@@ -36,12 +36,32 @@ import java.util.ArrayList;
 
 public class PrometheusDataSource implements DataSource
 {
+	private final String name;
+	private final String serviceName;
+	private final String dataSourceURL;
 	private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusDataSource.class);
 
-	private final String dataSourceURL;
+	//TODO Resolve Issue
+	public PrometheusDataSource(String name, String serviceName, String dataSourceURL) {
+		this.name = name;
+		this.serviceName = serviceName;
+		this.dataSourceURL = dataSourceURL;
+	}
 
-	public PrometheusDataSource(String monitoringAgentEndpoint) {
-		this.dataSourceURL = monitoringAgentEndpoint;
+	/**
+	 * Returns the name of the data source
+	 * @return String containing the name of the data source
+	 */
+	public String getName() {
+		return name;
+	}
+
+	/**
+	 * Returns the name of service for data source
+	 * @return String containing the name of service for data source
+	 */
+	public String getServiceName() {
+		return serviceName;
 	}
 
 	/**
@@ -50,6 +70,15 @@ public class PrometheusDataSource implements DataSource
 	 */
 	public String getDataSourceURL() {
 		return dataSourceURL;
+	}
+
+	/**
+	 * Checks if data source is serviceable and can be connected to
+	 * @return String containing the API endpoint
+	 */
+	public boolean isServiceable(){
+		// TODO Add logic to check if data source is serviceable or not
+		return true;
 	}
 
 	@Override

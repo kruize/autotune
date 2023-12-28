@@ -21,6 +21,18 @@ import java.util.List;
 public interface DataSource
 {
 	/**
+	 * Returns the name of the data source
+	 * @return String containing the name of the data source
+	 */
+	String getName();
+
+	/**
+	 * Returns the name of service for data source
+	 * @return String containing the name of service for data source
+	 */
+	String getServiceName();
+
+	/**
 	 * Run the getAppsForLayer and return the list of applications matching the layer.
 	 * @param query getAppsForLayer query for the layer
 	 * @param key The key to search for in the response
@@ -40,4 +52,10 @@ public interface DataSource
 	 * @return String containing the API endpoint
 	 */
 	String getQueryEndpoint();
+
+	/**
+	 * Checks if data source is serviceable and can be connected to
+	 * @return String containing the API endpoint
+	 */
+	boolean isServiceable();
 }

@@ -50,7 +50,7 @@ public class DataSourceFactory {
             monitoringAgentEndpoint = getMonitoringAgentEndpoint();
 
         if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE))
-            return new PrometheusDataSource(monitoringAgentEndpoint);
+            return new PrometheusDataSource(KruizeDeploymentInfo.monitoring_agent, KruizeDeploymentInfo.monitoring_service, monitoringAgentEndpoint);
 
         LOGGER.error("Datasource " + dataSource + " not supported");
         return null;

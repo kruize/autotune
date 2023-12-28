@@ -18,17 +18,21 @@ package com.autotune.operator;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.common.datasource.DataSource;
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceFactory;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.crypto.Data;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
@@ -70,6 +74,14 @@ public class InitializeDeployment {
 
         KruizeDeploymentInfo.logDeploymentInfo();
 
+        DataSourceCollection dataSourceCollection = new DataSourceCollection();
+        dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
+        HashMap<String, DataSource> dataSources = dataSourceCollection.getDataSourcesCollection();
+
+        for(String name: dataSources.keySet()){
+            DataSource dataSource = dataSources.get(name);
+            LOGGER.info("Datasource Added: " + dataSource.getName() + ", " + dataSource.getServiceName() + ", " + dataSource.getDataSourceURL());
+        }
 
     }
 

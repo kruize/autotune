@@ -120,7 +120,21 @@ data:
         "hbm2ddlauto": "none",
         "showsql": "false",
         "timezone": "UTC"
+      },
+    "datasource": [
+      { 
+        "name": "prometheus-1",
+        "provider": "prometheus",
+        "serviceName": "prometheus-k8s-1",
+        "url": "https://www.exampleone.com:8080/"
+      },
+      { 
+        "name": "prometheus-2",
+        "provider": "prometheus",
+        "serviceName": "prometheus-k8s-2",
+        "url": "https://www.exampletwo.com:8080/"
       }
+    ]
     }
 ---
 apiVersion: apps/v1
@@ -143,7 +157,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.20.1_rm
+          image: rh-ee-shesaxen/autotune:datasource-test
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume

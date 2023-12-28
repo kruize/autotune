@@ -346,6 +346,19 @@ public class KruizeConstants {
                 }
             }
         }
+
+        public static class DataSourceErrorMsgs{
+            private DataSourceErrorMsgs(){
+            }
+
+            public static final String MISSING_DATASOURCE_NAME = "Datasource name cannot be empty";
+            public static final String MISSING_DATASOURCE_PROVIDER = "Datasource provider cannot be empty";
+            public static final String MISSING_DATASOURCE_URL = "Datasource url cannot be empty";
+            public static final String MISSING_DATASOURCE_SERVICENAME = "Datasource servicename cannot be empty";
+            public static final String UNSUPPORTED_DATASOURCE_PROVIDER = "Datasource provider is invalid";
+            public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
+            public static final String DATASOURCE_ALREADY_EXIST = "Datasource with the name already exist";
+        }
     }
 
     /**
