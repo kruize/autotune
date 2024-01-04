@@ -358,6 +358,7 @@ public class KruizeConstants {
             public static final String UNSUPPORTED_DATASOURCE_PROVIDER = "Datasource provider is invalid";
             public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
             public static final String DATASOURCE_ALREADY_EXIST = "Datasource with the name already exist";
+            public static final String DATASOURCE_NOT_EXIST = "Datasource with the name not exist";
         }
     }
 

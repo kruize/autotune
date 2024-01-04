@@ -58,4 +58,10 @@ public interface DataSource
 	 * @return String containing the API endpoint
 	 */
 	boolean isServiceable();
+
+	/**
+	 * Returns the provider for the datasource
+	 * @return String containing the provider type
+	 */
+	String getProvider();
 }

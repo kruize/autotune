@@ -65,6 +65,14 @@ public class PrometheusDataSource implements DataSource
 	}
 
 	/**
+	 * Returns the provider for data source
+	 * @return String containing the name of provider for data source
+	 */
+	public String getProvider() {
+		return KruizeConstants.SupportedDatasources.PROMETHEUS;
+	}
+
+	/**
 	 * Returns the datasource endpoint from which queries can be run
 	 * @return String containing the URL
 	 */
