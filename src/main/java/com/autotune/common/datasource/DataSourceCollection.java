@@ -34,11 +34,24 @@ public class DataSourceCollection {
     }
 
     /**
+     * Returns the of data source based on name
+     * @param name String name of the data source
+     * @return DataSource object
+     */
+    public DataSource getDataSource(String name){
+        DataSource resultDataSource = null;
+        if(dataSourcesCollection.containsKey(name)){
+            resultDataSource = dataSourcesCollection.get(name);
+        }
+        return resultDataSource;
+    }
+
+    /**
      * Adds datasource to collection
      * @param name String name of the data source
      * @param provider String provider for data source
      * @param serviceName String name of the service for data source
-     * @param url URL of data source
+     * @param dataSourceURL URL of data source
      */
     public void addDataSourceToCollection(String name, String provider, String serviceName, String dataSourceURL){
         try{
@@ -87,7 +100,7 @@ public class DataSourceCollection {
      * Deletes datasource from collection
      * @param name String name of the data source
      */
-    public void deleteDataSourceToCollection(String name){
+    public void deleteDataSourceFromCollection(String name){
         try{
             if(name == null) {
                 throw new DataSourceMissingRequiredFiled(KruizeConstants.ErrorMsgs.DataSourceErrorMsgs.MISSING_DATASOURCE_NAME);
