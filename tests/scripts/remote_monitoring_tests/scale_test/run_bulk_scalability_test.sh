@@ -149,11 +149,11 @@ declare -a pid_array=()
 for ((loop=1; loop<=num_clients; loop++));
 do
 
-	name="scaletest${num_exps}-${num_days_of_res}days-${loop}"
+	name="scaletest${num_exps}-${loop}"
 	logfile="${SCALE_LOG_DIR}/${name}.log"
 	echo "logfile = $logfile"
 
-	nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name scaletest${num_exps}-${num_days_of_res}days-${loop} --count ${num_exps},${results_count} --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} >> ${logfile} 2>&1 &
+	nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} >> ${logfile} 2>&1 &
 
 	pid_array+=($!)
 
