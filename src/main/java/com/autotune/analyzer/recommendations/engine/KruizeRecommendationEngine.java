@@ -34,6 +34,6 @@ public interface KruizeRecommendationEngine {
                                                                 String recPeriod,
                                                                 RecommendationSettings recommendationSettings,
                                                                 HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfigMap,
-                                                                Double durationInHrs, double availableData);
+                                                                Double durationInHrs);
     public void validateRecommendations();
 }

@@ -302,10 +302,10 @@ def get_datetime():
 
 
 def term_based_start_time(input_date_str, term):
-    duration = {"short_term": 1, "medium_term": 7, "long_term": 15}
+    duration = {"short_term": 0.5, "medium_term": 48, "long_term": 192}
     input_date = datetime.strptime(input_date_str, "%Y-%m-%dT%H:%M:%S.%fZ")
 
-    output_date = input_date - timedelta(days=duration[term])
+    output_date = input_date - timedelta(hours=duration[term])
     output_date_str = output_date.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + 'Z'
 
     return output_date_str

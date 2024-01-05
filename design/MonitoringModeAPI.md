@@ -48,11 +48,13 @@ Below are the default terms used in resource analysis, along with their respecti
 <a name="terms-duration--threshold-table"></a>
 ### Terms, Duration & Threshold Table
 
-| Term       | Duration | Threshold |
-|------------|----------|-----------|
-| Short      | 1 day    | 6 hours   |
-| Medium     | 7 days   | 6 hours   |
-| Long       | 15 days  | 6 hours   |
+| Term   | Minimum Data Threshold | Duration | Threshold |
+|--------|------------------------|----------|-----------|
+| Short  | 30 mins                | 1 day    | 6 hours   |
+| Medium | 2 Days                 | 7 days   | 6 hours   |
+| Long   | 8 Days                 | 15 days  | 6 hours   |
+
+**Minimum Data Threshold**: The "minimum data threshold" represents the minimum amount of data needed for generating a recommendation associated with a given duration term.
 
 **Duration**: The "duration" in the term analysis refers to the amount of historical data taken into account when assessing resource utilization.
 

@@ -104,7 +104,6 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                 KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD));
         // Get the new Timestamp after subtracting 10 days
         Timestamp calculated_start_time = new Timestamp(cal.getTimeInMillis());
-        LOGGER.debug("calculated_start_time = {}", calculated_start_time);
         Map<String, KruizeObject> mainKruizeExperimentMap = new HashMap<>();
         String experiment_name = kruizeObject.getExperimentName();
         mainKruizeExperimentMap.put(experiment_name, kruizeObject);
@@ -146,8 +145,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
                         // Check for min data before setting notifications
                         // Check for at least short term
-                        double availableData = RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject);
-                        if (availableData < KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.SHORT_TERM_MIN_DATA_THRESHOLD_MINS) {
+                        if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, RecommendationConstants.RecommendationTerms.SHORT_TERM)) {
                             RecommendationNotification recommendationNotification = new RecommendationNotification(
                                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
                             );
@@ -262,20 +260,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
 
                             // Check if there is min data available for the term
-                            availableData = RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject);
-                            double minAvailableData = 0.0;
-                            if (term.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM)) {
-                                minAvailableData = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.SHORT_TERM_MIN_DATA_THRESHOLD_MINS;
-                            } else if (term.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM)) {
-                                minAvailableData = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS;
-                            } else if (term.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)) {
-                                minAvailableData = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.LONG_TERM_MIN_DATA_THRESHOLD_MINS;
-                            } else {
-                                LOGGER.error("Invalid Recommendation Term");
-                            }
-                            LOGGER.debug("minAvailableData = {}", minAvailableData);
-                            LOGGER.debug("availableData = {}", availableData);
-                            if (availableData < minAvailableData) {
+                            if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, recommendationTerm)) {
                                 RecommendationNotification recommendationNotification = new RecommendationNotification(
                                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                                 mappedRecommendationForTerm.addNotification(recommendationNotification);
@@ -306,8 +291,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                             term,
                                             recommendationSettings,
                                             currentConfig,
-                                            Double.valueOf(String.valueOf(duration)),
-                                            availableData);
+                                            Double.valueOf(String.valueOf(duration)));
 
                                     if (null == mappedRecommendationForEngine) {
                                         continue;

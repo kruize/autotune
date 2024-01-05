@@ -20,6 +20,7 @@ import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForEngine;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
@@ -911,7 +912,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                                                                 HashMap<AnalyzerConstants.ResourceSetting,
                                                                         HashMap<AnalyzerConstants.RecommendationItem,
                                                                                 RecommendationConfigItem>> currentConfigMap,
-                                                                Double durationInHrs, double availableData) {
+                                                                Double durationInHrs) {
         MappedRecommendationForEngine mappedRecommendationForEngine = new MappedRecommendationForEngine();
         // Set CPU threshold to default
         double cpuThreshold = DEFAULT_CPU_THRESHOLD;
@@ -982,6 +983,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                 return null;
             }
             // set the confidenceLevel to 1.0 if it exceeds 1 since the confidence can only vary between 0 and 1
+            double availableData = RecommendationUtils.getDurationSummation(containerData);
             double confidenceLevel = (availableData / term_max_data_mins);
             confidenceLevel = Math.min(confidenceLevel, 1.0);
 
