@@ -1,8 +1,9 @@
 package com.autotune.common.datasource;
 
+import com.autotune.common.datasource.promql.PrometheusDataSource;
 import com.autotune.common.exceptions.*;
+import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.KruizeSupportedTypes;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -14,8 +15,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class DataSourceCollection {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCollection.class);
@@ -76,7 +75,7 @@ public class DataSourceCollection {
                     throw new UnsupportedDataSourceProvider(name + ": " + KruizeConstants.ErrorMsgs.DataSourceErrorMsgs.UNSUPPORTED_DATASOURCE_PROVIDER);
                 }
 
-                if(dataSource.isServiceable()){
+                if(dataSource.isReachable() == CommonUtils.DatasourceReachabilityStatus.REACHABLE){
                     dataSourcesCollection.put(name, dataSource);
                     LOGGER.info("Added Datasource to Collection: " + dataSource.getName() + ", " + dataSource.getServiceName() + ", " + dataSource.getDataSourceURL());
                 }else{
@@ -144,7 +143,7 @@ public class DataSourceCollection {
                     updatedDataSource = new PrometheusDataSource(newName, newServiceName, newDataSourceURL);
                 }
 
-                if(updatedDataSource.isServiceable()){
+                if(updatedDataSource.isReachable() == CommonUtils.DatasourceReachabilityStatus.REACHABLE){
                     dataSourcesCollection.remove(oldDataSource.getName());
                     dataSourcesCollection.put(newName, updatedDataSource);
                     LOGGER.info("Updated Datasource: " + updatedDataSource.getName() + ", " + updatedDataSource.getServiceName() + ", " + updatedDataSource.getDataSourceURL());

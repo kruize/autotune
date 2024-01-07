@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.autotune.common.utils.CommonUtils;
+
 import java.net.MalformedURLException;
 import java.util.List;
 
@@ -54,10 +56,18 @@ public interface DataSource
 	String getQueryEndpoint();
 
 	/**
-	 * Checks if data source is serviceable and can be connected to
-	 * @return String containing the API endpoint
+	 * Check if a datasource is reachable, implementation of this function
+	 * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
+	 * @return DatasourceReachabilityStatus
 	 */
-	boolean isServiceable();
+	CommonUtils.DatasourceReachabilityStatus isReachable();
+
+	/**
+	 * Check if a datasource is reliable to use, implementation of this function
+	 * should check and return the reachability status (RELIABLE, NOT RELIABLE)
+	 * @return DatasourceReliabilityStatus
+	 */
+	CommonUtils.DatasourceReliabilityStatus isReliable(Object... objects);
 
 	/**
 	 * Returns the provider for the datasource

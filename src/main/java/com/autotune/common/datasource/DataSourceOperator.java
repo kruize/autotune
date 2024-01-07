@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.autotune.common.datasource.promql.PrometheusDataOperator;
 import com.autotune.utils.KruizeConstants;
 
 public class DataSourceOperator {
@@ -24,6 +25,14 @@ public class DataSourceOperator {
         if (datasource.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
             return PrometheusDataOperator.getInstance();
         }
+        return null;
+    }
+
+    /**
+     * abstraction for extract data function for different data sources
+     * @return Object containing the fetched data
+     */
+    public Object extract(String url, String query){
         return null;
     }
 }

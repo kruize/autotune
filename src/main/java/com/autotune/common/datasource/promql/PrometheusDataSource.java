@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.datasource;
+package com.autotune.common.datasource.promql;
 
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.datasource.DataSource;
+import com.autotune.common.datasource.DataSourceFactory;
+import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.authModels.BearerAccessToken;
@@ -81,12 +84,23 @@ public class PrometheusDataSource implements DataSource
 	}
 
 	/**
-	 * Checks if data source is serviceable and can be connected to
-	 * @return String containing the API endpoint
+	 * Check if a datasource is reachable, implementation of this function
+	 * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
+	 * @return DatasourceReachabilityStatus
 	 */
-	public boolean isServiceable(){
-		// TODO Add logic to check if data source is serviceable or not
-		return true;
+	public CommonUtils.DatasourceReachabilityStatus isReachable(){
+		// TODO: to implement this function
+		return CommonUtils.DatasourceReachabilityStatus.REACHABLE;
+	}
+
+	/**
+	 * Check if a datasource is reliable to use, implementation of this function
+	 * should check and return the reachability status (RELIABLE, NOT RELIABLE)
+	 * @return DatasourceReliabilityStatus
+	 */
+	public CommonUtils.DatasourceReliabilityStatus isReliable(Object... objects){
+		// TODO: to implement this function
+		return CommonUtils.DatasourceReliabilityStatus.RELIABLE;
 	}
 
 	@Override
