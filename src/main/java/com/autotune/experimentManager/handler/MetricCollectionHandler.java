@@ -19,7 +19,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.datasource.DataSourceOperator;
-import com.autotune.common.datasource.KruizeDataSourceOperator;
+import com.autotune.common.datasource.promql.PrometheusDataOperator;
 import com.autotune.common.k8sObjects.KubernetesContexts;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.worker.CallableFactory;
@@ -118,7 +118,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             String updatedPodQuery = EMUtil.replaceQueryVars(podMetric.getQuery(), queryVarList);
                             updatedPodQuery = EMUtil.formatQueryByPodName(updatedPodQuery, podName);
                             // Need to run the updated query by calling the datasource
-                            KruizeDataSourceOperator ado = DataSourceOperator.getOperator(podMetric.getDatasource());
+                            DataSourceOperator ado = PrometheusDataOperator.getInstance();
                             if (null == ado) {
                                 // TODO: Return an error saying unsupported datasource
                             }
@@ -155,7 +155,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                 updatedContainerQuery = EMUtil.formatQueryByPodName(updatedContainerQuery, podName);
                                 updatedContainerQuery = EMUtil.formatQueryByContainerName(updatedContainerQuery, containerName);
                                 // Need to run the updated query by calling the datasource
-                                KruizeDataSourceOperator ado = DataSourceOperator.getOperator(containerMetric.getDatasource());
+                                DataSourceOperator ado = PrometheusDataOperator.getInstance();
                                 if (null == ado) {
                                     // TODO: Return an error saying unsupported datasource
                                 }

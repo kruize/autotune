@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.datasource.promql;
 
-import com.autotune.common.datasource.KruizeDataSourceOperator;
+import com.autotune.common.datasource.DataSourceOperator;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
@@ -27,7 +27,7 @@ import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
-public class PrometheusDataOperator implements KruizeDataSourceOperator {
+public class PrometheusDataOperator implements DataSourceOperator {
     private static PrometheusDataOperator prometheusDataOperator = null;
     private PrometheusDataOperator() {
 
