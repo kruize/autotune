@@ -22,7 +22,7 @@ public class DataSourceCollection {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCollection.class);
     private HashMap<String, DataSourceInfo> dataSourceCollection;
 
-    public DataSourceCollection(){
+    public DataSourceCollection() {
         this.dataSourceCollection = new HashMap<>();
     }
 
@@ -30,7 +30,7 @@ public class DataSourceCollection {
      * Returns the hashmap of data sources
      * @return HashMap containing data sources
      */
-    public HashMap<String, DataSourceInfo> getDataSourcesCollection(){
+    public HashMap<String, DataSourceInfo> getDataSourcesCollection() {
         return dataSourceCollection;
     }
 
@@ -54,7 +54,7 @@ public class DataSourceCollection {
             }
 
             if (!dataSourceCollection.containsKey(datasource.getName())) {
-                if (datasource.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)){
+                if (datasource.getProvider().equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
                     PrometheusDataSource promDataSource = new PrometheusDataSource(datasource.getName(), datasource.getProvider(), datasource.getServiceName(), datasource.getUrl());
                     if (promDataSource.isReachable() == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
                         dataSourceCollection.put(datasource.getName(), promDataSource);

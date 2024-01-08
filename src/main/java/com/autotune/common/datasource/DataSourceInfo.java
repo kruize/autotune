@@ -42,7 +42,9 @@ public class DataSourceInfo {
      * Returns the name of the data source
      * @return String containing the name of the data source
      */
-    public String getName() { return name; }
+    public String getName() {
+        return name;
+    }
 
     /**
      * Returns the provider of the data source

@@ -333,8 +333,8 @@ public class KruizeConstants {
         private ErrorMsgs() {
         }
 
-        public static class DataSourceErrorMsgs{
-            private DataSourceErrorMsgs(){
+        public static class DataSourceErrorMsgs {
+            private DataSourceErrorMsgs() {
             }
 
             public static final String MISSING_DATASOURCE_NAME = "Datasource name cannot be empty";

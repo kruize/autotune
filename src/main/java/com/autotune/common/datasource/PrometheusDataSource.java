@@ -115,7 +115,7 @@ public class PrometheusDataSource extends DataSourceInfo
 	 * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
 	 * @return DatasourceReachabilityStatus
 	 */
-	public CommonUtils.DatasourceReachabilityStatus isReachable(){
+	public CommonUtils.DatasourceReachabilityStatus isReachable() {
 		// TODO: to implement this function
 		return CommonUtils.DatasourceReachabilityStatus.REACHABLE;
 	}

@@ -78,7 +78,7 @@ public class InitializeDeployment {
 
         LOGGER.info("Checking Available Datasources ...");
         HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
-        for(String name: dataSources.keySet()){
+        for (String name: dataSources.keySet()) {
             DataSourceInfo dataSource = dataSources.get(name);
             LOGGER.info("Datasource: " + dataSource.getName() + ", " + dataSource.getServiceName() + ", " + dataSource.getUrl().toString());
         }
