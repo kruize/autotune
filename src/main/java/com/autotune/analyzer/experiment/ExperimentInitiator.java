@@ -149,7 +149,7 @@ public class ExperimentInitiator {
         for (UpdateResultsAPIObject object : updateResultsAPIObjects) {
             String experimentName = object.getExperimentName();
             if (experimentName == null) {
-                errorReasons.add(String.format("%s", MISSING_EXPERIMENT));
+                errorReasons.add(String.format("%s%s", MISSING_EXPERIMENT_NAME, null));
                 object.setErrors(getErrorMap(errorReasons));
                 failedUpdateResultsAPIObjects.add(object);
                 continue;
