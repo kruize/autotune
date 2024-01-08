@@ -26,18 +26,44 @@ import java.net.URL;
  * }
  */
 public class DataSourceInfo {
+    private final String name;
     private final String provider;
+    private final String serviceName;
     private final URL url;
 
-    public DataSourceInfo(String provider, URL url) {
+    public DataSourceInfo(String name, String provider, String serviceName, URL url) {
+        this.name = name;
         this.provider = provider;
+        this.serviceName = serviceName;
         this.url = url;
     }
 
+    /**
+     * Returns the name of the data source
+     * @return String containing the name of the data source
+     */
+    public String getName() { return name; }
+
+    /**
+     * Returns the provider of the data source
+     * @return String containing the provider of the data source
+     */
     public String getProvider() {
         return provider;
     }
 
+    /**
+     * Returns the serviceName of the data source
+     * @return String containing the name of service for the data source
+     */
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    /**
+     * Returns the URL of the data source
+     * @return URL containing the URL of the data source
+     */
     public URL getUrl() {
         return url;
     }

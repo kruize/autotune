@@ -17,6 +17,7 @@ package com.autotune.common.datasource;
 
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.authModels.BearerAccessToken;
@@ -27,6 +28,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -34,25 +36,17 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
-public class PrometheusDataSource implements DataSource
+public class PrometheusDataSource extends DataSourceInfo
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusDataSource.class);
 
 	private final String dataSourceURL;
 
-	public PrometheusDataSource(String monitoringAgentEndpoint) {
-		this.dataSourceURL = monitoringAgentEndpoint;
+	public PrometheusDataSource(String name, String provider, String serviceName, URL url) {
+		super(name, provider, serviceName, url);
+		this.dataSourceURL = url.toString();
 	}
 
-	/**
-	 * Returns the datasource endpoint from which queries can be run
-	 * @return String containing the URL
-	 */
-	public String getDataSourceURL() {
-		return dataSourceURL;
-	}
-
-	@Override
 	public String getQueryEndpoint() {
 		return AnalyzerConstants.PROMETHEUS_API;
 	}
@@ -114,5 +108,15 @@ public class PrometheusDataSource implements DataSource
 			LOGGER.error("Unable to proceed due to invalid connection to URL: "+ queryURL);
 		}
 		return valuesList;
+	}
+
+	/**
+	 * Check if a datasource is reachable, implementation of this function
+	 * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
+	 * @return DatasourceReachabilityStatus
+	 */
+	public CommonUtils.DatasourceReachabilityStatus isReachable(){
+		// TODO: to implement this function
+		return CommonUtils.DatasourceReachabilityStatus.REACHABLE;
 	}
 }

@@ -28,6 +28,8 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,7 +42,7 @@ public class DataSourceFactory {
     private DataSourceFactory() {
     }
 
-    public static DataSource getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
+    public static DataSourceInfo getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
         String monitoringAgentEndpoint = null;
         if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.monitoring_agent))
             monitoringAgentEndpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
@@ -49,8 +51,13 @@ public class DataSourceFactory {
         if (monitoringAgentEndpoint == null || monitoringAgentEndpoint.isEmpty())
             monitoringAgentEndpoint = getMonitoringAgentEndpoint();
 
-        if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE))
-            return new PrometheusDataSource(monitoringAgentEndpoint);
+        if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE)) {
+            try {
+                return new PrometheusDataSource(KruizeDeploymentInfo.monitoring_agent, KruizeConstants.SupportedDatasources.PROMETHEUS, KruizeDeploymentInfo.monitoring_service, new URL(monitoringAgentEndpoint));
+            } catch (MalformedURLException e) {
+                LOGGER.error("Datasource url is not valid");
+            }
+        }
 
         LOGGER.error("Datasource " + dataSource + " not supported");
         return null;
