@@ -76,11 +76,14 @@ public class InitializeDeployment {
         DataSourceCollection dataSourceCollection = new DataSourceCollection();
         dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
 
-        LOGGER.info("Checking Available Datasources ...");
+        LOGGER.info(KruizeConstants.DataSourceConstants.CheckingAvailableDataSource);
         HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
         for (String name: dataSources.keySet()) {
             DataSourceInfo dataSource = dataSources.get(name);
-            LOGGER.info("Datasource: " + dataSource.getName() + ", " + dataSource.getServiceName() + ", " + dataSource.getUrl().toString());
+            String dataSourceName = dataSource.getName();
+            String serviceName = dataSource.getServiceName();
+            String url = dataSource.getUrl().toString();
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceAvailable + dataSourceName + ", " + serviceName + ", " + url);
         }
     }
 

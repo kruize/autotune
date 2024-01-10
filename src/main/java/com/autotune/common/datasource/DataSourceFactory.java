@@ -44,6 +44,8 @@ public class DataSourceFactory {
 
     public static DataSourceInfo getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
         String monitoringAgentEndpoint = null;
+        DataSourceInfo datasource = null;
+
         if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.monitoring_agent))
             monitoringAgentEndpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
 
@@ -53,14 +55,15 @@ public class DataSourceFactory {
 
         if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE)) {
             try {
-                return new PrometheusDataSource(KruizeDeploymentInfo.monitoring_agent, KruizeConstants.SupportedDatasources.PROMETHEUS, KruizeDeploymentInfo.monitoring_service, new URL(monitoringAgentEndpoint));
+                datasource = new PrometheusDataSource(KruizeDeploymentInfo.monitoring_agent, KruizeConstants.SupportedDatasources.PROMETHEUS, KruizeDeploymentInfo.monitoring_service, new URL(monitoringAgentEndpoint));
             } catch (MalformedURLException e) {
-                LOGGER.error("Datasource url is not valid");
+                LOGGER.error(KruizeConstants.ErrorMsgs.DataSourceErrorMsgs.DATASOURCE_INVALID_URL);
             }
+        } else {
+            LOGGER.error(dataSource + KruizeConstants.ErrorMsgs.DataSourceErrorMsgs.DATASOURCE_NOT_SUPPORTED);
         }
 
-        LOGGER.error("Datasource " + dataSource + " not supported");
-        return null;
+        return datasource;
     }
 
     /**
@@ -76,6 +79,7 @@ public class DataSourceFactory {
         List<Service> serviceList = kubernetesServices.getServicelist(null);
         kubernetesServices.shutdownClient();
         String monitoringAgentService = KruizeDeploymentInfo.monitoring_service;
+        String monitoringAgentEndpoint = null;
 
         if (monitoringAgentService == null)
             throw new MonitoringAgentNotFoundException();
@@ -88,18 +92,22 @@ public class DataSourceFactory {
                     int port = service.getSpec().getPorts().get(0).getPort();
                     LOGGER.debug(KruizeDeploymentInfo.cluster_type);
                     if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
-                        return AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
+                        monitoringAgentEndpoint = AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
                     }
                     if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
-                        return AnalyzerConstants.HTTPS_PROTOCOL + "://" + clusterIP + ":" + port;
+                        monitoringAgentEndpoint = AnalyzerConstants.HTTPS_PROTOCOL + "://" + clusterIP + ":" + port;
                     }
                 } catch (Exception e) {
                     throw new MonitoringAgentNotFoundException();
                 }
             }
         }
-        LOGGER.error("Monitoring agent endpoint not found");
-        return null;
+
+        if (monitoringAgentEndpoint == null) {
+            LOGGER.error("Monitoring agent endpoint not found");
+        }
+
+        return monitoringAgentEndpoint;
     }
 
     /**

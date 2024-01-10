@@ -329,6 +329,20 @@ public class KruizeConstants {
         }
     }
 
+    public static class DataSourceConstants {
+        public static final String DataSourceName = "name";
+        public static final String DataSourceProvider = "provider";
+        public static final String DataSourceServiceName = "serviceName";
+        public static final String DataSourceUrl = "url";
+        public static final String DataSourceAdded = "Added Datasource to Collection: ";
+        public static final String KruizeDataSource = "datasource";
+        public static final String DataSourceAvailable = "Datasource Available: ";
+        public static final String CheckingAvailableDataSource = "Checking Available Datasources ...";
+
+        private DataSourceConstants() {
+        }
+    }
+
     public static class ErrorMsgs {
         private ErrorMsgs() {
         }
@@ -337,14 +351,16 @@ public class KruizeConstants {
             private DataSourceErrorMsgs() {
             }
 
-            public static final String MISSING_DATASOURCE_NAME = "Datasource name cannot be empty";
-            public static final String MISSING_DATASOURCE_PROVIDER = "Datasource provider cannot be empty";
-            public static final String MISSING_DATASOURCE_URL = "Datasource url cannot be empty";
-            public static final String MISSING_DATASOURCE_SERVICENAME = "Datasource servicename cannot be empty";
-            public static final String UNSUPPORTED_DATASOURCE_PROVIDER = "Datasource provider is invalid";
-            public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
-            public static final String DATASOURCE_ALREADY_EXIST = "Datasource with the name already exist";
-            public static final String DATASOURCE_NOT_EXIST = "Datasource with the name not exist";
+            public static final String MISSING_DATASOURCE_NAME = " Datasource name cannot be empty";
+            public static final String MISSING_DATASOURCE_PROVIDER = " Datasource provider cannot be empty";
+            public static final String MISSING_DATASOURCE_URL = " Datasource url cannot be empty";
+            public static final String MISSING_DATASOURCE_SERVICENAME = " Datasource servicename cannot be empty";
+            public static final String UNSUPPORTED_DATASOURCE_PROVIDER = " Datasource provider is invalid";
+            public static final String DATASOURCE_NOT_SERVICEABLE = " Datasource is not serviceable.";
+            public static final String DATASOURCE_ALREADY_EXIST = " Datasource with the name already exist";
+            public static final String DATASOURCE_NOT_EXIST = " Datasource with the name not exist";
+            public static final String DATASOURCE_INVALID_URL = " Datasource url is not valid";
+            public static final String DATASOURCE_NOT_SUPPORTED = " Datasource is not supported";
         }
 
         public static class APIErrorMsgs {
