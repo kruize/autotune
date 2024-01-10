@@ -533,16 +533,14 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     end_time = max(data, key=lambda x: x['interval_end_time'])['interval_end_time']
 
     sorted_data = sorted(data, key=lambda x: x['interval_end_time'], reverse=True)
-    top_5_records = sorted_data[:5]
-    top_5_dates = [
-        item['interval_start_time'] for item in sorted_data[:5]
+    all_dates = [
+        item['interval_start_time'] for item in sorted_data
     ]
-    print(f"{top_5_dates}")
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
 
-    for dateStr in top_5_dates:
+    for dateStr in all_dates:
         update_recommendations(experiment_name, None,
                                dateStr.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z")
 
@@ -568,11 +566,11 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
         # Expected no. of recommendations is 1 as there would be only one recommendation with latest = true
         expected_num_recos = 1
     elif latest == "false":
-        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MIN
         print(f"len update results json {len(update_results_json)}")
         # Recommendations are generated only when 24h results are present
         total_num_results = len(result_json_arr)
-        num_results_without_recos = int(SHORT_TERM_DURATION_IN_HRS_MAX * 4 - 1)
+        num_results_without_recos = int(SHORT_TERM_DURATION_IN_HRS_MIN * 4 - 1)
         print(f"total_num_results {total_num_results}")
         print(f"num_results_without_recos {num_results_without_recos}")
         expected_num_recos = total_num_results - num_results_without_recos
@@ -1032,43 +1030,45 @@ def test_list_recommendations_notification_codes(cluster_type: str):
             assert data['status'] == SUCCESS_STATUS
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
-            if j > 95:
-                response = update_recommendations(experiment_name, None, end_time)
-                data = response.json()
-                assert response.status_code == SUCCESS_STATUS_CODE
-                assert data[0]['experiment_name'] == experiment_name
+            response = update_recommendations(experiment_name, None, end_time)
+            data = response.json()
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data[0]['experiment_name'] == experiment_name
 
-                # Get the experiment name
-                json_data = json.load(open(create_exp_json_file))
-                experiment_name = json_data[0]['experiment_name']
+            # Get the experiment name
+            json_data = json.load(open(create_exp_json_file))
+            experiment_name = json_data[0]['experiment_name']
 
-                response = list_recommendations(experiment_name)
-                assert response.status_code == SUCCESS_200_STATUS_CODE
+            response = list_recommendations(experiment_name)
+            assert response.status_code == SUCCESS_200_STATUS_CODE
 
-                #############################################################################################
-                # TODO: Optimise the flow by having everything in the same else if ladder blocks            #
-                #############################################################################################
-                # This mechanism can be optimised by placing the above content in a function and calling    #
-                # recommendations in the same else if ladder above, but parking it for later as Currently   #
-                # we are not intended to disturb the flow as of now.                                        #
-                #############################################################################################
-                recommendation_json = response.json()
+            #############################################################################################
+            # TODO: Optimise the flow by having everything in the same else if ladder blocks            #
+            #############################################################################################
+            # This mechanism can be optimised by placing the above content in a function and calling    #
+            # recommendations in the same else if ladder above, but parking it for later as Currently   #
+            # we are not intended to disturb the flow as of now.                                        #
+            #############################################################################################
+            recommendation_json = response.json()
 
-                recommendation_section = None
+            recommendation_section = None
 
-                for containers in recommendation_json[0]["kubernetes_objects"][0]["containers"]:
-                    actual_container_name = containers["container_name"]
-                    print(
-                        f"actual container name = {actual_container_name}  expected container name = {container_name_to_update}")
-                    if containers["container_name"] == container_name_to_update:
-                        recommendation_section = containers["recommendations"]
-                        break
+            for containers in recommendation_json[0]["kubernetes_objects"][0]["containers"]:
+                actual_container_name = containers["container_name"]
+                print(
+                    f"actual container name = {actual_container_name}  expected container name = {container_name_to_update}")
+                if containers["container_name"] == container_name_to_update:
+                    recommendation_section = containers["recommendations"]
+                    break
 
-                assert recommendation_section is not None
+            assert recommendation_section is not None
 
-                high_level_notifications = recommendation_section["notifications"]
+            high_level_notifications = recommendation_section["notifications"]
 
-                # Check for Recommendation level notifications
+            # Check for Recommendation level notifications
+            if j == 0:
+                assert NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in high_level_notifications
+            else:
                 assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
 
                 data_section = recommendation_section["data"]

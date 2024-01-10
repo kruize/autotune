@@ -19,8 +19,8 @@ import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.recommendations.confidence.ConfidenceLevelCalculator;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForEngine;
-import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
@@ -38,18 +38,19 @@ import java.util.stream.Collectors;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_CPU_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_MEMORY_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
-import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.*;
 
 public class CostRecommendationEngine implements KruizeRecommendationEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(CostRecommendationEngine.class);
     private String name;
     private String key;
     private RecommendationConstants.RecommendationCategory category;
+    private ConfidenceLevelCalculator confidenceLevelCalculator;
 
-    public CostRecommendationEngine() {
+    public CostRecommendationEngine(ConfidenceLevelCalculator confidenceLevelCalculator) {
         this.name = RecommendationConstants.RecommendationEngine.EngineNames.COST;
         this.key = RecommendationConstants.RecommendationEngine.EngineKeys.COST_KEY;
         this.category = RecommendationConstants.RecommendationCategory.COST;
+        this.confidenceLevelCalculator = confidenceLevelCalculator;
     }
 
     public CostRecommendationEngine(String name) {
@@ -971,21 +972,13 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
             mappedRecommendationForEngine.setPodsCount(numPods);
 
             // set the confidence level
-            double term_max_data_mins;
-            if (recPeriod.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM)) {
-                term_max_data_mins = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.SHORT_TERM_MAX_DATA_MINS;
-            } else if (recPeriod.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM)) {
-                term_max_data_mins = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.MEDIUM_TERM_MAX_DATA_MINS;
-            } else if (recPeriod.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)) {
-                term_max_data_mins = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.LONG_TERM_MAX_DATA_MINS;
-            } else {
-                LOGGER.error("Invalid Recommendation Term");
+            double confidenceLevel;
+            try {
+                confidenceLevel = confidenceLevelCalculator.calculateConfidenceBasedOnRecommendationPeriod(containerData, recPeriod);
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage());
                 return null;
             }
-            // set the confidenceLevel to 1.0 if it exceeds 1 since the confidence can only vary between 0 and 1
-            double availableData = RecommendationUtils.getDurationSummation(containerData);
-            double confidenceLevel = (availableData / term_max_data_mins);
-            confidenceLevel = Math.min(confidenceLevel, 1.0);
 
             mappedRecommendationForEngine.setConfidence_level(confidenceLevel);
 

@@ -19,12 +19,15 @@ import os
 import re
 import subprocess
 import time
+import math
 from datetime import datetime, timedelta
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
 ERROR_STATUS_CODE = 400
 ERROR_409_STATUS_CODE = 409
+MIN_CONFIDENCE_VALUE = 0.1
+MAX_CONFIDENCE_VALUE = 1.0
 
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
@@ -97,8 +100,11 @@ INVALID_INTERVAL_DURATION_MSG = "Interval duration cannot be less than or greate
 time_log_csv = "/tmp/time_log.csv"
 
 # DURATION - No. of days * 24.0 hrs
+SHORT_TERM_DURATION_IN_HRS_MIN = 1 * 0.5
 SHORT_TERM_DURATION_IN_HRS_MAX = 1 * 24.0
+MEDIUM_TERM_DURATION_IN_HRS_MIN = 2 * 24.0
 MEDIUM_TERM_DURATION_IN_HRS_MAX = 7 * 24.0
+LONG_TERM_DURATION_IN_HRS_MIN = 8 * 24.0
 LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
 
 SHORT_TERM = "short_term"
@@ -372,6 +378,21 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                                    expected_duration_in_hours, test_name)
 
 
+def set_duration_based_on_terms(duration_in_hours, term, interval_start_time, interval_end_time):
+    diff = time_diff_in_hours(interval_start_time, interval_end_time)
+    duration_in_hours += diff
+    print(f"duration in hours = {duration_in_hours}")
+
+    if term == "short_term" and duration_in_hours > SHORT_TERM_DURATION_IN_HRS_MAX:
+        duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+    elif term == "medium_term" and duration_in_hours > MEDIUM_TERM_DURATION_IN_HRS_MAX:
+        duration_in_hours = MEDIUM_TERM_DURATION_IN_HRS_MAX
+    elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
+        duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
+
+    return duration_in_hours
+
+
 def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours, test_name):
     # Validate container image name and container name
     if update_results_container != None and list_reco_container != None:
@@ -420,22 +441,15 @@ def validate_container(update_results_container, update_results_json, list_reco_
 
                         # Validate duration in hrs
                         if expected_duration_in_hours == None:
-                            diff = time_diff_in_hours(interval_start_time, interval_end_time)
-                            print(f"difference in hours = {diff}")
-                            duration_in_hours += diff
-                            print(f"duration in hours = {duration_in_hours}")
+                            duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time, interval_end_time)
 
-                            if term == "short_term" and duration_in_hours > SHORT_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
-                            elif term == "medium_term" and duration_in_hours > MEDIUM_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = MEDIUM_TERM_DURATION_IN_HRS_MAX
-                            elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
-
+                        duration_in_hours_rounded_off = math.ceil(duration_in_hours * 10) / 10
                         print(
-                            f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
-                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
-                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours_rounded_off}")
+                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours_rounded_off, \
+                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours_rounded_off}"
+                        duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time,
+                                                                        interval_end_time)
 
                         # Get engine objects
                         engines_list = ["cost", "performance"]
