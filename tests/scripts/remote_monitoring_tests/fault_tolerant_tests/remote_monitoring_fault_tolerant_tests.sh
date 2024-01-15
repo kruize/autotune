@@ -174,7 +174,7 @@ if [ "${exit_code}" -ne 0 ]; then
 	echo "Fault tolerant test failed! Check the log for details" | tee -a ${LOG}
 	exit 1
 else
-	if [[ $(grep -i "ERROR" ${KRUIZE_POD_LOG_BEFORE}) || $(grep -i "error\|exception" ${KRUIZE_POD_LOG_AFTER}) ]]; then
+	if [[ $(grep -i "error\|exception" ${KRUIZE_POD_LOG_BEFORE}) || $(grep -i "error\|exception" ${KRUIZE_POD_LOG_AFTER}) ]]; then
 		echo "Fault tolerant test failed! Check the logs for details" | tee -a ${LOG}
 		exit 1
 	else

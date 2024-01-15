@@ -81,22 +81,19 @@ public class ExperimentDBService {
 
     public void loadAllResults(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
-
+        KruizeObject kruizeObject;
         // Load results from the DB and save to local
         List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadAllResults();
         if (null != kruizeResultsEntries && !kruizeResultsEntries.isEmpty()) {
             List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
-            if (null != updateResultsAPIObjects && !updateResultsAPIObjects.isEmpty()) {
+            if (!updateResultsAPIObjects.isEmpty()) {
                 List<ExperimentResultData> resultDataList = new ArrayList<>();
                 for (UpdateResultsAPIObject updateResultsAPIObject : updateResultsAPIObjects) {
                     try {
-                        ExperimentResultData experimentResultData = null;
-                        if (updateResultsAPIObject.getKruizeObject() != null)
-                            experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
-                        if (experimentResultData != null)
-                            resultDataList.add(experimentResultData);
-                        else
-                            LOGGER.warn("Converted experimentResultData is null");
+                        kruizeObject = mainKruizeExperimentMap.get(updateResultsAPIObject.getExperimentName());
+                        updateResultsAPIObject.setKruizeObject(kruizeObject);
+                        ExperimentResultData experimentResultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
+                        resultDataList.add(experimentResultData);
                     } catch (IllegalArgumentException e) {
                         LOGGER.error("Failed to convert DB data to local: {}", e.getMessage());
                     } catch (Exception e) {
