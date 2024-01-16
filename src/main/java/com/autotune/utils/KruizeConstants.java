@@ -333,12 +333,17 @@ public class KruizeConstants {
         public static final String DataSourceName = "name";
         public static final String DataSourceProvider = "provider";
         public static final String DataSourceServiceName = "serviceName";
+        public static final String DataSourceServiceNamespace = "namespace";
         public static final String DataSourceUrl = "url";
         public static final String DataSourceAdded = "Added Datasource to Collection: ";
+        public static final String AddingDataSource = "Adding Datasource to Collection: ";
+        public static final String VerifyingDataSourceReachability = "Verifying Datasource Reachability: ";
         public static final String KruizeDataSource = "datasource";
         public static final String DataSourceAvailable = "Datasource Available: ";
-        public static final String CheckingAvailableDataSource = "Checking Available Datasources ...";
-
+        public static final String CheckingAvailableDataSource = "Checking Available Datasources";
+        public static final String PROMETHEUS_DATASOURCE_DNS = ".svc.cluster.local";
+        public static final String PROMETHEUS_PORT = "9090";
+        public static final String Reachability_Query = "up";
         private DataSourceConstants() {
         }
     }
@@ -353,8 +358,9 @@ public class KruizeConstants {
 
             public static final String MISSING_DATASOURCE_NAME = " Datasource name cannot be empty";
             public static final String MISSING_DATASOURCE_PROVIDER = " Datasource provider cannot be empty";
-            public static final String MISSING_DATASOURCE_URL = " Datasource url cannot be empty";
-            public static final String MISSING_DATASOURCE_SERVICENAME = " Datasource servicename cannot be empty";
+            public static final String MISSING_DATASOURCE_NAMESPACE = " Datasource namespace cannot be empty";
+            public static final String DATASOURCE_URL_SERVICENAME_SET = " Datasource url and servicename both can not be set";
+            public static final String MISSING_DATASOURCE_SERVICENAME_AND_URL = " Datasource servicename and url both cannot be empty";
             public static final String UNSUPPORTED_DATASOURCE_PROVIDER = " Datasource provider is invalid";
             public static final String DATASOURCE_NOT_SERVICEABLE = " Datasource is not serviceable.";
             public static final String DATASOURCE_ALREADY_EXIST = " Datasource with the name already exist";

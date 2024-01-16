@@ -29,13 +29,23 @@ public class DataSourceInfo {
     private final String name;
     private final String provider;
     private final String serviceName;
+    private final String namespace;
     private final URL url;
 
-    public DataSourceInfo(String name, String provider, String serviceName, URL url) {
+    public DataSourceInfo(String name, String provider, URL url) {
+        this.name = name;
+        this.provider = provider;
+        this.url = url;
+        this.serviceName = "";
+        this.namespace = "";
+    }
+
+    public DataSourceInfo(String name, String provider, String serviceName, String namespace) {
         this.name = name;
         this.provider = provider;
         this.serviceName = serviceName;
-        this.url = url;
+        this.namespace = namespace;
+        this.url = null;
     }
 
     /**
@@ -62,6 +72,9 @@ public class DataSourceInfo {
         return serviceName;
     }
 
+    public String getNamespace() {
+        return namespace;
+    }
     /**
      * Returns the URL of the data source
      * @return URL containing the URL of the data source

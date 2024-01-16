@@ -125,15 +125,17 @@ data:
         {
           "name": "prometheus-1",
           "provider": "prometheus",
-          "serviceName": "prometheus-k8s-1",
-          "url": "https://www.exampleone.com:8080/"
+          "serviceName": "prometheus-k8s",
+          "namespace": "monitoring",
+          "url": ""
         },
         {
           "name": "prometheus-2",
           "provider": "prometheus",
-          "serviceName": "prometheus-k8s-2",
-          "url": "https://www.exampletwo.com:8080/"
-        }
+          "serviceName": "",
+          "namespace": "",
+          "url": "http://127.0.0.1:9090"
+        },
       ]
     }
 ---

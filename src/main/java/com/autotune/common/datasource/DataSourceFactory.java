@@ -55,7 +55,7 @@ public class DataSourceFactory {
 
         if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE)) {
             try {
-                datasource = new PrometheusDataSource(KruizeDeploymentInfo.monitoring_agent, KruizeConstants.SupportedDatasources.PROMETHEUS, KruizeDeploymentInfo.monitoring_service, new URL(monitoringAgentEndpoint));
+                datasource = new PrometheusDataSource(KruizeDeploymentInfo.monitoring_agent, KruizeConstants.SupportedDatasources.PROMETHEUS, new URL(monitoringAgentEndpoint));
             } catch (MalformedURLException e) {
                 LOGGER.error(KruizeConstants.ErrorMsgs.DataSourceErrorMsgs.DATASOURCE_INVALID_URL);
             }
