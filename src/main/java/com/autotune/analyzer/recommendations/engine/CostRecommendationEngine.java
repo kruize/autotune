@@ -19,7 +19,6 @@ import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
-import com.autotune.analyzer.recommendations.confidence.ConfidenceLevelCalculator;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForEngine;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
@@ -38,19 +37,18 @@ import java.util.stream.Collectors;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_CPU_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_MEMORY_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
+import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.*;
 
 public class CostRecommendationEngine implements KruizeRecommendationEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(CostRecommendationEngine.class);
     private String name;
     private String key;
     private RecommendationConstants.RecommendationCategory category;
-    private ConfidenceLevelCalculator confidenceLevelCalculator;
 
-    public CostRecommendationEngine(ConfidenceLevelCalculator confidenceLevelCalculator) {
+    public CostRecommendationEngine() {
         this.name = RecommendationConstants.RecommendationEngine.EngineNames.COST;
         this.key = RecommendationConstants.RecommendationEngine.EngineKeys.COST_KEY;
         this.category = RecommendationConstants.RecommendationCategory.COST;
-        this.confidenceLevelCalculator = confidenceLevelCalculator;
     }
 
     public CostRecommendationEngine(String name) {
@@ -970,17 +968,6 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
             int numPods = getNumPods(filteredResultsMap);
 
             mappedRecommendationForEngine.setPodsCount(numPods);
-
-            // set the confidence level
-            double confidenceLevel;
-            try {
-                confidenceLevel = confidenceLevelCalculator.calculateConfidenceBasedOnRecommendationPeriod(containerData, recPeriod);
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage());
-                return null;
-            }
-
-            mappedRecommendationForEngine.setConfidence_level(confidenceLevel);
 
             // Pass Notification object to all callers to update the notifications required
             ArrayList<RecommendationNotification> notifications = new ArrayList<RecommendationNotification>();

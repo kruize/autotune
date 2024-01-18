@@ -21,8 +21,6 @@ import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
-import com.autotune.analyzer.recommendations.confidence.ConfidenceLevelCalculator;
-import com.autotune.analyzer.recommendations.confidence.DefaultConfidenceCalculator;
 import com.autotune.analyzer.recommendations.engine.CostRecommendationEngine;
 import com.autotune.analyzer.recommendations.engine.KruizeRecommendationEngine;
 import com.autotune.analyzer.recommendations.engine.PerformanceRecommendationEngine;
@@ -61,13 +59,11 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
     private void init() {
         // Add new engines
         kruizeRecommendationEngineList = new ArrayList<KruizeRecommendationEngine>();
-        // Creating an instance of ConfidenceLevelCalculator
-        ConfidenceLevelCalculator confidenceLevelCalculator = new DefaultConfidenceCalculator();
         // Create Duration based engine
-        CostRecommendationEngine costRecommendationEngine = new CostRecommendationEngine(confidenceLevelCalculator);
+        CostRecommendationEngine costRecommendationEngine = new CostRecommendationEngine();
         // TODO: Create profile based engine
         AnalyzerConstants.RegisterRecommendationEngineStatus _unused_status = registerEngine(costRecommendationEngine);
-        PerformanceRecommendationEngine performanceRecommendationEngine = new PerformanceRecommendationEngine(confidenceLevelCalculator);
+        PerformanceRecommendationEngine performanceRecommendationEngine = new PerformanceRecommendationEngine();
         _unused_status = registerEngine(performanceRecommendationEngine);
         // TODO: Add profile based once recommendation algos are available
     }
