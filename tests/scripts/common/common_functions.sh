@@ -286,6 +286,25 @@ function autotune_cleanup() {
 	echo "done"
 }
 
+# Restore DB from the file passed as input
+function restore_db() {
+	db_backup_file=$1
+    	db_restore_log=$2
+
+	echo ""
+	echo "Restoring DB..."
+	postgres_pod=$(kubectl get pods -o=name -n ${NAMESPACE} | grep postgres | cut -d '/' -f2)
+	db_file=$(basename ${db_backup_file})
+
+	echo "oc cp ${db_backup_file} ${NAMESPACE}/${postgres_pod}:/"
+	oc cp ${db_backup_file} ${NAMESPACE}/${postgres_pod}:/
+
+	echo "kubectl exec -it ${postgres_pod} -n ${NAMESPACE} -- psql -U admin -d kruizeDB -f ${db_file} > ${db_restore_log}"
+	kubectl exec -it ${postgres_pod} -n ${NAMESPACE} -- psql -U admin -d kruizeDB -f ${db_file} > ${db_restore_log}
+	echo "Restoring DB...done"
+	echo ""
+}
+
 # list of test cases supported
 # input: testsuite
 # ouput: print the testcases supported for specified testsuite

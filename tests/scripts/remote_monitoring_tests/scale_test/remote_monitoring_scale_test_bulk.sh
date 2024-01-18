@@ -38,6 +38,10 @@ interval_hours=6
 initial_start_date="2023-01-10T00:00:00.000Z"
 query_db_interval=10
 
+store_db=false
+restore_db=false
+db_backup_file="./db_backup.sql"
+
 replicas=10
 
 target="crc"
@@ -46,7 +50,7 @@ hours=6
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>]"
+	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)"
 	exit -1
 }
 
@@ -77,7 +81,7 @@ function get_kruize_service_log() {
         kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
-while getopts r:i:u:d:t:n:m:s:q:h gopts
+while getopts r:i:u:d:t:n:m:s:l:f:b:q:h gopts
 do
 	case ${gopts} in
 	r)
@@ -106,6 +110,15 @@ do
 		;;
 	q)
 		query_db_interval="${OPTARG}"		
+		;;
+	s)
+		store_db="${OPTARG}"		
+		;;
+	l)
+		restore_db="${OPTARG}"		
+		;;
+	f)
+		db_backup_file="${OPTARG}"		
 		;;
 	h)
 		usage
@@ -165,6 +178,12 @@ echo | tee -a ${LOG}
 
 get_kruize_pod_log ${LOG_DIR}
 get_kruize_service_log ${KRUIZE_SERVICE_LOG}
+
+if [ ${restore_db} == true ]; then
+	# Load DB
+	DB_RESTORE_LOG="${LOG_DIR}/db_restore.log"
+	restore_db ${db_backup_file} ${DB_RESTORE_LOG}
+fi
 
 # Run the scale test
 echo ""
