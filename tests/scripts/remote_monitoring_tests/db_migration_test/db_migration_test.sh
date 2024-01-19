@@ -14,8 +14,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-### Script to run scale test with Kruize in remote monitoring mode ##
+### Script to run DB migration test with Kruize in remote monitoring mode ##
 #
+
+# This test does the following:
+# Deploys the previous release of kruize that is specified and uploads results for 50 exps / 15 days
+# Invokes updateRecommendations for all the 50 exps
+# Backups DB and deploys the current release of kruize specified along with a new instance of postgres. 
+# The backed up DB is restored and new usage metrics or results for 1 day for 50 exps is posted
+# Invokes updateRecommendations for all the 50 exps
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO="${CURRENT_DIR}/../../../../"
