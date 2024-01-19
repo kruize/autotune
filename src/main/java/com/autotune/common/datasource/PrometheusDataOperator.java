@@ -18,8 +18,14 @@ package com.autotune.common.datasource;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -31,7 +37,7 @@ public class PrometheusDataOperator implements KruizeDataSourceOperator {
     private PrometheusDataOperator() {
 
     }
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusDataOperator.class);
     public static PrometheusDataOperator getInstance() {
         if (null == prometheusDataOperator) {
             prometheusDataOperator = new PrometheusDataOperator();
@@ -72,6 +78,73 @@ public class PrometheusDataOperator implements KruizeDataSourceOperator {
                     return result_json.getJSONArray("value").getString(1);
                 }
             }
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (NoSuchAlgorithmException e) {
+            e.printStackTrace();
+        } catch (KeyStoreException e) {
+            e.printStackTrace();
+        } catch (KeyManagementException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * Extracts JSON data from a specified URL using a GenericRestApiClient with the given query.
+     *
+     * @param url   The base URL for the data source.
+     * @param query The query to fetch the desired data.
+     * @return      The extracted data object if successful, or null if any error occurs.
+     *
+     * Example output data object -
+     * {
+     *   "data": {
+     *     "result": [
+     *       {
+     *         "metric": {
+     *           "__name__": "exampleMetric"
+     *         },
+     *         "value": [1642612628.987, "1"]
+     *       }
+     *     ]
+     *   }
+     * }
+     */
+    public Object extractDataObject(String url, String query) {
+        GenericRestApiClient apiClient = new GenericRestApiClient(
+                CommonUtils.getBaseDataSourceUrl(
+                        url,
+                        KruizeConstants.SupportedDatasources.PROMETHEUS
+                )
+        );
+        if (null == apiClient) {
+            return null;
+        }
+        try {
+            JSONObject jsonObject = apiClient.fetchMetricsJson(
+                    KruizeConstants.HttpConstants.MethodType.GET,
+                    query);
+            if (!jsonObject.has("status"))
+                return null;
+            if (!jsonObject.getString("status").equalsIgnoreCase("success"))
+                return null;
+            if (!jsonObject.has("data"))
+                return null;
+            if (!jsonObject.getJSONObject("data").has("result"))
+                return null;
+            if (jsonObject.getJSONObject("data").getJSONArray("result").isEmpty())
+                return  null;
+
+            String jsonString = jsonObject.toString();
+
+            JsonObject gsonJsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
+
+            JsonObject dataObject = gsonJsonObject.get("data").getAsJsonObject();
+            if (dataObject != null) {
+                return dataObject;
+            }
+
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {
