@@ -86,6 +86,8 @@ public class InitializeDeployment {
                 LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceAvailable + dataSourceName + ", " + url.toString());
             }
         }
+        DataSourceManager dataSourceManager = new DataSourceManager();
+        dataSourceManager.createExperimentsFromDataSource();
     }
 
     /**
