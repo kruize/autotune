@@ -16,6 +16,6 @@
 package com.autotune.common.datasource;
 
 public interface KruizeDataSourceOperator {
-    public Object extract(String url, String query);
-    public Object extractDataObject(String url, String query);
+    public Object extractPrometheusDataValue(String url, String query);
+    public Object extractPrometheusDataResultObject(String url, String query);
 }
