@@ -32,7 +32,6 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.datasource.DataSource;
 import com.autotune.common.datasource.DataSourceFactory;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.PrometheusDataSource;
