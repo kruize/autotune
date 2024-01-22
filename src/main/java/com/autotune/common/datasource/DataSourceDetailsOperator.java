@@ -18,6 +18,9 @@ import java.util.List;
  *
  * Currently Supported Implementations:
  *  - createDataSourceDetails
+ *
+ *  TODO -
+ *  object stored in memory
  */
 public class DataSourceDetailsOperator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceDetailsOperator.class);
@@ -32,13 +35,13 @@ public class DataSourceDetailsOperator {
 
             PrometheusDataSource prometheusDataSource = new PrometheusDataSource(dataSourceInfo.getName(),dataSourceInfo.getProvider(),dataSourceInfo.getServiceName(),dataSourceInfo.getNamespace());
 
-            JsonObject namespacesDataObject = (JsonObject) kruizeDataSourceOperator.extractDataObject(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.NAMESPACE_QUERY);
+            JsonObject namespacesDataObject = (JsonObject) kruizeDataSourceOperator.extractPrometheusDataResultObject(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.NAMESPACE_QUERY);
             List<String> datasourceNamespaces = dataSourceDetailsHelper.parseActiveNamespaces(namespacesDataObject);
 
-            JsonObject workloadDataObject = (JsonObject) kruizeDataSourceOperator.extractDataObject(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.WORKLOAD_QUERY);
+            JsonObject workloadDataObject = (JsonObject) kruizeDataSourceOperator.extractPrometheusDataResultObject(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.WORKLOAD_QUERY);
             HashMap<String, List<DataSourceWorkload>> datasourceWorkloads = dataSourceDetailsHelper.parseWorkloadInfo(workloadDataObject);
 
-            JsonObject containerDataObject = (JsonObject) kruizeDataSourceOperator.extractDataObject(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.CONTAINER_QUERY);
+            JsonObject containerDataObject = (JsonObject) kruizeDataSourceOperator.extractPrometheusDataResultObject(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.CONTAINER_QUERY);
             HashMap<String, List<DataSourceContainers>> datasourceContainers = dataSourceDetailsHelper.parseContainerInfo(containerDataObject);
 
             DataSourceDetailsInfo dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(datasourceNamespaces, datasourceWorkloads, datasourceContainers);
