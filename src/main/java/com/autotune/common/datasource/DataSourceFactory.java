@@ -18,6 +18,7 @@ package com.autotune.common.datasource;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.datasource.promql.PrometheusDataSource;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -116,7 +117,7 @@ public class DataSourceFactory {
      * @param values  ArrayList to hold the key values in the JSON
      * @param level   Level of recursion
      */
-    static void parseJsonForKey(JSONObject jsonObj, String key, ArrayList<String> values, int level) throws TooManyRecursiveCallsException {
+    public static void parseJsonForKey(JSONObject jsonObj, String key, ArrayList<String> values, int level) throws TooManyRecursiveCallsException {
         level += 1;
 
         if (level > 30)

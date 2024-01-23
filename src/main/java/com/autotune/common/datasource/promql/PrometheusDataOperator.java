@@ -13,8 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.datasource;
+package com.autotune.common.datasource.promql;
 
+import com.autotune.common.datasource.KruizeDataSourceOperator;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
@@ -24,11 +25,9 @@ import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Logger;
 
 public class PrometheusDataOperator implements KruizeDataSourceOperator {
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(PrometheusDataOperator.class);

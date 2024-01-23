@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.autotune.common.datasource.promql.PrometheusDataOperator;
 import com.autotune.utils.KruizeConstants;
 
 public class DataSourceOperator {
