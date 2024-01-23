@@ -20,11 +20,16 @@ import java.util.List;
  *  - createDataSourceDetails
  *
  *  TODO -
- *  object stored in memory
+ *  object is currently stored in memory moving forward need to store cluster details in Kruize DB
  */
 public class DataSourceDetailsOperator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceDetailsOperator.class);
-    List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
+    private static DataSourceDetailsOperator dataSourceOperatorInstance = new DataSourceDetailsOperator();
+    private List<DataSourceDetailsInfo> dataSourceDetailsInfoList;
+
+    private DataSourceDetailsOperator() { this.dataSourceDetailsInfoList = new ArrayList<>(); }
+    public static DataSourceDetailsOperator getInstance() { return dataSourceOperatorInstance; }
+    public List<DataSourceDetailsInfo> getDataSourceDetailsInfoList() { return dataSourceDetailsInfoList; }
     public void createDataSourceDetails(DataSourceInfo dataSourceInfo){
 
         KruizeDataSourceOperator kruizeDataSourceOperator = DataSourceOperator.getOperator(dataSourceInfo.getProvider());
@@ -46,11 +51,6 @@ public class DataSourceDetailsOperator {
 
             DataSourceDetailsInfo dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(datasourceNamespaces, datasourceWorkloads, datasourceContainers);
             dataSourceDetailsInfoList.add(dataSourceDetailsInfo);
-
-            Gson gson = new GsonBuilder().setPrettyPrinting().create();
-            String jsonOutput = gson.toJson(dataSourceDetailsInfoList);
-
-            LOGGER.info(jsonOutput);
 
         }
     }

@@ -1,8 +1,12 @@
 package com.autotune.common.datasource;
 
+import com.autotune.common.data.dataSourceDetails.DataSourceDetailsInfo;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * DataSourceManager is an interface to manage (create and update) experiments
@@ -15,7 +19,8 @@ import java.util.HashMap;
 
 public class DataSourceManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceManager.class);
-    DataSourceDetailsOperator dataSourceDetailsOperator = new DataSourceDetailsOperator();
+    DataSourceDetailsOperator dataSourceDetailsOperator = DataSourceDetailsOperator.getInstance();
+    List<DataSourceDetailsInfo> dataSourceDetailsInfoList = DataSourceDetailsOperator.getInstance().getDataSourceDetailsInfoList();
     HashMap<String, DataSourceInfo> dataSources = DataSourceCollection.getInstance().getDataSourcesCollection();
 
     /**
@@ -28,6 +33,10 @@ public class DataSourceManager {
             dataSourceDetailsOperator.createDataSourceDetails(dataSource);
 
         }
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        String jsonOutput = gson.toJson(dataSourceDetailsInfoList);
+
+        LOGGER.info(jsonOutput);
     }
 
     /*
