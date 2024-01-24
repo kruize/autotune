@@ -1,5 +1,10 @@
 package com.autotune.common.data.dataSourceQueries;
 
+/**
+ * This class contains PromQL queries as enum constants for various metrics related to Kubernetes clusters.
+ * TODO - Add a custom PromQL query to fetch Cluster info
+ *
+ */
 public class DataSourceQueries {
 
     public enum PromQLQuery {
