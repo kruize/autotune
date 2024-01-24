@@ -324,7 +324,7 @@ spec:
 apiVersion: batch/v1
 kind: CronJob
 metadata:
-  name: delete-partition-cronjob
+  name: kruize-delete-partition-cronjob
   namespace: monitoring
 spec:
   schedule: "0 0 25 * *" # Run on 25th of every month at midnight
