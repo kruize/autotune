@@ -45,7 +45,6 @@ public class DataSourceFactory {
     public static DataSource getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
         String monitoringAgentEndpoint = null;
         DataSourceInfo datasource = null;
-
         if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.monitoring_agent))
             monitoringAgentEndpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
 
