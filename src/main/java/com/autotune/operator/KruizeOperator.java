@@ -34,8 +34,6 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.datasource.DataSource;
 import com.autotune.common.datasource.DataSourceFactory;
-import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.common.datasource.PrometheusDataSource;
 import com.autotune.common.k8sObjects.KubernetesContexts;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
@@ -666,9 +664,9 @@ public class KruizeOperator {
                 LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
                 return;
             }
-            PrometheusDataSource autotuneDataSource = null;
+            DataSource autotuneDataSource = null;
             try {
-                autotuneDataSource = (PrometheusDataSource) DataSourceFactory.getDataSource(KruizeDeploymentInfo.monitoring_agent);
+                autotuneDataSource = DataSourceFactory.getDataSource(KruizeDeploymentInfo.monitoring_agent);
             } catch (MonitoringAgentNotFoundException e) {
                 e.printStackTrace();
             }

@@ -13,8 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.datasource;
+package com.autotune.common.datasource.prometheus;
 
+import com.autotune.common.datasource.DataSourceOperator;
+import com.autotune.common.datasource.DataSourceOperatorImpl;
+import com.autotune.common.datasource.KruizeDataSourceOperator;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
@@ -24,29 +27,80 @@ import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.net.ConnectException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.logging.Logger;
 
-public class PrometheusDataOperator implements KruizeDataSourceOperator {
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(PrometheusDataOperator.class);
+/**
+ *  PrometheusDataOperatorImpl extends DataSourceOperatorImpl class
+ *  This class provides Prometheus specific implementation for DataSourceOperator functions
+ */
+public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(PrometheusDataOperatorImpl.class);
 
-    private static PrometheusDataOperator prometheusDataOperator = null;
-    private PrometheusDataOperator() {
-
+    private static PrometheusDataOperatorImpl prometheusDataOperator = null;;
+    private PrometheusDataOperatorImpl() {
+        super();
     }
 
-    public static PrometheusDataOperator getInstance() {
+    /**
+     * Returns the instance of PrometheusDataOperatorImpl class
+     * @return PrometheusDataOperatorImpl instance
+     */
+    public static PrometheusDataOperatorImpl getInstance() {
         if (null == prometheusDataOperator) {
-            prometheusDataOperator = new PrometheusDataOperator();
+            prometheusDataOperator = new PrometheusDataOperatorImpl();
         }
         return prometheusDataOperator;
     }
 
+    /**
+     * Returns the default service port for prometheus
+     * @return String containing the port number
+     */
     @Override
-    public Object extract(String url, String query) {
+    public String getDefaultServicePortForProvider() {
+        return KruizeConstants.DataSourceConstants.PROMETHEUS_DEFAULT_SERVICE_PORT;
+    }
+
+    /**
+     * Check if a datasource is reachable, implementation of this function
+     * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
+     * @param dataSourceURL String containing the url for the datasource
+     * @return DatasourceReachabilityStatus
+     */
+    @Override
+    public CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceURL) {
+        String dataSourceStatus;
+        Object queryResult;
+
+        String query = KruizeConstants.DataSourceConstants.PROMETHEUS_REACHABILITY_QUERY;
+        CommonUtils.DatasourceReachabilityStatus reachabilityStatus;
+
+        queryResult = this.getValueForQuery(dataSourceURL, query);
+
+        if (queryResult != null){
+            dataSourceStatus = queryResult.toString();
+        } else {
+            dataSourceStatus = "0";
+        }
+
+        if (dataSourceStatus.equalsIgnoreCase("1")){
+            reachabilityStatus = CommonUtils.DatasourceReachabilityStatus.REACHABLE;
+        } else {
+            reachabilityStatus = CommonUtils.DatasourceReachabilityStatus.NOT_REACHABLE;
+        }
+        return reachabilityStatus;
+    }
+
+    /**
+     * executes specified query on datasource and returns the result value
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return Object containing the result value for the specified query
+     */
+    @Override
+    public Object getValueForQuery(String url, String query) {
         GenericRestApiClient apiClient = new GenericRestApiClient(
                 CommonUtils.getBaseDataSourceUrl(
                         url,
@@ -79,7 +133,7 @@ public class PrometheusDataOperator implements KruizeDataSourceOperator {
                 }
             }
         } catch (HttpHostConnectException e) {
-            LOGGER.error(KruizeConstants.ErrorMsgs.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE);
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {

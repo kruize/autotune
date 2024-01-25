@@ -15,15 +15,24 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
-import com.autotune.utils.KruizeConstants;
+import com.autotune.common.utils.CommonUtils;
 
-public class DataSourceOperator {
-    private DataSourceOperator() { }
+import java.util.ArrayList;
 
-    public static KruizeDataSourceOperator getOperator(String datasource) {
-        if (datasource.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
-            return PrometheusDataOperator.getInstance();
-        }
-        return null;
-    }
+/**
+ * DataSourceOperator is an abstraction which has a generic and implementation,
+ * and it can also be implemented by each data source provider type.
+ *
+ * Currently Supported Implementations:
+ *  - Prometheus
+ *
+ *  The Implementation should have helper functions to perform operations related
+ *  to datasource
+ */
+
+public interface DataSourceOperator {
+    String getDefaultServicePortForProvider();
+    DataSourceOperator getOperator(String provider);
+    CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceUrl);
+    Object getValueForQuery(String url, String query);
 }

@@ -15,14 +15,22 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.KruizeConstants;
+import org.slf4j.LoggerFactory;
 
 /**
- * This Data object is used to store information about metric collectors like Prometheus, LogicMonitor, Dynatrace, Amazon Timestream etc
+ * This DataSourceInfo object is used to store information about metric collectors like Prometheus, LogicMonitor, Dynatrace, Amazon Timestream etc
  * Example
  * "datasource_info": {
- * "name": "prometheus",
- * "url": "http://10.101.144.137:9090"
+ *     "name": "prometheus-1",
+ *     "provider": "prometheus",
+ *     "serviceName": "prometheus-k8s",
+ *     "namespace": "monitoring",
+ *     "url": ""
  * }
  */
 public class DataSourceInfo {
@@ -31,6 +39,8 @@ public class DataSourceInfo {
     private final String serviceName;
     private final String namespace;
     private final URL url;
+
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataSourceOperatorImpl.class);
 
     public DataSourceInfo(String name, String provider, URL url) {
         this.name = name;
@@ -45,7 +55,7 @@ public class DataSourceInfo {
         this.provider = provider;
         this.serviceName = serviceName;
         this.namespace = namespace;
-        this.url = null;
+        this.url = getDNSBasedUrlForService(serviceName, namespace, provider);
     }
 
     /**
@@ -57,7 +67,7 @@ public class DataSourceInfo {
     }
 
     /**
-     * Returns the provider of the data source
+     * Returns the provider type of the data source
      * @return String containing the provider of the data source
      */
     public String getProvider() {
@@ -72,9 +82,14 @@ public class DataSourceInfo {
         return serviceName;
     }
 
+    /**
+     * Returns the namespace in which data source service is deployed
+     * @return String containing the namespace of service for the data source
+     */
     public String getNamespace() {
         return namespace;
     }
+
     /**
      * Returns the URL of the data source
      * @return URL containing the URL of the data source
@@ -83,11 +98,26 @@ public class DataSourceInfo {
         return url;
     }
 
-    @Override
-    public String toString() {
-        return "DataSourceInfo{" +
-                "provider='" + provider + '\'' +
-                ", url=" + url +
-                '}';
+    /**
+     * Returns the DNS Based URL for accessing the service
+     * @return URL containing the URL of the data source
+     */
+    private URL getDNSBasedUrlForService(String serviceName, String namespace, String provider) {
+        URL dnsUrl = null;
+        try {
+            String url = "";
+            DataSourceOperator op = DataSourceOperatorImpl.getInstance();
+            String servicePort = op.getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS).getDefaultServicePortForProvider();
+
+            if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
+                url  = AnalyzerConstants.HTTP_PROTOCOL + "://" + serviceName + "." + namespace + KruizeConstants.DataSourceConstants.SERVICE_DNS + ":" + servicePort;
+            } else if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
+                url = AnalyzerConstants.HTTPS_PROTOCOL + "://" + serviceName + "." + namespace + KruizeConstants.DataSourceConstants.SERVICE_DNS + ":" + servicePort;
+            }
+            dnsUrl = new URL(url);
+        } catch (MalformedURLException e) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DATASOURCE_URL);
+        }
+        return dnsUrl;
     }
 }
