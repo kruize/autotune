@@ -18,10 +18,7 @@ package com.autotune.common.datasource;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
+import com.google.gson.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -45,7 +42,7 @@ public class PrometheusDataOperator implements KruizeDataSourceOperator {
         return prometheusDataOperator;
     }
 
-    private JSONObject fetchPrometheusJsonObject(String url, String query) {
+    private JSONObject getPrometheusJsonObject(String url, String query) {
         GenericRestApiClient apiClient = new GenericRestApiClient(
                 CommonUtils.getBaseDataSourceUrl(
                         url,
@@ -78,8 +75,8 @@ public class PrometheusDataOperator implements KruizeDataSourceOperator {
         return null;
     }
     @Override
-    public Object extractPrometheusDataValue(String url, String query) {
-        JSONObject jsonObject = fetchPrometheusJsonObject(url, query);
+    public Object getPrometheusDataValue(String url, String query) {
+        JSONObject jsonObject = getPrometheusJsonObject(url, query);
 
         if (jsonObject != null) {
             JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
@@ -96,39 +93,38 @@ public class PrometheusDataOperator implements KruizeDataSourceOperator {
     }
 
     /**
-     * Extracts JSON data from a specified URL using a GenericRestApiClient with the given query.
+     * Retrieves Prometheus data from the specified URL and query, returning the result as a JsonArray.
      *
-     * @param url   The base URL for the data source.
-     * @param query The query to fetch the desired data.
-     * @return      The extracted data object if successful, or null if any error occurs.
+     * @param url   The Prometheus API endpoint URL.
+     * @param query The Prometheus query string.
+     * @return      A JsonArray containing the "result" data, or null if the data is not available or in the expected format.
      *
-     * Example output data object -
-     * {
-     *   "data": {
-     *     "result": [
-     *       {
-     *         "metric": {
-     *           "__name__": "exampleMetric"
-     *         },
-     *         "value": [1642612628.987, "1"]
-     *       }
-     *     ]
+     * Example output JsonArray -
+     * [
+     *   {
+     *     "metric": {
+     *       "__name__": "exampleMetric"
+     *     },
+     *     "value": [1642612628.987, "1"]
      *   }
-     * }
+     * ]
      */
-    public Object extractPrometheusDataResultObject(String url, String query) {
-        JSONObject jsonObject = fetchPrometheusJsonObject(url, query);
+    public JsonArray getPrometheusDataResultArray(String url, String query) {
+        JSONObject jsonObject = getPrometheusJsonObject(url, query);
 
         if (jsonObject != null) {
             String jsonString = jsonObject.toString();
-            JsonObject gsonJsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
-            JsonObject dataObject = gsonJsonObject.get("data").getAsJsonObject();
+            JsonObject parsedJsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
+            JsonObject dataObject = parsedJsonObject.get("data").getAsJsonObject();
 
-            if (dataObject != null) {
-                return dataObject;
+            if (dataObject.has("result") && dataObject.get("result").isJsonArray()) {
+                JsonArray resultArray = dataObject.getAsJsonArray("result");
+
+                if (resultArray != null) {
+                    return resultArray;
+                }
             }
         }
-
         return null;
     }
 }

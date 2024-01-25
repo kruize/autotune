@@ -2,9 +2,7 @@ package com.autotune.common.datasource;
 
 import com.autotune.common.data.dataSourceDetails.*;
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
@@ -40,13 +38,13 @@ public class DataSourceDetailsOperator {
 
             PrometheusDataSource prometheusDataSource = new PrometheusDataSource(dataSourceInfo.getName(),dataSourceInfo.getProvider(),dataSourceInfo.getServiceName(),dataSourceInfo.getNamespace());
 
-            JsonObject namespacesDataObject = (JsonObject) kruizeDataSourceOperator.extractPrometheusDataResultObject(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.NAMESPACE_QUERY);
+            JsonArray namespacesDataObject =  kruizeDataSourceOperator.getPrometheusDataResultArray(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.NAMESPACE_QUERY);
             List<String> datasourceNamespaces = dataSourceDetailsHelper.parseActiveNamespaces(namespacesDataObject);
 
-            JsonObject workloadDataObject = (JsonObject) kruizeDataSourceOperator.extractPrometheusDataResultObject(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.WORKLOAD_QUERY);
+            JsonArray workloadDataObject =  kruizeDataSourceOperator.getPrometheusDataResultArray(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.WORKLOAD_QUERY);
             HashMap<String, List<DataSourceWorkload>> datasourceWorkloads = dataSourceDetailsHelper.parseWorkloadInfo(workloadDataObject);
 
-            JsonObject containerDataObject = (JsonObject) kruizeDataSourceOperator.extractPrometheusDataResultObject(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.CONTAINER_QUERY);
+            JsonArray containerDataObject = kruizeDataSourceOperator.getPrometheusDataResultArray(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.CONTAINER_QUERY);
             HashMap<String, List<DataSourceContainers>> datasourceContainers = dataSourceDetailsHelper.parseContainerInfo(containerDataObject);
 
             DataSourceDetailsInfo dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(datasourceNamespaces, datasourceWorkloads, datasourceContainers);

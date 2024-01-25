@@ -15,7 +15,9 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.google.gson.JsonArray;
+
 public interface KruizeDataSourceOperator {
-    public Object extractPrometheusDataValue(String url, String query);
-    public Object extractPrometheusDataResultObject(String url, String query);
+    public Object getPrometheusDataValue(String url, String query);
+    public JsonArray getPrometheusDataResultArray(String url, String query);
 }

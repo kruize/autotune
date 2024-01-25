@@ -11,14 +11,14 @@ public class DataSourceDetailsHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceDetailsHelper.class);
 
     /**
-     * Parses namespace information from a JsonObject and organizes
+     * Parses namespace information from a JsonArray and organizes
      * into a List of namespaces
      *
-     * @param dataObject The JsonObject containing the namespace information.
+     * @param resultArray The JsonArray containing the namespace information.
      * @return A List<String> representing namespaces
      *
      * Example:
-     * input dataObject structure:
+     * input resultArray structure:
      * {
      *   "result": [
      *     {
@@ -33,28 +33,23 @@ public class DataSourceDetailsHelper {
      * output List:
      * ["exampleNamespace", ... additional namespaces ...]
      */
-    public List<String> parseActiveNamespaces(JsonObject dataObject) {
+    public List<String> parseActiveNamespaces(JsonArray resultArray) {
         List<String> namespaces = new ArrayList<>();
 
         try {
-            // Check if the response data contains "result" as an array
-            if (dataObject.has("result") && dataObject.get("result").isJsonArray()) {
-                JsonArray resultArray = dataObject.getAsJsonArray("result");
+            // Iterate through the "result" array to extract namespaces
+            for (JsonElement result : resultArray) {
+                if (result.isJsonObject()) {
+                    JsonObject resultObject = result.getAsJsonObject();
 
-                // Iterate through the "result" array to extract namespaces
-                for (JsonElement result : resultArray) {
-                    if (result.isJsonObject()) {
-                        JsonObject resultObject = result.getAsJsonObject();
+                    // Check if the result object contains the "metric" field with "namespace"
+                    if (resultObject.has("metric") && resultObject.get("metric").isJsonObject()) {
+                        JsonObject metricObject = resultObject.getAsJsonObject("metric");
 
-                        // Check if the result object contains the "metric" field with "namespace"
-                        if (resultObject.has("metric") && resultObject.get("metric").isJsonObject()) {
-                            JsonObject metricObject = resultObject.getAsJsonObject("metric");
-
-                            // Extract the namespace value and add it to the list
-                            if (metricObject.has("namespace")) {
-                                String namespace = metricObject.get("namespace").getAsString();
-                                namespaces.add(namespace);
-                            }
+                        // Extract the namespace value and add it to the list
+                        if (metricObject.has("namespace")) {
+                            String namespace = metricObject.get("namespace").getAsString();
+                            namespaces.add(namespace);
                         }
                     }
                 }
@@ -66,10 +61,10 @@ public class DataSourceDetailsHelper {
     }
 
     /**
-     * Parses workload information from a JsonObject and organizes it into a HashMap
+     * Parses workload information from a JsonArray and organizes it into a HashMap
      * with namespaces as keys and lists of DataSourceWorkload objects as values.
      *
-     * @param dataObject The JsonObject containing the workload information.
+     * @param resultArray The JsonArray containing the workload information.
      * @return A HashMap<String, List<DataSourceWorkload>> representing namespaces
      *         and their associated workload details.
      *
@@ -101,34 +96,29 @@ public class DataSourceDetailsHelper {
      *   // ... additional namespaces ...
      * }
      */
-    public HashMap<String, List<DataSourceWorkload>> parseWorkloadInfo(JsonObject dataObject) {
+    public HashMap<String, List<DataSourceWorkload>> parseWorkloadInfo(JsonArray resultArray) {
         HashMap<String, List<DataSourceWorkload>> namespaceWorkloadMap = new HashMap<>();
 
         try {
-            // Check if the response data contains "result" as an array
-            if (dataObject.has("result") && dataObject.get("result").isJsonArray()) {
-                JsonArray resultArray = dataObject.getAsJsonArray("result");
+            // Iterate through the "result" array to extract namespaces
+            for (JsonElement result : resultArray) {
+                JsonObject resultObject = result.getAsJsonObject();
 
-                // Iterate through the "result" array to extract namespaces
-                for (JsonElement result : resultArray) {
-                    JsonObject resultObject = result.getAsJsonObject();
+                // Check if the result object contains the "metric" field with "namespace"
+                if (resultObject.has("metric") && resultObject.get("metric").isJsonObject()) {
+                    JsonObject metricObject = resultObject.getAsJsonObject("metric");
 
-                    // Check if the result object contains the "metric" field with "namespace"
-                    if (resultObject.has("metric") && resultObject.get("metric").isJsonObject()) {
-                        JsonObject metricObject = resultObject.getAsJsonObject("metric");
+                    // Extract the namespace value
+                    if (metricObject.has("namespace")) {
+                        String namespace = metricObject.get("namespace").getAsString();
 
-                        // Extract the namespace value
-                        if (metricObject.has("namespace")) {
-                            String namespace = metricObject.get("namespace").getAsString();
+                        // Create Workload object and populate it
+                        DataSourceWorkload dataSourceWorkload = new DataSourceWorkload();
+                        dataSourceWorkload.setDataSourceWorkloadName(metricObject.get("workload").getAsString());
+                        dataSourceWorkload.setDataSourceWorkloadType(metricObject.get("workload_type").getAsString());
 
-                            // Create Workload object and populate it
-                            DataSourceWorkload dataSourceWorkload = new DataSourceWorkload();
-                            dataSourceWorkload.setDataSourceWorkloadName(metricObject.get("workload").getAsString());
-                            dataSourceWorkload.setDataSourceWorkloadType(metricObject.get("workload_type").getAsString());
-
-                            // Add the Workload object to the list for the namespace
-                            namespaceWorkloadMap.computeIfAbsent(namespace, key -> new ArrayList<>()).add(dataSourceWorkload);
-                        }
+                        // Add the Workload object to the list for the namespace
+                        namespaceWorkloadMap.computeIfAbsent(namespace, key -> new ArrayList<>()).add(dataSourceWorkload);
                     }
                 }
             }
@@ -139,10 +129,10 @@ public class DataSourceDetailsHelper {
     }
 
     /**
-     * Parses container metric information from a JsonObject and organizes it into a HashMap
+     * Parses container metric information from a JsonArray and organizes it into a HashMap
      * with namespaces as keys and lists of DataSourceContainers objects as values.
      *
-     * @param dataObject The JsonObject containing the container information.
+     * @param resultArray The JsonArray containing the container information.
      * @return A HashMap<String, List<DataSourceContainers>> representing namespaces
      *         and their associated container details.
      *
@@ -173,34 +163,29 @@ public class DataSourceDetailsHelper {
      *   // ... additional namespaces ...
      * }
      */
-    public HashMap<String, List<DataSourceContainers>> parseContainerInfo(JsonObject dataObject) {
+    public HashMap<String, List<DataSourceContainers>> parseContainerInfo(JsonArray resultArray) {
         HashMap<String, List<DataSourceContainers>> workloadContainerMap = new HashMap<>();
 
         try {
-            // Check if the response data contains "result" as an array
-            if (dataObject.has("result") && dataObject.get("result").isJsonArray()) {
-                JsonArray resultArray = dataObject.getAsJsonArray("result");
+            // Iterate through the "result" array to extract namespaces
+            for (JsonElement result : resultArray) {
+                JsonObject resultObject = result.getAsJsonObject();
 
-                // Iterate through the "result" array to extract namespaces
-                for (JsonElement result : resultArray) {
-                    JsonObject resultObject = result.getAsJsonObject();
+                // Check if the result object contains the "metric" field with "namespace"
+                if (resultObject.has("metric") && resultObject.get("metric").isJsonObject()) {
+                    JsonObject metricObject = resultObject.getAsJsonObject("metric");
 
-                    // Check if the result object contains the "metric" field with "namespace"
-                    if (resultObject.has("metric") && resultObject.get("metric").isJsonObject()) {
-                        JsonObject metricObject = resultObject.getAsJsonObject("metric");
+                    // Extract the namespace value
+                    if (metricObject.has("workload")) {
+                        String workload = metricObject.get("workload").getAsString();
 
-                        // Extract the namespace value
-                        if (metricObject.has("workload")) {
-                            String workload = metricObject.get("workload").getAsString();
+                        // Create Containers object and populate it
+                        DataSourceContainers dataSourceContainers = new DataSourceContainers();
+                        dataSourceContainers.setDataSourceContainerName(metricObject.get("container").getAsString());
+                        dataSourceContainers.setDataSourceContainerImageName(metricObject.get("image").getAsString());
 
-                            // Create Containers object and populate it
-                            DataSourceContainers dataSourceContainers = new DataSourceContainers();
-                            dataSourceContainers.setDataSourceContainerName(metricObject.get("container").getAsString());
-                            dataSourceContainers.setDataSourceContainerImageName(metricObject.get("image").getAsString());
-
-                            // Add the Containers object to the list for the namespace
-                            workloadContainerMap.computeIfAbsent(workload, key -> new ArrayList<>()).add(dataSourceContainers);
-                        }
+                        // Add the Containers object to the list for the namespace
+                        workloadContainerMap.computeIfAbsent(workload, key -> new ArrayList<>()).add(dataSourceContainers);
                     }
                 }
             }
