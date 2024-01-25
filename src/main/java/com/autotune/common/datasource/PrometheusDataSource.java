@@ -142,7 +142,7 @@ public class PrometheusDataSource extends DataSourceInfo
 		CommonUtils.DatasourceReachabilityStatus reachabilityStatus;
 
 		KruizeDataSourceOperator ado = DataSourceOperator.getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
-		result = ado.extractPrometheusDataValue(this.dataSourceURL, query);
+		result = ado.getPrometheusDataValue(this.dataSourceURL, query);
 		if (result != null){
 			status = result.toString();
 		} else {

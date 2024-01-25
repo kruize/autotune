@@ -122,7 +122,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             if (null == ado) {
                                 // TODO: Return an error saying unsupported datasource
                             }
-                            String queryResult = (String) ado.extractPrometheusDataValue(experimentTrial.getDatasourceInfoHashMap()
+                            String queryResult = (String) ado.getPrometheusDataValue(experimentTrial.getDatasourceInfoHashMap()
                                     .get(podMetric.getDatasource())
                                     .getUrl().toString(), updatedPodQuery);
                             if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
@@ -161,7 +161,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                 }
                                 if (null != updatedContainerQuery) {
                                     LOGGER.debug("Updated Query - " + updatedContainerQuery);
-                                    String queryResult = (String) ado.extractPrometheusDataValue(experimentTrial.getDatasourceInfoHashMap()
+                                    String queryResult = (String) ado.getPrometheusDataValue(experimentTrial.getDatasourceInfoHashMap()
                                             .get(containerMetric.getDatasource())
                                             .getUrl().toString(), updatedContainerQuery);
                                     if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
