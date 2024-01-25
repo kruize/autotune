@@ -102,34 +102,34 @@ def main(argv):
 
         reco_json_dir = results_dir + "/reco_jsons" + "_iter" + str(i)
         os.mkdir(reco_json_dir)
-        for res_num in range(num_res):
-            for exp_num in range(num_exps):
-                # create the experiment and post it
-                create_exp_json_file = exp_json_dir + "/create_exp_" + str(exp_num) + ".json"
-                create_experiment(create_exp_json_file)
-                
-                # Obtain the experiment name
-                json_data = json.load(open(create_exp_json_file))
 
-                experiment_name = json_data[0]['experiment_name']
-                print(f"experiment_name = {experiment_name}")
+        for exp_num in range(num_exps):
+            # create the experiment and post it
+            create_exp_json_file = exp_json_dir + "/create_exp_" + str(exp_num) + ".json"
+            create_experiment(create_exp_json_file)
 
-                json_file = result_json_dir + "/result_" + str(exp_num) + "_" + str(res_num) + ".json"
+            # Obtain the experiment name
+            json_data = json.load(open(create_exp_json_file))
 
-                update_results(json_file)
+            experiment_name = json_data[0]['experiment_name']
+            print(f"experiment_name = {experiment_name}")
 
-                # Obtain the monitoring end time
-                json_data = json.load(open(json_file))
-                interval_end_time = json_data[0]['interval_end_time']
+            json_file = result_json_dir + "/result_" + str(exp_num) + ".json"
 
-                # sleep for a while before fetching recommendations for the experiments
-                #time.sleep(1)
+            update_results(json_file)
 
-                # Fetch the recommendations for all the experiments
-                latest = None
-                reco = update_recommendations(experiment_name, latest, interval_end_time)
-                filename = reco_json_dir + '/update_reco_' + str(res_num) + '_' +  str(exp_num) + '.json'
-                write_json_data_to_file(filename, reco.json())
+            # Obtain the monitoring end time
+            json_data = json.load(open(json_file))
+            interval_end_time = json_data[num_res-1]['interval_end_time']
+
+            # sleep for a while before fetching recommendations for the experiments
+            #time.sleep(1)
+
+            # Fetch the recommendations for all the experiments
+            latest = None
+            reco = update_recommendations(experiment_name, latest, interval_end_time)
+            filename = reco_json_dir + '/update_reco_' + str(exp_num) + '.json'
+            write_json_data_to_file(filename, reco.json())
 
         # Fetch listExperiments
         list_exp_json_file_before = list_exp_json_dir + "/list_exp_json_before_" + str(i) + ".json"
