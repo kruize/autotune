@@ -281,7 +281,8 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                     HashMap<Timestamp, IntervalResults> resultsMap = containerDataKruizeObject.getResults();
                                     monitoringStartTime = RecommendationUtils.getMonitoringStartTime(resultsMap,
                                             monitoringEndTime,
-                                            Double.valueOf(String.valueOf(duration)));
+                                            duration,
+                                            recommendationTerm.getLowerBound() / NO_OF_MINUTES_PER_HOUR);
 
                                     // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                                     MappedRecommendationForEngine mappedRecommendationForEngine = engine.generateRecommendation(

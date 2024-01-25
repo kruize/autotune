@@ -3,8 +3,6 @@ package com.autotune.analyzer.recommendations.utils;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
-import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
@@ -121,7 +119,7 @@ public class RecommendationUtils {
 
     public static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
                                                    Timestamp endTime,
-                                                   Double durationInHrs) {
+                                                   Double durationInHrs, double lowerBoundInHrs) {
 
         // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
         TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
@@ -129,6 +127,7 @@ public class RecommendationUtils {
 
         double sum = 0.0;
         Timestamp intervalEndTime = null;
+        Timestamp threshHoldEndTime = null;
         for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
             if (!timestamp.after(endTime)) {
                 if (sortedResultsHashMap.containsKey(timestamp)) {
@@ -139,9 +138,14 @@ public class RecommendationUtils {
                         intervalEndTime = timestamp;
                         break;
                     }
+                    if (threshHoldEndTime == null && sum >= lowerBoundInHrs * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR) {
+                        threshHoldEndTime = timestamp;
+                    }
                 }
             }
         }
+        if (null == intervalEndTime)
+            intervalEndTime = threshHoldEndTime;
         try {
             return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
         } catch (NullPointerException npe) {
