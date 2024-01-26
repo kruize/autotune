@@ -13,17 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+
 package com.autotune.common.datasource;
 
-import com.autotune.utils.KruizeConstants;
+import com.autotune.common.utils.CommonUtils;
 
-public class DataSourceOperator {
-    private DataSourceOperator() { }
+/**
+ * KruizeDataSourceServiceability holds the possible functions of a datasources which can state
+ * that the datasource is serviceable
+ */
+public interface KruizeDataSourceServiceability {
 
-    public static KruizeDataSourceOperator getOperator(String datasource) {
-        if (datasource.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
-            return PrometheusDataOperator.getInstance();
-        }
-        return null;
-    }
+    /**
+     * Check if a datasource is reachable, implementation of this function
+     * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
+     * @return DatasourceReachabilityStatus
+     */
+    public CommonUtils.DatasourceReachabilityStatus isReachable();
+
+    /**
+     * Check if a datasource is reliable to use, implementation of this function
+     * should check and return the reachability status (RELIABLE, NOT RELIABLE)
+     * @return DatasourceReliabilityStatus
+     */
+    public CommonUtils.DatasourceReliabilityStatus isReliable(Object... objects);
 }

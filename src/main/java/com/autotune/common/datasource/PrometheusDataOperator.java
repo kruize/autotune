@@ -13,16 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.datasource.promql;
+package com.autotune.common.datasource;
 
-import com.autotune.common.datasource.KruizeDataSourceOperator;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
-import org.apache.http.conn.HttpHostConnectException;
 import org.json.JSONArray;
 import org.json.JSONObject;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.KeyManagementException;
@@ -30,8 +27,6 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
 public class PrometheusDataOperator implements KruizeDataSourceOperator {
-    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(PrometheusDataOperator.class);
-
     private static PrometheusDataOperator prometheusDataOperator = null;
     private PrometheusDataOperator() {
 
@@ -77,8 +72,6 @@ public class PrometheusDataOperator implements KruizeDataSourceOperator {
                     return result_json.getJSONArray("value").getString(1);
                 }
             }
-        } catch (HttpHostConnectException e) {
-            LOGGER.error(KruizeConstants.ErrorMsgs.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE);
         } catch (IOException e) {
             e.printStackTrace();
         } catch (NoSuchAlgorithmException e) {

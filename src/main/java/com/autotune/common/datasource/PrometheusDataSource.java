@@ -13,14 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.common.datasource.promql;
+package com.autotune.common.datasource;
 
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.datasource.DataSourceFactory;
-import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.common.datasource.DataSourceOperator;
-import com.autotune.common.datasource.KruizeDataSourceOperator;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;

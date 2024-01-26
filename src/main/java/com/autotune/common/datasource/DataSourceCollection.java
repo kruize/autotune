@@ -1,6 +1,5 @@
 package com.autotune.common.datasource;
 
-import com.autotune.common.datasource.promql.PrometheusDataSource;
 import com.autotune.common.exceptions.*;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
@@ -16,6 +15,7 @@ import java.net.MalformedURLException;
 import java.nio.charset.StandardCharsets;
 import java.net.URL;
 import java.util.HashMap;
+import java.util.Objects;
 
 public class DataSourceCollection {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCollection.class);
