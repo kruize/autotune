@@ -330,43 +330,57 @@ public class KruizeConstants {
     }
 
     public static class DataSourceConstants {
-        public static final String DataSourceName = "name";
-        public static final String DataSourceProvider = "provider";
-        public static final String DataSourceServiceName = "serviceName";
-        public static final String DataSourceServiceNamespace = "namespace";
-        public static final String DataSourceUrl = "url";
-        public static final String DataSourceAdded = "Added Datasource to Collection: ";
-        public static final String AddingDataSource = "Adding Datasource to Collection: ";
-        public static final String VerifyingDataSourceReachability = "Verifying Datasource Reachability: ";
-        public static final String KruizeDataSource = "datasource";
-        public static final String DataSourceAvailable = "Datasource Available: ";
-        public static final String CheckingAvailableDataSource = "Checking Available Datasources";
-        public static final String PROMETHEUS_DATASOURCE_DNS = ".svc.cluster.local";
-        public static final String PROMETHEUS_PORT = "9090";
-        public static final String Reachability_Query = "up";
-        private DataSourceConstants() {
-        }
-    }
+        public static final String DATASOURCE_NAME = "name";
+        public static final String DATASOURCE_PROVIDER = "provider";
+        public static final String DATASOURCE_SERVICE_NAME = "serviceName";
+        public static final String DATASOURCE_SERVICE_NAMESPACE = "namespace";
+        public static final String DATASOURCE_URL = "url";
+        public static final String KRUIZE_DATASOURCE = "datasource";
+        public static final String SERVICE_DNS = ".svc.cluster.local";
+        public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";
+        public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
 
-    public static class ErrorMsgs {
-        private ErrorMsgs() {
+        public static class DataSourceInfoMsgs {
+            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: ";
+            public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: ";
+            public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
+            private DataSourceInfoMsgs() {
+            }
+        }
+
+        public static class DataSourceSuccessMsgs {
+            public static final String DATASOURCE_ADDED = "Datasource added to the collection successfully.";
+            public static final String DATASOURCE_FOUND = "Datasource found: ";
+            public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
+            private DataSourceSuccessMsgs() {
+            }
         }
 
         public static class DataSourceErrorMsgs {
             private DataSourceErrorMsgs() {
             }
 
-            public static final String MISSING_DATASOURCE_NAME = " Datasource name cannot be empty";
-            public static final String MISSING_DATASOURCE_PROVIDER = " Datasource provider cannot be empty";
-            public static final String MISSING_DATASOURCE_NAMESPACE = " Datasource namespace cannot be empty";
-            public static final String DATASOURCE_URL_SERVICENAME_SET = " Datasource url and servicename both can not be set";
-            public static final String MISSING_DATASOURCE_SERVICENAME_AND_URL = " Datasource servicename and url both cannot be empty";
-            public static final String UNSUPPORTED_DATASOURCE_PROVIDER = " Datasource provider is invalid";
-            public static final String DATASOURCE_NOT_SERVICEABLE = " Datasource is not serviceable.";
-            public static final String DATASOURCE_ALREADY_EXIST = " Datasource with the name already exist";
-            public static final String DATASOURCE_NOT_EXIST = " Datasource with the name not exist";
-            public static final String DATASOURCE_INVALID_URL = " Datasource url is not valid";
-            public static final String DATASOURCE_NOT_SUPPORTED = " Datasource is not supported";
+            public static final String MISSING_DATASOURCE_NAME = "Datasource name cannot be empty.";
+            public static final String MISSING_DATASOURCE_PROVIDER = "Datasource provider cannot be empty.";
+            public static final String MISSING_DATASOURCE_NAMESPACE = "Datasource namespace cannot be empty.";
+            public static final String DATASOURCE_URL_SERVICENAME_BOTH_SET = "Datasource url and servicename both can not be set.";
+            public static final String MISSING_DATASOURCE_SERVICENAME_AND_URL = "Datasource servicename and url both cannot be empty.";
+            public static final String UNSUPPORTED_DATASOURCE_PROVIDER = "Datasource provider is invalid.";
+            public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
+            public static final String DATASOURCE_CONNECTION_FAILED = "Datasource connection refused or timed out.";
+            public static final String DATASOURCE_ALREADY_EXIST = "Datasource with the name already exist.";
+            public static final String DATASOURCE_NOT_EXIST = "Datasource with the name does not exist.";
+            public static final String INVALID_DATASOURCE_URL = "Datasource url is not valid.";
+            public static final String DATASOURCE_NOT_SUPPORTED = "Datasource is not supported: ";
+            public static final String SERVICE_NOT_FOUND = "Can not find service with specified name.";
+            public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
+        }
+        private DataSourceConstants() {
+        }
+    }
+
+    public static class ErrorMsgs {
+        private ErrorMsgs() {
         }
 
         public static class APIErrorMsgs {

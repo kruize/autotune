@@ -58,7 +58,7 @@ public class InitializeDeployment {
                 throw new MonitoringAgentNotFoundException();
             } else {
                 // Fetch endpoint from service cluster IP
-                monitoring_agent_endpoint = DataSourceFactory.getDataSource(monitoring_agent).getUrl().toString();
+                monitoring_agent_endpoint = DataSourceFactory.getDataSource(monitoring_agent).getDataSourceURL();
             }
         }
         KruizeDeploymentInfo.setMonitoring_agent_endpoint(monitoring_agent_endpoint);
@@ -72,19 +72,13 @@ public class InitializeDeployment {
         DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
         dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
 
-        LOGGER.info(KruizeConstants.DataSourceConstants.CheckingAvailableDataSource);
+        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
         HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
         for (String name: dataSources.keySet()) {
             DataSourceInfo dataSource = dataSources.get(name);
             String dataSourceName = dataSource.getName();
-            String serviceName = dataSource.getServiceName();
-            String namespace = dataSource.getNamespace();
-            URL url = dataSource.getUrl();
-            if (url == null) {
-                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceAvailable + dataSourceName + ", " + serviceName);
-            } else {
-                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceAvailable + dataSourceName + ", " + url.toString());
-            }
+            String url = dataSource.getUrl().toString();
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
         }
     }
 
