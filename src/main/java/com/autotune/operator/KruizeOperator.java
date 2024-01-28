@@ -32,13 +32,15 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.datasource.DataSource;
-import com.autotune.common.datasource.DataSourceFactory;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.DataSourceOperatorImpl;
+import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.KubernetesContexts;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.common.variables.Variables;
 import com.autotune.utils.EventLogger;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KubeEventLogger;
 import com.google.gson.Gson;
 import io.fabric8.kubernetes.api.model.Container;
@@ -664,11 +666,11 @@ public class KruizeOperator {
                 LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
                 return;
             }
-            DataSource autotuneDataSource = null;
+            DataSourceInfo autotuneDataSource = null;
             try {
-                autotuneDataSource = DataSourceFactory.getDataSource(KruizeDeploymentInfo.monitoring_agent);
-            } catch (MonitoringAgentNotFoundException e) {
-                e.printStackTrace();
+                autotuneDataSource = DataSourceOperatorImpl.getDataSource(KruizeDeploymentInfo.monitoring_agent);
+            } catch (DataSourceNotExist e) {
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_EXIST);
             }
             ArrayList<String> appsForAllQueries = new ArrayList<>();
             ArrayList<LayerPresenceQuery> layerPresenceQueries = layer.getLayerPresenceQueries();
@@ -677,7 +679,7 @@ public class KruizeOperator {
                 for (LayerPresenceQuery layerPresenceQuery : layerPresenceQueries) {
                     try {
                         // TODO: Check the datasource in the query is the same as the Autotune one
-                        ArrayList<String> apps = (ArrayList<String>) autotuneDataSource.getAppsForLayer(layerPresenceQuery.getLayerPresenceQuery(),
+                        ArrayList<String> apps = (ArrayList<String>) DataSourceOperatorImpl.getInstance().getAppsForLayer(autotuneDataSource, layerPresenceQuery.getLayerPresenceQuery(),
                                 layerPresenceQuery.getLayerPresenceKey());
                         appsForAllQueries.addAll(apps);
                     } catch (MalformedURLException | NullPointerException e) {

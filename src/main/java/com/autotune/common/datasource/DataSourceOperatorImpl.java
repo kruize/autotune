@@ -1,9 +1,33 @@
 package com.autotune.common.datasource;
 
+import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
+import com.autotune.common.exceptions.DataSourceNotExist;
+import com.autotune.common.exceptions.ServiceNotFound;
+import com.autotune.common.target.kubernetes.service.KubernetesServices;
+import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.authModels.BearerAccessToken;
+import io.fabric8.kubernetes.api.model.Service;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
+
+import javax.xml.crypto.Data;
+import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DataSourceOperatorImpl implements DataSourceOperator{
 
@@ -67,4 +91,161 @@ public class DataSourceOperatorImpl implements DataSourceOperator{
         return null;
     }
 
+    /**
+     * returns query endpoint for datasource
+     * @return String containing query endpoint
+     */
+    @Override
+    public String getQueryEndpoint() {
+        return null;
+    }
+
+    /**
+     * returns authentication token for datasource
+     * @return String containing token
+     */
+    public String getToken() throws IOException {
+        String fileName = KruizeConstants.AUTH_MOUNT_PATH+"token";
+        String authToken = new String(Files.readAllBytes(Paths.get(fileName)));
+        return authToken;
+    }
+
+    /**
+     * Run the getAppsForLayer and return the list of applications matching the layer.
+     * @param dataSource
+     * @param query getAppsForLayer query for the layer
+     * @param key The key to search for in the response
+     * @return ArrayList of all applications from the query
+     * @throws MalformedURLException
+     */
+    public ArrayList<String> getAppsForLayer(DataSourceInfo dataSource, String query, String key) throws MalformedURLException {
+        String dataSourceURL = dataSource.getUrl().toString();
+        String provider = dataSource.getProvider();
+        DataSourceOperator op = this.getOperator(provider);
+        String queryEndpoint = op.getQueryEndpoint();
+        String response = null;
+        ArrayList<String> valuesList = new ArrayList<>();
+        String queryURL = dataSourceURL + queryEndpoint + query;
+        LOGGER.debug("Query URL is: {}", queryURL);
+        try {
+            GenericRestApiClient genericRestApiClient = new GenericRestApiClient(
+                    dataSourceURL + queryEndpoint,
+                    new BearerAccessToken(this.getToken())
+            );
+            JSONObject responseJson = genericRestApiClient.fetchMetricsJson("GET", query);
+            int level = 0;
+            try {
+                parseJsonForKey(responseJson, key, valuesList, level);
+                LOGGER.debug("Applications for the query: {}", valuesList.toString());
+            } catch (TooManyRecursiveCallsException e) {
+                e.printStackTrace();
+            }
+        } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+            LOGGER.error("Unable to proceed due to invalid connection to URL: "+ queryURL);
+        }
+        return valuesList;
+    }
+
+    /**
+     * returns DataSourceInfo objects for default datasources like monitoring agent
+     * @return DataSourceInfo objects
+     */
+    public static DataSourceInfo getDataSource(String dataSource) throws DataSourceNotExist, MalformedURLException {
+        String dataSourceEndpoint = null;
+        DataSourceInfo datasource = null;
+        if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.monitoring_agent)) {
+            dataSourceEndpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
+            // Monitoring agent endpoint not set in the configmap
+            if (dataSourceEndpoint == null || dataSourceEndpoint.isEmpty()) {
+                dataSourceEndpoint = getServiceEndpoint(KruizeDeploymentInfo.monitoring_service);
+            }
+            if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE)) {
+                datasource = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, new URL(dataSourceEndpoint));
+            }
+        }
+
+        if (datasource == null) {
+            LOGGER.error("Datasource " + datasource + " not supported");
+        }
+
+        return datasource;
+    }
+
+    /**
+     * Gets the service endpoint for the datasource service through the cluster IP
+     * of the service.
+     * @return Endpoint of the service.
+     * @throws ServiceNotFound
+     */
+    private static String getServiceEndpoint(String serviceName) {
+        //No endpoint was provided in the configmap, find the endpoint from the service.
+        KubernetesServices kubernetesServices = new KubernetesServicesImpl();
+        List<Service> serviceList = kubernetesServices.getServicelist(null);
+        kubernetesServices.shutdownClient();
+        String serviceEndpoint = null;
+
+        try {
+            if (serviceName == null) {
+                throw new ServiceNotFound();
+            }
+
+            for (Service service : serviceList) {
+                String name = service.getMetadata().getName();
+                if (name.toLowerCase().equals(serviceName)) {
+                    String clusterIP = service.getSpec().getClusterIP();
+                    int port = service.getSpec().getPorts().get(0).getPort();
+                    LOGGER.debug(KruizeDeploymentInfo.cluster_type);
+                    if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
+                        serviceEndpoint = AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
+                    }
+                    if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
+                        serviceEndpoint = AnalyzerConstants.HTTPS_PROTOCOL + "://" + clusterIP + ":" + port;
+                    }
+                }
+            }
+        } catch (ServiceNotFound e) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.SERVICE_NOT_FOUND);
+        }
+
+        if (serviceEndpoint == null) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.ENDPOINT_NOT_FOUND);
+        }
+
+        return serviceEndpoint;
+    }
+
+    /**
+     * @param jsonObj The JSON that needs to be parsed
+     * @param key     The key to search in the JSON
+     * @param values  ArrayList to hold the key values in the JSON
+     * @param level   Level of recursion
+     */
+    static void parseJsonForKey(JSONObject jsonObj, String key, ArrayList<String> values, int level) throws TooManyRecursiveCallsException {
+        level += 1;
+
+        if (level > 30)
+            throw new TooManyRecursiveCallsException();
+
+        for (String keyStr : jsonObj.keySet()) {
+            Object keyvalue = jsonObj.get(keyStr);
+
+            if (keyStr.equals(key))
+                values.add(keyvalue.toString());
+
+            //for nested objects
+            if (keyvalue instanceof JSONObject)
+                parseJsonForKey((JSONObject) keyvalue, key, values, level);
+
+            //for json array, iterate and recursively get values
+            if (keyvalue instanceof JSONArray) {
+                JSONArray jsonArray = (JSONArray) keyvalue;
+                for (int index = 0; index < jsonArray.length(); index++) {
+                    Object jsonObject = jsonArray.get(index);
+                    if (jsonObject instanceof JSONObject) {
+                        parseJsonForKey((JSONObject) jsonObject, key, values, level);
+                    }
+                }
+            }
+        }
+    }
 }
