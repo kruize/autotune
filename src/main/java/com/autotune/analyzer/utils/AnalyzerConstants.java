@@ -86,6 +86,8 @@ public class AnalyzerConstants {
     public static final String TARGET = "target/bin";
     public static final String MIGRATIONS = "migrations";
     public static final String DDL = "kruize_experiments_ddl.sql";
+    public static final int DEFAULT_PAGE_VALUE = 1;
+    public static final int DEFAULT_LIMIT_VALUE = 20;
 
 
     private AnalyzerConstants() {
@@ -311,6 +313,8 @@ public class AnalyzerConstants {
         public static final String LATEST = "latest";
         public static final String EXPERIMENT_REGISTERED = "Registered successfully with Kruize! View registered experiments at /listExperiments";
         public static final String RESULT_SAVED = "Results added successfully! View saved results at /listExperiments.";
+        public static final String PAGE = "page";
+        public static final String LIMIT = "limit";
 
         private ServiceConstants() {
         }

@@ -44,6 +44,7 @@ public class Analyzer {
         context.addServlet(ListKruizeTunables.class, ServerContext.LIST_KRUIZE_TUNABLES);
         context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
         context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENTS);
+        context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENT_NAMES);
         context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
         context.addServlet(CreateExperiment.class, ServerContext.CREATE_EXPERIMENT);
         context.addServlet(UpdateResults.class, ServerContext.UPDATE_RESULTS);

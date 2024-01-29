@@ -362,4 +362,16 @@ public class ExperimentDBService {
         }
         return experimentResultDataList;
     }
+
+    public List<String> loadAllExperimentNames(int page, int limit) throws Exception {
+        return experimentDAO.loadAllExperimentNames(page, limit);
+    }
+
+    public List<String> loadExperimentNamesBasedOnSearchString(String searchString, int page, int limit) throws Exception {
+        return experimentDAO.loadExperimentNamesBasedOnSearchString(searchString, page, limit);
+    }
+
+    public Long getExperimentsCount(String searchString) throws Exception {
+        return experimentDAO.getExperimentsCount(searchString);
+    }
 }
