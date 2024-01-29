@@ -18,7 +18,7 @@ package com.autotune.operator;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.common.datasource.DataSourceFactory;
+import com.autotune.common.datasource.*;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -27,10 +27,9 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Locale;
+import java.util.*;
 
 /**
  * Get the deployment information from the config map and initialize
@@ -70,7 +69,17 @@ public class InitializeDeployment {
 
         KruizeDeploymentInfo.logDeploymentInfo();
 
+        DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
+        dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
 
+        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
+        HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
+        for (String name: dataSources.keySet()) {
+            DataSourceInfo dataSource = dataSources.get(name);
+            String dataSourceName = dataSource.getName();
+            String url = dataSource.getUrl().toString();
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
+        }
     }
 
     /**

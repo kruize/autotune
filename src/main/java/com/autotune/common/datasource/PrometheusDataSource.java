@@ -34,6 +34,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
+// TODO: This class will be deleted in next cleanup PR and dataSourceInfo class will be used
 public class PrometheusDataSource implements DataSource
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusDataSource.class);
