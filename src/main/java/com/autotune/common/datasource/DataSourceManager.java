@@ -26,7 +26,7 @@ public class DataSourceManager {
     /**
      * Creates experiments for each data source using associated DataSourceInfo and DataSourceDetailsOperator.
      */
-    public void createExperimentsFromDataSource() {
+    public void ImportDataFromDataSource() {
 
         for(String name : dataSources.keySet()) {
             DataSourceInfo dataSource = dataSources.get(name);
@@ -41,7 +41,7 @@ public class DataSourceManager {
 
     /*
     TODO
-    private static updateExperimentsFromDS() {
+    private static updateDataFromDataSource() {
 
         for(String name : dataSources.keySet()) {
             DataSourceInfo dataSource = dataSources.get(name);
