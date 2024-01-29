@@ -33,7 +33,7 @@ public class DataSourceDetailsHelper {
      * output List:
      * ["exampleNamespace", ... additional namespaces ...]
      */
-    public List<String> parseActiveNamespaces(JsonArray resultArray) {
+    public List<String> getActiveNamespaces(JsonArray resultArray) {
         List<String> namespaces = new ArrayList<>();
 
         try {
@@ -96,7 +96,7 @@ public class DataSourceDetailsHelper {
      *   // ... additional namespaces ...
      * }
      */
-    public HashMap<String, List<DataSourceWorkload>> parseWorkloadInfo(JsonArray resultArray) {
+    public HashMap<String, List<DataSourceWorkload>> getWorkloadInfo(JsonArray resultArray) {
         HashMap<String, List<DataSourceWorkload>> namespaceWorkloadMap = new HashMap<>();
 
         try {
@@ -163,7 +163,7 @@ public class DataSourceDetailsHelper {
      *   // ... additional namespaces ...
      * }
      */
-    public HashMap<String, List<DataSourceContainers>> parseContainerInfo(JsonArray resultArray) {
+    public HashMap<String, List<DataSourceContainers>> getContainerInfo(JsonArray resultArray) {
         HashMap<String, List<DataSourceContainers>> workloadContainerMap = new HashMap<>();
 
         try {

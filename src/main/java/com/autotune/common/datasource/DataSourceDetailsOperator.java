@@ -28,24 +28,37 @@ public class DataSourceDetailsOperator {
     private DataSourceDetailsOperator() { this.dataSourceDetailsInfoList = new ArrayList<>(); }
     public static DataSourceDetailsOperator getInstance() { return dataSourceOperatorInstance; }
     public List<DataSourceDetailsInfo> getDataSourceDetailsInfoList() { return dataSourceDetailsInfoList; }
+
+    /**
+     * Creates and populates details for a data source based on the provided DataSourceInfo object.
+     *
+     * Currently supported DataSourceProvider - Prometheus
+     *
+     * @param dataSourceInfo The DataSourceInfo object containing information about the data source.
+     * TODO - support multiple data sources
+     */
     public void createDataSourceDetails(DataSourceInfo dataSourceInfo){
 
         KruizeDataSourceOperator kruizeDataSourceOperator = DataSourceOperator.getOperator(dataSourceInfo.getProvider());
 
         DataSourceDetailsHelper dataSourceDetailsHelper = new DataSourceDetailsHelper();
 
+        /**
+        * For the "prometheus" provider, fetches and processes data related to namespaces, workloads, and containers,
+        * creating a comprehensive DataSourceDetailsInfo object that is then added to a list.
+        */
         if (dataSourceInfo.getProvider().equals("prometheus")) {
 
             PrometheusDataSource prometheusDataSource = new PrometheusDataSource(dataSourceInfo.getName(),dataSourceInfo.getProvider(),dataSourceInfo.getServiceName(),dataSourceInfo.getNamespace());
 
-            JsonArray namespacesDataObject =  kruizeDataSourceOperator.getPrometheusDataResultArray(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.NAMESPACE_QUERY);
-            List<String> datasourceNamespaces = dataSourceDetailsHelper.parseActiveNamespaces(namespacesDataObject);
+            JsonArray namespacesDataResultArray =  kruizeDataSourceOperator.getPrometheusDataResultArray(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.NAMESPACE_QUERY);
+            List<String> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
 
-            JsonArray workloadDataObject =  kruizeDataSourceOperator.getPrometheusDataResultArray(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.WORKLOAD_QUERY);
-            HashMap<String, List<DataSourceWorkload>> datasourceWorkloads = dataSourceDetailsHelper.parseWorkloadInfo(workloadDataObject);
+            JsonArray workloadDataResultArray =  kruizeDataSourceOperator.getPrometheusDataResultArray(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.WORKLOAD_QUERY);
+            HashMap<String, List<DataSourceWorkload>> datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
 
-            JsonArray containerDataObject = kruizeDataSourceOperator.getPrometheusDataResultArray(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.CONTAINER_QUERY);
-            HashMap<String, List<DataSourceContainers>> datasourceContainers = dataSourceDetailsHelper.parseContainerInfo(containerDataObject);
+            JsonArray containerDataResultArray = kruizeDataSourceOperator.getPrometheusDataResultArray(prometheusDataSource.getDataSourceURL(), PromQLDataSourceQueries.CONTAINER_QUERY);
+            HashMap<String, List<DataSourceContainers>> datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
 
             DataSourceDetailsInfo dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(datasourceNamespaces, datasourceWorkloads, datasourceContainers);
             dataSourceDetailsInfoList.add(dataSourceDetailsInfo);
