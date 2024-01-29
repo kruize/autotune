@@ -44,6 +44,7 @@ RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available"
 COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available"
 PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available"
 
+
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
 NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE = "112101"
@@ -432,10 +433,17 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
                                 duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
 
-                        print(
-                            f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
-                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
-                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                        print(f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+
+                        if MEDIUM_TERM in test_name and term == MEDIUM_TERM:
+                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                        elif SHORT_TERM in test_name and term == SHORT_TERM:
+                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                        elif LONG_TERM in test_name and term == LONG_TERM:
+                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
 
                         # Get engine objects
                         engines_list = ["cost", "performance"]
