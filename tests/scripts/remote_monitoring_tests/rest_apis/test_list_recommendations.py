@@ -1117,17 +1117,18 @@ def test_list_recommendations_notification_codes(cluster_type: str):
         print("delete exp = ", response.status_code)
 
 
-def validate_error_msgs(j: int, status_message):
+def validate_error_msgs(j: int, status_message, cname, experiment_name):
+
     if j == 96:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_REQUEST
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_REQUEST + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
     elif j == 97:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_REQUEST
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_REQUEST + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
     elif j == 98:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_LIMIT
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_LIMIT + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
     elif j == 99:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_LIMIT
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_LIMIT + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
     elif j > 100:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
 
 
 @pytest.mark.negative
@@ -1313,7 +1314,7 @@ def test_invalid_list_recommendations_notification_codes(cluster_type: str):
             if j in range(96, 104):
                 assert response.status_code == ERROR_STATUS_CODE
                 assert data['status'] == ERROR_STATUS
-                validate_error_msgs(j, data['data'][0]['errors'][0]['message'])
+                validate_error_msgs(j, data['data'][0]['errors'][0]['message'], container_name_to_update, experiment_name)
             else:
                 assert response.status_code == SUCCESS_STATUS_CODE
                 assert data['status'] == SUCCESS_STATUS
