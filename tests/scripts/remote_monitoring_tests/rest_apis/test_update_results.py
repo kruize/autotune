@@ -17,10 +17,10 @@ interval_end_times = [
 ]
 
 missing_metrics = [
-    ("Missing_metrics_single_res_single_container", "../json_files/missing_metrics_jsons/update_results_missing_metrics_single_container.json", "Out of a total of 1 records, 1 failed to save", "kubernetes_objects : Metric data is not present for container : tfb-server-0 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
-    ("Missing_metrics_single_res_all_containers", "../json_files/missing_metrics_jsons/update_results_missing_metrics_all_containers.json", "Out of a total of 1 records, 1 failed to save", "kubernetes_objects : Metric data is not present for container : tfb-server-0 for experiment: quarkus-resteasy-kruize-min-http-response-time-db. Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
-    ("Missing_metrics_bulk_res_single_container", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_single_container.json", "Out of a total of 100 records, 1 failed to save", "kubernetes_objects : Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
-    ("Missing_metrics_bulk_res_few_containers", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers.json", "Out of a total of 100 records, 2 failed to save", "kubernetes_objects : Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
+    ("Missing_metrics_single_res_single_container", "../json_files/missing_metrics_jsons/update_results_missing_metrics_single_container.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Metric data is not present for container : tfb-server-0 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
+    ("Missing_metrics_single_res_all_containers", "../json_files/missing_metrics_jsons/update_results_missing_metrics_all_containers.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Metric data is not present for container : tfb-server-0 for experiment: quarkus-resteasy-kruize-min-http-response-time-db. , Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
+    ("Missing_metrics_bulk_res_single_container", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_single_container.json", "Out of a total of 100 records, 1 failed to save", "Performance profile: [Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
+    ("Missing_metrics_bulk_res_few_containers", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers.json", "Out of a total of 100 records, 2 failed to save", "Performance profile: [Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"),
     ("Missing_metrics_bulk_res_few_containers_few_individual_metrics_missing", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers_few_individual_metrics_missing.json", "Out of a total of 100 records, 4 failed to save", "Metric data is not present for container")
 ]
 
@@ -28,7 +28,7 @@ missing_metrics = [
 @pytest.mark.negative
 @pytest.mark.parametrize(
     "test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format, cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum, memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum, memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format, memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_format",
-    generate_test_data(csvfile, update_results_test_data))
+    generate_test_data(csvfile, update_results_test_data, "update_results"))
 def test_update_results_invalid_tests(test_name, expected_status_code, version, experiment_name, interval_start_time,
                                       interval_end_time, kubernetes_obj_type, name, namespace, container_image_name,
                                       container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg,
@@ -180,9 +180,9 @@ def test_update_results_with_missing_metrics_section(test_name, result_json_file
         for err in error_data:
             actual_error_message = err["message"]
             if test_name == "Missing_metrics_bulk_res_few_containers" and d["interval_end_time"] == "2023-04-13T23:29:20.982Z":
-                error_message = "kubernetes_objects : Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db. Metric data is not present for container : tfb-server-0 for experiment: quarkus-resteasy-kruize-min-http-response-time-db"
+                error_message = "Performance profile: [Metric data is not present for container : tfb-server-1 for experiment: quarkus-resteasy-kruize-min-http-response-time-db. , Metric data is not present for container : tfb-server-0 for experiment: quarkus-resteasy-kruize-min-http-response-time-db. ]"
             if test_name == "Missing_metrics_bulk_res_few_containers_few_individual_metrics_missing" and d["interval_end_time"] == "2023-04-13T23:44:20.982Z" or d["interval_end_time"] == "2023-04-13T23:59:20.982Z":
-                error_message = "Performance profile: Missing one of the following mandatory parameters for experiment - quarkus-resteasy-kruize-min-http-response-time-db : [cpuUsage, memoryUsage, memoryRSS]"
+                error_message = "Performance profile: [Missing one of the following mandatory parameters for experiment - quarkus-resteasy-kruize-min-http-response-time-db : [cpuUsage, memoryUsage, memoryRSS]]"
             assert error_message in actual_error_message
     
     response = delete_experiment(input_json_file)
