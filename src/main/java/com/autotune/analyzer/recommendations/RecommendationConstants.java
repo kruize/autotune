@@ -190,6 +190,14 @@ public class RecommendationConstants {
         public double getUpperBound() {
             return this.upperBound;
         }
+
+        public static double getMaxDuration(RecommendationTerms termValue) {
+            return switch (termValue) {
+                case SHORT_TERM -> SHORT_TERM_HOURS;
+                case MEDIUM_TERM -> MEDIUM_TERM_HOURS;
+                case LONG_TERM -> LONG_TERM_HOURS;
+            };
+        }
     }
 
     public enum RecommendationNotification {

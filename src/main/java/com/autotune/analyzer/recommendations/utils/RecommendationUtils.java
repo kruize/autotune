@@ -10,6 +10,7 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.utils.KruizeConstants;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class RecommendationUtils {
@@ -102,10 +103,10 @@ public class RecommendationUtils {
         double lowerBound = recommendationTerms.getLowerBound();
         double sum = getDurationSummation(containerData);
         // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
-        if (sum >= lowerBound)
+        // Check if sum for the entire term is available
+        if (hasFullTermData(containerData, recommendationTerms)) {
             return true;
-
-        return false;
+        } else return sum >= lowerBound;
     }
 
     public static double getDurationSummation(ContainerData containerData) {
@@ -165,6 +166,22 @@ public class RecommendationUtils {
         return recommendationNotification;
     }
 
+    public static boolean hasFullTermData(ContainerData containerData, RecommendationConstants.RecommendationTerms recommendationTerms) {
+        // Get the maximum duration allowed for the term
+        double maxDuration = RecommendationConstants.RecommendationTerms.getMaxDuration(recommendationTerms);
+
+        LocalDateTime intervalEndDateTime = containerData.getResults().values().iterator().next().getIntervalEndTime().toLocalDateTime();
+        LocalDateTime intervalStartDateTime = intervalEndDateTime.minusHours((long) maxDuration);
+
+        // Check if there are missing intervals within the term duration
+        for (LocalDateTime current = intervalEndDateTime; current.isAfter(intervalStartDateTime); current = current.minusMinutes(15)) {
+            Timestamp currentTimestamp = Timestamp.valueOf(current);
+            if (!containerData.getResults().containsKey(currentTimestamp)) {
+                return false;
+            }
+        }
+        return true;
+    }
 
 }
 

@@ -100,9 +100,8 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
          * Incorporate a buffer period of "threshold days" to account for potential remote cluster downtime.
          * This adjustment aims to align the cumulative hours' duration with LONG_TERM_DURATION_DAYS.
          */
-        cal.add(Calendar.DAY_OF_MONTH, -(KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS +
-                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD));
-        // Get the new Timestamp after subtracting 10 days
+        cal.add(Calendar.DAY_OF_MONTH, -(KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS));
+        // Get the new Timestamp after subtracting 15 days
         Timestamp calculated_start_time = new Timestamp(cal.getTimeInMillis());
         Map<String, KruizeObject> mainKruizeExperimentMap = new HashMap<>();
         String experiment_name = kruizeObject.getExperimentName();
