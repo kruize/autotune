@@ -86,7 +86,7 @@ public class InitializeDeployment {
 
         /*
         DataSourceManager dataSourceManager = new DataSourceManager();
-        dataSourceManager.ImportDataFromDataSource();
+        dataSourceManager.importDataFromAllDataSources();
         */
     }
 
