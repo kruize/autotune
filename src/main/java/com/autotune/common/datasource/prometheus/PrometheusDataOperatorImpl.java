@@ -209,4 +209,14 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
         }
         return null;
     }
+
+    /**
+     * Validates a JSON array to ensure it is not null, not a JSON null, and has at least one element.
+     *
+     * @param resultArray The JSON array to be validated.
+     * @return True if the JSON array is valid (not null, not a JSON null, and has at least one element), otherwise false.
+     */
+    public boolean validateResultArray(JsonArray resultArray) {
+        return resultArray != null && !resultArray.isJsonNull() && resultArray.size() > 0;
+    }
 }
