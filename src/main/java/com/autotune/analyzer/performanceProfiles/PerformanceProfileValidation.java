@@ -98,7 +98,7 @@ public class PerformanceProfileValidation {
             }
             StringBuilder errorString = new StringBuilder();
             // check if the performance profile already exists
-            if (performanceProfilesMap.get(performanceProfile.getName()) != null) {
+            if (performanceProfilesMap.get(performanceProfile.getName()) != null && !performanceProfile.getName().equalsIgnoreCase(AnalyzerConstants.PerformanceProfileConstants.DEFAULT_PROFILE)) {
                 errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE).append(performanceProfile.getName());
                 return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
             }

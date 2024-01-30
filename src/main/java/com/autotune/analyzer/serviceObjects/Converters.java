@@ -25,11 +25,9 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Converters {
@@ -52,43 +50,54 @@ public class Converters {
         public static KruizeObject convertCreateExperimentAPIObjToKruizeObject(CreateExperimentAPIObject createExperimentAPIObject) {
             KruizeObject kruizeObject = new KruizeObject();
             try {
-                List<K8sObject> k8sObjectList = new ArrayList<>();
-                List<KubernetesAPIObject> kubernetesAPIObjectsList = createExperimentAPIObject.getKubernetesObjects();
-                for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjectsList) {
-                    K8sObject k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
-                    List<ContainerAPIObject> containerAPIObjects = kubernetesAPIObject.getContainerAPIObjects();
-                    HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
-                    for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
-                        ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(),
-                                containerAPIObject.getContainer_image_name(), new ContainerRecommendations(), null);
-                        containerDataHashMap.put(containerData.getContainer_name(), containerData);
-                    }
-                    k8sObject.setContainerDataMap(containerDataHashMap);
-                    k8sObjectList.add(k8sObject);
-                }
+                List<K8sObject> k8sObjectList = getK8sObjects(createExperimentAPIObject);
                 kruizeObject.setKubernetes_objects(k8sObjectList);
                 kruizeObject.setExperimentName(createExperimentAPIObject.getExperimentName());
                 kruizeObject.setApiVersion(createExperimentAPIObject.getApiVersion());
-                kruizeObject.setTarget_cluster(createExperimentAPIObject.getTargetCluster());
-                kruizeObject.setClusterName(createExperimentAPIObject.getClusterName());
+                kruizeObject.setTarget_cluster(createExperimentAPIObject.getTarget_cluster());
+                Optional<String> clusterNameOptional = Optional.ofNullable(createExperimentAPIObject.getClusterName());
+                clusterNameOptional.ifPresent(kruizeObject::setClusterName);
                 kruizeObject.setMode(createExperimentAPIObject.getMode());
                 kruizeObject.setPerformanceProfile(createExperimentAPIObject.getPerformanceProfile());
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
-                kruizeObject.setTrial_settings(createExperimentAPIObject.getTrialSettings());
-                kruizeObject.setRecommendation_settings(createExperimentAPIObject.getRecommendationSettings());
+                kruizeObject.setTrial_settings(createExperimentAPIObject.getTrial_settings());
+                kruizeObject.setRecommendation_settings(createExperimentAPIObject.getRecommendation_settings());
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
                 kruizeObject.setExperiment_usecase_type(new ExperimentUseCaseType(kruizeObject));
-                if (null != createExperimentAPIObject.getValidationData()) {
-                    //Validation already done and it is getting loaded back from db
-                    kruizeObject.setValidation_data(createExperimentAPIObject.getValidationData());
-                }
             } catch (Exception e) {
-                LOGGER.error("failed to convert CreateExperimentAPIObj To KruizeObject due to {} ", e.getMessage());
+                LOGGER.error("Failed to convert CreateExperimentAPIObj To KruizeObject due to {} ", e.getMessage());
                 LOGGER.debug(createExperimentAPIObject.toString());
-                kruizeObject = null;
+                kruizeObject.setValidation_data(new ValidationOutputData(false,
+                        "failed to convert CreateExperimentAPIObj To KruizeObject due to: "+e.getMessage(),
+                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+                return kruizeObject;
             }
             return kruizeObject;
+        }
+
+        private static List<K8sObject> getK8sObjects(CreateExperimentAPIObject createExperimentAPIObject) {
+            List<K8sObject> k8sObjectList = new ArrayList<>();
+            List<KubernetesAPIObject> kubernetesAPIObjectsList = createExperimentAPIObject.getKubernetes_objects();
+            for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjectsList) {
+                K8sObject k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(),
+                        kubernetesAPIObject.getNamespace());
+                HashMap<String, ContainerData> containerDataHashMap = getContainerData(kubernetesAPIObject);
+                k8sObject.setContainerDataMap(containerDataHashMap);
+                k8sObjectList.add(k8sObject);
+            }
+            return k8sObjectList;
+        }
+
+        private static HashMap<String, ContainerData> getContainerData(KubernetesAPIObject kubernetesAPIObject) {
+            List<ContainerAPIObject> containerAPIObjects = kubernetesAPIObject.getContainerAPIObjects();
+            HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
+            for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
+                ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(),
+                        containerAPIObject.getContainer_image_name(), new ContainerRecommendations(), null);
+                containerDataHashMap.put(containerData.getContainer_name(), containerData);
+            }
+            return containerDataHashMap;
         }
 
         public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSO(

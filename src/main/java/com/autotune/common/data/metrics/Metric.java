@@ -16,11 +16,14 @@ package com.autotune.common.data.metrics;
 
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.gson.*;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
+import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.List;
+import java.util.Map;
 
 /**
  * Holds the variables used in the objective_function for the autotune object
@@ -46,6 +49,7 @@ public final class Metric {
     private MetricResults metricResults;
     private final LinkedHashMap<String, LinkedHashMap<String, LinkedHashMap<Integer, MetricResults>>> cycleDataMap = new LinkedHashMap<>();
     @SerializedName("aggregation_functions")
+    @JsonAdapter(AggregationFunctionsDeserializer.class)
     private HashMap<String, AggregationFunctions> aggregationFunctionsMap;
 
     public Metric(String name,
@@ -121,5 +125,33 @@ public final class Metric {
                 ", kubernetesObject='" + kubernetesObject + '\'' +
                 ", aggregationFunctionsMap=" + aggregationFunctionsMap +
                 '}';
+    }
+}
+class AggregationFunctionsDeserializer implements JsonDeserializer<HashMap<String, AggregationFunctions>> {
+    @Override
+    public HashMap<String, AggregationFunctions> deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+        HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
+
+        if (json.isJsonArray()) {
+            // Handle case where aggregation_functions is an array of JSON objects
+            JsonArray jsonArray = json.getAsJsonArray();
+            for (int i = 0; i < jsonArray.size(); i++) {
+                JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
+                String key = jsonObject.get("function").getAsString();
+                AggregationFunctions aggregationFunctions = context.deserialize(jsonObject, AggregationFunctions.class);
+                aggregationFunctionsMap.put(key, aggregationFunctions);
+            }
+        } else {
+            // Handle case where aggregation_functions is a single JSON object
+            JsonObject jsonObject = json.getAsJsonObject();
+            for (Map.Entry<String, JsonElement> entry : jsonObject.entrySet()) {
+                String key = entry.getKey();
+                JsonElement value = entry.getValue();
+                AggregationFunctions aggregationFunctions = context.deserialize(value, AggregationFunctions.class);
+                aggregationFunctionsMap.put(key, aggregationFunctions);
+            }
+        }
+
+        return aggregationFunctionsMap;
     }
 }

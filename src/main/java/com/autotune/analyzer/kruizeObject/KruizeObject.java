@@ -122,7 +122,7 @@ public final class KruizeObject {
     }
 
     public SelectorInfo getSelectorInfo() {
-        return new SelectorInfo(selectorInfo);
+        return selectorInfo;
     }
 
     public void setSelectorInfo(SelectorInfo selectorInfo) {

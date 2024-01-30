@@ -87,6 +87,11 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, version, expe
     data = response.json()
     print(data['message'])
 
+    keys = test_name.split('_', 1)
+    test_name_variable = keys[1]
+    INVALID_EXP_NAME_MSG = test_name_variable + NOT_EMPTY_OR_NULL
+    assert data['message'] == INVALID_EXP_NAME_MSG, f"expected - {INVALID_EXP_NAME_MSG}, actual - {data['message']}"
+
     assert response.status_code == int(expected_status_code)
     response = delete_experiment(tmp_json_file)
     print("delete exp = ", response.status_code)
@@ -434,6 +439,7 @@ def test_create_exp_mandatory_fields(cluster_type, field, expected_status_code, 
     data = response.json()
     print(data['message'])
 
+    print("response msg = ", response.content)
     assert response.status_code == expected_status_code, \
         f"Mandatory field check failed for {field} actual - {response.status_code} expected - {expected_status_code}"
     assert data['status'] == expected_status
