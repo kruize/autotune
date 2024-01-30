@@ -375,6 +375,48 @@ public class KruizeConstants {
             public static final String SERVICE_NOT_FOUND = "Can not find service with specified name.";
             public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
         }
+
+        public static class DataSourceQueryJSONKeys {
+            private DataSourceQueryJSONKeys() {
+            }
+
+            public static final String STATUS = "status";
+            public static final String DATA = "data";
+            public static final String RESULT = "result";
+            public static final String METRIC = "metric";
+            public static final String VALUE = "value";
+
+        }
+
+        public static class DataSourceQueryStatus {
+            private DataSourceQueryStatus() {
+            }
+
+            public static final String SUCCESS = "success";
+            public static final String ERROR = "error";
+        }
+
+        public static class DataSourceQueryMetricKeys {
+            private DataSourceQueryMetricKeys() {
+            }
+
+            public static final String NAMESPACE = "namespace";
+            public static final String WORKLOAD = "workload";
+            public static final String WORKLOAD_TYPE = "workload_type";
+            public static final String CONTAINER_NAME = "container";
+            public static final String CONTAINER_IMAGE_NAME = "image";
+        }
+
+        public static class DataSourceDetailsInfoConstants {
+            private DataSourceDetailsInfoConstants() {
+            }
+
+            public static final String version = "v1.0";
+            public static final String CLUSTER_GROUP_NAME = "prometheus";
+            public static final String CLUSTER_NAME = "k8s-cluster";
+
+        }
+
         private DataSourceConstants() {
         }
     }

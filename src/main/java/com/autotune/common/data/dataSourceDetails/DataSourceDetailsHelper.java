@@ -1,5 +1,6 @@
 package com.autotune.common.data.dataSourceDetails;
 
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -43,12 +44,12 @@ public class DataSourceDetailsHelper {
                     JsonObject resultObject = result.getAsJsonObject();
 
                     // Check if the result object contains the "metric" field with "namespace"
-                    if (resultObject.has("metric") && resultObject.get("metric").isJsonObject()) {
-                        JsonObject metricObject = resultObject.getAsJsonObject("metric");
+                    if (resultObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC) && resultObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC).isJsonObject()) {
+                        JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC);
 
                         // Extract the namespace value and add it to the list
-                        if (metricObject.has("namespace")) {
-                            String namespace = metricObject.get("namespace").getAsString();
+                        if (metricObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.NAMESPACE)) {
+                            String namespace = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.NAMESPACE).getAsString();
                             namespaces.add(namespace);
                         }
                     }
@@ -105,19 +106,19 @@ public class DataSourceDetailsHelper {
                 JsonObject resultObject = result.getAsJsonObject();
 
                 // Check if the result object contains the "metric" field with "namespace"
-                if (resultObject.has("metric") && resultObject.get("metric").isJsonObject()) {
-                    JsonObject metricObject = resultObject.getAsJsonObject("metric");
+                if (resultObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC) && resultObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC).isJsonObject()) {
+                    JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC);
 
                     // Extract the namespace value
-                    if (metricObject.has("namespace")) {
-                        String namespace = metricObject.get("namespace").getAsString();
+                    if (metricObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.NAMESPACE)) {
+                        String namespace = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.NAMESPACE).getAsString();
 
-                        // Create Workload object and populate it
+                        // Create Workload object and populate
                         DataSourceWorkload dataSourceWorkload = new DataSourceWorkload();
-                        dataSourceWorkload.setDataSourceWorkloadName(metricObject.get("workload").getAsString());
-                        dataSourceWorkload.setDataSourceWorkloadType(metricObject.get("workload_type").getAsString());
+                        dataSourceWorkload.setDataSourceWorkloadName(metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD).getAsString());
+                        dataSourceWorkload.setDataSourceWorkloadType(metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD_TYPE).getAsString());
 
-                        // Add the Workload object to the list for the namespace
+                        // Add the Workload object to the list for the namespace key
                         namespaceWorkloadMap.computeIfAbsent(namespace, key -> new ArrayList<>()).add(dataSourceWorkload);
                     }
                 }
@@ -171,20 +172,20 @@ public class DataSourceDetailsHelper {
             for (JsonElement result : resultArray) {
                 JsonObject resultObject = result.getAsJsonObject();
 
-                // Check if the result object contains the "metric" field with "namespace"
-                if (resultObject.has("metric") && resultObject.get("metric").isJsonObject()) {
-                    JsonObject metricObject = resultObject.getAsJsonObject("metric");
+                // Check if the result object contains the "metric" field with "workload"
+                if (resultObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC) && resultObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC).isJsonObject()) {
+                    JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC);
 
-                    // Extract the namespace value
-                    if (metricObject.has("workload")) {
-                        String workload = metricObject.get("workload").getAsString();
+                    // Extract the workload name value
+                    if (metricObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD)) {
+                        String workload = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD).getAsString();
 
-                        // Create Containers object and populate it
+                        // Create Container object and populate
                         DataSourceContainers dataSourceContainers = new DataSourceContainers();
-                        dataSourceContainers.setDataSourceContainerName(metricObject.get("container").getAsString());
-                        dataSourceContainers.setDataSourceContainerImageName(metricObject.get("image").getAsString());
+                        dataSourceContainers.setDataSourceContainerName(metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.CONTAINER_NAME).getAsString());
+                        dataSourceContainers.setDataSourceContainerImageName(metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.CONTAINER_IMAGE_NAME).getAsString());
 
-                        // Add the Containers object to the list for the namespace
+                        // Add the Container objects to the list for the workload key
                         workloadContainerMap.computeIfAbsent(workload, key -> new ArrayList<>()).add(dataSourceContainers);
                     }
                 }
@@ -208,15 +209,15 @@ public class DataSourceDetailsHelper {
     public DataSourceDetailsInfo createDataSourceDetailsInfoObject(List<String> activeNamespaces,
                                                                    HashMap<String, List<DataSourceWorkload>> namespaceWorkloadMap,
                                                                    HashMap<String, List<DataSourceContainers>> workloadContainerMap) {
-
+        // add Datasource constants
         DataSourceDetailsInfo dataSourceDetailsInfo = new DataSourceDetailsInfo();
-        dataSourceDetailsInfo.setVersion("1.0");
+        dataSourceDetailsInfo.setVersion(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.version);
 
         DataSourceClusterGroup dataSourceClusterGroup = new DataSourceClusterGroup();
-        dataSourceClusterGroup.setDataSourceClusterGroupName("prometheus");
+        dataSourceClusterGroup.setDataSourceClusterGroupName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.CLUSTER_GROUP_NAME);
 
         DataSourceCluster dataSourceCluster = new DataSourceCluster();
-        dataSourceCluster.setDataSourceClusterName("k8s-cluster");
+        dataSourceCluster.setDataSourceClusterName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.CLUSTER_NAME);
 
         List<DataSourceNamespace> dataSourceNamespaceList = new ArrayList<>();
 

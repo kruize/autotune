@@ -110,12 +110,12 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             return null;
         }
 
-        JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
+        JSONArray result = jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
         for (Object result_obj: result) {
             JSONObject result_json = (JSONObject) result_obj;
-            if (result_json.has("value")
-                    && !result_json.getJSONArray("value").isEmpty()) {
-                return result_json.getJSONArray("value").getString(1);
+            if (result_json.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE)
+                    && !result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).isEmpty()) {
+                return result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).getString(1);
             }
         }
         return null;
@@ -144,15 +144,15 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             JSONObject jsonObject = apiClient.fetchMetricsJson(
                     KruizeConstants.HttpConstants.MethodType.GET,
                     query);
-            if (!jsonObject.has("status"))
+            if (!jsonObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS))
                 return null;
-            if (!jsonObject.getString("status").equalsIgnoreCase("success"))
+            if (!jsonObject.getString(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS).equalsIgnoreCase(KruizeConstants.DataSourceConstants.DataSourceQueryStatus.SUCCESS))
                 return null;
-            if (!jsonObject.has("data"))
+            if (!jsonObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA))
                 return null;
-            if (!jsonObject.getJSONObject("data").has("result"))
+            if (!jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT))
                 return null;
-            if (jsonObject.getJSONObject("data").getJSONArray("result").isEmpty())
+            if (jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isEmpty())
                 return  null;
 
             return jsonObject;
@@ -198,10 +198,10 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
         String jsonString = jsonObject.toString();
         JsonObject parsedJsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
-        JsonObject dataObject = parsedJsonObject.get("data").getAsJsonObject();
+        JsonObject dataObject = parsedJsonObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getAsJsonObject();
 
-        if (dataObject.has("result") && dataObject.get("result").isJsonArray()) {
-            JsonArray resultArray = dataObject.getAsJsonArray("result");
+        if (dataObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT) && dataObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isJsonArray()) {
+            JsonArray resultArray = dataObject.getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
 
             if (resultArray != null) {
                 return resultArray;
