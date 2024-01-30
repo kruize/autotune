@@ -101,6 +101,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator{
     }
 
     /**
+     * TODO: To find a suitable place for this function later
      * returns authentication token for datasource
      * @return String containing token
      */
@@ -111,6 +112,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator{
     }
 
     /**
+     * TODO: To find a suitable place for this function later
      * Run the getAppsForLayer and return the list of applications matching the layer.
      * @param dataSource
      * @param query getAppsForLayer query for the layer
@@ -147,6 +149,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator{
     }
 
     /**
+     * TODO: To find a suitable place for this function later
      * returns DataSourceInfo objects for default datasources like monitoring agent
      * @return DataSourceInfo objects
      */
@@ -172,6 +175,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator{
     }
 
     /**
+     * TODO: To find a suitable place for this function later
      * Gets the service endpoint for the datasource service through the cluster IP
      * of the service.
      * @return Endpoint of the service.
@@ -215,6 +219,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator{
     }
 
     /**
+     * TODO: To find a suitable place for this function later
      * @param jsonObj The JSON that needs to be parsed
      * @param key     The key to search in the JSON
      * @param values  ArrayList to hold the key values in the JSON
