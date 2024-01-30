@@ -18,6 +18,7 @@ package com.autotune.common.datasource;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.exceptions.ServiceNotFound;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -28,13 +29,12 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Creates and configures the datasource class for the specified datasource string
+ * TODO: this class will be deleted in next cleanup PR and important functions will be moved to DataSourceOperatorImpl class
  */
 public class DataSourceFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceFactory.class);
@@ -42,72 +42,65 @@ public class DataSourceFactory {
     private DataSourceFactory() {
     }
 
-    public static DataSourceInfo getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
+    public static DataSource getDataSource(String dataSource) throws MonitoringAgentNotFoundException {
         String monitoringAgentEndpoint = null;
         DataSourceInfo datasource = null;
-
         if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.monitoring_agent))
             monitoringAgentEndpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
 
         // Monitoring agent endpoint not set in the configmap
         if (monitoringAgentEndpoint == null || monitoringAgentEndpoint.isEmpty())
-            monitoringAgentEndpoint = getMonitoringAgentEndpoint();
+            monitoringAgentEndpoint = getServiceEndpoint(KruizeDeploymentInfo.monitoring_service);
 
-        if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE)) {
-            try {
-                datasource = new PrometheusDataSource(KruizeDeploymentInfo.monitoring_agent, KruizeConstants.SupportedDatasources.PROMETHEUS, new URL(monitoringAgentEndpoint));
-            } catch (MalformedURLException e) {
-                LOGGER.error(KruizeConstants.ErrorMsgs.DataSourceErrorMsgs.DATASOURCE_INVALID_URL);
-            }
-        } else {
-            LOGGER.error(dataSource + KruizeConstants.ErrorMsgs.DataSourceErrorMsgs.DATASOURCE_NOT_SUPPORTED);
-        }
+        if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE))
+            return new PrometheusDataSource(monitoringAgentEndpoint);
 
-        return datasource;
+        LOGGER.error("Datasource " + dataSource + " not supported");
+        return null;
     }
 
     /**
-     * Gets the monitoring agent endpoint for the datasource through the cluster IP
+     * Gets the service endpoint for the datasource service through the cluster IP
      * of the service.
      *
-     * @return Endpoint of the monitoring agent.
-     * @throws MonitoringAgentNotFoundException
+     * @return Endpoint of the service.
+     * @throws ServiceNotFound
      */
-    private static String getMonitoringAgentEndpoint() throws MonitoringAgentNotFoundException {
+    private static String getServiceEndpoint(String serviceName) {
         //No endpoint was provided in the configmap, find the endpoint from the service.
         KubernetesServices kubernetesServices = new KubernetesServicesImpl();
         List<Service> serviceList = kubernetesServices.getServicelist(null);
         kubernetesServices.shutdownClient();
-        String monitoringAgentService = KruizeDeploymentInfo.monitoring_service;
-        String monitoringAgentEndpoint = null;
+        String serviceEndpoint = null;
 
-        if (monitoringAgentService == null)
-            throw new MonitoringAgentNotFoundException();
+        try {
+            if (serviceName == null) {
+                throw new ServiceNotFound();
+            }
 
-        for (Service service : serviceList) {
-            String serviceName = service.getMetadata().getName();
-            if (serviceName.toLowerCase().equals(monitoringAgentService)) {
-                try {
+            for (Service service : serviceList) {
+                String name = service.getMetadata().getName();
+                if (name.toLowerCase().equals(serviceName)) {
                     String clusterIP = service.getSpec().getClusterIP();
                     int port = service.getSpec().getPorts().get(0).getPort();
                     LOGGER.debug(KruizeDeploymentInfo.cluster_type);
                     if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
-                        monitoringAgentEndpoint = AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
+                        serviceEndpoint = AnalyzerConstants.HTTP_PROTOCOL + "://" + clusterIP + ":" + port;
                     }
                     if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
-                        monitoringAgentEndpoint = AnalyzerConstants.HTTPS_PROTOCOL + "://" + clusterIP + ":" + port;
+                        serviceEndpoint = AnalyzerConstants.HTTPS_PROTOCOL + "://" + clusterIP + ":" + port;
                     }
-                } catch (Exception e) {
-                    throw new MonitoringAgentNotFoundException();
                 }
             }
+        } catch (ServiceNotFound e) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.SERVICE_NOT_FOUND);
         }
 
-        if (monitoringAgentEndpoint == null) {
-            LOGGER.error("Monitoring agent endpoint not found");
+        if (serviceEndpoint == null) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.ENDPOINT_NOT_FOUND);
         }
 
-        return monitoringAgentEndpoint;
+        return serviceEndpoint;
     }
 
     /**

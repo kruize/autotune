@@ -15,15 +15,48 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
-import com.autotune.utils.KruizeConstants;
+import com.autotune.common.utils.CommonUtils;
 
-public class DataSourceOperator {
-    private DataSourceOperator() { }
+import java.util.ArrayList;
 
-    public static KruizeDataSourceOperator getOperator(String datasource) {
-        if (datasource.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
-            return PrometheusDataOperator.getInstance();
-        }
-        return null;
-    }
+/**
+ * DataSourceOperator is an abstraction which has a generic and implementation,
+ * and it can also be implemented by each data source provider type.
+ *
+ * Currently Supported Implementations:
+ *  - Prometheus
+ *
+ *  The Implementation should have helper functions to perform operations related
+ *  to datasource
+ */
+
+public interface DataSourceOperator {
+    /**
+     * Returns the default service port for provider
+     * @return String containing the port number
+     */
+    String getDefaultServicePortForProvider();
+
+    /**
+     * Returns the instance of specific operator class based on provider type
+     * @param provider String containing the name of provider
+     * @return instance of specific operator
+     */
+    DataSourceOperatorImpl getOperator(String provider);
+
+    /**
+     * Check if a datasource is reachable, implementation of this function
+     * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
+     * @param dataSourceUrl String containing the url for the datasource
+     * @return DatasourceReachabilityStatus
+     */
+    CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceUrl);
+
+    /**
+     * executes specified query on datasource and returns the result value
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return Object containing the result value for the specified query
+     */
+    Object getValueForQuery(String url, String query);
 }

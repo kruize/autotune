@@ -17,8 +17,6 @@ package com.autotune.common.datasource;
 
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.utils.CommonUtils;
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.authModels.BearerAccessToken;
@@ -29,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
@@ -37,30 +34,15 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 
-public class PrometheusDataSource extends DataSourceInfo
+// TODO: This class will be deleted in next cleanup PR and dataSourceInfo class will be used
+public class PrometheusDataSource implements DataSource
 {
 	private static final Logger LOGGER = LoggerFactory.getLogger(PrometheusDataSource.class);
 
 	private final String dataSourceURL;
 
-	public PrometheusDataSource(String name, String provider, String serviceName, String namespace) {
-		super(name, provider, serviceName, namespace);
-		String url = "";
-		if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
-			url  = AnalyzerConstants.HTTP_PROTOCOL + "://" + serviceName + "." + namespace + KruizeConstants.DataSourceConstants.PROMETHEUS_DATASOURCE_DNS + ":" + KruizeConstants.DataSourceConstants.PROMETHEUS_PORT;
-		} else if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
-			url = AnalyzerConstants.HTTPS_PROTOCOL + "://" + serviceName + "." + namespace + KruizeConstants.DataSourceConstants.PROMETHEUS_DATASOURCE_DNS + ":" + KruizeConstants.DataSourceConstants.PROMETHEUS_PORT;;
-		}
-		this.dataSourceURL = url;
-	}
-
-	public PrometheusDataSource(String name, String provider, URL url) {
-		super(name, provider, url);
-		this.dataSourceURL = url.toString();
-	}
-
-	public String getQueryEndpoint() {
-		return AnalyzerConstants.PROMETHEUS_API;
+	public PrometheusDataSource(String monitoringAgentEndpoint) {
+		this.dataSourceURL = monitoringAgentEndpoint;
 	}
 
 	/**
@@ -69,6 +51,11 @@ public class PrometheusDataSource extends DataSourceInfo
 	 */
 	public String getDataSourceURL() {
 		return dataSourceURL;
+	}
+
+	@Override
+	public String getQueryEndpoint() {
+		return AnalyzerConstants.PROMETHEUS_API;
 	}
 
 	public String getToken() throws IOException {
@@ -130,30 +117,4 @@ public class PrometheusDataSource extends DataSourceInfo
 		return valuesList;
 	}
 
-	/**
-	 * Check if a datasource is reachable, implementation of this function
-	 * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
-	 * @return DatasourceReachabilityStatus
-	 */
-	public CommonUtils.DatasourceReachabilityStatus isReachable() {
-		String status;
-		Object result;
-		String query = KruizeConstants.DataSourceConstants.Reachability_Query;
-		CommonUtils.DatasourceReachabilityStatus reachabilityStatus;
-
-		KruizeDataSourceOperator ado = DataSourceOperator.getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
-		result = ado.getPrometheusDataValue(this.dataSourceURL, query);
-		if (result != null){
-			status = result.toString();
-		} else {
-			status = "0";
-		}
-
-		if (status.equalsIgnoreCase("1")){
-			reachabilityStatus = CommonUtils.DatasourceReachabilityStatus.REACHABLE;
-		} else {
-			reachabilityStatus = CommonUtils.DatasourceReachabilityStatus.NOT_REACHABLE;
-		}
-		return reachabilityStatus;
-	}
 }
