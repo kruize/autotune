@@ -21,6 +21,9 @@ import com.autotune.common.datasource.KruizeDataSourceOperator;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.apache.http.conn.HttpHostConnectException;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -101,15 +104,42 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      */
     @Override
     public Object getValueForQuery(String url, String query) {
+        JSONObject jsonObject = getJsonObjectForQuery(url, query);
+
+        if (null == jsonObject) {
+            return null;
+        }
+
+        JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
+        for (Object result_obj: result) {
+            JSONObject result_json = (JSONObject) result_obj;
+            if (result_json.has("value")
+                    && !result_json.getJSONArray("value").isEmpty()) {
+                return result_json.getJSONArray("value").getString(1);
+            }
+        }
+        return null;
+    }
+
+    /**
+     * executes specified query on datasource and returns the JSON Object
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return JSONObject for the specified query
+     */
+    @Override
+    public JSONObject getJsonObjectForQuery(String url, String query) {
         GenericRestApiClient apiClient = new GenericRestApiClient(
                 CommonUtils.getBaseDataSourceUrl(
                         url,
                         KruizeConstants.SupportedDatasources.PROMETHEUS
                 )
         );
+
         if (null == apiClient) {
             return null;
         }
+
         try {
             JSONObject jsonObject = apiClient.fetchMetricsJson(
                     KruizeConstants.HttpConstants.MethodType.GET,
@@ -124,14 +154,9 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
                 return null;
             if (jsonObject.getJSONObject("data").getJSONArray("result").isEmpty())
                 return  null;
-            JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
-            for (Object result_obj: result) {
-                JSONObject result_json = (JSONObject) result_obj;
-                if (result_json.has("value")
-                        && !result_json.getJSONArray("value").isEmpty()) {
-                    return result_json.getJSONArray("value").getString(1);
-                }
-            }
+
+            return jsonObject;
+
         } catch (HttpHostConnectException e) {
             LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED);
         } catch (IOException e) {
@@ -142,6 +167,45 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             e.printStackTrace();
         } catch (KeyManagementException e) {
             e.printStackTrace();
+        }
+        return null;
+    }
+
+    /**
+     * executes specified query on datasource and returns the result array
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return JsonArray containing the result array for the specified query
+     *
+     * Example output JsonArray -
+     * [
+     *   {
+     *     "metric": {
+     *       "__name__": "exampleMetric"
+     *     },
+     *     "value": [1642612628.987, "1"]
+     *   }
+     * ]
+     */
+
+    @Override
+    public JsonArray getResultArrayForQuery(String url, String query) {
+        JSONObject jsonObject = getJsonObjectForQuery(url, query);
+
+        if (null == jsonObject) {
+            return null;
+        }
+
+        String jsonString = jsonObject.toString();
+        JsonObject parsedJsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
+        JsonObject dataObject = parsedJsonObject.get("data").getAsJsonObject();
+
+        if (dataObject.has("result") && dataObject.get("result").isJsonArray()) {
+            JsonArray resultArray = dataObject.getAsJsonArray("result");
+
+            if (resultArray != null) {
+                return resultArray;
+            }
         }
         return null;
     }

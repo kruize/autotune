@@ -16,6 +16,9 @@
 package com.autotune.common.datasource;
 
 import com.autotune.common.utils.CommonUtils;
+import com.google.gson.JsonArray;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
 import java.util.ArrayList;
 
@@ -59,4 +62,20 @@ public interface DataSourceOperator {
      * @return Object containing the result value for the specified query
      */
     Object getValueForQuery(String url, String query);
+
+    /**
+     * executes specified query on datasource and returns the JSON Object
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return JSONObject for the specified query
+     */
+    JSONObject getJsonObjectForQuery(String url, String query);
+
+    /**
+     * executes specified query on datasource and returns the result array
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return JsonArray containing the result array for the specified query
+     */
+    public JsonArray getResultArrayForQuery(String url, String query);
 }

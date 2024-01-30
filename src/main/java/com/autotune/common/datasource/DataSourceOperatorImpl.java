@@ -3,6 +3,9 @@ package com.autotune.common.datasource;
 import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.JsonArray;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
 public class DataSourceOperatorImpl implements DataSourceOperator{
@@ -64,6 +67,28 @@ public class DataSourceOperatorImpl implements DataSourceOperator{
      */
     @Override
     public Object getValueForQuery(String url, String query){
+        return null;
+    }
+
+    /**
+     * executes specified query on datasource and returns the JSON Object
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return JSONObject for the specified query
+     */
+    @Override
+    public JSONObject getJsonObjectForQuery(String url, String query) {
+        return null;
+    }
+
+    /**
+     * executes specified query on datasource and returns the result array
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return JsonArray containing the result array for the specified query
+     */
+    @Override
+    public JsonArray getResultArrayForQuery(String url, String query) {
         return null;
     }
 
