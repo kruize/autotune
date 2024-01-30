@@ -374,6 +374,7 @@ public class KruizeConstants {
             public static final String DATASOURCE_NOT_SUPPORTED = "Datasource is not supported: ";
             public static final String SERVICE_NOT_FOUND = "Can not find service with specified name.";
             public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
+            public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
         }
 
         public static class DataSourceQueryJSONKeys {
@@ -414,6 +415,16 @@ public class KruizeConstants {
             public static final String version = "v1.0";
             public static final String CLUSTER_GROUP_NAME = "prometheus";
             public static final String CLUSTER_NAME = "k8s-cluster";
+
+        }
+
+        public static class DataSourceDetailsErrorMsgs {
+            private DataSourceDetailsErrorMsgs() {
+            }
+
+            public static final String INVALID_NAMESPACE_DATA = "Namespace query data obtained is either null or invalid";
+            public static final String INVALID_WORKLOAD_DATA = "Workload query data obtained is either null or invalid";
+            public static final String INVALID_CONTAINER_DATA = "Namespace query data obtained is either null or invalid";
 
         }
 
