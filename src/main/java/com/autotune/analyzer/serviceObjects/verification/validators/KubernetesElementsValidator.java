@@ -19,9 +19,7 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
-import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.common.k8sObjects.K8sObject;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
@@ -29,9 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 public class KubernetesElementsValidator implements ConstraintValidator<KubernetesElementsCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(KubernetesElementsValidator.class);
@@ -96,29 +91,6 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
                                 kubeObjNameSpaceInResultsData,
                                 expName
                         ));
-            }
-
-            // Validate container names and image names
-            List<ContainerData> kruizeContainers = kruizeObject.getKubernetes_objects().get(0).getContainerDataMap().values().stream().toList();
-            List<ContainerData> resultContainers = resultData.getKubernetes_objects().get(0).getContainerDataMap().values().stream().toList();
-            if (kruizeContainers.size() != resultContainers.size()) {
-                kubeObjsMisMatch = true;
-                errorMsg = errorMsg.concat(
-                        String.format("Containers count MisMatched. Expected: %s, Found: %s in Results for experiment: %s \n",
-                                kruizeContainers.size(), resultContainers.size(), expName));
-            } else {
-                for (int i = 0; i < kruizeContainers.size(); i++) {
-                    ContainerData kruizeContainer = kruizeContainers.get(i);
-                    ContainerData resultContainer = resultContainers.get(i);
-                    if (!kruizeContainer.getContainer_name().equals(resultContainer.getContainer_name())
-                            || !kruizeContainer.getContainer_image_name().equals(resultContainer.getContainer_image_name())) {
-                        kubeObjsMisMatch = true;
-                        errorMsg = errorMsg.concat(
-                                String.format("Container names or image names MisMatched. Expected: %s - %s, Found: %s - %s in Results for experiment: %s \n",
-                                        kruizeContainer.getContainer_name(), kruizeContainer.getContainer_image_name(),
-                                        resultContainer.getContainer_name(), resultContainer.getContainer_image_name(), expName));
-                    }
-                }
             }
 
             if (kubeObjsMisMatch) {
