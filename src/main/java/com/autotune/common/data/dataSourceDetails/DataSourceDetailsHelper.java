@@ -201,12 +201,13 @@ public class DataSourceDetailsHelper {
      * This function populates the DataSourceDetailsInfo object with information about active namespaces,
      * workload and container information.
      *
+     * @param cluster_group_name     Name of the cluster group representing data source provider.
      * @param activeNamespaces       List of active namespace names.
-     * @param namespaceWorkloadMap   Mapping of namespace names to lists of DataSourceWorkload objects.
+     * @param namespaceWorkloadMap   Mapping of namespaces to lists of DataSourceWorkload objects.
      * @param workloadContainerMap   Mapping of workload names to lists of DataSourceContainers objects.
      * @return                       A DataSourceDetailsInfo object with populated information.
      */
-    public DataSourceDetailsInfo createDataSourceDetailsInfoObject(List<String> activeNamespaces,
+    public DataSourceDetailsInfo createDataSourceDetailsInfoObject(String cluster_group_name, List<String> activeNamespaces,
                                                                    HashMap<String, List<DataSourceWorkload>> namespaceWorkloadMap,
                                                                    HashMap<String, List<DataSourceContainers>> workloadContainerMap) {
         // add Datasource constants
@@ -214,7 +215,7 @@ public class DataSourceDetailsHelper {
         dataSourceDetailsInfo.setVersion(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.version);
 
         DataSourceClusterGroup dataSourceClusterGroup = new DataSourceClusterGroup();
-        dataSourceClusterGroup.setDataSourceClusterGroupName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.CLUSTER_GROUP_NAME);
+        dataSourceClusterGroup.setDataSourceClusterGroupName(cluster_group_name);
 
         DataSourceCluster dataSourceCluster = new DataSourceCluster();
         dataSourceCluster.setDataSourceClusterName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.CLUSTER_NAME);
