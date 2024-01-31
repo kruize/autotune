@@ -25,10 +25,10 @@ import java.util.List;
  */
 public class DataSourceDetailsOperator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceDetailsOperator.class);
-    private static DataSourceDetailsOperator dataSourceOperatorInstance = new DataSourceDetailsOperator();
+    private static DataSourceDetailsOperator dataSourceDetailsOperatorInstance = new DataSourceDetailsOperator();
     private DataSourceDetailsInfo dataSourceDetailsInfo;
     private DataSourceDetailsOperator() { this.dataSourceDetailsInfo = null; }
-    public static DataSourceDetailsOperator getInstance() { return dataSourceOperatorInstance; }
+    public static DataSourceDetailsOperator getInstance() { return dataSourceDetailsOperatorInstance; }
     public DataSourceDetailsInfo getDataSourceDetailsInfo() { return dataSourceDetailsInfo; }
 
     /**
@@ -42,7 +42,7 @@ public class DataSourceDetailsOperator {
     public void createDataSourceDetails (DataSourceInfo dataSourceInfo) {
 
         DataSourceDetailsHelper dataSourceDetailsHelper = new DataSourceDetailsHelper();
-
+        DataSourceOperatorImpl op1 = DataSourceOperatorImpl.getInstance();
         /**
         * For the "prometheus" provider, fetches and processes data related to namespaces, workloads, and containers,
         * creating a comprehensive DataSourceDetailsInfo object that is then added to a list.
@@ -81,6 +81,12 @@ public class DataSourceDetailsOperator {
         }
     }
 
+    /**
+     * Retrieves details for the specified data source information.
+     *
+     * @param dataSourceInfo The information about the data source to retrieve details for.
+     * @return DataSourceDetailsInfo containing details about the data source if found, otherwise null.
+     */
     public DataSourceDetailsInfo getDataSourceDetails(DataSourceInfo dataSourceInfo) {
 
         if (dataSourceDetailsInfo != null && dataSourceDetailsInfo.getDataSourceClusterGroup().getDataSourceClusterGroupName().equals(dataSourceInfo.getProvider())) {
@@ -90,12 +96,15 @@ public class DataSourceDetailsOperator {
     }
 
     /*
-    TODO - Implement methods to support CRUD operations for periodic update of DataSourceDetailsInfo
+    TODO - Implement methods to support update and delete operations for periodic update of DataSourceDetailsInfo
 
-    private static deleteDataSourceDetails(DataSourceInfo d) {
+    public DataSourceDetailsInfo updateDataSourceDetails(DataSourceInfo dataSource) {
+
     }
 
-    private static updateDataSourceDetails(DataSourceInfo d) {
+    public void deleteDataSourceDetails(DataSourceInfo dataSource) {
+
     }
-    */
+
+     */
 }

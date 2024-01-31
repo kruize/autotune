@@ -46,11 +46,30 @@ public class DataSourceManager {
     /**
      * Imports Data for a specific data source using associated DataSourceInfo.
      */
-    public DataSourceDetailsInfo importDataFromDataSource(DataSourceInfo dataSource) {
+    public void importDataFromDataSource(DataSourceInfo dataSource) {
 
         try {
             if (null != dataSource) {
                 dataSourceDetailsOperator.createDataSourceDetails(dataSource);
+            } else {
+                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            }
+        } catch (DataSourceNotExist e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    /**
+     * Retrieves data from the specified data source information.
+     *
+     * @param dataSource The information about the data source to retrieve data from.
+     * @return DataSourceDetailsInfo containing details about the data source, or null if not found.
+     * @throws DataSourceNotExist Thrown when the provided data source information is null.
+     */
+    public DataSourceDetailsInfo getDataFromDataSource(DataSourceInfo dataSource) {
+
+        try {
+            if (null != dataSource) {
                 return dataSourceDetailsOperator.getDataSourceDetails(dataSource);
             } else {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
@@ -63,24 +82,32 @@ public class DataSourceManager {
 
     /*
     TODO - Implement update and delete functionalities
-    private static updateDataFromDataSource() {
 
-        for(String name : dataSources.keySet()) {
-            DataSourceInfo dataSource = dataSources.get(name);
-            dataSourceDetailsOperator.updateDataSourceDetails(dataSource);
+    public DataSourceDetailsInfo updateDataFromDataSource(DataSourceInfo dataSource) {
 
+        try {
+            if (null != dataSource) {
+                return dataSourceDetailsOperator.updateDataSourceDetails(dataSource);
+            } else {
+                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            }
+        } catch (DataSourceNotExist e) {
+            LOGGER.error(e.getMessage());
         }
+        return null;
     }
-    private static deleteDataFromDataSource() {
+    public void deleteDataFromDataSource(DataSourceInfo dataSource) {
 
-        for(String name : dataSources.keySet()) {
-            DataSourceInfo dataSource = dataSources.get(name);
-            dataSourceDetailsOperator.deleteDataSourceDetails(dataSource);
-
+        try {
+            if (null != dataSource) {
+                dataSourceDetailsOperator.deleteDataSourceDetails(dataSource);
+            } else {
+                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            }
+        } catch (DataSourceNotExist e) {
+            LOGGER.error(e.getMessage());
         }
     }
 
      */
-
-
 }
