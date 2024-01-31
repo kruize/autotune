@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.utils.CommonUtils;
 
 import java.util.ArrayList;
@@ -59,4 +60,10 @@ public interface DataSourceOperator {
      * @return Object containing the result value for the specified query
      */
     Object getValueForQuery(String url, String query);
+
+    /**
+     * returns query endpoint for datasource
+     * @return String containing query endpoint
+     */
+    String getQueryEndpoint();
 }
