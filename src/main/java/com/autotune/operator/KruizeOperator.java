@@ -668,9 +668,9 @@ public class KruizeOperator {
             }
             DataSourceInfo autotuneDataSource = null;
             try {
-                autotuneDataSource = DataSourceOperatorImpl.getDataSource(KruizeDeploymentInfo.monitoring_agent);
-            } catch (DataSourceNotExist e) {
-                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_EXIST);
+                autotuneDataSource = DataSourceOperatorImpl.getMonitoringAgent(KruizeDeploymentInfo.monitoring_agent);
+            } catch (MonitoringAgentNotFoundException e) {
+                e.printStackTrace();
             }
             ArrayList<String> appsForAllQueries = new ArrayList<>();
             ArrayList<LayerPresenceQuery> layerPresenceQueries = layer.getLayerPresenceQueries();

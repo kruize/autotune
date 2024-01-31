@@ -1,5 +1,6 @@
 package com.autotune.common.datasource;
 
+import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
@@ -149,29 +150,30 @@ public class DataSourceOperatorImpl implements DataSourceOperator{
     }
 
     /**
-     * TODO: To find a suitable place for this function later
-     * returns DataSourceInfo objects for default datasources like monitoring agent
+     * TODO: monitoring agent will be replaced by default datasource later
+     * returns DataSourceInfo objects for default datasource which is currently monitoring agent
      * @return DataSourceInfo objects
      */
-    public static DataSourceInfo getDataSource(String dataSource) throws DataSourceNotExist, MalformedURLException {
-        String dataSourceEndpoint = null;
-        DataSourceInfo datasource = null;
+    public static DataSourceInfo getMonitoringAgent(String dataSource) throws MonitoringAgentNotFoundException, MalformedURLException {
+        String monitoringAgentEndpoint;
+        DataSourceInfo monitoringAgent = null;
+
         if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.monitoring_agent)) {
-            dataSourceEndpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
+            monitoringAgentEndpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
             // Monitoring agent endpoint not set in the configmap
-            if (dataSourceEndpoint == null || dataSourceEndpoint.isEmpty()) {
-                dataSourceEndpoint = getServiceEndpoint(KruizeDeploymentInfo.monitoring_service);
+            if (monitoringAgentEndpoint == null || monitoringAgentEndpoint.isEmpty()) {
+                monitoringAgentEndpoint = getServiceEndpoint(KruizeDeploymentInfo.monitoring_service);
             }
             if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE)) {
-                datasource = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, new URL(dataSourceEndpoint));
+                monitoringAgent = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, new URL(monitoringAgentEndpoint));
             }
         }
 
-        if (datasource == null) {
-            LOGGER.error("Datasource " + datasource + " not supported");
+        if (monitoringAgent == null) {
+            LOGGER.error("Datasource " + dataSource + " not supported");
         }
 
-        return datasource;
+        return monitoringAgent;
     }
 
     /**
