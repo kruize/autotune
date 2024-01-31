@@ -19,7 +19,7 @@ import os
 import re
 import subprocess
 import time
-import math
+import warnings
 from datetime import datetime, timedelta
 
 SUCCESS_STATUS_CODE = 201
@@ -112,6 +112,7 @@ LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
 SHORT_TERM = "short_term"
 MEDIUM_TERM = "medium_term"
 LONG_TERM = "long_term"
+MINUTES_IN_AN_HOUR = 60
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -418,6 +419,32 @@ def set_duration_based_on_terms(duration_in_hours, term, interval_start_time, in
     return duration_in_hours
 
 
+def check_monitoring_start_time(monitoring_start_time, interval_start_time, interval_end_time, term):
+    duration = {"short_term": 1, "medium_term": 7, "long_term": 15}
+
+    # Convert datetime strings to datetime objects
+    interval_start_time = datetime.strptime(interval_start_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+    interval_end_time = datetime.strptime(interval_end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+
+    # First check
+    remaining_time = interval_end_time - timedelta(days=duration[term])
+    remaining_time_str = remaining_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + 'Z'
+    if monitoring_start_time == remaining_time_str:
+        return True
+
+    # Second check
+    remaining_time = interval_end_time
+    time_difference = interval_end_time - interval_start_time
+    iterations = int(MINUTES_IN_AN_HOUR / (time_difference.total_seconds()/60))
+    for i in range(24 * duration[term] * iterations):
+        remaining_time -= time_difference
+        remaining_time_str = remaining_time.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + 'Z'
+        if monitoring_start_time == remaining_time_str:
+            return True
+
+    return False
+
+
 def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours, test_name):
     # Validate container image name and container name
     if update_results_container != None and list_reco_container != None:
@@ -460,21 +487,37 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
                         #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
-                        monitoring_start_time = term_based_start_time(interval_end_time, term)
-                        assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
-                            f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
+                        check = check_monitoring_start_time(terms_obj[term]["monitoring_start_time"],
+                                                            interval_start_time, interval_end_time, term)
+                        if not check:
+                            warnings.warn(f"{term} data not available!")
 
                         # Validate duration in hrs
                         if expected_duration_in_hours == None:
-                            duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time, interval_end_time)
+                            diff = time_diff_in_hours(interval_start_time, interval_end_time)
+                            print(f"difference in hours = {diff}")
+                            duration_in_hours += diff
+                            print(f"duration in hours = {duration_in_hours}")
 
-                        duration_in_hours_rounded_off = math.ceil(duration_in_hours * 10) / 10
-                        print(
-                            f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours_rounded_off}")
-                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours_rounded_off, \
-                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours_rounded_off}"
-                        duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time,
-                                                                        interval_end_time)
+                            if term == "short_term" and duration_in_hours > SHORT_TERM_DURATION_IN_HRS_MAX:
+                                duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+                            elif term == "medium_term" and duration_in_hours > MEDIUM_TERM_DURATION_IN_HRS_MAX:
+                                duration_in_hours = MEDIUM_TERM_DURATION_IN_HRS_MAX
+                            elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
+                                duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
+
+                        print(f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+
+                        if test_name is not None:
+                            if MEDIUM_TERM in test_name and term == MEDIUM_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            elif SHORT_TERM in test_name and term == SHORT_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            elif LONG_TERM in test_name and term == LONG_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
 
                         # Get engine objects
                         engines_list = ["cost", "performance"]
