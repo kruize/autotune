@@ -21,7 +21,7 @@ public class DataSourceDetailsInfo {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return "DataSourceDetailsInfo{" +
                 "version ='" + version + '\'' +
                 ", cluster_group ='" + cluster_group.toString() + '\'' +

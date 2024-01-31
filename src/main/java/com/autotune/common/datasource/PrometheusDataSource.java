@@ -116,5 +116,4 @@ public class PrometheusDataSource implements DataSource
 		}
 		return valuesList;
 	}
-
 }

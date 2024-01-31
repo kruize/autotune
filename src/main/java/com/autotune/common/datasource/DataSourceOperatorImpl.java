@@ -8,7 +8,7 @@ import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
-public class DataSourceOperatorImpl implements DataSourceOperator{
+public class DataSourceOperatorImpl implements DataSourceOperator {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataSourceOperatorImpl.class);
     private static DataSourceOperatorImpl dataSourceOperator = null;

@@ -24,7 +24,7 @@ public class DataSourceWorkload {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return "DataSourceWorkload{" +
                 "workload_name ='" + workload_name + '\'' +
                 ", workload_type ='" + workload_type + '\'' +

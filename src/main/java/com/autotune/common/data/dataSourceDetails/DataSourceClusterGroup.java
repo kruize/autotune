@@ -22,7 +22,7 @@ public class DataSourceClusterGroup {
 
 
     @Override
-    public String toString(){
+    public String toString() {
         return "DataSourceClusterGroup{" +
                 "cluster_group_name ='" + cluster_group_name + '\'' +
                 ", cluster ='" + cluster.toString() + '\'' +

@@ -22,7 +22,7 @@ public class DataSourceNamespace {
     }
 
     @Override
-    public String toString(){
+    public String toString() {
         return "DataSourceNamespaces{" +
                 "namespace ='" + namespace + '\'' +
                 ", workloads ='" + workloads.toString() + '\'' +
