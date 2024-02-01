@@ -209,6 +209,9 @@ public class KruizeConstants {
         public static final String PERFORMANCE = "performance";
         public static final String RECOMMENDATION_TERMS = "recommendation_terms";
         public static final String RECOMMENDATION_ENGINES = "recommendation_engines";
+
+        public static final String PLOTS_DATAPOINTS = "datapoints";
+        public static final String PLOTS_DATA = "plots_data";
         public static final String CONFIDENCE_LEVEL = "confidence_level";
 
         private JSONKeys() {
@@ -446,6 +449,7 @@ public class KruizeConstants {
                 public static final int MEDIUM_TERM_DURATION_DAYS = 7;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
                 public static final int LONG_TERM_DURATION_DAYS_THRESHOLD = 2;
+
                 private DurationAmount() {
 
                 }
@@ -454,7 +458,7 @@ public class KruizeConstants {
             public static final class RecommendationDurationRanges {
                 private static final double BUFFER_VALUE_IN_MINS = (TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / TimeConv.NO_OF_SECONDS_PER_MINUTE);
                 /* SHORT TERM */
-                public static final double  SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
+                public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS =
                         (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) + BUFFER_VALUE_IN_MINS;
                 public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
                         (DurationAmount.SHORT_TERM_DURATION_DAYS * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR) - BUFFER_VALUE_IN_MINS;

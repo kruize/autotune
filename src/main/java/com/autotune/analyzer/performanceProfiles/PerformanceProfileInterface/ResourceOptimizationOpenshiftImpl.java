@@ -17,6 +17,7 @@ package com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.plots.PlotManager;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
@@ -169,6 +170,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         } else {
                             timestampRecommendation = new MappedRecommendationForTimestamp();
                         }
+
 
                         HashMap<Timestamp, IntervalResults> intervalResultsHashMap = containerDataResultData.getResults();
                         timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
@@ -338,8 +340,11 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                     mappedRecommendationForTerm.addNotification(recommendationNotification);
                                 }
                                 mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
+                                setDurationBasedOnTerm(containerDataKruizeObject, mappedRecommendationForTerm, recommendationTerm);
+                                if (null != monitoringStartTime) {
+                                    mappedRecommendationForTerm.setPlots(new PlotManager(containerDataKruizeObject.getResults(), recommendationTerm, monitoringStartTime, monitoringEndTime).generatePlots());
+                                }
                             }
-                            setDurationBasedOnTerm(containerDataKruizeObject, mappedRecommendationForTerm, recommendationTerm);
                             timestampRecommendation.setRecommendationForTermHashMap(term, mappedRecommendationForTerm);
                         }
                         if (!termLevelRecommendationExist) {
