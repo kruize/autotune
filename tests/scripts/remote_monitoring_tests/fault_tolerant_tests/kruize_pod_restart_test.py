@@ -133,7 +133,12 @@ def main(argv):
 
         # Fetch listExperiments
         list_exp_json_file_before = list_exp_json_dir + "/list_exp_json_before_" + str(i) + ".json"
-        response = list_experiments()
+        # assign params to be passed in listExp
+        results = "true"
+        recommendations = "true"
+        latest = "false"
+        experiment_name = None
+        response = list_experiments(results, recommendations, latest, experiment_name)
         if response.status_code == SUCCESS_200_STATUS_CODE:
            list_exp_json = response.json()
         else:
@@ -173,7 +178,11 @@ def main(argv):
 
         # Fetch listExperiments
         list_exp_json_file_after = list_exp_json_dir + "/list_exp_json_after_" + str(i) + ".json"
-        response = list_experiments()
+        results = "true"
+        recommendations = "true"
+        latest = "false"
+        experiment_name = None
+        response = list_experiments(results, recommendations, latest, experiment_name)
         if response.status_code == SUCCESS_200_STATUS_CODE:
             list_exp_json = response.json()
         else:

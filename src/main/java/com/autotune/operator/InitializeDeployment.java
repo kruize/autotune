@@ -58,7 +58,7 @@ public class InitializeDeployment {
                 throw new MonitoringAgentNotFoundException();
             } else {
                 // Fetch endpoint from service cluster IP
-                monitoring_agent_endpoint = DataSourceFactory.getDataSource(monitoring_agent).getDataSourceURL();
+                monitoring_agent_endpoint = DataSourceOperatorImpl.getMonitoringAgent(monitoring_agent).getUrl().toString();
             }
         }
         KruizeDeploymentInfo.setMonitoring_agent_endpoint(monitoring_agent_endpoint);

@@ -15,9 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.datasource.prometheus;
 
-import com.autotune.common.datasource.DataSourceOperator;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
-import com.autotune.common.datasource.KruizeDataSourceOperator;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
@@ -169,6 +168,15 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             e.printStackTrace();
         }
         return null;
+    }
+
+    /**
+     * returns query endpoint for prometheus datasource
+     * @return String containing query endpoint
+     */
+    @Override
+    public String getQueryEndpoint() {
+        return AnalyzerConstants.PROMETHEUS_API;
     }
 
     /**

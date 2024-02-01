@@ -17,10 +17,7 @@ package com.autotune.common.datasource;
 
 import com.autotune.common.utils.CommonUtils;
 import com.google.gson.JsonArray;
-import org.json.JSONArray;
 import org.json.JSONObject;
-
-import java.util.ArrayList;
 
 /**
  * DataSourceOperator is an abstraction which has a generic and implementation,
@@ -87,4 +84,9 @@ public interface DataSourceOperator {
      */
     boolean validateResultArray(JsonArray resultArray);
 
+    /**
+     * returns query endpoint for datasource
+     * @return String containing query endpoint
+     */
+    String getQueryEndpoint();
 }
