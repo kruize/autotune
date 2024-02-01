@@ -16,6 +16,8 @@
 
 package com.autotune.utils;
 
+import java.util.Map;
+
 /**
  * Constants for Autotune module
  */
@@ -473,6 +475,21 @@ public class KruizeConstants {
                 public static final double LONG_TERM_HOURS = DurationAmount.LONG_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS + BUFFER_VALUE_IN_MINS;
                 public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS - BUFFER_VALUE_IN_MINS;
+
+                /* DATA POINTS */
+                public static final int SHORT_TERM_MAX_DATAPOINTS = 96;
+                public static final int SHORT_TERM_MIN_DATAPOINTS = 2;
+                public static final int MEDIUM_TERM_MAX_DATAPOINTS = 672;
+                public static final int MEDIUM_TERM_MIN_DATAPOINTS = 192;
+                public static final int LONG_TERM_MAX_DATAPOINTS = 1440;
+                public static final int LONG_TERM_MIN_DATAPOINTS = 768;
+
+
+                public static final Map<String, Integer> MIN_DATAPOINTS_MAP = Map.of(
+                        JSONKeys.SHORT_TERM, SHORT_TERM_MIN_DATAPOINTS,
+                        JSONKeys.MEDIUM_TERM, MEDIUM_TERM_MIN_DATAPOINTS,
+                        JSONKeys.LONG_TERM, LONG_TERM_MIN_DATAPOINTS
+                );
 
                 private RecommendationDurationRanges() {
 

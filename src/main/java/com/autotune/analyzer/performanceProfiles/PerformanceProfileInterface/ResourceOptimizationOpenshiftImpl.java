@@ -144,7 +144,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
 
                         // Check for min data before setting notifications
                         // Check for at least short term
-                        if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, RecommendationConstants.RecommendationTerms.SHORT_TERM)) {
+                        if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, RecommendationConstants.RecommendationTerms.SHORT_TERM, monitoringEndTime)) {
                             RecommendationNotification recommendationNotification = new RecommendationNotification(
                                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
                             );
@@ -259,7 +259,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
 
                             // Check if there is min data available for the term
-                            if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, recommendationTerm)) {
+                            if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, recommendationTerm, monitoringEndTime)) {
                                 RecommendationNotification recommendationNotification = new RecommendationNotification(
                                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                                 mappedRecommendationForTerm.addNotification(recommendationNotification);
@@ -280,8 +280,8 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                     HashMap<Timestamp, IntervalResults> resultsMap = containerDataKruizeObject.getResults();
                                     monitoringStartTime = RecommendationUtils.getMonitoringStartTime(resultsMap,
                                             monitoringEndTime,
-                                            duration,
-                                            recommendationTerm.getLowerBound() / NO_OF_MINUTES_PER_HOUR);
+                                            duration);
+                                    LOGGER.debug("monitoringStartTime = {}", monitoringStartTime);
 
                                     // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                                     MappedRecommendationForEngine mappedRecommendationForEngine = engine.generateRecommendation(
