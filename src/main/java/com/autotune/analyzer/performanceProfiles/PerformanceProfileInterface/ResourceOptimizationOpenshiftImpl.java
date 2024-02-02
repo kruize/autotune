@@ -143,8 +143,13 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                         }
 
                         // Check for min data before setting notifications
-                        // Check for at least short term
-                        if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, RecommendationConstants.RecommendationTerms.SHORT_TERM, monitoringEndTime)) {
+                        boolean recommendationAvailable = false;
+                        for (RecommendationConstants.RecommendationTerms recommendationTerm : RecommendationConstants.RecommendationTerms.values()) {
+                            if (RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, recommendationTerm, monitoringEndTime)) {
+                                recommendationAvailable = true;
+                            }
+                        }
+                        if (!recommendationAvailable) {
                             RecommendationNotification recommendationNotification = new RecommendationNotification(
                                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
                             );
@@ -152,7 +157,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                             continue;
                         }
 
-                        boolean recommendationAvailable = false;
+                        recommendationAvailable = false;
 
                         // Get the engine recommendation map for a time stamp if it exists else create one
                         HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap

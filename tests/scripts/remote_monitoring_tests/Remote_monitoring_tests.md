@@ -61,6 +61,9 @@ Here are the test scenarios:
   	- with invalid data points for each term
 - List recommendations with minimum data threshold exceeding the max duration for each term
 	- with non-contiguous data points exceeding the max duration fixed for each term
+- List recommendations with data available for some terms
+	- with data available only for medium term
+	- with data available only for long term
 
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
    - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
