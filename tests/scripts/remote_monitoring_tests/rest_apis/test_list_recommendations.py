@@ -51,9 +51,6 @@ term_input_exceeding_limit = [
     ("long_term_test_non_contiguous_768_data_points_exceeding_15_days", 768, long_term_list_reco_json_schema, 192.0, 360)
 ]
 
-missing_results_input = [
-    ("short_term_test_missing_data_points", 50, list_reco_json_schema, 5),
-]
 
 @pytest.mark.sanity
 def test_list_recommendations_single_result(cluster_type):
@@ -1102,6 +1099,8 @@ def test_list_recommendations_notification_codes(cluster_type: str):
             # Check for Recommendation level notifications
             if j == 0:
                 assert NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in high_level_notifications
+                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+                           NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA]['message'] == NOT_ENOUGH_DATA_MSG
             else:
                 assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
 
@@ -1890,7 +1889,8 @@ def test_list_recommendations_min_data_threshold_exceeding_max_duration(test_nam
                                                                         expected_duration_in_hours,
                                                                         increment_end_time_by, cluster_type):
     """
-           Test Description: This test validates if recommendations are generated within the max duration fixed for each term
+           Test Description: This test validates if recommendations generated are exceeding the max duration fixed for
+           each term
     """
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results.json"
