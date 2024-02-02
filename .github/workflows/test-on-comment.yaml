@@ -4,13 +4,14 @@ on:
   issue_comment:
     types: [created]
     issue_type: [pull_request]
-  pull_request_review:
-    types: [submitted]
 
 jobs:
   functest:
 
     if: contains(github.event.comment.body, 'run functional tests')
+    outputs:
+      workflow_url: ${{ steps.workflow_run_info.outputs.url }}
+      workflow_id: ${{ steps.workflow_run_info.outputs.id }}
 
     runs-on: ubuntu-20.04
     steps:
