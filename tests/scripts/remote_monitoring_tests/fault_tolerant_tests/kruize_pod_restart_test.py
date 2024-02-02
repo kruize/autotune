@@ -169,7 +169,7 @@ def main(argv):
         result = check_pod_running(namespace, pod_name)
 
         # Sleep for a while 
-        time.sleep(5)
+        time.sleep(60)
 
         if result == False:
             print("Restarting kruize failed!")
