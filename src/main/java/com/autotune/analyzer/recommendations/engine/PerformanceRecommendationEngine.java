@@ -919,18 +919,39 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
         }
 
         if (isRecommendedMemoryLimitAvailable) {
-            if (isCurrentMemoryLimitAvailable && currentMemLimitValue > 0.0) {
+            if (isCurrentMemoryLimitAvailable && currentMemLimitValue > 0.0 && null != generatedMemLimit) {
                 double diffMemLimitPercentage = CommonUtils.getPercentage(generatedMemLimit.doubleValue(), currentMemLimitValue);
                 // Check if variation percentage is negative
                 if (diffMemLimitPercentage < 0.0) {
                     // Convert to positive to check with threshold
                     diffMemLimitPercentage = diffMemLimitPercentage * (-1);
                 }
-                if (diffMemLimitPercentage <= cpuThreshold) {
-                    // Remove from Config
-                    limitsMap.remove(AnalyzerConstants.RecommendationItem.memory);
-                    // Remove from Variation
-                    limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                if (diffMemLimitPercentage <= memoryThreshold) {
+                    // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // limitsMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
+
+                    // Alternative - MEMORY LIMIT VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecMemoryLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    if (null != tempAccessedRecMemoryLimit) {
+                        // Updating it with desired value
+                        tempAccessedRecMemoryLimit.setAmount(currentMemLimitValue);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    limitsMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryLimit);
+
+                    // Alternative - MEMORY LIMIT VARIATION VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecMemoryLimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    if (null != tempAccessedRecMemoryLimitVariation) {
+                        // Updating it with desired value (as we are setting to current variation would be 0)
+                        tempAccessedRecMemoryLimitVariation.setAmount(MEM_ZERO);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryLimitVariation);
+
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_LIMITS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
                 }
