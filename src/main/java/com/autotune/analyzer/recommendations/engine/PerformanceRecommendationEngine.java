@@ -798,7 +798,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
 
         // Check for thresholds
         if (isRecommendedCPURequestAvailable) {
-            if (isCurrentCPURequestAvailable && currentCpuRequestValue > 0.0) {
+            if (isCurrentCPURequestAvailable && currentCpuRequestValue > 0.0 && null != generatedCpuRequest) {
                 double diffCpuRequestPercentage = CommonUtils.getPercentage(generatedCpuRequest.doubleValue(), currentCpuRequestValue);
                 // Check if variation percentage is negative
                 if (diffCpuRequestPercentage < 0.0) {
@@ -806,10 +806,32 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                     diffCpuRequestPercentage = diffCpuRequestPercentage * (-1);
                 }
                 if (diffCpuRequestPercentage <= cpuThreshold) {
-                    // Remove from Config
-                    requestsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
-                    // Remove from Variation
-                    requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // requestsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+
+                    // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+
+                    // Alternative - CPU REQUEST VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    if (null != tempAccessedRecCPURequest) {
+                        // Updating it with desired value
+                        tempAccessedRecCPURequest.setAmount(currentCpuRequestValue);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPURequest);
+
+                    // Alternative - CPU REQUEST VARIATION VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecCPURequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    if (null != tempAccessedRecCPURequestVariation) {
+                        // Updating it with desired value (as we are setting to current variation would be 0)
+                        tempAccessedRecCPURequestVariation.setAmount(CPU_ZERO);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPURequestVariation);
+
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_REQUESTS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
                 }
