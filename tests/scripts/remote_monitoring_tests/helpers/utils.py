@@ -19,6 +19,7 @@ import os
 import re
 import subprocess
 import time
+import math
 from datetime import datetime, timedelta
 
 SUCCESS_STATUS_CODE = 201
@@ -114,6 +115,17 @@ LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
 SHORT_TERM = "short_term"
 MEDIUM_TERM = "medium_term"
 LONG_TERM = "long_term"
+NO_TERM = "no_term"
+SHORT_AND_MEDIUM = "short_and_medium"
+SHORT_AND_LONG = "short_and_long"
+MEDIUM_AND_LONG = "medium_and_long"
+
+TERMS_NOTIFICATION_CODES = {
+    SHORT_TERM: NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE,
+    MEDIUM_TERM: NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE,
+    LONG_TERM: NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE,
+}
+
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -452,20 +464,9 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
 
                         # Validate duration in hrs
-                        if expected_duration_in_hours == None:
-                            diff = time_diff_in_hours(interval_start_time, interval_end_time)
-                            print(f"difference in hours = {diff}")
-                            duration_in_hours += diff
-                            print(f"duration in hours = {duration_in_hours}")
-
-                            if term == "short_term" and duration_in_hours > SHORT_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
-                            elif term == "medium_term" and duration_in_hours > MEDIUM_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = MEDIUM_TERM_DURATION_IN_HRS_MAX
-                            elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
-
-                        print(f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                        if expected_duration_in_hours is None:
+                            duration_in_hours = set_duration_based_on_terms(duration_in_hours, term,
+                                                                            interval_start_time, interval_end_time)
 
                         if test_name is not None:
                             if MEDIUM_TERM in test_name and term == MEDIUM_TERM:
@@ -477,6 +478,14 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             elif LONG_TERM in test_name and term == LONG_TERM:
                                 assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
                                     f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                        else:
+                            duration_in_hours_rounded_off = math.ceil(duration_in_hours * 10) / 10
+                            print(
+                                f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours_rounded_off}")
+                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours_rounded_off, \
+                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours_rounded_off}"
+                            duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time,
+                                                                            interval_end_time)
 
                         # Get engine objects
                         engines_list = ["cost", "performance"]
@@ -500,6 +509,21 @@ def validate_container(update_results_container, update_results_json, list_reco_
         print("Checking for recommendation notifications message...")
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
+
+
+def set_duration_based_on_terms(duration_in_hours, term, interval_start_time, interval_end_time):
+    diff = time_diff_in_hours(interval_start_time, interval_end_time)
+    duration_in_hours += diff
+    print(f"duration in hours = {duration_in_hours}")
+
+    if term == "short_term" and duration_in_hours > SHORT_TERM_DURATION_IN_HRS_MAX:
+        duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+    elif term == "medium_term" and duration_in_hours > MEDIUM_TERM_DURATION_IN_HRS_MAX:
+        duration_in_hours = MEDIUM_TERM_DURATION_IN_HRS_MAX
+    elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
+        duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
+
+    return duration_in_hours
 
 
 def validate_config(reco_config, metrics):
