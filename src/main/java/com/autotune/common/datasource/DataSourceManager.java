@@ -1,6 +1,7 @@
 package com.autotune.common.datasource;
 
 import com.autotune.common.data.dataSourceDetails.DataSourceDetailsInfo;
+import com.autotune.common.exceptions.DataSourceDetailsInfoCreationException;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.Gson;
@@ -27,20 +28,26 @@ public class DataSourceManager {
     List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
     HashMap<String, DataSourceInfo> dataSources = DataSourceCollection.getInstance().getDataSourcesCollection();
 
+    public DataSourceManager() {
+    }
+
     /**
      * Imports Data for each data source using associated DataSourceInfo and DataSourceDetailsOperator.
      */
     public void importDataFromAllDataSources() {
+        try {
+            for (String name : dataSources.keySet()) {
+                DataSourceInfo dataSource = dataSources.get(name);
+                dataSourceDetailsOperator.createDataSourceDetails(dataSource);
+                dataSourceDetailsInfoList.add(dataSourceDetailsOperator.getDataSourceDetailsInfo());
+            }
+            Gson gson = new GsonBuilder().setPrettyPrinting().create();
+            String jsonOutput = gson.toJson(dataSourceDetailsInfoList);
 
-        for(String name : dataSources.keySet()) {
-            DataSourceInfo dataSource = dataSources.get(name);
-            dataSourceDetailsOperator.createDataSourceDetails(dataSource);
-            dataSourceDetailsInfoList.add(dataSourceDetailsOperator.getDataSourceDetailsInfo());
+            LOGGER.info(jsonOutput);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
         }
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String jsonOutput = gson.toJson(dataSourceDetailsInfoList);
-
-        LOGGER.info(jsonOutput);
     }
 
     /**
@@ -56,6 +63,8 @@ public class DataSourceManager {
             }
         } catch (DataSourceNotExist e) {
             LOGGER.error(e.getMessage());
+        } catch (DataSourceDetailsInfoCreationException e) {
+            throw new RuntimeException(e);
         }
     }
 

@@ -17,14 +17,14 @@ package com.autotune.common.datasource.prometheus;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
+import com.autotune.common.exceptions.InvalidDataSourceQueryData;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import org.apache.http.conn.HttpHostConnectException;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
@@ -103,19 +103,25 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      */
     @Override
     public Object getValueForQuery(String url, String query) {
-        JSONObject jsonObject = getJsonObjectForQuery(url, query);
+        try {
+            JSONObject jsonObject = getJsonObjectForQuery(url, query);
 
-        if (null == jsonObject) {
-            return null;
-        }
-
-        JSONArray result = jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-        for (Object result_obj: result) {
-            JSONObject result_json = (JSONObject) result_obj;
-            if (result_json.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE)
-                    && !result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).isEmpty()) {
-                return result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).getString(1);
+            if (null == jsonObject) {
+                return null;
             }
+
+            JSONArray result = jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+            for (Object result_obj : result) {
+                JSONObject result_json = (JSONObject) result_obj;
+                if (result_json.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE)
+                        && !result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).isEmpty()) {
+                    return result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).getString(1);
+                }
+            }
+        } catch (JSONException e) {
+            e.printStackTrace();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -198,22 +204,28 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     @Override
     public JsonArray getResultArrayForQuery(String url, String query) {
-        JSONObject jsonObject = getJsonObjectForQuery(url, query);
+        try {
+            JSONObject jsonObject = getJsonObjectForQuery(url, query);
 
-        if (null == jsonObject) {
-            return null;
-        }
-
-        String jsonString = jsonObject.toString();
-        JsonObject parsedJsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
-        JsonObject dataObject = parsedJsonObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getAsJsonObject();
-
-        if (dataObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT) && dataObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isJsonArray()) {
-            JsonArray resultArray = dataObject.getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-
-            if (resultArray != null) {
-                return resultArray;
+            if (null == jsonObject) {
+                return null;
             }
+
+            String jsonString = jsonObject.toString();
+            JsonObject parsedJsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
+            JsonObject dataObject = parsedJsonObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getAsJsonObject();
+
+            if (dataObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT) && dataObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isJsonArray()) {
+                JsonArray resultArray = dataObject.getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+
+                if (resultArray != null) {
+                    return resultArray;
+                }
+            }
+        } catch (JsonParseException e) {
+            e.printStackTrace();
+        } catch (NullPointerException e) {
+            e.printStackTrace();
         }
         return null;
     }
@@ -225,6 +237,14 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      * @return True if the JSON array is valid (not null, not a JSON null, and has at least one element), otherwise false.
      */
     public boolean validateResultArray(JsonArray resultArray) {
-        return resultArray != null && !resultArray.isJsonNull() && resultArray.size() > 0;
+        try {
+            if ( resultArray == null || resultArray.isJsonNull() || resultArray.size() == 0 ) {
+                throw new InvalidDataSourceQueryData();
+            }
+            return true;
+        } catch (InvalidDataSourceQueryData e) {
+            LOGGER.error(e.getMessage());
+            return false;
+        }
     }
 }

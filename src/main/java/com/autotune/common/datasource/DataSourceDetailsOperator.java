@@ -2,13 +2,12 @@ package com.autotune.common.datasource;
 
 import com.autotune.common.data.dataSourceDetails.*;
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
-import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
+import com.autotune.common.exceptions.DataSourceDetailsInfoCreationException;
 import com.autotune.common.exceptions.InvalidDataSourceQueryData;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -39,7 +38,7 @@ public class DataSourceDetailsOperator {
      * @param dataSourceInfo The DataSourceInfo object containing information about the data source.
      * TODO - support multiple data sources
      */
-    public void createDataSourceDetails (DataSourceInfo dataSourceInfo) {
+    public void createDataSourceDetails (DataSourceInfo dataSourceInfo) throws DataSourceDetailsInfoCreationException {
 
         DataSourceDetailsHelper dataSourceDetailsHelper = new DataSourceDetailsHelper();
         DataSourceOperatorImpl op = null;
@@ -59,27 +58,29 @@ public class DataSourceDetailsOperator {
             JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.NAMESPACE_QUERY);
 
             if (!op.validateResultArray(namespacesDataResultArray)) {
-                throw new InvalidDataSourceQueryData(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.INVALID_NAMESPACE_DATA);
+                throw new InvalidDataSourceQueryData(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.INVALID_DATASOURCE_DETAILS_NAMESPACE_DATA);
             }
-            List<String> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
+            List<DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
 
             JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.WORKLOAD_QUERY);
 
             if (!op.validateResultArray(workloadDataResultArray)) {
-                throw new InvalidDataSourceQueryData(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.INVALID_WORKLOAD_DATA);
+                throw new InvalidDataSourceQueryData(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.INVALID_DATASOURCE_DETAILS_WORKLOAD_DATA);
             }
             HashMap<String, List<DataSourceWorkload>> datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
 
             JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.CONTAINER_QUERY);
 
             if (!op.validateResultArray(containerDataResultArray)) {
-                throw new InvalidDataSourceQueryData(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.INVALID_CONTAINER_DATA);
+                throw new InvalidDataSourceQueryData(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.INVALID_DATASOURCE_DETAILS_CONTAINER_DATA);
             }
             HashMap<String, List<DataSourceContainers>> datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
 
             dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), datasourceNamespaces, datasourceWorkloads, datasourceContainers);
         } catch (InvalidDataSourceQueryData e) {
             LOGGER.error(e.getMessage());
+        } catch (DataSourceDetailsInfoCreationException e) {
+            throw new DataSourceDetailsInfoCreationException(e.getMessage());
         }
     }
 
