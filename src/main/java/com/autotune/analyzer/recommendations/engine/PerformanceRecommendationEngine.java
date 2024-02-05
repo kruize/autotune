@@ -839,7 +839,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
         }
 
         if (isRecommendedCPULimitAvailable) {
-            if (isCurrentCPULimitAvailable && currentCpuLimitValue > 0.0) {
+            if (isCurrentCPULimitAvailable && currentCpuLimitValue > 0.0 && null != generatedCpuLimit) {
                 double diffCPULimitPercentage = CommonUtils.getPercentage(generatedCpuLimit.doubleValue(), currentCpuLimitValue);
                 // Check if variation percentage is negative
                 if (diffCPULimitPercentage < 0.0) {
@@ -847,10 +847,31 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                     diffCPULimitPercentage = diffCPULimitPercentage * (-1);
                 }
                 if (diffCPULimitPercentage <= cpuThreshold) {
-                    // Remove from Config
-                    limitsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
-                    // Remove from Variation
-                    limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // limitsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+
+                    // Alternative - CPU LIMIT VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    if (null != tempAccessedRecCPULimit) {
+                        // Updating it with desired value
+                        tempAccessedRecCPULimit.setAmount(currentCpuLimitValue);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPULimit);
+
+                    // Alternative - CPU LIMIT VARIATION VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecCPULimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    if (null != tempAccessedRecCPULimitVariation) {
+                        // Updating it with desired value (as we are setting to current variation would be 0)
+                        tempAccessedRecCPULimitVariation.setAmount(CPU_ZERO);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPULimitVariation);
+
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_LIMITS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
                 }
