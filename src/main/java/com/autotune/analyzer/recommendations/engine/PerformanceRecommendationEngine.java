@@ -879,7 +879,7 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
         }
 
         if (isRecommendedMemoryRequestAvailable) {
-            if (isCurrentMemoryRequestAvailable && currentMemRequestValue > 0.0) {
+            if (isCurrentMemoryRequestAvailable && currentMemRequestValue > 0.0 && null != generatedMemRequest) {
                 double diffMemRequestPercentage = CommonUtils.getPercentage(generatedMemRequest.doubleValue(), currentMemRequestValue);
                 // Check if variation percentage is negative
                 if (diffMemRequestPercentage < 0.0) {
@@ -887,10 +887,31 @@ public class PerformanceRecommendationEngine implements KruizeRecommendationEngi
                     diffMemRequestPercentage = diffMemRequestPercentage * (-1);
                 }
                 if (diffMemRequestPercentage <= memoryThreshold) {
-                    // Remove from Config
-                    requestsMap.remove(AnalyzerConstants.RecommendationItem.memory);
-                    // Remove from Variation
-                    requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // requestsMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
+
+                    // Alternative - MEMORY REQUEST VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecMemoryRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    if (null != tempAccessedRecMemoryRequest) {
+                        // Updating it with desired value
+                        tempAccessedRecMemoryRequest.setAmount(currentMemRequestValue);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    requestsMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryRequest);
+
+                    // Alternative - MEMORY REQUEST VARIATION VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecMemoryRequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    if (null != tempAccessedRecMemoryRequestVariation) {
+                        // Updating it with desired value (as we are setting to current variation would be 0)
+                        tempAccessedRecMemoryRequestVariation.setAmount(MEM_ZERO);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryRequestVariation);
+
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_REQUESTS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
                 }
