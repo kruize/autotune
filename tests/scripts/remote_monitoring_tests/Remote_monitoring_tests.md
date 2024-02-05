@@ -57,13 +57,22 @@ Here are the test scenarios:
 	- Non-existing time stamp, incorrect timestamp format
 - List recommendations with valid and invalid notification codes
 - List recommendations with valid and invalid minimum data threshold
-  	- with valid contiguous and non-contiguous minimum data points for each term
-  	- with invalid data points for each term
+	- Valid contiguous and non-contiguous minimum data points for each term
+	- Invalid minimum data points for each term
 - List recommendations with minimum data threshold exceeding the max duration for each term
 	- with non-contiguous data points exceeding the max duration fixed for each term
 - List recommendations with data available for some terms
-	- with data available only for medium term
-	- with data available only for long term
+	- for contiguous data: 
+		- no data available
+		- all data available
+		- only short_term data available
+		- only medium_term data available
+		- only long_term data available
+		- short_term and medium_term data available
+		- short_term and long_term data available
+		- medium_term and long_term data available
+	- for non-contiguous data:
+		- similar tests as mentioned above for contiguous
 
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
    - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo

@@ -2,13 +2,19 @@ import datetime
 import json
 
 import pytest
+
+from helpers.all_terms_list_reco_json_schema import all_terms_list_reco_json_schema
 from helpers.fixtures import *
 from helpers.generate_rm_jsons import *
 from helpers.kruize import *
 from helpers.list_reco_json_schema import *
+from helpers.medium_and_long_term_list_reco_json_schema import medium_and_long_term_list_reco_json_schema
 from helpers.medium_term_list_reco_json_schema import *
 from helpers.long_term_list_reco_json_schema import *
 from helpers.list_reco_json_validate import *
+from helpers.short_and_long_term_list_reco_json_schema import short_and_long_term_list_reco_json_schema
+from helpers.short_and_medium_term_list_reco_json_schema import short_and_medium_term_list_reco_json_schema
+from helpers.short_term_list_reco_json_schema import short_term_list_reco_json_schema
 from helpers.utils import *
 
 reco_term_input = [
@@ -40,24 +46,25 @@ term_input_for_missing_terms = [
     # test_name, num_res, reco_json_schema, expected_duration_in_hours, increment_end_time_by
     # contiguous scenarios
     ("no_term_min_recomm", 1, None, 0, 0),
-    ("all_terms_min_recomm", 768, list_reco_json_schema, 192.0, 0),
-    ("only_short_term_min_recomm", 2, list_reco_json_schema, 0.5, 0),
+    ("all_terms_min_recomm", 768, all_terms_list_reco_json_schema, 192.0, 0),
+    ("only_short_term_min_recomm", 2, short_term_list_reco_json_schema, 0.5, 0),
     ("only_medium_term_min_recomm", 192, medium_term_list_reco_json_schema, 48.0, 0),
     ("only_long_term_min_recomm", 768, long_term_list_reco_json_schema, 192.0, 0),
-    ("short_and_medium_term_min_recomm", 192, list_reco_json_schema, 48.0, 0),
-    ("short_and_long_term_min_recomm", 768, list_reco_json_schema, 192.0, 0),
-    ("medium_and_long_term_min_recomm", 768, list_reco_json_schema, 192.0, 0)
+    ("short_and_medium_term_min_recomm", 192, short_and_medium_term_list_reco_json_schema, 48.0, 0),
+    ("short_and_long_term_min_recomm", 768, short_and_long_term_list_reco_json_schema, 192.0, 0),
+    ("medium_and_long_term_min_recomm", 768, medium_and_long_term_list_reco_json_schema, 192.0, 0)
 ]
+
 term_input_for_missing_terms_non_contiguous = [
     # test_name, num_res, reco_json_schema, expected_duration_in_hours, increment_end_time_by
     # non-contiguous scenarios
-    ("all_terms_min_recomm_non_contiguous", 768, long_term_list_reco_json_schema, 192, 15),
-    ("only_short_term_min_recomm_non_contiguous", 2, list_reco_json_schema, 0.5, 15),
+    ("all_terms_min_recomm_non_contiguous", 768, all_terms_list_reco_json_schema, 192, 15),
+    ("only_short_term_min_recomm_non_contiguous", 2, short_term_list_reco_json_schema, 0.5, 15),
     ("only_medium_term_min_recomm_non_contiguous", 192, medium_term_list_reco_json_schema, 48.0, 15),
     ("only_long_term_min_recomm_non_contiguous", 768, long_term_list_reco_json_schema, 192.0, 15),
-    ("short_and_medium_term_min_recomm_non_contiguous", 192, medium_term_list_reco_json_schema, 48.0, 15),
-    ("short_and_long_term_min_recomm_non_contiguous", 768, long_term_list_reco_json_schema, 192.0, 15),
-    ("medium_and_long_term_min_recomm_non_contiguous", 768, long_term_list_reco_json_schema, 192.0, 15),
+    ("short_and_medium_term_min_recomm_non_contiguous", 192, short_and_medium_term_list_reco_json_schema, 48.0, 15),
+    ("short_and_long_term_min_recomm_non_contiguous", 768, short_and_long_term_list_reco_json_schema, 192.0, 15),
+    ("medium_and_long_term_min_recomm_non_contiguous", 768, medium_and_long_term_list_reco_json_schema, 192.0, 15),
 ]
 
 invalid_term_input = [
