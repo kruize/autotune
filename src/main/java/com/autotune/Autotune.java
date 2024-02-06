@@ -16,10 +16,10 @@
 package com.autotune;
 
 import com.autotune.analyzer.Analyzer;
+import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
@@ -102,8 +102,8 @@ public class Autotune {
             InitializeDeployment.setup_deployment_info();
             // Read and execute the DDLs here
             executeDDLs();
-        } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
-                 MonitoringAgentNotFoundException e) {
+        } catch (Exception | K8sTypeNotSupportedException |
+                 DefaultDataSourceNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
         }

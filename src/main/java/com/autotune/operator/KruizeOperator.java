@@ -32,6 +32,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.exceptions.DataSourceNotExist;
@@ -495,7 +496,7 @@ public class KruizeOperator {
                 for (Object query : layerPresenceQueryJson) {
                     JSONObject queryJson = (JSONObject) query;
                     String datasource = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-                    if (datasource.equalsIgnoreCase(KruizeDeploymentInfo.monitoring_agent)) {
+                    if (datasource.equalsIgnoreCase(KruizeDeploymentInfo.defaultDataSource.getProvider())) {
                         layerPresenceQueryStr = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
                         layerPresenceKey = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.KEY);
                         // Replace the queryvariables in the query
@@ -668,8 +669,11 @@ public class KruizeOperator {
             }
             DataSourceInfo autotuneDataSource = null;
             try {
-                autotuneDataSource = DataSourceOperatorImpl.getMonitoringAgent(KruizeDeploymentInfo.monitoring_agent);
-            } catch (MonitoringAgentNotFoundException e) {
+                autotuneDataSource = DataSourceCollection.getInstance().getDefaultDataSource();
+                if (autotuneDataSource == null){
+                    throw new DefaultDataSourceNotFoundException(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DEFAULT_DATASOURCE_NOT_FOUND);
+                }
+            } catch (DefaultDataSourceNotFoundException e) {
                 e.printStackTrace();
             }
             ArrayList<String> appsForAllQueries = new ArrayList<>();

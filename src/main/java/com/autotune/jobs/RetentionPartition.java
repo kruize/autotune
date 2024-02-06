@@ -1,8 +1,7 @@
 package com.autotune.jobs;
 
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.operator.InitializeDeployment;
 import org.hibernate.Session;
@@ -18,8 +17,7 @@ public class RetentionPartition {
         LOGGER.info("Checking Liveliness probe DB connection...");
         try {
             InitializeDeployment.setup_deployment_info();
-        } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
-                 MonitoringAgentNotFoundException e) {
+        } catch (Exception | K8sTypeNotSupportedException | DefaultDataSourceNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
         }

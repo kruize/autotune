@@ -15,12 +15,12 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
-public class MonitoringAgentNotFoundException extends Throwable
+public class DefaultDataSourceNotFoundException extends Throwable
 {
-	public MonitoringAgentNotFoundException() {
+	public DefaultDataSourceNotFoundException() {
 	}
 
-	public MonitoringAgentNotFoundException(String message) {
+	public DefaultDataSourceNotFoundException(String message) {
 		super(message);
 	}
 }

@@ -15,9 +15,9 @@
  *******************************************************************************/
 package com.autotune.operator;
 
+import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.common.datasource.*;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
@@ -41,36 +41,29 @@ public class InitializeDeployment {
 
     }
 
-    public static void setup_deployment_info() throws Exception, K8sTypeNotSupportedException, MonitoringAgentNotSupportedException, MonitoringAgentNotFoundException {
+    public static void setup_deployment_info() throws Exception, K8sTypeNotSupportedException, DefaultDataSourceNotFoundException {
         setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.KRUIZE_CONFIG_ENV_NAME.class);
         setConfigValues(KruizeConstants.DBConstants.CONFIG_FILE, KruizeConstants.DATABASE_ENV_NAME.class);
+
+        DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
+        dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
+
         KruizeDeploymentInfo.setCluster_type(KruizeDeploymentInfo.cluster_type);
         KruizeDeploymentInfo.setKubernetesType(KruizeDeploymentInfo.k8s_type);
         KruizeDeploymentInfo.setAuth_type(KruizeDeploymentInfo.auth_type);
-        KruizeDeploymentInfo.setMonitoring_agent(KruizeDeploymentInfo.monitoring_agent);
-        KruizeDeploymentInfo.setMonitoringAgentService(KruizeDeploymentInfo.monitoring_service);
-        String monitoring_agent_endpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
-        String monitoring_agent = KruizeDeploymentInfo.monitoring_agent;
-        String monitoring_agent_service = KruizeDeploymentInfo.monitoring_service;
-        //If no endpoint was specified in the configmap
-        if (monitoring_agent_endpoint == null || monitoring_agent_endpoint.isEmpty()) {
-            if (monitoring_agent == null || monitoring_agent_service == null) {
-                throw new MonitoringAgentNotFoundException();
-            } else {
-                // Fetch endpoint from service cluster IP
-                monitoring_agent_endpoint = DataSourceOperatorImpl.getMonitoringAgent(monitoring_agent).getUrl().toString();
-            }
+        KruizeDeploymentInfo.setDefaultDataSource();
+        DataSourceInfo defaultDataSource = KruizeDeploymentInfo.defaultDataSource;
+        // If no default datasource was specified in the configmap
+        if (defaultDataSource == null) {
+                throw new DefaultDataSourceNotFoundException();
         }
-        KruizeDeploymentInfo.setMonitoring_agent_endpoint(monitoring_agent_endpoint);
-
         KruizeDeploymentInfo.setLayerTable();
 
         KruizeDeploymentInfo.initiateEventLogging();
 
         KruizeDeploymentInfo.logDeploymentInfo();
 
-        DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
-        dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
+
 
         LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
         HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();

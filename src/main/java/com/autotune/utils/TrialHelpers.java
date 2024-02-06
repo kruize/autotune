@@ -28,6 +28,7 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.trials.*;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
@@ -145,9 +146,9 @@ public class TrialHelpers {
                 trialNumber,
                 trialResultUrl.toString());
 
-        DataSourceInfo datasourceInfo = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, KruizeConstants.SupportedDatasources.PROMETHEUS, new URL(KruizeDeploymentInfo.monitoring_agent_endpoint));
+        DataSourceInfo datasourceInfo = KruizeDeploymentInfo.defaultDataSource;
         HashMap<String, DataSourceInfo> datasourceInfoHashMap = new HashMap<>();
-        datasourceInfoHashMap.put(KruizeDeploymentInfo.monitoring_agent, datasourceInfo);  //Change key value as per YAML input
+        datasourceInfoHashMap.put(KruizeConstants.DataSourceConstants.DEFAULT_DATASOURCE_NAME, datasourceInfo);  //Change key value as per YAML input
         DeploymentTracking deploymentTracking = new DeploymentTracking();
         DeploymentSettings deploymentSettings = new DeploymentSettings(deploymentPolicy,
                 deploymentTracking);
@@ -201,7 +202,7 @@ public class TrialHelpers {
                 LOGGER.error("ERROR: tunable is null for tunableName: " + tunableName);
             }
             ApplicationServiceStack applicationServiceStack = kruizeExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(tunable.getStackName());
-            String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.monitoring_agent);
+            String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.defaultDataSource.getProvider());
             Class<Layer> classRef = KruizeDeploymentInfo.getLayer(tunable.getLayerName());
             try {
                 Object inst = classRef.getDeclaredConstructor().newInstance();
@@ -220,7 +221,7 @@ public class TrialHelpers {
             if (tunableQuery != null && !tunableQuery.isEmpty()) {
                 Metric queryMetric = new Metric(tunable.getName(),
                         tunableQuery,
-                        KruizeDeploymentInfo.monitoring_agent,
+                        KruizeDeploymentInfo.defaultDataSource.getProvider(),
                         tunable.getValueType(), null);
                 if (containerMetricsHashMap != null
                         && !containerMetricsHashMap.isEmpty()

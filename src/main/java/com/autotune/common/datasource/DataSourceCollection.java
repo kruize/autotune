@@ -62,6 +62,31 @@ public class DataSourceCollection {
     }
 
     /**
+     * Returns the object of default dataSource
+     * @return DataSourceInfo object
+     */
+    public DataSourceInfo getDefaultDataSource() {
+        return dataSourceCollection.get(KruizeConstants.DataSourceConstants.DEFAULT_DATASOURCE_NAME);
+    }
+
+    /**
+     * Set or update the default dataSource
+     * @param dataSource dataSourceInfo object containing the details of default datasource
+     */
+    public void setDefaultDataSource(DataSourceInfo dataSource) {
+        if (dataSourceCollection.containsKey(KruizeConstants.DataSourceConstants.DEFAULT_DATASOURCE_NAME)) {
+            updateDataSource(KruizeConstants.DataSourceConstants.DEFAULT_DATASOURCE_NAME, dataSource);
+        } else {
+            if (!dataSource.getName().equalsIgnoreCase(KruizeConstants.DataSourceConstants.DEFAULT_DATASOURCE_NAME)) {
+                addDataSource(dataSource);
+            } else {
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DEFAULT_DATASOURCE_NAME);
+            }
+
+        }
+    }
+
+    /**
      * Adds datasource to collection
      * @param datasource DataSourceInfo object containing details of datasource
      */

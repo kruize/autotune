@@ -22,6 +22,8 @@ import com.autotune.analyzer.kruizeLayer.layers.ContainerLayer;
 import com.autotune.analyzer.kruizeLayer.layers.GenericLayer;
 import com.autotune.analyzer.kruizeLayer.layers.HotspotLayer;
 import com.autotune.analyzer.kruizeLayer.layers.QuarkusLayer;
+import com.autotune.common.datasource.DataSourceCollection;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.KubeEventLogger;
 import org.slf4j.Logger;
@@ -53,9 +55,7 @@ public class KruizeDeploymentInfo {
     public static String settings_hibernate_show_sql;
     public static String settings_hibernate_time_zone;
     public static String autotune_mode;
-    public static String monitoring_agent;
-    public static String monitoring_service;
-    public static String monitoring_agent_endpoint;
+    public static DataSourceInfo defaultDataSource;
     public static String cluster_type;
     public static String k8s_type;       // ABC
     public static String auth_type;
@@ -89,17 +89,6 @@ public class KruizeDeploymentInfo {
     public static Class getLayer(String layerName) {
         return tunableLayerPair.get(layerName);
     }
-
-
-    public static void setMonitoring_agent_endpoint(String monitoring_agent_endpoint) {
-        if (monitoring_agent_endpoint.endsWith("/")) {
-            KruizeDeploymentInfo.monitoring_agent_endpoint =
-                    monitoring_agent_endpoint.substring(0, monitoring_agent_endpoint.length() - 1);
-        } else {
-            KruizeDeploymentInfo.monitoring_agent_endpoint = monitoring_agent_endpoint;
-        }
-    }
-
 
     public static void setCluster_type(String cluster_type) throws ClusterTypeNotSupportedException {
         if (cluster_type != null)
@@ -144,33 +133,18 @@ public class KruizeDeploymentInfo {
         }
     }
 
+    public static void setDefaultDataSource() {
+        KruizeDeploymentInfo.defaultDataSource = DataSourceCollection.getInstance().getDefaultDataSource();
 
-    public static void setMonitoring_agent(String monitoring_agent) throws MonitoringAgentNotSupportedException {
-        if (monitoring_agent != null)
-            monitoring_agent = monitoring_agent.toLowerCase();
-
-        if (KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(monitoring_agent)) {
-            KruizeDeploymentInfo.monitoring_agent = monitoring_agent;
-        } else {
-            LOGGER.error("Monitoring agent {}  is not supported", monitoring_agent);
-            throw new MonitoringAgentNotSupportedException();
-        }
-    }
-
-
-    public static void setMonitoringAgentService(String monitoringAgentService) {
-        if (monitoringAgentService != null)
-            KruizeDeploymentInfo.monitoring_service = monitoringAgentService.toLowerCase();
     }
 
     public static void logDeploymentInfo() {
         LOGGER.info("Cluster Type: {}", KruizeDeploymentInfo.cluster_type);
         LOGGER.info("Kubernetes Type: {}", KruizeDeploymentInfo.k8s_type);
         LOGGER.info("Auth Type: {}", KruizeDeploymentInfo.auth_type);
-        LOGGER.info("Monitoring Agent: {}", KruizeDeploymentInfo.monitoring_agent);
-        LOGGER.info("Monitoring Agent URL: {}", KruizeDeploymentInfo.monitoring_agent_endpoint);
-        LOGGER.info("Monitoring agent service: {}\n\n", KruizeDeploymentInfo.monitoring_service);
+        LOGGER.info("Default Datasource: {}", KruizeDeploymentInfo.defaultDataSource.getName());
+        LOGGER.info("Default Datasource URL: {}", KruizeDeploymentInfo.defaultDataSource.getUrl());
+        LOGGER.info("Default Datasource Provider: {}\n\n", KruizeDeploymentInfo.defaultDataSource.getProvider());
     }
-
 
 }

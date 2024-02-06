@@ -29,7 +29,7 @@ public class KruizeSupportedTypes
 	public static final Set<String> DIRECTIONS_SUPPORTED =
 			new HashSet<>(Arrays.asList("minimize", "maximize"));
 
-	public static final Set<String> MONITORING_AGENTS_SUPPORTED =
+	public static final Set<String> DATASOURCES_SUPPORTED =
 			new HashSet<>(Arrays.asList("prometheus"));
 
 	public static final Set<String> MODES_SUPPORTED =
