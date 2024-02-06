@@ -105,9 +105,6 @@ data:
       "clustertype": "kubernetes",
       "k8stype": "minikube",
       "authtype": "",
-      "monitoringagent": "prometheus",
-      "monitoringservice": "prometheus-k8s",
-      "monitoringendpoint": "prometheus-k8s",
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
       "hibernate": {
