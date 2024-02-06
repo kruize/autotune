@@ -116,9 +116,11 @@ SHORT_TERM = "short_term"
 MEDIUM_TERM = "medium_term"
 LONG_TERM = "long_term"
 NO_TERM = "no_term"
-SHORT_AND_MEDIUM = "short_and_medium"
-SHORT_AND_LONG = "short_and_long"
-MEDIUM_AND_LONG = "medium_and_long"
+SHORT_AND_MEDIUM = "short_term_and_medium_term"
+SHORT_AND_LONG = "short_term_and_long_term"
+MEDIUM_AND_LONG = "medium_term_and_long_term"
+ONLY_LONG = "only_long_term"
+ONLY_MEDIUM = "only_medium_term"
 
 TERMS_NOTIFICATION_CODES = {
     SHORT_TERM: NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE,
@@ -469,6 +471,22 @@ def validate_container(update_results_container, update_results_json, list_reco_
                                                                             interval_start_time, interval_end_time)
 
                         if test_name is not None:
+                            if SHORT_AND_MEDIUM in test_name:
+                                if term == SHORT_TERM:
+                                    duration_in_hours = 24.0
+                                else:
+                                    duration_in_hours = 48.0
+                            elif SHORT_AND_LONG in test_name:
+                                if term == SHORT_TERM:
+                                    duration_in_hours = 24.0
+                                else:
+                                    duration_in_hours = 192.0
+                            elif MEDIUM_AND_LONG in test_name:
+                                if term == MEDIUM_TERM:
+                                    duration_in_hours = 168.0
+                                else:
+                                    duration_in_hours = 192.0
+
                             if MEDIUM_TERM in test_name and term == MEDIUM_TERM:
                                 assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
                                     f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"

@@ -50,9 +50,9 @@ term_input_for_missing_terms = [
     ("only_short_term_min_recomm", 2, short_term_list_reco_json_schema, 0.5, 0),
     ("only_medium_term_min_recomm", 192, medium_term_list_reco_json_schema, 48.0, 0),
     ("only_long_term_min_recomm", 768, long_term_list_reco_json_schema, 192.0, 0),
-    ("short_and_medium_term_min_recomm", 192, short_and_medium_term_list_reco_json_schema, 48.0, 0),
-    ("short_and_long_term_min_recomm", 768, short_and_long_term_list_reco_json_schema, 192.0, 0),
-    ("medium_and_long_term_min_recomm", 768, medium_and_long_term_list_reco_json_schema, 192.0, 0)
+    ("short_term_and_medium_term_min_recomm", 192, short_and_medium_term_list_reco_json_schema, 24.0, 0),
+    ("short_term_and_long_term_min_recomm", 768, short_and_long_term_list_reco_json_schema, 24.0, 0),
+    ("medium_term_and_long_term_min_recomm", 768, medium_and_long_term_list_reco_json_schema, 168.0, 0)
 ]
 
 term_input_for_missing_terms_non_contiguous = [
@@ -62,9 +62,9 @@ term_input_for_missing_terms_non_contiguous = [
     ("only_short_term_min_recomm_non_contiguous", 2, short_term_list_reco_json_schema, 0.5, 15),
     ("only_medium_term_min_recomm_non_contiguous", 192, medium_term_list_reco_json_schema, 48.0, 15),
     ("only_long_term_min_recomm_non_contiguous", 768, long_term_list_reco_json_schema, 192.0, 15),
-    ("short_and_medium_term_min_recomm_non_contiguous", 192, short_and_medium_term_list_reco_json_schema, 48.0, 15),
-    ("short_and_long_term_min_recomm_non_contiguous", 768, short_and_long_term_list_reco_json_schema, 192.0, 15),
-    ("medium_and_long_term_min_recomm_non_contiguous", 768, medium_and_long_term_list_reco_json_schema, 192.0, 15),
+    ("short_term_and_medium_term_min_recomm_non_contiguous", 192, short_and_medium_term_list_reco_json_schema, 24.0, 15),
+    ("short_term_and_long_term_min_recomm_non_contiguous", 768, short_and_long_term_list_reco_json_schema, 24.0, 15),
+    ("medium_term_and_long_term_min_recomm_non_contiguous", 768, medium_and_long_term_list_reco_json_schema, 168.0, 15),
 ]
 
 invalid_term_input = [
@@ -2124,7 +2124,7 @@ def test_list_recommendations_for_missing_terms(test_name, num_res, reco_json_sc
     # Create experiment using the specified json
     num_exps = 1
     list_of_result_json_arr = []
-    increment_end_time_for_long = 7200
+    increment_end_time_for_long = 8640
     increment_end_time_for_medium_and_long = 1440
     for i in range(num_exps):
         create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
@@ -2158,10 +2158,23 @@ def test_list_recommendations_for_missing_terms(test_name, num_res, reco_json_sc
 
             if j == 0:
                 start_time = interval_start_time
-            elif j == num_res - 2 and LONG_TERM in test_name:
-                start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_long)
-            elif j == num_res - 1 and (MEDIUM_TERM in test_name or LONG_TERM in test_name):
-                start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_medium_and_long)
+            elif SHORT_AND_LONG in test_name:
+                if j == num_res - 2:
+                    start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_long)
+                else:
+                    start_time = end_time
+            elif MEDIUM_AND_LONG in test_name or ONLY_MEDIUM in test_name:
+                if j == num_res - 1:
+                    start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_medium_and_long)
+                else:
+                    start_time = end_time
+            elif ONLY_LONG in test_name:
+                if j == num_res - 2:
+                    start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_long)
+                elif j == num_res - 1:
+                    start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_medium_and_long)
+                else:
+                    start_time = end_time
             else:
                 start_time = end_time
 
@@ -2231,7 +2244,7 @@ def test_list_recommendations_for_missing_terms(test_name, num_res, reco_json_sc
                                          NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE)
             validate_and_assert_term_recommendations(data, end_time, SHORT_TERM)
 
-            if SHORT_AND_MEDIUM in test_name:
+            if MEDIUM_TERM in test_name:
                 # Check the presence of medium_term
                 assert_notification_presence(data, end_time, MEDIUM_TERM,
                                              NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE)
@@ -2240,7 +2253,7 @@ def test_list_recommendations_for_missing_terms(test_name, num_res, reco_json_sc
                                             NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE)
                 validate_and_assert_term_recommendations(data, end_time, MEDIUM_TERM)
 
-            elif SHORT_AND_LONG in test_name:
+            elif LONG_TERM in test_name:
                 # Check the presence of long_term
                 assert_notification_presence(data, end_time, LONG_TERM,
                                              NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE)
@@ -2394,10 +2407,23 @@ def test_list_recommendations_for_missing_terms_non_contiguous(test_name, num_re
                 start_time = interval_start_time
             elif j == 1 or j % 10 == 0:
                 start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_by)
-            elif j == num_res - 2 and LONG_TERM in test_name:
-                start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_long)
-            elif j == num_res - 1 and (MEDIUM_TERM in test_name or LONG_TERM in test_name):
-                start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_medium_and_long)
+            elif SHORT_AND_LONG in test_name:
+                if j == num_res - 2:
+                    start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_long)
+                else:
+                    start_time = end_time
+            elif MEDIUM_AND_LONG in test_name or ONLY_MEDIUM in test_name:
+                if j == num_res - 1:
+                    start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_medium_and_long)
+                else:
+                    start_time = end_time
+            elif ONLY_LONG in test_name:
+                if j == num_res - 2:
+                    start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_long)
+                elif j == num_res - 1:
+                    start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_for_medium_and_long)
+                else:
+                    start_time = end_time
             else:
                 start_time = end_time
 
@@ -2463,7 +2489,7 @@ def test_list_recommendations_for_missing_terms_non_contiguous(test_name, num_re
                                          NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE)
             validate_and_assert_term_recommendations(data, end_time, SHORT_TERM)
 
-            if SHORT_AND_MEDIUM in test_name:
+            if MEDIUM_TERM in test_name:
                 # Check the presence of medium_term
                 assert_notification_presence(data, end_time, MEDIUM_TERM,
                                              NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE)
@@ -2472,7 +2498,7 @@ def test_list_recommendations_for_missing_terms_non_contiguous(test_name, num_re
                                             NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE)
                 validate_and_assert_term_recommendations(data, end_time, MEDIUM_TERM)
 
-            elif SHORT_AND_LONG in test_name:
+            elif LONG_TERM in test_name:
                 # Check the presence of long_term
                 assert_notification_presence(data, end_time, LONG_TERM,
                                              NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE)
