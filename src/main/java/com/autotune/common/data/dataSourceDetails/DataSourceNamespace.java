@@ -1,22 +1,28 @@
 package com.autotune.common.data.dataSourceDetails;
 
+import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
+/**
+ * DataSourceNamespace object represents the namespace of a cluster, and it's associated workloads
+ * used to store hashmap of DataSourceWorkload objects representing workload metadata
+ */
 public class DataSourceNamespace {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceNamespace.class);
     private String namespace;
-    private List<DataSourceWorkload> workloads;
+
+    // key = workload_name
+    @SerializedName("workloads")
+    private HashMap<String, DataSourceWorkload> workloadHashMap ;
     public DataSourceNamespace(String namespace) {
         this.namespace = namespace;
-        this.workloads = new ArrayList<>();
-
     }
-    public DataSourceNamespace(String namespace, List<DataSourceWorkload> dataSourceWorkloadList) {
+
+    public DataSourceNamespace(String namespace, HashMap<String, DataSourceWorkload> workloadHashMap) {
         this.namespace = namespace;
-        this.workloads = dataSourceWorkloadList;
+        this.workloadHashMap = workloadHashMap;
     }
 
     public String getDataSourceNamespaceName() {
@@ -27,22 +33,19 @@ public class DataSourceNamespace {
         this.namespace = namespace;
     }
 
-    public List<DataSourceWorkload> getDataSourceWorkloads() {
-        return workloads;
+    public HashMap<String, DataSourceWorkload> getDataSourceWorkloads() {
+        return workloadHashMap;
     }
 
-    public void setDataSourceWorkloads(List<DataSourceWorkload> workloads) {
-        if (workloads.isEmpty()) {
-            LOGGER.info("No workloads found for namespace: " + namespace);
-        }
-        this.workloads = workloads;
+    public void setDataSourceWorkloadHashMap(HashMap<String, DataSourceWorkload> workloadHashMap) {
+       this.workloadHashMap = workloadHashMap;
     }
 
     @Override
     public String toString() {
-        return "DataSourceNamespaces{" +
-                "namespace ='" + namespace + '\'' +
-                ", workloads ='" + workloads.toString() + '\'' +
+        return "DataSourceNamespace{" +
+                "namespace='" + namespace + '\'' +
+                ", workloads=" + workloadHashMap +
                 '}';
     }
 }

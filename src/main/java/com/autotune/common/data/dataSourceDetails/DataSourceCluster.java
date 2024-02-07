@@ -1,49 +1,53 @@
 package com.autotune.common.data.dataSourceDetails;
 
+import com.google.gson.annotations.SerializedName;
 import org.slf4j.LoggerFactory;
 import org.slf4j.Logger;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashMap;
 
+/**
+ * DataSourceCluster object represents the cluster of a data source, and it's associated namespaces
+ * used to store hashmap of DataSourceNamespace objects representing namespace metadata
+ */
 public class DataSourceCluster {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCluster.class);
-    private String cluster_name;
-    private List<DataSourceNamespace> namespaces;
+    @SerializedName("cluster_name")
+    private String clusterName;
 
-    public DataSourceCluster(String cluster_name) {
-        this.cluster_name = cluster_name;
-        this.namespaces = new ArrayList<>();
+    // key = namespace
+    @SerializedName("namespaces")
+    private HashMap<String, DataSourceNamespace> dataSourceNamespaceHashMap;
+
+    public DataSourceCluster(String clusterName) {
+        this.clusterName = clusterName;
     }
 
-    public DataSourceCluster(String cluster_name, List<DataSourceNamespace> namespaces) {
-        this.cluster_name = cluster_name;
-        this.namespaces = namespaces;
+    public DataSourceCluster(String clusterName, HashMap<String, DataSourceNamespace> dataSourceNamespaceHashMap) {
+        this.clusterName = clusterName;
+        this.dataSourceNamespaceHashMap = dataSourceNamespaceHashMap;
     }
 
     public String getDataSourceClusterName() {
-        return cluster_name;
+        return clusterName;
     }
 
-    public void setDataSourceClusterName(String cluster_name) {
-        this.cluster_name = cluster_name;
+    public void setDataSourceClusterName(String clusterName) {
+        this.clusterName = clusterName;
     }
 
-    public List<DataSourceNamespace> getDataSourceNamespaces() {
-        return namespaces;
+    public HashMap<String, DataSourceNamespace> getDataSourceNamespaces() {
+        return dataSourceNamespaceHashMap;
     }
 
-    public void setDataSourceNamespaces(List<DataSourceNamespace> namespaces) {
-        if (namespaces == null || namespaces.isEmpty()) {
-            LOGGER.info("No namespaces found for cluster: " + cluster_name);
-        }
-        this.namespaces = namespaces;
+    public void setDataSourceNamespaces(HashMap<String, DataSourceNamespace> dataSourceNamespaceHashMap) {
+        this.dataSourceNamespaceHashMap = dataSourceNamespaceHashMap;
     }
 
     @Override
     public String toString() {
         return "DataSourceCluster{" +
-                "cluster_group_name ='" + cluster_name + '\'' +
-                ", namespaces ='" + namespaces.toString() + '\'' +
+                "cluster_name='" + clusterName + '\'' +
+                ", namespaces=" + dataSourceNamespaceHashMap +
                 '}';
     }
 }

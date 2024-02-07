@@ -1,53 +1,61 @@
 package com.autotune.common.data.dataSourceDetails;
 
+import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.HashMap;
 
-import java.util.ArrayList;
-import java.util.List;
-
+/**
+ * DataSourceWorkload object represents the workload of a namespace, and it's associated containers
+ * used to store hashmap of DataSourceContainer objects representing container metadata
+ */
 public class DataSourceWorkload {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceWorkload.class);
-    private String workload_name;
-    private String workload_type;
-    private List<DataSourceContainers> containers;
+    @SerializedName("workload_name")
+    private String workloadName;
+    @SerializedName("workload_type")
+    private String workloadType;
 
-    public DataSourceWorkload(String workload_name, String workload_type) {
-        this.workload_name = workload_name;
-        this.workload_type = workload_type;
-        this.containers = new ArrayList<>();
-    }
-    public DataSourceWorkload(String workload_name, String workload_type, List<DataSourceContainers> containers) {
-        this.workload_name = workload_name;
-        this.workload_type = workload_type;
-        this.containers = containers;
-    }
+    // key = containerName
+    @SerializedName("containers")
+    private HashMap<String, DataSourceContainer> containersHashMap;
 
-    public String getDataSourceWorkloadName() {return workload_name;}
-
-    public void setDataSourceWorkloadName(String workload_name) {this.workload_name = workload_name;}
-
-    public String getDataSourceWorkloadType() {return workload_type;}
-
-    public void setDataSourceWorkloadType(String workload_type) {this.workload_type = workload_type;}
-
-    public List<DataSourceContainers> getDataSourceContainers() {
-        return containers;
+    public DataSourceWorkload(String workloadName, String workloadType) {
+        this.workloadName = workloadName;
+        this.workloadType = workloadType;
     }
 
-    public void setDataSourceContainers(List<DataSourceContainers> containers) {
-        if (containers == null || containers.isEmpty()) {
-            LOGGER.info("No containers found for workload: "+ workload_name);
+    public DataSourceWorkload(String workloadName, String workloadType, HashMap<String, DataSourceContainer> containers) {
+        this.workloadName = workloadName;
+        this.workloadType = workloadType;
+        this.containersHashMap = containers;
+    }
+
+    public String getDataSourceWorkloadName() {return workloadName;}
+
+    public void setDataSourceWorkloadName(String workloadName) {this.workloadName = workloadName;}
+
+    public String getDataSourceWorkloadType() {return workloadType;}
+
+    public void setDataSourceWorkloadType(String workloadType) {this.workloadType = workloadType;}
+
+    public HashMap<String, DataSourceContainer> getDataSourceContainers() {
+        return containersHashMap;
+    }
+
+    public void setDataSourceContainers(HashMap<String, DataSourceContainer> containers) {
+        if (containers == null) {
+            LOGGER.info("No containers found for workload ");
         }
-        this.containers = containers;
+        this.containersHashMap = containers;
     }
 
     @Override
     public String toString() {
         return "DataSourceWorkload{" +
-                "workload_name ='" + workload_name + '\'' +
-                ", workload_type ='" + workload_type + '\'' +
-                ", containers ='" + containers.toString() + '\'' +
+                "workload_name ='" + workloadName + '\'' +
+                ", workload_type ='" + workloadType + '\'' +
+                ", containers ='" + containersHashMap.toString() + '\'' +
                 '}';
     }
 }

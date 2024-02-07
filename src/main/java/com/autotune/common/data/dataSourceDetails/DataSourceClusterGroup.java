@@ -1,43 +1,57 @@
 package com.autotune.common.data.dataSourceDetails;
 
+import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import java.util.HashMap;
 
+/**
+ * DataSourceClusterGroup object represents the cluster group for a given data source, and it's associated clusters
+ * used to store hashmap of DataSourceCluster objects representing cluster metadata
+ */
 public class DataSourceClusterGroup {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceClusterGroup.class);
-    private String cluster_group_name;
-    private DataSourceCluster cluster;
+    @SerializedName("cluster_group_name")
+    private String clusterGroupName;
 
-    public DataSourceClusterGroup(String cluster_group_name, DataSourceCluster cluster) {
-        this.cluster_group_name = cluster_group_name;
+    // key = clusterName
+    @SerializedName("clusters")
+    private HashMap<String, DataSourceCluster> dataSourceClusterHashMap;
 
-        if (cluster == null) {
-            LOGGER.info("No clusters found for cluster_group: " + cluster_group_name);
+    public DataSourceClusterGroup(String clusterGroupName) {
+        this.clusterGroupName = clusterGroupName;
+    }
+
+    public DataSourceClusterGroup(String clusterGroupName, HashMap<String,DataSourceCluster> clusters) {
+        this.clusterGroupName = clusterGroupName;
+
+        if (clusters == null) {
+            LOGGER.info("No clusters found for cluster_group: " + clusterGroupName);
         }
-        this.cluster = cluster;
+        this.dataSourceClusterHashMap = clusters;
     }
 
     public String getDataSourceClusterGroupName() {
-        return cluster_group_name;
+        return clusterGroupName;
     }
 
-    public void setDataSourceClusterGroupName(String cluster_group_name) {
-        this.cluster_group_name = cluster_group_name;
+    public void setDataSourceClusterGroupName(String clusterGroupName) {
+        this.clusterGroupName = clusterGroupName;
     }
 
-    public DataSourceCluster getDataSourceCluster() {
-        return cluster;
+    public HashMap<String, DataSourceCluster> getDataSourceCluster() {
+        return dataSourceClusterHashMap;
     }
 
-    public void setDataSourceCluster(DataSourceCluster cluster) {
-        this.cluster = cluster;
+    public void setDataSourceCluster(HashMap<String, DataSourceCluster> clusters) {
+        this.dataSourceClusterHashMap = clusters;
     }
 
     @Override
     public String toString() {
         return "DataSourceClusterGroup{" +
-                "cluster_group_name ='" + cluster_group_name + '\'' +
-                ", cluster ='" + cluster.toString() + '\'' +
+                "cluster_group_name='" + clusterGroupName + '\'' +
+                ", clusters=" + dataSourceClusterHashMap +
                 '}';
     }
 }
