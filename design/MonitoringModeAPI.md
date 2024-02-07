@@ -44,8 +44,7 @@ Documentation still in progress stay tuned.
 ## Resource Analysis Terms and Defaults
 
 When analyzing resource utilization in Kubernetes, it's essential to define terms that specify the duration of past data
-considered for recommendations and the threshold for obtaining additional data. These terms help in categorizing and
-fine-tuning resource allocation.
+considered for recommendations. These terms help in categorizing and fine-tuning resource allocation.
 
 Below are the default terms used in resource analysis, along with their respective durations and thresholds:
 
