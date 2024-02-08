@@ -19,14 +19,17 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
-import jakarta.validation.ConstraintValidator;
-import jakarta.validation.ConstraintValidatorContext;
+import jakarta.validation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class KubernetesElementsValidator implements ConstraintValidator<KubernetesElementsCheck, UpdateResultsAPIObject> {
     private static final Logger LOGGER = LoggerFactory.getLogger(KubernetesElementsValidator.class);
@@ -93,6 +96,18 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
                         ));
             }
 
+            // Validate blank or null container names and image names
+            List<ContainerData> resultContainers = resultData.getKubernetes_objects().get(0).getContainerDataMap().values().stream().toList();
+            List<String> validationErrors = resultContainers.stream()
+                    .flatMap(containerData -> validateContainerData(containerData).stream())
+                    .toList();
+
+            if (!validationErrors.isEmpty()) {
+                kubeObjsMisMatch = true;
+                errorMsg = errorMsg.concat(validationErrors.toString());
+            }
+
+
             if (kubeObjsMisMatch) {
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate(errorMsg)
@@ -122,5 +137,21 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
         }
         LOGGER.debug("KubernetesElementsValidator success : {}", success);
         return success;
+    }
+
+    /**
+     * Validation method for a single ContainerData object
+     * @param containerData
+     * @return list of errors if any, while validating the containerData Object
+     */
+    private static List<String> validateContainerData(ContainerData containerData) {
+        List<String> errors = new ArrayList<>();
+        if (containerData.getContainer_image_name() == null || containerData.getContainer_image_name().trim().isEmpty()) {
+            errors.add(AnalyzerErrorConstants.AutotuneObjectErrors.NULL_OR_BLANK_CONTAINER_IMAGE_NAME);
+        }
+        if (containerData.getContainer_name() == null || containerData.getContainer_name().trim().isEmpty()) {
+            errors.add(AnalyzerErrorConstants.AutotuneObjectErrors.NULL_OR_BLANK_CONTAINER_NAME);
+        }
+        return errors;
     }
 }

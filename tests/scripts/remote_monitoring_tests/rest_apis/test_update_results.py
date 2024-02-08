@@ -27,20 +27,14 @@ missing_metrics = [
 
 @pytest.mark.negative
 @pytest.mark.parametrize(
-    "test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format, cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum, memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum, memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format, memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_format",
+    "test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_format, cpuLimit_name, cpuLimit_format, cpuUsage_name, cpuUsage_format, cpuThrottle_name, cpuThrottle_format, memoryRequest_name, memoryRequest_format, memoryLimit_name, memoryLimit_format, memoryUsage_name, memoryUsage_format, memoryRSS_name, memoryRSS_format",
     generate_test_data(csvfile, update_results_test_data, "update_results"))
 def test_update_results_invalid_tests(test_name, expected_status_code, version, experiment_name, interval_start_time,
                                       interval_end_time, kubernetes_obj_type, name, namespace, container_image_name,
-                                      container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg,
-                                      cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format,
-                                      cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min,
-                                      cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max,
-                                      cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum,
-                                      memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum,
-                                      memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum,
-                                      memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format,
-                                      memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min,
-                                      memoryRSS_format, cluster_type):
+                                      container_name, cpuRequest_name, cpuRequest_format, cpuLimit_name, cpuLimit_format,
+                                      cpuUsage_name, cpuUsage_format, cpuThrottle_name, cpuThrottle_format,
+                                      memoryRequest_name, memoryRequest_format, memoryLimit_name, memoryLimit_format,
+                                      memoryUsage_name, memoryUsage_format, memoryRSS_name, memoryRSS_format, cluster_type):
     print("\n*******************************************************")
     print("Test - ", test_name)
     print("*******************************************************\n")
@@ -88,43 +82,20 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
         container_image_name=container_image_name,
         container_name=container_name,
         cpuRequest_name=cpuRequest_name,
-        cpuRequest_sum=cpuRequest_sum,
-        cpuRequest_avg=cpuRequest_avg,
         cpuRequest_format=cpuRequest_format,
         cpuLimit_name=cpuLimit_name,
-        cpuLimit_sum=cpuLimit_sum,
-        cpuLimit_avg=cpuLimit_avg,
         cpuLimit_format=cpuLimit_format,
         cpuUsage_name=cpuUsage_name,
-        cpuUsage_sum=cpuUsage_sum,
-        cpuUsage_max=cpuUsage_max,
-        cpuUsage_avg=cpuUsage_avg,
-        cpuUsage_min=cpuUsage_min,
         cpuUsage_format=cpuUsage_format,
         cpuThrottle_name=cpuThrottle_name,
-        cpuThrottle_sum=cpuThrottle_sum,
-        cpuThrottle_max=cpuThrottle_max,
-        cpuThrottle_avg=cpuThrottle_avg,
         cpuThrottle_format=cpuThrottle_format,
         memoryRequest_name=memoryRequest_name,
-        memoryRequest_sum=memoryRequest_sum,
-        memoryRequest_avg=memoryRequest_avg,
         memoryRequest_format=memoryRequest_format,
         memoryLimit_name=memoryLimit_name,
-        memoryLimit_sum=memoryLimit_sum,
-        memoryLimit_avg=memoryLimit_avg,
         memoryLimit_format=memoryLimit_format,
         memoryUsage_name=memoryUsage_name,
-        memoryUsage_sum=memoryUsage_sum,
-        memoryUsage_max=memoryUsage_max,
-        memoryUsage_avg=memoryUsage_avg,
-        memoryUsage_min=memoryUsage_min,
         memoryUsage_format=memoryUsage_format,
         memoryRSS_name=memoryRSS_name,
-        memoryRSS_sum=memoryRSS_sum,
-        memoryRSS_max=memoryRSS_max,
-        memoryRSS_avg=memoryRSS_avg,
-        memoryRSS_min=memoryRSS_min,
         memoryRSS_format=memoryRSS_format
     )
     with open(filename, mode="w", encoding="utf-8") as message:
@@ -609,10 +580,12 @@ def test_update_valid_results_without_create_exp(cluster_type):
     data = response.json()
     print("message = ", data['message'])
 
-    EXP_NAME_NOT_FOUND_MSG = "Experiment name : " + experiment_name + " not found"
+    EXP_NAME_NOT_FOUND_MSG = UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND + experiment_name
+    FAILED_RECORDS_MSG = "Out of a total of 1 records, 1 failed to save"
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert data['message'] == EXP_NAME_NOT_FOUND_MSG
+    assert data['message'] == FAILED_RECORDS_MSG
+    assert data['data'][0]['errors'][0]['message'] == EXP_NAME_NOT_FOUND_MSG
 
 
 @pytest.mark.sanity

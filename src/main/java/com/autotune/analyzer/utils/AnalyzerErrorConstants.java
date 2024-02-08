@@ -95,6 +95,8 @@ public class AnalyzerErrorConstants {
         public static final String JSON_PARSING_ERROR = "Failed to parse the JSON. Please check the input payload ";
         public static final String AGGREGATION_INFO_INVALID_VALUE = "Invalid value type for aggregation_info objects. Expected a numeric value (Double).";
         public static final String VERSION_MISMATCH = "Version number mismatch found. Expected: %s , Found: %s";
+        public static final String NULL_OR_BLANK_CONTAINER_IMAGE_NAME = "container_image_name cannot be null or blank";
+        public static final String NULL_OR_BLANK_CONTAINER_NAME = "container_name cannot be null or blank";
 
 
         private AutotuneObjectErrors() {
