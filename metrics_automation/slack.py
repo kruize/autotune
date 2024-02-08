@@ -4,7 +4,7 @@ import json
 import requests
 from typing import List, Dict
     
-os.environ['SLACK_APP_TOKEN'] = '<request_bot_admin_for_token_replace_here>'
+os.environ['SLACK_APP_TOKEN'] = os.getenv("SLACK_BOT_TOKEN")
 os.environ['SLACK_APP_CHANNEL'] = '#metrics_bot'
 
 def post_message_to_slack(text: str, blocks: List[Dict[str, str]] = None):

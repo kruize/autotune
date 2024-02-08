@@ -35,19 +35,13 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
     OC_AUTH_TOKEN = token
     GABI_AUTH_TOKEN = gabi_token
 
-    if prometheus_url_1 is None:
-        if cluster_type == "openshift":
-            prometheus_url_1 = f"https://thanos-querier-openshift-monitoring.apps.{server}/api/v1/query"
-        elif cluster_type == "minikube":
-            prometheus_url_1 = f"http://{server}:9090/api/v1/query"
-
     if cluster_type == "openshift":
         requests.packages.urllib3.disable_warnings(requests.packages.urllib3.exceptions.InsecureRequestWarning)
 
     headers = {'Authorization': f'Bearer {OC_AUTH_TOKEN}'}
 
     #####Gabi Auth tokens needed
-    cmd1 = ["curl", "-s", "https://gabi-kruize-prod.apps.crcp01ue1.o9m8.p1.openshiftapps.com/query",
+    cmd1 = ["curl", "-s", gabi_url,
        "-H", "Authorization: Bearer " + GABI_AUTH_TOKEN,
        "-d", '{"query":"select count(*) from public.kruize_experiments"}']
 
@@ -56,7 +50,7 @@ def run_queries(server,prometheus_url_1=None, prometheus_url_2=None):
 
     total_exp = json.loads(stdout1.decode().strip())['result'][1][0]
 
-    cmd2 = ["curl", "-s", "https://gabi-kruize-prod.apps.crcp01ue1.o9m8.p1.openshiftapps.com/query",
+    cmd2 = ["curl", "-s", gabi_url,
        "-H","Authorization: Bearer " + GABI_AUTH_TOKEN,
        "-d", '{"query":"SELECT pg_size_pretty(pg_database_size(current_database()));"}']
 
@@ -154,29 +148,40 @@ def job(server,prometheus_url_1=None,prometheus_url_2=None):
 
     loadResultsByExpNameSumSuccess = float (increase_metrics['loadResultsByExperimentName_sum_success'])
     loadResultsByExpNameCountSuccess = float (increase_metrics['loadResultsByExperimentName_count_success'])
-    
+
+    def safe_round(value, decimals=2):
+        try:
+            return round(float(value), decimals)
+        except (TypeError, ValueError):
+            return None  
+
     data = {
-        'date': increase_metrics['timestamp'],
-        'instances': increase_metrics['instances'],
-        'max_cpu': round(float(increase_metrics['kruize_cpu_max']), 2),
-        'max_mem': round(float(increase_metrics['kruize_mmr_max']), 2),
-        'db_size': increase_metrics['db_size'],
-        'total_experiments': increase_metrics['total_exp'],
-        'aws_fss': increase_metrics['aws_fss'],
-        'kafka_lag': increase_metrics['kafka_lag'],
-        'update_recommendations': {'max': round(float(increase_metrics['updateRecommendations_max_success']) , 2),
-                                    'avg': round(float(increase_metrics['updateRecommendationsPerCall_success']) , 2),
-                                     'success_count':  round(float(increase_metrics['updateRecommendations_count_success']) , 2), 
-                                     'failure_count':  round( float(increase_metrics['updateRecommendations_count_failure']) , 2)},
-        'update_results': {'max': round(float(increase_metrics['updateResults_max_success']), 2), 
-                           'avg': round(float(increase_metrics['updateResultsPerCall_success']) , 2), 
-                           'success_count': round(float(increase_metrics['updateResults_count_success']), 2), 
-                           'failure_count': round(float(increase_metrics['updateResults_count_failure']), 2)},
-        'load_results_by_exp_name': {
-            'max': round(float(increase_metrics['loadResultsByExperimentName_max_success']), 2),
-            'avg' : round(loadResultsByExpNameSumSuccess/loadResultsByExpNameCountSuccess , 2),
-        }
+    'date': increase_metrics.get('timestamp', None),
+    'instances': increase_metrics.get('instances', None),
+    'max_cpu': safe_round(increase_metrics.get('kruize_cpu_max', None)),
+    'max_mem': safe_round(increase_metrics.get('kruize_mmr_max', None)),
+    'db_size': increase_metrics.get('db_size', None),
+    'total_experiments': increase_metrics.get('total_exp', None),
+    'aws_fss': increase_metrics.get('aws_fss', None),
+    'kafka_lag': increase_metrics.get('kafka_lag', None),
+    'update_recommendations': {
+        'max': safe_round(increase_metrics.get('updateRecommendations_max_success', None)),
+        'avg': safe_round(increase_metrics.get('updateRecommendationsPerCall_success', None)),
+        'success_count': safe_round(increase_metrics.get('updateRecommendations_count_success', None)),
+        'failure_count': safe_round(increase_metrics.get('updateRecommendations_count_failure', None)),
+    },
+    'update_results': {
+        'max': safe_round(increase_metrics.get('updateResults_max_success', None)),
+        'avg': safe_round(increase_metrics.get('updateResultsPerCall_success', None)),
+        'success_count': safe_round(increase_metrics.get('updateResults_count_success', None)),
+        'failure_count': safe_round(increase_metrics.get('updateResults_count_failure', None)),
+    },
+    'load_results_by_exp_name': {
+        'max': safe_round(increase_metrics.get('loadResultsByExperimentName_max_success', None)),
+        'avg': safe_round(loadResultsByExpNameSumSuccess/loadResultsByExpNameCountSuccess if loadResultsByExpNameCountSuccess else None),
     }
+    }
+
     print(data)
     return data
 
@@ -200,6 +205,7 @@ def main(argv):
     global namespace
     global prometheus_url_1
     global prometheus_url_2
+    global gabi_url
     global outputdir
     global token
     global gabi_token
@@ -209,6 +215,7 @@ def main(argv):
     parser.add_argument('-s', '--cluster_name', help='Name/IP to access the openshift/minikube cluster. Example:kruize-rm.p1.openshiftapps.com/localhost. Prometheus URL is generated using this name if prometheus_url is None')
     parser.add_argument('-p1', '--prometheus_url_1', help='Prometheus URL 1',default=None)
     parser.add_argument('-p2', '--prometheus_url_2', help='Prometheus URL 2',default=None)
+    parser.add_argument('-g', '--gabi_url', help='Gabi URL',default=None)
     parser.add_argument('-t', '--time', help='Time duration for a query in mins', default='60m')
     parser.add_argument('-d', '--duration', help='Duration for the script to run:value in hours')
     parser.add_argument('-q', '--queries_type', help='Query type: increase/total', default='increase')
@@ -241,6 +248,7 @@ def main(argv):
     resultsfile = args.resultsfile
     prometheus_url_1 = args.prometheus_url_1
     prometheus_url_2 = args.prometheus_url_2
+    gabi_url = args.gabi_url
     outputdir = args.outputdir
     token = args.token
     gabi_token = args.gabi_token
