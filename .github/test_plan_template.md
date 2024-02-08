@@ -107,6 +107,13 @@ As part of the release testing, test the following will be executed:
 
 Define the test completion or exit criteria
 
+* All must_fix defects identified for the release are fixed
+* New features work as expected and tests have been added to validate these
+* No new regressions in the functional tests
+* 98% functional tests have passed
+* All non-functional tests work as expected without major issues
+* Documentation updates have been completed
+
 ----
 ## RISKS AND CONTINGENCIES
 
