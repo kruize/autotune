@@ -138,24 +138,53 @@ update_results_test_data = {
     "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
     "container_name": "tfb-server",
     "cpuRequest_name": "cpuRequest",
+    "cpuRequest_sum": 4.4,
+    "cpuRequest_avg": 1.1,
     "cpuRequest_format": "cores",
     "cpuLimit_name": "cpuLimit",
+    "cpuLimit_sum": 5.4,
+    "cpuLimit_avg": 22.1,
     "cpuLimit_format": "cores",
     "cpuUsage_name": "cpuUsage",
+    "cpuUsage_sum": 3.4,
+    "cpuUsage_max": 2.4,
+    "cpuUsage_avg": 1.5,
+    "cpuUsage_min": 0.5,
     "cpuUsage_format": "cores",
     "cpuThrottle_name": "cpuThrottle",
+    "cpuThrottle_sum": 1.09,
+    "cpuThrottle_max": 0.09,
+    "cpuThrottle_avg": 0.045,
     "cpuThrottle_format": "cores",
     "memoryRequest_name": "memoryRequest",
+    "memoryRequest_sum": 250.85,
+    "memoryRequest_avg": 51.1,
     "memoryRequest_format": "MiB",
     "memoryLimit_name": "memoryLimit",
+    "memoryLimit_sum": 500,
+    "memoryLimit_avg": 100,
     "memoryLimit_format": "MiB",
     "memoryUsage_name": "memoryUsage",
+    "memoryUsage_sum": 298.5,
+    "memoryUsage_max": 198.4,
+    "memoryUsage_avg": 41.5,
+    "memoryUsage_min": 21.5,
     "memoryUsage_format": "MiB",
     "memoryRSS_name": "memoryRSS",
+    "memoryRSS_sum": 225.64,
+    "memoryRSS_max": 125.54,
+    "memoryRSS_avg": 46.5,
+    "memoryRSS_min": 26.5,
     "memoryRSS_format": "MiB"
 }
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
+
+aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "cpuLimit_avg", "cpuUsage_sum", "cpuUsage_max",
+                          "cpuUsage_avg", "cpuUsage_min", "cpuThrottle_sum", "cpuThrottle_max", "cpuThrottle_avg",
+                          "memoryRequest_sum", "memoryRequest_avg", "memoryLimit_sum", "memoryRequest_avg",
+                          "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
+                          "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
 
 
 def generate_test_data(csvfile, test_data, api_name):
@@ -169,6 +198,9 @@ def generate_test_data(csvfile, test_data, api_name):
                 data = []
                 # skip checking the invalid container name and container image name
                 if (key == "container_name" or key == "container_image_name") and t == "invalid":
+                    continue
+                #  skip checking the aggregation info values
+                if key in aggr_info_keys_to_skip:
                     continue
 
                 test_name = t + "_" + key
