@@ -121,6 +121,9 @@ SHORT_AND_LONG = "short_term_and_long_term"
 MEDIUM_AND_LONG = "medium_term_and_long_term"
 ONLY_LONG = "only_long_term"
 ONLY_MEDIUM = "only_medium_term"
+SHORT_TERM_TEST = "short_term_test"
+MEDIUM_TERM_TEST = "medium_term_test"
+LONG_TERM_TEST = "long_term_test"
 
 TERMS_NOTIFICATION_CODES = {
     SHORT_TERM: NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE,
@@ -471,29 +474,14 @@ def validate_container(update_results_container, update_results_json, list_reco_
                                                                             interval_start_time, interval_end_time)
 
                         if test_name is not None:
-                            if SHORT_AND_MEDIUM in test_name:
-                                if term == SHORT_TERM:
-                                    duration_in_hours = 24.0
-                                else:
-                                    duration_in_hours = 48.0
-                            elif SHORT_AND_LONG in test_name:
-                                if term == SHORT_TERM:
-                                    duration_in_hours = 24.0
-                                else:
-                                    duration_in_hours = 192.0
-                            elif MEDIUM_AND_LONG in test_name:
-                                if term == MEDIUM_TERM:
-                                    duration_in_hours = 168.0
-                                else:
-                                    duration_in_hours = 192.0
 
-                            if MEDIUM_TERM in test_name and term == MEDIUM_TERM:
+                            if MEDIUM_TERM_TEST in test_name and term == MEDIUM_TERM:
                                 assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
                                     f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
-                            elif SHORT_TERM in test_name and term == SHORT_TERM:
+                            elif SHORT_TERM_TEST in test_name and term == SHORT_TERM:
                                 assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
                                     f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
-                            elif LONG_TERM in test_name and term == LONG_TERM:
+                            elif LONG_TERM_TEST in test_name and term == LONG_TERM:
                                 assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
                                     f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
                         else:

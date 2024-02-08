@@ -105,6 +105,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
         Timestamp calculated_start_time = new Timestamp(cal.getTimeInMillis());
         Map<String, KruizeObject> mainKruizeExperimentMap = new HashMap<>();
         String experiment_name = kruizeObject.getExperimentName();
+        double measurementDuration = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
         mainKruizeExperimentMap.put(experiment_name, kruizeObject);
         new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMap,
                 experiment_name,
@@ -344,7 +345,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                                 }
                                 mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
                             }
-                            setDurationBasedOnTerm(containerDataKruizeObject, mappedRecommendationForTerm, recommendationTerm);
+                            setDurationBasedOnTerm(containerDataKruizeObject, mappedRecommendationForTerm, recommendationTerm, monitoringEndTime, measurementDuration);
                             timestampRecommendation.setRecommendationForTermHashMap(term, mappedRecommendationForTerm);
                         }
                         if (!termLevelRecommendationExist) {
@@ -372,9 +373,10 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
         }
     }
 
-    private void setDurationBasedOnTerm(ContainerData containerDataKruizeObject, TermRecommendations mappedRecommendationForTerm, RecommendationConstants.RecommendationTerms recommendationTerm) {
+    private void setDurationBasedOnTerm(ContainerData containerDataKruizeObject, TermRecommendations mappedRecommendationForTerm, RecommendationConstants.RecommendationTerms recommendationTerm, Timestamp monitoringEndTime, double measurementDuration) {
 
-        double durationSummation = Double.valueOf(RecommendationUtils.getDurationSummation(containerDataKruizeObject) / NO_OF_MINUTES_PER_HOUR);
+        int dataPoints = RecommendationUtils.getTheAvailableDataPoints(containerDataKruizeObject, recommendationTerm, monitoringEndTime);
+        double durationSummation = (dataPoints * measurementDuration) / NO_OF_MINUTES_PER_HOUR;
         durationSummation = Double.parseDouble(String.format("%.1f", durationSummation));
         if (durationSummation <= NO_OF_HOURS_PER_DAY) {
             mappedRecommendationForTerm.setDurationInHrs(durationSummation);
