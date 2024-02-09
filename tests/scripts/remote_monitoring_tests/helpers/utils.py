@@ -200,7 +200,7 @@ def generate_test_data(csvfile, test_data, api_name):
                 if (key == "container_name" or key == "container_image_name") and t == "invalid":
                     continue
                 #  skip checking the aggregation info values
-                if key in aggr_info_keys_to_skip:
+                if key in aggr_info_keys_to_skip and t == "null":
                     continue
 
                 test_name = t + "_" + key
