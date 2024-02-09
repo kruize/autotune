@@ -34,7 +34,7 @@ public class DataSourceNamespace {
     }
 
     public void setDataSourceWorkloadHashMap(HashMap<String, DataSourceWorkload> workloadHashMap) {
-        if(null == workloadHashMap) {
+        if (null == workloadHashMap) {
             LOGGER.error("No workloads found for namespace - "+ namespace);
         }
        this.workloadHashMap = workloadHashMap;

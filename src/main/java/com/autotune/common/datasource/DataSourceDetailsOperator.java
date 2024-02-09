@@ -54,7 +54,7 @@ public class DataSourceDetailsOperator {
         try {
             JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.NAMESPACE_QUERY);
 
-            if(false == op.validateResultArray(namespacesDataResultArray)){
+            if (false == op.validateResultArray(namespacesDataResultArray)){
                 dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), null);
                 return;
             }

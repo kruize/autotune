@@ -118,9 +118,9 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
                 }
             }
         } catch (JSONException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         } catch (NullPointerException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
         return null;
     }

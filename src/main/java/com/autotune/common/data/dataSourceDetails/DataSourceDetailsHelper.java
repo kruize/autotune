@@ -7,6 +7,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
 
+/**
+ * Utility class for handling DataSourceDetailsInfo and related metadata.
+ * This class provides methods to parse and organize information from JSON arrays
+ * into appropriate data structures, facilitating the creation and updating of DataSourceDetailsInfo objects.
+ */
 public class DataSourceDetailsHelper {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceDetailsHelper.class);
 
@@ -33,6 +38,13 @@ public class DataSourceDetailsHelper {
      *   ]
      * }
      *
+     * The function would parse the JsonObject and return a HashMap like:
+     * {
+     *   "exampleNamespace": {
+     *     "namespaceName": "exampleNamespace"
+     *   },
+     *   // ... additional namespace entries ...
+     * }
      */
     public HashMap<String, DataSourceNamespace> getActiveNamespaces(JsonArray resultArray) {
         HashMap<String, DataSourceNamespace> dataSourceNamespaceHashMap = new HashMap<>();
@@ -68,39 +80,38 @@ public class DataSourceDetailsHelper {
     }
 
     /**
-     * Parses workload information from a JsonArray and organizes it into a HashMap
-     * with namespaces as keys and DataSourceWorkload objects as values.
+     * Parses workload information from a JsonArray and organizes it into a nested map,
+     * outer HashMap with namespaces as keys and
+     * inner HashMap with workload name as keys and DataSourceWorkload objects as values.
      *
      * @param resultArray The JsonArray containing the workload information.
-     * @return A HashMap<String, DataSourceWorkload> representing namespaces
+     * @return A HashMap<String, HashMap<String, DataSourceWorkload>> representing namespaces
      *         and their associated workload details.
      *
      * Example:
-     * input dataObject structure:
+     * input resultArray structure:
      * {
      *   "result": [
      *     {
      *       "metric": {
      *         "namespace": "exampleNamespace",
      *         "workload": "exampleWorkload",
-     *         "workload_type": "exampleType"
+     *         "workloadType": "exampleWorkloadType"
      *       }
      *     },
      *     // ... additional result objects ...
      *   ]
      * }
      *
-     * The function would parse the JsonObject and return a HashMap like:
+     * The function would parse the JsonObject and return a nested HashMap like:
      * {
-     *   "exampleNamespace": [
-     *     {
-     *       "workload_name": "exampleWorkload",
-     *       "workload_type": "exampleType",
-     *       "containers": null
-     *     },
-     *     // ... additional DataSourceWorkload objects ...
-     *   ],
-     *   // ... additional namespaces ...
+     *   "exampleNamespace": {
+     *     "exampleWorkload": {
+     *       "workload": "exampleWorkload",
+     *       "workloadType": "exampleWorkloadType"
+     *     }
+     *   },
+     *   // ... additional namespace entries ...
      * }
      */
     public HashMap<String, HashMap<String, DataSourceWorkload>> getWorkloadInfo(JsonArray resultArray) {
@@ -145,20 +156,21 @@ public class DataSourceDetailsHelper {
     }
 
     /**
-     * Parses container metric information from a JsonArray and organizes it into a HashMap
-     * with workload as keys and DataSourceContainers objects as values.
+     * Parses container information from a JsonArray and organizes it into a nested map,
+     * outer HashMap with workload names as keys and
+     * inner HashMap with container name as keys and DataSourceWorkload objects as values.
      *
      * @param resultArray The JsonArray containing the container information.
-     * @return A HashMap<String, DataSourceContainer> representing workloads
+     * @return A HashMap<String, HashMap<String, DataSourceContainer>> representing workloads
      *         and their associated container details.
      *
      * Example:
-     * input dataObject structure:
+     * input resultArray structure:
      * {
      *   "result": [
      *     {
      *       "metric": {
-     *         "namespace": "exampleNamespace",
+     *         "workload_name": "exampleWorkloadName",
      *         "container": "exampleContainer",
      *         "image_name": "exampleImageName"
      *       }
@@ -167,16 +179,15 @@ public class DataSourceDetailsHelper {
      *   ]
      * }
      *
-     * The function would parse the JsonObject and return a HashMap like:
+     * The function would parse the JsonObject and return a nested HashMap like:
      * {
-     *   "exampleNamespace": [
-     *     {
-     *       "container_name": "exampleContainer",
-     *       "container_image_name": "exampleImageName",
-     *     },
-     *     // ... additional DataSourceContainer objects ...
-     *   ],
-     *   // ... additional namespaces ...
+     *   "exampleWorkloadName": {
+     *     "exampleContainer": {
+     *       "containerName": "exampleContainer",
+     *       "containerImageName": "exampleImageName"
+     *     }
+     *   },
+     *   // ... additional workload entries ...
      * }
      */
     public HashMap<String, HashMap<String, DataSourceContainer>> getContainerInfo(JsonArray resultArray) {
@@ -258,8 +269,7 @@ public class DataSourceDetailsHelper {
      * @param namespaceWorkloadMap  The map containing workload information.
      * @return The DataSourceCluster object if validation passes, or null if validation fails.
      */
-    private DataSourceCluster validateInputParametersAndGetClusterObject(String clusterGroupName, DataSourceDetailsInfo dataSourceDetailsInfo,
-                                                                             HashMap<String, HashMap<String, DataSourceWorkload>> namespaceWorkloadMap) {
+    private DataSourceCluster validateInputParametersAndGetClusterObject(String clusterGroupName, DataSourceDetailsInfo dataSourceDetailsInfo, HashMap<String, HashMap<String, DataSourceWorkload>> namespaceWorkloadMap) {
 
         if (null == clusterGroupName || clusterGroupName.isEmpty()) {
             LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.MISSING_DATASOURCE_DETAILS_CLUSTER_GROUP_NAME);
