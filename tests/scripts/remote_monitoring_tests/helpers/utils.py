@@ -722,3 +722,17 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
             assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][
                 AMOUNT_KEY] - current_memory_value
             assert variation_limits[MEMORY_KEY][FORMAT_KEY] == recommended_limits[MEMORY_KEY][FORMAT_KEY]
+
+
+def check_optimised_codes(cost_notifications, perf_notifications):
+    assert CPU_REQUEST_OPTIMISED_CODE in cost_notifications
+    assert CPU_REQUEST_OPTIMISED_CODE in perf_notifications
+
+    assert CPU_LIMIT_OPTIMISED_CODE in cost_notifications
+    assert CPU_LIMIT_OPTIMISED_CODE in perf_notifications
+
+    assert MEMORY_REQUEST_OPTIMISED_CODE in cost_notifications
+    assert MEMORY_REQUEST_OPTIMISED_CODE in perf_notifications
+
+    assert MEMORY_LIMIT_OPTIMISED_CODE in cost_notifications
+    assert MEMORY_LIMIT_OPTIMISED_CODE in perf_notifications

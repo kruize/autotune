@@ -1678,50 +1678,20 @@ def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
                 short_term_recommendation_cost_notifications = short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
                 short_term_recommendation_perf_notifications = short_term_recommendation["recommendation_engines"]["performance"]["notifications"]
 
-                assert CPU_REQUEST_OPTIMISED_CODE in short_term_recommendation_cost_notifications
-                assert CPU_REQUEST_OPTIMISED_CODE in short_term_recommendation_perf_notifications
-
-                assert CPU_LIMIT_OPTIMISED_CODE in short_term_recommendation_cost_notifications
-                assert CPU_LIMIT_OPTIMISED_CODE in short_term_recommendation_perf_notifications
-
-                assert MEMORY_REQUEST_OPTIMISED_CODE in short_term_recommendation_cost_notifications
-                assert MEMORY_REQUEST_OPTIMISED_CODE in short_term_recommendation_perf_notifications
-
-                assert MEMORY_LIMIT_OPTIMISED_CODE in short_term_recommendation_cost_notifications
-                assert MEMORY_LIMIT_OPTIMISED_CODE in short_term_recommendation_perf_notifications
+                check_optimised_codes(short_term_recommendation_cost_notifications, short_term_recommendation_perf_notifications)
 
 
                 if j > 672:
                     medium_term_recommendation_cost_notifications = medium_term_recommendation["recommendation_engines"]["cost"]["notifications"]
                     medium_term_recommendation_perf_notifications = medium_term_recommendation["recommendation_engines"]["performance"]["notifications"]
 
-                    assert CPU_REQUEST_OPTIMISED_CODE in medium_term_recommendation_cost_notifications
-                    assert CPU_REQUEST_OPTIMISED_CODE in medium_term_recommendation_perf_notifications
-
-                    assert CPU_LIMIT_OPTIMISED_CODE in medium_term_recommendation_cost_notifications
-                    assert CPU_LIMIT_OPTIMISED_CODE in medium_term_recommendation_perf_notifications
-
-                    assert MEMORY_REQUEST_OPTIMISED_CODE in medium_term_recommendation_cost_notifications
-                    assert MEMORY_REQUEST_OPTIMISED_CODE in medium_term_recommendation_perf_notifications
-
-                    assert MEMORY_LIMIT_OPTIMISED_CODE in medium_term_recommendation_cost_notifications
-                    assert MEMORY_LIMIT_OPTIMISED_CODE in medium_term_recommendation_perf_notifications
+                    check_optimised_codes(medium_term_recommendation_cost_notifications, medium_term_recommendation_perf_notifications)
 
                 if j > 1439:
                     long_term_recommendation_cost_notifications = long_term_recommendation["recommendation_engines"]["cost"]["notifications"]
                     long_term_recommendation_perf_notifications = long_term_recommendation["recommendation_engines"]["performance"]["notifications"]
 
-                    assert CPU_REQUEST_OPTIMISED_CODE in long_term_recommendation_cost_notifications
-                    assert CPU_REQUEST_OPTIMISED_CODE in long_term_recommendation_perf_notifications
-
-                    assert CPU_LIMIT_OPTIMISED_CODE in long_term_recommendation_cost_notifications
-                    assert CPU_LIMIT_OPTIMISED_CODE in long_term_recommendation_perf_notifications
-
-                    assert MEMORY_REQUEST_OPTIMISED_CODE in long_term_recommendation_cost_notifications
-                    assert MEMORY_REQUEST_OPTIMISED_CODE in long_term_recommendation_perf_notifications
-
-                    assert MEMORY_LIMIT_OPTIMISED_CODE in long_term_recommendation_cost_notifications
-                    assert MEMORY_LIMIT_OPTIMISED_CODE in long_term_recommendation_perf_notifications
+                    check_optimised_codes(long_term_recommendation_cost_notifications, long_term_recommendation_perf_notifications)
 
 
     # Delete the experiments
