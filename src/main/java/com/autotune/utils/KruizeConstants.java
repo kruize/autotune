@@ -422,13 +422,11 @@ public class KruizeConstants {
             private DataSourceDetailsErrorMsgs() {
             }
 
-            public static final String INVALID_DATASOURCE_DETAILS_NAMESPACE_DATA = "Namespace query data obtained is either null or invalid";
-            public static final String INVALID_DATASOURCE_DETAILS_WORKLOAD_DATA = "Workload query data obtained is either null or invalid";
-            public static final String INVALID_DATASOURCE_DETAILS_CONTAINER_DATA = "Container query data obtained is either null or invalid";
             public static final String MISSING_DATASOURCE_DETAILS_CLUSTER_GROUP_NAME = "DataSourceDetails Cluster group name cannot be empty";
-            public static final String MISSING_DATASOURCE_DETAILS_NAMESPACE_DATA = "DataSourceDetails Namespace data cannot be empty or null";
-            public static final String MISSING_DATASOURCE_DETAILS_WORKLOAD_DATA = "DataSourceDetails Workload data cannot be empty or null";
-            public static final String MISSING_DATASOURCE_DETAILS_CONTAINER_DATA = "DataSourceDetails Container data cannot be empty or null";
+            public static final String MISSING_DATASOURCE_DETAILS_WORKLOAD_MAP = "DataSourceDetails Workload data cannot be empty or null";
+            public static final String MISSING_DATASOURCE_DETAILS_CONTAINER_MAP = "DataSourceDetails Container data cannot be empty or null";
+            public static final String MISSING_DATASOURCE_DETAILS_INFO_OBJECT = "DataSourceDetailsInfo Object cannot be empty or null";
+            public static final String MISSING_DATASOURCE_DETAILS_CLUSTER_GROUP_OBJECT = "DataSourceDetails DataSourceClusterGroup Object cannot be empty or null";
         }
 
         private DataSourceConstants() {

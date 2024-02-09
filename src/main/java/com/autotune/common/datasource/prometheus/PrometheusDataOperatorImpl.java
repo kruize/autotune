@@ -17,7 +17,6 @@ package com.autotune.common.datasource.prometheus;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
-import com.autotune.common.exceptions.InvalidDataSourceQueryData;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
@@ -223,9 +222,9 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
                 }
             }
         } catch (JsonParseException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         } catch (NullPointerException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
         return null;
     }
@@ -237,14 +236,10 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      * @return True if the JSON array is valid (not null, not a JSON null, and has at least one element), otherwise false.
      */
     public boolean validateResultArray(JsonArray resultArray) {
-        try {
-            if ( resultArray == null || resultArray.isJsonNull() || resultArray.size() == 0 ) {
-                throw new InvalidDataSourceQueryData();
-            }
-            return true;
-        } catch (InvalidDataSourceQueryData e) {
-            LOGGER.error(e.getMessage());
+
+        if ( resultArray == null || resultArray.isJsonNull() || resultArray.size() == 0 ) {
             return false;
         }
+        return true;
     }
 }

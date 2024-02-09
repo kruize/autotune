@@ -1,10 +1,8 @@
 package com.autotune.common.data.dataSourceDetails;
 
-import com.autotune.utils.KruizeConstants;
 import com.autotune.common.exceptions.DataSourceDetailsInfoCreationException;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import java.util.*;
@@ -53,12 +51,16 @@ public class DataSourceDetailsHelper {
                         if (metricObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.NAMESPACE)) {
                             String namespace = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.NAMESPACE).getAsString();
 
-                            DataSourceNamespace dataSourceNamespace = new DataSourceNamespace(namespace);
+                            DataSourceNamespace dataSourceNamespace = new DataSourceNamespace(namespace,null);
                             dataSourceNamespaceHashMap.put(namespace, dataSourceNamespace);
                         }
                     }
                 }
             }
+        } catch (JsonParseException e) {
+            LOGGER.error(e.getMessage());
+        } catch (NullPointerException e) {
+            LOGGER.error(e.getMessage());
         } catch (Exception e) {
             LOGGER.error("Error parsing namespace JSON array: " + e.getMessage());
         }
@@ -101,8 +103,8 @@ public class DataSourceDetailsHelper {
      *   // ... additional namespaces ...
      * }
      */
-    public HashMap<String, DataSourceWorkload> getWorkloadInfo(JsonArray resultArray) {
-        HashMap<String, DataSourceWorkload> dataSourceWorkloadHashMap = new HashMap<>();
+    public HashMap<String, HashMap<String, DataSourceWorkload>> getWorkloadInfo(JsonArray resultArray) {
+        HashMap<String, HashMap<String, DataSourceWorkload>> namespaceWorkloadMap = new HashMap<>();
 
         try {
             // Iterate through the "result" array to extract namespaces
@@ -113,22 +115,33 @@ public class DataSourceDetailsHelper {
                 if (resultObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC) && resultObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC).isJsonObject()) {
                     JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC);
 
-                    // Extract the workload name value
-                    if (metricObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD)) {
-                        String workloadName = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD).getAsString();
+                    // Extract the namespace name
+                    if (metricObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.NAMESPACE)) {
+                        String namespace = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.NAMESPACE).getAsString();
 
-                        if (!dataSourceWorkloadHashMap.containsKey(workloadName)) {
-                            String workloadType = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD_TYPE).getAsString();
-                            DataSourceWorkload dataSourceWorkload = new DataSourceWorkload(workloadName, workloadType);
-                            dataSourceWorkloadHashMap.put(workloadName, dataSourceWorkload);
+                        // Check if the outer map already contains the namespace
+                        if (!namespaceWorkloadMap.containsKey(namespace)) {
+                            // If not, create a new inner hashmap for the namespace
+                            namespaceWorkloadMap.put(namespace, new HashMap<>());
                         }
+
+                        String workloadName = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD).getAsString();
+                        String workloadType = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD_TYPE).getAsString();
+                        DataSourceWorkload dataSourceWorkload = new DataSourceWorkload(workloadName, workloadType,null);
+
+                        // Put the DataSourceWorkload into the inner hashmap directly
+                        namespaceWorkloadMap.get(namespace).put(workloadName, dataSourceWorkload);
                     }
                 }
             }
+        } catch (JsonParseException e) {
+            LOGGER.error(e.getMessage());
+        } catch (NullPointerException e) {
+            LOGGER.error(e.getMessage());
         } catch (Exception e) {
             LOGGER.error("Error parsing workload JSON array: " + e.getMessage());
         }
-        return dataSourceWorkloadHashMap;
+        return namespaceWorkloadMap;
     }
 
     /**
@@ -166,8 +179,8 @@ public class DataSourceDetailsHelper {
      *   // ... additional namespaces ...
      * }
      */
-    public HashMap<String, DataSourceContainer> getContainerInfo(JsonArray resultArray) {
-        HashMap<String, DataSourceContainer> dataSourceContainersHashMap = new HashMap<>();
+    public HashMap<String, HashMap<String, DataSourceContainer>> getContainerInfo(JsonArray resultArray) {
+        HashMap<String, HashMap<String, DataSourceContainer>> workloadContainerMap = new HashMap<>();
 
         try {
             // Iterate through the "result" array to extract namespaces
@@ -178,55 +191,172 @@ public class DataSourceDetailsHelper {
                 if (resultObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC) && resultObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC).isJsonObject()) {
                     JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC);
 
-                    // Extract the container name value
-                    if (metricObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.CONTAINER_NAME)) {
-                        String containerName = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.CONTAINER_NAME).getAsString();
-                        if (!dataSourceContainersHashMap.containsKey(containerName)) {
-                            String containerImageName = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.CONTAINER_IMAGE_NAME).getAsString();
-                            DataSourceContainer dataSourceContainer = new DataSourceContainer(containerName, containerImageName);
-                            dataSourceContainersHashMap.put(containerName, dataSourceContainer);
+                    // Extract the workload name value
+                    if (metricObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD)) {
+                        String workloadName = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD).getAsString();
+
+                        if (!workloadContainerMap.containsKey(workloadName)) {
+                            workloadContainerMap.put(workloadName, new HashMap<>());
                         }
+
+                        String containerName = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.CONTAINER_NAME).getAsString();
+                        String containerImageName = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.CONTAINER_IMAGE_NAME).getAsString();
+                        DataSourceContainer dataSourceContainer = new DataSourceContainer(containerName, containerImageName);
+                        workloadContainerMap.get(workloadName).put(containerName, dataSourceContainer);
                     }
                 }
             }
+        } catch (JsonParseException e) {
+            LOGGER.error(e.getMessage());
+        } catch (NullPointerException e) {
+            LOGGER.error(e.getMessage());
         } catch (Exception e) {
             LOGGER.error("Error parsing container JSON array: " + e.getMessage());
         }
-        return dataSourceContainersHashMap;
+        return workloadContainerMap;
     }
 
     /**
      * Creates and returns a DataSourceDetailsInfo object based on the provided parameters.
-     * This function populates the DataSourceDetailsInfo object with information about active namespaces,
-     * workload and container information.
+     * This function populates the DataSourceDetailsInfo object with information about active namespaces
      *
      * @param clusterGroupName       Name of the cluster group representing data source provider.
-     * @param dataSourceNamespaces   List of active namespace names.
+     * @param dataSourceNamespaces   Map of namespace objects
      * @return                       A DataSourceDetailsInfo object with populated information.
      */
-    public DataSourceDetailsInfo createDataSourceDetailsInfoObject(String clusterGroupName, HashMap<String,DataSourceNamespace> dataSourceNamespaces) throws DataSourceDetailsInfoCreationException {
+    public DataSourceDetailsInfo createDataSourceDetailsInfoObject(String clusterGroupName, HashMap<String, DataSourceNamespace> dataSourceNamespaces) throws DataSourceDetailsInfoCreationException {
+
         try {
+            DataSourceDetailsInfo dataSourceDetailsInfo = new DataSourceDetailsInfo(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.version, null);
 
-            DataSourceDetailsInfo dataSourceDetailsInfo = new DataSourceDetailsInfo(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.version);
-
-            DataSourceClusterGroup dataSourceClusterGroup = new DataSourceClusterGroup(clusterGroupName);
+            DataSourceClusterGroup dataSourceClusterGroup = new DataSourceClusterGroup(clusterGroupName,null);
 
             DataSourceCluster dataSourceCluster = new DataSourceCluster(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.CLUSTER_NAME, dataSourceNamespaces);
 
             // Set cluster in cluster group
             HashMap<String, DataSourceCluster> clusters = new HashMap<>();
             clusters.put(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.CLUSTER_NAME, dataSourceCluster);
-            dataSourceClusterGroup.setDataSourceCluster(clusters);
+            dataSourceClusterGroup.setDataSourceClusterHashMap(clusters);
 
             // Set cluster group in DataSourceDetailsInfo
             HashMap<String, DataSourceClusterGroup> clusterGroups = new HashMap<>();
             clusterGroups.put(clusterGroupName, dataSourceClusterGroup);
-            dataSourceDetailsInfo.setDataSourceClusterGroup(clusterGroups);
-
+            dataSourceDetailsInfo.setDataSourceClusterGroupHashMap(clusterGroups);
 
             return dataSourceDetailsInfo;
         } catch (Exception e) {
-            throw new DataSourceDetailsInfoCreationException("Error creating DataSourceDetailsInfo: " + e.getMessage());
+            LOGGER.error("Error creating DataSourceDetailsInfo: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Validates input parameters and retrieves the DataSourceCluster object.
+     *
+     * @param clusterGroupName      The name of the cluster group.
+     * @param dataSourceDetailsInfo The DataSourceDetailsInfo object.
+     * @param namespaceWorkloadMap  The map containing workload information.
+     * @return The DataSourceCluster object if validation passes, or null if validation fails.
+     */
+    private DataSourceCluster validateInputParametersAndGetClusterObject(String clusterGroupName, DataSourceDetailsInfo dataSourceDetailsInfo,
+                                                                             HashMap<String, HashMap<String, DataSourceWorkload>> namespaceWorkloadMap) {
+
+        if (null == clusterGroupName || clusterGroupName.isEmpty()) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.MISSING_DATASOURCE_DETAILS_CLUSTER_GROUP_NAME);
+            return null;
+        }
+
+        if (null == dataSourceDetailsInfo) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.MISSING_DATASOURCE_DETAILS_INFO_OBJECT);
+            return null;
+        }
+
+        if (null == namespaceWorkloadMap || namespaceWorkloadMap.isEmpty()) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.MISSING_DATASOURCE_DETAILS_WORKLOAD_MAP);
+            return null;
+        }
+
+        DataSourceClusterGroup dataSourceClusterGroup = dataSourceDetailsInfo.getDataSourceClusterGroupObject(clusterGroupName);
+
+        if (dataSourceClusterGroup == null) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.MISSING_DATASOURCE_DETAILS_CLUSTER_GROUP_OBJECT + clusterGroupName);
+            return null;
+        }
+
+        return dataSourceClusterGroup.getDataSourceClusterObject(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.CLUSTER_NAME);
+    }
+
+    /**
+     * Updates the workload metadata in the provided DataSourceDetailsInfo object for a specific cluster group.
+     *
+     * @param clusterGroupName      The name of the cluster group to update.
+     * @param dataSourceDetailsInfo The DataSourceDetailsInfo object to update.
+     * @param workloadMap           A map containing namespace as keys and workload data as values.
+     */
+    public void updateWorkloadDataSourceDetailsInfoObject(String clusterGroupName, DataSourceDetailsInfo dataSourceDetailsInfo,
+                                                          HashMap<String, HashMap<String, DataSourceWorkload>> workloadMap) {
+        try {
+
+            // Retrieve DataSourceCluster
+            DataSourceCluster dataSourceCluster = validateInputParametersAndGetClusterObject(clusterGroupName, dataSourceDetailsInfo, workloadMap);
+
+            // Update the DataSourceNamespaces using the provided map
+            if (null != dataSourceCluster) {
+                for (String namespace : workloadMap.keySet()) {
+                    DataSourceNamespace dataSourceNamespace = dataSourceCluster.getDataSourceNamespaceObject(namespace);
+
+                    if (null != dataSourceNamespace) {
+                        // Bulk update workload data for the namespace
+                        dataSourceNamespace.setDataSourceWorkloadHashMap(workloadMap.get(namespace));
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error updating DataSourceDetailsInfo with workload metadata: " + e.getMessage());
+        }
+    }
+
+
+    /**
+     * Updates the container metadata in the provided DataSourceDetailsInfo object for a specific cluster group.
+     *
+     * @param clusterGroupName      The name of the cluster group to update.
+     * @param dataSourceDetailsInfo The DataSourceDetailsInfo object to update.
+     * @param namespaceWorkloadMap   A map containing namespace as keys and workload data as values.
+     * @param workloadContainerMap  A map containing workload names as keys and container data as values.
+     */
+    public void updateContainerDataSourceDetailsInfoObject(String clusterGroupName, DataSourceDetailsInfo dataSourceDetailsInfo,
+                                                           HashMap<String, HashMap<String, DataSourceWorkload>> namespaceWorkloadMap,
+                                                           HashMap<String, HashMap<String, DataSourceContainer>> workloadContainerMap) {
+        try {
+
+            if (null == workloadContainerMap || workloadContainerMap.isEmpty()) {
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.MISSING_DATASOURCE_DETAILS_CONTAINER_MAP);
+                return;
+            }
+            // Retrieve DataSourceCluster
+            DataSourceCluster dataSourceCluster = validateInputParametersAndGetClusterObject(clusterGroupName, dataSourceDetailsInfo, namespaceWorkloadMap);
+
+            if (null != dataSourceCluster) {
+                // Iterate over namespaces in namespaceWorkloadMap
+                for (String namespace : namespaceWorkloadMap.keySet()) {
+                    DataSourceNamespace dataSourceNamespace = dataSourceCluster.getDataSourceNamespaceObject(namespace);
+
+                    if (null != dataSourceNamespace) {
+                        // Iterate over workloads in workloadContainerMap
+                        for (String workloadName : namespaceWorkloadMap.get(namespace).keySet()) {
+                            DataSourceWorkload dataSourceWorkload = dataSourceNamespace.getDataSourceWorkloadObject(workloadName);
+
+                            // Bulk update container data for the workload
+                            if (null != dataSourceWorkload && workloadContainerMap.containsKey(workloadName)) {
+                                dataSourceWorkload.setDataSourceContainerHashMap(workloadContainerMap.get(workloadName));
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Error updating DataSourceDetailsInfo with container metadata: " + e.getMessage());
         }
     }
 }

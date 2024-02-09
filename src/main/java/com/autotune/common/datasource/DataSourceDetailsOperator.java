@@ -3,7 +3,6 @@ package com.autotune.common.datasource;
 import com.autotune.common.data.dataSourceDetails.*;
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
 import com.autotune.common.exceptions.DataSourceDetailsInfoCreationException;
-import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +25,6 @@ public class DataSourceDetailsOperator {
     private DataSourceDetailsInfo dataSourceDetailsInfo;
     private DataSourceDetailsOperator() { this.dataSourceDetailsInfo = null; }
     public static DataSourceDetailsOperator getInstance() { return dataSourceDetailsOperatorInstance; }
-    public DataSourceDetailsInfo getDataSourceDetailsInfo() { return dataSourceDetailsInfo; }
 
     /**
      * Creates and populates details for a data source based on the provided DataSourceInfo object.
@@ -36,79 +34,82 @@ public class DataSourceDetailsOperator {
      * @param dataSourceInfo The DataSourceInfo object containing information about the data source.
      * TODO - support multiple data sources
      */
-    public void createDataSourceDetails (DataSourceInfo dataSourceInfo) throws DataSourceDetailsInfoCreationException {
+    public void createDataSourceDetails (DataSourceInfo dataSourceInfo) {
 
         DataSourceDetailsHelper dataSourceDetailsHelper = new DataSourceDetailsHelper();
-        DataSourceOperatorImpl op = null;
-
         /**
-         * Get PrometheusDataSourceOperatorImpl instance on runtime based on dataSource provider
+         * Get DataSourceOperatorImpl instance on runtime based on dataSource provider
          */
-        if (dataSourceInfo.getProvider().equals(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
-            op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
+        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
+
+        if (null == op) {
+            return;
         }
 
         /**
          * For the "prometheus" data source, fetches and processes data related to namespaces, workloads, and containers,
          * creating a comprehensive DataSourceDetailsInfo object that is then added to a list.
+         * TODO - Process cluster metadata using a custom query
          */
         try {
             JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.NAMESPACE_QUERY);
 
-            if (op.validateResultArray(namespacesDataResultArray)) {
-                //populate namespace data
-                HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
-                dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), datasourceNamespaces);
-
-                //populate workload data
-                HashMap<String, DataSourceWorkload> datasourceWorkloads = new HashMap<>();
-                for (String key : datasourceNamespaces.keySet()) {
-                    String namespace = key;
-                    /*
-                    TODO -  get workload metadata for a given namespace
-                     */
-                    JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.WORKLOAD_QUERY);
-
-                    if (op.validateResultArray(workloadDataResultArray)) {
-                        datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
-                    }
-                }
-                //dataSourceDetailsHelper.updateWorkloadDataSourceDetailsInfoObject(datasourceNamespaces, datasourceWorkloads);
-
-                //populate container data
-                HashMap<String, DataSourceContainer> datasourceContainers = new HashMap<>();
-
-                for (String key : datasourceWorkloads.keySet()) {
-                    String workloadName = key;
-                    /*
-                    TODO - get container metadata for a given workload
-                     */
-                    JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.CONTAINER_QUERY);
-
-                    if (op.validateResultArray(containerDataResultArray)) {
-                        datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
-                    }
-
-                }
-                //dataSourceDetailsHelper.updateContainerDataSourceDetailsInfoObject(datasourceWorkloads, datasourceContainers);
+            if(false == op.validateResultArray(namespacesDataResultArray)){
+                dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), null);
+                return;
             }
+
+            /**
+             * Key: Name of namespace
+             * Value: DataSourceNamespace object corresponding to a namespace
+             */
+            HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
+            dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), datasourceNamespaces);
+
+            /**
+             * Outer map:
+             * Key: Name of namespace
+             * <p>
+             * Inner map:
+             * Key: Name of workload
+             * Value: DataSourceWorkload object matching the name
+             * TODO -  get workload metadata for a given namespace
+             */
+            HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
+            JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.WORKLOAD_QUERY);
+            if (true == op.validateResultArray(workloadDataResultArray)) {
+                datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
+            }
+            dataSourceDetailsHelper.updateWorkloadDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), dataSourceDetailsInfo, datasourceWorkloads);
+
+            /**
+             * Outer map:
+             * Key: Name of workload
+             * <p>
+             * Inner map:
+             * Key: Name of container
+             * Value: DataSourceContainer object matching the name
+             * TODO - get container metadata for a given workload
+             */
+            HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
+            JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.CONTAINER_QUERY);
+            if (true == op.validateResultArray(containerDataResultArray)) {
+                datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
+            }
+            dataSourceDetailsHelper.updateContainerDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), dataSourceDetailsInfo, datasourceWorkloads, datasourceContainers);
         } catch (DataSourceDetailsInfoCreationException e) {
-            throw new DataSourceDetailsInfoCreationException(e.getMessage());
+            LOGGER.error(e.getMessage());
         }
     }
 
     /**
-     * Retrieves details for the specified data source information.
-     *
-     * @param dataSourceInfo The information about the data source to retrieve details for.
+     * Retrieves DataSourceDetailsInfo object.
      * @return DataSourceDetailsInfo containing details about the data source if found, otherwise null.
+     *
+     * TODO - support data retrieval for a specified data source
      */
-    public DataSourceDetailsInfo getDataSourceDetails(DataSourceInfo dataSourceInfo) {
-
-        if (dataSourceDetailsInfo != null) {
-            return dataSourceDetailsInfo;
-        }
-        return null;
+    public DataSourceDetailsInfo getDataSourceDetailsInfo() {
+        return dataSourceDetailsInfo;
     }
 
     /*
