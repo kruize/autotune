@@ -1630,10 +1630,50 @@ def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
                 if INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
                     assert "variation" in short_term_recommendation["recommendation_engines"]["cost"]
                     assert "config" in short_term_recommendation["recommendation_engines"]["cost"]
+                    assert short_term_recommendation["recommendation_engines"]["cost"]["config"]["requests"]["cpu"]["amount"] == OPTIMISED_CPU
+                    assert short_term_recommendation["recommendation_engines"]["cost"]["config"]["limits"]["cpu"]["amount"] == OPTIMISED_CPU
+                    assert short_term_recommendation["recommendation_engines"]["cost"]["config"]["requests"]["memory"]["amount"] == OPTIMISED_MEMORY
+                    assert short_term_recommendation["recommendation_engines"]["cost"]["config"]["limits"]["memory"]["amount"] == OPTIMISED_MEMORY
+
+                    if j > 671:
+                        assert "variation" in medium_term_recommendation["recommendation_engines"]["cost"]
+                        assert "config" in medium_term_recommendation["recommendation_engines"]["cost"]
+                        assert medium_term_recommendation["recommendation_engines"]["cost"]["config"]["requests"]["cpu"]["amount"] == OPTIMISED_CPU
+                        assert medium_term_recommendation["recommendation_engines"]["cost"]["config"]["limits"]["cpu"]["amount"] == OPTIMISED_CPU
+                        assert medium_term_recommendation["recommendation_engines"]["cost"]["config"]["requests"]["memory"]["amount"] == OPTIMISED_MEMORY
+                        assert medium_term_recommendation["recommendation_engines"]["cost"]["config"]["limits"]["memory"]["amount"] == OPTIMISED_MEMORY
+
+                    if j > 1439:
+                        assert "variation" in long_term_recommendation["recommendation_engines"]["cost"]
+                        assert "config" in long_term_recommendation["recommendation_engines"]["cost"]
+                        assert long_term_recommendation["recommendation_engines"]["cost"]["config"]["requests"]["cpu"]["amount"] == OPTIMISED_CPU
+                        assert long_term_recommendation["recommendation_engines"]["cost"]["config"]["limits"]["cpu"]["amount"] == OPTIMISED_CPU
+                        assert long_term_recommendation["recommendation_engines"]["cost"]["config"]["requests"]["memory"]["amount"] == OPTIMISED_MEMORY
+                        assert long_term_recommendation["recommendation_engines"]["cost"]["config"]["limits"]["memory"]["amount"] == OPTIMISED_MEMORY
 
                 if INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
                     assert "variation" in short_term_recommendation["recommendation_engines"]["performance"]
                     assert "config" in short_term_recommendation["recommendation_engines"]["performance"]
+                    assert short_term_recommendation["recommendation_engines"]["performance"]["config"]["requests"]["cpu"]["amount"] == OPTIMISED_CPU
+                    assert short_term_recommendation["recommendation_engines"]["performance"]["config"]["limits"]["cpu"]["amount"] == OPTIMISED_CPU
+                    assert short_term_recommendation["recommendation_engines"]["performance"]["config"]["requests"]["memory"]["amount"] == OPTIMISED_MEMORY
+                    assert short_term_recommendation["recommendation_engines"]["performance"]["config"]["limits"]["memory"]["amount"] == OPTIMISED_MEMORY
+
+                    if j > 671:
+                        assert "variation" in medium_term_recommendation["recommendation_engines"]["performance"]
+                        assert "config" in medium_term_recommendation["recommendation_engines"]["performance"]
+                        assert medium_term_recommendation["recommendation_engines"]["performance"]["config"]["requests"]["cpu"]["amount"] == OPTIMISED_CPU
+                        assert medium_term_recommendation["recommendation_engines"]["performance"]["config"]["limits"]["cpu"]["amount"] == OPTIMISED_CPU
+                        assert medium_term_recommendation["recommendation_engines"]["performance"]["config"]["requests"]["memory"]["amount"] == OPTIMISED_MEMORY
+                        assert medium_term_recommendation["recommendation_engines"]["performance"]["config"]["limits"]["memory"]["amount"] == OPTIMISED_MEMORY
+
+                    if j > 1439:
+                        assert "variation" in long_term_recommendation["recommendation_engines"]["performance"]
+                        assert "config" in long_term_recommendation["recommendation_engines"]["performance"]
+                        assert long_term_recommendation["recommendation_engines"]["performance"]["config"]["requests"]["cpu"]["amount"] == OPTIMISED_CPU
+                        assert long_term_recommendation["recommendation_engines"]["performance"]["config"]["limits"]["cpu"]["amount"] == OPTIMISED_CPU
+                        assert long_term_recommendation["recommendation_engines"]["performance"]["config"]["requests"]["memory"]["amount"] == OPTIMISED_MEMORY
+                        assert long_term_recommendation["recommendation_engines"]["performance"]["config"]["limits"]["memory"]["amount"] == OPTIMISED_MEMORY
 
                 short_term_recommendation_cost_notifications = short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
                 short_term_recommendation_perf_notifications = short_term_recommendation["recommendation_engines"]["performance"]["notifications"]
