@@ -16,14 +16,12 @@ public class DataSourceWorkload {
     @SerializedName("workload_type")
     private String workloadType;
 
-    // key = containerName
+    /**
+     * Key: Container name
+     * Value: Associated DataSourceContainer object
+     */
     @SerializedName("containers")
     private HashMap<String, DataSourceContainer> containersHashMap;
-
-    public DataSourceWorkload(String workloadName, String workloadType) {
-        this.workloadName = workloadName;
-        this.workloadType = workloadType;
-    }
 
     public DataSourceWorkload(String workloadName, String workloadType, HashMap<String, DataSourceContainer> containers) {
         this.workloadName = workloadName;
@@ -33,19 +31,15 @@ public class DataSourceWorkload {
 
     public String getDataSourceWorkloadName() {return workloadName;}
 
-    public void setDataSourceWorkloadName(String workloadName) {this.workloadName = workloadName;}
-
     public String getDataSourceWorkloadType() {return workloadType;}
 
-    public void setDataSourceWorkloadType(String workloadType) {this.workloadType = workloadType;}
-
-    public HashMap<String, DataSourceContainer> getDataSourceContainers() {
+    public HashMap<String, DataSourceContainer> getDataSourceContainerHashMap() {
         return containersHashMap;
     }
 
-    public void setDataSourceContainers(HashMap<String, DataSourceContainer> containers) {
+    public void setDataSourceContainerHashMap(HashMap<String, DataSourceContainer> containers) {
         if (containers == null) {
-            LOGGER.info("No containers found for workload ");
+            LOGGER.info("No containers found for workload - "+ workloadName);
         }
         this.containersHashMap = containers;
     }

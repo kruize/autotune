@@ -13,12 +13,12 @@ public class DataSourceNamespace {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceNamespace.class);
     private String namespace;
 
-    // key = workload_name
+    /**
+     * Key: Workload name
+     * Value: Associated DataSourceWorkload object
+     */
     @SerializedName("workloads")
     private HashMap<String, DataSourceWorkload> workloadHashMap ;
-    public DataSourceNamespace(String namespace) {
-        this.namespace = namespace;
-    }
 
     public DataSourceNamespace(String namespace, HashMap<String, DataSourceWorkload> workloadHashMap) {
         this.namespace = namespace;
@@ -29,18 +29,24 @@ public class DataSourceNamespace {
         return namespace;
     }
 
-    public void setDataSourceNamespaceName(String namespace) {
-        this.namespace = namespace;
-    }
-
-    public HashMap<String, DataSourceWorkload> getDataSourceWorkloads() {
+    public HashMap<String, DataSourceWorkload> getDataSourceWorkloadHashMap() {
         return workloadHashMap;
     }
 
     public void setDataSourceWorkloadHashMap(HashMap<String, DataSourceWorkload> workloadHashMap) {
+        if(null == workloadHashMap) {
+            LOGGER.error("No workloads found for namespace - "+ namespace);
+        }
        this.workloadHashMap = workloadHashMap;
     }
 
+    public DataSourceWorkload getDataSourceWorkloadObject(String workloadName) {
+        if (null != workloadHashMap && workloadHashMap.containsKey(workloadName)) {
+            return workloadHashMap.get(workloadName);
+        }
+
+        return null;
+    }
     @Override
     public String toString() {
         return "DataSourceNamespace{" +

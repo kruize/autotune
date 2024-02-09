@@ -17,9 +17,7 @@ public class DataSourceContainer {
     }
 
     public String getDataSourceContainerName() { return containerName;}
-    public void setDataSourceContainerName(String containerName) { this.containerName = containerName; }
     public String getDataSourceContainerImageName() { return containerImageName;}
-    public void setDataSourceContainerImageName(String container_image_name) { this.containerImageName = container_image_name; }
 
     @Override
     public String toString() {

@@ -14,20 +14,15 @@ public class DataSourceClusterGroup {
     @SerializedName("cluster_group_name")
     private String clusterGroupName;
 
-    // key = clusterName
+    /**
+     * Key: Cluster name
+     * Value: Associated DataSourceCluster object
+     */
     @SerializedName("clusters")
     private HashMap<String, DataSourceCluster> dataSourceClusterHashMap;
 
-    public DataSourceClusterGroup(String clusterGroupName) {
-        this.clusterGroupName = clusterGroupName;
-    }
-
     public DataSourceClusterGroup(String clusterGroupName, HashMap<String,DataSourceCluster> clusters) {
         this.clusterGroupName = clusterGroupName;
-
-        if (clusters == null) {
-            LOGGER.info("No clusters found for cluster_group: " + clusterGroupName);
-        }
         this.dataSourceClusterHashMap = clusters;
     }
 
@@ -35,16 +30,22 @@ public class DataSourceClusterGroup {
         return clusterGroupName;
     }
 
-    public void setDataSourceClusterGroupName(String clusterGroupName) {
-        this.clusterGroupName = clusterGroupName;
-    }
-
-    public HashMap<String, DataSourceCluster> getDataSourceCluster() {
+    public HashMap<String, DataSourceCluster> getDataSourceClusterHashMap() {
         return dataSourceClusterHashMap;
     }
 
-    public void setDataSourceCluster(HashMap<String, DataSourceCluster> clusters) {
+    public void setDataSourceClusterHashMap(HashMap<String, DataSourceCluster> clusters) {
+        if (null == clusters) {
+            LOGGER.error("No clusters found for cluster group: "+ clusterGroupName);
+        }
         this.dataSourceClusterHashMap = clusters;
+    }
+
+    public DataSourceCluster getDataSourceClusterObject(String clusterName) {
+        if (null != dataSourceClusterHashMap && dataSourceClusterHashMap.containsKey(clusterName)) {
+            return dataSourceClusterHashMap.get(clusterName);
+        }
+        return null;
     }
 
     @Override

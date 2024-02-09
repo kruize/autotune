@@ -8,13 +8,13 @@ import java.util.HashMap;
 public class DataSourceDetailsInfo {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceDetailsInfo.class);
     private String version;
-    // key = cluster_group_name
+
+    /**
+     * Key: Cluster group name
+     * Value: Associated DataSourceClusterGroup object
+     */
     @SerializedName("cluster_groups")
     private HashMap<String, DataSourceClusterGroup> clusterGroupHashMap;
-
-    public DataSourceDetailsInfo(String version) {
-        this.version = version;
-    }
 
     public DataSourceDetailsInfo(String version, HashMap<String, DataSourceClusterGroup> clusterGroupHashMap) {
         this.version = version;
@@ -29,12 +29,22 @@ public class DataSourceDetailsInfo {
         this.version = version;
     }
 
-    public HashMap<String, DataSourceClusterGroup> getDataSourceClusterGroup() {
+    public HashMap<String, DataSourceClusterGroup> getDataSourceClusterGroupHashMap() {
         return clusterGroupHashMap;
     }
 
-    public void setDataSourceClusterGroup(HashMap<String, DataSourceClusterGroup> clusterGroupHashMap) {
+    public void setDataSourceClusterGroupHashMap(HashMap<String, DataSourceClusterGroup> clusterGroupHashMap) {
+        if (null == clusterGroupHashMap) {
+            LOGGER.error("No cluster groups found");
+        }
         this.clusterGroupHashMap = clusterGroupHashMap;
+    }
+
+    public DataSourceClusterGroup getDataSourceClusterGroupObject(String clusterGroupName) {
+        if (null != clusterGroupHashMap && clusterGroupHashMap.containsKey(clusterGroupName)) {
+            return clusterGroupHashMap.get(clusterGroupName);
+        }
+        return null;
     }
 
     @Override

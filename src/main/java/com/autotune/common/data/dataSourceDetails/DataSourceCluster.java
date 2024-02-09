@@ -14,13 +14,12 @@ public class DataSourceCluster {
     @SerializedName("cluster_name")
     private String clusterName;
 
-    // key = namespace
+    /**
+     * Key: Namespace
+     * Value: Associated DataSourceNamespace object
+     */
     @SerializedName("namespaces")
     private HashMap<String, DataSourceNamespace> dataSourceNamespaceHashMap;
-
-    public DataSourceCluster(String clusterName) {
-        this.clusterName = clusterName;
-    }
 
     public DataSourceCluster(String clusterName, HashMap<String, DataSourceNamespace> dataSourceNamespaceHashMap) {
         this.clusterName = clusterName;
@@ -31,16 +30,15 @@ public class DataSourceCluster {
         return clusterName;
     }
 
-    public void setDataSourceClusterName(String clusterName) {
-        this.clusterName = clusterName;
-    }
-
-    public HashMap<String, DataSourceNamespace> getDataSourceNamespaces() {
+    public HashMap<String, DataSourceNamespace> getDataSourceNamespaceHashMap() {
         return dataSourceNamespaceHashMap;
     }
 
-    public void setDataSourceNamespaces(HashMap<String, DataSourceNamespace> dataSourceNamespaceHashMap) {
-        this.dataSourceNamespaceHashMap = dataSourceNamespaceHashMap;
+    public DataSourceNamespace getDataSourceNamespaceObject(String namespace) {
+        if  (null != dataSourceNamespaceHashMap && dataSourceNamespaceHashMap.containsKey(namespace)) {
+            return dataSourceNamespaceHashMap.get(namespace);
+        }
+        return null;
     }
 
     @Override
