@@ -1,6 +1,5 @@
 package com.autotune.common.data.dataSourceDetails;
 
-import com.autotune.common.exceptions.DataSourceDetailsInfoCreationException;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.*;
 import org.slf4j.Logger;
@@ -47,7 +46,7 @@ public class DataSourceDetailsHelper {
      * }
      */
     public HashMap<String, DataSourceNamespace> getActiveNamespaces(JsonArray resultArray) {
-        HashMap<String, DataSourceNamespace> dataSourceNamespaceHashMap = new HashMap<>();
+        HashMap<String, DataSourceNamespace> namespaceMap = new HashMap<>();
 
         try {
             // Iterate through the "result" array to extract namespaces
@@ -64,7 +63,7 @@ public class DataSourceDetailsHelper {
                             String namespace = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.NAMESPACE).getAsString();
 
                             DataSourceNamespace dataSourceNamespace = new DataSourceNamespace(namespace,null);
-                            dataSourceNamespaceHashMap.put(namespace, dataSourceNamespace);
+                            namespaceMap.put(namespace, dataSourceNamespace);
                         }
                     }
                 }
@@ -74,9 +73,14 @@ public class DataSourceDetailsHelper {
         } catch (NullPointerException e) {
             LOGGER.error(e.getMessage());
         } catch (Exception e) {
-            LOGGER.error("Error parsing namespace JSON array: " + e.getMessage());
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.NAMESPACE_JSON_PARSING_ERROR + e.getMessage());
         }
-        return dataSourceNamespaceHashMap;
+
+        if (null == namespaceMap || namespaceMap.isEmpty()) {
+            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsDebugMsgs.DEBUG_NAMESPACE_MAP_POPULATION);
+        }
+
+        return namespaceMap;
     }
 
     /**
@@ -150,7 +154,11 @@ public class DataSourceDetailsHelper {
         } catch (NullPointerException e) {
             LOGGER.error(e.getMessage());
         } catch (Exception e) {
-            LOGGER.error("Error parsing workload JSON array: " + e.getMessage());
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.WORKLOAD_JSON_PARSING_ERROR + e.getMessage());
+        }
+
+        if (null == namespaceWorkloadMap || namespaceWorkloadMap.isEmpty()) {
+            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsDebugMsgs.DEBUG_NAMESPACE_WORKLOAD_MAP_POPULATION);
         }
         return namespaceWorkloadMap;
     }
@@ -222,7 +230,11 @@ public class DataSourceDetailsHelper {
         } catch (NullPointerException e) {
             LOGGER.error(e.getMessage());
         } catch (Exception e) {
-            LOGGER.error("Error parsing container JSON array: " + e.getMessage());
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.CONTAINER_JSON_PARSING_ERROR + e.getMessage());
+        }
+
+        if (null == workloadContainerMap || workloadContainerMap.isEmpty()) {
+            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsDebugMsgs.DEBUG_WORKLOAD_CONTAINER_MAP_POPULATION);
         }
         return workloadContainerMap;
     }
@@ -232,17 +244,17 @@ public class DataSourceDetailsHelper {
      * This function populates the DataSourceDetailsInfo object with information about active namespaces
      *
      * @param clusterGroupName       Name of the cluster group representing data source provider.
-     * @param dataSourceNamespaces   Map of namespace objects
+     * @param namespaceMap           Map of namespace objects
      * @return                       A DataSourceDetailsInfo object with populated information.
      */
-    public DataSourceDetailsInfo createDataSourceDetailsInfoObject(String clusterGroupName, HashMap<String, DataSourceNamespace> dataSourceNamespaces) throws DataSourceDetailsInfoCreationException {
+    public DataSourceDetailsInfo createDataSourceDetailsInfoObject(String clusterGroupName, HashMap<String, DataSourceNamespace> namespaceMap) {
 
         try {
             DataSourceDetailsInfo dataSourceDetailsInfo = new DataSourceDetailsInfo(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.version, null);
 
             DataSourceClusterGroup dataSourceClusterGroup = new DataSourceClusterGroup(clusterGroupName,null);
 
-            DataSourceCluster dataSourceCluster = new DataSourceCluster(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.CLUSTER_NAME, dataSourceNamespaces);
+            DataSourceCluster dataSourceCluster = new DataSourceCluster(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.CLUSTER_NAME, namespaceMap);
 
             // Set cluster in cluster group
             HashMap<String, DataSourceCluster> clusters = new HashMap<>();
@@ -256,7 +268,7 @@ public class DataSourceDetailsHelper {
 
             return dataSourceDetailsInfo;
         } catch (Exception e) {
-            LOGGER.error("Error creating DataSourceDetailsInfo: " + e.getMessage());
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.DATASOURCE_DETAILS_INFO_CREATION_ERROR + e.getMessage());
         }
         return null;
     }
@@ -301,28 +313,28 @@ public class DataSourceDetailsHelper {
      *
      * @param clusterGroupName      The name of the cluster group to update.
      * @param dataSourceDetailsInfo The DataSourceDetailsInfo object to update.
-     * @param workloadMap           A map containing namespace as keys and workload data as values.
+     * @param namespaceWorkloadMap  A map containing namespace as keys and workload data as values.
      */
     public void updateWorkloadDataSourceDetailsInfoObject(String clusterGroupName, DataSourceDetailsInfo dataSourceDetailsInfo,
-                                                          HashMap<String, HashMap<String, DataSourceWorkload>> workloadMap) {
+                                                          HashMap<String, HashMap<String, DataSourceWorkload>> namespaceWorkloadMap) {
         try {
 
             // Retrieve DataSourceCluster
-            DataSourceCluster dataSourceCluster = validateInputParametersAndGetClusterObject(clusterGroupName, dataSourceDetailsInfo, workloadMap);
+            DataSourceCluster dataSourceCluster = validateInputParametersAndGetClusterObject(clusterGroupName, dataSourceDetailsInfo, namespaceWorkloadMap);
 
             // Update the DataSourceNamespaces using the provided map
             if (null != dataSourceCluster) {
-                for (String namespace : workloadMap.keySet()) {
+                for (String namespace : namespaceWorkloadMap.keySet()) {
                     DataSourceNamespace dataSourceNamespace = dataSourceCluster.getDataSourceNamespaceObject(namespace);
 
                     if (null != dataSourceNamespace) {
                         // Bulk update workload data for the namespace
-                        dataSourceNamespace.setDataSourceWorkloadHashMap(workloadMap.get(namespace));
+                        dataSourceNamespace.setDataSourceWorkloadHashMap(namespaceWorkloadMap.get(namespace));
                     }
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Error updating DataSourceDetailsInfo with workload metadata: " + e.getMessage());
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.WORKLOAD_METADATA_UPDATE_ERROR+ e.getMessage());
         }
     }
 
@@ -366,7 +378,7 @@ public class DataSourceDetailsHelper {
                 }
             }
         } catch (Exception e) {
-            LOGGER.error("Error updating DataSourceDetailsInfo with container metadata: " + e.getMessage());
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.CONTAINER_METADATA_UPDATE_ERROR + e.getMessage());
         }
     }
 }

@@ -1,5 +1,6 @@
 package com.autotune.common.data.dataSourceDetails;
 
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,19 +12,19 @@ import java.util.HashMap;
  */
 public class DataSourceClusterGroup {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceClusterGroup.class);
-    @SerializedName("cluster_group_name")
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.CLUSTER_GROUP_NAME)
     private String clusterGroupName;
 
     /**
      * Key: Cluster name
      * Value: Associated DataSourceCluster object
      */
-    @SerializedName("clusters")
-    private HashMap<String, DataSourceCluster> dataSourceClusterHashMap;
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.CLUSTERS)
+    private HashMap<String, DataSourceCluster> clusterHashMap;
 
     public DataSourceClusterGroup(String clusterGroupName, HashMap<String,DataSourceCluster> clusters) {
         this.clusterGroupName = clusterGroupName;
-        this.dataSourceClusterHashMap = clusters;
+        this.clusterHashMap = clusters;
     }
 
     public String getDataSourceClusterGroupName() {
@@ -31,19 +32,19 @@ public class DataSourceClusterGroup {
     }
 
     public HashMap<String, DataSourceCluster> getDataSourceClusterHashMap() {
-        return dataSourceClusterHashMap;
+        return clusterHashMap;
     }
 
     public void setDataSourceClusterHashMap(HashMap<String, DataSourceCluster> clusters) {
         if (null == clusters) {
-            LOGGER.error("No clusters found for cluster group: "+ clusterGroupName);
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_CLUSTER_MAP_ERROR + clusterGroupName);
         }
-        this.dataSourceClusterHashMap = clusters;
+        this.clusterHashMap = clusters;
     }
 
     public DataSourceCluster getDataSourceClusterObject(String clusterName) {
-        if (null != dataSourceClusterHashMap && dataSourceClusterHashMap.containsKey(clusterName)) {
-            return dataSourceClusterHashMap.get(clusterName);
+        if (null != clusterHashMap && clusterHashMap.containsKey(clusterName)) {
+            return clusterHashMap.get(clusterName);
         }
         return null;
     }
@@ -52,7 +53,7 @@ public class DataSourceClusterGroup {
     public String toString() {
         return "DataSourceClusterGroup{" +
                 "cluster_group_name='" + clusterGroupName + '\'' +
-                ", clusters=" + dataSourceClusterHashMap +
+                ", clusters=" + clusterHashMap +
                 '}';
     }
 }

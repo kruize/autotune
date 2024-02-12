@@ -2,7 +2,6 @@ package com.autotune.common.datasource;
 
 import com.autotune.common.data.dataSourceDetails.*;
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
-import com.autotune.common.exceptions.DataSourceDetailsInfoCreationException;
 import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,7 +96,7 @@ public class DataSourceDetailsOperator {
                 datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
             }
             dataSourceDetailsHelper.updateContainerDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), dataSourceDetailsInfo, datasourceWorkloads, datasourceContainers);
-        } catch (DataSourceDetailsInfoCreationException e) {
+        } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
     }

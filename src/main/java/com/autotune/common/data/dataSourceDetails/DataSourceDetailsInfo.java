@@ -1,5 +1,6 @@
 package com.autotune.common.data.dataSourceDetails;
 
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,7 +14,7 @@ public class DataSourceDetailsInfo {
      * Key: Cluster group name
      * Value: Associated DataSourceClusterGroup object
      */
-    @SerializedName("cluster_groups")
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.CLUSTER_GROUPS)
     private HashMap<String, DataSourceClusterGroup> clusterGroupHashMap;
 
     public DataSourceDetailsInfo(String version, HashMap<String, DataSourceClusterGroup> clusterGroupHashMap) {

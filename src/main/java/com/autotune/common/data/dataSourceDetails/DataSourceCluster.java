@@ -1,8 +1,7 @@
 package com.autotune.common.data.dataSourceDetails;
 
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
-import org.slf4j.LoggerFactory;
-import org.slf4j.Logger;
 import java.util.HashMap;
 
 /**
@@ -10,20 +9,19 @@ import java.util.HashMap;
  * used to store hashmap of DataSourceNamespace objects representing namespace metadata
  */
 public class DataSourceCluster {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCluster.class);
-    @SerializedName("cluster_name")
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.CLUSTER_NAME)
     private String clusterName;
 
     /**
      * Key: Namespace
      * Value: Associated DataSourceNamespace object
      */
-    @SerializedName("namespaces")
-    private HashMap<String, DataSourceNamespace> dataSourceNamespaceHashMap;
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.NAMESPACES)
+    private HashMap<String, DataSourceNamespace> namespaceHashMap;
 
     public DataSourceCluster(String clusterName, HashMap<String, DataSourceNamespace> dataSourceNamespaceHashMap) {
         this.clusterName = clusterName;
-        this.dataSourceNamespaceHashMap = dataSourceNamespaceHashMap;
+        this.namespaceHashMap = dataSourceNamespaceHashMap;
     }
 
     public String getDataSourceClusterName() {
@@ -31,12 +29,12 @@ public class DataSourceCluster {
     }
 
     public HashMap<String, DataSourceNamespace> getDataSourceNamespaceHashMap() {
-        return dataSourceNamespaceHashMap;
+        return namespaceHashMap;
     }
 
     public DataSourceNamespace getDataSourceNamespaceObject(String namespace) {
-        if  (null != dataSourceNamespaceHashMap && dataSourceNamespaceHashMap.containsKey(namespace)) {
-            return dataSourceNamespaceHashMap.get(namespace);
+        if  (null != namespaceHashMap && namespaceHashMap.containsKey(namespace)) {
+            return namespaceHashMap.get(namespace);
         }
         return null;
     }
@@ -45,7 +43,7 @@ public class DataSourceCluster {
     public String toString() {
         return "DataSourceCluster{" +
                 "cluster_name='" + clusterName + '\'' +
-                ", namespaces=" + dataSourceNamespaceHashMap +
+                ", namespaces=" + namespaceHashMap +
                 '}';
     }
 }

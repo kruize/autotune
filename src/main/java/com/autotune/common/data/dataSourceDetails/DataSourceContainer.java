@@ -1,14 +1,15 @@
 package com.autotune.common.data.dataSourceDetails;
 
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 /**
  * DataSourceContainers object represents the container metadata for a workload
  */
 public class DataSourceContainer {
-    @SerializedName("container_name")
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.CONTAINER_NAME)
     private String containerName;
-    @SerializedName("container_image_name")
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.CONTAINER_IMAGE_NAME)
     private String containerImageName;
 
     public DataSourceContainer(String containerName, String container_image_name) {

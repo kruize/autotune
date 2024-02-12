@@ -1,5 +1,6 @@
 package com.autotune.common.data.dataSourceDetails;
 
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,7 +18,7 @@ public class DataSourceNamespace {
      * Key: Workload name
      * Value: Associated DataSourceWorkload object
      */
-    @SerializedName("workloads")
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.WORKLOADS)
     private HashMap<String, DataSourceWorkload> workloadHashMap ;
 
     public DataSourceNamespace(String namespace, HashMap<String, DataSourceWorkload> workloadHashMap) {
@@ -35,7 +36,7 @@ public class DataSourceNamespace {
 
     public void setDataSourceWorkloadHashMap(HashMap<String, DataSourceWorkload> workloadHashMap) {
         if (null == workloadHashMap) {
-            LOGGER.error("No workloads found for namespace - "+ namespace);
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_WORKLOAD_MAP_ERROR + namespace);
         }
        this.workloadHashMap = workloadHashMap;
     }

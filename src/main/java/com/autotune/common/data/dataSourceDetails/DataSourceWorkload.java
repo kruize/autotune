@@ -1,5 +1,6 @@
 package com.autotune.common.data.dataSourceDetails;
 
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -11,22 +12,22 @@ import java.util.HashMap;
  */
 public class DataSourceWorkload {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceWorkload.class);
-    @SerializedName("workload_name")
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.WORKLOAD_NAME)
     private String workloadName;
-    @SerializedName("workload_type")
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.WORKLOAD_TYPE)
     private String workloadType;
 
     /**
      * Key: Container name
      * Value: Associated DataSourceContainer object
      */
-    @SerializedName("containers")
-    private HashMap<String, DataSourceContainer> containersHashMap;
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.CONTAINERS)
+    private HashMap<String, DataSourceContainer> containerHashMap;
 
     public DataSourceWorkload(String workloadName, String workloadType, HashMap<String, DataSourceContainer> containers) {
         this.workloadName = workloadName;
         this.workloadType = workloadType;
-        this.containersHashMap = containers;
+        this.containerHashMap = containers;
     }
 
     public String getDataSourceWorkloadName() {return workloadName;}
@@ -34,14 +35,14 @@ public class DataSourceWorkload {
     public String getDataSourceWorkloadType() {return workloadType;}
 
     public HashMap<String, DataSourceContainer> getDataSourceContainerHashMap() {
-        return containersHashMap;
+        return containerHashMap;
     }
 
     public void setDataSourceContainerHashMap(HashMap<String, DataSourceContainer> containers) {
         if (containers == null) {
-            LOGGER.info("No containers found for workload - "+ workloadName);
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_CONTAINER_MAP_ERROR + workloadName);
         }
-        this.containersHashMap = containers;
+        this.containerHashMap = containers;
     }
 
     @Override
@@ -49,7 +50,7 @@ public class DataSourceWorkload {
         return "DataSourceWorkload{" +
                 "workload_name ='" + workloadName + '\'' +
                 ", workload_type ='" + workloadType + '\'' +
-                ", containers ='" + containersHashMap.toString() + '\'' +
+                ", containers ='" + containerHashMap.toString() + '\'' +
                 '}';
     }
 }
