@@ -780,7 +780,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
 
         // Check for thresholds
         if (isRecommendedCPURequestAvailable) {
-            if (isCurrentCPURequestAvailable && currentCpuRequestValue > 0.0) {
+            if (isCurrentCPURequestAvailable && currentCpuRequestValue > 0.0 && null != generatedCpuRequest) {
                 double diffCpuRequestPercentage = CommonUtils.getPercentage(generatedCpuRequest.doubleValue(), currentCpuRequestValue);
                 // Check if variation percentage is negative
                 if (diffCpuRequestPercentage < 0.0) {
@@ -788,10 +788,32 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                     diffCpuRequestPercentage = diffCpuRequestPercentage * (-1);
                 }
                 if (diffCpuRequestPercentage <= cpuThreshold) {
-                    // Remove from Config
-                    requestsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
-                    // Remove from Variation
-                    requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // requestsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+
+                    // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+
+                    // Alternative - CPU REQUEST VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    if (null != tempAccessedRecCPURequest) {
+                        // Updating it with desired value
+                        tempAccessedRecCPURequest.setAmount(currentCpuRequestValue);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPURequest);
+
+                    // Alternative - CPU REQUEST VARIATION VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecCPURequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    if (null != tempAccessedRecCPURequestVariation) {
+                        // Updating it with desired value (as we are setting to current variation would be 0)
+                        tempAccessedRecCPURequestVariation.setAmount(CPU_ZERO);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPURequestVariation);
+
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_REQUESTS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
                 }
@@ -799,7 +821,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         }
 
         if (isRecommendedCPULimitAvailable) {
-            if (isCurrentCPULimitAvailable && currentCpuLimitValue > 0.0) {
+            if (isCurrentCPULimitAvailable && currentCpuLimitValue > 0.0 && null != generatedCpuLimit) {
                 double diffCPULimitPercentage = CommonUtils.getPercentage(generatedCpuLimit.doubleValue(), currentCpuLimitValue);
                 // Check if variation percentage is negative
                 if (diffCPULimitPercentage < 0.0) {
@@ -807,10 +829,31 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                     diffCPULimitPercentage = diffCPULimitPercentage * (-1);
                 }
                 if (diffCPULimitPercentage <= cpuThreshold) {
-                    // Remove from Config
-                    limitsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
-                    // Remove from Variation
-                    limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // limitsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+
+                    // Alternative - CPU LIMIT VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    if (null != tempAccessedRecCPULimit) {
+                        // Updating it with desired value
+                        tempAccessedRecCPULimit.setAmount(currentCpuLimitValue);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPULimit);
+
+                    // Alternative - CPU LIMIT VARIATION VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecCPULimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    if (null != tempAccessedRecCPULimitVariation) {
+                        // Updating it with desired value (as we are setting to current variation would be 0)
+                        tempAccessedRecCPULimitVariation.setAmount(CPU_ZERO);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPULimitVariation);
+
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_LIMITS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
                 }
@@ -818,7 +861,7 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         }
 
         if (isRecommendedMemoryRequestAvailable) {
-            if (isCurrentMemoryRequestAvailable && currentMemRequestValue > 0.0) {
+            if (isCurrentMemoryRequestAvailable && currentMemRequestValue > 0.0 && null != generatedMemRequest) {
                 double diffMemRequestPercentage = CommonUtils.getPercentage(generatedMemRequest.doubleValue(), currentMemRequestValue);
                 // Check if variation percentage is negative
                 if (diffMemRequestPercentage < 0.0) {
@@ -826,10 +869,31 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
                     diffMemRequestPercentage = diffMemRequestPercentage * (-1);
                 }
                 if (diffMemRequestPercentage <= memoryThreshold) {
-                    // Remove from Config
-                    requestsMap.remove(AnalyzerConstants.RecommendationItem.memory);
-                    // Remove from Variation
-                    requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // requestsMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
+
+                    // Alternative - MEMORY REQUEST VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecMemoryRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    if (null != tempAccessedRecMemoryRequest) {
+                        // Updating it with desired value
+                        tempAccessedRecMemoryRequest.setAmount(currentMemRequestValue);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    requestsMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryRequest);
+
+                    // Alternative - MEMORY REQUEST VARIATION VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecMemoryRequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    if (null != tempAccessedRecMemoryRequestVariation) {
+                        // Updating it with desired value (as we are setting to current variation would be 0)
+                        tempAccessedRecMemoryRequestVariation.setAmount(MEM_ZERO);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryRequestVariation);
+
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_REQUESTS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
                 }
@@ -837,18 +901,39 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         }
 
         if (isRecommendedMemoryLimitAvailable) {
-            if (isCurrentMemoryLimitAvailable && currentMemLimitValue > 0.0) {
+            if (isCurrentMemoryLimitAvailable && currentMemLimitValue > 0.0 && null != generatedMemLimit) {
                 double diffMemLimitPercentage = CommonUtils.getPercentage(generatedMemLimit.doubleValue(), currentMemLimitValue);
                 // Check if variation percentage is negative
                 if (diffMemLimitPercentage < 0.0) {
                     // Convert to positive to check with threshold
                     diffMemLimitPercentage = diffMemLimitPercentage * (-1);
                 }
-                if (diffMemLimitPercentage <= cpuThreshold) {
-                    // Remove from Config
-                    limitsMap.remove(AnalyzerConstants.RecommendationItem.memory);
-                    // Remove from Variation
-                    limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                if (diffMemLimitPercentage <= memoryThreshold) {
+                    // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // limitsMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
+                    // limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
+
+                    // Alternative - MEMORY LIMIT VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecMemoryLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    if (null != tempAccessedRecMemoryLimit) {
+                        // Updating it with desired value
+                        tempAccessedRecMemoryLimit.setAmount(currentMemLimitValue);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    limitsMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryLimit);
+
+                    // Alternative - MEMORY LIMIT VARIATION VALUE
+                    // Accessing existing recommendation item
+                    RecommendationConfigItem tempAccessedRecMemoryLimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    if (null != tempAccessedRecMemoryLimitVariation) {
+                        // Updating it with desired value (as we are setting to current variation would be 0)
+                        tempAccessedRecMemoryLimitVariation.setAmount(MEM_ZERO);
+                    }
+                    // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
+                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryLimitVariation);
+
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_LIMITS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
                 }

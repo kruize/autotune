@@ -31,6 +31,14 @@ public class FailedUpdateResultsAPIObject extends BaseSO {
 
     private List<KruizeResponse> errors;
 
+    public List<KruizeResponse> getErrors() {
+        return errors;
+    }
+
+    public void setErrors(List<KruizeResponse> errors) {
+        this.errors = errors;
+    }
+
     public FailedUpdateResultsAPIObject(String version, String experiment_name, Timestamp startTimestamp, Timestamp endTimestamp, List<KruizeResponse> errors) {
         this.setApiVersion(version);
         this.setExperimentName(experiment_name);

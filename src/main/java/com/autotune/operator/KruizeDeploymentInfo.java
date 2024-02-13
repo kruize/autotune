@@ -31,6 +31,7 @@ import java.time.Clock;
 import java.util.Hashtable;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
+import static com.autotune.utils.KruizeConstants.KRUIZE_CONFIG_DEFAULT_VALUE.DELETE_PARTITION_THRESHOLD_IN_DAYS;
 
 /**
  * Contains information about the current deployment by parsing the autotune config map
@@ -68,7 +69,7 @@ public class KruizeDeploymentInfo {
     public static Integer bulk_update_results_limit = 100;
 
     public static int generate_recommendations_date_range_limit_in_days = 15;
-
+    public static Integer delete_partition_threshold_in_days = DELETE_PARTITION_THRESHOLD_IN_DAYS;
     private static Hashtable<String, Class> tunableLayerPair;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;

@@ -136,16 +136,23 @@ public class ExperimentInitiator {
     }
 
     public void validateAndAddExperimentResults(List<UpdateResultsAPIObject> updateResultsAPIObjects) {
-        List<UpdateResultsAPIObject> failedDBObjects = new ArrayList<>();
+        List<UpdateResultsAPIObject> failedDBObjects;
         Validator validator = Validation.byProvider(HibernateValidator.class)
                 .configure()
                 .messageInterpolator(new ParameterMessageInterpolator())
                 .failFast(true)
                 .buildValidatorFactory()
                 .getValidator();
-        Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<String, KruizeObject>();
+        Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
+        List<String> errorReasons = new ArrayList<>();
         for (UpdateResultsAPIObject object : updateResultsAPIObjects) {
             String experimentName = object.getExperimentName();
+            if (experimentName == null) {
+                errorReasons.add(String.format("%s%s", MISSING_EXPERIMENT_NAME, null));
+                object.setErrors(getErrorMap(errorReasons));
+                failedUpdateResultsAPIObjects.add(object);
+                continue;
+            }
             if (!mainKruizeExperimentMAP.containsKey(experimentName)) {
                 try {
                     new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experimentName); // TODO try to avoid DB
@@ -154,6 +161,15 @@ public class ExperimentInitiator {
                 }
             }
             if (mainKruizeExperimentMAP.containsKey(experimentName)) {
+
+                // check version
+                String errorMsg = checkVersion(object, mainKruizeExperimentMAP);
+                if (errorMsg != null) {
+                    errorReasons.add(errorMsg);
+                    object.setErrors(getErrorMap(errorReasons));
+                    failedUpdateResultsAPIObjects.add(object);
+                    continue;
+                }
                 object.setKruizeObject(mainKruizeExperimentMAP.get(object.getExperimentName()));
                 Set<ConstraintViolation<UpdateResultsAPIObject>> violations = new HashSet<>();
                 try {
@@ -161,10 +177,9 @@ public class ExperimentInitiator {
                     if (violations.isEmpty()) {
                         successUpdateResultsAPIObjects.add(object);
                     } else {
-                        List<String> errorReasons = new ArrayList<>();
                         for (ConstraintViolation<UpdateResultsAPIObject> violation : violations) {
                             String propertyPath = violation.getPropertyPath().toString();
-                            if (null != propertyPath && propertyPath.length() != 0) {
+                            if (null != propertyPath && !propertyPath.isEmpty()) {
                                 errorReasons.add(getSerializedName(propertyPath, UpdateResultsAPIObject.class) + ": " + violation.getMessage());
                             } else {
                                 errorReasons.add(violation.getMessage());
@@ -176,13 +191,11 @@ public class ExperimentInitiator {
                 } catch (Exception e) {
                     LOGGER.debug(e.getMessage());
                     e.printStackTrace();
-                    List<String> errorReasons = new ArrayList<>();
                     errorReasons.add(String.format("%s%s", e.getMessage(), experimentName));
                     object.setErrors(getErrorMap(errorReasons));
                     failedUpdateResultsAPIObjects.add(object);
                 }
             } else {
-                List<String> errorReasons = new ArrayList<>();
                 errorReasons.add(String.format("%s%s", MISSING_EXPERIMENT_NAME, experimentName));
                 object.setErrors(getErrorMap(errorReasons));
                 failedUpdateResultsAPIObjects.add(object);
@@ -199,6 +212,20 @@ public class ExperimentInitiator {
             failedDBObjects = new ExperimentDBService().addResultsToDB(resultDataList);
             failedUpdateResultsAPIObjects.addAll(failedDBObjects);
         }
+    }
+
+    private String checkVersion(UpdateResultsAPIObject object, Map<String, KruizeObject> mainKruizeExperimentMAP) {
+        try {
+            KruizeObject kruizeObject = mainKruizeExperimentMAP.get(object.getExperimentName());
+            if (!object.getApiVersion().equals(kruizeObject.getApiVersion())) {
+                return String.format(AnalyzerErrorConstants.AutotuneObjectErrors.VERSION_MISMATCH,
+                        kruizeObject.getApiVersion(), object.getApiVersion());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while checking version: {}", e.getMessage());
+            return null;
+        }
+        return null;
     }
 
     public String getSerializedName(String fieldName, Class<?> targetClass) {

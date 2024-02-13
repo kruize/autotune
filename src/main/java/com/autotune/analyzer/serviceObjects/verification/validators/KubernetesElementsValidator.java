@@ -16,11 +16,9 @@
 package com.autotune.analyzer.serviceObjects.verification.validators;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
-import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.common.data.result.ExperimentResultData;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
@@ -45,7 +43,6 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
         String errorMessage = "";
         try {
             KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
-            PerformanceProfile performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
             ExperimentResultData resultData = Converters.KruizeObjectConverters.convertUpdateResultsAPIObjToExperimentResultData(updateResultsAPIObject);
             String expName = kruizeObject.getExperimentName();
             String errorMsg = "";

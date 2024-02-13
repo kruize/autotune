@@ -56,6 +56,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -384,7 +385,7 @@ public class ListExperiments extends HttpServlet {
                                 ko,
                                 getLatest,
                                 false,
-                                (String) null);
+                                null);
 
                 mergeRecommendationsInKruizeObject(listRecommendationsAPIObject, ko);
             } catch (Exception e) {
@@ -395,54 +396,6 @@ public class ListExperiments extends HttpServlet {
 
     private void mergeRecommendationsInKruizeObject(ListRecommendationsAPIObject listRecommendationsAPIObject, KruizeObject ko) {
         ko.setKubernetes_objects(convertKubernetesAPIObjectListToK8sObjectList(listRecommendationsAPIObject.getKubernetesObjects()));
-    }
-
-    //TODO this function no more used.
-    @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        response.setStatus(HttpServletResponse.SC_OK);
-        response.setContentType(JSON_CONTENT_TYPE);
-        response.setCharacterEncoding(CHARACTER_ENCODING);
-
-        LOGGER.info("Processing trial result...");
-        try {
-            String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
-            // String deploymentName = request.getParameter(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME);
-
-            String trialResultsData = request.getReader().lines().collect(Collectors.joining());
-            JSONObject trialResultsJson = new JSONObject(trialResultsData);
-
-            // Read in the experiment name and the deployment name in the received JSON from EM
-            String experimentNameJson = trialResultsJson.getString(EXPERIMENT_NAME);
-            String trialNumber = trialResultsJson.getString("trialNumber");
-
-            JSONArray deploymentsJsonArray = trialResultsJson.getJSONArray("deployments");
-            for (Object deploymentObject : deploymentsJsonArray) {
-                JSONObject deploymentJsonObject = (JSONObject) deploymentObject;
-                String deploymentNameJson = deploymentJsonObject.getString(DEPLOYMENT_NAME);
-                KruizeExperiment kruizeExperiment = experimentsMap.get(deploymentNameJson);
-
-                // Check if the passed in JSON has the same info as in the URL
-                if (!experimentName.equals(experimentNameJson) || kruizeExperiment == null) {
-                    LOGGER.error("Bad results JSON passed: {}", experimentNameJson);
-                    response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                    break;
-                }
-
-                try {
-                    updateExperimentTrial(trialNumber, kruizeExperiment, trialResultsJson);
-                } catch (InvalidValueException | IncompatibleInputJSONException e) {
-                    e.printStackTrace();
-                }
-                RunExperiment runExperiment = kruizeExperiment.getExperimentThread();
-                // Received a metrics JSON from EM after a trial, let the waiting thread know
-                LOGGER.info("Received trial result for experiment: " + experimentNameJson + "; Deployment name: " + deploymentNameJson);
-                runExperiment.send();
-            }
-            response.getWriter().close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
     }
 
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
