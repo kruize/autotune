@@ -116,25 +116,29 @@ pushd ${SCALE_TEST} > /dev/null
 popd > /dev/null 
 	echo ""
 
-total_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
-
-# Backup DB
-echo ""
-echo "Backing up DB..."
-db_backup_file="${LOG_DIR}/kruize_scale_test_logs_50_15days/db_backup.sql"
-echo "kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}"
-kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}
-echo "Backing up DB...Done"
-echo ""
-
 sleep 20
+
+# Restart only kruize with the current release image
+echo ""
+echo "Restarting only kruize instances with ${kruize_image_current} image..."
+kubectl set image deployment/kruize kruize=${kruize_image_current}
+status=$?
+if [ $? != 0 ]; then
+	echo "Restarting only kruize instances with ${kruize_image_current} image failed!"
+	exit 1
+else
+	echo "Restarting only kruize instances with ${kruize_image_current} image...done"
+fi
+
+sleep 120
 
 # Run scalability test to load 50 exps / 1 day data and update Recommendations after restoring DB with the current release
 pushd ${SCALE_TEST} > /dev/null
 	echo ""
-	echo "Run scalability test to load 50 exps / 1 day data and update Recommendations after restoring DB with ${kruize_image_current}..."
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u 5 -d 1 -n 10 -t 6 -q 10 -s 2024-01-04T00:00:00.000Z -l true -f ${db_backup_file} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days -e ${total_results_count}"
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u 5 -d 1 -n 10 -t 6 -q 10 -s 2024-01-04T00:00:00.000Z -l true -f ${db_backup_file} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days -e ${total_results_count}
+	kruize_setup=false
+	echo "Run scalability test to load 50 exps / 1 day data and update Recommendations with ${kruize_image_current}..."
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u 5 -d 1 -n 10 -t 6 -q 10 -s 2024-01-04T00:00:00.000Z -b ${kruize_setup} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days"
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u 5 -d 1 -n 10 -t 6 -q 10 -s 2024-01-04T00:00:00.000Z -b ${kruize_setup} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days
 
 	echo | tee -a ${LOG}
 	echo ""
