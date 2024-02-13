@@ -66,6 +66,8 @@ public interface ExperimentDAO {
     // Get KruizeResult Record
     List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception;
 
+    void deletePartitions(int thresholdDaysCount);
+
     public void addPartitions(String tableName, String month, String year, int dayOfTheMonth, String partitionType) throws Exception;
 
 }

@@ -123,7 +123,7 @@ Remote monitoring tests can also be run without using the test_autotune.sh. To d
 ```
 - To run only a specific test within listRecommendations API
 ```
-	pytest -s test_list_recommandations::test_list_recommendations_single_exp --cluster_type <minikube|openshift>
+	pytest -s test_list_recommendations.py::test_list_recommendations_single_exp --cluster_type <minikube|openshift>
 ```
 
 Note: You can check the report.html for the results as it provides better readability

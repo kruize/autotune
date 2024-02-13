@@ -25,22 +25,33 @@ SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
 ERROR_STATUS_CODE = 400
 ERROR_409_STATUS_CODE = 409
+DUPLICATE_RECORDS_COUNT = 5
 
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
 UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG = "The Start time should precede the End time!"
+UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG = "Performance profile: [avg cannot be negative or blank for the metric variable: "
+UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile: [ Format value should be among these values: [GiB, Gi, Ei, KiB, E, MiB, G, PiB, K, TiB, M, P, Bytes, cores, T, Ti, MB, KB, Pi, GB, EB, k, m, TB, PB, bytes, kB, Mi, Ki, EiB]"
+UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_RECORDS_COUNT} failed to save"
+DUPLICATE_RECORDS_MSG = "An entry for this record already exists!"
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
 UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE = 'interval_end_time is mandatory'
-UPDATE_RECOMMENDATIONS_DATA_NOT_FOUND = 'Data not found!'
+UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND = 'Not Found: experiment_name does not exist: '
 UPDATE_RECOMMENDATIONS_START_TIME_PRECEDE_END_TIME = 'The Start time should precede the End time!'
 UPDATE_RECOMMENDATIONS_START_TIME_END_TIME_GAP_ERROR = 'The gap between the interval_start_time and interval_end_time must be within a maximum of 15 days!'
 UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT = "Given timestamp - \" %s \" is not a valid timestamp format"
+RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available"
+COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available"
+PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available"
+CONTAINER_AND_EXPERIMENT_NAME = " for container : %s for experiment: %s.]"
 
 # Kruize Recommendations Notification codes
+NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
 NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE = "112101"
+NOTIFICATION_CODE_FOR_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "112102"
 NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA = "120001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE = "323001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO = "323002"
@@ -68,7 +79,9 @@ CRITICAL_MEMORY_REQUEST_NOT_SET_CODE = "524001"
 CRITICAL_MEMORY_LIMIT_NOT_SET_CODE = "524002"
 
 INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
+INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE = "112102"
 INFO_RECOMMENDATIONS_AVAILABLE_CODE = "111000"
+INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE = "111101"
 
 CPU_REQUEST = "cpuRequest"
 CPU_LIMIT = "cpuLimit"
@@ -91,6 +104,10 @@ time_log_csv = "/tmp/time_log.csv"
 SHORT_TERM_DURATION_IN_HRS_MAX = 1 * 24.0
 MEDIUM_TERM_DURATION_IN_HRS_MAX = 7 * 24.0
 LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
+
+SHORT_TERM = "short_term"
+MEDIUM_TERM = "medium_term"
+LONG_TERM = "long_term"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -164,7 +181,7 @@ update_results_test_data = {
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
 
-def generate_test_data(csvfile, test_data):
+def generate_test_data(csvfile, test_data, api_name):
     if os.path.isfile(csvfile):
         os.remove(csvfile)
     with open(csvfile, 'a') as f:
@@ -176,7 +193,7 @@ def generate_test_data(csvfile, test_data):
 
                 test_name = t + "_" + key
                 status_code = 400
-                if test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name":
+                if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"):
                     status_code = 201
 
                 data.append(test_name)
@@ -306,7 +323,7 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
 
     # Validate kubernetes objects
-    if update_results_json != None:
+    if update_results_json is not None and len(update_results_json) > 0:
         length = len(update_results_json[0]["kubernetes_objects"])
         for i in range(length):
             update_results_kubernetes_obj = update_results_json[0]["kubernetes_objects"][i]
@@ -320,6 +337,29 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
         list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
         validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
                                 list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
+
+
+def validate_list_exp_results_count(expected_results_count, list_exp_json):
+
+    # Get the count of objects in all results arrays
+    list_exp_results_count = count_results_objects(list_exp_json)
+    print("results_count = ", expected_results_count)
+    print("list_exp_results_count = ", list_exp_results_count)
+
+    assert expected_results_count == list_exp_results_count
+
+
+# Function to count objects in results arrays
+def count_results_objects(list_exp_json):
+    count = 0
+    container_count = 1
+    for k8s_object in list_exp_json.get("kubernetes_objects", []):
+        container_count = len(k8s_object.get("containers"))
+        for container in k8s_object.get("containers", {}).values():
+            results = container.get("results", {})
+            count += len(results)
+
+    return count/container_count
 
 
 def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
@@ -356,10 +396,10 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                 update_results_container = create_exp_kubernetes_obj["containers"][i]
                 list_reco_container = list_reco_kubernetes_obj["containers"][j]
                 validate_container(update_results_container, update_results_json, list_reco_container,
-                                   expected_duration_in_hours)
+                                   expected_duration_in_hours, test_name)
 
 
-def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours):
+def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours, test_name):
     # Validate container image name and container name
     if update_results_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == update_results_container["container_image_name"], \
@@ -368,6 +408,8 @@ def validate_container(update_results_container, update_results_json, list_reco_
         assert list_reco_container["container_name"] == update_results_container["container_name"], \
             f"Container names did not match! Acutal = {list_reco_container['container_name']} Expected - {update_results_container['container_name']}"
 
+    # default term value
+    term = SHORT_TERM
     # Validate timestamps
     if update_results_json != None:
         if expected_duration_in_hours == None:
@@ -379,12 +421,22 @@ def validate_container(update_results_container, update_results_json, list_reco_
             interval_end_time = update_results["interval_end_time"]
             interval_start_time = update_results["interval_start_time"]
             print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
+
+            # Obtain the metrics
+            metrics = ""
+            containers = update_results['kubernetes_objects'][0]['containers']
+            for container in containers:
+                if update_results_container["container_image_name"] == container["container_image_name"]:
+                    metrics = container["metrics"]
+
             if check_if_recommendations_are_present(list_reco_container["recommendations"]):
                 terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
+                current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
 
                 duration_terms = ["short_term", "medium_term", "long_term"]
                 for term in duration_terms:
                     if check_if_recommendations_are_present(terms_obj[term]):
+                        print(f"reco present for term {term}")
                         # Validate timestamps [deprecated as monitoring end time is moved to higher level]
                         # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
                         #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
@@ -423,7 +475,8 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             for engine_entry in engines_list:
                                 if engine_entry in terms_obj[term]["recommendation_engines"]:
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                                    validate_config(engine_obj["config"])
+                                    validate_config(engine_obj["config"], metrics)
+                                    validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
 
             else:
                 data = list_reco_container["recommendations"]["data"]
@@ -435,17 +488,27 @@ def validate_container(update_results_container, update_results_json, list_reco_
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
 
 
-def validate_config(reco_config):
+def validate_config(reco_config, metrics):
+    cpu_format_type = ""
+    memory_format_type = ""
+
+    for metric in metrics:
+        if "cpuUsage" == metric["name"]:
+            cpu_format_type = metric['results']['aggregation_info']['format']
+
+        if "memoryUsage" == metric["name"]:
+            memory_format_type = metric['results']['aggregation_info']['format']
+
     usage_list = ["requests", "limits"]
     for usage in usage_list:
         assert reco_config[usage]["cpu"][
                    "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
         assert reco_config[usage]["cpu"][
-                   "format"] == "cores", f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']}"
+                   "format"] == cpu_format_type, f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']} instead of {cpu_format_type}"
         assert reco_config[usage]["memory"][
                    "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
         assert reco_config[usage]["memory"][
-                   "format"] == "MiB", f"memory format in recommendation config is {reco_config[usage]['memory']['format']}"
+                   "format"] == memory_format_type, f"memory format in recommendation config is {reco_config[usage]['memory']['format']} instead of {memory_format_type}"
 
 
 def check_if_recommendations_are_present(cost_obj):
@@ -618,11 +681,13 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
                 current_cpu_value = current_requests[CPU_KEY][AMOUNT_KEY]
             assert variation_requests[CPU_KEY][AMOUNT_KEY] == recommended_requests[CPU_KEY][
                 AMOUNT_KEY] - current_cpu_value
+            assert variation_requests[CPU_KEY][FORMAT_KEY] == recommended_requests[CPU_KEY][FORMAT_KEY]
         if MEMORY_KEY in recommended_requests:
             if MEMORY_KEY in current_requests and AMOUNT_KEY in current_requests[MEMORY_KEY]:
                 current_memory_value = current_requests[MEMORY_KEY][AMOUNT_KEY]
             assert variation_requests[MEMORY_KEY][AMOUNT_KEY] == recommended_requests[MEMORY_KEY][
                 AMOUNT_KEY] - current_memory_value
+            assert variation_requests[MEMORY_KEY][FORMAT_KEY] == recommended_requests[MEMORY_KEY][FORMAT_KEY]
     if recommended_limits is not None:
         current_cpu_value = 0
         current_memory_value = 0
@@ -630,8 +695,10 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
             if CPU_KEY in current_limits and AMOUNT_KEY in current_limits[CPU_KEY]:
                 current_cpu_value = current_limits[CPU_KEY][AMOUNT_KEY]
             assert variation_limits[CPU_KEY][AMOUNT_KEY] == recommended_limits[CPU_KEY][AMOUNT_KEY] - current_cpu_value
+            assert variation_limits[CPU_KEY][FORMAT_KEY] == recommended_limits[CPU_KEY][FORMAT_KEY]
         if MEMORY_KEY in recommended_limits:
             if MEMORY_KEY in current_limits and AMOUNT_KEY in current_limits[MEMORY_KEY]:
                 current_memory_value = current_limits[MEMORY_KEY][AMOUNT_KEY]
             assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][
                 AMOUNT_KEY] - current_memory_value
+            assert variation_limits[MEMORY_KEY][FORMAT_KEY] == recommended_limits[MEMORY_KEY][FORMAT_KEY]

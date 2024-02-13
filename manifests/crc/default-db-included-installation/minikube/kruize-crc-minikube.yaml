@@ -46,7 +46,7 @@ spec:
       #  runAsUser: 1000
       containers:
         - name: postgres
-          image: quay.io/enterprisedb/postgresql:16-postgis-multilang
+          image: quay.io/kruizehub/postgres:15.2
           imagePullPolicy: IfNotPresent
           env:
             - name: POSTGRES_PASSWORD
@@ -320,4 +320,47 @@ spec:
     - name: nginx-config-volume
       configMap:
         name: nginx-config
-
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: kruize-delete-partition-cronjob
+  namespace: monitoring
+spec:
+  schedule: "0 0 25 * *" # Run on 25th of every month at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: kruizedeletejob
+              image: kruize/autotune_operator:0.0.20.2_rm
+              imagePullPolicy: Always
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /etc/config
+              command:
+                - sh
+                - -c
+                - |
+                  /home/autotune/app/target/bin/RetentionPartition
+              args: [ "" ]
+              env:
+                - name: START_AUTOTUNE
+                  value: "false"
+                - name: LOGGING_LEVEL
+                  value: "info"
+                - name: ROOT_LOGGING_LEVEL
+                  value: "error"
+                - name: DB_CONFIG_FILE
+                  value: "/etc/config/dbconfigjson"
+                - name: KRUIZE_CONFIG_FILE
+                  value: "/etc/config/kruizeconfigjson"
+                - name: deletepartitionsthreshold
+                  value: "15"
+          volumes:
+            - name: config-volume
+              configMap:
+                name: kruizeconfig
+          restartPolicy: OnFailure
+---

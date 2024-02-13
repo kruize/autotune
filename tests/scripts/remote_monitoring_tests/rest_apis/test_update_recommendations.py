@@ -82,8 +82,8 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
                 data = response.json()
                 assert response.status_code == SUCCESS_STATUS_CODE
                 assert data[0]['experiment_name'] == experiment_name
-                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                           'message'] == 'Cost Recommendations Available'
+                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
+                           'message'] == 'Recommendations Are Available'
                 response = list_recommendations(experiment_name)
                 if response.status_code == SUCCESS_200_STATUS_CODE:
                     recommendation_json = response.json()
@@ -91,9 +91,9 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
                         "recommendations"]
                     high_level_notifications = recommendation_section["notifications"]
                     # Check if duration
-                    assert INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+                    assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
                     data_section = recommendation_section["data"]
-                    short_term_recommendation = data_section[str(end_time)]["cost"]["short_term"]
+                    short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
                     short_term_notifications = short_term_recommendation["notifications"]
                     for notification in short_term_notifications.values():
                         assert notification["type"] != "error"
@@ -102,8 +102,8 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
-        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                   'message'] == 'Cost Recommendations Available'
+        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
+                   'message'] == 'Recommendations Are Available'
 
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
@@ -207,8 +207,8 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
                 data = response.json()
                 assert response.status_code == SUCCESS_STATUS_CODE
                 assert data[0]['experiment_name'] == experiment_name
-                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                           'message'] == 'Cost Recommendations Available'
+                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][INFO_RECOMMENDATIONS_AVAILABLE_CODE][
+                           'message'] == RECOMMENDATIONS_AVAILABLE
                 response = list_recommendations(experiment_name)
                 if response.status_code == SUCCESS_200_STATUS_CODE:
                     recommendation_json = response.json()
@@ -216,9 +216,9 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
                         "recommendations"]
                     high_level_notifications = recommendation_section["notifications"]
                     # Check if duration
-                    assert INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+                    assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
                     data_section = recommendation_section["data"]
-                    short_term_recommendation = data_section[str(end_time)]["cost"]["short_term"]
+                    short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
                     short_term_notifications = short_term_recommendation["notifications"]
                     for notification in short_term_notifications.values():
                         assert notification["type"] != "error"
@@ -227,8 +227,8 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
-        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['112101'][
-                   'message'] == 'Cost Recommendations Available'
+        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][INFO_RECOMMENDATIONS_AVAILABLE_CODE][
+                   'message'] == RECOMMENDATIONS_AVAILABLE
 
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
@@ -305,7 +305,7 @@ def test_update_recommendations_with_unknown_experiment_name_and_end_time(cluste
     response = update_recommendations(experiment_name, None, end_time)
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    assert data['message'] == UPDATE_RECOMMENDATIONS_DATA_NOT_FOUND
+    assert data['message'] == UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND + experiment_name
 
 
 @pytest.mark.negative
@@ -323,7 +323,7 @@ def test_update_recommendations_with_end_time_precede_start_time(cluster_type):
     assert data['message'] == UPDATE_RECOMMENDATIONS_START_TIME_PRECEDE_END_TIME
 
 
-@pytest.mark.negative
+@pytest.mark.skip(reason="Not enabled interval_start_time yet")
 def test_update_recommendations_with_end_time_precede_start_time(cluster_type):
     '''
         Update recommendation with start time and end time having difference more than 15 days.

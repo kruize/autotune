@@ -24,10 +24,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.IntStream;
 
@@ -73,6 +76,57 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             }
         }
         return validationOutputData;
+    }
+
+    /**
+     * Deletes database partitions based on a specified threshold day count.
+     * <p>
+     * This method iterates through all Kruize tables in the database, extracts the date part
+     * from their names, and compares it with a cutoff date = currentDate - thresholdDaysCount. Tables with dates before the cutoff
+     * date are eligible for deletion, and the method executes SQL statements to drop these tables.
+     *
+     * @param thresholdDaysCount The number of days to be used as the threshold for partition deletion.
+     *                           Tables with dates older than this threshold will be deleted.
+     * @throws RuntimeException if any exception occurs during the deletion process. The exception
+     *                          details are logged, and the deletion process continues for other tables.
+     */
+    @Override
+    public void deletePartitions(int thresholdDaysCount) {
+        LOGGER.info("Threshold is set to {}", thresholdDaysCount);
+        // Calculate the date 'daysCount' days ago
+        Calendar calendar = Calendar.getInstance();
+        calendar.add(Calendar.DAY_OF_YEAR, -thresholdDaysCount);
+        Date cutoffDate = calendar.getTime();
+        String yyyyMMdd = "yyyyMMdd";
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            List<String> tablenames = session.createNativeQuery(SELECT_ALL_KRUIZE_TABLES).getResultList();
+            for (String tableName : tablenames) {   // Since tableName cannot be null, there is no need to implement null handling; it can be skipped.
+                String datePart = null;
+                if (tableName.startsWith(DBConstants.TABLE_NAMES.KRUIZE_RESULTS + "_")) {
+                    datePart = tableName.substring((DBConstants.TABLE_NAMES.KRUIZE_RESULTS + "_").length());
+                } else if (tableName.startsWith(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS + "_")) {
+                    datePart = tableName.substring((DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS + "_").length());
+                }
+                if (null != datePart) {
+                    Date tableDate = new SimpleDateFormat(yyyyMMdd).parse(datePart);
+                    // Compare the date part with the cutoffDate  (cutoffDate = todaysDate - thresholdDaysCount)
+                    if (tableDate.after(cutoffDate)) {
+                        LOGGER.debug("Table not eligible for deletion: " + tableName);
+                    } else {
+                        LOGGER.debug("Table found for deletion: " + tableName);
+                        try {
+                            Transaction tx = session.beginTransaction();
+                            session.createNativeQuery("DROP TABLE " + tableName).executeUpdate();
+                            tx.commit();
+                        } catch (Exception ignored) {
+                            LOGGER.error("Exception occurred while deleting the partition: {}", ignored.getMessage());
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while deleting the partition: {}", e.getMessage());
+        }
     }
 
     @Override
@@ -163,8 +217,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         String statusValue = "failure";
         Timer.Sample timerAddBulkResultsDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            tx = session.beginTransaction();
             for (KruizeResultsEntry entry : kruizeResultsEntries) {
+                tx = session.beginTransaction();
                 try {
                     session.persist(entry);
                     session.flush();
@@ -199,16 +253,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                         entry.setErrorReasons(List.of(e.getMessage()));
                         failedResultsEntries.add(entry);
                     }
-                    tx.commit();
-                    tx = session.beginTransaction();
                 } catch (Exception e) {
                     entry.setErrorReasons(List.of(e.getMessage()));
                     failedResultsEntries.add(entry);
+                } finally {
                     tx.commit();
-                    tx = session.beginTransaction();
                 }
             }
-            tx.commit();
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
