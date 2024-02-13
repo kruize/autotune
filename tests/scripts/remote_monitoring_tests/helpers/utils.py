@@ -197,7 +197,7 @@ def generate_test_data(csvfile, test_data, api_name):
             for t in test_type:
                 data = []
                 # skip checking the invalid container name and container image name
-                if (key == "container_name" or key == "container_image_name") and t == "invalid":
+                if key == "container_image_name" or (key == "container_name" and t == "invalid"):
                     continue
                 #  skip checking the aggregation info values
                 if key in aggr_info_keys_to_skip and t == "null":

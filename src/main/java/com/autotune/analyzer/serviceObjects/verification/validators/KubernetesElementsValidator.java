@@ -141,14 +141,11 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
 
     /**
      * Validation method for a single ContainerData object
-     * @param containerData
+     * @param containerData contains the container data in which the container name is present which needs to be validated
      * @return list of errors if any, while validating the containerData Object
      */
     private static List<String> validateContainerData(ContainerData containerData) {
         List<String> errors = new ArrayList<>();
-        if (containerData.getContainer_image_name() == null || containerData.getContainer_image_name().trim().isEmpty()) {
-            errors.add(AnalyzerErrorConstants.AutotuneObjectErrors.NULL_OR_BLANK_CONTAINER_IMAGE_NAME);
-        }
         if (containerData.getContainer_name() == null || containerData.getContainer_name().trim().isEmpty()) {
             errors.add(AnalyzerErrorConstants.AutotuneObjectErrors.NULL_OR_BLANK_CONTAINER_NAME);
         }
