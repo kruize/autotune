@@ -22,10 +22,6 @@ This document describes the test plan for Kruize remote monitoring release 0.0.2
 ----
 
 ## FEATURES TO BE TESTED
-* Update Term Design 
-
-Update the Recommendations Term design to include minimum data threshold for each term and strictly enforce the term duration.
-For more details refer the github issue [1059](https://github.com/kruize/autotune/issues/1059)
 
 * Delete Partitions
 
@@ -36,6 +32,7 @@ This feature addressed the filling up of the Kruize database. As part of the dat
 * [1065](https://github.com/kruize/autotune/issues/1065) - CreateExperiment failed after increase in DB size
 * [561](https://github.com/kruize/autotune/issues/561) - Add validations for the UpdateResultsAPI objects
 * [908](https://github.com/kruize/autotune/issues/908) - Fix the NPE issue in ListExperimentsAPI
+* [1092](https://github.com/kruize/autotune/pull/1092) - Update the recommendation threshold
 
 ---
 ## TEST ENVIRONMENT
@@ -67,8 +64,7 @@ End Date (The deadline)
 
 | #   | ISSUE (NEW FEATURE) | TEST DESCRIPTION | TEST DELIVERABLES | RESULTS | COMMENTS |
 | --- | --------- | ---------------- | ----------------- |  -----  | --- |
-| 1   |  [Term Design changes](https://github.com/kruize/autotune/issues/1059)         |       |[Tests added as part of PR](https://github.com/kruize/autotune/pull/1081)                  |           |        |
-| 2   |  [DeletePartitions](https://github.com/kruize/autotune/issues/1084)         | This has been tested manually |                  |           |        |
+| 1   |  [DeletePartitions](https://github.com/kruize/autotune/issues/1084)         | This has been tested manually |                  |           |        |
 
 ### Regression Testing
 
@@ -76,7 +72,8 @@ End Date (The deadline)
 | --- | --------- | ---------------- | -------- | --- |
 | 1   |  [1065](https://github.com/kruize/autotune/issues/1065)  | Tested Manually | PASSED | | 
 | 2   |  [561](https://github.com/kruize/autotune/issues/561)  | Functional testsuite  | PASSED | |
-| 1   |  [908](https://github.com/kruize/autotune/issues/908)  | Fault tolerant test | PASSED | |
+| 3   |  [908](https://github.com/kruize/autotune/issues/908)  | Fault tolerant test | PASSED | |
+| 4   |  [1092](https://github.com/kruize/autotune/pull/1092)  | [New tests added](https://github.com/kruize/autotune/pull/1094) | PASSED | |
 
 ---
 ## SCALABILITY TESTING
