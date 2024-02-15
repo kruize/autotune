@@ -19,6 +19,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -117,6 +118,8 @@ public class CreateExperiment extends HttpServlet {
                         addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
                     }
                     if (addedToDB.isSuccess()) {
+                        // create RecommendationEngine object : TODO: need to discuss this
+                        RecommendationEngine recommendationEngine = new RecommendationEngine();
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
                         statusValue = "success";
                     } else {

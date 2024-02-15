@@ -16,7 +16,10 @@
 package com.autotune.analyzer.performanceProfiles;
 
 import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.recommendations.term.Terms;
 import com.google.gson.annotations.SerializedName;
+
+import java.util.Map;
 
 /**
  * Container class for the PerformanceProfile kubernetes kind, which is used to define
@@ -35,6 +38,8 @@ public class PerformanceProfile {
 
     @SerializedName("slo")
     private SloInfo sloInfo;
+
+    private Map<String, Terms> terms;
 
     public void setName(String name) {
         this.name = name;
@@ -77,6 +82,14 @@ public class PerformanceProfile {
 
     public SloInfo getSloInfo() {
         return sloInfo;
+    }
+
+    public Map<String, Terms> getTerms() {
+        return terms;
+    }
+
+    public void setTerms(Map<String, Terms> terms) {
+        this.terms = terms;
     }
 
     @Override
