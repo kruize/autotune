@@ -139,6 +139,7 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+
 @pytest.mark.negative
 @pytest.mark.parametrize("test_name, result_json_file, expected_message, error_message", missing_metrics)
 def test_update_results_with_missing_metrics_section(test_name, result_json_file, expected_message, error_message, cluster_type):
@@ -187,6 +188,7 @@ def test_update_results_with_missing_metrics_section(test_name, result_json_file
     
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+
 
 @pytest.mark.sanity
 def test_update_valid_results_after_create_exp(cluster_type):
@@ -609,10 +611,12 @@ def test_update_valid_results_without_create_exp(cluster_type):
     data = response.json()
     print("message = ", data['message'])
 
-    EXP_NAME_NOT_FOUND_MSG = "Experiment name : " + experiment_name + " not found"
+    EXP_NAME_NOT_FOUND_MSG = UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND + experiment_name
+    FAILED_RECORDS_MSG = "Out of a total of 1 records, 1 failed to save"
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert data['message'] == EXP_NAME_NOT_FOUND_MSG
+    assert data['message'] == FAILED_RECORDS_MSG
+    assert data['data'][0]['errors'][0]['message'] == EXP_NAME_NOT_FOUND_MSG
 
 
 @pytest.mark.sanity

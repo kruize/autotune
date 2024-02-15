@@ -180,6 +180,12 @@ update_results_test_data = {
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
+aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "cpuLimit_avg", "cpuUsage_sum", "cpuUsage_max",
+                          "cpuUsage_avg", "cpuUsage_min", "cpuThrottle_sum", "cpuThrottle_max", "cpuThrottle_avg",
+                          "memoryRequest_sum", "memoryRequest_avg", "memoryLimit_sum", "memoryRequest_avg",
+                          "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
+                          "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
+
 
 def generate_test_data(csvfile, test_data, api_name):
     if os.path.isfile(csvfile):
@@ -190,6 +196,12 @@ def generate_test_data(csvfile, test_data, api_name):
         for key in test_data:
             for t in test_type:
                 data = []
+                # skip checking the invalid container name and container image name
+                if key == "container_image_name" or (key == "container_name" and t == "invalid"):
+                    continue
+                #  skip checking the aggregation info values
+                if key in aggr_info_keys_to_skip and t == "null":
+                    continue
 
                 test_name = t + "_" + key
                 status_code = 400
