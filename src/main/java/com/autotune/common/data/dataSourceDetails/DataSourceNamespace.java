@@ -19,7 +19,7 @@ public class DataSourceNamespace {
      * Value: Associated DataSourceWorkload object
      */
     @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.WORKLOADS)
-    private HashMap<String, DataSourceWorkload> workloadHashMap ;
+    private HashMap<String, DataSourceWorkload> workloadHashMap;
 
     public DataSourceNamespace(String namespace, HashMap<String, DataSourceWorkload> workloadHashMap) {
         this.namespace = namespace;

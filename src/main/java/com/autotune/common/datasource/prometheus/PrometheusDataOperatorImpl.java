@@ -217,7 +217,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             if (dataObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT) && dataObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isJsonArray()) {
                 JsonArray resultArray = dataObject.getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
 
-                if (resultArray != null) {
+                if (null != resultArray) {
                     return resultArray;
                 }
             }
@@ -237,7 +237,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      */
     public boolean validateResultArray(JsonArray resultArray) {
 
-        if ( resultArray == null || resultArray.isJsonNull() || resultArray.size() == 0 ) {
+        if (null == resultArray || resultArray.isJsonNull() || resultArray.size() == 0) {
             return false;
         }
         return true;

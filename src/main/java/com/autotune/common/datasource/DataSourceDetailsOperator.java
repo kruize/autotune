@@ -11,16 +11,14 @@ import java.util.HashMap;
  * DataSourceDetailsOperator is an abstraction with CRUD operations to manage DataSourceDetailsInfo Object
  * representing JSON for a given data source
  *
- *
  * Currently Supported Implementations:
  *  - createDataSourceDetails
- *
  *  TODO -
  *  object is currently stored in memory moving forward need to store cluster details in Kruize DB
  */
 public class DataSourceDetailsOperator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceDetailsOperator.class);
-    private static DataSourceDetailsOperator dataSourceDetailsOperatorInstance = new DataSourceDetailsOperator();
+    private static final DataSourceDetailsOperator dataSourceDetailsOperatorInstance = new DataSourceDetailsOperator();
     private DataSourceDetailsInfo dataSourceDetailsInfo;
     private DataSourceDetailsOperator() { this.dataSourceDetailsInfo = null; }
     public static DataSourceDetailsOperator getInstance() { return dataSourceDetailsOperatorInstance; }
@@ -52,7 +50,6 @@ public class DataSourceDetailsOperator {
          */
         try {
             JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.NAMESPACE_QUERY);
-
             if (false == op.validateResultArray(namespacesDataResultArray)){
                 dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), null);
                 return;

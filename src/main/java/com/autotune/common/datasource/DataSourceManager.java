@@ -39,8 +39,13 @@ public class DataSourceManager {
             for (String name : dataSources.keySet()) {
                 DataSourceInfo dataSource = dataSources.get(name);
                 dataSourceDetailsOperator.createDataSourceDetails(dataSource);
+
+                DataSourceDetailsInfo dataSourceDetails = dataSourceDetailsOperator.getDataSourceDetailsInfo();
+                if (null == dataSourceDetails) {
+                    continue;
+                }
+                dataSourceDetailsInfoList.add(dataSourceDetails);
             }
-            dataSourceDetailsInfoList.add(dataSourceDetailsOperator.getDataSourceDetailsInfo());
             Gson gson = new GsonBuilder().setPrettyPrinting().create();
             String jsonOutput = gson.toJson(dataSourceDetailsInfoList);
 
@@ -56,11 +61,10 @@ public class DataSourceManager {
     public void importDataFromDataSource(DataSourceInfo dataSource) {
 
         try {
-            if (null != dataSource) {
-                dataSourceDetailsOperator.createDataSourceDetails(dataSource);
-            } else {
+            if (null == dataSource) {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
+            dataSourceDetailsOperator.createDataSourceDetails(dataSource);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
@@ -76,11 +80,10 @@ public class DataSourceManager {
     public DataSourceDetailsInfo getDataFromDataSource(DataSourceInfo dataSource) {
 
         try {
-            if (null != dataSource) {
-                return dataSourceDetailsOperator.getDataSourceDetailsInfo();
-            } else {
+            if (null == dataSource) {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
+            return dataSourceDetailsOperator.getDataSourceDetailsInfo();
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
@@ -93,11 +96,10 @@ public class DataSourceManager {
     public DataSourceDetailsInfo updateDataFromDataSource(DataSourceInfo dataSource) {
 
         try {
-            if (null != dataSource) {
-                return dataSourceDetailsOperator.updateDataSourceDetails(dataSource);
-            } else {
+            if (null == dataSource) {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
+            return dataSourceDetailsOperator.updateDataSourceDetails(dataSource);
         } catch (DataSourceNotExist e) {
             LOGGER.error(e.getMessage());
         }
@@ -107,10 +109,9 @@ public class DataSourceManager {
 
         try {
             if (null != dataSource) {
-                dataSourceDetailsOperator.deleteDataSourceDetails(dataSource);
-            } else {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
+            dataSourceDetailsOperator.deleteDataSourceDetails(dataSource);
         } catch (DataSourceNotExist e) {
             LOGGER.error(e.getMessage());
         }

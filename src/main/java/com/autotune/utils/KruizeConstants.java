@@ -413,9 +413,7 @@ public class KruizeConstants {
             }
 
             public static final String version = "v1.0";
-            public static final String CLUSTER_GROUP_NAME = "prometheus";
-            public static final String CLUSTER_NAME = "k8s-cluster";
-
+            public static final String CLUSTER_NAME = "default";
         }
 
         public static class DataSourceDetailsErrorMsgs {
@@ -436,6 +434,12 @@ public class KruizeConstants {
             public static final String SET_CLUSTER_MAP_ERROR = "clusterHashMap is null, no clusters provided for cluster group: ";
             public static final String SET_WORKLOAD_MAP_ERROR = "workloadHashMap is null, no workloads provided for namespace: ";
             public static final String SET_CONTAINER_MAP_ERROR = "containerHashMap is null, no containers provided for workload: ";
+            public static final String NAMESPACE_MAP_NOT_POPULATED = "The namespaceMap is not populated, is either null or empty.";
+            public static final String NAMESPACE_WORKLOAD_MAP_NOT_POPULATED = "The namespaceWorkloadMap is not populated, is either null or empty.";
+            public static final String WORKLOAD_CONTAINER_MAP_NOT_POPULATED = "The workloadContainerMap is not populated, is either null or empty.";
+            public static final String INVALID_DATASOURCE_DETAILS_CLUSTER = "dataSourceCluster object is null";
+            public static final String INVALID_DATASOURCE_DETAILS_NAMESPACE = "dataSourceNamespace object is null";
+            public static final String INVALID_DATASOURCE_DETAILS_NAMESPACE_DATA = "namespaceHashMap is either null or empty";
         }
 
         public static class DataSourceDetailsInfoJSONKeys {
@@ -452,17 +456,8 @@ public class KruizeConstants {
             public static final String CONTAINERS = "containers";
             public static final String CONTAINER_NAME = "container_name";
             public static final String CONTAINER_IMAGE_NAME = "container_image_name";
-
         }
 
-        public static class DataSourceDetailsDebugMsgs {
-            private DataSourceDetailsDebugMsgs() {
-            }
-            public static final String DEBUG_NAMESPACE_MAP_POPULATION = "DEBUG: The namespaceMap is either null or empty.";
-            public static final String DEBUG_NAMESPACE_WORKLOAD_MAP_POPULATION = "DEBUG: The namespaceWorkloadMap is either null or empty.";
-            public static final String DEBUG_WORKLOAD_CONTAINER_MAP_POPULATION = "DEBUG: The workloadContainerMap is either null or empty.";
-
-        }
         private DataSourceConstants() {
         }
     }
