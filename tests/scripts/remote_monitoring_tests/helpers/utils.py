@@ -736,3 +736,12 @@ def check_optimised_codes(cost_notifications, perf_notifications):
 
     assert MEMORY_LIMIT_OPTIMISED_CODE in cost_notifications
     assert MEMORY_LIMIT_OPTIMISED_CODE in perf_notifications
+
+
+def validate_recommendation_for_cpu_mem_optimised(recommendations: dict, current: dict, profile: str):
+    assert "variation" in recommendations["recommendation_engines"][profile]
+    assert "config" in recommendations["recommendation_engines"][profile]
+    assert recommendations["recommendation_engines"][profile]["config"]["requests"]["cpu"]["amount"] == current["requests"]["cpu"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["limits"]["cpu"]["amount"] == current["limits"]["cpu"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["requests"]["memory"]["amount"] == current["requests"]["memory"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["limits"]["memory"]["amount"] == current["limits"]["memory"]["amount"]
