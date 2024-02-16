@@ -440,6 +440,8 @@ public class KruizeConstants {
             public static final String INVALID_DATASOURCE_DETAILS_CLUSTER = "dataSourceCluster object is null";
             public static final String INVALID_DATASOURCE_DETAILS_NAMESPACE = "dataSourceNamespace object is null";
             public static final String INVALID_DATASOURCE_DETAILS_NAMESPACE_DATA = "namespaceHashMap is either null or empty";
+            public static final String DATASOURCE_DETAILS_INFO_NOT_AVAILABLE = "DataSourceDetailsInfo is null. Metadata is not populated.";
+            public static final String DATASOURCE_DETAILS_CLUSTER_GROUP_NOT_AVAILABLE = "DataSourceClusterGroup information is not available for the specified DataSource provider: ";
         }
 
         public static class DataSourceDetailsInfoJSONKeys {

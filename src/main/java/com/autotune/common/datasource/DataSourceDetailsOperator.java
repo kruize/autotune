@@ -2,9 +2,12 @@ package com.autotune.common.datasource;
 
 import com.autotune.common.data.dataSourceDetails.*;
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
 import java.util.HashMap;
 
 /**
@@ -31,7 +34,7 @@ public class DataSourceDetailsOperator {
      * @param dataSourceInfo The DataSourceInfo object containing information about the data source.
      * TODO - support multiple data sources
      */
-    public void createDataSourceDetails (DataSourceInfo dataSourceInfo) {
+    public void createDataSourceDetails(DataSourceInfo dataSourceInfo) {
 
         DataSourceDetailsHelper dataSourceDetailsHelper = new DataSourceDetailsHelper();
         /**
@@ -101,11 +104,25 @@ public class DataSourceDetailsOperator {
     /**
      * Retrieves DataSourceDetailsInfo object.
      * @return DataSourceDetailsInfo containing details about the data source if found, otherwise null.
-     *
-     * TODO - support data retrieval for a specified data source
      */
-    public DataSourceDetailsInfo getDataSourceDetailsInfo() {
-        return dataSourceDetailsInfo;
+    public DataSourceDetailsInfo getDataSourceDetailsInfo(DataSourceInfo dataSource) {
+        String clusterGroupName = dataSource.getProvider();
+
+        if (null == dataSourceDetailsInfo) {
+            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.DATASOURCE_DETAILS_INFO_NOT_AVAILABLE);
+            return null;
+        }
+        HashMap<String, DataSourceClusterGroup> clusterGroupHashMap = dataSourceDetailsInfo.getDataSourceClusterGroupHashMap();
+
+        if (null == clusterGroupHashMap || !clusterGroupHashMap.containsKey(clusterGroupName)) {
+            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.DATASOURCE_DETAILS_CLUSTER_GROUP_NOT_AVAILABLE + clusterGroupName);
+            return null;
+        }
+
+        DataSourceClusterGroup targetClusterGroup = clusterGroupHashMap.get(clusterGroupName);
+        HashMap<String, DataSourceClusterGroup> targetClusterGroupHashMap = new HashMap<>();
+        targetClusterGroupHashMap.put(clusterGroupName, targetClusterGroup);
+        return new DataSourceDetailsInfo(dataSourceDetailsInfo.getVersion(), targetClusterGroupHashMap);
     }
 
     /*

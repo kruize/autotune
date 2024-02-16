@@ -40,7 +40,7 @@ public class DataSourceManager {
                 DataSourceInfo dataSource = dataSources.get(name);
                 dataSourceDetailsOperator.createDataSourceDetails(dataSource);
 
-                DataSourceDetailsInfo dataSourceDetails = dataSourceDetailsOperator.getDataSourceDetailsInfo();
+                DataSourceDetailsInfo dataSourceDetails = dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSource);
                 if (null == dataSourceDetails) {
                     continue;
                 }
@@ -83,7 +83,7 @@ public class DataSourceManager {
             if (null == dataSource) {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            return dataSourceDetailsOperator.getDataSourceDetailsInfo();
+            return dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSource);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
