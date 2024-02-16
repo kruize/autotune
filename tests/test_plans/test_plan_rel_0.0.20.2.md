@@ -4,7 +4,6 @@
 - [FEATURES TO BE TESTED](#features-to-be-tested)
 - [BUG FIXES TO BE TESTED](#bug-fixes-to-be-tested)
 - [TEST ENVIRONMENT](#test-environment)
-- [TEST SCHEDULE](#test-schedule)
 - [TEST DELIVERABLES](#test-deliverables)
    - [New Test Cases Developed](#new-test-cases-developed)
    - [Regression Testing](#regresion-testing)
@@ -41,22 +40,6 @@ This feature addressed the filling up of the Kruize database. As part of the dat
 * Openshift Cluster 
 
 ---
-## TEST SCHEDULE
-
-### Scalability Testing
-
-Start Date (The date when testing begins)
-
-End Date (The deadline)
-
-### Release Testing
-
-Start Date (The date when testing begins)
-
-End Date (The deadline)
-
-
----
 
 ## TEST DELIVERABLES
 
@@ -64,7 +47,7 @@ End Date (The deadline)
 
 | #   | ISSUE (NEW FEATURE) | TEST DESCRIPTION | TEST DELIVERABLES | RESULTS | COMMENTS |
 | --- | --------- | ---------------- | ----------------- |  -----  | --- |
-| 1   |  [DeletePartitions](https://github.com/kruize/autotune/issues/1084)         | This has been tested manually |                  |           |        |
+| 1   |  [DeletePartitions](https://github.com/kruize/autotune/issues/1084) | This has been tested manually | | Worked as expected | |
 
 ### Regression Testing
 
@@ -83,7 +66,7 @@ Changes do not have scalability implications. Short scalability test will be run
 
 | #   | OBJECTIVE | INPUT | EXPECTED RESULTS |  ACTUAL RESULTS   | COMMENTS |
 | --- | --------- | ----- | ---------------- | ----------------- | -------  |
-| 1   |  Run a short run of scalability to check for any regressions         |  5k exps / 15 days     |                  |                   |          |
+| 1   |  Run a short run of scalability to check for any regressions |  5k exps / 15 days | PASSED | PASSED | |
 
 ----
 ## RELEASE TESTING
@@ -96,10 +79,10 @@ As part of the release testing, test the following will be executed:
 
 | #   | TEST SUITE | EXPECTED RESULTS | ACTUAL RESULTS | COMMENTS |
 | --- | --------- | ---------------- | -------------- | ---- | 
-| 1   |  Functional testsuite         |                  |                |      |
-| 2   |  Fault tolerant test         |                  |                |      |
-| 3   |  Stress test         |                  |                |      |
-| 4   |  Scalability test         |                  |                |      |
+| 1   |  Functional testsuite | TOTAL - 320, PASSED - 277, FAILED - 43  | TOTAL - 320, PASSED - 277, FAILED - 43 | No new regressions seen, existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
+| 2   |  Fault tolerant test | PASSED | PASSED | |
+| 3   |  Stress test | PASSED | FAILED | Intermittent on openshift - issuse raised [1106](https://github.com/kruize/autotune/issues/1106) |
+| 4   |  Scalability test | PASSED | PASSED | Exps - 5000, Results - 72000, execution time - 3 hrs 50 mins |
 
 
 ---
