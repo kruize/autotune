@@ -45,6 +45,11 @@ public class RecommendationConfigItem {
         return amount;
     }
 
+    // Adding a setter for incorporating dynamic change in threshold check
+    public void setAmount(Double amount) {
+        this.amount = amount;
+    }
+
     public String getFormat() {
         return format;
     }
