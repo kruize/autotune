@@ -135,7 +135,6 @@ public class KruizeDeploymentInfo {
 
     public static void setDefaultDataSource() {
         KruizeDeploymentInfo.defaultDataSource = DataSourceCollection.getInstance().getDefaultDataSource();
-
     }
 
     public static void logDeploymentInfo() {

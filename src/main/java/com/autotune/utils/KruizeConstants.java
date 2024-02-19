@@ -331,7 +331,7 @@ public class KruizeConstants {
 
     public static class DataSourceConstants {
         public static final String DATASOURCE_NAME = "name";
-        public static final String DEFAULT_DATASOURCE_NAME = "default";
+        public static final String DEFAULT_DATASOURCE_NAME = "prometheus";
         public static final String DATASOURCE_PROVIDER = "provider";
         public static final String DATASOURCE_SERVICE_NAME = "serviceName";
         public static final String DATASOURCE_SERVICE_NAMESPACE = "namespace";
@@ -343,6 +343,7 @@ public class KruizeConstants {
 
         public static class DataSourceInfoMsgs {
             public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: ";
+            public static final String UPDATING_DEFAULT_DATASOURCE = "Trying to update the default datasource: ";
             public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: ";
             public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
             private DataSourceInfoMsgs() {
@@ -351,6 +352,7 @@ public class KruizeConstants {
 
         public static class DataSourceSuccessMsgs {
             public static final String DATASOURCE_ADDED = "Datasource added to the collection successfully.";
+            public static final String DEFAULT_DATASOURCE_UPDATED = "Default datasource is updated successfully.";
             public static final String DATASOURCE_FOUND = "Datasource found: ";
             public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
             private DataSourceSuccessMsgs() {
