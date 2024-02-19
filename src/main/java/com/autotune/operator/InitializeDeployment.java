@@ -73,6 +73,14 @@ public class InitializeDeployment {
             String url = dataSource.getUrl().toString();
             LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
         }
+        /**
+         * Temporarily commenting out the data import process from data sources
+         */
+
+        /*
+        DataSourceManager dataSourceManager = new DataSourceManager();
+        dataSourceManager.importDataFromAllDataSources();
+        */
     }
 
     /**

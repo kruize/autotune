@@ -20,8 +20,10 @@ import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
+import com.google.gson.*;
 import org.apache.http.conn.HttpHostConnectException;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
@@ -100,37 +102,65 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      */
     @Override
     public Object getValueForQuery(String url, String query) {
+        try {
+            JSONObject jsonObject = getJsonObjectForQuery(url, query);
+
+            if (null == jsonObject) {
+                return null;
+            }
+
+            JSONArray result = jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+            for (Object result_obj : result) {
+                JSONObject result_json = (JSONObject) result_obj;
+                if (result_json.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE)
+                        && !result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).isEmpty()) {
+                    return result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).getString(1);
+                }
+            }
+        } catch (JSONException e) {
+            LOGGER.error(e.getMessage());
+        } catch (NullPointerException e) {
+            LOGGER.error(e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * executes specified query on datasource and returns the JSON Object
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return JSONObject for the specified query
+     */
+    @Override
+    public JSONObject getJsonObjectForQuery(String url, String query) {
         GenericRestApiClient apiClient = new GenericRestApiClient(
                 CommonUtils.getBaseDataSourceUrl(
                         url,
                         KruizeConstants.SupportedDatasources.PROMETHEUS
                 )
         );
+
         if (null == apiClient) {
             return null;
         }
+
         try {
             JSONObject jsonObject = apiClient.fetchMetricsJson(
                     KruizeConstants.HttpConstants.MethodType.GET,
                     query);
-            if (!jsonObject.has("status"))
+            if (!jsonObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS))
                 return null;
-            if (!jsonObject.getString("status").equalsIgnoreCase("success"))
+            if (!jsonObject.getString(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS).equalsIgnoreCase(KruizeConstants.DataSourceConstants.DataSourceQueryStatus.SUCCESS))
                 return null;
-            if (!jsonObject.has("data"))
+            if (!jsonObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA))
                 return null;
-            if (!jsonObject.getJSONObject("data").has("result"))
+            if (!jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT))
                 return null;
-            if (jsonObject.getJSONObject("data").getJSONArray("result").isEmpty())
+            if (jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isEmpty())
                 return  null;
-            JSONArray result = jsonObject.getJSONObject("data").getJSONArray("result");
-            for (Object result_obj: result) {
-                JSONObject result_json = (JSONObject) result_obj;
-                if (result_json.has("value")
-                        && !result_json.getJSONArray("value").isEmpty()) {
-                    return result_json.getJSONArray("value").getString(1);
-                }
-            }
+
+            return jsonObject;
+
         } catch (HttpHostConnectException e) {
             LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED);
         } catch (IOException e) {
@@ -152,5 +182,64 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
     @Override
     public String getQueryEndpoint() {
         return AnalyzerConstants.PROMETHEUS_API;
+    }
+
+    /**
+     * executes specified query on datasource and returns the result array
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return JsonArray containing the result array for the specified query
+     *
+     * Example output JsonArray -
+     * [
+     *   {
+     *     "metric": {
+     *       "__name__": "exampleMetric"
+     *     },
+     *     "value": [1642612628.987, "1"]
+     *   }
+     * ]
+     */
+
+    @Override
+    public JsonArray getResultArrayForQuery(String url, String query) {
+        try {
+            JSONObject jsonObject = getJsonObjectForQuery(url, query);
+
+            if (null == jsonObject) {
+                return null;
+            }
+
+            String jsonString = jsonObject.toString();
+            JsonObject parsedJsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
+            JsonObject dataObject = parsedJsonObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getAsJsonObject();
+
+            if (dataObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT) && dataObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isJsonArray()) {
+                JsonArray resultArray = dataObject.getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+
+                if (null != resultArray) {
+                    return resultArray;
+                }
+            }
+        } catch (JsonParseException e) {
+            LOGGER.error(e.getMessage());
+        } catch (NullPointerException e) {
+            LOGGER.error(e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Validates a JSON array to ensure it is not null, not a JSON null, and has at least one element.
+     *
+     * @param resultArray The JSON array to be validated.
+     * @return True if the JSON array is valid (not null, not a JSON null, and has at least one element), otherwise false.
+     */
+    public boolean validateResultArray(JsonArray resultArray) {
+
+        if (null == resultArray || resultArray.isJsonNull() || resultArray.size() == 0) {
+            return false;
+        }
+        return true;
     }
 }

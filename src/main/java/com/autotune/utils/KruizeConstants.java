@@ -380,6 +380,90 @@ public class KruizeConstants {
             public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
 
         }
+
+        public static class DataSourceQueryJSONKeys {
+            private DataSourceQueryJSONKeys() {
+            }
+
+            public static final String STATUS = "status";
+            public static final String DATA = "data";
+            public static final String RESULT = "result";
+            public static final String METRIC = "metric";
+            public static final String VALUE = "value";
+
+        }
+
+        public static class DataSourceQueryStatus {
+            private DataSourceQueryStatus() {
+            }
+
+            public static final String SUCCESS = "success";
+            public static final String ERROR = "error";
+        }
+
+        public static class DataSourceQueryMetricKeys {
+            private DataSourceQueryMetricKeys() {
+            }
+
+            public static final String NAMESPACE = "namespace";
+            public static final String WORKLOAD = "workload";
+            public static final String WORKLOAD_TYPE = "workload_type";
+            public static final String CONTAINER_NAME = "container";
+            public static final String CONTAINER_IMAGE_NAME = "image";
+        }
+
+        public static class DataSourceDetailsInfoConstants {
+            private DataSourceDetailsInfoConstants() {
+            }
+
+            public static final String version = "v1.0";
+            public static final String CLUSTER_NAME = "default";
+        }
+
+        public static class DataSourceDetailsErrorMsgs {
+            private DataSourceDetailsErrorMsgs() {
+            }
+
+            public static final String MISSING_DATASOURCE_DETAILS_CLUSTER_GROUP_NAME = "DataSourceDetails Cluster group name cannot be empty";
+            public static final String MISSING_DATASOURCE_DETAILS_WORKLOAD_MAP = "DataSourceDetails Workload data cannot be empty or null";
+            public static final String MISSING_DATASOURCE_DETAILS_CONTAINER_MAP = "DataSourceDetails Container data cannot be empty or null";
+            public static final String MISSING_DATASOURCE_DETAILS_INFO_OBJECT = "DataSourceDetailsInfo Object cannot be null";
+            public static final String MISSING_DATASOURCE_DETAILS_CLUSTER_GROUP_OBJECT = "DataSourceDetails DataSourceClusterGroup Object cannot be empty or null";
+            public static final String NAMESPACE_JSON_PARSING_ERROR = "Error parsing namespace JSON array: ";
+            public static final String WORKLOAD_JSON_PARSING_ERROR = "Error parsing workload JSON array: ";
+            public static final String CONTAINER_JSON_PARSING_ERROR = "Error parsing container JSON array: ";
+            public static final String DATASOURCE_DETAILS_INFO_CREATION_ERROR = "Error creating DataSourceDetailsInfo: ";
+            public static final String WORKLOAD_METADATA_UPDATE_ERROR = "Error updating DataSourceDetailsInfo with workload metadata: ";
+            public static final String CONTAINER_METADATA_UPDATE_ERROR = "Error updating DataSourceDetailsInfo with container metadata: ";
+            public static final String SET_CLUSTER_MAP_ERROR = "clusterHashMap is null, no clusters provided for cluster group: ";
+            public static final String SET_WORKLOAD_MAP_ERROR = "workloadHashMap is null, no workloads provided for namespace: ";
+            public static final String SET_CONTAINER_MAP_ERROR = "containerHashMap is null, no containers provided for workload: ";
+            public static final String NAMESPACE_MAP_NOT_POPULATED = "The namespaceMap is not populated, is either null or empty.";
+            public static final String NAMESPACE_WORKLOAD_MAP_NOT_POPULATED = "The namespaceWorkloadMap is not populated, is either null or empty.";
+            public static final String WORKLOAD_CONTAINER_MAP_NOT_POPULATED = "The workloadContainerMap is not populated, is either null or empty.";
+            public static final String INVALID_DATASOURCE_DETAILS_CLUSTER = "dataSourceCluster object is null";
+            public static final String INVALID_DATASOURCE_DETAILS_NAMESPACE = "dataSourceNamespace object is null";
+            public static final String INVALID_DATASOURCE_DETAILS_NAMESPACE_DATA = "namespaceHashMap is either null or empty";
+            public static final String DATASOURCE_DETAILS_INFO_NOT_AVAILABLE = "DataSourceDetailsInfo is null. Metadata is not populated.";
+            public static final String DATASOURCE_DETAILS_CLUSTER_GROUP_NOT_AVAILABLE = "DataSourceClusterGroup information is not available for the specified DataSource provider: ";
+        }
+
+        public static class DataSourceDetailsInfoJSONKeys {
+            private DataSourceDetailsInfoJSONKeys() {
+            }
+            public static final String CLUSTER_GROUPS = "cluster_groups";
+            public static final String CLUSTER_GROUP_NAME = "cluster_group_name";
+            public static final String CLUSTERS = "clusters";
+            public static final String CLUSTER_NAME = "cluster_name";
+            public static final String NAMESPACES = "namespaces";
+            public static final String WORKLOADS = "workloads";
+            public static final String WORKLOAD_NAME = "workload_name";
+            public static final String WORKLOAD_TYPE = "workload_type";
+            public static final String CONTAINERS = "containers";
+            public static final String CONTAINER_NAME = "container_name";
+            public static final String CONTAINER_IMAGE_NAME = "container_image_name";
+        }
+
         private DataSourceConstants() {
         }
     }
