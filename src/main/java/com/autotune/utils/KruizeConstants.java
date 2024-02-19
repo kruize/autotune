@@ -377,6 +377,7 @@ public class KruizeConstants {
             public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
             public static final String INVALID_DEFAULT_DATASOURCE_NAME = "Invalid default datasource name.";
             public static final String DEFAULT_DATASOURCE_NOT_FOUND = "Default datasource is not set.";
+            public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
 
         }
         private DataSourceConstants() {
