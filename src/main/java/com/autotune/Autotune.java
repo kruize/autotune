@@ -19,7 +19,6 @@ import com.autotune.analyzer.Analyzer;
 import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
-import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;

@@ -17,7 +17,6 @@ package com.autotune.operator;
 
 import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
-import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.common.datasource.*;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
@@ -55,7 +54,7 @@ public class InitializeDeployment {
         DataSourceInfo defaultDataSource = KruizeDeploymentInfo.defaultDataSource;
         // If no default datasource was specified in the configmap
         if (defaultDataSource == null) {
-                throw new DefaultDataSourceNotFoundException();
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DEFAULT_DATASOURCE_NOT_FOUND);
         }
         KruizeDeploymentInfo.setLayerTable();
 

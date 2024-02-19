@@ -142,9 +142,11 @@ public class KruizeDeploymentInfo {
         LOGGER.info("Cluster Type: {}", KruizeDeploymentInfo.cluster_type);
         LOGGER.info("Kubernetes Type: {}", KruizeDeploymentInfo.k8s_type);
         LOGGER.info("Auth Type: {}", KruizeDeploymentInfo.auth_type);
-        LOGGER.info("Default Datasource: {}", KruizeDeploymentInfo.defaultDataSource.getName());
-        LOGGER.info("Default Datasource URL: {}", KruizeDeploymentInfo.defaultDataSource.getUrl());
-        LOGGER.info("Default Datasource Provider: {}\n\n", KruizeDeploymentInfo.defaultDataSource.getProvider());
+        if (null != KruizeDeploymentInfo.defaultDataSource) {
+            LOGGER.info("Default Datasource: {}", KruizeDeploymentInfo.defaultDataSource.getName());
+            LOGGER.info("Default Datasource URL: {}", KruizeDeploymentInfo.defaultDataSource.getUrl());
+            LOGGER.info("Default Datasource Provider: {}\n\n", KruizeDeploymentInfo.defaultDataSource.getProvider());
+        }
     }
 
 }

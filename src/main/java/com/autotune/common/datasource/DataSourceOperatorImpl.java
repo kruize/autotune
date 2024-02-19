@@ -1,6 +1,5 @@
 package com.autotune.common.datasource;
 
-import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;

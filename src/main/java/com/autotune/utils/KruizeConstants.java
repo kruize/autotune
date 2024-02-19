@@ -550,7 +550,6 @@ public class KruizeConstants {
         public static final String K8S_TYPE = "k8stype";
         public static final String AUTH_TYPE = "authtype";
         public static final String AUTH_TOKEN = "authtoken";
-
         public static final String CLUSTER_TYPE = "clustertype";
         public static final String AUTOTUNE_MODE = "autotunemode";
         public static final String EM_ONLY_MODE = "emonly";
