@@ -12,5 +12,49 @@ data:
   monitoring_agent_endpoint: ""
   root_logging_level: "error"
   logging_level: "info"
+  dbconfigjson: |
+    {
+      "database": {
+        "adminPassword": "admin",
+        "adminUsername": "admin",
+        "hostname": "postgres-service",
+        "name": "kruizeDB",
+        "password": "admin",
+        "port": 5432,
+        "sslMode": "require",
+        "username": "admin"
+      }
+    }
+  kruizeconfigjson: |
+    {
+      "clustertype": "kubernetes",
+      "k8stype": "minikube",
+      "authtype": "",
+      "monitoringagent": "prometheus",
+      "monitoringservice": "prometheus-k8s",
+      "monitoringendpoint": "prometheus-k8s",
+      "savetodb": "true",
+      "dbdriver": "jdbc:postgresql://",
+      "hibernate": {
+        "dialect": "org.hibernate.dialect.PostgreSQLDialect",
+        "driver": "org.postgresql.Driver",
+        "c3p0minsize": 2,
+        "c3p0maxsize": 5,
+        "c3p0timeout": 300,
+        "c3p0maxstatements": 50,
+        "hbm2ddlauto": "none",
+        "showsql": "false",
+        "timezone": "UTC"
+      },
+      "datasource": [
+        {
+          "name": "default",
+          "provider": "prometheus",
+          "serviceName": "prometheus-k8s",
+          "namespace": "monitoring",
+          "url": ""
+        }
+      ]
+    }
 
 

@@ -123,7 +123,7 @@ data:
       },
       "datasource": [
         {
-          "name": "prometheus-1",
+          "name": "default",
           "provider": "prometheus",
           "serviceName": "prometheus-k8s",
           "namespace": "monitoring",
