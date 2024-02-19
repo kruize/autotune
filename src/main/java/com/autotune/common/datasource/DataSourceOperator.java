@@ -15,10 +15,9 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
-import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.utils.CommonUtils;
-
-import java.util.ArrayList;
+import com.google.gson.JsonArray;
+import org.json.JSONObject;
 
 /**
  * DataSourceOperator is an abstraction which has a generic and implementation,
@@ -60,6 +59,30 @@ public interface DataSourceOperator {
      * @return Object containing the result value for the specified query
      */
     Object getValueForQuery(String url, String query);
+
+    /**
+     * executes specified query on datasource and returns the JSON Object
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return JSONObject for the specified query
+     */
+    JSONObject getJsonObjectForQuery(String url, String query);
+
+    /**
+     * executes specified query on datasource and returns the result array
+     * @param url String containing the url for the datasource
+     * @param query String containing the query to be executed
+     * @return JsonArray containing the result array for the specified query
+     */
+    public JsonArray getResultArrayForQuery(String url, String query);
+
+    /**
+     * Validates a JSON array to ensure it is not null, not a JSON null, and has at least one element.
+     *
+     * @param resultArray The JSON array to be validated.
+     * @return True if the JSON array is valid (not null, not a JSON null, and has at least one element), otherwise false.
+     */
+    boolean validateResultArray(JsonArray resultArray);
 
     /**
      * returns query endpoint for datasource
