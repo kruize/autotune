@@ -433,8 +433,8 @@ def validate_container(update_results_container, update_results_json, list_reco_
                 terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
                 current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
 
-                duration_terms = ["short_term", "medium_term", "long_term"]
-                for term in duration_terms:
+                duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+                for term in duration_terms.keys():
                     if check_if_recommendations_are_present(terms_obj[term]):
                         print(f"reco present for term {term}")
                         # Validate timestamps [deprecated as monitoring end time is moved to higher level]
@@ -477,8 +477,19 @@ def validate_container(update_results_container, update_results_json, list_reco_
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
                                     validate_config(engine_obj["config"], metrics)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
+                        # Extract Plots data
+                        plots = None
+                        datapoint = None
+                        if "plots" in terms_obj[term]:
+                            plots = terms_obj[term]["plots"]
+                            datapoint = plots["datapoints"]
+                            plots_data = plots["plots_data"]
 
-            else:
+                        assert plots is not None, f"Expected plots to be available"
+                        assert datapoint is not None, f"Expected datapoint to be available"
+                        assert datapoint == duration_terms[term], f"datapoint Expected: {duration_terms[term]}, Obtained: {datapoint}"
+                        assert len(plots_data) == duration_terms[term], f"plots_data size Expected: {duration_terms[term]}, Obtained: {len(plots_data)}"
+        else:
                 data = list_reco_container["recommendations"]["data"]
                 assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
 
