@@ -31,21 +31,22 @@ SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
 UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG = "The Start time should precede the End time!"
-UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG = "Performance profile: avg cannot be negative or blank for the metric variable: "
-UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile:  Format value should be among these values: [cores, MiB]"
+UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG = "Performance profile: [avg cannot be negative or blank for the metric variable: "
+UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile: [ Format value should be among these values: [GiB, Gi, Ei, KiB, E, MiB, G, PiB, K, TiB, M, P, Bytes, cores, T, Ti, MB, KB, Pi, GB, EB, k, m, TB, PB, bytes, kB, Mi, Ki, EiB]"
 UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_RECORDS_COUNT} failed to save"
 DUPLICATE_RECORDS_MSG = "An entry for this record already exists!"
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
 UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE = 'interval_end_time is mandatory'
-UPDATE_RECOMMENDATIONS_DATA_NOT_FOUND = 'Data not found!'
+UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND = 'Not Found: experiment_name does not exist: '
 UPDATE_RECOMMENDATIONS_START_TIME_PRECEDE_END_TIME = 'The Start time should precede the End time!'
 UPDATE_RECOMMENDATIONS_START_TIME_END_TIME_GAP_ERROR = 'The gap between the interval_start_time and interval_end_time must be within a maximum of 15 days!'
 UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT = "Given timestamp - \" %s \" is not a valid timestamp format"
 RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available"
 COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available"
 PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available"
+CONTAINER_AND_EXPERIMENT_NAME = " for container : %s for experiment: %s.]"
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
@@ -82,6 +83,11 @@ INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE = "112102"
 INFO_RECOMMENDATIONS_AVAILABLE_CODE = "111000"
 INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE = "111101"
 
+CPU_REQUEST_OPTIMISED_CODE = "323004"
+CPU_LIMIT_OPTIMISED_CODE = "323005"
+MEMORY_REQUEST_OPTIMISED_CODE = "324003"
+MEMORY_LIMIT_OPTIMISED_CODE = "324004"
+
 CPU_REQUEST = "cpuRequest"
 CPU_LIMIT = "cpuLimit"
 CPU_USAGE = "cpuUsage"
@@ -91,6 +97,9 @@ MEMORY_REQUEST = "memoryRequest"
 MEMORY_LIMIT = "memoryLimit"
 MEMORY_USAGE = "memoryUsage"
 MEMORY_RSS = "memoryRSS"
+
+OPTIMISED_CPU = 3
+OPTIMISED_MEMORY = 300
 
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
 EXP_EXISTS_MSG = "Experiment name already exists: "
@@ -179,8 +188,14 @@ update_results_test_data = {
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
+aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "cpuLimit_avg", "cpuUsage_sum", "cpuUsage_max",
+                          "cpuUsage_avg", "cpuUsage_min", "cpuThrottle_sum", "cpuThrottle_max", "cpuThrottle_avg",
+                          "memoryRequest_sum", "memoryRequest_avg", "memoryLimit_sum", "memoryRequest_avg",
+                          "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
+                          "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
 
-def generate_test_data(csvfile, test_data):
+
+def generate_test_data(csvfile, test_data, api_name):
     if os.path.isfile(csvfile):
         os.remove(csvfile)
     with open(csvfile, 'a') as f:
@@ -189,10 +204,16 @@ def generate_test_data(csvfile, test_data):
         for key in test_data:
             for t in test_type:
                 data = []
+                # skip checking the invalid container name and container image name
+                if key == "container_image_name" or (key == "container_name" and t == "invalid"):
+                    continue
+                #  skip checking the aggregation info values
+                if key in aggr_info_keys_to_skip and t == "null":
+                    continue
 
                 test_name = t + "_" + key
                 status_code = 400
-                if test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name":
+                if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"):
                     status_code = 201
 
                 data.append(test_name)
@@ -701,3 +722,26 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
             assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][
                 AMOUNT_KEY] - current_memory_value
             assert variation_limits[MEMORY_KEY][FORMAT_KEY] == recommended_limits[MEMORY_KEY][FORMAT_KEY]
+
+
+def check_optimised_codes(cost_notifications, perf_notifications):
+    assert CPU_REQUEST_OPTIMISED_CODE in cost_notifications
+    assert CPU_REQUEST_OPTIMISED_CODE in perf_notifications
+
+    assert CPU_LIMIT_OPTIMISED_CODE in cost_notifications
+    assert CPU_LIMIT_OPTIMISED_CODE in perf_notifications
+
+    assert MEMORY_REQUEST_OPTIMISED_CODE in cost_notifications
+    assert MEMORY_REQUEST_OPTIMISED_CODE in perf_notifications
+
+    assert MEMORY_LIMIT_OPTIMISED_CODE in cost_notifications
+    assert MEMORY_LIMIT_OPTIMISED_CODE in perf_notifications
+
+
+def validate_recommendation_for_cpu_mem_optimised(recommendations: dict, current: dict, profile: str):
+    assert "variation" in recommendations["recommendation_engines"][profile]
+    assert "config" in recommendations["recommendation_engines"][profile]
+    assert recommendations["recommendation_engines"][profile]["config"]["requests"]["cpu"]["amount"] == current["requests"]["cpu"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["limits"]["cpu"]["amount"] == current["limits"]["cpu"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["requests"]["memory"]["amount"] == current["requests"]["memory"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["limits"]["memory"]["amount"] == current["limits"]["memory"]["amount"]

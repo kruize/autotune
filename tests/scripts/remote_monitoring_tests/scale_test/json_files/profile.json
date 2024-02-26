@@ -1,0 +1,28 @@
+{
+  "name": "resource-optimization-openshift",
+  "profile_version": 1,
+  "k8s_type": "openshift",
+  "slo": {
+    "slo_class": "resource_usage",
+    "direction": "minimize",
+    "objective_function": {
+      "function_type": "expression",
+      "expression": "cpuRequest"
+    },
+    "function_variables": [
+      {
+        "name": "cpuRequest",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "query": "kube_pod_container_resource_requests{pod=~'$DEPLOYMENT_NAME$-[^-]*-[^-]*$', container='$CONTAINER_NAME$', namespace='$NAMESPACE', resource='cpu', unit='core'}",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})"
+          }
+        ]
+      }
+    ]
+  }
+}
