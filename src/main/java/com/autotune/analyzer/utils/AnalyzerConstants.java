@@ -282,6 +282,10 @@ public class AnalyzerConstants {
         public static final String JSON_CONTENT_TYPE = "application/json";
         public static final String CHARACTER_ENCODING = "UTF-8";
         public static final String EXPERIMENT_NAME = "experiment_name";
+
+        public static final String DATASOURCE_NAME = "name";
+        public static final String DATASOURCE_PROVIDER = "provider";
+
         public static final String DEPLOYMENTS = "deployments";
         public static final String DEPLOYMENT_NAME = "deployment_name";
         public static final String NAMESPACE = "namespace";
