@@ -15,8 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.ResourceOptimizationOpenshiftImpl;
 import com.autotune.utils.KruizeConstants;
 
 import java.util.Map;
@@ -171,7 +169,7 @@ public class AnalyzerConstants {
         DAEMONSET,
     }
 
-    public enum RegisterRecommendationEngineStatus {
+    public enum RegisterRecommendationModelStatus {
         SUCCESS,
         ALREADY_EXISTS,
         INVALID
@@ -462,12 +460,6 @@ public class AnalyzerConstants {
         public static final Map<String, String> PerfProfileNames = Map.of(
                 RESOURCE_OPT_OPENSHIFT_PROFILE, "ResourceOptimizationOpenshiftImpl",
                 RESOURCE_OPT_LOCAL_MON_PROFILE, "ResourceOptimizationOpenshiftImpl"
-        );
-
-        public static final Map<String, Class> perfProfileInstances = Map.of(
-                DEFAULT_PROFILE, DefaultImpl.class,
-                RESOURCE_OPT_OPENSHIFT_PROFILE, ResourceOptimizationOpenshiftImpl.class,
-                RESOURCE_OPT_LOCAL_MON_PROFILE, ResourceOptimizationOpenshiftImpl.class
         );
     }
 

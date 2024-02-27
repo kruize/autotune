@@ -9,5 +9,5 @@ public interface MappedRecommendationForTerm {
     public HashMap<Integer, RecommendationNotification> getNotifications();
     public Timestamp getMonitoringStartTime();
     public double getDurationInHrs();
-    public MappedRecommendationForEngine getRecommendationByEngine(String EngineName);
+    public MappedRecommendationForModel getRecommendationByEngine(String EngineName);
 }

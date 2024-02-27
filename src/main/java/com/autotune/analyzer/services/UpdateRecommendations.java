@@ -15,22 +15,15 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.data.result.ExperimentResultData;
-import com.autotune.database.service.ExperimentDBService;
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.Utils;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -50,14 +43,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
-import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
-import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_INTERVAL_END_TIME;
 
 /**
  *
@@ -102,111 +90,16 @@ public class UpdateRecommendations extends HttpServlet {
             String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
             Timestamp interval_end_time = null;
             Timestamp interval_start_time = null;
-
-            // Check if experiment_name is provided
-            if (experiment_name == null || experiment_name.isEmpty()) {
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.EXPERIMENT_NAME_MANDATORY);
-                return;
-            }
-
-            // Check if interval_end_time is provided
-            if (intervalEndTimeStr == null || intervalEndTimeStr.isEmpty()) {
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INTERVAL_END_TIME_MANDATORY);
-                return;
-            }
-            if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
-                sendErrorResponse(
-                        response,
-                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
-                        HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStr)
-                );
-                return;
+            // validate the input params and generate recommendations
+            RecommendationEngine recommendationEngine = new RecommendationEngine();
+            KruizeObject kruizeObject = recommendationEngine.validateAndGenerateRecommendation(experiment_name,
+                    interval_end_time, interval_start_time, intervalEndTimeStr, intervalStartTimeStr, calCount);
+            if (!kruizeObject.getValidation_data().isSuccess()) {
+                sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject
+                        .getValidation_data().getMessage());
             } else {
-                interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr);
-            }
-
-
-            // Check if interval_start_time is provided
-            if (intervalStartTimeStr != null) {
-                if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalStartTimeStr)) {
-                    sendErrorResponse(
-                            response,
-                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
-                            HttpServletResponse.SC_BAD_REQUEST,
-                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalStartTimeStr)
-                    );
-                    return;
-                } else {
-                    interval_start_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalStartTimeStr);
-                    int comparisonResult = interval_start_time.compareTo(interval_end_time);
-                    if (comparisonResult >= 0) {
-                        // interval_start_time is after interval_end_time
-                        sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.TIME_COMPARE);
-                        return;
-                    } else {
-                        // calculate difference between two dates
-                        long differenceInMillis = interval_end_time.getTime() - interval_start_time.getTime();
-                        long differenceInDays = TimeUnit.MILLISECONDS.toDays(differenceInMillis);
-                        if (differenceInDays > KruizeDeploymentInfo.generate_recommendations_date_range_limit_in_days) {
-                            sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.TIME_GAP_LIMIT);
-                            return;
-                        }
-                    }
-                }
-            }
-            LOGGER.debug("UpdateRecommendations API request count: {} experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", calCount, experiment_name, intervalStartTimeStr, intervalEndTimeStr);
-            LOGGER.debug("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
-
-            List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
-            ExperimentResultData experimentResultData = null;
-            Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
-            KruizeObject kruizeObject = null;
-            try {
-                new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
-                if (null != mainKruizeExperimentMAP.get(experiment_name)) {
-                    kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
-                }
-                if (null != kruizeObject)
-                    experimentResultDataList = new ExperimentDBService().getExperimentResultData(experiment_name, kruizeObject, interval_start_time, interval_end_time);   // Todo this object is not required
-                else {
-                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("%s%s", MISSING_EXPERIMENT_NAME, experiment_name));
-                    return;
-                }
-            } catch (Exception e) {
-                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-                sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-                return;
-            }
-
-            if (experimentResultDataList.size() > 0) {
-                //generate recommendation
-                try {
-                    new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);    // TODO: experimentResultDataList not required
-                    ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
-                    if (validationOutputData.isSuccess()) {
-                        LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
-                        sendSuccessResponse(response, kruizeObject, interval_end_time);
-                        statusValue = "success";
-                    } else {
-                        LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-                        sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
-                    }
-                } catch (Exception e) {
-                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-                    e.printStackTrace();
-                    LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
-                            experiment_name,
-                            interval_start_time,
-                            interval_end_time);
-                    sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-                    return;
-                }
-            } else {
-                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, String.format("%s%s", MISSING_INTERVAL_END_TIME, intervalEndTimeStr));
-                return;
+                sendSuccessResponse(response, kruizeObject, interval_end_time);
+                statusValue = "success";
             }
         } catch (Exception e) {
             LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
