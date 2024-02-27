@@ -50,12 +50,14 @@ For more details refer to the github issues
 
 | #   | ISSUE (NEW FEATURE) | TEST DESCRIPTION | TEST DELIVERABLES | RESULTS | COMMENTS |
 | --- | --------- | ---------------- | ----------------- |  -----  | --- |
-| 1   |  [Term Design changes](https://github.com/kruize/autotune/issues/1059)         |       |[Tests added as part of PR](https://github.com/kruize/autotune/pull/1081)                  |           |        |
+| 1   |  [Term Design changes](https://github.com/kruize/autotune/issues/1059) |       |[Tests added as part of PR](https://github.com/kruize/autotune/pull/1081) |  |  |
+| 2   |  [Term Documentation](https://github.com/kruize/autotune/issues/1088) |       |[Tests added as part of PR](https://github.com/kruize/autotune/pull/1096) |  |  |
 
 ### Regression Testing
 
 | #   | ISSUE (BUG/NEW FEATURE) |  TEST CASE | RESULTS | COMMENTS |
 | --- | --------- | ---------------- | -------- | --- |
+| 1   | Term Design Changes | Functional test suite | | |
 
 ---
 
@@ -66,7 +68,7 @@ Changes do not have scalability implications. Short scalability test will be run
 
 | #   | OBJECTIVE | INPUT | EXPECTED RESULTS |  ACTUAL RESULTS   | COMMENTS |
 | --- | --------- | ----- | ---------------- | ----------------- | -------  |
-| 1   |  Run a short run of scalability to check for any regressions         |  5k exps / 15 days     |                  |                   |          |
+| 1   |  Run a short run of scalability to check for any regressions |  5k exps / 15 days     |  |  |  |
 
 ----
 ## RELEASE TESTING
@@ -78,11 +80,11 @@ As part of the release testing, test the following will be executed:
 - [Scalability test (On openshift)](/tests/scripts/remote_monitoring_tests/scalability_test.md) - scalability test with 5000 exps / 15 days usage data
 
 | #   | TEST SUITE | EXPECTED RESULTS | ACTUAL RESULTS | COMMENTS |
-| --- | --------- | ---------------- | -------------- | ---- | 
-| 1   |  Functional testsuite         |                  |                |      |
-| 2   |  Fault tolerant test         |                  |                |      |
-| 3   |  Stress test         |                  |                |      |
-| 4   |  Scalability test         |                  |                |      |
+| --- | ---------- | ---------------- | -------------- | -------- | 
+| 1   |  Functional testsuite |               |                |     |
+| 2   |  Fault tolerant test  |               |                |      |
+| 3   |  Stress test          |               |                |      |
+| 4   |  Scalability test     |               |                |      |
 
 
 ---
@@ -98,11 +100,10 @@ As part of the release testing, test the following will be executed:
 * Documentation updates have been completed
 
 ----
+
 ## RISKS AND CONTINGENCIES
 
-* Lack of availability of required hardware or software
-* Delay in delivery of the software
-* Requirements or design changes
+* None
 
 ----
 ## APPROVALS
