@@ -265,7 +265,7 @@ public class DBHelpers {
                     kruizeExperimentEntry.setVersion(apiObject.getApiVersion());
                     kruizeExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
                     kruizeExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-                    kruizeExperimentEntry.setMeta_data(null);
+//                    kruizeExperimentEntry.setMeta_data(null); TODO: need to set this as per latest change
                     kruizeExperimentEntry.setDatasource(null);
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
@@ -659,6 +659,7 @@ public class DBHelpers {
                 KruizeDataSource kruizeDataSource;
                 try {
                     kruizeDataSource = new KruizeDataSource();
+                    kruizeDataSource.setVersion(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.version);
                     kruizeDataSource.setName(dataSourceInfo.getName());
                     kruizeDataSource.setProvider(dataSourceInfo.getProvider());
                     kruizeDataSource.setServiceName(dataSourceInfo.getServiceName());

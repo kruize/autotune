@@ -120,4 +120,14 @@ public class DataSourceInfo {
         }
         return dnsUrl;
     }
+    @Override
+    public String toString() {
+        return "DataSourceInfo{" +
+                "name='" + name + '\'' +
+                ", provider='" + provider + '\'' +
+                ", serviceName='" + serviceName + '\'' +
+                ", namespace='" + namespace + '\'' +
+                ", url=" + url +
+                '}';
+    }
 }

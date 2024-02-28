@@ -61,13 +61,9 @@ public class KruizeExperimentEntry {
     private String datasource;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode extended_data;
-    @ManyToMany
-    @JoinTable(
-            name = "kruize_experiments",
-            joinColumns = @JoinColumn(name = "experiment_id"),
-            inverseJoinColumns = @JoinColumn(name = "id")
-    )
-    private List<KruizeMetadata> kruizeMetadataList;
+    @ManyToOne
+    @JoinColumn(name = "metadata_id", referencedColumnName = "id") // This specifies the foreign key column
+    private KruizeMetadata metadata;
 
 
     public String getVersion() {
@@ -148,5 +144,13 @@ public class KruizeExperimentEntry {
 
     public void setDatasource(String datasource) {
         this.datasource = datasource;
+    }
+
+    public KruizeMetadata getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(KruizeMetadata metadata) {
+        this.metadata = metadata;
     }
 }

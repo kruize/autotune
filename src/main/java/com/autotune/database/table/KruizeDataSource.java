@@ -1,8 +1,6 @@
 package com.autotune.database.table;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 
 /**
  * This is a Java class named KruizeDataSource annotated with JPA annotations.
@@ -21,8 +19,8 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "kruize_datasources")
 public class KruizeDataSource {
-    @Id
     private String version;
+    @Id
     private String name;
     private String provider;
     private String serviceName;

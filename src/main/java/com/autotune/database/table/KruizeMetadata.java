@@ -34,11 +34,8 @@ public class KruizeMetadata {
     private String workloadName;
     private String containerName;
     private String containerImageName;
-
-    @ManyToMany(mappedBy = "kruize_metadata")
-    private List<KruizeExperimentEntry> experiments;
-
-    // Constructors, getters, and setters
+    @OneToMany(mappedBy = "metadata", cascade = CascadeType.ALL)
+    private List<KruizeExperimentEntry> experimentEntries;
 
     public KruizeMetadata() {
     }
@@ -56,10 +53,6 @@ public class KruizeMetadata {
 
     public Long getId() {
         return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getVersion() {
@@ -124,6 +117,14 @@ public class KruizeMetadata {
 
     public void setContainerImageName(String containerImageName) {
         this.containerImageName = containerImageName;
+    }
+
+    public List<KruizeExperimentEntry> getExperimentEntries() {
+        return experimentEntries;
+    }
+
+    public void setExperimentEntries(List<KruizeExperimentEntry> experimentEntries) {
+        this.experimentEntries = experimentEntries;
     }
 
     @Override

@@ -366,7 +366,10 @@ public class ExperimentDBService {
             dataSourceInfoList = DBHelpers.Converters.KruizeObjectConverters
                     .convertKruizeDataSourceToDataSourceObject(kruizeDataSourceList);
         }
-        return dataSourceInfoList.get(0);
+        if (dataSourceInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceInfoList.get(0);
     }
 
 

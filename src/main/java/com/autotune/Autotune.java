@@ -21,6 +21,8 @@ import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.datasource.DataSourceCollection;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.experimentManager.core.ExperimentManager;
@@ -52,6 +54,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Scanner;
 
 import static com.autotune.utils.ServerContext.*;
@@ -102,6 +105,19 @@ public class Autotune {
             InitializeDeployment.setup_deployment_info();
             // Read and execute the DDLs here
             executeDDLs();
+            // set up DataSource
+            DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
+            dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
+
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
+            HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
+            for (String name: dataSources.keySet()) {
+                DataSourceInfo dataSource = dataSources.get(name);
+                String dataSourceName = dataSource.getName();
+                String url = dataSource.getUrl().toString();
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
+            }
+            // TODO: setup metadata code
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
                  MonitoringAgentNotFoundException e) {
             e.printStackTrace();

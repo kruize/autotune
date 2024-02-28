@@ -600,13 +600,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      */
     @Override
     public List<KruizeDataSource> loadDataSourceByName(String name) throws Exception {
-        List<KruizeDataSource> kruizeDataSourceList = null;
+        List<KruizeDataSource> kruizeDataSourceList;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             kruizeDataSourceList = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_DATASOURCE_BY_NAME, KruizeDataSource.class)
                     .setParameter("name", name).list();
         } catch (Exception e) {
-            LOGGER.error("Not able to load datasource {} due to {}", name, e.getMessage());
-            throw new Exception("Error while loading existing datasource from database due to : " + e.getMessage());
+            LOGGER.error("Not able to load datasource: {} : {}", name, e.getMessage());
+            throw new Exception("Error while loading existing datasource from database : " + e.getMessage());
         }
         return kruizeDataSourceList;
     }

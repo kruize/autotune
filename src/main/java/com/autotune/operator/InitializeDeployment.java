@@ -70,17 +70,6 @@ public class InitializeDeployment {
 
         KruizeDeploymentInfo.logDeploymentInfo();
 
-        DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
-        dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
-
-        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
-        HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
-        for (String name: dataSources.keySet()) {
-            DataSourceInfo dataSource = dataSources.get(name);
-            String dataSourceName = dataSource.getName();
-            String url = dataSource.getUrl().toString();
-            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
-        }
         /**
          * Temporarily commenting out the data import process from data sources
          */
