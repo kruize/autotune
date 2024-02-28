@@ -311,7 +311,8 @@ public class AnalyzerConstants {
         public static final String LATEST = "latest";
         public static final String EXPERIMENT_REGISTERED = "Registered successfully with Kruize! View registered experiments at /listExperiments";
         public static final String RESULT_SAVED = "Results added successfully! View saved results at /listExperiments.";
-
+        public static final String DATASOURCE_NAME = "name";
+        public static final String DATASOURCE_PROVIDER = "provider";
         private ServiceConstants() {
         }
     }

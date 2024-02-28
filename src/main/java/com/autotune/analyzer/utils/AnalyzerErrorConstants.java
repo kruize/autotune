@@ -160,6 +160,14 @@ public class AnalyzerErrorConstants {
             private UpdateRecommendationsAPI() {
             }
         }
+
+        public static final class ListDataSourcesAPI {
+            private ListDataSourcesAPI() {
+
+            }
+            public static final String INVALID_DATASOURCE_NAME_EXCPTN = "Invalid DataSource Name";
+            public static final String INVALID_DATASOURCE_NAME_MSG = "Given datasource name - \" %s \" either does not exist or is not valid";
+        }
     }
 
     public static final class ConversionErrors {

@@ -28,6 +28,9 @@ public class MetricsConfig {
     public String DB_METRIC_DESC = "Time taken for KruizeDB methods";
     public static PrometheusMeterRegistry meterRegistry;
 
+    public static Timer timerListDS, timerImportDSMetadata;
+    public static Timer.Builder timerBListDS, timerBImportDSMetadata;
+
     private MetricsConfig() {
         meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
         meterRegistry.config().commonTags("application", "Kruize");
@@ -53,6 +56,8 @@ public class MetricsConfig {
         timerBLoadPerfProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadPerformanceProfileByName");
         timerBLoadAllPerfProfiles = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method","loadAllPerformanceProfiles");
 
+        timerBListDS = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","listDataSources").tag("method","GET");
+        timerBImportDSMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","importDataSourceMetadata").tag("method","POST");
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);
         new JvmGcMetrics().bindTo(meterRegistry);
