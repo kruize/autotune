@@ -28,13 +28,11 @@ import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.helper.DBHelpers;
-import com.autotune.database.table.KruizeExperimentEntry;
-import com.autotune.database.table.KruizePerformanceProfileEntry;
-import com.autotune.database.table.KruizeRecommendationEntry;
-import com.autotune.database.table.KruizeResultsEntry;
+import com.autotune.database.table.*;
 import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -139,6 +137,16 @@ public class ExperimentDBService {
                 }
             }
         }
+    }
+
+    public List<DataSourceInfo> loadAllDataSources() throws Exception {
+        List<KruizeDataSource> entries = experimentDAO.loadAllDataSources();
+        List<DataSourceInfo> dataSourceInfoList = null;
+        if (null != entries && !entries.isEmpty()) {
+            dataSourceInfoList = DBHelpers.Converters.KruizeObjectConverters.convertKruizeDataSourceToDataSourceObject(entries);
+            return dataSourceInfoList;
+        }
+        return dataSourceInfoList;
     }
 
     public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {
@@ -262,6 +270,17 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
+    public ValidationOutputData addDataSourceToDB(DataSourceInfo dataSourceInfo) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeDataSource kruizeDataSource = DBHelpers.Converters.KruizeObjectConverters.convertDataSourceToDataSourceDBObj(dataSourceInfo);
+            validationOutputData = this.experimentDAO.addDataSourceToDB(kruizeDataSource);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save data source due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
     /*
      * This is a Java method that loads all experiments from the database using an experimentDAO object.
      * The method then converts the retrieved data into KruizeObject format, adds them to a list,
@@ -339,6 +358,17 @@ public class ExperimentDBService {
 
         loadAllRecommendations(mainKruizeExperimentMap);
     }
+
+    public DataSourceInfo loadDataSourceFromDBByName(String name) throws Exception {
+        List<KruizeDataSource> kruizeDataSourceList = experimentDAO.loadDataSourceByName(name);
+        List<DataSourceInfo> dataSourceInfoList = new ArrayList<>();
+        if (null != kruizeDataSourceList && !kruizeDataSourceList.isEmpty()) {
+            dataSourceInfoList = DBHelpers.Converters.KruizeObjectConverters
+                    .convertKruizeDataSourceToDataSourceObject(kruizeDataSourceList);
+        }
+        return dataSourceInfoList.get(0);
+    }
+
 
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
         kruizeObject.setStatus(status);

@@ -21,20 +21,16 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
-import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.serviceObjects.*;
-import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.database.table.KruizeExperimentEntry;
-import com.autotune.database.table.KruizePerformanceProfileEntry;
-import com.autotune.database.table.KruizeRecommendationEntry;
-import com.autotune.database.table.KruizeResultsEntry;
+import com.autotune.database.table.*;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -658,6 +654,46 @@ public class DBHelpers {
 
                 return performanceProfiles;
             }
+
+            public static KruizeDataSource convertDataSourceToDataSourceDBObj(DataSourceInfo dataSourceInfo) throws Exception {
+                KruizeDataSource kruizeDataSource;
+                try {
+                    kruizeDataSource = new KruizeDataSource();
+                    kruizeDataSource.setName(dataSourceInfo.getName());
+                    kruizeDataSource.setProvider(dataSourceInfo.getProvider());
+                    kruizeDataSource.setServiceName(dataSourceInfo.getServiceName());
+                    kruizeDataSource.setNamespace(dataSourceInfo.getNamespace());
+                    kruizeDataSource.setUrl(dataSourceInfo.getUrl().toString());
+                } catch (Exception e) {
+                    kruizeDataSource = null;
+                    LOGGER.error("Error while converting DataSource Object to KruizeDataSource table due to {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeDataSource;
+            }
+
+            public static List<DataSourceInfo> convertKruizeDataSourceToDataSourceObject(List<KruizeDataSource> kruizeDataSourceList) throws Exception {
+                List<DataSourceInfo> dataSourceInfoList = new ArrayList<>();
+                int failureThreshHold = kruizeDataSourceList.size();
+                int failureCount = 0;
+                for (KruizeDataSource kruizeDataSource : kruizeDataSourceList) {
+                    try {
+                        DataSourceInfo dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
+                                .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace());
+                        dataSourceInfoList.add(dataSourceInfo);
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while converting to dataSourceInfo from DB object : {}", e.getMessage());
+                        LOGGER.error(e.getMessage());
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the Datasource loaded from DB.");
+
+                return dataSourceInfoList;
+            }
+
+
         }
     }
 }

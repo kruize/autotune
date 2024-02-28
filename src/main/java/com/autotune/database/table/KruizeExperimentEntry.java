@@ -22,6 +22,8 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.util.List;
+
 /**
  * This is a Java class named KruizeExperimentEntry annotated with JPA annotations.
  * It represents a table named kruize_experiment in a relational database.
@@ -56,12 +58,16 @@ public class KruizeExperimentEntry {
     private String performance_profile;
     @Enumerated(EnumType.STRING)
     private AnalyzerConstants.ExperimentStatus status;
-    @JdbcTypeCode(SqlTypes.JSON)
-    private JsonNode datasource;
+    private String datasource;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode extended_data;
-    @JdbcTypeCode(SqlTypes.JSON)
-    private JsonNode meta_data;
+    @ManyToMany
+    @JoinTable(
+            name = "kruize_experiments",
+            joinColumns = @JoinColumn(name = "experiment_id"),
+            inverseJoinColumns = @JoinColumn(name = "id")
+    )
+    private List<KruizeMetadata> kruizeMetadataList;
 
 
     public String getVersion() {
@@ -120,14 +126,6 @@ public class KruizeExperimentEntry {
         this.extended_data = extended_data;
     }
 
-    public JsonNode getMeta_data() {
-        return meta_data;
-    }
-
-    public void setMeta_data(JsonNode meta_data) {
-        this.meta_data = meta_data;
-    }
-
     public AnalyzerConstants.ExperimentStatus getStatus() {
         return status;
     }
@@ -144,11 +142,11 @@ public class KruizeExperimentEntry {
         this.experiment_id = experiment_id;
     }
 
-    public JsonNode getDatasource() {
+    public String getDatasource() {
         return datasource;
     }
 
-    public void setDatasource(JsonNode datasource) {
+    public void setDatasource(String datasource) {
         this.datasource = datasource;
     }
 }
