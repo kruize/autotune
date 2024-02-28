@@ -65,6 +65,18 @@ public class IntervalResults {
         this.metricResultsMap = metricResultsMap;
     }
 
+    public void setIntervalStartTime(Timestamp intervalStartTime) {
+        this.intervalStartTime = intervalStartTime;
+    }
+
+    public Timestamp getIntervalEndTime() {
+        return intervalEndTime;
+    }
+
+    public void setIntervalEndTime(Timestamp intervalEndTime) {
+        this.intervalEndTime = intervalEndTime;
+    }
+
     public Timestamp getIntervalStartTime() {
         return intervalStartTime;
     }
