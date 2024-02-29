@@ -91,7 +91,7 @@ public class AnalyzerErrorConstants {
         public static final String BLANK_AGGREGATION_INFO_VALUE = " cannot be negative or blank for the metric variable: ";
         public static final String UNSUPPORTED_FORMAT = " Format value should be among these values: ".concat(KruizeSupportedTypes.SUPPORTED_FORMATS.toString());
         public static final String UNSUPPORTED_METRIC = "Metric variable name should be among these values: ".concat(Arrays.toString(AnalyzerConstants.MetricName.values()));
-
+        public static final String UNSUPPORTED_DATASOURCE = String.format("At present, the system does not support bulk datasource entries!");
 
         private AutotuneObjectErrors() {
         }
@@ -167,6 +167,14 @@ public class AnalyzerErrorConstants {
             }
             public static final String INVALID_DATASOURCE_NAME_EXCPTN = "Invalid DataSource Name";
             public static final String INVALID_DATASOURCE_NAME_MSG = "Given datasource name - \" %s \" either does not exist or is not valid";
+        }
+
+        public static final class ImportDataSourceMetadataAPI {
+            private ImportDataSourceMetadataAPI(){
+            }
+            public static final String DATASOURCE_NAME_MANDATORY = KruizeConstants.JSONKeys.DATASOURCE_NAME + " is mandatory";
+            public static final String INVALID_DATASOURCE_NAME_METADATA_EXCPTN = "Invalid DataSource Name";
+            public static final String INVALID_DATASOURCE_NAME_METADATA_MSG = "Metadata for a given datasource name - \" %s \" either does not exist or is not valid";
         }
     }
 
