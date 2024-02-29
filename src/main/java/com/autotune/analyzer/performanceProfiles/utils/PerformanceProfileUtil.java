@@ -66,8 +66,9 @@ public class PerformanceProfileUtil {
      * @param updateResultsAPIObject
      * @return
      */
-    public static String validateResults(PerformanceProfile performanceProfile, UpdateResultsAPIObject updateResultsAPIObject) {
+    public static List<String> validateResults(PerformanceProfile performanceProfile, UpdateResultsAPIObject updateResultsAPIObject) {
 
+        List<String> errorReasons = new ArrayList<>();
         String errorMsg = "";
         List<AnalyzerConstants.MetricName> mandatoryFields = Arrays.asList(
                 AnalyzerConstants.MetricName.cpuUsage,
@@ -87,12 +88,12 @@ public class PerformanceProfileUtil {
                 queryList.add(metric.getQuery());
         }
 
-        // Get the metrics data from the Kruize Object
+        // Get the metrics data from the Kruize Object and validate it
         for (KubernetesAPIObject kubernetesAPIObject : updateResultsAPIObject.getKubernetesObjects()) {
             for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
                 // if the metrics data is not present, set corresponding validation message and skip adding the current container data
                 if (containerAPIObject.getMetrics() == null) {
-                    errorMsg = errorMsg.concat(String.format(
+                    errorReasons.add(String.format(
                             AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
                             containerAPIObject.getContainer_name(),
                             updateResultsAPIObject.getExperimentName()
@@ -106,6 +107,10 @@ public class PerformanceProfileUtil {
                         // validate the metric values
                         errorMsg = PerformanceProfileUtil.validateMetricsValues(metric.getName(), metric.getMetricResult());
                         if (!errorMsg.isBlank()) {
+                            errorReasons.add(errorMsg.concat(String.format(
+                                    AnalyzerErrorConstants.AutotuneObjectErrors.CONTAINER_AND_EXPERIMENT,
+                                    containerAPIObject.getContainer_name(),
+                                    updateResultsAPIObject.getExperimentName())));
                             break;
                         }
                         AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metric.getName());
@@ -113,40 +118,43 @@ public class PerformanceProfileUtil {
                         MetricResults metricResults = metric.getMetricResult();
                         Map<String, Object> aggrInfoClassAsMap;
                         if (!perfProfileAggrFunctions.isEmpty()) {
-                                try {
-                                    aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
-                                    errorMsg = validateAggFunction(aggrInfoClassAsMap, perfProfileAggrFunctions);
-                                    if (!errorMsg.isBlank()) {
-                                        errorMsg = errorMsg.concat(String.format(" for the experiment : %s"
-                                                , updateResultsAPIObject.getExperimentName()));
-                                        break;
-                                    }
-                                } catch(IllegalAccessException | InvocationTargetException e){
-                                    throw new RuntimeException(e);
-                                }
-                            } else{
-                                // check if query is also absent
-                                if (queryList.isEmpty()) {
-                                    errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING;
+                            try {
+                                aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
+                                errorMsg = validateAggFunction(aggrInfoClassAsMap, perfProfileAggrFunctions);
+                                if (!errorMsg.isBlank()) {
+                                    errorReasons.add(errorMsg.concat(String.format(
+                                            AnalyzerErrorConstants.AutotuneObjectErrors.CONTAINER_AND_EXPERIMENT,
+                                            containerAPIObject.getContainer_name(),
+                                            updateResultsAPIObject.getExperimentName())));
                                     break;
                                 }
+                            } catch(IllegalAccessException | InvocationTargetException e){
+                                throw new RuntimeException(e);
                             }
+                        } else{
+                            // check if query is also absent
+                            if (queryList.isEmpty()) {
+                                errorReasons.add(AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING);
+                                break;
+                            }
+                        }
                     } catch (IllegalArgumentException e) {
                         LOGGER.error("Error occurred in metrics validation: " + errorMsg);
                     }
                 }
-                if (!errorMsg.isBlank())
+                if (!errorReasons.isEmpty())
                     break;
 
                 LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
                 LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
                 if (!new HashSet<>(kruizeFunctionVariablesList).containsAll(mandatoryFields)) {
-                    errorMsg = errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s", updateResultsAPIObject.getExperimentName(), mandatoryFields));
+                    errorReasons.add(errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s",
+                            updateResultsAPIObject.getExperimentName(), mandatoryFields)));
                     break;
                 }
             }
         }
-        return errorMsg;
+        return errorReasons;
     }
 
     public static void addPerformanceProfile(Map<String, PerformanceProfile> performanceProfileMap, PerformanceProfile performanceProfile) {

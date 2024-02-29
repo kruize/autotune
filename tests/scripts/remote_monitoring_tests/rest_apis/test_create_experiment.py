@@ -33,7 +33,7 @@ csvfile = "/tmp/create_exp_test_data.csv"
 @pytest.mark.negative
 @pytest.mark.parametrize(
     "test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace, container_image_name, container_name, measurement_duration, threshold",
-    generate_test_data(csvfile, create_exp_test_data))
+    generate_test_data(csvfile, create_exp_test_data, "create_exp"))
 def test_create_exp_invalid_tests(test_name, expected_status_code, version, experiment_name, cluster_name,
                                   performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace,
                                   container_image_name, container_name, measurement_duration, threshold, cluster_type):
@@ -322,7 +322,7 @@ def test_create_exp_with_both_performance_profile_slo(cluster_type):
     print("delete exp = ", response.status_code)
 
 
-@pytest.mark.sanity
+@pytest.mark.negative
 def test_create_exp_with_both_deployment_name_selector(cluster_type):
     """
     Test Description: This test validates the creation of an experiment by specifying both deployment name & selector
@@ -347,7 +347,7 @@ def test_create_exp_with_both_deployment_name_selector(cluster_type):
     print("delete exp = ", response.status_code)
 
 
-@pytest.mark.sanity
+@pytest.mark.negative
 def test_create_exp_with_invalid_header(cluster_type):
     """
     Test Description: This test validates the creation of an experiment by specifying invalid content type in the header
