@@ -79,6 +79,7 @@ public class ListRecommendations extends HttpServlet {
         // Set the character encoding of the request to UTF-8
         request.setCharacterEncoding(CHARACTER_ENCODING);
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        String clusterName = request.getParameter(KruizeConstants.JSONKeys.CLUSTER_NAME);
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String monitoringEndTime = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
         Timestamp monitoringEndTimestamp = null;
@@ -144,6 +145,59 @@ public class ListRecommendations extends HttpServlet {
                             new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
                             HttpServletResponse.SC_BAD_REQUEST,
                             String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
+                    );
+                }
+            } else if (null != clusterName) {
+                try {
+                    new ExperimentDBService().loadExperimentsAndRecommendationsFromDBByClusterName(mKruizeExperimentMap, clusterName);
+                } catch (Exception e) {
+                    LOGGER.error("Loading experiments and recommendations based on cluster {} failed: {} ", clusterName, e.getMessage());
+                }
+                // Check if cluster exists
+                if (!mKruizeExperimentMap.isEmpty()) {
+                    // Check if timestamp is passed
+                    if (null != monitoringEndTime && !monitoringEndTime.isEmpty()) {
+                        monitoringEndTime = monitoringEndTime.trim();
+                        if (Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime)) {
+                            Date mEndTime = Utils.DateUtils.getDateFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, monitoringEndTime);
+                            monitoringEndTimestamp = new Timestamp(mEndTime.getTime());
+                            // Check if timestamp exists in recommendations
+                            for (String expName : mKruizeExperimentMap.keySet()) {
+                                boolean timestampExists = ServiceHelpers.KruizeObjectOperations.checkRecommendationTimestampExists(mKruizeExperimentMap.get(expName), monitoringEndTime);
+                                if (timestampExists) {
+                                    kruizeObjectList.add(mKruizeExperimentMap.get(expName));
+                                    checkForTimestamp = true;
+                                }
+                            }
+                            if (kruizeObjectList.isEmpty()) {
+                                error = true;
+                                sendErrorResponse(
+                                        response,
+                                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_EXCPTN),
+                                        HttpServletResponse.SC_BAD_REQUEST,
+                                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.RECOMMENDATION_DOES_NOT_EXIST_MSG, monitoringEndTime)
+                                );
+                            }
+                        } else {
+                            error = true;
+                            sendErrorResponse(
+                                    response,
+                                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_EXCPTN),
+                                    HttpServletResponse.SC_BAD_REQUEST,
+                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, monitoringEndTime)
+                            );
+                        }
+                    } else {
+                        // Add all experiments to list
+                        kruizeObjectList.addAll(mKruizeExperimentMap.values());
+                    }
+                } else {
+                    error = true;
+                    sendErrorResponse(
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_CLUSTER_NAME_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_CLUSTER_NAME_MSG, clusterName)
                     );
                 }
             } else {

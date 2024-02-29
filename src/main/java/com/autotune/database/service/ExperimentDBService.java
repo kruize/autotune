@@ -190,6 +190,28 @@ public class ExperimentDBService {
         }
     }
 
+    public void loadRecommendationsFromDBByClusterName(Map<String, KruizeObject> mainKruizeExperimentMap, String clusterName) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        // Load Recommendations from DB and save to local
+        List<KruizeRecommendationEntry> recommendationEntries = experimentDAO.loadRecommendationsByClusterName(clusterName);
+        if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
+            List<ListRecommendationsAPIObject> recommendationsAPIObjects
+                    = null;
+            try {
+                recommendationsAPIObjects = DBHelpers.Converters.KruizeObjectConverters
+                        .convertRecommendationEntryToRecommendationAPIObject(recommendationEntries);
+            } catch (InvalidConversionOfRecommendationEntryException e) {
+                e.printStackTrace();
+            }
+            if (null != recommendationsAPIObjects && !recommendationsAPIObjects.isEmpty()) {
+                experimentInterface.addRecommendationsToLocalStorage(mainKruizeExperimentMap,
+                        recommendationsAPIObjects,
+                        true);
+            }
+        }
+    }
+
+
     public ValidationOutputData addExperimentToDB(CreateExperimentAPIObject createExperimentAPIObject) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
@@ -302,6 +324,34 @@ public class ExperimentDBService {
             }
         }
     }
+    public void loadExperimentsFromDBByClusterName(Map<String, KruizeObject> mainKruizeExperimentMap, String clusterName) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeExperimentEntry> entries = experimentDAO.loadExperimentsByClusterName(clusterName);
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+            if (null != createExperimentAPIObjects && !createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+
+                int failureThreshHold = createExperimentAPIObjects.size();
+                int failureCount = 0;
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    } else {
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("Failed to load experiments for cluster " + clusterName + " from the database. No valid experiments found.");
+                }
+                experimentInterface.addExperimentToLocalStorage(mainKruizeExperimentMap, kruizeExpList);
+            }
+        }
+    }
+
+
+
 
 
     public void loadExperimentAndResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
@@ -316,6 +366,11 @@ public class ExperimentDBService {
         loadExperimentFromDBByName(mainKruizeExperimentMap, experimentName);
 
         loadRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName);
+    }
+
+    public void loadExperimentsAndRecommendationsFromDBByClusterName(Map<String, KruizeObject> mainKruizeExperimentMap, String clusterName) throws Exception {
+        loadExperimentsFromDBByClusterName(mainKruizeExperimentMap, clusterName);
+        loadRecommendationsFromDBByClusterName(mainKruizeExperimentMap, clusterName);
     }
 
     public void loadPerformanceProfileFromDBByName(Map<String, PerformanceProfile> performanceProfileMap, String performanceProfileName) throws Exception {
