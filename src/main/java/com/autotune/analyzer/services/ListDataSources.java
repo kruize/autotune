@@ -1,5 +1,6 @@
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.serviceObjects.ListDataSourcesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
@@ -87,12 +88,20 @@ public class ListDataSources extends HttpServlet {
             }
 
             if (!error) {
-                // create Gson Object
-                Gson gsonObj = createGsonObject();
-                gsonStr = gsonObj.toJson(dataSourceInfoList);
-                response.getWriter().println(gsonStr);
-                response.getWriter().close();
-                statusValue = "success";
+                try {
+                    ListDataSourcesAPIObject listDataSourcesAPIObject = new ListDataSourcesAPIObject();
+                    listDataSourcesAPIObject.setDataSourceInfoList(dataSourceInfoList);
+
+                    // create Gson Object
+                    Gson gsonObj = createGsonObject();
+                    gsonStr = gsonObj.toJson(listDataSourcesAPIObject);
+                    response.getWriter().println(gsonStr);
+                    response.getWriter().close();
+                    statusValue = "success";
+
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage());
+                }
             }
 
         } catch (Exception e) {

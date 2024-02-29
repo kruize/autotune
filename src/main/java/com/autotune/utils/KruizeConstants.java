@@ -176,6 +176,11 @@ public class KruizeConstants {
         public static final String COUNT = "count";
         public static final String MEDIAN = "median";
         public static final String RANGE = "range";
+
+        // DataSource JSON keys
+        public static final String DATASOURCE_NAME = "datasource_name";
+        public static final String DATASOURCES = "datasources";
+
         // UI support JSON keys
         public static final String DATA = "data";
         public static final String NAMESPACES = "namespaces";
@@ -412,7 +417,7 @@ public class KruizeConstants {
             private DataSourceDetailsInfoConstants() {
             }
 
-            public static final String version = "v1.0";
+            public static final String version = "1.0";
             public static final String CLUSTER_NAME = "default";
         }
 
