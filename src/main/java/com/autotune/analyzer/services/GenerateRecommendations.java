@@ -29,6 +29,7 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
@@ -133,6 +134,7 @@ public class GenerateRecommendations extends HttpServlet {
             Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
             KruizeObject kruizeObject = null;
             try {
+                long interval_end_time_epoc = interval_end_time.getTime() / 1000;
                 new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
                 if (null != mainKruizeExperimentMAP.get(experiment_name)) {
                     kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
@@ -142,9 +144,37 @@ public class GenerateRecommendations extends HttpServlet {
                 // Find LongTerm duration  keep Start , End and Step(measurement Duration)
                 // prepare <List>ExperimentResultData
                 // and call new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);    // TODO: experimentResultDataList not required
-
                 List<String> promQls = new ArrayList<>();
                 promQls.add("sum(rate(container_cpu_usage_seconds_total{container!~\"POD|\",namespace=\"%s\",container=\"%s\"}[%sm])) by (namespace,container)");
+
+                Double measurementDurationMinutesInDouble = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
+                List<K8sObject> kubernetes_objects = kruizeObject.getKubernetes_objects();
+                for(K8sObject k8sObject : kubernetes_objects){
+                    String namespace = k8sObject.getNamespace();
+                    HashMap<String, ContainerData> containerDataMap = k8sObject.getContainerDataMap();
+                    for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
+                        ContainerData containerData = entry.getValue();
+                        String containerName = containerData.getContainer_name();
+                        HashMap<Timestamp, IntervalResults>  containerDataResults = containerData.getResults();
+                        if(null == containerDataResults){
+                            containerDataResults = new HashMap<>();
+                        }
+                        promQls.forEach(ql -> {
+                            String promQL = String.format(ql,namespace,containerName,measurementDurationMinutesInDouble);
+                            String podMetricsUrl = null;
+                            try {
+                                podMetricsUrl = String.format("%s?query=%s&start=%s&end=%s&step=%s",
+                                        "https://prometheus.crcp01ue1.devshift.net/api/v1/query_range",
+                                        URLEncoder.encode(promQL, "UTF-8"),
+                                        "1707905369",
+                                        interval_end_time_epoc,
+                                        1440);
+                            } catch (UnsupportedEncodingException e) {
+                                throw new RuntimeException(e);
+                            }
+                        });
+                    }
+                }
                 HashMap<Timestamp, IntervalResults> results = new HashMap<>();
                 HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap = new HashMap<>();
 
