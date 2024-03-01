@@ -412,6 +412,7 @@ public class KruizeConstants {
             private DataSourceDetailsInfoConstants() {
             }
 
+            public static final String version = "v1.0";
             public static final String CLUSTER_NAME = "default";
         }
 
