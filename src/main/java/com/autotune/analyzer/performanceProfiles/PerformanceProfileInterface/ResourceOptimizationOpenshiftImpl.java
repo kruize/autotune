@@ -134,6 +134,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                     continue;
                 }
 
+
                 boolean recommendationAvailable = false;
 
                 // Get the engine recommendation map for a time stamp if it exists else create one
@@ -232,6 +233,7 @@ public class ResourceOptimizationOpenshiftImpl extends PerfProfileImpl {
                     String term = recommendationTerm.getValue();
                     LOGGER.debug("term = {}", term);
                     double duration = recommendationTerm.getDuration();
+                    LOGGER.debug("duration {}", duration);
 
                     // TODO: Add check for min data
 

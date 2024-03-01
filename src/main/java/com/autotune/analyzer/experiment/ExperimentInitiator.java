@@ -123,13 +123,20 @@ public class ExperimentInitiator {
 
     // Generate recommendations and add it to the kruize object
     public void generateAndAddRecommendations(KruizeObject kruizeObject, List<ExperimentResultData> experimentResultDataList, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
+        LOGGER.debug("generateAndAddRecommendations");
         if (AnalyzerConstants.PerformanceProfileConstants.perfProfileInstances.containsKey(kruizeObject.getPerformanceProfile())) {
             PerfProfileInterface perfProfileInstance =
                     (PerfProfileInterface) AnalyzerConstants.PerformanceProfileConstants
                             .perfProfileInstances.get(kruizeObject.getPerformanceProfile())
                             .getDeclaredConstructor().newInstance();
             if (null == experimentResultDataList) {
-                perfProfileInstance.generateRecommendation(kruizeObject, interval_start_time);
+                try {
+                    LOGGER.debug("generateRecommendation(kruizeObject, interval_start_time)");
+                    perfProfileInstance.generateRecommendation(kruizeObject, interval_start_time);
+                } catch (Exception e) {
+                    LOGGER.debug(e.getMessage());
+                    e.printStackTrace();
+                }
             } else {
                 perfProfileInstance.generateRecommendation(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);
             }

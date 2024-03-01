@@ -24,7 +24,6 @@ import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
@@ -74,7 +73,7 @@ public class GenerateRecommendations extends HttpServlet {
         URL url = new URL(urlString);
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
         connection.setRequestMethod("GET");
-        String authToken = "sha256~1QYiqQ8ewoTuJv8XEO7Fx--Csn0WsQEeEW8i6a9OL0k";
+        String authToken = "sha256~oSqd4EtCo04RYhn_OpyYaGpUhD1jeQlaj5lG0IYSiRg";
         connection.setRequestProperty("Authorization", "Bearer " + authToken);
 
         int responseCode = connection.getResponseCode();
@@ -234,10 +233,10 @@ public class GenerateRecommendations extends HttpServlet {
                                     format = "cores";
                                 } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryUsage || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRSS) {
                                     promQL = String.format(metricEntry.getValue(), methodName, methodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
-                                    format = "byte";
+                                    format = "GiB";
                                 } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRequest) {
                                     promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
-                                    format = "byte";
+                                    format = "GiB";
                                 }
                                 System.out.println(promQL);
                                 String podMetricsUrl = null;
@@ -277,6 +276,7 @@ public class GenerateRecommendations extends HttpServlet {
                                             }
                                             Method method = MetricAggregationInfoResults.class.getDeclaredMethod("set" + methodName.substring(0, 1).toUpperCase() + methodName.substring(1), Double.class);
                                             method.invoke(metricAggregationInfoResults, value);
+                                            metricAggregationInfoResults.setFormat(format);
                                             metricResults.setAggregationInfoResult(metricAggregationInfoResults);
                                             metricResults.setName(String.valueOf(metricEntry.getKey()));
                                             metricResults.setFormat(format);
@@ -284,6 +284,7 @@ public class GenerateRecommendations extends HttpServlet {
                                             intervalResults.setMetricResultsMap(resMap);
                                             intervalResults.setIntervalStartTime(sTime);  //Todo this will change
                                             intervalResults.setIntervalEndTime(eTime);
+                                            intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime()) / (6 * 1000)));
                                             containerDataResults.put(eTime, intervalResults);
                                             sTime = eTime;
                                         }
@@ -300,14 +301,16 @@ public class GenerateRecommendations extends HttpServlet {
                 String jsonString = gson.toJson(kruizeObject);
                 System.out.println(jsonString);
                 new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, null, interval_start_time, interval_end_time);    // TODO: experimentResultDataList not required
-                ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
-                if (validationOutputData.isSuccess()) {
-                    sendSuccessResponse(response, kruizeObject, interval_end_time);
-                    statusValue = "success";
-                } else {
-                    sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
-                }
+                sendSuccessResponse(response, kruizeObject, interval_end_time);
+//                ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
+//                if (validationOutputData.isSuccess()) {
+//                    sendSuccessResponse(response, kruizeObject, interval_end_time);
+//                    statusValue = "success";
+//                } else {
+//                    sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
+//                }
             } catch (Exception e) {
+                e.printStackTrace();
                 sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
             }
@@ -324,6 +327,7 @@ public class GenerateRecommendations extends HttpServlet {
     }
 
     private void sendSuccessResponse(HttpServletResponse response, KruizeObject ko, Timestamp interval_end_time) throws IOException {
+        LOGGER.debug("sendSuccessResponse");
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_CREATED);
@@ -369,6 +373,7 @@ public class GenerateRecommendations extends HttpServlet {
 
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
+        LOGGER.debug("sendErrorResponse");
         if (null != e) {
             e.printStackTrace();
             LOGGER.error(e.toString());
