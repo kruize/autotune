@@ -26,6 +26,7 @@ import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.dataSourceDetails.*;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -655,7 +656,7 @@ public class DBHelpers {
                 return performanceProfiles;
             }
 
-            public static KruizeDataSource convertDataSourceToDataSourceDBObj(DataSourceInfo dataSourceInfo) throws Exception {
+            public static KruizeDataSource convertDataSourceToDataSourceDBObj(DataSourceInfo dataSourceInfo) {
                 KruizeDataSource kruizeDataSource;
                 try {
                     kruizeDataSource = new KruizeDataSource();
@@ -695,6 +696,90 @@ public class DBHelpers {
             }
 
 
+            public static List<DataSourceDetailsInfo> convertKruizeMetadataToClusterGroupObject(List<KruizeMetadata> kruizeMetadataList) throws Exception {
+                List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
+                int failureThreshHold = kruizeMetadataList.size();
+                int failureCount = 0;
+                for (KruizeMetadata kruizeMetadata : kruizeMetadataList) {
+                    try {
+                        DataSourceClusterGroup dataSourceClusterGroup = getDataSourceClusterGroup(kruizeMetadata);
+                        HashMap<String, DataSourceClusterGroup> dataSourceClusterGroupHashMap = new HashMap<>();
+                        dataSourceClusterGroupHashMap.put(kruizeMetadata.getClusterGroupName(), dataSourceClusterGroup);
+                        DataSourceDetailsInfo dataSourceDetailsInfo = new DataSourceDetailsInfo(kruizeMetadata.getVersion(), dataSourceClusterGroupHashMap);
+                        dataSourceDetailsInfoList.add(dataSourceDetailsInfo);
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while converting to dataSourceInfo from DB object : {}", e.getMessage());
+                        LOGGER.error(e.getMessage());
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the Datasource loaded from DB.");
+
+                return dataSourceDetailsInfoList;
+            }
+
+            public static KruizeMetadata convertDataSourceDetailsToMetadataObj(DataSourceDetailsInfo dataSourceDetailsInfo) {
+                KruizeMetadata kruizeMetadata = new KruizeMetadata();
+                try {
+                    kruizeMetadata.setVersion(dataSourceDetailsInfo.getVersion());
+
+                    for (DataSourceClusterGroup dataSourceClusterGroup : dataSourceDetailsInfo.getDataSourceClusterGroupHashMap().values()) {
+                        String clusterGroupName = dataSourceClusterGroup.getDataSourceClusterGroupName();
+
+                        for (DataSourceCluster dataSourceCluster : dataSourceClusterGroup.getDataSourceClusterHashMap().values()) {
+                            String dataSourceClusterName = dataSourceCluster.getDataSourceClusterName();
+
+                            for (DataSourceNamespace dataSourceNamespace : dataSourceCluster.getDataSourceNamespaceHashMap().values()) {
+                                String namespaceName = dataSourceNamespace.getDataSourceNamespaceName();
+
+                                for (DataSourceWorkload dataSourceWorkload : dataSourceNamespace.getDataSourceWorkloadHashMap().values()) {
+                                    kruizeMetadata.setClusterGroupName(clusterGroupName);
+                                    kruizeMetadata.setClusterName(dataSourceClusterName);
+                                    kruizeMetadata.setNamespace(namespaceName);
+                                    kruizeMetadata.setWorkloadType(dataSourceWorkload.getDataSourceWorkloadType());
+                                    kruizeMetadata.setWorkloadName(dataSourceWorkload.getDataSourceWorkloadName());
+
+                                    for (DataSourceContainer dataSourceContainer : dataSourceWorkload.getDataSourceContainerHashMap().values()) {
+                                        kruizeMetadata.setContainerName(dataSourceContainer.getDataSourceContainerName());
+                                        kruizeMetadata.setContainerImageName(dataSourceContainer.getDataSourceContainerImageName());
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception e) {
+                    kruizeMetadata = null;
+                    LOGGER.error("Error while converting DataSourceDetails Object to KruizeMetadata table due to {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeMetadata;
+            }
         }
     }
+
+    private static DataSourceClusterGroup getDataSourceClusterGroup(KruizeMetadata kruizeMetadata) {
+        DataSourceNamespace dataSourceNamespace = getDataSourceNamespace(kruizeMetadata);
+        HashMap<String, DataSourceNamespace> dataSourceNamespaceHashMap = new HashMap<>();
+        dataSourceNamespaceHashMap.put(kruizeMetadata.getNamespace(), dataSourceNamespace);
+        DataSourceCluster dataSourceCluster = new DataSourceCluster(kruizeMetadata.getClusterName(), dataSourceNamespaceHashMap);
+        HashMap<String, DataSourceCluster> dataSourceClusterHashMap = new HashMap<>();
+        dataSourceClusterHashMap.put(kruizeMetadata.getClusterName(), dataSourceCluster);
+        return new DataSourceClusterGroup(kruizeMetadata.getClusterGroupName(), dataSourceClusterHashMap);
+    }
+
+    private static DataSourceNamespace getDataSourceNamespace(KruizeMetadata kruizeMetadata) {
+        DataSourceWorkload dataSourceWorkload = getDataSourceWorkload(kruizeMetadata);
+        HashMap<String, DataSourceWorkload> dataSourceWorkloadHashMap = new HashMap<>();
+        dataSourceWorkloadHashMap.put(kruizeMetadata.getWorkloadName(), dataSourceWorkload);
+        return new DataSourceNamespace(kruizeMetadata.getNamespace(), dataSourceWorkloadHashMap);
+    }
+
+    private static DataSourceWorkload getDataSourceWorkload(KruizeMetadata kruizeMetadata) {
+        DataSourceContainer dataSourceContainer = new DataSourceContainer(kruizeMetadata.getContainerName(), kruizeMetadata.getContainerImageName());
+        HashMap<String, DataSourceContainer> dataSourceContainerHashMap = new HashMap<>();
+        dataSourceContainerHashMap.put(kruizeMetadata.getContainerName(), dataSourceContainer);
+        return new DataSourceWorkload(kruizeMetadata.getWorkloadName(), kruizeMetadata.getWorkloadType(),dataSourceContainerHashMap);
+    }
+
 }

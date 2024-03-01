@@ -27,6 +27,7 @@ import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.dataSourceDetails.DataSourceDetailsInfo;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.database.dao.ExperimentDAO;
@@ -281,6 +282,18 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
+    public ValidationOutputData addMetadataToDB(DataSourceDetailsInfo dataSourceDetailsInfo) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeMetadata kruizeMetadata = DBHelpers.Converters.KruizeObjectConverters.convertDataSourceDetailsToMetadataObj(dataSourceDetailsInfo);
+            validationOutputData = this.experimentDAO.addMetadataToDB(kruizeMetadata);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save metadata due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+
     /*
      * This is a Java method that loads all experiments from the database using an experimentDAO object.
      * The method then converts the retrieved data into KruizeObject format, adds them to a list,
@@ -393,5 +406,18 @@ public class ExperimentDBService {
             }
         }
         return experimentResultDataList;
+    }
+
+    public DataSourceDetailsInfo loadDataSourceClusterGroupFromDBByName(String clusterGroupName) throws Exception {
+        List<KruizeMetadata> kruizeMetadataList = experimentDAO.loadDataSourceClusterGroupByName(clusterGroupName);
+        List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
+        if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
+            dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                    .convertKruizeMetadataToClusterGroupObject(kruizeMetadataList);
+        }
+        if (dataSourceDetailsInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceDetailsInfoList.get(0);
     }
 }

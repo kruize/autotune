@@ -23,6 +23,7 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.experimentManager.core.ExperimentManager;
@@ -117,7 +118,10 @@ public class Autotune {
                 String url = dataSource.getUrl().toString();
                 LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
             }
-            // TODO: setup metadata code
+            // add metadata details in the DB
+            DataSourceManager dataSourceManager = new DataSourceManager();
+            dataSourceManager.saveDataFromAllSourcesToDB(dataSourceCollection.getDataSourcesCollection());
+
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
                  MonitoringAgentNotFoundException e) {
             e.printStackTrace();

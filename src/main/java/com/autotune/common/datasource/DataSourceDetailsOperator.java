@@ -53,7 +53,7 @@ public class DataSourceDetailsOperator {
          */
         try {
             JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.NAMESPACE_QUERY);
-            if (false == op.validateResultArray(namespacesDataResultArray)){
+            if (!op.validateResultArray(namespacesDataResultArray)){
                 dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), null);
                 return;
             }
@@ -76,7 +76,7 @@ public class DataSourceDetailsOperator {
              */
             HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
             JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.WORKLOAD_QUERY);
-            if (true == op.validateResultArray(workloadDataResultArray)) {
+            if (op.validateResultArray(workloadDataResultArray)) {
                 datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
             }
             dataSourceDetailsHelper.updateWorkloadDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), dataSourceDetailsInfo, datasourceWorkloads);
@@ -92,7 +92,7 @@ public class DataSourceDetailsOperator {
              */
             HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
             JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.CONTAINER_QUERY);
-            if (true == op.validateResultArray(containerDataResultArray)) {
+            if (op.validateResultArray(containerDataResultArray)) {
                 datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
             }
             dataSourceDetailsHelper.updateContainerDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), dataSourceDetailsInfo, datasourceWorkloads, datasourceContainers);

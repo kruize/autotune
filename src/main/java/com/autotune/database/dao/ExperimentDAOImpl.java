@@ -164,21 +164,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
     }
 
-    /**
-     * @return list of datasources after fetching from the DB
-     */
-    @Override
-    public List<KruizeDataSource> loadAllDataSources() throws Exception {
-        List<KruizeDataSource> entries;
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            entries = session.createQuery(SELECT_FROM_DATASOURCE, KruizeDataSource.class).list();
-        } catch (Exception e) {
-            LOGGER.error("Not able to load datasource: {}", e.getMessage());
-            throw new Exception("Error while loading existing datasources from database: " + e.getMessage());
-        }
-        return entries;
-    }
-
     @Override
     public ValidationOutputData addResultsToDB(KruizeResultsEntry resultsEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
@@ -429,6 +414,35 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+    /**
+     * @param kruizeMetadata
+     * @return
+     */
+    @Override
+    public ValidationOutputData addMetadataToDB(KruizeMetadata kruizeMetadata) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeMetadata);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save metadata due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save metadata source due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        }
+        return validationOutputData;
+    }
+
 
     @Override
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
@@ -610,6 +624,36 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return kruizeDataSourceList;
     }
+    /**
+     * @return list of datasources after fetching from the DB
+     */
+    @Override
+    public List<KruizeDataSource> loadAllDataSources() throws Exception {
+        List<KruizeDataSource> entries;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(SELECT_FROM_DATASOURCE, KruizeDataSource.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load datasource: {}", e.getMessage());
+            throw new Exception("Error while loading existing datasources from database: " + e.getMessage());
+        }
+        return entries;
+    }
+
+    /**
+     * @param clusterGroupName
+     * @return
+     */
+    @Override
+    public List<KruizeMetadata> loadDataSourceClusterGroupByName(String clusterGroupName) throws Exception {
+        List<KruizeMetadata> kruizeMetadataList;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME, KruizeMetadata.class)
+                    .setParameter("clusterGroupName", clusterGroupName).list();
+        } catch (Exception e) {
+            LOGGER.error("Unable to load metadata with clusterGroupName: {} : {}", clusterGroupName, e.getMessage());
+            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
+        }
+        return kruizeMetadataList;    }
 
     @Override
     public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {

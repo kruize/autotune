@@ -122,7 +122,7 @@ public class DataSourceCollection {
                 try {
                     DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
                     if (null != dataSourceInfo) {
-                        LOGGER.error("Datasource {} already exists!", name);
+                        LOGGER.error("Datasource: {} already exists!", name);
                         continue;
                     }
                 } catch (Exception e) {
