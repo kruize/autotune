@@ -257,8 +257,7 @@ public class DataSourceDetailsHelper {
     public DataSourceDetailsInfo createDataSourceDetailsInfoObject(String clusterGroupName, HashMap<String, DataSourceNamespace> namespaceMap) {
 
         try {
-            DataSourceDetailsInfo dataSourceDetailsInfo = new DataSourceDetailsInfo(KruizeConstants.
-                    DataSourceConstants.DataSourceDetailsInfoConstants.version, null);
+            DataSourceDetailsInfo dataSourceDetailsInfo = new DataSourceDetailsInfo(null);
 
             DataSourceClusterGroup dataSourceClusterGroup = new DataSourceClusterGroup(clusterGroupName,null);
 

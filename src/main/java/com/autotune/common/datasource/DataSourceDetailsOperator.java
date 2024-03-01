@@ -54,7 +54,7 @@ public class DataSourceDetailsOperator {
         try {
             JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.NAMESPACE_QUERY);
             if (false == op.validateResultArray(namespacesDataResultArray)){
-                dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), null);
+                dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(dataSourceInfo.getName(), null);
                 return;
             }
 
@@ -63,7 +63,7 @@ public class DataSourceDetailsOperator {
              * Value: DataSourceNamespace object corresponding to a namespace
              */
             HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
-            dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), datasourceNamespaces);
+            dataSourceDetailsInfo = dataSourceDetailsHelper.createDataSourceDetailsInfoObject(dataSourceInfo.getName(), datasourceNamespaces);
 
             /**
              * Outer map:
@@ -79,7 +79,7 @@ public class DataSourceDetailsOperator {
             if (true == op.validateResultArray(workloadDataResultArray)) {
                 datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
             }
-            dataSourceDetailsHelper.updateWorkloadDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), dataSourceDetailsInfo, datasourceWorkloads);
+            dataSourceDetailsHelper.updateWorkloadDataSourceDetailsInfoObject(dataSourceInfo.getName(), dataSourceDetailsInfo, datasourceWorkloads);
 
             /**
              * Outer map:
@@ -95,7 +95,7 @@ public class DataSourceDetailsOperator {
             if (true == op.validateResultArray(containerDataResultArray)) {
                 datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
             }
-            dataSourceDetailsHelper.updateContainerDataSourceDetailsInfoObject(dataSourceInfo.getProvider(), dataSourceDetailsInfo, datasourceWorkloads, datasourceContainers);
+            dataSourceDetailsHelper.updateContainerDataSourceDetailsInfoObject(dataSourceInfo.getName(), dataSourceDetailsInfo, datasourceWorkloads, datasourceContainers);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
@@ -111,7 +111,7 @@ public class DataSourceDetailsOperator {
                 LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.DATASOURCE_DETAILS_INFO_NOT_AVAILABLE);
                 return null;
             }
-            String clusterGroupName = dataSource.getProvider();
+            String clusterGroupName = dataSource.getName();
             HashMap<String, DataSourceClusterGroup> clusterGroupHashMap = dataSourceDetailsInfo.getDataSourceClusterGroupHashMap();
 
             if (null == clusterGroupHashMap || !clusterGroupHashMap.containsKey(clusterGroupName)) {
@@ -171,7 +171,7 @@ public class DataSourceDetailsOperator {
 
             }
             targetClusterGroupHashMap.put(clusterGroupName, targetClusterGroup);
-            return new DataSourceDetailsInfo(dataSourceDetailsInfo.getVersion(), targetClusterGroupHashMap);
+            return new DataSourceDetailsInfo(targetClusterGroupHashMap);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             return null;
