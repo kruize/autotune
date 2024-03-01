@@ -128,7 +128,11 @@ public class ExperimentInitiator {
                     (PerfProfileInterface) AnalyzerConstants.PerformanceProfileConstants
                             .perfProfileInstances.get(kruizeObject.getPerformanceProfile())
                             .getDeclaredConstructor().newInstance();
-            perfProfileInstance.generateRecommendation(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);
+            if (null == experimentResultDataList) {
+                perfProfileInstance.generateRecommendation(kruizeObject, interval_start_time);
+            } else {
+                perfProfileInstance.generateRecommendation(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);
+            }
         } else {
             throw new Exception("No Recommendation Engine mapping found for performance profile: " +
                     kruizeObject.getPerformanceProfile() + ". Cannot process recommendations for the experiment");

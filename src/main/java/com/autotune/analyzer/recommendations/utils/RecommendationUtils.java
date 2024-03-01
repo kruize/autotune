@@ -12,6 +12,7 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.utils.KruizeConstants;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 public class RecommendationUtils {
@@ -119,31 +120,19 @@ public class RecommendationUtils {
         return sum;
     }
 
-    public static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
-                                                   Timestamp endTime,
+    public static Timestamp getMonitoringStartTime(Timestamp endTime,
                                                    Double durationInHrs) {
 
-        // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
-        TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
-        sortedResultsHashMap.putAll(resultsHashMap);
-
-        double sum = 0.0;
-        Timestamp intervalEndTime = null;
-        for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
-            if (!timestamp.after(endTime)) {
-                if (sortedResultsHashMap.containsKey(timestamp)) {
-                    sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
-                    if (sum >= ((durationInHrs * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR)
-                            - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE))) {
-                        // Storing the timestamp value in startTimestamp variable to return
-                        intervalEndTime = timestamp;
-                        break;
-                    }
-                }
-            }
-        }
+        Timestamp intervalEndTime;
         try {
-            return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
+            // Convert Timestamp to LocalDateTime
+            LocalDateTime localDateTime = endTime.toLocalDateTime();
+            long maxTermDuration = (long) durationInHrs.doubleValue();
+            // Subtract hours
+            LocalDateTime newLocalDateTime = localDateTime.minusHours(maxTermDuration);
+            // Convert back to Timestamp
+            intervalEndTime = Timestamp.valueOf(newLocalDateTime);
+            return intervalEndTime;
         } catch (NullPointerException npe) {
             return null;
         }

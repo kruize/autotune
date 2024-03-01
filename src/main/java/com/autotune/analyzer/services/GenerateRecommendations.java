@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
@@ -23,6 +24,7 @@ import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
@@ -180,7 +182,28 @@ public class GenerateRecommendations extends HttpServlet {
                 // and call new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);    // TODO: experimentResultDataList not required
                 Map<AnalyzerConstants.MetricName, String> promQls = new HashMap<>();
                 promQls.put(AnalyzerConstants.MetricName.cpuUsage,
-                        "%s by(container, namespace)(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\" }[%sm]))"
+                        "%s by(container, namespace)(%s_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\" }[%sm]))"
+                );
+                promQls.put(AnalyzerConstants.MetricName.cpuThrottle,
+                        "%s by(container,namespace) (rate(container_cpu_cfs_throttled_seconds_total{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\"}[%sm]))"
+                );
+                promQls.put(AnalyzerConstants.MetricName.cpuLimit,
+                        "%s by(container,namespace) (kube_pod_container_resource_limits{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='cpu', unit='core',namespace=\"%s\",container=\"%s\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase='Running'}))"
+                );
+                promQls.put(AnalyzerConstants.MetricName.cpuRequest,
+                        "%s by(container, namespace) (kube_pod_container_resource_requests{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='cpu', unit='core' ,namespace=\"%s\",container=\"%s\"} * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase='Running'}))"
+                );
+                promQls.put(AnalyzerConstants.MetricName.memoryUsage,
+                        "%s by(container, namespace) (%s_over_time(container_memory_working_set_bytes{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\" }[%sm]))"
+                );
+                promQls.put(AnalyzerConstants.MetricName.memoryRSS,
+                        "%s by(container, namespace) (%s_over_time(container_memory_rss{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\"}[%sm]))"
+                );
+                promQls.put(AnalyzerConstants.MetricName.memoryLimit,
+                        "%s by(container,namespace) (kube_pod_container_resource_limits{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='memory', unit='byte', namespace=\"%s\",container=\"%s\" } * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase='Running'}))"
+                );
+                promQls.put(AnalyzerConstants.MetricName.memoryRequest,
+                        "%s by(container,namespace) (kube_pod_container_resource_requests{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='memory', unit='byte',namespace=\"%s\",container=\"%s\"} * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase='Running'}))"
                 );
                 List<String> aggregationMethods = Arrays.asList("sum", "avg", "max", "min");
                 Double measurementDurationMinutesInDouble = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
@@ -198,7 +221,24 @@ public class GenerateRecommendations extends HttpServlet {
                             MetricResults metricResults = new MetricResults();
                             MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
                             for (String methodName : aggregationMethods) {
-                                String promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                String promQL = null;
+                                String format = null;
+                                if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuUsage) {
+                                    promQL = String.format(metricEntry.getValue(), methodName, methodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                    format = "cores";
+                                } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuThrottle) {
+                                    promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                    format = "cores";
+                                } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.cpuRequest) {
+                                    promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
+                                    format = "cores";
+                                } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryUsage || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRSS) {
+                                    promQL = String.format(metricEntry.getValue(), methodName, methodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                    format = "byte";
+                                } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRequest) {
+                                    promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
+                                    format = "byte";
+                                }
                                 System.out.println(promQL);
                                 String podMetricsUrl = null;
                                 String podMetricsResponse = null;
@@ -229,7 +269,7 @@ public class GenerateRecommendations extends HttpServlet {
                                             if (containerDataResults.containsKey(eTime)) {
                                                 intervalResults = containerDataResults.get(eTime);
                                                 resMap = intervalResults.getMetricResultsMap();
-                                                metricResults = resMap.get(AnalyzerConstants.MetricName.cpuUsage);
+                                                metricResults = resMap.get(metricEntry.getKey());
                                                 if (null == metricResults) metricResults = new MetricResults();
                                                 metricAggregationInfoResults = metricResults.getAggregationInfoResult();
                                                 if (null == metricAggregationInfoResults)
@@ -237,11 +277,10 @@ public class GenerateRecommendations extends HttpServlet {
                                             }
                                             Method method = MetricAggregationInfoResults.class.getDeclaredMethod("set" + methodName.substring(0, 1).toUpperCase() + methodName.substring(1), Double.class);
                                             method.invoke(metricAggregationInfoResults, value);
-                                            //metricAggregationInfoResults.setSum(value);
                                             metricResults.setAggregationInfoResult(metricAggregationInfoResults);
                                             metricResults.setName(String.valueOf(metricEntry.getKey()));
-                                            metricResults.setFormat("cores");      //todo
-                                            resMap.put(AnalyzerConstants.MetricName.cpuUsage, metricResults);
+                                            metricResults.setFormat(format);
+                                            resMap.put(metricEntry.getKey(), metricResults);
                                             intervalResults.setMetricResultsMap(resMap);
                                             intervalResults.setIntervalStartTime(sTime);  //Todo this will change
                                             intervalResults.setIntervalEndTime(eTime);
@@ -260,12 +299,18 @@ public class GenerateRecommendations extends HttpServlet {
                 Gson gson = new GsonBuilder().registerTypeAdapter(Date.class, new GsonUTCDateAdapter()).create();  //.setPrettyPrinting()
                 String jsonString = gson.toJson(kruizeObject);
                 System.out.println(jsonString);
+                new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, null, interval_start_time, interval_end_time);    // TODO: experimentResultDataList not required
+                ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
+                if (validationOutputData.isSuccess()) {
+                    sendSuccessResponse(response, kruizeObject, interval_end_time);
+                    statusValue = "success";
+                } else {
+                    sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
+                }
             } catch (Exception e) {
                 sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
             }
-
-
         } catch (Exception e) {
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
