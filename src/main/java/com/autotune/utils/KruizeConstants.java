@@ -417,7 +417,7 @@ public class KruizeConstants {
             private DataSourceDetailsInfoConstants() {
             }
 
-            public static final String version = "1.0";
+            public static final String version = "v1.0";
             public static final String CLUSTER_NAME = "default";
         }
 
@@ -447,6 +447,9 @@ public class KruizeConstants {
             public static final String INVALID_DATASOURCE_DETAILS_NAMESPACE_DATA = "namespaceHashMap is either null or empty";
             public static final String DATASOURCE_DETAILS_INFO_NOT_AVAILABLE = "DataSourceDetailsInfo is null. Metadata is not populated.";
             public static final String DATASOURCE_DETAILS_CLUSTER_GROUP_NOT_AVAILABLE = "DataSourceClusterGroup information is not available for the specified DataSource provider: ";
+            public static final String DATASOURCE_DETAILS_CLUSTER_NOT_AVAILABLE = "DataSourceCluster information is not available for the specified Cluster {} and DataSource provider {}";
+            public static final String DATASOURCE_DETAILS_NAMESPACE_NOT_AVAILABLE = "DataSourceNamespace information is not available for the specified Namespace {}, Cluster {} and DataSource provider {}";
+            public static final String SET_NAMESPACE_MAP_ERROR = "namespaceHashMap is null, no namespaces provided for cluster: ";
         }
 
         public static class DataSourceDetailsInfoJSONKeys {

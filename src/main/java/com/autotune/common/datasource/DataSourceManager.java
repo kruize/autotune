@@ -40,7 +40,7 @@ public class DataSourceManager {
                 DataSourceInfo dataSource = dataSources.get(name);
                 dataSourceDetailsOperator.createDataSourceDetails(dataSource);
 
-                DataSourceDetailsInfo dataSourceDetails = dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSource);
+                DataSourceDetailsInfo dataSourceDetails = dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSource, null, null);
                 if (null == dataSourceDetails) {
                     continue;
                 }
@@ -77,13 +77,12 @@ public class DataSourceManager {
      * @return DataSourceDetailsInfo containing details about the data source, or null if not found.
      * @throws DataSourceNotExist Thrown when the provided data source information is null.
      */
-    public DataSourceDetailsInfo getDataFromDataSource(DataSourceInfo dataSource) {
-
+    public DataSourceDetailsInfo getDataFromDataSource(DataSourceInfo dataSource, String clusterName, String namespace) {
         try {
             if (null == dataSource) {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            return dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSource);
+            return dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSource, clusterName, namespace);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }

@@ -2,6 +2,9 @@ package com.autotune.common.data.dataSourceDetails;
 
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 
 /**
@@ -9,6 +12,7 @@ import java.util.HashMap;
  * used to store hashmap of DataSourceNamespace objects representing namespace metadata
  */
 public class DataSourceCluster {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCluster.class);
     @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.CLUSTER_NAME)
     private String clusterName;
 
@@ -37,6 +41,13 @@ public class DataSourceCluster {
             return namespaceHashMap.get(namespace);
         }
         return null;
+    }
+
+    public void setDataSourceNamespaceHashMap(HashMap<String, DataSourceNamespace> namespaceHashMap) {
+        if (null == namespaceHashMap) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_NAMESPACE_MAP_ERROR + clusterName);
+        }
+        this.namespaceHashMap = namespaceHashMap;
     }
 
     @Override

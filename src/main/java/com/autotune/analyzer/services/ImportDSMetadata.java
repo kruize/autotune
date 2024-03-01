@@ -148,7 +148,7 @@ public class ImportDSMetadata extends HttpServlet {
         try{
             DataSourceInfo dataSource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
             new DataSourceManager().importDataFromDataSource(dataSource);
-            dataSourceMetadataMap.put(dataSourceName, new DataSourceManager().getDataFromDataSource(dataSource));
+            dataSourceMetadataMap.put(dataSourceName, new DataSourceManager().getDataFromDataSource(dataSource, null, null));
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
@@ -183,6 +183,105 @@ public class ImportDSMetadata extends HttpServlet {
         // check for the input request data to debug issues, if any
         LOGGER.debug(inputRequestPayload);
         response.sendError(httpStatusCode, errorMsg);
+    }
+
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
+        String statusValue = "failure";
+        Timer.Sample timerImportDSMetadata = Timer.start(MetricsConfig.meterRegistry());
+        response.setStatus(HttpServletResponse.SC_OK);
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
+        String gsonStr;
+
+        String dataSourceName = request.getParameter(AnalyzerConstants.ServiceConstants.DATASOURCE_NAME);
+        String clusterName = request.getParameter(AnalyzerConstants.ServiceConstants.CLUSTER_NAME);
+        String namespace = request.getParameter(AnalyzerConstants.ServiceConstants.NAMESPACE);
+        //Key = dataSource name
+        HashMap<String, DataSourceDetailsInfo> dataSourceDetailsMap = new HashMap<>();
+        boolean error = false;
+
+        try {
+            if (null != dataSourceName) {
+                try {
+                    //kruize_dsmetadata -> loadDSMetadataByName()
+                    loadDataSourceMetadataFromDBByName(dataSourceDetailsMap, dataSourceName, clusterName, namespace);
+                } catch (Exception e) {
+                    LOGGER.error("Loading saved Datasource metadata {} failed: {} ", dataSourceName, e.getMessage());
+                }
+
+                if (null != dataSourceName && !dataSourceDetailsMap.containsKey(dataSourceName)) {
+                    error = true;
+                    sendErrorResponse(
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG, dataSourceName)
+                    );
+                }
+
+            } else {
+                error = true;
+                sendErrorResponse(
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG
+                                , dataSourceName)
+                );
+            }
+
+            if (!error) {
+                // create Gson Object
+                Gson gsonObj = createGsonObject();
+                gsonStr = gsonObj.toJson(dataSourceDetailsMap.get(dataSourceName));
+                response.getWriter().println(gsonStr);
+                response.getWriter().close();
+                statusValue = "success";
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Exception: " + e.getMessage());
+            e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } finally {
+            if (null != timerImportDSMetadata) {
+                MetricsConfig.timerImportDSMetadata = MetricsConfig.timerBImportDSMetadata.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerImportDSMetadata.stop(MetricsConfig.timerImportDSMetadata);
+            }
+        }
+    }
+
+    public void loadDataSourceMetadataFromDBByName(HashMap<String, DataSourceDetailsInfo> dataSourceMetadataMap, String dataSourceName,
+                                             String clusterName, String namespace){
+        try {
+            if (null != dataSourceName || !dataSourceName.isEmpty()) {
+                if (!DataSourceCollection.getInstance().getDataSourcesCollection().isEmpty() && DataSourceCollection.getInstance().getDataSourcesCollection().containsKey(dataSourceName)) {
+                    DataSourceInfo dataSource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
+                    dataSourceMetadataMap.put(dataSourceName, new DataSourceManager().getDataFromDataSource(dataSource, clusterName, namespace));
+                }
+            }
+        } catch(Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
+            IOException {
+        if (null != e) {
+            LOGGER.error(e.toString());
+            e.printStackTrace();
+            if (null == errorMsg) errorMsg = e.getMessage();
+        }
+        response.sendError(httpStatusCode, errorMsg);
+    }
+    private Gson createGsonObject() {
+        return new GsonBuilder()
+                .disableHtmlEscaping()
+                .setPrettyPrinting()
+                .enableComplexMapKeySerialization()
+                .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                .create();
     }
 
 }

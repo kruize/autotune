@@ -105,24 +105,77 @@ public class DataSourceDetailsOperator {
      * Retrieves DataSourceDetailsInfo object.
      * @return DataSourceDetailsInfo containing details about the data source if found, otherwise null.
      */
-    public DataSourceDetailsInfo getDataSourceDetailsInfo(DataSourceInfo dataSource) {
-        String clusterGroupName = dataSource.getProvider();
+    public DataSourceDetailsInfo getDataSourceDetailsInfo(DataSourceInfo dataSource, String clusterName, String namespace) {
+        try {
+            if (null == dataSourceDetailsInfo) {
+                LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.DATASOURCE_DETAILS_INFO_NOT_AVAILABLE);
+                return null;
+            }
+            String clusterGroupName = dataSource.getProvider();
+            HashMap<String, DataSourceClusterGroup> clusterGroupHashMap = dataSourceDetailsInfo.getDataSourceClusterGroupHashMap();
 
-        if (null == dataSourceDetailsInfo) {
-            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.DATASOURCE_DETAILS_INFO_NOT_AVAILABLE);
+            if (null == clusterGroupHashMap || !clusterGroupHashMap.containsKey(clusterGroupName)) {
+                LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.DATASOURCE_DETAILS_CLUSTER_GROUP_NOT_AVAILABLE + clusterGroupName);
+                return null;
+            }
+
+            DataSourceClusterGroup targetClusterGroup = clusterGroupHashMap.get(clusterGroupName);
+            HashMap<String, DataSourceClusterGroup> targetClusterGroupHashMap = new HashMap<>();
+            if ((null != clusterName && !clusterName.isEmpty()) && (null == namespace || namespace.isEmpty())) {
+
+                HashMap<String, DataSourceCluster> clusterHashMap = dataSourceDetailsInfo.getDataSourceClusterGroupHashMap()
+                        .get(clusterGroupName)
+                        .getDataSourceClusterHashMap();
+
+                if (null == clusterHashMap || !clusterHashMap.containsKey(clusterName)) {
+                    LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.DATASOURCE_DETAILS_CLUSTER_NOT_AVAILABLE + clusterName, clusterGroupName);
+                    return null;
+                }
+                DataSourceCluster targetCluster = clusterHashMap.get(clusterName);
+                HashMap<String, DataSourceCluster> targetClusterHashMap = new HashMap<>();
+                targetClusterHashMap.put(clusterName, targetCluster);
+
+                targetClusterGroup.setDataSourceClusterHashMap(targetClusterHashMap);
+
+            } else if ((null != clusterName && !clusterName.isEmpty()) && (null != namespace && !namespace.isEmpty())) {
+
+                HashMap<String, DataSourceCluster> clusterHashMap = dataSourceDetailsInfo.getDataSourceClusterGroupHashMap()
+                        .get(clusterGroupName)
+                        .getDataSourceClusterHashMap();
+
+                if (null == clusterHashMap || !clusterHashMap.containsKey(clusterName)) {
+                    LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.DATASOURCE_DETAILS_CLUSTER_NOT_AVAILABLE + clusterName, clusterGroupName);
+                    return null;
+                }
+
+                HashMap<String, DataSourceNamespace> namespaceHashMap = dataSourceDetailsInfo.getDataSourceClusterGroupHashMap()
+                        .get(clusterGroupName)
+                        .getDataSourceClusterHashMap().get(clusterName)
+                        .getDataSourceNamespaceHashMap();
+
+                if (null == namespaceHashMap || !namespaceHashMap.containsKey(namespace)) {
+                    LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.DATASOURCE_DETAILS_NAMESPACE_NOT_AVAILABLE + namespace, clusterName, clusterGroupName);
+                    return null;
+                }
+
+                DataSourceNamespace targetNamespace = namespaceHashMap.get(namespace);
+                HashMap<String, DataSourceNamespace> targetNamespaceHashMap = new HashMap<>();
+                targetNamespaceHashMap.put(namespace, targetNamespace);
+
+                DataSourceCluster targetCluster = clusterHashMap.get(clusterName);
+                targetCluster.setDataSourceNamespaceHashMap(targetNamespaceHashMap);
+                HashMap<String, DataSourceCluster> targetClusterHashMap = new HashMap<>();
+                targetClusterHashMap.put(clusterName, targetCluster);
+
+                targetClusterGroup.setDataSourceClusterHashMap(targetClusterHashMap);
+
+            }
+            targetClusterGroupHashMap.put(clusterGroupName, targetClusterGroup);
+            return new DataSourceDetailsInfo(dataSourceDetailsInfo.getVersion(), targetClusterGroupHashMap);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
             return null;
         }
-        HashMap<String, DataSourceClusterGroup> clusterGroupHashMap = dataSourceDetailsInfo.getDataSourceClusterGroupHashMap();
-
-        if (null == clusterGroupHashMap || !clusterGroupHashMap.containsKey(clusterGroupName)) {
-            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.DATASOURCE_DETAILS_CLUSTER_GROUP_NOT_AVAILABLE + clusterGroupName);
-            return null;
-        }
-
-        DataSourceClusterGroup targetClusterGroup = clusterGroupHashMap.get(clusterGroupName);
-        HashMap<String, DataSourceClusterGroup> targetClusterGroupHashMap = new HashMap<>();
-        targetClusterGroupHashMap.put(clusterGroupName, targetClusterGroup);
-        return new DataSourceDetailsInfo(dataSourceDetailsInfo.getVersion(), targetClusterGroupHashMap);
     }
 
     /*

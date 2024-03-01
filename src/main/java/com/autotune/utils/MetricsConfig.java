@@ -58,6 +58,7 @@ public class MetricsConfig {
 
         timerBListDS = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","listDataSources").tag("method","GET");
         timerBImportDSMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","importDataSourceMetadata").tag("method","POST");
+        timerBImportDSMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api","importDataSourceMetadata").tag("method","GET");
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);
         new JvmGcMetrics().bindTo(meterRegistry);
