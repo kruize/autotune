@@ -1,8 +1,6 @@
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.serviceObjects.ImportDSMetadataAPIObject;
+import com.autotune.analyzer.serviceObjects.DSMetadataAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
@@ -10,7 +8,6 @@ import com.autotune.common.data.dataSourceDetails.DataSourceDetailsInfo;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
-import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -25,17 +22,15 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 @WebServlet(asyncSupported = true)
-public class ImportDSMetadata extends HttpServlet {
-    private static final Logger LOGGER = LoggerFactory.getLogger(ImportDSMetadata.class);
+public class DSMetadataService extends HttpServlet {
+    private static final Logger LOGGER = LoggerFactory.getLogger(DSMetadataService.class);
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -60,20 +55,11 @@ public class ImportDSMetadata extends HttpServlet {
                 throw new Exception("Request input data cannot be null or empty");
             }
 
-            ImportDSMetadataAPIObject importDSMetadataAPIObject = new Gson().fromJson(inputData, ImportDSMetadataAPIObject.class);
+            DSMetadataAPIObject DSMetadataAPIObject = new Gson().fromJson(inputData, DSMetadataAPIObject.class);
 
-            /*
-            if (null == importDSMetadataAPIObject) {
-                sendErrorResponse(
-                        inputData,
-                        response,
-                        null,
-                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        "Internal Server Error: cannot be null");
-            }
-             */
+            DSMetadataAPIObject.validateInputFields();
 
-            String dataSourceName = importDSMetadataAPIObject.getDataSourceName();
+            String dataSourceName = DSMetadataAPIObject.getDataSourceName();
 
             if (null == dataSourceName || dataSourceName.isEmpty()) {
                 sendErrorResponse(
@@ -84,7 +70,7 @@ public class ImportDSMetadata extends HttpServlet {
                         AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.DATASOURCE_NAME_MANDATORY);
             }
             // kruize_dsmetadata -> addDSMetadataToDB()
-            addDataSourceMetadataToDataBase(dataSourceMetadataMap, dataSourceName);
+            addDSMetadataToDataBase(dataSourceMetadataMap, dataSourceName);
 
             if (dataSourceMetadataMap.isEmpty() || !dataSourceMetadataMap.containsKey(dataSourceName)) {
                 sendErrorResponse(
@@ -92,7 +78,7 @@ public class ImportDSMetadata extends HttpServlet {
                         response,
                         new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
                         HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG, dataSourceName)
+                        String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.DATASOURCE_METADATA_IMPORT_ERROR_MSG, dataSourceName)
                 );
             } else {
                 sendSuccessResponse(response, dataSourceMetadataMap.get(dataSourceName));
@@ -144,11 +130,18 @@ public class ImportDSMetadata extends HttpServlet {
 
     }
 
-    private void addDataSourceMetadataToDataBase(HashMap<String, DataSourceDetailsInfo> dataSourceMetadataMap, String dataSourceName) {
-        try{
+    private void addDSMetadataToDataBase(HashMap<String, DataSourceDetailsInfo> dataSourceMetadataMap, String dataSourceName) {
+        try {
+            if (null == dataSourceName || dataSourceName.isEmpty()) {
+                return;
+            }
+            if (DataSourceCollection.getInstance().getDataSourcesCollection().isEmpty() || !DataSourceCollection.getInstance().getDataSourcesCollection().containsKey(dataSourceName)) {
+                return;
+            }
+
             DataSourceInfo dataSource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
             new DataSourceManager().importDataFromDataSource(dataSource);
-            dataSourceMetadataMap.put(dataSourceName, new DataSourceManager().getDataFromDataSource(dataSource, null, null));
+            dataSourceMetadataMap.put(dataSourceName, new DataSourceManager().getDataFromDataSource(dataSource));
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
@@ -194,7 +187,7 @@ public class ImportDSMetadata extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         String gsonStr;
 
-        String dataSourceName = request.getParameter(AnalyzerConstants.ServiceConstants.DATASOURCE_NAME);
+        String dataSourceName = request.getParameter(AnalyzerConstants.ServiceConstants.DATASOURCE);
         String clusterName = request.getParameter(AnalyzerConstants.ServiceConstants.CLUSTER_NAME);
         String namespace = request.getParameter(AnalyzerConstants.ServiceConstants.NAMESPACE);
         //Key = dataSource name
@@ -205,18 +198,18 @@ public class ImportDSMetadata extends HttpServlet {
             if (null != dataSourceName) {
                 try {
                     //kruize_dsmetadata -> loadDSMetadataByName()
-                    loadDataSourceMetadataFromDBByName(dataSourceDetailsMap, dataSourceName, clusterName, namespace);
+                    loadDSMetadataByName(dataSourceDetailsMap, dataSourceName);
                 } catch (Exception e) {
                     LOGGER.error("Loading saved Datasource metadata {} failed: {} ", dataSourceName, e.getMessage());
                 }
 
-                if (null != dataSourceName && !dataSourceDetailsMap.containsKey(dataSourceName)) {
+                if (!dataSourceDetailsMap.containsKey(dataSourceName)) {
                     error = true;
                     sendErrorResponse(
                             response,
-                            new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                            new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
                             HttpServletResponse.SC_BAD_REQUEST,
-                            String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG, dataSourceName)
+                            String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.MISSING_DATASOURCE_METADATA_MSG, dataSourceName, clusterName, namespace)
                     );
                 }
 
@@ -252,15 +245,21 @@ public class ImportDSMetadata extends HttpServlet {
         }
     }
 
-    public void loadDataSourceMetadataFromDBByName(HashMap<String, DataSourceDetailsInfo> dataSourceMetadataMap, String dataSourceName,
-                                             String clusterName, String namespace){
+    public void loadDSMetadataByName(HashMap<String, DataSourceDetailsInfo> dataSourceMetadataMap, String dataSourceName){
         try {
-            if (null != dataSourceName || !dataSourceName.isEmpty()) {
-                if (!DataSourceCollection.getInstance().getDataSourcesCollection().isEmpty() && DataSourceCollection.getInstance().getDataSourcesCollection().containsKey(dataSourceName)) {
-                    DataSourceInfo dataSource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
-                    dataSourceMetadataMap.put(dataSourceName, new DataSourceManager().getDataFromDataSource(dataSource, clusterName, namespace));
-                }
+            if (null == dataSourceName || dataSourceName.isEmpty()) {
+                return;
             }
+            if (DataSourceCollection.getInstance().getDataSourcesCollection().isEmpty() || !DataSourceCollection.getInstance().getDataSourcesCollection().containsKey(dataSourceName)) {
+                return;
+            }
+
+            DataSourceInfo dataSource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
+            DataSourceDetailsInfo dataSourceMetadata = new DataSourceManager().getDataFromDataSource(dataSource);
+            if (null != dataSourceMetadata) {
+                dataSourceMetadataMap.put(dataSourceName, dataSourceMetadata);
+            }
+
         } catch(Exception e) {
             LOGGER.error(e.getMessage());
         }

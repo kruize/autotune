@@ -63,8 +63,8 @@ public class ServerContext {
     public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS_END_POINT = EXPERIMENT_MANAGER_SERVER_URL + EXPERIMENT_MANAGER_LIST_TRIAL_STATUS;
 
     //Datasource EndPoints
-    public static final String LIST_DATASOURCES = ROOT_CONTEXT + "listDataSources";
-    public static final String IMPORT_DATASOURCE_METADATA = ROOT_CONTEXT + "importDataSourceMetadata";
+    public static final String LIST_DATASOURCES = ROOT_CONTEXT + "datasource";
+    public static final String DATASOURCE_METADATA = ROOT_CONTEXT + "dsmetadata";
 
     // UI support EndPoints
     public static final String QUERY_CONTEXT = ROOT_CONTEXT + "query/";

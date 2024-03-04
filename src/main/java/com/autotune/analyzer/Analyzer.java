@@ -52,7 +52,7 @@ public class Analyzer {
         context.addServlet(PerformanceProfileService.class, ServerContext.CREATE_PERF_PROFILE);
         context.addServlet(PerformanceProfileService.class, ServerContext.LIST_PERF_PROFILES);
         context.addServlet(ListDataSources.class, ServerContext.LIST_DATASOURCES);
-        context.addServlet(ImportDSMetadata.class, ServerContext.IMPORT_DATASOURCE_METADATA);
+        context.addServlet(DSMetadataService.class, ServerContext.DATASOURCE_METADATA);
 
         // Adding UI support API's
         context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);

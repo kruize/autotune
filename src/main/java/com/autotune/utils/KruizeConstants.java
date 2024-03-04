@@ -178,7 +178,7 @@ public class KruizeConstants {
         public static final String RANGE = "range";
 
         // DataSource JSON keys
-        public static final String DATASOURCE_NAME = "datasource_name";
+        public static final String DATASOURCE_NAME = "name";
         public static final String DATASOURCES = "datasources";
 
         // UI support JSON keys
