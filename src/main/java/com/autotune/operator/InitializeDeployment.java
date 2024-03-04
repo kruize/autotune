@@ -20,6 +20,7 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.common.datasource.*;
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.Gson;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,17 +70,6 @@ public class InitializeDeployment {
 
         KruizeDeploymentInfo.logDeploymentInfo();
 
-        DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
-        dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
-
-        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
-        HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
-        for (String name: dataSources.keySet()) {
-            DataSourceInfo dataSource = dataSources.get(name);
-            String dataSourceName = dataSource.getName();
-            String url = dataSource.getUrl().toString();
-            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
-        }
         /**
          * Temporarily commenting out the data import process from data sources
          */
