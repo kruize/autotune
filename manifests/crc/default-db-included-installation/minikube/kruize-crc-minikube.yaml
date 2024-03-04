@@ -152,7 +152,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.20.2_rm
+          image: quay.io/khansaad/autotune_operator:kruize_local_db
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume

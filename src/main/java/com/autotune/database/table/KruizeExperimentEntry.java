@@ -61,8 +61,7 @@ public class KruizeExperimentEntry {
     private String datasource;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode extended_data;
-    @ManyToOne
-    @JoinColumn(name = "metadata_id", referencedColumnName = "id") // This specifies the foreign key column
+    @OneToOne //TODO: to be updated in future
     private KruizeMetadata metadata;
 
 

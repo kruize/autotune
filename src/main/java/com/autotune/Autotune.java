@@ -118,9 +118,9 @@ public class Autotune {
                 String url = dataSource.getUrl().toString();
                 LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
             }
-            // add metadata details in the DB
-            DataSourceManager dataSourceManager = new DataSourceManager();
-            dataSourceManager.saveDataFromAllSourcesToDB(dataSourceCollection.getDataSourcesCollection());
+            // TODO: Added for demo, needs to be removed
+//            DataSourceManager dataSourceManager = new DataSourceManager();
+//            dataSourceManager.saveDataFromAllSourcesToDB(dataSourceCollection.getDataSourcesCollection());
 
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
                  MonitoringAgentNotFoundException e) {

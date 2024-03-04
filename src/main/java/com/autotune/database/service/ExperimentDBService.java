@@ -420,4 +420,16 @@ public class ExperimentDBService {
         else
             return dataSourceDetailsInfoList.get(0);
     }
+    public DataSourceDetailsInfo loadMetadataFromDB() throws Exception {
+        List<KruizeMetadata> kruizeMetadataList = experimentDAO.loadMetadata();
+        List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
+        if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
+            dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                    .convertKruizeMetadataToClusterGroupObject(kruizeMetadataList);
+        }
+        if (dataSourceDetailsInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceDetailsInfoList.get(0);
+    }
 }

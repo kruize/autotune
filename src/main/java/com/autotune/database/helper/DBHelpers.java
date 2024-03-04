@@ -29,6 +29,8 @@ import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.dataSourceDetails.*;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.datasource.DataSourceCollection;
+import com.autotune.common.datasource.DataSourceDetailsOperator;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.*;
@@ -266,8 +268,13 @@ public class DBHelpers {
                     kruizeExperimentEntry.setVersion(apiObject.getApiVersion());
                     kruizeExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
                     kruizeExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-//                    kruizeExperimentEntry.setMeta_data(null); TODO: need to set this as per latest change
-                    kruizeExperimentEntry.setDatasource(null);
+                    kruizeExperimentEntry.setDatasource(apiObject.getDatasource());
+                    // get metadata from the DB based on the datasource
+                    if (apiObject.getDatasource() != null) {
+                        KruizeMetadata kruizeMetadata = getMetadata(apiObject.getDatasource());
+                        kruizeExperimentEntry.setMetadata(kruizeMetadata);
+                    } else
+                        kruizeExperimentEntry.setMetadata(null);
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeExperimentEntry.setExtended_data(
@@ -705,7 +712,7 @@ public class DBHelpers {
                         DataSourceClusterGroup dataSourceClusterGroup = getDataSourceClusterGroup(kruizeMetadata);
                         HashMap<String, DataSourceClusterGroup> dataSourceClusterGroupHashMap = new HashMap<>();
                         dataSourceClusterGroupHashMap.put(kruizeMetadata.getClusterGroupName(), dataSourceClusterGroup);
-                        DataSourceDetailsInfo dataSourceDetailsInfo = new DataSourceDetailsInfo(kruizeMetadata.getVersion(), dataSourceClusterGroupHashMap);
+                        DataSourceDetailsInfo dataSourceDetailsInfo = new DataSourceDetailsInfo(dataSourceClusterGroupHashMap);
                         dataSourceDetailsInfoList.add(dataSourceDetailsInfo);
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while converting to dataSourceInfo from DB object : {}", e.getMessage());
@@ -722,7 +729,7 @@ public class DBHelpers {
             public static KruizeMetadata convertDataSourceDetailsToMetadataObj(DataSourceDetailsInfo dataSourceDetailsInfo) {
                 KruizeMetadata kruizeMetadata = new KruizeMetadata();
                 try {
-                    kruizeMetadata.setVersion(dataSourceDetailsInfo.getVersion());
+                    kruizeMetadata.setVersion(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.version);
 
                     for (DataSourceClusterGroup dataSourceClusterGroup : dataSourceDetailsInfo.getDataSourceClusterGroupHashMap().values()) {
                         String clusterGroupName = dataSourceClusterGroup.getDataSourceClusterGroupName();
@@ -780,6 +787,13 @@ public class DBHelpers {
         HashMap<String, DataSourceContainer> dataSourceContainerHashMap = new HashMap<>();
         dataSourceContainerHashMap.put(kruizeMetadata.getContainerName(), dataSourceContainer);
         return new DataSourceWorkload(kruizeMetadata.getWorkloadName(), kruizeMetadata.getWorkloadType(),dataSourceContainerHashMap);
+    }
+
+    private static KruizeMetadata getMetadata(String datasource) {
+        DataSourceDetailsOperator dataSourceDetailsOperator = DataSourceDetailsOperator.getInstance();
+        HashMap<String, DataSourceInfo> dataSources = DataSourceCollection.getInstance().getDataSourcesCollection();
+        DataSourceDetailsInfo dataSourceDetailsInfo = dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSources.get(datasource));
+        return Converters.KruizeObjectConverters.convertDataSourceDetailsToMetadataObj(dataSourceDetailsInfo);
     }
 
 }

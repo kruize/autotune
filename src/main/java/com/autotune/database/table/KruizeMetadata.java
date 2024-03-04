@@ -34,8 +34,9 @@ public class KruizeMetadata {
     private String workloadName;
     private String containerName;
     private String containerImageName;
-    @OneToMany(mappedBy = "metadata", cascade = CascadeType.ALL)
-    private List<KruizeExperimentEntry> experimentEntries;
+//    TODO: Relation mapping needs to be done later
+//    @OneToMany(mappedBy = "metadata", cascade = CascadeType.ALL)
+//    private List<KruizeExperimentEntry> experimentEntries;
 
     public KruizeMetadata() {
     }
@@ -117,14 +118,6 @@ public class KruizeMetadata {
 
     public void setContainerImageName(String containerImageName) {
         this.containerImageName = containerImageName;
-    }
-
-    public List<KruizeExperimentEntry> getExperimentEntries() {
-        return experimentEntries;
-    }
-
-    public void setExperimentEntries(List<KruizeExperimentEntry> experimentEntries) {
-        this.experimentEntries = experimentEntries;
     }
 
     @Override

@@ -648,12 +648,28 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         List<KruizeMetadata> kruizeMetadataList;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME, KruizeMetadata.class)
-                    .setParameter("clusterGroupName", clusterGroupName).list();
+                    .setParameter("cluster_group_name", clusterGroupName).list();
         } catch (Exception e) {
             LOGGER.error("Unable to load metadata with clusterGroupName: {} : {}", clusterGroupName, e.getMessage());
             throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
         }
-        return kruizeMetadataList;    }
+        return kruizeMetadataList;
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    public List<KruizeMetadata> loadMetadata() throws Exception {
+        List<KruizeMetadata> kruizeMetadataList;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA, KruizeMetadata.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Unable to load metadata : {}", e.getMessage());
+            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
+        }
+        return kruizeMetadataList;
+    }
 
     @Override
     public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {
