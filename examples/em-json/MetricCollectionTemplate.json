@@ -1,6 +1,7 @@
 [
   {
     "experiment_name": "Collect software releases metrics",
+    "cluster_name": "local-cluster",
     "resource": {
       "namespace": "default",
       "deployment_name": "tfb-qrh-sample"
