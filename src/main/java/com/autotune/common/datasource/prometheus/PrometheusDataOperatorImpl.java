@@ -20,6 +20,7 @@ import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
+import com.autotune.utils.authModels.BearerAccessToken;
 import com.google.gson.*;
 import org.apache.http.conn.HttpHostConnectException;
 import org.json.JSONArray;
@@ -71,14 +72,14 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      * @return DatasourceReachabilityStatus
      */
     @Override
-    public CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceURL) {
+    public CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceURL, BearerAccessToken authToken) {
         String dataSourceStatus;
         Object queryResult;
 
         String query = KruizeConstants.DataSourceConstants.PROMETHEUS_REACHABILITY_QUERY;
         CommonUtils.DatasourceReachabilityStatus reachabilityStatus;
 
-        queryResult = this.getValueForQuery(dataSourceURL, query);
+        queryResult = this.getValueForQuery(dataSourceURL, query, authToken);
 
         if (queryResult != null){
             dataSourceStatus = queryResult.toString();
@@ -101,9 +102,9 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      * @return Object containing the result value for the specified query
      */
     @Override
-    public Object getValueForQuery(String url, String query) {
+    public Object getValueForQuery(String url, String query, BearerAccessToken authToken) {
         try {
-            JSONObject jsonObject = getJsonObjectForQuery(url, query);
+            JSONObject jsonObject = getJsonObjectForQuery(url, query, authToken);
 
             if (null == jsonObject) {
                 return null;
@@ -132,13 +133,25 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      * @return JSONObject for the specified query
      */
     @Override
-    public JSONObject getJsonObjectForQuery(String url, String query) {
-        GenericRestApiClient apiClient = new GenericRestApiClient(
-                CommonUtils.getBaseDataSourceUrl(
-                        url,
-                        KruizeConstants.SupportedDatasources.PROMETHEUS
-                )
-        );
+    public JSONObject getJsonObjectForQuery(String url, String query, BearerAccessToken authToken) {
+        GenericRestApiClient apiClient = null;
+
+        if (null != authToken) {
+            apiClient = new GenericRestApiClient(
+                    CommonUtils.getBaseDataSourceUrl(
+                            url,
+                            KruizeConstants.SupportedDatasources.PROMETHEUS
+                    ), authToken
+            );
+        } else {
+            apiClient = new GenericRestApiClient(
+                    CommonUtils.getBaseDataSourceUrl(
+                            url,
+                            KruizeConstants.SupportedDatasources.PROMETHEUS
+                    )
+            );
+        }
+
 
         if (null == apiClient) {
             return null;
@@ -202,9 +215,9 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      */
 
     @Override
-    public JsonArray getResultArrayForQuery(String url, String query) {
+    public JsonArray getResultArrayForQuery(String url, String query, BearerAccessToken authToken) {
         try {
-            JSONObject jsonObject = getJsonObjectForQuery(url, query);
+            JSONObject jsonObject = getJsonObjectForQuery(url, query, authToken);
 
             if (null == jsonObject) {
                 return null;

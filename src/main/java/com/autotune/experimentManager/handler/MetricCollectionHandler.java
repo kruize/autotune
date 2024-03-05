@@ -37,6 +37,7 @@ import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.authModels.BearerAccessToken;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -123,7 +124,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             }
                             String queryResult = (String) op.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
                                     .get(podMetric.getDatasource())
-                                    .getUrl().toString(), updatedPodQuery);
+                                    .getUrl().toString(), updatedPodQuery, null);
                             if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                 try {
                                     queryResult = queryResult.trim();
@@ -162,7 +163,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                     LOGGER.debug("Updated Query - " + updatedContainerQuery);
                                     String queryResult = (String) op.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
                                             .get(containerMetric.getDatasource())
-                                            .getUrl().toString(), updatedContainerQuery);
+                                            .getUrl().toString(), updatedContainerQuery, null);
                                     if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                         try {
                                             queryResult = queryResult.trim();

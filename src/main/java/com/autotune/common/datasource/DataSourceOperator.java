@@ -16,6 +16,7 @@
 package com.autotune.common.datasource;
 
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.utils.authModels.BearerAccessToken;
 import com.google.gson.JsonArray;
 import org.json.JSONObject;
 
@@ -50,7 +51,7 @@ public interface DataSourceOperator {
      * @param dataSourceUrl String containing the url for the datasource
      * @return DatasourceReachabilityStatus
      */
-    CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceUrl);
+    CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceUrl, BearerAccessToken authToken);
 
     /**
      * executes specified query on datasource and returns the result value
@@ -58,7 +59,7 @@ public interface DataSourceOperator {
      * @param query String containing the query to be executed
      * @return Object containing the result value for the specified query
      */
-    Object getValueForQuery(String url, String query);
+    Object getValueForQuery(String url, String query, BearerAccessToken authToken);
 
     /**
      * executes specified query on datasource and returns the JSON Object
@@ -66,7 +67,7 @@ public interface DataSourceOperator {
      * @param query String containing the query to be executed
      * @return JSONObject for the specified query
      */
-    JSONObject getJsonObjectForQuery(String url, String query);
+    JSONObject getJsonObjectForQuery(String url, String query, BearerAccessToken authToken);
 
     /**
      * executes specified query on datasource and returns the result array
@@ -74,7 +75,7 @@ public interface DataSourceOperator {
      * @param query String containing the query to be executed
      * @return JsonArray containing the result array for the specified query
      */
-    public JsonArray getResultArrayForQuery(String url, String query);
+    public JsonArray getResultArrayForQuery(String url, String query, BearerAccessToken authToken);
 
     /**
      * Validates a JSON array to ensure it is not null, not a JSON null, and has at least one element.

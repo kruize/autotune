@@ -335,6 +335,7 @@ public class KruizeConstants {
         public static final String DATASOURCE_SERVICE_NAME = "serviceName";
         public static final String DATASOURCE_SERVICE_NAMESPACE = "namespace";
         public static final String DATASOURCE_URL = "url";
+        public static final String DATASOURCE_AUTH_TOKEN = "authToken";
         public static final String KRUIZE_DATASOURCE = "datasource";
         public static final String SERVICE_DNS = ".svc.cluster.local";
         public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";

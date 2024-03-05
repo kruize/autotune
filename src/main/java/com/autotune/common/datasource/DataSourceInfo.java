@@ -20,6 +20,7 @@ import java.net.URL;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.authModels.BearerAccessToken;
 import org.slf4j.LoggerFactory;
 
 /**
@@ -39,6 +40,7 @@ public class DataSourceInfo {
     private final String serviceName;
     private final String namespace;
     private final URL url;
+    BearerAccessToken authToken;
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataSourceOperatorImpl.class);
 
@@ -48,6 +50,25 @@ public class DataSourceInfo {
         this.url = url;
         this.serviceName = "";
         this.namespace = "";
+        this.authToken = null;
+    }
+
+    public DataSourceInfo(String name, String provider, URL url, BearerAccessToken authToken) {
+        this.name = name;
+        this.provider = provider;
+        this.url = url;
+        this.serviceName = "";
+        this.namespace = "";
+        this.authToken = authToken;
+    }
+
+    public DataSourceInfo(String name, String provider, String serviceName, String namespace, BearerAccessToken authToken) {
+        this.name = name;
+        this.provider = provider;
+        this.serviceName = serviceName;
+        this.namespace = namespace;
+        this.url = getDNSBasedUrlForService(serviceName, namespace, provider);
+        this.authToken = authToken;
     }
 
     public DataSourceInfo(String name, String provider, String serviceName, String namespace) {
@@ -56,6 +77,7 @@ public class DataSourceInfo {
         this.serviceName = serviceName;
         this.namespace = namespace;
         this.url = getDNSBasedUrlForService(serviceName, namespace, provider);
+        this.authToken = null;
     }
 
     /**
@@ -96,6 +118,14 @@ public class DataSourceInfo {
      */
     public URL getUrl() {
         return url;
+    }
+
+    /**
+     * Returns the authToken for the data source
+     * @return BearerAccessToken containing the authToken for the data source
+     */
+    public BearerAccessToken getAuthToken() {
+        return authToken;
     }
 
     /**

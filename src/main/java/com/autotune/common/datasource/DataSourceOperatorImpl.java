@@ -75,7 +75,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
      * @return DatasourceReachabilityStatus
      */
     @Override
-    public CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceUrl) {
+    public CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceUrl, BearerAccessToken authToken) {
         return null;
     }
 
@@ -86,7 +86,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
      * @return Object containing the result value for the specified query
      */
     @Override
-    public Object getValueForQuery(String url, String query) {
+    public Object getValueForQuery(String url, String query, BearerAccessToken authToken) {
         return null;
     }
 
@@ -105,7 +105,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
      * @return JSONObject for the specified query
      */
     @Override
-    public JSONObject getJsonObjectForQuery(String url, String query) {
+    public JSONObject getJsonObjectForQuery(String url, String query, BearerAccessToken authToken) {
         return null;
     }
 
@@ -116,7 +116,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
      * @return JsonArray containing the result array for the specified query
      */
     @Override
-    public JsonArray getResultArrayForQuery(String url, String query) {
+    public JsonArray getResultArrayForQuery(String url, String query, BearerAccessToken authToken) {
         return null;
     }
 
