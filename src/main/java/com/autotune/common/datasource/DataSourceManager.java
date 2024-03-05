@@ -99,7 +99,6 @@ public class DataSourceManager {
      * @throws DataSourceNotExist Thrown when the provided data source information is null.
      */
     public DataSourceDetailsInfo getDataFromDataSource(DataSourceInfo dataSource) {
-
         try {
             if (null == dataSource) {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
