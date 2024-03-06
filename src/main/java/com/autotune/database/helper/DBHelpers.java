@@ -721,16 +721,20 @@ public class DBHelpers {
                         dataSourceDetailsInfo.getDataSourceClusterGroupHashMap().put(kruizeMetadata.getClusterGroupName(), dataSourceClusterGroup);
                         dataSourceClusterGroup.getDataSourceClusterHashMap().put(kruizeMetadata.getClusterName(), dataSourceCluster);
                         dataSourceCluster.getDataSourceNamespaceHashMap().put(kruizeMetadata.getNamespace(), dataSourceNamespace);
+                        if (null == dataSourceWorkload) {
+                            dataSourceNamespace.setDataSourceWorkloadHashMap(null);
+                            continue;
+                        }
                         dataSourceNamespace.getDataSourceWorkloadHashMap().put(kruizeMetadata.getWorkloadName(), dataSourceWorkload);
                         dataSourceWorkload.getDataSourceContainerHashMap().put(kruizeMetadata.getContainerName(), dataSourceContainer);
                     } catch (Exception e) {
-                        LOGGER.error("Error occurred while converting to dataSourceInfo from DB object : {}", e.getMessage());
+                        LOGGER.error("Error occurred while converting to dataSourceDetailsInfo from DB object : {}", e.getMessage());
                         LOGGER.error(e.getMessage());
                         failureCount++;
                     }
                 }
                 if (failureThreshHold > 0 && failureCount == failureThreshHold)
-                    throw new Exception("None of the Datasource loaded from DB.");
+                    throw new Exception("None of the Metadata loaded from DB.");
 
                 dataSourceDetailsInfoList.add(dataSourceDetailsInfo);
                 return dataSourceDetailsInfoList;
@@ -748,8 +752,18 @@ public class DBHelpers {
 
                             for (DataSourceNamespace dataSourceNamespace : dataSourceCluster.getDataSourceNamespaceHashMap().values()) {
                                 String namespaceName = dataSourceNamespace.getDataSourceNamespaceName();
-                                //TODO - handle cases where workload metadata is not available
+
                                 if (null == dataSourceNamespace.getDataSourceWorkloadHashMap()) {
+                                    KruizeMetadata kruizeMetadata = new KruizeMetadata();
+                                    kruizeMetadata.setVersion(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.version);
+                                    kruizeMetadata.setClusterGroupName(clusterGroupName);
+                                    kruizeMetadata.setClusterName(dataSourceClusterName);
+                                    kruizeMetadata.setNamespace(namespaceName);
+                                    kruizeMetadata.setWorkloadName(null);
+                                    kruizeMetadata.setWorkloadType(null);
+                                    kruizeMetadata.setContainerName(null);
+                                    kruizeMetadata.setContainerImageName(null);
+                                    kruizeMetadataList.add(kruizeMetadata);
                                     continue;
                                 }
 
@@ -828,6 +842,10 @@ public class DBHelpers {
     private static DataSourceWorkload getDataSourceWorkload(KruizeMetadata kruizeMetadata, DataSourceNamespace dataSourceNamespace) {
         String workloadName = kruizeMetadata.getWorkloadName();
 
+        if (null == workloadName) {
+            return null;
+        }
+
         // Check if the workload already exists in the DataSourceNamespace
         if (dataSourceNamespace.getDataSourceWorkloadHashMap().containsKey(workloadName)) {
             return dataSourceNamespace.getDataSourceWorkloadHashMap().get(workloadName);
@@ -840,6 +858,10 @@ public class DBHelpers {
     }
     private static DataSourceContainer getDataSourceContainer(KruizeMetadata kruizeMetadata, DataSourceWorkload dataSourceWorkload) {
         String containerName = kruizeMetadata.getContainerName();
+
+        if (null == containerName) {
+            return null;
+        }
 
         // Check if the container already exists in the DataSourceWorkload
         if (dataSourceWorkload.getDataSourceContainerHashMap().containsKey(containerName)) {

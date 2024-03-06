@@ -412,7 +412,6 @@ public class ExperimentDBService {
 
     public DataSourceDetailsInfo loadMetadataFromDBByName(String clusterGroupName) throws Exception {
         List<KruizeMetadata> kruizeMetadataList = experimentDAO.loadMetadataByName(clusterGroupName);
-        //LOGGER.info("load metadata list: {} ", kruizeMetadataList);
         List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
         if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
             dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
