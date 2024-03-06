@@ -644,11 +644,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * @return
      */
     @Override
-    public List<KruizeMetadata> loadDataSourceClusterGroupByName(String clusterGroupName) throws Exception {
+    public List<KruizeMetadata> loadMetadataByName(String clusterGroupName) throws Exception {
         List<KruizeMetadata> kruizeMetadataList;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME, KruizeMetadata.class)
-                    .setParameter("cluster_group_name", clusterGroupName).list();
+                    .setParameter("clusterGroupName", clusterGroupName).list();
         } catch (Exception e) {
             LOGGER.error("Unable to load metadata with clusterGroupName: {} : {}", clusterGroupName, e.getMessage());
             throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());

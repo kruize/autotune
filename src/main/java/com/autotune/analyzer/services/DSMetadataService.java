@@ -5,9 +5,9 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.dataSourceDetails.DataSourceDetailsInfo;
-import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -55,11 +55,11 @@ public class DSMetadataService extends HttpServlet {
                 throw new Exception("Request input data cannot be null or empty");
             }
 
-            DSMetadataAPIObject DSMetadataAPIObject = new Gson().fromJson(inputData, DSMetadataAPIObject.class);
+            DSMetadataAPIObject metadataAPIObject = new Gson().fromJson(inputData, DSMetadataAPIObject.class);
 
-            DSMetadataAPIObject.validateInputFields();
+            metadataAPIObject.validateInputFields();
 
-            String dataSourceName = DSMetadataAPIObject.getDataSourceName();
+            String dataSourceName = metadataAPIObject.getDataSourceName();
 
             if (null == dataSourceName || dataSourceName.isEmpty()) {
                 sendErrorResponse(
@@ -69,8 +69,13 @@ public class DSMetadataService extends HttpServlet {
                         HttpServletResponse.SC_BAD_REQUEST,
                         AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.DATASOURCE_NAME_MANDATORY);
             }
-            // kruize_dsmetadata -> addDSMetadataToDB()
-            addDSMetadataToDataBase(dataSourceMetadataMap, dataSourceName);
+
+            DataSourceInfo datasource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
+            if(null != datasource) {
+                new DataSourceManager().importDataFromDataSource(datasource);
+                DataSourceDetailsInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName);
+                dataSourceMetadataMap.put(dataSourceName,dataSourceMetadata);
+            }
 
             if (dataSourceMetadataMap.isEmpty() || !dataSourceMetadataMap.containsKey(dataSourceName)) {
                 sendErrorResponse(
@@ -83,40 +88,6 @@ public class DSMetadataService extends HttpServlet {
             } else {
                 sendSuccessResponse(response, dataSourceMetadataMap.get(dataSourceName));
             }
-            /*
-            List<ImportDSMetadataAPIObject> importDSMetadataAPIObjects = Arrays.asList(new Gson().fromJson(inputData, ImportDSMetadataAPIObject[].class));
-            if (importDSMetadataAPIObjects.size() > 1) {
-                LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_DATASOURCE);
-                sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_DATASOURCE);
-            } else {
-                for (ImportDSMetadataAPIObject importDSMetadataAPIObject: importDSMetadataAPIObjects) {
-                    String dataSourceName = importDSMetadataAPIObject.getDataSourceName();
-
-                    if (null == dataSourceName || dataSourceName.isEmpty()) {
-                        sendErrorResponse(
-                                inputData,
-                                response,
-                                null,
-                                HttpServletResponse.SC_BAD_REQUEST,
-                                AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.DATASOURCE_NAME_MANDATORY);
-                    }
-                    // kruize_dsmetadata -> addDSMetadataToDB()
-                    addDataSourceMetadataToDataBase(dataSourceMetadataMap, dataSourceName);
-
-                    if (dataSourceMetadataMap.isEmpty() || !dataSourceMetadataMap.containsKey(dataSourceName)) {
-                        sendErrorResponse(
-                                inputData,
-                                response,
-                                new Exception(AnalyzerErrorConstants.APIErrors.ListDataSourcesAPI.INVALID_DATASOURCE_NAME_EXCPTN),
-                                HttpServletResponse.SC_BAD_REQUEST,
-                                String.format(AnalyzerErrorConstants.APIErrors.ListDataSourcesAPI.INVALID_DATASOURCE_NAME_MSG, dataSourceName)
-                        );
-                    } else {
-                        sendSuccessResponse(response, dataSourceMetadataMap.get(dataSourceName));
-                    }
-                }
-            }
-             */
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught: " + e.getMessage());
@@ -128,23 +99,6 @@ public class DSMetadataService extends HttpServlet {
             }
         }
 
-    }
-
-    private void addDSMetadataToDataBase(HashMap<String, DataSourceDetailsInfo> dataSourceMetadataMap, String dataSourceName) {
-        try {
-            if (null == dataSourceName || dataSourceName.isEmpty()) {
-                return;
-            }
-            if (DataSourceCollection.getInstance().getDataSourcesCollection().isEmpty() || !DataSourceCollection.getInstance().getDataSourcesCollection().containsKey(dataSourceName)) {
-                return;
-            }
-
-            DataSourceInfo dataSource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
-            new DataSourceManager().importDataFromDataSource(dataSource);
-            dataSourceMetadataMap.put(dataSourceName, new DataSourceManager().getDataFromDataSource(dataSource));
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-        }
     }
 
     private void sendSuccessResponse(HttpServletResponse response, DataSourceDetailsInfo dataSourceMetadata) throws IOException {
@@ -197,8 +151,10 @@ public class DSMetadataService extends HttpServlet {
         try {
             if (null != dataSourceName) {
                 try {
-                    //kruize_dsmetadata -> loadDSMetadataByName()
-                    loadDSMetadataByName(dataSourceDetailsMap, dataSourceName);
+                    DataSourceDetailsInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName);
+                    if (null != dataSourceMetadata) {
+                        dataSourceDetailsMap.put(dataSourceName, dataSourceMetadata);
+                    }
                 } catch (Exception e) {
                     LOGGER.error("Loading saved Datasource metadata {} failed: {} ", dataSourceName, e.getMessage());
                 }
@@ -242,26 +198,6 @@ public class DSMetadataService extends HttpServlet {
                 MetricsConfig.timerImportDSMetadata = MetricsConfig.timerBImportDSMetadata.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                 timerImportDSMetadata.stop(MetricsConfig.timerImportDSMetadata);
             }
-        }
-    }
-
-    public void loadDSMetadataByName(HashMap<String, DataSourceDetailsInfo> dataSourceMetadataMap, String dataSourceName){
-        try {
-            if (null == dataSourceName || dataSourceName.isEmpty()) {
-                return;
-            }
-            if (DataSourceCollection.getInstance().getDataSourcesCollection().isEmpty() || !DataSourceCollection.getInstance().getDataSourcesCollection().containsKey(dataSourceName)) {
-                return;
-            }
-
-            DataSourceInfo dataSource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
-            DataSourceDetailsInfo dataSourceMetadata = new DataSourceManager().getDataFromDataSource(dataSource);
-            if (null != dataSourceMetadata) {
-                dataSourceMetadataMap.put(dataSourceName, dataSourceMetadata);
-            }
-
-        } catch(Exception e) {
-            LOGGER.error(e.getMessage());
         }
     }
 

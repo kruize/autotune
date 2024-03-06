@@ -285,8 +285,10 @@ public class ExperimentDBService {
     public ValidationOutputData addMetadataToDB(DataSourceDetailsInfo dataSourceDetailsInfo) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
-            KruizeMetadata kruizeMetadata = DBHelpers.Converters.KruizeObjectConverters.convertDataSourceDetailsToMetadataObj(dataSourceDetailsInfo);
-            validationOutputData = this.experimentDAO.addMetadataToDB(kruizeMetadata);
+            List<KruizeMetadata> kruizeMetadataList = DBHelpers.Converters.KruizeObjectConverters.convertDataSourceDetailsToMetadataObj(dataSourceDetailsInfo);
+            for(KruizeMetadata kruizeMetadata : kruizeMetadataList) {
+                validationOutputData = this.experimentDAO.addMetadataToDB(kruizeMetadata);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to save metadata due to {}", e.getMessage());
         }
@@ -408,8 +410,8 @@ public class ExperimentDBService {
         return experimentResultDataList;
     }
 
-    public DataSourceDetailsInfo loadDataSourceClusterGroupFromDBByName(String clusterGroupName) throws Exception {
-        List<KruizeMetadata> kruizeMetadataList = experimentDAO.loadDataSourceClusterGroupByName(clusterGroupName);
+    public DataSourceDetailsInfo loadMetadataFromDBByName(String clusterGroupName) throws Exception {
+        List<KruizeMetadata> kruizeMetadataList = experimentDAO.loadMetadataByName(clusterGroupName);
         List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
         if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
             dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters

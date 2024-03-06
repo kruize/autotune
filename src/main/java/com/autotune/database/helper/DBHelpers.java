@@ -726,10 +726,9 @@ public class DBHelpers {
                 return dataSourceDetailsInfoList;
             }
 
-            public static KruizeMetadata convertDataSourceDetailsToMetadataObj(DataSourceDetailsInfo dataSourceDetailsInfo) {
-                KruizeMetadata kruizeMetadata = new KruizeMetadata();
+            public static List<KruizeMetadata> convertDataSourceDetailsToMetadataObj(DataSourceDetailsInfo dataSourceDetailsInfo) {
+                List<KruizeMetadata> kruizeMetadataList = new ArrayList<>();
                 try {
-                    kruizeMetadata.setVersion(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.version);
 
                     for (DataSourceClusterGroup dataSourceClusterGroup : dataSourceDetailsInfo.getDataSourceClusterGroupHashMap().values()) {
                         String clusterGroupName = dataSourceClusterGroup.getDataSourceClusterGroupName();
@@ -739,28 +738,37 @@ public class DBHelpers {
 
                             for (DataSourceNamespace dataSourceNamespace : dataSourceCluster.getDataSourceNamespaceHashMap().values()) {
                                 String namespaceName = dataSourceNamespace.getDataSourceNamespaceName();
+                                //TODO - handle cases where workload metadata is not available
+                                if (null == dataSourceNamespace.getDataSourceWorkloadHashMap()) {
+                                    continue;
+                                }
 
                                 for (DataSourceWorkload dataSourceWorkload : dataSourceNamespace.getDataSourceWorkloadHashMap().values()) {
-                                    kruizeMetadata.setClusterGroupName(clusterGroupName);
-                                    kruizeMetadata.setClusterName(dataSourceClusterName);
-                                    kruizeMetadata.setNamespace(namespaceName);
-                                    kruizeMetadata.setWorkloadType(dataSourceWorkload.getDataSourceWorkloadType());
-                                    kruizeMetadata.setWorkloadName(dataSourceWorkload.getDataSourceWorkloadName());
 
                                     for (DataSourceContainer dataSourceContainer : dataSourceWorkload.getDataSourceContainerHashMap().values()) {
+                                        KruizeMetadata kruizeMetadata = new KruizeMetadata();
+                                        kruizeMetadata.setVersion(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.version);
+
+                                        kruizeMetadata.setClusterGroupName(clusterGroupName);
+                                        kruizeMetadata.setClusterName(dataSourceClusterName);
+                                        kruizeMetadata.setNamespace(namespaceName);
+                                        kruizeMetadata.setWorkloadType(dataSourceWorkload.getDataSourceWorkloadType());
+                                        kruizeMetadata.setWorkloadName(dataSourceWorkload.getDataSourceWorkloadName());
+
                                         kruizeMetadata.setContainerName(dataSourceContainer.getDataSourceContainerName());
                                         kruizeMetadata.setContainerImageName(dataSourceContainer.getDataSourceContainerImageName());
+
+                                        kruizeMetadataList.add(kruizeMetadata);
                                     }
                                 }
                             }
                         }
                     }
                 } catch (Exception e) {
-                    kruizeMetadata = null;
                     LOGGER.error("Error while converting DataSourceDetails Object to KruizeMetadata table due to {}", e.getMessage());
                     e.printStackTrace();
                 }
-                return kruizeMetadata;
+                return kruizeMetadataList;
             }
         }
     }
@@ -793,7 +801,11 @@ public class DBHelpers {
         DataSourceDetailsOperator dataSourceDetailsOperator = DataSourceDetailsOperator.getInstance();
         HashMap<String, DataSourceInfo> dataSources = DataSourceCollection.getInstance().getDataSourcesCollection();
         DataSourceDetailsInfo dataSourceDetailsInfo = dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSources.get(datasource));
-        return Converters.KruizeObjectConverters.convertDataSourceDetailsToMetadataObj(dataSourceDetailsInfo);
+        List<KruizeMetadata> kruizeMetadataList = Converters.KruizeObjectConverters.convertDataSourceDetailsToMetadataObj(dataSourceDetailsInfo);
+        if (kruizeMetadataList.isEmpty())
+            return null;
+        else
+            return kruizeMetadataList.get(0);
     }
 
 }
