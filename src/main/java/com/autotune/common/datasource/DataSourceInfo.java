@@ -121,8 +121,8 @@ public class DataSourceInfo {
     }
 
     /**
-     * Returns the authToken for the data source
-     * @return BearerAccessToken containing the authToken for the data source
+     * Returns the authToken for accessing the data source
+     * @return BearerAccessToken containing the authToken for accessing the data source
      */
     public BearerAccessToken getAuthToken() {
         return authToken;
