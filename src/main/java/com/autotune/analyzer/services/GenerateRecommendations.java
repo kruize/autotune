@@ -29,13 +29,16 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.*;
 import io.micrometer.core.instrument.Timer;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -45,15 +48,10 @@ import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.lang.reflect.Method;
-import java.net.HttpURLConnection;
-import java.net.URL;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -69,36 +67,6 @@ public class GenerateRecommendations extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(GenerateRecommendations.class);
 
-    private static String sendHttpGetRequest(String urlString) throws IOException {
-        URL url = new URL(urlString);
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        String authToken = "sha256~oSqd4EtCo04RYhn_OpyYaGpUhD1jeQlaj5lG0IYSiRg";
-        connection.setRequestProperty("Authorization", "Bearer " + authToken);
-
-        int responseCode = connection.getResponseCode();
-        if (responseCode == HttpURLConnection.HTTP_OK) {
-            BufferedReader in = new BufferedReader(new InputStreamReader(connection.getInputStream()));
-            StringBuilder response = new StringBuilder();
-            String inputLine;
-            while ((inputLine = in.readLine()) != null) {
-                response.append(inputLine);
-            }
-            in.close();
-            return response.toString();
-        } else {
-            // Read error response body
-            BufferedReader errorReader = new BufferedReader(new InputStreamReader(connection.getErrorStream()));
-            StringBuilder errorResponse = new StringBuilder();
-            String errorLine;
-            while ((errorLine = errorReader.readLine()) != null) {
-                errorResponse.append(errorLine);
-            }
-            errorReader.close();
-
-            throw new IOException("HTTP GET request failed with status code: " + responseCode + "\nError Response: " + errorResponse.toString());
-        }
-    }
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -164,6 +132,7 @@ public class GenerateRecommendations extends HttpServlet {
             ExperimentResultData experimentResultData = null;
             Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
             KruizeObject kruizeObject = null;
+            DataSourceInfo dataSourceInfo = null;
             try {
                 long interval_end_time_epoc = interval_end_time.getTime() / 1000 - (interval_end_time.getTimezoneOffset() * 60);
                 ;
@@ -173,6 +142,8 @@ public class GenerateRecommendations extends HttpServlet {
                 new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
                 if (null != mainKruizeExperimentMAP.get(experiment_name)) {
                     kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
+                    dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(kruizeObject.getDataSource());
+                    LOGGER.info("dataSource : {}", dataSourceInfo);
                 }
                 // Get DataSource and connect
                 // Get MetricsProfile name and list of promQL to fetch
@@ -215,15 +186,17 @@ public class GenerateRecommendations extends HttpServlet {
                         String containerName = containerData.getContainer_name();
                         HashMap<Timestamp, IntervalResults> containerDataResults = new HashMap<>();
                         IntervalResults intervalResults = new IntervalResults();
+                        HashMap<AnalyzerConstants.MetricName, MetricResults> resMap = new HashMap<>();
+                        MetricResults metricResults = new MetricResults();
+                        MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
                         for (Map.Entry<AnalyzerConstants.MetricName, String> metricEntry : promQls.entrySet()) {
-                            HashMap<AnalyzerConstants.MetricName, MetricResults> resMap = new HashMap<>();
-                            MetricResults metricResults = new MetricResults();
-                            MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
                             for (String methodName : aggregationMethods) {
                                 String promQL = null;
                                 String format = null;
                                 if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuUsage) {
-                                    promQL = String.format(metricEntry.getValue(), methodName, methodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                    String secondmethodeName = methodName;
+                                    if (secondmethodeName == "sum") secondmethodeName = "avg";
+                                    promQL = String.format(metricEntry.getValue(), methodName, secondmethodeName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
                                     format = "cores";
                                 } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuThrottle) {
                                     promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
@@ -232,7 +205,9 @@ public class GenerateRecommendations extends HttpServlet {
                                     promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
                                     format = "cores";
                                 } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryUsage || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRSS) {
-                                    promQL = String.format(metricEntry.getValue(), methodName, methodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                    String secondmethodeName = methodName;
+                                    if (secondmethodeName == "sum") secondmethodeName = "avg";
+                                    promQL = String.format(metricEntry.getValue(), methodName, secondmethodeName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
                                     format = "GiB";
                                 } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRequest) {
                                     promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
@@ -242,16 +217,15 @@ public class GenerateRecommendations extends HttpServlet {
                                 String podMetricsUrl = null;
                                 String podMetricsResponse = null;
                                 try {
-                                    podMetricsUrl = String.format("%s?query=%s&start=%s&end=%s&step=%s",
-                                            "https://prometheus.crcp01ue1.devshift.net/api/v1/query_range",
+                                    podMetricsUrl = String.format("%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s",
+                                            dataSourceInfo.getUrl(),
                                             URLEncoder.encode(promQL, "UTF-8"),
                                             interval_start_time_epoc,
                                             interval_end_time_epoc,
                                             measurementDurationMinutesInDouble.intValue() * 60);
                                     System.out.println(podMetricsUrl);
-                                    podMetricsResponse = sendHttpGetRequest(podMetricsUrl);
-                                    Gson gson = new Gson();
-                                    JsonObject jsonObject = gson.fromJson(podMetricsResponse, JsonObject.class);
+                                    JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson("get", "");
+                                    JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                                     JsonArray resultArray = jsonObject.getAsJsonObject("data").getAsJsonArray("result");
                                     if (null != resultArray && resultArray.size() > 0) {
                                         resultArray = jsonObject.getAsJsonObject("data").getAsJsonArray("result").get(0).getAsJsonObject().getAsJsonArray("values");
@@ -268,11 +242,16 @@ public class GenerateRecommendations extends HttpServlet {
                                             if (containerDataResults.containsKey(eTime)) {
                                                 intervalResults = containerDataResults.get(eTime);
                                                 resMap = intervalResults.getMetricResultsMap();
+                                            } else {
+                                                intervalResults = new IntervalResults();
+                                                resMap = new HashMap<>();
+                                            }
+                                            if (resMap.containsKey(metricEntry.getKey())) {
                                                 metricResults = resMap.get(metricEntry.getKey());
-                                                if (null == metricResults) metricResults = new MetricResults();
                                                 metricAggregationInfoResults = metricResults.getAggregationInfoResult();
-                                                if (null == metricAggregationInfoResults)
-                                                    metricAggregationInfoResults = new MetricAggregationInfoResults();
+                                            } else {
+                                                metricResults = new MetricResults();
+                                                metricAggregationInfoResults = new MetricAggregationInfoResults();
                                             }
                                             Method method = MetricAggregationInfoResults.class.getDeclaredMethod("set" + methodName.substring(0, 1).toUpperCase() + methodName.substring(1), Double.class);
                                             method.invoke(metricAggregationInfoResults, value);
@@ -289,7 +268,7 @@ public class GenerateRecommendations extends HttpServlet {
                                             sTime = eTime;
                                         }
                                     }
-                                } catch (IOException | ParseException e) {
+                                } catch (Exception e) {
                                     throw new RuntimeException(e);
                                 }
                             }
@@ -297,18 +276,16 @@ public class GenerateRecommendations extends HttpServlet {
                         containerData.setResults(containerDataResults);
                     }
                 }
-                Gson gson = new GsonBuilder().registerTypeAdapter(Date.class, new GsonUTCDateAdapter()).create();  //.setPrettyPrinting()
+/*                Gson gson = new GsonBuilder().setPrettyPrinting().registerTypeAdapter(Date.class, new GsonUTCDateAdapter()).create();  //.setPrettyPrinting()
                 String jsonString = gson.toJson(kruizeObject);
-                System.out.println(jsonString);
+                try (FileWriter fileWriter = new FileWriter("/tmp/kruize_results_1hrDuration.json")) {
+                    fileWriter.write(jsonString);
+                    System.out.println("JSON string has been written to the file.");
+                } catch (IOException e) {
+                    System.out.println("An error occurred while writing JSON to file: " + e.getMessage());
+                }*/
                 new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, null, interval_start_time, interval_end_time);    // TODO: experimentResultDataList not required
                 sendSuccessResponse(response, kruizeObject, interval_end_time);
-//                ValidationOutputData validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, experimentResultDataList);
-//                if (validationOutputData.isSuccess()) {
-//                    sendSuccessResponse(response, kruizeObject, interval_end_time);
-//                    statusValue = "success";
-//                } else {
-//                    sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, validationOutputData.getMessage());
-//                }
             } catch (Exception e) {
                 e.printStackTrace();
                 sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
@@ -333,7 +310,7 @@ public class GenerateRecommendations extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_CREATED);
         List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();              //TODO: Executing two identical SQL SELECT queries against the database instead of just one is causing a performance issue. set 'showSQL' flag is set to true to debug.
         try {
-            LOGGER.debug(ko.getKubernetes_objects().toString());
+            //LOGGER.debug(ko.getKubernetes_objects().toString());
             ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
                     convertKruizeObjectToListRecommendationSO(
                             ko,
