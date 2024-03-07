@@ -8,6 +8,7 @@ import com.autotune.common.data.dataSourceDetails.DataSourceDetailsInfo;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -148,52 +149,94 @@ public class DSMetadataService extends HttpServlet {
         //Key = dataSource name
         HashMap<String, DataSourceDetailsInfo> dataSourceDetailsMap = new HashMap<>();
         boolean error = false;
+        // validate Query params
+        Set<String> invalidParams = new HashSet<>();
+        for (String param : request.getParameterMap().keySet()) {
+            if (!KruizeSupportedTypes.DSMETADATA_QUERY_PARAMS_SUPPORTED.contains(param)) {
+                invalidParams.add(param);
+            }
+        }
 
         try {
-            if (null != dataSourceName) {
-                try {
-                    DataSourceDetailsInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByNamespace(dataSourceName, clusterName, namespace);
-                    if (null != dataSourceMetadata) {
-                        dataSourceDetailsMap.put(dataSourceName, dataSourceMetadata);
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Loading saved Datasource metadata {} failed: {} ", dataSourceName, e.getMessage());
+            if (invalidParams.isEmpty()){
+                if (null==verbose || null == clusterName || null == namespace) {
+                    verbose = "false";
                 }
 
-                if (!dataSourceDetailsMap.containsKey(dataSourceName)) {
-                    error = true;
+                if(isValidBooleanValue(verbose)) {
+                    try {
+                        if (null != dataSourceName) {
+                            try {
+                                DataSourceDetailsInfo dataSourceMetadata = null;
+                                if(null == clusterName) {
+                                    dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName);
+
+                                } else if(null!=clusterName && verbose=="false"){
+                                    if (null == namespace) {
+                                        dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByClusterName(dataSourceName, clusterName);
+                                    } else {
+                                        verbose = "true";
+                                        dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByNamespace(dataSourceName, clusterName, namespace);
+                                    }
+                                }
+
+                                if (null != dataSourceMetadata) {
+                                    dataSourceDetailsMap.put(dataSourceName, dataSourceMetadata);
+                                }
+                            } catch (Exception e) {
+                                LOGGER.error("Loading saved Datasource metadata {} failed: {} ", dataSourceName, e.getMessage());
+                            }
+
+                            if (!dataSourceDetailsMap.containsKey(dataSourceName)) {
+                                error = true;
+                                sendErrorResponse(
+                                        response,
+                                        new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
+                                        HttpServletResponse.SC_BAD_REQUEST,
+                                        String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.MISSING_DATASOURCE_METADATA_MSG, dataSourceName, clusterName, namespace)
+                                );
+                            }
+
+                        } else {
+                            error = true;
+                            sendErrorResponse(
+                                    response,
+                                    new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                                    HttpServletResponse.SC_BAD_REQUEST,
+                                    String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG
+                                            , dataSourceName)
+                            );
+                        }
+
+                        if (!error) {
+                            // create Gson Object
+                            Gson gsonObj = createGsonObject();
+                            gsonStr = gsonObj.toJson(dataSourceDetailsMap.get(dataSourceName));
+                            response.getWriter().println(gsonStr);
+                            response.getWriter().close();
+                            statusValue = "success";
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Exception: " + e.getMessage());
+                        e.printStackTrace();
+                        sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                    }
+                } else {
                     sendErrorResponse(
                             response,
-                            new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
+                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE),
                             HttpServletResponse.SC_BAD_REQUEST,
-                            String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.MISSING_DATASOURCE_METADATA_MSG, dataSourceName, clusterName, namespace)
+                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE)
                     );
                 }
-
             } else {
-                error = true;
                 sendErrorResponse(
                         response,
-                        new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM),
                         HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG
-                                , dataSourceName)
+                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM, invalidParams)
                 );
             }
-
-            if (!error) {
-                // create Gson Object
-                Gson gsonObj = createGsonObject();
-                gsonStr = gsonObj.toJson(dataSourceDetailsMap.get(dataSourceName));
-                response.getWriter().println(gsonStr);
-                response.getWriter().close();
-                statusValue = "success";
-            }
-
-        } catch (Exception e) {
-            LOGGER.error("Exception: " + e.getMessage());
-            e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
             if (null != timerImportDSMetadata) {
                 MetricsConfig.timerImportDSMetadata = MetricsConfig.timerBImportDSMetadata.tag("status", statusValue).register(MetricsConfig.meterRegistry());
@@ -219,5 +262,7 @@ public class DSMetadataService extends HttpServlet {
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                 .create();
     }
-
+    private boolean isValidBooleanValue(String value) {
+        return value != null && (value.equals("true") || value.equals("false"));
+    }
 }
