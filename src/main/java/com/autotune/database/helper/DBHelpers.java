@@ -471,6 +471,7 @@ public class DBHelpers {
                         CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
                         apiObj.setExperiment_id(entry.getExperiment_id());
                         apiObj.setStatus(entry.getStatus());
+                        apiObj.setDatasource(entry.getDatasource());
                         createExperimentAPIObjects.add(apiObj);
                     } catch (Exception e) {
                         LOGGER.error("Error in converting to apiObj from db object due to : {}", e.getMessage());
@@ -793,7 +794,10 @@ public class DBHelpers {
         DataSourceDetailsOperator dataSourceDetailsOperator = DataSourceDetailsOperator.getInstance();
         HashMap<String, DataSourceInfo> dataSources = DataSourceCollection.getInstance().getDataSourcesCollection();
         DataSourceDetailsInfo dataSourceDetailsInfo = dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSources.get(datasource));
-        return Converters.KruizeObjectConverters.convertDataSourceDetailsToMetadataObj(dataSourceDetailsInfo);
+        if (dataSourceDetailsInfo == null)
+            return null;
+        else
+            return Converters.KruizeObjectConverters.convertDataSourceDetailsToMetadataObj(dataSourceDetailsInfo);
     }
 
 }
