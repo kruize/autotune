@@ -739,6 +739,81 @@ public class DBHelpers {
                 dataSourceDetailsInfoList.add(dataSourceDetailsInfo);
                 return dataSourceDetailsInfoList;
             }
+            public static List<DataSourceDetailsInfo> convertKruizeMetadataToClusterLevelDataSourceDetails(List<KruizeMetadata> kruizeMetadataList) throws Exception {
+                List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
+                int failureThreshHold = kruizeMetadataList.size();
+                int failureCount = 0;
+
+                // Create a single instance of DataSourceDetailsInfo
+                DataSourceDetailsInfo dataSourceDetailsInfo = new DataSourceDetailsInfo(new HashMap<>());
+
+                for (KruizeMetadata kruizeMetadata : kruizeMetadataList) {
+                    try {
+                        // Use provided functions to get DataSource objects
+                        DataSourceClusterGroup dataSourceClusterGroup = getDataSourceClusterGroup(kruizeMetadata, dataSourceDetailsInfo);
+                        DataSourceCluster dataSourceCluster = getDataSourceCluster(kruizeMetadata, dataSourceClusterGroup);
+                        dataSourceCluster.setDataSourceNamespaceHashMap(null);
+
+                        // Update DataSourceDetailsInfo with the DataSourceClusterGroup and DataSourceCluster
+                        dataSourceDetailsInfo.getDataSourceClusterGroupHashMap()
+                                .put(kruizeMetadata.getClusterGroupName(), dataSourceClusterGroup);
+
+                        dataSourceClusterGroup.getDataSourceClusterHashMap()
+                                .put(kruizeMetadata.getClusterName(), dataSourceCluster);
+
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while converting to dataSourceDetailsInfo from DB object : {}", e.getMessage());
+                        LOGGER.error(e.getMessage());
+                        failureCount++;
+                    }
+                }
+
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the Metadata loaded from DB.");
+
+                dataSourceDetailsInfoList.add(dataSourceDetailsInfo);
+                return dataSourceDetailsInfoList;
+            }
+
+            public static List<DataSourceDetailsInfo> convertKruizeMetadataToNamespaceLevelDataSourceDetails(List<KruizeMetadata> kruizeMetadataList) throws Exception {
+                List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
+                int failureThreshHold = kruizeMetadataList.size();
+                int failureCount = 0;
+
+                // Create a single instance of DataSourceDetailsInfo
+                DataSourceDetailsInfo dataSourceDetailsInfo = new DataSourceDetailsInfo(new HashMap<>());
+
+                for (KruizeMetadata kruizeMetadata : kruizeMetadataList) {
+                    try {
+                        // Use provided functions to get DataSource objects
+                        DataSourceClusterGroup dataSourceClusterGroup = getDataSourceClusterGroup(kruizeMetadata, dataSourceDetailsInfo);
+                        DataSourceCluster dataSourceCluster = getDataSourceCluster(kruizeMetadata, dataSourceClusterGroup);
+                        DataSourceNamespace dataSourceNamespace = getDataSourceNamespace(kruizeMetadata, dataSourceCluster);
+                        dataSourceNamespace.setDataSourceWorkloadHashMap(null);
+
+                        // Update DataSourceDetailsInfo with the DataSourceClusterGroup and DataSourceCluster
+                        dataSourceDetailsInfo.getDataSourceClusterGroupHashMap()
+                                .put(kruizeMetadata.getClusterGroupName(), dataSourceClusterGroup);
+
+                        dataSourceClusterGroup.getDataSourceClusterHashMap()
+                                .put(kruizeMetadata.getClusterName(), dataSourceCluster);
+
+                        dataSourceCluster.getDataSourceNamespaceHashMap()
+                                .put(kruizeMetadata.getNamespace(), dataSourceNamespace);
+
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while converting to dataSourceDetailsInfo from DB object : {}", e.getMessage());
+                        LOGGER.error(e.getMessage());
+                        failureCount++;
+                    }
+                }
+
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the Metadata loaded from DB.");
+
+                dataSourceDetailsInfoList.add(dataSourceDetailsInfo);
+                return dataSourceDetailsInfoList;
+            }
 
             public static List<KruizeMetadata> convertDataSourceDetailsToMetadataObj(DataSourceDetailsInfo dataSourceDetailsInfo) {
                 List<KruizeMetadata> kruizeMetadataList = new ArrayList<>();

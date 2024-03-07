@@ -655,6 +655,37 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return kruizeMetadataList;
     }
+    @Override
+    public List<KruizeMetadata> loadMetadataByClusterName(String clusterGroupName, String clusterName) throws Exception {
+        List<KruizeMetadata> kruizeMetadataList;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<KruizeMetadata> kruizeMetadataQuery = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME_AND_CLUSTER_NAME, KruizeMetadata.class)
+                    .setParameter("cluster_group_name", clusterGroupName)
+                    .setParameter("cluster_name", clusterName);
+
+            kruizeMetadataList = kruizeMetadataQuery.list();
+        } catch (Exception e) {
+            LOGGER.error("Unable to load metadata with clusterGroupName: {} and clusterName : {} : {}", clusterGroupName, clusterName, e.getMessage());
+            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
+        }
+        return kruizeMetadataList;
+    }
+
+    public List<KruizeMetadata> loadMetadataByNamespace(String clusterGroupName, String clusterName, String namespace) throws Exception {
+        List<KruizeMetadata> kruizeMetadataList;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<KruizeMetadata> kruizeMetadataQuery = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME_CLUSTER_NAME_AND_NAMESPACE, KruizeMetadata.class)
+                    .setParameter("cluster_group_name", clusterGroupName)
+                    .setParameter("cluster_name", clusterName)
+                    .setParameter("namespace",namespace);
+
+            kruizeMetadataList = kruizeMetadataQuery.list();
+        } catch (Exception e) {
+            LOGGER.error("Unable to load metadata with clusterGroupName: {}, clusterName : {} and namespace : {} : {}", clusterGroupName, clusterName, namespace, e.getMessage());
+            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
+        }
+        return kruizeMetadataList;
+    }
 
     /**
      * @return

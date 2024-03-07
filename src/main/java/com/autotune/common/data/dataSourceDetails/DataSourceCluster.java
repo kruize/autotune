@@ -45,7 +45,7 @@ public class DataSourceCluster {
 
     public void setDataSourceNamespaceHashMap(HashMap<String, DataSourceNamespace> namespaceHashMap) {
         if (null == namespaceHashMap) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_NAMESPACE_MAP_ERROR + clusterName);
+            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_NAMESPACE_MAP_ERROR + clusterName);
         }
         this.namespaceHashMap = namespaceHashMap;
     }

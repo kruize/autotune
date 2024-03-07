@@ -415,6 +415,30 @@ public class ExperimentDBService {
         List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
         if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
             dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                    .convertKruizeMetadataToClusterLevelDataSourceDetails(kruizeMetadataList);
+        }
+        if (dataSourceDetailsInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceDetailsInfoList.get(0);
+    }
+    public DataSourceDetailsInfo loadMetadataFromDBByClusterName(String clusterGroupName, String clusterName) throws Exception {
+        List<KruizeMetadata> kruizeMetadataList = experimentDAO.loadMetadataByClusterName(clusterGroupName, clusterName);
+        List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
+        if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
+            dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                    .convertKruizeMetadataToNamespaceLevelDataSourceDetails(kruizeMetadataList);
+        }
+        if (dataSourceDetailsInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceDetailsInfoList.get(0);
+    }
+    public DataSourceDetailsInfo loadMetadataFromDBByNamespace(String clusterGroupName, String clusterName, String namespace) throws Exception {
+        List<KruizeMetadata> kruizeMetadataList = experimentDAO.loadMetadataByNamespace(clusterGroupName, clusterName, namespace);
+        List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
+        if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
+            dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
                     .convertKruizeMetadataToDataSourceDetailsObject(kruizeMetadataList);
         }
         if (dataSourceDetailsInfoList.isEmpty())

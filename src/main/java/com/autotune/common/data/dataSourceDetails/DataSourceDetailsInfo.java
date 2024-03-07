@@ -26,7 +26,7 @@ public class DataSourceDetailsInfo {
 
     public void setDataSourceClusterGroupHashMap(HashMap<String, DataSourceClusterGroup> clusterGroupHashMap) {
         if (null == clusterGroupHashMap) {
-            LOGGER.error("No cluster groups found");
+            LOGGER.debug("No cluster groups found");
         }
         this.clusterGroupHashMap = clusterGroupHashMap;
     }

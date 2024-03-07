@@ -459,6 +459,7 @@ public class KruizeConstants {
             public static final String CLUSTERS = "clusters";
             public static final String CLUSTER_NAME = "cluster_name";
             public static final String NAMESPACES = "namespaces";
+            public static final String NAMESPACE = "namespace";
             public static final String WORKLOADS = "workloads";
             public static final String WORKLOAD_NAME = "workload_name";
             public static final String WORKLOAD_TYPE = "workload_type";

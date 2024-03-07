@@ -77,6 +77,8 @@ public interface ExperimentDAO {
     List<KruizeDataSource> loadAllDataSources() throws Exception;
 
     List<KruizeMetadata> loadMetadataByName(String clusterGroupName) throws Exception;
+    List<KruizeMetadata> loadMetadataByClusterName(String clusterGroupName, String clusterName) throws Exception;
+    List<KruizeMetadata> loadMetadataByNamespace(String clusterGroupName, String clusterName, String namespace) throws Exception;
 
     ValidationOutputData addMetadataToDB(KruizeMetadata kruizeMetadata);
 

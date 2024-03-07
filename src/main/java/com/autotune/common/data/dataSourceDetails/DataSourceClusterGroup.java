@@ -37,7 +37,7 @@ public class DataSourceClusterGroup {
 
     public void setDataSourceClusterHashMap(HashMap<String, DataSourceCluster> clusters) {
         if (null == clusters) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_CLUSTER_MAP_ERROR + clusterGroupName);
+            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_CLUSTER_MAP_ERROR + clusterGroupName);
         }
         this.clusterHashMap = clusters;
     }

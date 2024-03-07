@@ -144,6 +144,7 @@ public class DSMetadataService extends HttpServlet {
         String dataSourceName = request.getParameter(AnalyzerConstants.ServiceConstants.DATASOURCE);
         String clusterName = request.getParameter(AnalyzerConstants.ServiceConstants.CLUSTER_NAME);
         String namespace = request.getParameter(AnalyzerConstants.ServiceConstants.NAMESPACE);
+        String verbose = request.getParameter(AnalyzerConstants.ServiceConstants.VERBOSE);
         //Key = dataSource name
         HashMap<String, DataSourceDetailsInfo> dataSourceDetailsMap = new HashMap<>();
         boolean error = false;
@@ -151,7 +152,7 @@ public class DSMetadataService extends HttpServlet {
         try {
             if (null != dataSourceName) {
                 try {
-                    DataSourceDetailsInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName);
+                    DataSourceDetailsInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByNamespace(dataSourceName, clusterName, namespace);
                     if (null != dataSourceMetadata) {
                         dataSourceDetailsMap.put(dataSourceName, dataSourceMetadata);
                     }

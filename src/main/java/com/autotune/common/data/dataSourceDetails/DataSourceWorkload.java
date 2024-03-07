@@ -40,7 +40,7 @@ public class DataSourceWorkload {
 
     public void setDataSourceContainerHashMap(HashMap<String, DataSourceContainer> containers) {
         if (containers == null) {
-            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_CONTAINER_MAP_ERROR + workloadName);
+            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_CONTAINER_MAP_ERROR + workloadName);
         }
         this.containerHashMap = containers;
     }
