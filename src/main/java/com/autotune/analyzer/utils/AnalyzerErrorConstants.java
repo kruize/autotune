@@ -177,11 +177,11 @@ public class AnalyzerErrorConstants {
         public static final class ImportDataSourceMetadataAPI {
             private ImportDataSourceMetadataAPI(){
             }
-            public static final String DATASOURCE_NAME_MANDATORY = KruizeConstants.JSONKeys.DATASOURCE_NAME + " is mandatory";
+            public static final String DATASOURCE_NAME_MANDATORY = KruizeConstants.JSONKeys.DATASOURCE + " is mandatory";
             public static final String INVALID_DATASOURCE_NAME_METADATA_EXCPTN = "Invalid DataSource Name";
             public static final String INVALID_DATASOURCE_NAME_METADATA_MSG = "Metadata for a given datasource name - \" %s \" either does not exist or is not valid";
             public static final String MISSING_DATASOURCE_METADATA_EXCPTN = "Invalid DataSource metadata";
-            public static final String MISSING_DATASOURCE_METADATA_MSG = "Metadata for a given datasource name - \" %s \", cluster name - \" %s \", namespace - \"%s \" " +
+            public static final String MISSING_DATASOURCE_METADATA_MSG = "Metadata for a given datasource - \" %s \", cluster name - \" %s \", namespace - \"%s \" " +
                     "either does not exist or is not valid";
             public static final String DATASOURCE_METADATA_IMPORT_ERROR_MSG = "Metadata cannot be imported for datasource - \" %s \" , either does not exist or is not valid";
         }

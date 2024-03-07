@@ -86,6 +86,20 @@ public class DataSourceManager {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
             dataSourceDetailsOperator.createDataSourceDetails(dataSource);
+            saveDataFromSourceToDB(dataSource);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+    public void saveDataFromSourceToDB(DataSourceInfo dataSource) {
+        try {
+            DataSourceDetailsInfo dataSourceDetails = dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSource);
+            if (null == dataSourceDetails) {
+                return;
+            }
+            // save the metadata to DB
+            addMetadataToDB(dataSourceDetails);
+
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
@@ -163,7 +177,7 @@ public class DataSourceManager {
     private boolean checkIfClusterGroupExists(String clusterGroupName) {
         boolean isPresent = false;
         try {
-            DataSourceDetailsInfo dataSourceDetailsInfo = new ExperimentDBService().loadDataSourceClusterGroupFromDBByName(clusterGroupName);
+            DataSourceDetailsInfo dataSourceDetailsInfo = new ExperimentDBService().loadMetadataFromDBByName(clusterGroupName);
             if (dataSourceDetailsInfo != null) {
                 LOGGER.warn("Cluster group: {} already exists!", clusterGroupName);
                 isPresent = true;

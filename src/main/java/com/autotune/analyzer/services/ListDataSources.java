@@ -6,6 +6,8 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;;
+import com.autotune.common.datasource.DataSourceManager;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -58,8 +60,10 @@ public class ListDataSources extends HttpServlet {
 
             if (null != dataSourceName) {
                 try {
-                    // kruize_datasources -> loadDataSourceByName(dataSourceName)
-                    loadDataSourceByName(dataSourceMap, dataSourceName);
+                    DataSourceInfo dataSource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
+                    if (null != dataSource) {
+                        dataSourceMap.put(dataSourceName, dataSource);
+                    }
                 } catch (Exception e) {
                     LOGGER.error("Loading saved Datasource {} failed: {} ", dataSourceName, e.getMessage());
                 }
@@ -76,8 +80,7 @@ public class ListDataSources extends HttpServlet {
                 dataSourceInfoList.add(dataSourceMap.get(dataSourceName));
             } else {
                 try {
-                    // kruize_datasources -> loadAllDataSources()
-                    loadAllDataSources(dataSourceMap);
+                    dataSourceInfoList = new ExperimentDBService().loadAllDataSources();
                 } catch (Exception e) {
                     LOGGER.error("Loading saved Datasources failed: {} ", e.getMessage());
                 }
@@ -115,25 +118,6 @@ public class ListDataSources extends HttpServlet {
             }
         }
 
-    }
-
-    public void loadDataSourceByName(HashMap<String, DataSourceInfo> dataSourceMap, String dataSourceName){
-        try {
-            if (null != dataSourceName || !dataSourceName.isEmpty()) {
-                if (!DataSourceCollection.getInstance().getDataSourcesCollection().isEmpty() && DataSourceCollection.getInstance().getDataSourcesCollection().containsKey(dataSourceName)) {
-                    dataSourceMap.put(dataSourceName, DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName));
-                }
-            }
-        } catch(Exception e) {
-            LOGGER.error(e.getMessage());
-        }
-    }
-    public void loadAllDataSources(HashMap<String, DataSourceInfo> dataSourceMap){
-        try {
-            dataSourceMap.putAll(DataSourceCollection.getInstance().getDataSourcesCollection());
-        } catch(Exception e) {
-            LOGGER.error(e.getMessage());
-        }
     }
 
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws

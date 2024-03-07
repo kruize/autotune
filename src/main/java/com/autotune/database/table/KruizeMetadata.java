@@ -27,13 +27,13 @@ public class KruizeMetadata {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String version;
-    private String clusterGroupName;
-    private String clusterName;
+    private String cluster_group_name;
+    private String cluster_name;
     private String namespace;
-    private String workloadType;
-    private String workloadName;
-    private String containerName;
-    private String containerImageName;
+    private String workload_name;
+    private String workload_type;
+    private String container_name;
+    private String container_image_name;
 //    TODO: Relation mapping needs to be done later
 //    @OneToMany(mappedBy = "metadata", cascade = CascadeType.ALL)
 //    private List<KruizeExperimentEntry> experimentEntries;
@@ -41,15 +41,15 @@ public class KruizeMetadata {
     public KruizeMetadata() {
     }
 
-    public KruizeMetadata(String version, String clusterGroupName, String clusterName, String namespace, String workloadType, String workloadName, String containerName, String containerImageName) {
+    public KruizeMetadata(String version, String cluster_group_name, String cluster_name, String namespace, String workload_type, String workload_name, String container_name, String container_image_name) {
         this.version = version;
-        this.clusterGroupName = clusterGroupName;
-        this.clusterName = clusterName;
+        this.cluster_group_name = cluster_group_name;
+        this.cluster_name = cluster_name;
         this.namespace = namespace;
-        this.workloadType = workloadType;
-        this.workloadName = workloadName;
-        this.containerName = containerName;
-        this.containerImageName = containerImageName;
+        this.workload_type = workload_type;
+        this.workload_name = workload_name;
+        this.container_name = container_name;
+        this.container_image_name = container_image_name;
     }
 
     public Long getId() {
@@ -65,19 +65,19 @@ public class KruizeMetadata {
     }
 
     public String getClusterGroupName() {
-        return clusterGroupName;
+        return cluster_group_name;
     }
 
-    public void setClusterGroupName(String clusterGroupName) {
-        this.clusterGroupName = clusterGroupName;
+    public void setClusterGroupName(String cluster_group_name) {
+        this.cluster_group_name = cluster_group_name;
     }
 
     public String getClusterName() {
-        return clusterName;
+        return cluster_name;
     }
 
-    public void setClusterName(String clusterName) {
-        this.clusterName = clusterName;
+    public void setClusterName(String cluster_name) {
+        this.cluster_name = cluster_name;
     }
 
     public String getNamespace() {
@@ -89,35 +89,35 @@ public class KruizeMetadata {
     }
 
     public String getWorkloadType() {
-        return workloadType;
+        return workload_type;
     }
 
-    public void setWorkloadType(String workloadType) {
-        this.workloadType = workloadType;
+    public void setWorkloadType(String workload_type) {
+        this.workload_type = workload_type;
     }
 
     public String getWorkloadName() {
-        return workloadName;
+        return workload_name;
     }
 
-    public void setWorkloadName(String workloadName) {
-        this.workloadName = workloadName;
+    public void setWorkloadName(String workload_name) {
+        this.workload_name = workload_name;
     }
 
     public String getContainerName() {
-        return containerName;
+        return container_name;
     }
 
-    public void setContainerName(String containerName) {
-        this.containerName = containerName;
+    public void setContainerName(String container_name) {
+        this.container_name = container_name;
     }
 
     public String getContainerImageName() {
-        return containerImageName;
+        return container_image_name;
     }
 
-    public void setContainerImageName(String containerImageName) {
-        this.containerImageName = containerImageName;
+    public void setContainerImageName(String container_image_name) {
+        this.container_image_name = container_image_name;
     }
 
     @Override
@@ -125,13 +125,13 @@ public class KruizeMetadata {
         return "KruizeMetadata{" +
                 "id=" + id +
                 ", version='" + version + '\'' +
-                ", clusterGroupName='" + clusterGroupName + '\'' +
-                ", clusterName='" + clusterName + '\'' +
+                ", clusterGroupName='" + cluster_group_name + '\'' +
+                ", clusterName='" + cluster_name + '\'' +
                 ", namespace='" + namespace + '\'' +
-                ", workloadType='" + workloadType + '\'' +
-                ", workloadName='" + workloadName + '\'' +
-                ", containerName='" + containerName + '\'' +
-                ", containerImageName='" + containerImageName + '\'' +
+                ", workloadType='" + workload_type + '\'' +
+                ", workloadName='" + workload_name + '\'' +
+                ", containerName='" + container_name + '\'' +
+                ", containerImageName='" + container_image_name + '\'' +
                 '}';
     }
 }
