@@ -101,7 +101,16 @@ data:
         "hbm2ddlauto": "none",
         "showsql": "false",
         "timezone": "UTC"
-      }
+      },
+      "datasource": [
+        {
+          "name": "prometheus-1",
+          "provider": "prometheus",
+          "serviceName": "",
+          "namespace": "openshift-monitoring",
+          "url": "https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9091"
+        }
+      ]
     }
 ---
 apiVersion: apps/v1
@@ -416,4 +425,17 @@ spec:
     - name: nginx-config-volume
       configMap:
         name: nginx-config
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kruize-monitoring-view
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+roleRef:
+  kind: ClusterRole
+  name: cluster-monitoring-view
+  apiGroup: rbac.authorization.k8s.io
 

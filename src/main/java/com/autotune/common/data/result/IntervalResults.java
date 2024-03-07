@@ -46,11 +46,16 @@ public class IntervalResults {
         this.duration_in_seconds = Double.valueOf((intervalEndTime.getTime() - intervalStartTime.getTime()) / NO_OF_MSECS_IN_SEC);
         this.durationInMinutes = Double.valueOf(intervalEndTime.getTime() - intervalStartTime.getTime()) / (NO_OF_MSECS_IN_SEC * NO_OF_SECONDS_PER_MINUTE);
     }
+
     public IntervalResults() {
     }
 
     public Double getDurationInMinutes() {
         return durationInMinutes;
+    }
+
+    public void setDurationInMinutes(Double durationInMinutes) {
+        this.durationInMinutes = durationInMinutes;
     }
 
     public Double getDuration_in_seconds() {
@@ -65,8 +70,20 @@ public class IntervalResults {
         this.metricResultsMap = metricResultsMap;
     }
 
+    public Timestamp getIntervalEndTime() {
+        return intervalEndTime;
+    }
+
+    public void setIntervalEndTime(Timestamp intervalEndTime) {
+        this.intervalEndTime = intervalEndTime;
+    }
+
     public Timestamp getIntervalStartTime() {
         return intervalStartTime;
+    }
+
+    public void setIntervalStartTime(Timestamp intervalStartTime) {
+        this.intervalStartTime = intervalStartTime;
     }
 
     @Override

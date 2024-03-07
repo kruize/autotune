@@ -79,6 +79,7 @@ public class Converters {
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
                 kruizeObject.setExperiment_usecase_type(new ExperimentUseCaseType(kruizeObject));
+                kruizeObject.setDataSource(createExperimentAPIObject.getDatasource());
                 if (null != createExperimentAPIObject.getValidationData()) {
                     //Validation already done and it is getting loaded back from db
                     kruizeObject.setValidation_data(createExperimentAPIObject.getValidationData());
