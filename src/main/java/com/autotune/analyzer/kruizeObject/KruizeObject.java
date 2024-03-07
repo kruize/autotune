@@ -60,6 +60,8 @@ public final class KruizeObject {
     private ValidationOutputData validation_data;
     private List<K8sObject> kubernetes_objects;
 
+    private String dataSource;
+
 
     public KruizeObject(String experimentName,
                         String clusterName,
@@ -244,6 +246,14 @@ public final class KruizeObject {
 
     public void setNamespace(String namespace) {
         this.namespace = namespace;
+    }
+
+    public String getDataSource() {
+        return dataSource;
+    }
+
+    public void setDataSource(String dataSource) {
+        this.dataSource = dataSource;
     }
 
     @Override

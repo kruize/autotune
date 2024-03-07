@@ -3,18 +3,22 @@ package com.autotune.analyzer.recommendations.utils;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
-import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
-import com.autotune.utils.KruizeConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Optional;
 
 public class RecommendationUtils {
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationUtils.class);
+
     public static RecommendationConfigItem getCurrentValue(Map<Timestamp, IntervalResults> filteredResultsMap,
                                                            Timestamp timestampToExtract,
                                                            AnalyzerConstants.ResourceSetting resourceSetting,
@@ -95,19 +99,27 @@ public class RecommendationUtils {
     }
 
     public static boolean checkIfMinDataAvailableForTerm(ContainerData containerData, RecommendationConstants.RecommendationTerms recommendationTerms) {
-        // Check if data available
-        if (null == containerData || null == containerData.getResults() || containerData.getResults().isEmpty()) {
+        try {
+            // Check if data available
+            if (null == containerData || null == containerData.getResults() || containerData.getResults().isEmpty()) {
+                return false;
+            }
+
+            // Set bounds to check if we get minimum requirement satisfied
+            double lowerBound = recommendationTerms.getLowerBound();
+            double sum = getDurationSummation(containerData);
+            LOGGER.debug("getDurationSummation {}", sum);
+            LOGGER.debug("lowerBound {}", lowerBound);
+            // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
+            if (sum >= lowerBound)
+                return true;
+
+            return false;
+        } catch (Exception e) {
+            LOGGER.debug(e.getMessage());
+            e.printStackTrace();
             return false;
         }
-
-        // Set bounds to check if we get minimum requirement satisfied
-        double lowerBound = recommendationTerms.getLowerBound();
-        double sum = getDurationSummation(containerData);
-        // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
-        if (sum >= lowerBound)
-            return true;
-
-        return false;
     }
 
     public static double getDurationSummation(ContainerData containerData) {
@@ -119,31 +131,19 @@ public class RecommendationUtils {
         return sum;
     }
 
-    public static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
-                                                   Timestamp endTime,
+    public static Timestamp getMonitoringStartTime(Timestamp endTime,
                                                    Double durationInHrs) {
 
-        // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
-        TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
-        sortedResultsHashMap.putAll(resultsHashMap);
-
-        double sum = 0.0;
-        Timestamp intervalEndTime = null;
-        for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
-            if (!timestamp.after(endTime)) {
-                if (sortedResultsHashMap.containsKey(timestamp)) {
-                    sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
-                    if (sum >= ((durationInHrs * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR)
-                            - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE))) {
-                        // Storing the timestamp value in startTimestamp variable to return
-                        intervalEndTime = timestamp;
-                        break;
-                    }
-                }
-            }
-        }
+        Timestamp intervalEndTime;
         try {
-            return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
+            // Convert Timestamp to LocalDateTime
+            LocalDateTime localDateTime = endTime.toLocalDateTime();
+            long maxTermDuration = (long) durationInHrs.doubleValue();
+            // Subtract hours
+            LocalDateTime newLocalDateTime = localDateTime.minusHours(maxTermDuration);
+            // Convert back to Timestamp
+            intervalEndTime = Timestamp.valueOf(newLocalDateTime);
+            return intervalEndTime;
         } catch (NullPointerException npe) {
             return null;
         }

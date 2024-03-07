@@ -57,4 +57,9 @@ public class DefaultImpl extends PerfProfileImpl {
     public void generateRecommendation(KruizeObject kruizeObject, List<ExperimentResultData> experimentResultDataList, Timestamp interval_start_time, Timestamp interval_end_time) {
 
     }
+
+    @Override
+    public void generateRecommendation(KruizeObject kruizeObject, Timestamp interval_start_time) throws Exception {
+
+    }
 }
