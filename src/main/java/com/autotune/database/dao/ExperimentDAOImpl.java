@@ -655,6 +655,15 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return kruizeMetadataList;
     }
+
+    /**
+     * Retrieves a list of KruizeMetadata objects based on the specified cluster group name and cluster name.
+     *
+     * @param clusterGroupName The name of the cluster group.
+     * @param clusterName The name of the cluster.
+     * @return A list of KruizeMetadata objects associated with the provided cluster group and cluster names.
+     * @throws Exception If there is an error while loading metadata from the database.
+     */
     @Override
     public List<KruizeMetadata> loadMetadataByClusterName(String clusterGroupName, String clusterName) throws Exception {
         List<KruizeMetadata> kruizeMetadataList;
@@ -671,6 +680,16 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return kruizeMetadataList;
     }
 
+    /**
+     * Retrieves a list of KruizeMetadata objects based on the specified
+     * cluster group name, cluster name and namespace.
+     *
+     * @param clusterGroupName The name of the cluster group.
+     * @param clusterName The name of the cluster.
+     * @param namespace namespace
+     * @return A list of KruizeMetadata objects associated with the provided cluster group, cluster name and namespaces.
+     * @throws Exception If there is an error while loading metadata from the database.
+     */
     public List<KruizeMetadata> loadMetadataByNamespace(String clusterGroupName, String clusterName, String namespace) throws Exception {
         List<KruizeMetadata> kruizeMetadataList;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {

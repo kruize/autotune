@@ -74,7 +74,7 @@ public class DSMetadataService extends HttpServlet {
             DataSourceInfo datasource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
             if(null != datasource) {
                 new DataSourceManager().importDataFromDataSource(datasource);
-                DataSourceDetailsInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName);
+                DataSourceDetailsInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "false");
                 dataSourceMetadataMap.put(dataSourceName,dataSourceMetadata);
             }
 
@@ -146,6 +146,7 @@ public class DSMetadataService extends HttpServlet {
         String clusterName = request.getParameter(AnalyzerConstants.ServiceConstants.CLUSTER_NAME);
         String namespace = request.getParameter(AnalyzerConstants.ServiceConstants.NAMESPACE);
         String verbose = request.getParameter(AnalyzerConstants.ServiceConstants.VERBOSE);
+        String internalVerbose = "false";
         //Key = dataSource name
         HashMap<String, DataSourceDetailsInfo> dataSourceDetailsMap = new HashMap<>();
         boolean error = false;
@@ -159,23 +160,23 @@ public class DSMetadataService extends HttpServlet {
 
         try {
             if (invalidParams.isEmpty()){
-                if (null==verbose || null == clusterName || null == namespace) {
-                    verbose = "false";
+                if (null != verbose) {
+                    internalVerbose = verbose;
                 }
 
-                if(isValidBooleanValue(verbose)) {
+                if (isValidBooleanValue(internalVerbose)) {
                     try {
                         if (null != dataSourceName) {
                             try {
                                 DataSourceDetailsInfo dataSourceMetadata = null;
-                                if(null == clusterName) {
-                                    dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName);
+                                if (null == clusterName) {
+                                    dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, internalVerbose);
 
-                                } else if(null!=clusterName && verbose=="false"){
+                                } else if (null != clusterName){
                                     if (null == namespace) {
-                                        dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByClusterName(dataSourceName, clusterName);
+                                        dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByClusterName(dataSourceName, clusterName, internalVerbose);
                                     } else {
-                                        verbose = "true";
+                                        internalVerbose = "true";
                                         dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByNamespace(dataSourceName, clusterName, namespace);
                                     }
                                 }
