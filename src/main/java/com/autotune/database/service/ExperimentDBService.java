@@ -410,24 +410,34 @@ public class ExperimentDBService {
         return experimentResultDataList;
     }
 
-    public DataSourceDetailsInfo loadMetadataFromDBByName(String clusterGroupName) throws Exception {
+    public DataSourceDetailsInfo loadMetadataFromDBByName(String clusterGroupName, String verbose) throws Exception {
         List<KruizeMetadata> kruizeMetadataList = experimentDAO.loadMetadataByName(clusterGroupName);
         List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
         if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
-            dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
-                    .convertKruizeMetadataToClusterLevelDataSourceDetails(kruizeMetadataList);
+            if (verbose.equals("false")) {
+                dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToClusterLevelDataSourceDetails(kruizeMetadataList);
+            } else {
+                dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToDataSourceDetailsObject(kruizeMetadataList);
+            }
         }
         if (dataSourceDetailsInfoList.isEmpty())
             return null;
         else
             return dataSourceDetailsInfoList.get(0);
     }
-    public DataSourceDetailsInfo loadMetadataFromDBByClusterName(String clusterGroupName, String clusterName) throws Exception {
+    public DataSourceDetailsInfo loadMetadataFromDBByClusterName(String clusterGroupName, String clusterName, String verbose) throws Exception {
         List<KruizeMetadata> kruizeMetadataList = experimentDAO.loadMetadataByClusterName(clusterGroupName, clusterName);
         List<DataSourceDetailsInfo> dataSourceDetailsInfoList = new ArrayList<>();
         if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
-            dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
-                    .convertKruizeMetadataToNamespaceLevelDataSourceDetails(kruizeMetadataList);
+            if (verbose.equals("false")) {
+                dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToNamespaceLevelDataSourceDetails(kruizeMetadataList);
+            } else {
+                dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToDataSourceDetailsObject(kruizeMetadataList);
+            }
         }
         if (dataSourceDetailsInfoList.isEmpty())
             return null;

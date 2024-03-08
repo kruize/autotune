@@ -750,7 +750,6 @@ public class DBHelpers {
 
                 for (KruizeMetadata kruizeMetadata : kruizeMetadataList) {
                     try {
-                        // Use provided functions to get DataSource objects
                         DataSourceClusterGroup dataSourceClusterGroup = getDataSourceClusterGroup(kruizeMetadata, dataSourceDetailsInfo);
                         DataSourceCluster dataSourceCluster = getDataSourceCluster(kruizeMetadata, dataSourceClusterGroup);
                         dataSourceCluster.setDataSourceNamespaceHashMap(null);
@@ -786,7 +785,6 @@ public class DBHelpers {
 
                 for (KruizeMetadata kruizeMetadata : kruizeMetadataList) {
                     try {
-                        // Use provided functions to get DataSource objects
                         DataSourceClusterGroup dataSourceClusterGroup = getDataSourceClusterGroup(kruizeMetadata, dataSourceDetailsInfo);
                         DataSourceCluster dataSourceCluster = getDataSourceCluster(kruizeMetadata, dataSourceClusterGroup);
                         DataSourceNamespace dataSourceNamespace = getDataSourceNamespace(kruizeMetadata, dataSourceCluster);
