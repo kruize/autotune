@@ -51,7 +51,6 @@ replicas=10
 target="crc"
 kruize_image_prev="quay.io/kruize/autotune_operator:0.0.19.5_rm"
 kruize_image_current="quay.io/kruize/autotune_operator:0.0.20.1_rm"
-hours=6
 
 function usage() {
 	echo
@@ -107,12 +106,14 @@ mkdir -p ${LOG_DIR}
 
 LOG="${LOG_DIR}/db-migration-test.log"
 
+
+
 # Run scalability test to load 50 exps / 15 days data and update Recommendations with previous release
 pushd ${SCALE_TEST} > /dev/null
 	echo ""
 	echo "Run scalability test to load 50 exps / 15 days data and update Recommendations with ${kruize_image_prev}"
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u 5 -d 15 -n 10 -t 6 -q 10 -s 2023-12-20T00:00:00.000Z -r ${LOG_DIR}/kruize_scale_test_logs_50_15days"
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u 5 -d 15 -n 10 -t 6 -q 10 -s 2023-12-20T00:00:00.000Z -r ${LOG_DIR}/kruize_scale_test_logs_50_15days
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/kruize_scale_test_logs_50_15days"
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/kruize_scale_test_logs_50_15days
 popd > /dev/null 
 	echo ""
 
@@ -133,15 +134,52 @@ sleep 20
 pushd ${SCALE_TEST} > /dev/null
 	echo ""
 	echo "Run scalability test to load 50 exps / 1 day data and update Recommendations after restoring DB with ${kruize_image_current}..."
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u 5 -d 1 -n 10 -t 6 -q 10 -s 2024-01-04T00:00:00.000Z -l true -f ${db_backup_file} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days -e ${total_results_count}"
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u 5 -d 1 -n 10 -t 6 -q 10 -s 2024-01-04T00:00:00.000Z -l true -f ${db_backup_file} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days -e ${total_results_count}
+
+	num_days_of_res=1
+	initial_start_date="2024-01-04T00:00:00.000Z"
+	restore_db=true
+
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days -e ${total_results_count}"
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days -e ${total_results_count}
 
 	echo | tee -a ${LOG}
 	echo ""
 popd > /dev/null 
 
 
+# Validate the recommendations json
+failed=0
+end_time="2024-01-05T00:00:00.000Z"
+for ((loop=1; loop<=num_clients; loop++));
+do
+	for ((j=1; j<=num_exps; j++));
+	do
+
+        	exp_name="scaletest${num_exps}-${loop}_${j}"
+	        SERVER_IP_ADDR=($(oc status --namespace=${NAMESPACE} | grep "kruize" | grep port | cut -d " " -f1 | cut -d "/" -f3))
+        	port=0
+
+	        reco_json_dir="${LOG_DIR}/reco_jsons"
+        	mkdir -p ${reco_json_dir}
+	        curl -s http://${SERVER_IP_ADDR}/listRecommendations?experiment_name=${exp_name} > ${reco_json_dir}/${exp_name}_reco.json
+
+		python3 validate_json.py -f ${reco_json_dir}/${exp_name}_reco.json -t ${end_time}
+		if [ $? != 0 ]; then
+			failed=1
+		fi
+	done
+done
+
+
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
 echo ""
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
+
+if [ ${failed} == 0 ]; then
+	echo "DB Migration test Passed!"
+	exit 0
+else
+	echo "DB Migration test failed! Check logs for details"
+	exit 1
+fi
