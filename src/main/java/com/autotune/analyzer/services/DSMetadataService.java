@@ -68,7 +68,7 @@ public class DSMetadataService extends HttpServlet {
                         response,
                         null,
                         HttpServletResponse.SC_BAD_REQUEST,
-                        AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.DATASOURCE_NAME_MANDATORY);
+                        AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_NAME_MANDATORY);
             }
 
             DataSourceInfo datasource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
@@ -82,9 +82,9 @@ public class DSMetadataService extends HttpServlet {
                 sendErrorResponse(
                         inputData,
                         response,
-                        new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
                         HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.DATASOURCE_METADATA_IMPORT_ERROR_MSG, dataSourceName)
+                        String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_IMPORT_ERROR_MSG, dataSourceName)
                 );
             } else {
                 sendSuccessResponse(response, dataSourceMetadataMap.get(dataSourceName));
@@ -192,9 +192,9 @@ public class DSMetadataService extends HttpServlet {
                                 error = true;
                                 sendErrorResponse(
                                         response,
-                                        new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
+                                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
                                         HttpServletResponse.SC_BAD_REQUEST,
-                                        String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.MISSING_DATASOURCE_METADATA_MSG, dataSourceName, clusterName, namespace)
+                                        String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_MSG, dataSourceName, clusterName, namespace)
                                 );
                             }
 
@@ -202,9 +202,9 @@ public class DSMetadataService extends HttpServlet {
                             error = true;
                             sendErrorResponse(
                                     response,
-                                    new Exception(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                                    new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
                                     HttpServletResponse.SC_BAD_REQUEST,
-                                    String.format(AnalyzerErrorConstants.APIErrors.ImportDataSourceMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG
+                                    String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG
                                             , dataSourceName)
                             );
                         }
@@ -225,17 +225,17 @@ public class DSMetadataService extends HttpServlet {
                 } else {
                     sendErrorResponse(
                             response,
-                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE),
+                            new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM_VALUE),
                             HttpServletResponse.SC_BAD_REQUEST,
-                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM_VALUE)
+                            String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM_VALUE)
                     );
                 }
             } else {
                 sendErrorResponse(
                         response,
-                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM),
+                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM),
                         HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_QUERY_PARAM, invalidParams)
+                        String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM, invalidParams)
                 );
             }
         } finally {
