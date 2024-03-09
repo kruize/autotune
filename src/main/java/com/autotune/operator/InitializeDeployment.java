@@ -53,6 +53,10 @@ public class InitializeDeployment {
         String monitoring_agent_endpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
         String monitoring_agent = KruizeDeploymentInfo.monitoring_agent;
         String monitoring_agent_service = KruizeDeploymentInfo.monitoring_service;
+        String kafka_bootstrap_servers = System.getenv("KAFKA_BOOTSTRAP_SERVERS");
+        String kafka_consumer_group_id = System.getenv("KAFKA_CONSUMER_GROUP_ID");
+        String kafka_topic_inbound = System.getenv("INGRESS_KAFKA_TOPIC");
+        String kafka_topic_outbound = System.getenv("EGRESS_KAFKA_TOPIC");
         //If no endpoint was specified in the configmap
         if (monitoring_agent_endpoint == null || monitoring_agent_endpoint.isEmpty()) {
             if (monitoring_agent == null || monitoring_agent_service == null) {
@@ -69,6 +73,11 @@ public class InitializeDeployment {
         KruizeDeploymentInfo.initiateEventLogging();
 
         KruizeDeploymentInfo.logDeploymentInfo();
+
+        KruizeDeploymentInfo.setKafkaBootstrapServers(kafka_bootstrap_servers);
+        KruizeDeploymentInfo.setKafkaGroupID(kafka_consumer_group_id);
+        KruizeDeploymentInfo.setInboundKafkaTopic(kafka_topic_inbound);
+        KruizeDeploymentInfo.setOutboundKafkaTopic(kafka_topic_outbound);
 
 
     }

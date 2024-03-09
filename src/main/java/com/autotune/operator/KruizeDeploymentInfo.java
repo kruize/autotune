@@ -74,6 +74,11 @@ public class KruizeDeploymentInfo {
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
 
+    private static String kafkaBootstrapServers = null;
+    private static String kafkaGroupID = null;
+    private static String inboundKafkaTopic = null;
+    private static String outboundKafkaTopic = null;
+
 
     private KruizeDeploymentInfo() {
     }
@@ -163,6 +168,34 @@ public class KruizeDeploymentInfo {
         if (monitoringAgentService != null)
             KruizeDeploymentInfo.monitoring_service = monitoringAgentService.toLowerCase();
     }
+
+    public static synchronized void setKafkaBootstrapServers(String kafkaBootstrapServers)
+    {
+        if (kafkaBootstrapServers != null)
+            KruizeDeploymentInfo.kafkaBootstrapServers = kafkaBootstrapServers;
+    }
+    public static String getKafkaBootstrapServers() {return KruizeDeploymentInfo.kafkaBootstrapServers;}
+
+    public static void setKafkaGroupID(String kafkaGroupID)
+    {
+        if (kafkaGroupID != null)
+            KruizeDeploymentInfo.kafkaGroupID = kafkaGroupID;
+    }
+    public static String getKafkaGroupID() {return KruizeDeploymentInfo.kafkaGroupID;}
+
+    public static void setInboundKafkaTopic(String inboundKafkaTopic)
+    {
+        if (inboundKafkaTopic != null)
+            KruizeDeploymentInfo.inboundKafkaTopic = inboundKafkaTopic;
+    }
+    public static String getInboundKafkaTopic() { return KruizeDeploymentInfo.inboundKafkaTopic; }
+
+    public static void setOutboundKafkaTopic(String outboundKafkaTopic)
+    {
+        if (outboundKafkaTopic != null)
+            KruizeDeploymentInfo.outboundKafkaTopic = outboundKafkaTopic;
+    }
+    public static String getOutboundKafkaTopic() {return KruizeDeploymentInfo.outboundKafkaTopic;}
 
     public static void logDeploymentInfo() {
         LOGGER.info("Cluster Type: {}", KruizeDeploymentInfo.cluster_type);

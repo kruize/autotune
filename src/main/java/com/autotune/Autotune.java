@@ -28,6 +28,7 @@ import com.autotune.operator.InitializeDeployment;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
+import com.autotune.utils.KafkaUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.ServerContext;
@@ -107,6 +108,10 @@ public class Autotune {
             e.printStackTrace();
             System.exit(1);
         }
+
+        String receivedMessage = KafkaUtils.consumeMessages();
+        LOGGER.error("Received kafka msg: {}", receivedMessage);
+        KafkaUtils.produceMessage(receivedMessage);
 
         if (KruizeDeploymentInfo.settings_save_to_db) {
             Session session = null;
