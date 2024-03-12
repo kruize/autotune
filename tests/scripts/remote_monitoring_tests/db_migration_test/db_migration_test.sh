@@ -163,7 +163,7 @@ do
         	mkdir -p ${reco_json_dir}
 	        curl -s http://${SERVER_IP_ADDR}/listRecommendations?experiment_name=${exp_name} > ${reco_json_dir}/${exp_name}_reco.json
 
-		python3 validate_json.py -f ${reco_json_dir}/${exp_name}_reco.json -t ${end_time}
+		python3 validate_reco_json.py -f ${reco_json_dir}/${exp_name}_reco.json -t ${end_time}
 		if [ $? != 0 ]; then
 			failed=1
 		fi
