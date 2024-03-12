@@ -44,6 +44,7 @@ import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URL;
 import java.sql.Timestamp;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -688,8 +689,14 @@ public class DBHelpers {
                 int failureCount = 0;
                 for (KruizeDataSource kruizeDataSource : kruizeDataSourceList) {
                     try {
-                        DataSourceInfo dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
-                                .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace());
+                        DataSourceInfo dataSourceInfo = null;
+                        if(null != kruizeDataSource.getUrl())
+                             dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
+                                    .getProvider(), new URL(kruizeDataSource.getUrl()));
+                        else{
+                             dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
+                                    .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace());
+                        }
                         dataSourceInfoList.add(dataSourceInfo);
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while converting to dataSourceInfo from DB object : {}", e.getMessage());
