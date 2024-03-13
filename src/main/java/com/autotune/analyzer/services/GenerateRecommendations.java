@@ -126,7 +126,7 @@ public class GenerateRecommendations extends HttpServlet {
                                 .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS * 24)));
                 LOGGER.info("{} - {}", interval_start_time, interval_end_time);
             }
-            LOGGER.debug("experiment_name : {} and interval_end_time : {} ", experiment_name, intervalEndTimeStr);
+            LOGGER.info("experiment_name : {} and interval_end_time : {} ", experiment_name, intervalEndTimeStr);
 
             List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
             ExperimentResultData experimentResultData = null;
@@ -139,9 +139,12 @@ public class GenerateRecommendations extends HttpServlet {
                 long interval_start_time_epoc = interval_start_time.getTime() / 1000 - (interval_start_time.getTimezoneOffset() * 60);
                 ;
 
+                LOGGER.info("getting KruizeObject");
                 new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
+
                 if (null != mainKruizeExperimentMAP.get(experiment_name)) {
                     kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
+                    LOGGER.info("getting dataSourceInfo");
                     dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(kruizeObject.getDataSource());
                     LOGGER.info("dataSource : {}", dataSourceInfo);
                 }
@@ -213,7 +216,7 @@ public class GenerateRecommendations extends HttpServlet {
                                     promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
                                     format = "GiB";
                                 }
-                                System.out.println(promQL);
+                                LOGGER.info(promQL);
                                 String podMetricsUrl = null;
                                 String podMetricsResponse = null;
                                 try {
@@ -223,7 +226,7 @@ public class GenerateRecommendations extends HttpServlet {
                                             interval_start_time_epoc,
                                             interval_end_time_epoc,
                                             measurementDurationMinutesInDouble.intValue() * 60);
-                                    System.out.println(podMetricsUrl);
+                                    LOGGER.info(podMetricsUrl);
                                     JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson("get", "");
                                     JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                                     JsonArray resultArray = jsonObject.getAsJsonObject("data").getAsJsonArray("result");
