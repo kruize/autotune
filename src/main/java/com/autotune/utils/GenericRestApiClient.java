@@ -166,6 +166,7 @@ public class GenericRestApiClient {
             }
             LOGGER.info("Executing request {} ", httpRequestBase.getRequestLine());
             jsonOutputInString = httpclient.execute(httpRequestBase, new StringResponseHandler());
+            LOGGER.info(jsonOutputInString);
         }
         return new JSONObject(jsonOutputInString);
     }
