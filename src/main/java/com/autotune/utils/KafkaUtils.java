@@ -28,8 +28,25 @@ public class KafkaUtils {
         addProducerShutdownHook();
     }
 
+    // Kafka Producer Method
+    public static void produceMessage(String message) {
+        Properties props = new Properties();
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KruizeDeploymentInfo.getKafkaBootstrapServers());
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
+
+        try {
+            producer = new KafkaProducer<>(props);
+            ProducerRecord<String, String> record = new ProducerRecord<>(KruizeDeploymentInfo.getOutboundKafkaTopic(), message);
+            producer.send(record);
+        } catch (Exception e) {
+            LOGGER.error("Unable to produce msg: ", e);
+        }
+    }
+
     // Kafka Consumer Method
     public static String consumeMessages() {
+        // listener/continuous process; returns msg
         Properties props = new Properties();
         LOGGER.error("This is from env {}", KruizeDeploymentInfo.getKafkaBootstrapServers());
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, KruizeDeploymentInfo.getKafkaBootstrapServers());
@@ -57,22 +74,6 @@ public class KafkaUtils {
             LOGGER.error("Unable to consume msg: ", e);
         }
         return null;
-    }
-
-    // Kafka Producer Method
-    public static void produceMessage(String message) {
-        Properties props = new Properties();
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KruizeDeploymentInfo.getKafkaBootstrapServers());
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-
-        try {
-            producer = new KafkaProducer<>(props);
-            ProducerRecord<String, String> record = new ProducerRecord<>(KruizeDeploymentInfo.getOutboundKafkaTopic(), message);
-            producer.send(record);
-        } catch (Exception e) {
-            LOGGER.error("Unable to produce msg: ", e);
-        }
     }
 
     private static boolean isTerminationSignalReceived() {
