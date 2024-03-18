@@ -1,115 +1,13 @@
 package com.autotune.analyzer.recommendations;
 
-import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.subCategory.PerformanceRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 public class RecommendationConstants {
 
-    public enum RecommendationCategory {
-        COST(
-                KruizeConstants.JSONKeys.COST,
-                new CostRecommendationSubCategory[]{
-                        new CostRecommendationSubCategory(
-                                KruizeConstants.JSONKeys.SHORT_TERM,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
-                                TimeUnit.DAYS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                        ),
-                        new CostRecommendationSubCategory(
-                                KruizeConstants.JSONKeys.MEDIUM_TERM,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
-                                TimeUnit.DAYS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                        ),
-                        new CostRecommendationSubCategory(
-                                KruizeConstants.JSONKeys.LONG_TERM,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
-                                TimeUnit.DAYS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                        ),
-                }
-        ),
-        // Need to update with profile based sub categories
-        PERFORMANCE(KruizeConstants.JSONKeys.PERFORMANCE, new PerformanceRecommendationSubCategory[]{
-                new PerformanceRecommendationSubCategory(
-                        KruizeConstants.JSONKeys.SHORT_TERM,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
-                        TimeUnit.DAYS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                ),
-                new PerformanceRecommendationSubCategory(
-                        KruizeConstants.JSONKeys.MEDIUM_TERM,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
-                        TimeUnit.DAYS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                ),
-                new PerformanceRecommendationSubCategory(
-                        KruizeConstants.JSONKeys.LONG_TERM,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
-                        TimeUnit.DAYS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                ),
-        });
-
-        private String name;
-        private RecommendationSubCategory[] recommendationSubCategories;
-
-        private RecommendationCategory(String name, RecommendationSubCategory[] recommendationSubCategories) {
-            this.name = name;
-            this.recommendationSubCategories = recommendationSubCategories;
-        }
-
-        public String getName() {
-            return this.name;
-        }
-
-        public RecommendationSubCategory[] getRecommendationSubCategories() {
-            return this.recommendationSubCategories;
-        }
-    }
     public enum RecommendationNotificationTypes {
         INFO("info", 1),
         ERROR("error", 2),
@@ -829,21 +727,21 @@ public class RecommendationConstants {
 
         }
 
-        public static class EngineNames {
+        public static class ModelNames {
             public static String DEFAULT_NAME = "default";
             public static String COST = "cost";
             public static String PERFORMANCE = "performance";
 
-            private EngineNames() {
+            private ModelNames() {
 
             }
         }
 
-        public static class EngineKeys {
+        public static class ModelKeys {
             public static String COST_KEY = "cost";
             public static String PERFORMANCE_BASED_KEY = "performance";
 
-            private EngineKeys() {
+            private ModelKeys() {
 
             }
         }

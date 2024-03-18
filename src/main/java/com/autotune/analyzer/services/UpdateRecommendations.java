@@ -24,6 +24,7 @@ import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
+import com.autotune.utils.Utils;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -91,16 +92,19 @@ public class UpdateRecommendations extends HttpServlet {
             Timestamp interval_end_time = null;
             Timestamp interval_start_time = null;
             // validate the input params and generate recommendations
-            RecommendationEngine recommendationEngine = new RecommendationEngine();
-            KruizeObject kruizeObject = recommendationEngine.validateAndGenerateRecommendation(experiment_name,
-                    interval_end_time, interval_start_time, intervalEndTimeStr, intervalStartTimeStr, calCount);
-            if (!kruizeObject.getValidation_data().isSuccess()) {
-                sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject
-                        .getValidation_data().getMessage());
-            } else {
+            RecommendationEngine recommendationEngine = new RecommendationEngine(experiment_name, intervalEndTimeStr, intervalStartTimeStr);
+            KruizeObject kruizeObject = recommendationEngine.generateRecommendations(calCount);
+            if (kruizeObject.getValidation_data().isSuccess()) {
+                LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
+                interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
+                        intervalEndTimeStr);
                 sendSuccessResponse(response, kruizeObject, interval_end_time);
                 statusValue = "success";
+            } else {
+                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, kruizeObject.getValidation_data().getMessage());
             }
+
         } catch (Exception e) {
             LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
             LOGGER.error("Exception: " + e.getMessage());

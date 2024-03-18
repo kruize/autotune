@@ -19,12 +19,10 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import org.slf4j.Logger;
@@ -34,7 +32,6 @@ import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
@@ -44,26 +41,34 @@ import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectE
 public class RecommendationEngine {
     private String performanceProfile;
     private String experimentName;
-    private Timestamp intervalEndTime;
+    private final String intervalEndTimeStr;
+    private final String intervalStartTimeStr;
     private Map<String, Terms> terms;
     List<RecommendationModel> recommendationModels;
+    private KruizeObject kruizeObject;
+    private Timestamp interval_end_time;
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
 
 
-    public RecommendationEngine(String performanceProfile, String experimentName, Timestamp intervalEndTime, Map<String, Terms> terms) {
-        this.performanceProfile = performanceProfile;
+    public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
         this.experimentName = experimentName;
-        this.intervalEndTime = intervalEndTime;
-        this.terms = terms;
+        this.intervalEndTimeStr = intervalEndTimeStr;
+        this.intervalStartTimeStr = intervalStartTimeStr;
         this.init();
     }
 
-    public RecommendationEngine() {
-
-    }
-
     private void init() {
+        // validate here and create KruizeObject if successful
+        String validationMessage = validate();
+        if (validationMessage.isEmpty()) {
+            interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
+                    intervalEndTimeStr);
+            setInterval_end_time(interval_end_time);
+            KruizeObject kruizeObject = createKruizeObject();
+            if (kruizeObject != null)
+                setKruizeObject(kruizeObject);
+        }
         // Add new models
         recommendationModels = new ArrayList<>();
         // Create Cost based model
@@ -75,7 +80,6 @@ public class RecommendationEngine {
         registerModel(performanceBasedRecommendationModel);
         // TODO: Add profile based once recommendation algos are available
     }
-
     private void registerModel(RecommendationModel recommendationModel) {
         if (null == recommendationModel) {
             return;
@@ -108,12 +112,12 @@ public class RecommendationEngine {
         this.experimentName = experimentName;
     }
 
-    public Timestamp getIntervalEndTime() {
-        return intervalEndTime;
+    public Timestamp getInterval_end_time() {
+        return interval_end_time;
     }
 
-    public void setIntervalEndTime(Timestamp intervalEndTime) {
-        this.intervalEndTime = intervalEndTime;
+    public void setInterval_end_time(Timestamp interval_end_time) {
+        this.interval_end_time = interval_end_time;
     }
 
     public Map<String, Terms> getTerms() {
@@ -124,84 +128,31 @@ public class RecommendationEngine {
         this.terms = terms;
     }
 
-    public KruizeObject validateAndGenerateRecommendation(String experiment_name, Timestamp interval_end_time,
-                                                                  Timestamp interval_start_time, String intervalEndTimeStr,
-                                                                  String intervalStartTimeStr, int calCount) {
-        KruizeObject kruizeObject = new KruizeObject();
-        ValidationOutputData validationOutputData;
-        String validationMessage = validate(experiment_name, interval_end_time, interval_start_time, intervalEndTimeStr, intervalStartTimeStr);
-        if (!validationMessage.isEmpty()) {
-            LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-            kruizeObject.setValidation_data(new ValidationOutputData(false, validationMessage, HttpServletResponse.SC_BAD_REQUEST));
-            return kruizeObject;
-        }
-        interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
-                intervalEndTimeStr);
-        LOGGER.debug("UpdateRecommendations API request count: {} experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", calCount, experiment_name, intervalStartTimeStr, intervalEndTimeStr);
-        LOGGER.debug("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
+    public KruizeObject getKruizeObject() {
+        return kruizeObject;
+    }
 
+    public void setKruizeObject(KruizeObject kruizeObject) {
+        this.kruizeObject = kruizeObject;
+    }
+
+    private KruizeObject createKruizeObject() {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
-        Map<String, Terms> terms = new HashMap<>();
+        KruizeObject kruizeObject = null;
         try {
-            new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experiment_name);
-            if (null != mainKruizeExperimentMAP.get(experiment_name)) {
-                kruizeObject = mainKruizeExperimentMAP.get(experiment_name);
-            }
-            if (null != kruizeObject) {
-                // set the default terms if the terms object is empty
-                if (kruizeObject.getTerms() == null)
-                    setDefaultTerms(terms);
-                // get the datasource
-                String dataSource = kruizeObject.getDataSource(); // TODO: This will be required for future use
-                int maxDay = Terms.getMaxDays(terms);
-                interval_start_time = Timestamp.valueOf(Objects.requireNonNull(interval_end_time).toLocalDateTime().minusDays(maxDay));
-
-                mainKruizeExperimentMAP.put(experiment_name, kruizeObject);
-                new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experiment_name,
-                        interval_start_time, interval_end_time);
-
-                // generate recommendation
-                try {
-                    generateRecommendations(kruizeObject);
-                    validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP,
-                            kruizeObject, interval_end_time);
-                    if (!validationOutputData.isSuccess()) {
-                        LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-                        validationOutputData = new ValidationOutputData(false, validationOutputData.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                    } else {
-                        LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
-                    }
-                    kruizeObject.setValidation_data(validationOutputData);
-                } catch (Exception e) {
-                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-                    e.printStackTrace();
-                    LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
-                            experiment_name,
-                            interval_start_time,
-                            interval_end_time);
-                    kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
-                }
-            } else {
-                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-                kruizeObject = new KruizeObject();
-                kruizeObject.setValidation_data(new ValidationOutputData(false, String.format("%s%s", MISSING_EXPERIMENT_NAME, experiment_name),
-                        HttpServletResponse.SC_BAD_REQUEST));
-            }
+            new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
+            kruizeObject = mainKruizeExperimentMAP.get(experimentName);
         } catch (Exception e) {
-            e.printStackTrace();
-            LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-            kruizeObject = new KruizeObject();
-            kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+            LOGGER.error("Failed to load experiment from DB: {}", e.getMessage());
         }
         return kruizeObject;
     }
 
-    public String validate(String experiment_name, Timestamp interval_end_time, Timestamp interval_start_time,
-                                  String intervalEndTimeStr, String intervalStartTimeStr) {
+    public String validate() {
 
         String validationFailureMsg = "";
         // Check if experiment_name is provided
-        if (experiment_name == null || experiment_name.isEmpty()) {
+        if (experimentName == null || experimentName.isEmpty()) {
             validationFailureMsg += AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.EXPERIMENT_NAME_MANDATORY;
         }
 
@@ -214,286 +165,206 @@ public class RecommendationEngine {
         }
 
         // Check if interval_start_time is provided
-        if (intervalStartTimeStr != null) {
-            if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalStartTimeStr)) {
-                validationFailureMsg += AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG;
-            } else {
-                interval_start_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
-                        intervalStartTimeStr);
-                if (interval_start_time != null) {
-                    int comparisonResult = interval_start_time.compareTo(interval_end_time);
-                    if (comparisonResult >= 0) {
-                        // interval_start_time is after interval_end_time
-                        validationFailureMsg += AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.TIME_COMPARE;
-                    } else {
-                        // calculate difference between two dates
-                        if (interval_end_time != null) {
-                            long differenceInMillis = interval_end_time.getTime() - interval_start_time.getTime();
-                            long differenceInDays = TimeUnit.MILLISECONDS.toDays(differenceInMillis);
-                            if (differenceInDays > KruizeDeploymentInfo.generate_recommendations_date_range_limit_in_days) {
-                                validationFailureMsg += AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.TIME_GAP_LIMIT;
-                            }
-                        }
-                    }
-                }
-            }
-        }
+        // TODO: to be considered in future
+
         return validationFailureMsg;
     }
 
-
     public void generateRecommendations(KruizeObject kruizeObject) {
 
-        //TODO: iterate using terms instead of results, check for min data and other notifications at terms level
-
         RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
-        for (K8sObject k8sObjectResultData : kruizeObject.getKubernetes_objects()) {
-            // We only support one K8sObject currently
-            K8sObject k8sObjectKruizeObject = kruizeObject.getKubernetes_objects().get(0);
-            for (String cName : k8sObjectResultData.getContainerDataMap().keySet()) {
-                ContainerData containerDataResultData = k8sObjectResultData.getContainerDataMap().get(cName);
-                if (null == containerDataResultData.getResults() || containerDataResultData.getResults().isEmpty())
-                    continue;
+        Map<String, Terms> termsMap = kruizeObject.getTerms();
+        for (Map.Entry<String, Terms> termEntry : termsMap.entrySet()) {
+            String term = termEntry.getKey();
+            Terms termObject = termEntry.getValue();
 
-                // Get the ContainerData from the KruizeObject and not from ResultData
-                ContainerData containerDataKruizeObject = k8sObjectKruizeObject.getContainerDataMap().get(cName);
+            for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                for (String containerName : k8sObject.getContainerDataMap().keySet()) {
+                    ContainerData containerData = k8sObject.getContainerDataMap().get(containerName);
+                    HashMap<Timestamp, IntervalResults> results = containerData.getResults();
 
-                // Get the monitoringEndTime from ResultData's ContainerData. Should have only one element
-                Timestamp monitoringEndTime = containerDataKruizeObject.getResults().keySet().stream().max(Timestamp::compareTo).get();
-
-                ContainerRecommendations containerRecommendations = containerDataKruizeObject.getContainerRecommendations();
-                // Just to make sure the container recommendations object is not empty
-                if (null == containerRecommendations) {
-                    containerRecommendations = new ContainerRecommendations();
-                }
-
-                HashMap<Integer, RecommendationNotification> recommendationLevelNM = containerRecommendations.getNotificationMap();
-                if (null == recommendationLevelNM) {
-                    recommendationLevelNM = new HashMap<>();
-                }
-
-                // Check for min data before setting notifications
-                // Check for at least short term
-                if (!Terms.checkIfMinDataAvailableForTerm(containerDataKruizeObject, RecommendationConstants.RecommendationTerms.SHORT_TERM)) {
-                    RecommendationNotification recommendationNotification = new RecommendationNotification(
-                            RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
-                    );
-                    recommendationLevelNM.put(recommendationNotification.getCode(), recommendationNotification);
-                    continue;
-                }
-
-                boolean recommendationAvailable = false;
-
-                // Get the engine recommendation map for a time stamp if it exists else create one
-                HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap
-                        = containerRecommendations.getData();
-
-                if (null == timestampBasedRecommendationMap) {
-                    timestampBasedRecommendationMap = new HashMap<>();
-                }
-                // check if engines map exists else create one
-                MappedRecommendationForTimestamp timestampRecommendation;
-                if (timestampBasedRecommendationMap.containsKey(monitoringEndTime)) {
-                    timestampRecommendation = timestampBasedRecommendationMap.get(monitoringEndTime);
-                } else {
-                    timestampRecommendation = new MappedRecommendationForTimestamp();
-                }
-
-                HashMap<Timestamp, IntervalResults> intervalResultsHashMap = containerDataResultData.getResults();
-                timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
-                HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = new HashMap<>();
-
-                ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
-
-                // Create Current Requests Map
-                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
-
-                // Create Current Limits Map
-                HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
-
-                for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
-                    for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
-                        RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(intervalResultsHashMap,
-                                monitoringEndTime,
-                                resourceSetting,
-                                recommendationItem,
-                                notifications);
-
-                        if (null == configItem)
-                            continue;
-                        if (null == configItem.getAmount()) {
-                            if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
-                                notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
-                            else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
-                                notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
-                            continue;
-                        }
-                        if (null == configItem.getFormat()) {
-                            if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
-                                notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
-                            else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
-                                notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
-                            continue;
-                        }
-                        if (configItem.getAmount() <= 0.0) {
-                            if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
-                                notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
-                            else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
-                                notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
-                            continue;
-                        }
-                        if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
-                            if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
-                                notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
-                            else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
-                                notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
-                            continue;
-                        }
-
-                        if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
-                            currentRequestsMap.put(recommendationItem, configItem);
-                        }
-                        if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
-                            currentLimitsMap.put(recommendationItem, configItem);
-                        }
+                    if (results == null || results.isEmpty()) {
+                        continue;
                     }
-                }
 
-                // Iterate over notifications and set to recommendations
-                for (RecommendationConstants.RecommendationNotification recommendationNotification : notifications) {
-                    timestampRecommendation.addNotification(new RecommendationNotification(recommendationNotification));
-                }
+                    Timestamp monitoringEndTime = results.keySet().stream().max(Timestamp::compareTo).get();
+                    Timestamp monitoringStartTime = Terms.getMonitoringStartTime(results, monitoringEndTime, termObject.getDays());
 
-                // Check if map is not empty and set requests map to current config
-                if (!currentRequestsMap.isEmpty()) {
-                    currentConfig.put(AnalyzerConstants.ResourceSetting.requests, currentRequestsMap);
-                }
+                    ContainerRecommendations containerRecommendations = containerData.getContainerRecommendations();
+                    if (containerRecommendations == null) {
+                        containerRecommendations = new ContainerRecommendations();
+                    }
 
-                // Check if map is not empty and set limits map to current config
-                if (!currentLimitsMap.isEmpty()) {
-                    currentConfig.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
-                }
+                    HashMap<Integer, RecommendationNotification> recommendationLevelNM = containerRecommendations.getNotificationMap();
+                    if (recommendationLevelNM == null) {
+                        recommendationLevelNM = new HashMap<>();
+                    }
+                    // todo: need to clean this up
+                    double duration = termObject.getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
+                            NO_OF_MINUTES_PER_HOUR;
 
-                timestampRecommendation.setCurrentConfig(currentConfig);
-
-                boolean termLevelRecommendationExist = false;
-                for (RecommendationConstants.RecommendationTerms recommendationTerm : RecommendationConstants.RecommendationTerms.values()) {
-                    String term = recommendationTerm.getValue();
-                    LOGGER.debug("term = {}", term);
-                    double duration = recommendationTerm.getDuration();
-
-                    // TODO: Add check for min data
-
-                    TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
-
-                    ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
-
-                    // Check if there is min data available for the term
-                    if (!RecommendationUtils.checkIfMinDataAvailableForTerm(containerDataKruizeObject, recommendationTerm)) {
+                    if (!Terms.checkIfMinDataAvailableForTerm(containerData, duration)) {
                         RecommendationNotification recommendationNotification = new RecommendationNotification(
-                                RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-                        mappedRecommendationForTerm.addNotification(recommendationNotification);
+                                RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
+                        );
+                        recommendationLevelNM.put(recommendationNotification.getCode(), recommendationNotification);
+                        continue;
+                    }
+
+                    boolean recommendationAvailable = false;
+
+                    HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap = containerRecommendations.getData();
+                    if (timestampBasedRecommendationMap == null) {
+                        timestampBasedRecommendationMap = new HashMap<>();
+                    }
+
+                    MappedRecommendationForTimestamp timestampRecommendation;
+                    if (timestampBasedRecommendationMap.containsKey(monitoringEndTime)) {
+                        timestampRecommendation = timestampBasedRecommendationMap.get(monitoringEndTime);
                     } else {
-                        Timestamp monitoringStartTime = null;
-                        for (RecommendationModel model : getModels()) {
-                            boolean isCostEngine = false;
-                            boolean isPerfEngine = false;
+                        timestampRecommendation = new MappedRecommendationForTimestamp();
+                    }
 
-                            if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.COST)) {
-                                isCostEngine = true;
-                            }
-                            if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.EngineNames.PERFORMANCE)) {
-                                isPerfEngine = true;
-                            }
+                    HashMap<Timestamp, IntervalResults> intervalResultsHashMap = containerData.getResults();
+                    timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
+                    HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = new HashMap<>();
 
-                            // Get the results
-                            HashMap<Timestamp, IntervalResults> resultsMap = containerDataKruizeObject.getResults();
-                            monitoringStartTime = RecommendationUtils.getMonitoringStartTime(resultsMap,
+                    ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
+
+                    // Create Current Requests Map
+                    HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
+
+                    // Create Current Limits Map
+                    HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
+
+                    for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
+                        for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
+                            RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(intervalResultsHashMap,
                                     monitoringEndTime,
-                                    Double.valueOf(String.valueOf(duration)));
+                                    resourceSetting,
+                                    recommendationItem,
+                                    notifications);
 
-                            // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
-                            MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
-                                    model,
-                                    monitoringStartTime,
-                                    containerDataKruizeObject,
-                                    monitoringEndTime,
-                                    term,
-                                    recommendationSettings,
-                                    currentConfig,
-                                    Double.valueOf(String.valueOf(duration)));
-
-                            if (null == mappedRecommendationForModel) {
+                            if (null == configItem)
+                                continue;
+                            if (null == configItem.getAmount()) {
+                                if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                    notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
+                                else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                    notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
+                                continue;
+                            }
+                            if (null == configItem.getFormat()) {
+                                if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                    notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
+                                else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                    notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
+                                continue;
+                            }
+                            if (configItem.getAmount() <= 0.0) {
+                                if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                    notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
+                                else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                    notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
+                                continue;
+                            }
+                            if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
+                                if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                                    notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
+                                else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                                    notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
                                 continue;
                             }
 
-                            // Set term level notification available
-                            termLevelRecommendationExist = true;
-
-                            // Adding the term level recommendation availability after confirming the recommendation exists
-                            RecommendationNotification rn = RecommendationUtils.getNotificationForTermAvailability(recommendationTerm);
-                            if (null != rn) {
-                                timestampRecommendation.addNotification(rn);
+                            if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
+                                currentRequestsMap.put(recommendationItem, configItem);
                             }
-
-                            RecommendationNotification recommendationNotification = null;
-                            if (isCostEngine) {
-                                // Setting it as at least one recommendation available
-                                recommendationAvailable = true;
-                                recommendationNotification = new RecommendationNotification(
-                                        RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
-                                );
+                            if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                                currentLimitsMap.put(recommendationItem, configItem);
                             }
+                        }
+                    }
 
-                            if (isPerfEngine) {
-                                // Setting it as at least one recommendation available
-                                recommendationAvailable = true;
-                                recommendationNotification = new RecommendationNotification(
-                                        RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
-                                );
-                            }
+                    // Iterate over notifications and set to recommendations
+                    for (RecommendationConstants.RecommendationNotification recommendationNotification : notifications) {
+                        timestampRecommendation.addNotification(new RecommendationNotification(recommendationNotification));
+                    }
 
-                            if (null != recommendationNotification) {
-                                termLevelNotifications.add(recommendationNotification);
-                            } else {
-                                recommendationNotification = new RecommendationNotification(
-                                        RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
-                                );
+                    // Check if map is not empty and set requests map to current config
+                    if (!currentRequestsMap.isEmpty()) {
+                        currentConfig.put(AnalyzerConstants.ResourceSetting.requests, currentRequestsMap);
+                    }
+
+                    // Check if map is not empty and set limits map to current config
+                    if (!currentLimitsMap.isEmpty()) {
+                        currentConfig.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
+                    }
+
+                    timestampRecommendation.setCurrentConfig(currentConfig);
+
+                    TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
+                    List<RecommendationNotification> termLevelNotifications = new ArrayList<>();
+
+                    for (RecommendationModel model : getModels()) {
+                        MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
+                                model,
+                                monitoringStartTime,
+                                containerData,
+                                monitoringEndTime,
+                                term,
+                                recommendationSettings,
+                                currentConfig,
+                                duration);
+
+                        if (mappedRecommendationForModel != null) {
+                            recommendationAvailable = true;
+                            RecommendationNotification recommendationNotification = getNotificationForTermAvailability(term);
+                            if (recommendationNotification != null) {
                                 termLevelNotifications.add(recommendationNotification);
                             }
                             mappedRecommendationForTerm.setRecommendationForEngineHashMap(model.getModelName(), mappedRecommendationForModel);
                         }
-
-                        for (RecommendationNotification recommendationNotification : termLevelNotifications) {
-                            mappedRecommendationForTerm.addNotification(recommendationNotification);
-                        }
-                        mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
                     }
-                    Terms.setDurationBasedOnTerm(containerDataKruizeObject, mappedRecommendationForTerm, recommendationTerm);
+
+                    if (!termLevelNotifications.isEmpty()) {
+                        for (RecommendationNotification notification : termLevelNotifications) {
+                            mappedRecommendationForTerm.addNotification(notification);
+                        }
+                    } else {
+                        RecommendationNotification recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                        mappedRecommendationForTerm.addNotification(recommendationNotification);
+                    }
+
+                    mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
+                    Terms.setDurationBasedOnTerm(containerData, mappedRecommendationForTerm, term);
                     timestampRecommendation.setRecommendationForTermHashMap(term, mappedRecommendationForTerm);
-                }
-                if (!termLevelRecommendationExist) {
-                    RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-                    timestampRecommendation.addNotification(recommendationNotification);
-                }
 
-                // put recommendations tagging to timestamp
-                timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);
+                    timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);
 
-                if (recommendationAvailable) {
-                    // set the Recommendations object level notifications
-                    RecommendationNotification rn = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
-                    recommendationLevelNM.put(rn.getCode(), rn);
+                    if (recommendationAvailable) {
+                        RecommendationNotification rn = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
+                        recommendationLevelNM.put(rn.getCode(), rn);
+                    }
+
+                    containerRecommendations.setNotificationMap(recommendationLevelNM);
+                    containerRecommendations.setData(timestampBasedRecommendationMap);
+                    containerData.setContainerRecommendations(containerRecommendations);
                 }
-
-                containerRecommendations.setNotificationMap(recommendationLevelNM);
-                // set the data object to map
-                containerRecommendations.setData(timestampBasedRecommendationMap);
-                // set the container recommendations in container object
-                containerDataKruizeObject.setContainerRecommendations(containerRecommendations);
             }
         }
+    }
 
+    public static RecommendationNotification getNotificationForTermAvailability(String recommendationTerm) {
+        RecommendationNotification recommendationNotification = null;
+        if (recommendationTerm.equalsIgnoreCase(RecommendationConstants.RecommendationTerms.SHORT_TERM.getValue())) {
+            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE);
+        } else if (recommendationTerm.equalsIgnoreCase(RecommendationConstants.RecommendationTerms.MEDIUM_TERM.getValue())) {
+            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE);
+        } else if (recommendationTerm.equalsIgnoreCase(RecommendationConstants.RecommendationTerms.LONG_TERM.getValue())) {
+            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE);
+        }
+        return recommendationNotification;
     }
 
     private MappedRecommendationForModel generateRecommendationBasedOnModel(RecommendationModel model, Timestamp monitoringStartTime, ContainerData
@@ -544,9 +415,6 @@ public class RecommendationEngine {
         }
         if (null != monitoringStartTime) {
             Timestamp finalMonitoringStartTime = monitoringStartTime;
-            // Set the timestamp to extract
-            Timestamp timestampToExtract = monitoringEndTime;
-
             Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
                     .filter((x -> ((x.getKey().compareTo(finalMonitoringStartTime) >= 0)
                             && (x.getKey().compareTo(monitoringEndTime) <= 0))))
@@ -572,7 +440,7 @@ public class RecommendationEngine {
             RecommendationConfigItem recommendationMemLimits = recommendationMemRequest;
 
             // Create an internal map to send data to populate
-            HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<String, RecommendationConfigItem>();
+            HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<>();
             // Add current values
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_REQUEST, currentCPURequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_LIMIT, currentCPULimit);
@@ -580,9 +448,9 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_LIMIT, currentMemLimit);
             // Add recommended values
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_REQUEST, recommendationCpuRequest);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, recommendationCpuLimits);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, recommendationCpuRequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemRequest);
 
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
@@ -1219,9 +1087,92 @@ public class RecommendationEngine {
         return isSuccess;
     }
 
-    public static void setDefaultTerms(Map<String, Terms> terms) {
+    public static void setDefaultTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
         terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD));
         terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD));
         terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD));
+
+        kruizeObject.setTerms(terms);
+    }
+
+    public KruizeObject generateRecommendations(int calCount) {
+        Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
+        Map<String, Terms> terms = new HashMap<>();
+        ValidationOutputData validationOutputData;
+        try {
+            if (null != kruizeObject) {
+                // set the default terms if the terms object is empty
+                if (kruizeObject.getTerms() == null)
+                    setDefaultTerms(terms, kruizeObject);
+                // set the performance profile
+                setPerformanceProfile(kruizeObject.getPerformanceProfile());
+                // get the datasource
+                String dataSource = kruizeObject.getDataSource();
+                int maxDay = Terms.getMaxDays(terms);
+                Timestamp interval_start_time = Timestamp.valueOf(Objects.requireNonNull(getInterval_end_time()).toLocalDateTime().minusDays(maxDay));
+
+                // update the KruizeObject to have the results data from the available datasource
+                getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
+
+                // generate recommendation
+                try {
+                    generateRecommendations(kruizeObject);
+                    // store the recommendations in the DB
+                    validationOutputData = addRecommendationsToDB(mainKruizeExperimentMAP, kruizeObject, interval_end_time);
+                    if (!validationOutputData.isSuccess()) {
+                        LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                        validationOutputData = new ValidationOutputData(false, validationOutputData.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    } else {
+                        LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
+                    }
+                    kruizeObject.setValidation_data(validationOutputData);
+                } catch (Exception e) {
+                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                    e.printStackTrace();
+                    LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
+                            experimentName,
+                            interval_start_time,
+                            interval_end_time);
+                    kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+                }
+            } else {
+                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                kruizeObject.setValidation_data(new ValidationOutputData(false, String.format("%s%s", MISSING_EXPERIMENT_NAME, experimentName),
+                        HttpServletResponse.SC_BAD_REQUEST));
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+            kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+        }
+        return kruizeObject;
+    }
+
+    private ValidationOutputData addRecommendationsToDB(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject, Timestamp intervalEndTime) {
+        ValidationOutputData validationOutputData;
+        try {
+            validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP,
+                    kruizeObject, interval_end_time);
+        } catch (Exception e) {
+            LOGGER.error("Failed to add recommendations to the DB: {}", e.getMessage());
+            validationOutputData = new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        return validationOutputData;
+    }
+
+    private void getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject, String
+            experimentName, Timestamp intervalStartTime, String dataSource) {
+        // get data from the DB in case of remote monitoring
+        if (kruizeObject.getExperiment_usecase_type().isRemote_monitoring()) {
+            mainKruizeExperimentMAP.put(experimentName, kruizeObject);
+            try {
+                new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
+            } catch (Exception e) {
+                LOGGER.error("Failed to fetch the results from the DB: {}", e.getMessage());
+            }
+        } else if (kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
+            // TODO: get data from Thanos/other data sources in case of Local monitoring
+        }
+
     }
 }

@@ -26,6 +26,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
     private static final Logger LOGGER = LoggerFactory.getLogger(CostBasedRecommendationModel.class);
 
     public CostBasedRecommendationModel() {
+        this.name = RecommendationConstants.RecommendationEngine.ModelNames.COST;
     }
 
     public CostBasedRecommendationModel(int percentile) {
@@ -185,6 +186,16 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         return recommendationConfigItem;
     }
 
+    @Override
+    public String getModelName() {
+        return this.name;
+    }
+
+    @Override
+    public void validate() {
+
+    }
+
     private static double calculateMemoryUsage(IntervalResults intervalResults) {
         Optional<MetricResults> cpuUsageResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
         double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
@@ -224,18 +235,6 @@ public class CostBasedRecommendationModel implements RecommendationModel {
     private static Double calculatePercentile(List<Double> list, double percentile) {
         return CommonUtils.percentile(percentile, list);
     }
-
-
-    @Override
-    public String getModelName() {
-        return this.name;
-    }
-
-    @Override
-    public void validate() {
-
-    }
-
     private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap,
                                                                         ArrayList<RecommendationNotification> notifications,
                                                                         double percentile, Double cpuZero, double cpuOneCore, double cpuOneMillicore,
