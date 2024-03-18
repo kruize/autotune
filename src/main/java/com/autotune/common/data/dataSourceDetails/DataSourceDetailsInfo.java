@@ -8,7 +8,6 @@ import java.util.HashMap;
 
 public class DataSourceDetailsInfo {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceDetailsInfo.class);
-    private String version;
 
     /**
      * Key: Cluster group name
@@ -17,17 +16,8 @@ public class DataSourceDetailsInfo {
     @SerializedName(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoJSONKeys.CLUSTER_GROUPS)
     private HashMap<String, DataSourceClusterGroup> clusterGroupHashMap;
 
-    public DataSourceDetailsInfo(String version, HashMap<String, DataSourceClusterGroup> clusterGroupHashMap) {
-        this.version = version;
+    public DataSourceDetailsInfo(HashMap<String, DataSourceClusterGroup> clusterGroupHashMap) {
         this.clusterGroupHashMap = clusterGroupHashMap;
-    }
-
-    public String getVersion() {
-        return version;
-    }
-
-    public void setVersion(String version) {
-        this.version = version;
     }
 
     public HashMap<String, DataSourceClusterGroup> getDataSourceClusterGroupHashMap() {
@@ -36,7 +26,7 @@ public class DataSourceDetailsInfo {
 
     public void setDataSourceClusterGroupHashMap(HashMap<String, DataSourceClusterGroup> clusterGroupHashMap) {
         if (null == clusterGroupHashMap) {
-            LOGGER.error("No cluster groups found");
+            LOGGER.debug("No cluster groups found");
         }
         this.clusterGroupHashMap = clusterGroupHashMap;
     }
@@ -51,8 +41,7 @@ public class DataSourceDetailsInfo {
     @Override
     public String toString() {
         return "DataSourceDetailsInfo{" +
-                "version ='" + version + '\'' +
-                ", cluster_group ='" + clusterGroupHashMap.toString() + '\'' +
+                "cluster_group ='" + clusterGroupHashMap.toString() + '\'' +
                 '}';
     }
 }

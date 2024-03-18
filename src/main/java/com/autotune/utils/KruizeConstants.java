@@ -131,6 +131,7 @@ public class KruizeConstants {
         public static final String NAME = "name";
         public static final String QUERY = "query";
         public static final String DATASOURCE = "datasource";
+        public static final String DATASOURCE_NAME = "datasource_name";
         public static final String CPU = "cpu";
         public static final String MEMORY = "memory";
         public static final String REQUESTS = "requests";
@@ -176,6 +177,10 @@ public class KruizeConstants {
         public static final String COUNT = "count";
         public static final String MEDIAN = "median";
         public static final String RANGE = "range";
+
+        // DataSource JSON keys
+        public static final String DATASOURCES = "datasources";
+
         // UI support JSON keys
         public static final String DATA = "data";
         public static final String NAMESPACES = "namespaces";
@@ -448,6 +453,9 @@ public class KruizeConstants {
             public static final String INVALID_DATASOURCE_DETAILS_NAMESPACE_DATA = "namespaceHashMap is either null or empty";
             public static final String DATASOURCE_DETAILS_INFO_NOT_AVAILABLE = "DataSourceDetailsInfo is null. Metadata is not populated.";
             public static final String DATASOURCE_DETAILS_CLUSTER_GROUP_NOT_AVAILABLE = "DataSourceClusterGroup information is not available for the specified DataSource provider: ";
+            public static final String DATASOURCE_DETAILS_CLUSTER_NOT_AVAILABLE = "DataSourceCluster information is not available for the specified Cluster {} and DataSource provider {}";
+            public static final String DATASOURCE_DETAILS_NAMESPACE_NOT_AVAILABLE = "DataSourceNamespace information is not available for the specified Namespace {}, Cluster {} and DataSource provider {}";
+            public static final String SET_NAMESPACE_MAP_ERROR = "namespaceHashMap is null, no namespaces provided for cluster: ";
         }
 
         public static class DataSourceDetailsInfoJSONKeys {
@@ -458,6 +466,7 @@ public class KruizeConstants {
             public static final String CLUSTERS = "clusters";
             public static final String CLUSTER_NAME = "cluster_name";
             public static final String NAMESPACES = "namespaces";
+            public static final String NAMESPACE = "namespace";
             public static final String WORKLOADS = "workloads";
             public static final String WORKLOAD_NAME = "workload_name";
             public static final String WORKLOAD_TYPE = "workload_type";
@@ -556,6 +565,7 @@ public class KruizeConstants {
         public static final String AUTOTUNE_MODE = "autotunemode";
         public static final String EM_ONLY_MODE = "emonly";
         public static final String BULK_UPDATE_RESULTS_LIMIT = "bulkresultslimit";
+        public static final String DELETE_PARTITION_THRESHOLD_IN_DAYS = "deletepartitionsthreshold";
         public static final String SETTINGS_SAVE_TO_DB = "savetodb";
         public static final String SETTINGS_DB_DRIVER = "dbdriver";
         public static final String SETTINGS_HIBERNATE_DIALECT = "hibernate_dialect";
@@ -615,5 +625,9 @@ public class KruizeConstants {
         }
 
 
+    }
+
+    public static final class KRUIZE_CONFIG_DEFAULT_VALUE {
+        public static final int DELETE_PARTITION_THRESHOLD_IN_DAYS = 16;
     }
 }

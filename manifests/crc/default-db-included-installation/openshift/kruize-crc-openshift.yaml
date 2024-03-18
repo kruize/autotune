@@ -101,7 +101,16 @@ data:
         "hbm2ddlauto": "none",
         "showsql": "false",
         "timezone": "UTC"
-      }
+      },
+      "datasource": [
+        {
+          "name": "prometheus-1",
+          "provider": "prometheus",
+          "serviceName": "",
+          "namespace": "openshift-monitoring",
+          "url": "https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9091"
+        }
+      ]
     }
 ---
 apiVersion: apps/v1
@@ -189,7 +198,7 @@ spec:
       serviceAccountName: kruize-sa
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.20.1_rm
+          image: kruize/autotune_operator:0.0.20.2_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -261,7 +270,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: kruize/autotune_operator:0.0.20.1_rm
+              image: kruize/autotune_operator:0.0.20.2_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -283,6 +292,49 @@ spec:
                   value: "/etc/config/dbconfigjson"
                 - name: KRUIZE_CONFIG_FILE
                   value: "/etc/config/kruizeconfigjson"
+          volumes:
+            - name: config-volume
+              configMap:
+                name: kruizeconfig
+          restartPolicy: OnFailure
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: kruize-delete-partition-cronjob
+  namespace: openshift-tuning
+spec:
+  schedule: "0 0 25 * *" # Run on 25th of every month at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: kruizedeletejob
+              image: kruize/autotune_operator:0.0.20.2_rm
+              imagePullPolicy: Always
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /etc/config
+              command:
+                - sh
+                - -c
+                - |
+                  /home/autotune/app/target/bin/RetentionPartition
+              args: [ "" ]
+              env:
+                - name: START_AUTOTUNE
+                  value: "false"
+                - name: LOGGING_LEVEL
+                  value: "info"
+                - name: ROOT_LOGGING_LEVEL
+                  value: "error"
+                - name: DB_CONFIG_FILE
+                  value: "/etc/config/dbconfigjson"
+                - name: KRUIZE_CONFIG_FILE
+                  value: "/etc/config/kruizeconfigjson"
+                - name: deletepartitionsthreshold
+                  value: "15"
           volumes:
             - name: config-volume
               configMap:
@@ -373,4 +425,17 @@ spec:
     - name: nginx-config-volume
       configMap:
         name: nginx-config
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kruize-monitoring-view
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+roleRef:
+  kind: ClusterRole
+  name: cluster-monitoring-view
+  apiGroup: rbac.authorization.k8s.io
 

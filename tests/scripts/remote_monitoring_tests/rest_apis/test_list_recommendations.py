@@ -1117,17 +1117,18 @@ def test_list_recommendations_notification_codes(cluster_type: str):
         print("delete exp = ", response.status_code)
 
 
-def validate_error_msgs(j: int, status_message):
+def validate_error_msgs(j: int, status_message, cname, experiment_name):
+
     if j == 96:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_REQUEST
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_REQUEST + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
     elif j == 97:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_REQUEST
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_REQUEST + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
     elif j == 98:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_LIMIT
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_LIMIT + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
     elif j == 99:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_LIMIT
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_LIMIT + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
     elif j > 100:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
 
 
 @pytest.mark.negative
@@ -1313,7 +1314,7 @@ def test_invalid_list_recommendations_notification_codes(cluster_type: str):
             if j in range(96, 104):
                 assert response.status_code == ERROR_STATUS_CODE
                 assert data['status'] == ERROR_STATUS
-                validate_error_msgs(j, data['data'][0]['errors'][0]['message'])
+                validate_error_msgs(j, data['data'][0]['errors'][0]['message'], container_name_to_update, experiment_name)
             else:
                 assert response.status_code == SUCCESS_STATUS_CODE
                 assert data['status'] == SUCCESS_STATUS
@@ -1436,6 +1437,248 @@ def test_invalid_list_recommendations_notification_codes(cluster_type: str):
                     validate_variation(current_config=recommendation_current,
                                        recommended_config=short_term_recommendation_config,
                                        variation_config=short_term_recommendation_variation)
+
+    # Delete the experiments
+    for i in range(num_exps):
+        json_file = "/tmp/create_exp_" + str(i) + ".json"
+
+        response = delete_experiment(json_file)
+        print("delete exp = ", response.status_code)
+
+@pytest.mark.sanity
+def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
+    """
+        Test Description: This test loads constant cpu and memory data for 15 days to check if autotune
+        sends the recommendation same as current along with notifications
+    """
+    input_json_file = "../json_files/create_exp.json"
+    result_json_file = "../json_files/update_results.json"
+
+    find = []
+    json_data = json.load(open(input_json_file))
+
+    find.append(json_data[0]['experiment_name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['namespace'])
+
+    form_kruize_url(cluster_type)
+
+    # Create experiment using the specified json
+    num_exps = 1
+    num_res = 1450 # 15 days + 10 entries buffer
+
+    for i in range(num_exps):
+        create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
+        generate_json(find, input_json_file, create_exp_json_file, i)
+
+        response = delete_experiment(create_exp_json_file)
+        print("delete exp = ", response.status_code)
+
+        response = create_experiment(create_exp_json_file)
+
+        data = response.json()
+        print("message = ", data['message'])
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+        # Update results for the experiment
+        update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
+
+        result_json_arr = []
+        # Get the experiment name
+        json_data = json.load(open(create_exp_json_file))
+        experiment_name = json_data[0]['experiment_name']
+        interval_start_time = get_datetime()
+        for j in range(num_res):
+            sum_field = avg_field = min_field = max_field = value_field = 0.00
+            update_timestamps = True
+            generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
+            result_json = read_json_data_from_file(update_results_json_file)
+            if j == 0:
+                start_time = interval_start_time
+            else:
+                start_time = end_time
+
+            result_json[0]['interval_start_time'] = start_time
+            end_time = increment_timestamp_by_given_mins(start_time, 15)
+            result_json[0]['interval_end_time'] = end_time
+
+            # Expecting that metrics exists for container as we read from template
+            # Add if exists checks for each key if needed
+            container_metrics: list = result_json[0]["kubernetes_objects"][0]["containers"][0]["metrics"]
+            container_name_to_update = result_json[0]["kubernetes_objects"][0]["containers"][0]["container_name"]
+
+            CPU_REQUEST_INDEX = get_index_of_metric(container_metrics, CPU_REQUEST)
+            CPU_LIMIT_INDEX = get_index_of_metric(container_metrics, CPU_LIMIT)
+            CPU_USAGE_INDEX = get_index_of_metric(container_metrics, CPU_USAGE)
+            CPU_THROTTLE_INDEX = get_index_of_metric(container_metrics, CPU_THROTTLE)
+
+            MEMORY_REQUEST_INDEX = get_index_of_metric(container_metrics, MEMORY_REQUEST)
+            MEMORY_LIMIT_INDEX = get_index_of_metric(container_metrics, MEMORY_LIMIT)
+            MEMORY_USAGE_INDEX = get_index_of_metric(container_metrics, MEMORY_USAGE)
+            MEMORY_RSS_INDEX = get_index_of_metric(container_metrics, MEMORY_RSS)
+
+            if CPU_REQUEST_INDEX is not None:
+                cpu_request_entry = container_metrics[CPU_REQUEST_INDEX]
+                aggre_info = cpu_request_entry["results"]["aggregation_info"]
+                aggre_info["avg"] = OPTIMISED_CPU
+                aggre_info["sum"] = OPTIMISED_CPU
+
+            if CPU_LIMIT_INDEX is not None:
+                cpu_limit_entry = container_metrics[CPU_LIMIT_INDEX]
+                aggre_info = cpu_limit_entry["results"]["aggregation_info"]
+                aggre_info["avg"] = OPTIMISED_CPU
+                aggre_info["sum"] = OPTIMISED_CPU
+
+            if CPU_USAGE_INDEX is not None:
+                cpu_usage_entry = container_metrics[CPU_USAGE_INDEX]
+                aggre_info = cpu_usage_entry["results"]["aggregation_info"]
+                aggre_info["avg"] = OPTIMISED_CPU
+                aggre_info["sum"] = OPTIMISED_CPU
+                aggre_info["min"] = OPTIMISED_CPU
+                aggre_info["max"] = OPTIMISED_CPU
+
+            if CPU_THROTTLE_INDEX is not None:
+                cpu_throttle_entry = container_metrics[CPU_THROTTLE_INDEX]
+                aggre_info = cpu_throttle_entry["results"]["aggregation_info"]
+                aggre_info["avg"] = 0.00
+                aggre_info["sum"] = 0.00
+                aggre_info["max"] = 0.00
+
+            if MEMORY_REQUEST_INDEX is not None:
+                memory_request_entry = container_metrics[MEMORY_REQUEST_INDEX]
+                aggre_info = memory_request_entry["results"]["aggregation_info"]
+                aggre_info["avg"] = OPTIMISED_MEMORY
+                aggre_info["sum"] = OPTIMISED_MEMORY
+
+            if MEMORY_LIMIT_INDEX is not None:
+                memory_limit_entry = container_metrics[MEMORY_LIMIT_INDEX]
+                aggre_info = memory_limit_entry["results"]["aggregation_info"]
+                aggre_info["avg"] = OPTIMISED_MEMORY
+                aggre_info["sum"] = OPTIMISED_MEMORY
+
+            if MEMORY_USAGE_INDEX is not None:
+                memory_usage_entry = container_metrics[MEMORY_USAGE_INDEX]
+                aggre_info = memory_usage_entry["results"]["aggregation_info"]
+                aggre_info["avg"] = OPTIMISED_MEMORY
+                aggre_info["sum"] = OPTIMISED_MEMORY
+                aggre_info["min"] = OPTIMISED_MEMORY
+                aggre_info["max"] = OPTIMISED_MEMORY
+
+            if MEMORY_RSS_INDEX is not None:
+                memory_rss_entry = container_metrics[MEMORY_RSS_INDEX]
+                aggre_info = memory_rss_entry["results"]["aggregation_info"]
+                aggre_info["avg"] = OPTIMISED_MEMORY
+                aggre_info["sum"] = OPTIMISED_MEMORY
+                aggre_info["min"] = OPTIMISED_MEMORY
+                aggre_info["max"] = OPTIMISED_MEMORY
+
+            write_json_data_to_file(update_results_json_file, result_json)
+            result_json_arr.append(result_json[0])
+            response = update_results(update_results_json_file)
+
+            data = response.json()
+            print("message = ", data['message'])
+
+            if j > 95:
+                response = update_recommendations(experiment_name, None, end_time)
+                data = response.json()
+                assert response.status_code == SUCCESS_STATUS_CODE
+                assert data[0]['experiment_name'] == experiment_name
+
+                # Get the experiment name
+                json_data = json.load(open(create_exp_json_file))
+                experiment_name = json_data[0]['experiment_name']
+
+                response = list_recommendations(experiment_name)
+                assert response.status_code == SUCCESS_200_STATUS_CODE
+
+                recommendation_json = response.json()
+
+                recommendation_section = None
+
+                for containers in recommendation_json[0]["kubernetes_objects"][0]["containers"]:
+                    actual_container_name = containers["container_name"]
+                    print(
+                        f"actual container name = {actual_container_name}  expected container name = {container_name_to_update}")
+                    if containers["container_name"] == container_name_to_update:
+                        recommendation_section = containers["recommendations"]
+                        break
+
+                assert recommendation_section is not None
+
+                high_level_notifications = recommendation_section["notifications"]
+
+                # Check for Recommendation level notifications
+                assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+
+                data_section = recommendation_section["data"]
+                # Check if recommendation exists
+                assert str(end_time) in data_section
+                # Check for timestamp level notifications
+                timestamp_level_notifications = data_section[str(end_time)]["notifications"]
+                assert INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE in timestamp_level_notifications
+
+                # Check for current recommendation
+                recommendation_current = None
+                if "current" in data_section[str(end_time)]:
+                    recommendation_current = data_section[str(end_time)]["current"]
+
+                short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
+                medium_term_recommendation = None
+                long_term_recommendation = None
+                if j > 671: # 7 days
+                    medium_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["medium_term"]
+                if j > 1439: # 15 days
+                    long_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["long_term"]
+
+                if INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
+                    validate_recommendation_for_cpu_mem_optimised(recommendations=short_term_recommendation,
+                                                                  current=recommendation_current,
+                                                                  profile="cost")
+
+                    if j > 671:
+                        validate_recommendation_for_cpu_mem_optimised(recommendations=medium_term_recommendation,
+                                                                      current=recommendation_current,
+                                                                      profile="cost")
+                    if j > 1439:
+                        validate_recommendation_for_cpu_mem_optimised(recommendations=long_term_recommendation,
+                                                                      current=recommendation_current,
+                                                                      profile="cost")
+
+                if INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
+                    validate_recommendation_for_cpu_mem_optimised(recommendations=short_term_recommendation,
+                                                                  current=recommendation_current,
+                                                                  profile="performance")
+
+                    if j > 671:
+                        validate_recommendation_for_cpu_mem_optimised(recommendations=medium_term_recommendation,
+                                                                      current=recommendation_current,
+                                                                      profile="performance")
+                    if j > 1439:
+                        validate_recommendation_for_cpu_mem_optimised(recommendations=long_term_recommendation,
+                                                                      current=recommendation_current,
+                                                                      profile="performance")
+
+                short_term_recommendation_cost_notifications = short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+                short_term_recommendation_perf_notifications = short_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+
+                check_optimised_codes(short_term_recommendation_cost_notifications, short_term_recommendation_perf_notifications)
+
+
+                if j > 672:
+                    medium_term_recommendation_cost_notifications = medium_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+                    medium_term_recommendation_perf_notifications = medium_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+
+                    check_optimised_codes(medium_term_recommendation_cost_notifications, medium_term_recommendation_perf_notifications)
+
+                if j > 1439:
+                    long_term_recommendation_cost_notifications = long_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+                    long_term_recommendation_perf_notifications = long_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+
+                    check_optimised_codes(long_term_recommendation_cost_notifications, long_term_recommendation_perf_notifications)
+
 
     # Delete the experiments
     for i in range(num_exps):

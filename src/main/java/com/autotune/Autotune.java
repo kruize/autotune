@@ -20,6 +20,9 @@ import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.datasource.DataSourceCollection;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.experimentManager.core.ExperimentManager;
@@ -51,6 +54,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Scanner;
 
 import static com.autotune.utils.ServerContext.*;
@@ -77,6 +81,7 @@ public class Autotune {
         // Create a connector (e.g., HTTP)
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(KRUIZE_SERVER_PORT);
+        connector.setIdleTimeout(60000*10);
         // Set the connector to the server
         server.addConnector(connector);
 
@@ -101,8 +106,23 @@ public class Autotune {
             InitializeDeployment.setup_deployment_info();
             // Read and execute the DDLs here
             executeDDLs();
-        } catch (Exception | K8sTypeNotSupportedException |
-                 DefaultDataSourceNotFoundException e) {
+            // set up DataSource
+            DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
+            dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
+
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
+            HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
+            for (String name: dataSources.keySet()) {
+                DataSourceInfo dataSource = dataSources.get(name);
+                String dataSourceName = dataSource.getName();
+                String url = dataSource.getUrl().toString();
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
+            }
+            // TODO: Added for demo, needs to be removed
+//            DataSourceManager dataSourceManager = new DataSourceManager();
+//            dataSourceManager.saveDataFromAllSourcesToDB(dataSourceCollection.getDataSourcesCollection());
+
+        } catch (Exception | K8sTypeNotSupportedException | DefaultDataSourceNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
         }

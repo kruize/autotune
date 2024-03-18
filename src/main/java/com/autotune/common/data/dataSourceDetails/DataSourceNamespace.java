@@ -36,7 +36,7 @@ public class DataSourceNamespace {
 
     public void setDataSourceWorkloadHashMap(HashMap<String, DataSourceWorkload> workloadHashMap) {
         if (null == workloadHashMap) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_WORKLOAD_MAP_ERROR + namespace);
+            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceDetailsErrorMsgs.SET_WORKLOAD_MAP_ERROR + namespace);
         }
        this.workloadHashMap = workloadHashMap;
     }

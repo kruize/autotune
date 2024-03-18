@@ -39,6 +39,8 @@ public class ServerContext {
     public static final String CREATE_EXPERIMENT = ROOT_CONTEXT + "createExperiment";
     public static final String UPDATE_RESULTS = ROOT_CONTEXT + "updateResults";
     public static final String UPDATE_RECOMMENDATIONS = ROOT_CONTEXT + "updateRecommendations";
+
+    public static final String GENERATE_RECOMMENDATIONS = ROOT_CONTEXT + "generateRecommendations";
     public static final String RECOMMEND_RESULTS = ROOT_CONTEXT + "listRecommendations";
     public static final String CREATE_PERF_PROFILE = ROOT_CONTEXT + "createPerformanceProfile";
     public static final String LIST_PERF_PROFILES = ROOT_CONTEXT + "listPerformanceProfiles";
@@ -61,6 +63,10 @@ public class ServerContext {
     public static final String EXPERIMENT_MANAGER_LIST_EXPERIMENT_END_POINT = EXPERIMENT_MANAGER_SERVER_URL + EXPERIMENT_MANAGER_LIST_EXPERIMENT_TRIAL;
     public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS = ROOT_CONTEXT + "listTrialStatus";
     public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS_END_POINT = EXPERIMENT_MANAGER_SERVER_URL + EXPERIMENT_MANAGER_LIST_TRIAL_STATUS;
+
+    //Datasource EndPoints
+    public static final String LIST_DATASOURCES = ROOT_CONTEXT + "datasources";
+    public static final String DATASOURCE_METADATA = ROOT_CONTEXT + "dsmetadata";
 
     // UI support EndPoints
     public static final String QUERY_CONTEXT = ROOT_CONTEXT + "query/";

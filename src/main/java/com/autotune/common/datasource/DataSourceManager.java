@@ -1,7 +1,10 @@
 package com.autotune.common.datasource;
 
+import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.dataSourceDetails.DataSourceClusterGroup;
 import com.autotune.common.data.dataSourceDetails.DataSourceDetailsInfo;
 import com.autotune.common.exceptions.DataSourceNotExist;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -55,6 +58,24 @@ public class DataSourceManager {
         }
     }
 
+    public void saveDataFromAllSourcesToDB(HashMap<String, DataSourceInfo> dataSources) {
+        try {
+            // traverse through the list and create metadata based on the datasource objects present
+            for (String name : dataSources.keySet()) {
+                DataSourceInfo dataSource = dataSources.get(name);
+                dataSourceDetailsOperator.createDataSourceDetails(dataSource);
+                DataSourceDetailsInfo dataSourceDetails = dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSource);
+                if (null == dataSourceDetails) {
+                    continue;
+                }
+                // save the metadata to DB
+                addMetadataToDB(dataSourceDetails);
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
     /**
      * Imports Data for a specific data source using associated DataSourceInfo.
      */
@@ -65,6 +86,20 @@ public class DataSourceManager {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
             dataSourceDetailsOperator.createDataSourceDetails(dataSource);
+            saveDataFromSourceToDB(dataSource);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+    public void saveDataFromSourceToDB(DataSourceInfo dataSource) {
+        try {
+            DataSourceDetailsInfo dataSourceDetails = dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSource);
+            if (null == dataSourceDetails) {
+                return;
+            }
+            // save the metadata to DB
+            addMetadataToDB(dataSourceDetails);
+
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
@@ -78,7 +113,6 @@ public class DataSourceManager {
      * @throws DataSourceNotExist Thrown when the provided data source information is null.
      */
     public DataSourceDetailsInfo getDataFromDataSource(DataSourceInfo dataSource) {
-
         try {
             if (null == dataSource) {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
@@ -118,4 +152,39 @@ public class DataSourceManager {
     }
 
      */
+
+    public void addMetadataToDB(DataSourceDetailsInfo dataSourceDetailsInfo) {
+        ValidationOutputData addedToDB = null;
+        for (DataSourceClusterGroup dataSourceClusterGroup : dataSourceDetailsInfo.getDataSourceClusterGroupHashMap().values()) {
+            String clusterGroupName = dataSourceClusterGroup.getDataSourceClusterGroupName();
+            // check if clusterGroup already exists in the DB and proceed to add accordingly
+            if (!checkIfClusterGroupExists(clusterGroupName)) {
+                try {
+                    // add the data source to DB
+                    addedToDB = new ExperimentDBService().addMetadataToDB(dataSourceDetailsInfo);
+                    if (addedToDB.isSuccess()) {
+                        LOGGER.info("Metadata added to the DB successfully.");
+                    } else {
+                        LOGGER.error("Failed to add metadata to DB: {}", addedToDB.getMessage());
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Exception occurred while adding metadata : {} ", e.getMessage());
+                }
+            }
+        }
+    }
+
+    private boolean checkIfClusterGroupExists(String clusterGroupName) {
+        boolean isPresent = false;
+        try {
+            DataSourceDetailsInfo dataSourceDetailsInfo = new ExperimentDBService().loadMetadataFromDBByName(clusterGroupName,"false");
+            if (dataSourceDetailsInfo != null) {
+                LOGGER.warn("Cluster group: {} already exists!", clusterGroupName);
+                isPresent = true;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to load metadata for the cluster group: {}: {} ", clusterGroupName, e.getMessage());
+        }
+        return isPresent;
+    }
 }
