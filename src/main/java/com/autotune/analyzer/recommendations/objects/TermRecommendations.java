@@ -1,5 +1,6 @@
 package com.autotune.analyzer.recommendations.objects;
 
+import com.autotune.analyzer.plots.PlotData;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.utils.KruizeConstants;
@@ -27,6 +28,9 @@ public class TermRecommendations implements MappedRecommendationForTerm {
 
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_ENGINES)
     private HashMap<String, MappedRecommendationForEngine> recommendationForEngineHashMap;
+
+    //@SerializedName(KruizeConstants.JSONKeys.PLOTS)
+    private PlotData.PlotsData plots;
 
     @Override
     public HashMap<Integer, RecommendationNotification> getNotifications() {
@@ -94,5 +98,13 @@ public class TermRecommendations implements MappedRecommendationForTerm {
 
         if (null != recommendationNotification)
             this.termLevelNotificationMap.put(recommendationNotification.getCode(), recommendationNotification);
+    }
+
+    public PlotData.PlotsData getPlots() {
+        return plots;
+    }
+
+    public void setPlots(PlotData.PlotsData plots) {
+        this.plots = plots;
     }
 }
