@@ -125,7 +125,7 @@ list_reco_json_schema = {
                                       },
                                       "monitoring_start_time": { "type": "string" },
                                       "duration_in_hours": { "type": "number" },
-                                      "recommendation_engines": {
+                                      "recommendation_models": {
                                         "type": "object",
                                         "properties": {
                                           "cost": {
