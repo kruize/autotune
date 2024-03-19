@@ -55,6 +55,7 @@ Here are the test scenarios:
 - List recommendations with invalid parameter values for experiment_name & monitoring_end_time
 	- Non-existing experiment_name
 	- Non-existing time stamp, incorrect timestamp format
+- List recommendations after sending 15 days of constant results matching requests and limits
 
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
    - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
