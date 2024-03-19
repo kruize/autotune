@@ -16,17 +16,17 @@ public class TermRecommendations implements MappedRecommendationForTerm {
     @SerializedName(KruizeConstants.JSONKeys.DURATION_IN_HOURS)
     private double durationInHrs;
 
-    public TermRecommendations(RecommendationConstants.RecommendationTerms recommendationTerm) {
-        this.durationInHrs = recommendationTerm.getDuration();
-    }
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationNotification> termLevelNotificationMap;
-
     @SerializedName(KruizeConstants.JSONKeys.MONITORING_START_TIME)
     private Timestamp monitoringStartTime;
 
-    @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_ENGINES)
-    private HashMap<String, MappedRecommendationForModel> recommendationForEngineHashMap;
+    @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_MODELS)
+    private HashMap<String, MappedRecommendationForModel> recommendationForModelHashMap;
+
+    public TermRecommendations(RecommendationConstants.RecommendationTerms recommendationTerm) {
+        this.durationInHrs = recommendationTerm.getDuration();
+    }
 
     @Override
     public HashMap<Integer, RecommendationNotification> getNotifications() {
@@ -60,31 +60,31 @@ public class TermRecommendations implements MappedRecommendationForTerm {
         this.monitoringStartTime = monitoringStartTime;
     }
 
-    public HashMap<String, MappedRecommendationForModel> getRecommendationForEngineHashMap() {
-        return recommendationForEngineHashMap;
+    public HashMap<String, MappedRecommendationForModel> getRecommendationForModelHashMap() {
+        return recommendationForModelHashMap;
     }
 
-    public void setRecommendationForEngineHashMap(HashMap<String, MappedRecommendationForModel> recommendationForEngineHashMap) {
-        this.recommendationForEngineHashMap = recommendationForEngineHashMap;
+    public void setRecommendationForModelHashMap(HashMap<String, MappedRecommendationForModel> recommendationForModelHashMap) {
+        this.recommendationForModelHashMap = recommendationForModelHashMap;
     }
 
     public void setRecommendationForEngineHashMap(String engineName, MappedRecommendationForModel mappedRecommendationForModel) {
         if (null != engineName && null != mappedRecommendationForModel) {
-            if (null == this.recommendationForEngineHashMap)
-                this.recommendationForEngineHashMap = new HashMap<>();
-            this.recommendationForEngineHashMap.put(engineName, mappedRecommendationForModel);
+            if (null == this.recommendationForModelHashMap)
+                this.recommendationForModelHashMap = new HashMap<>();
+            this.recommendationForModelHashMap.put(engineName, mappedRecommendationForModel);
         }
     }
 
     public MappedRecommendationForModel getCostRecommendations() {
-        if (null != this.recommendationForEngineHashMap && this.recommendationForEngineHashMap.containsKey(KruizeConstants.JSONKeys.COST))
-            return this.recommendationForEngineHashMap.get(KruizeConstants.JSONKeys.COST);
+        if (null != this.recommendationForModelHashMap && this.recommendationForModelHashMap.containsKey(KruizeConstants.JSONKeys.COST))
+            return this.recommendationForModelHashMap.get(KruizeConstants.JSONKeys.COST);
         return null;
     }
 
     public MappedRecommendationForModel getPerformanceRecommendations() {
-        if (null != this.recommendationForEngineHashMap && this.recommendationForEngineHashMap.containsKey(KruizeConstants.JSONKeys.PERFORMANCE))
-            return this.recommendationForEngineHashMap.get(KruizeConstants.JSONKeys.PERFORMANCE);
+        if (null != this.recommendationForModelHashMap && this.recommendationForModelHashMap.containsKey(KruizeConstants.JSONKeys.PERFORMANCE))
+            return this.recommendationForModelHashMap.get(KruizeConstants.JSONKeys.PERFORMANCE);
         return null;
     }
 

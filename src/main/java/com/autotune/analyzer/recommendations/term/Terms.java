@@ -1,6 +1,5 @@
 package com.autotune.analyzer.recommendations.term;
 
-import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
@@ -53,11 +52,13 @@ public class Terms {
         return maxTerms.map(term -> term.days).orElse(0); // Return the max days or 0 if terms is empty
     }
 
-    public static boolean checkIfMinDataAvailableForTerm(ContainerData containerData, double duration) {
+    public static boolean checkIfMinDataAvailableForTerm(ContainerData containerData, Terms term) {
         // Check if data available
         if (null == containerData || null == containerData.getResults() || containerData.getResults().isEmpty()) {
             return false;
         }
+        double duration = term.getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
+                NO_OF_MINUTES_PER_HOUR;
 
         // Set bounds to check if we get minimum requirement satisfied
         double lowerBound = duration - BUFFER_VALUE_IN_MINS;

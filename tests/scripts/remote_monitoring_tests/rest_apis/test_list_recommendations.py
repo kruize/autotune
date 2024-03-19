@@ -1086,15 +1086,15 @@ def test_list_recommendations_notification_codes(cluster_type: str):
                 short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
 
                 if INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
-                    assert "variation" in short_term_recommendation["recommendation_engines"]["cost"]
-                    assert "config" in short_term_recommendation["recommendation_engines"]["cost"]
+                    assert "variation" in short_term_recommendation["recommendation_models"]["cost"]
+                    assert "config" in short_term_recommendation["recommendation_models"]["cost"]
 
                 if INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
-                    assert "variation" in short_term_recommendation["recommendation_engines"]["performance"]
-                    assert "config" in short_term_recommendation["recommendation_engines"]["performance"]
+                    assert "variation" in short_term_recommendation["recommendation_models"]["performance"]
+                    assert "config" in short_term_recommendation["recommendation_models"]["performance"]
 
-                short_term_recommendation_config = short_term_recommendation["recommendation_engines"]["cost"]["config"]
-                short_term_recommendation_variation = short_term_recommendation["recommendation_engines"]["cost"]["variation"]
+                short_term_recommendation_config = short_term_recommendation["recommendation_models"]["cost"]["config"]
+                short_term_recommendation_variation = short_term_recommendation["recommendation_models"]["cost"]["variation"]
 
                 response = update_recommendations(experiment_name, None, end_time)
                 data = response.json()
@@ -1374,15 +1374,15 @@ def test_invalid_list_recommendations_notification_codes(cluster_type: str):
                 short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
 
                 if INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
-                    assert "variation" in short_term_recommendation["recommendation_engines"]["cost"]
-                    assert "config" in short_term_recommendation["recommendation_engines"]["cost"]
+                    assert "variation" in short_term_recommendation["recommendation_models"]["cost"]
+                    assert "config" in short_term_recommendation["recommendation_models"]["cost"]
 
                 if INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
-                    assert "variation" in short_term_recommendation["recommendation_engines"]["performance"]
-                    assert "config" in short_term_recommendation["recommendation_engines"]["performance"]
+                    assert "variation" in short_term_recommendation["recommendation_models"]["performance"]
+                    assert "config" in short_term_recommendation["recommendation_models"]["performance"]
 
-                short_term_recommendation_config = short_term_recommendation["recommendation_engines"]["cost"]["config"]
-                short_term_recommendation_variation = short_term_recommendation["recommendation_engines"]["cost"]["variation"]
+                short_term_recommendation_config = short_term_recommendation["recommendation_models"]["cost"]["config"]
+                short_term_recommendation_variation = short_term_recommendation["recommendation_models"]["cost"]["variation"]
 
                 if j == 104:
                     response = update_recommendations(experiment_name, None, end_time)

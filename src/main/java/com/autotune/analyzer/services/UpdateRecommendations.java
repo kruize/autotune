@@ -89,20 +89,27 @@ public class UpdateRecommendations extends HttpServlet {
             String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
 
             String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
-            Timestamp interval_end_time = null;
+            Timestamp interval_end_time;
             Timestamp interval_start_time = null;
-            // validate the input params and generate recommendations
+            // create recommendation engine object
             RecommendationEngine recommendationEngine = new RecommendationEngine(experiment_name, intervalEndTimeStr, intervalStartTimeStr);
-            KruizeObject kruizeObject = recommendationEngine.generateRecommendations(calCount);
-            if (kruizeObject.getValidation_data().isSuccess()) {
-                LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
-                interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
-                        intervalEndTimeStr);
-                sendSuccessResponse(response, kruizeObject, interval_end_time);
-                statusValue = "success";
+            // validate and create KruizeObject if successful
+            String validationMessage = recommendationEngine.validate();
+            if (validationMessage.isEmpty()) {
+                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount);
+                if (kruizeObject.getValidation_data().isSuccess()) {
+                    LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
+                    interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
+                            intervalEndTimeStr);
+                    sendSuccessResponse(response, kruizeObject, interval_end_time);
+                    statusValue = "success";
+                } else {
+                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                    sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject.getValidation_data().getMessage());
+                }
             } else {
-                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-                sendErrorResponse(response, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, kruizeObject.getValidation_data().getMessage());
+                LOGGER.error("Validation failed: {}", validationMessage);
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage);
             }
 
         } catch (Exception e) {
@@ -149,7 +156,7 @@ public class UpdateRecommendations extends HttpServlet {
             }
         };
         String gsonStr = "[]";
-        if (recommendationList.size() > 0) {
+        if (!recommendationList.isEmpty()) {
             Gson gsonObj = new GsonBuilder()
                     .disableHtmlEscaping()
                     .setPrettyPrinting()
