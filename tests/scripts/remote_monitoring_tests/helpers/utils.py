@@ -484,19 +484,19 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
                             f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
 
-                        # Get model objects
-                        models_list = ["cost", "performance"]
+                        # Get engine objects
+                        engines_list = ["cost", "performance"]
 
-                        # Extract recommendation model objects
-                        recommendation_models_object = None
-                        if "recommendation_models" in terms_obj[term]:
-                            recommendation_models_object = terms_obj[term]["recommendation_models"]
-                        if None != recommendation_models_object:
-                            for model_entry in models_list:
-                                if model_entry in terms_obj[term]["recommendation_models"]:
-                                    model_obj = terms_obj[term]["recommendation_models"][model_entry]
-                                    validate_config(model_obj["config"], metrics)
-                                    validate_variation(current_config, model_obj["config"], model_obj["variation"])
+                        # Extract recommendation engine objects
+                        recommendation_engines_object = None
+                        if "recommendation_engines" in terms_obj[term]:
+                            recommendation_engines_object = terms_obj[term]["recommendation_engines"]
+                        if None != recommendation_engines_object:
+                            for engine_entry in engines_list:
+                                if engine_entry in terms_obj[term]["recommendation_engines"]:
+                                    engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                                    validate_config(engine_obj["config"], metrics)
+                                    validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
 
             else:
                 data = list_reco_container["recommendations"]["data"]

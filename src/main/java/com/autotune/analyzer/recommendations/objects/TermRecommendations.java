@@ -21,7 +21,7 @@ public class TermRecommendations implements MappedRecommendationForTerm {
     @SerializedName(KruizeConstants.JSONKeys.MONITORING_START_TIME)
     private Timestamp monitoringStartTime;
 
-    @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_MODELS)
+    @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_ENGINES)
     private HashMap<String, MappedRecommendationForModel> recommendationForModelHashMap;
 
     public TermRecommendations(RecommendationConstants.RecommendationTerms recommendationTerm) {

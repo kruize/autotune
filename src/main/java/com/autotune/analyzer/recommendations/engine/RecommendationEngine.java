@@ -432,7 +432,6 @@ public class RecommendationEngine {
 
                     // Adding the term level recommendation availability after confirming the recommendation exists
                     RecommendationNotification rn = RecommendationNotification.getNotificationForTermAvailability(recommendationTerm);
-                    termLevelNotifications = new ArrayList<>();
                     if (null != rn) {
                         timestampRecommendation.addNotification(rn);
                     }

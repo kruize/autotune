@@ -14,10 +14,11 @@ import static com.autotune.utils.KruizeConstants.RecommendationEngineConstants.D
 public class Terms {
     int days;
     double threshold_in_days;
-
+    String name;
     String performanceProfile;
 
-    public Terms(int days, double threshold_in_days) {
+    public Terms(String name, int days, double threshold_in_days) {
+        this.name = name;
         this.days = days;
         this.threshold_in_days = threshold_in_days;
     }
@@ -44,6 +45,14 @@ public class Terms {
 
     public void setPerformanceProfile(String performanceProfile) {
         this.performanceProfile = performanceProfile;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     public static int getMaxDays(Map<String, Terms> terms) {
@@ -85,12 +94,14 @@ public class Terms {
         double durationSummation = getDurationSummation(containerDataKruizeObject);
         durationSummation = Double.parseDouble(String.format("%.1f", durationSummation));
         // Get the maximum duration allowed for the term
-        double maxDuration = getMaxDuration(recommendationTerm);
+        double maxDurationInHours = getMaxDuration(recommendationTerm);
+        double maxDurationInMinutes = maxDurationInHours * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
         // Set durationSummation to the maximum duration if it exceeds the maximum duration
-        if (durationSummation > maxDuration) {
-            durationSummation = maxDuration;
+        if (durationSummation > maxDurationInMinutes) {
+            durationSummation = maxDurationInMinutes;
         }
-        mappedRecommendationForTerm.setDurationInHrs(durationSummation);
+        double durationSummationInHours = durationSummation / KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
+        mappedRecommendationForTerm.setDurationInHrs(durationSummationInHours);
     }
 
     public static double getMaxDuration(String termValue) {

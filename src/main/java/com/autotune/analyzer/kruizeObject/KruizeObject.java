@@ -261,9 +261,17 @@ public final class KruizeObject {
     }
 
     public static void setDefaultTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
-        terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD));
-        terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD));
-        terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD));
+        // TODO: define term names like daily, weekly, fortnightly etc
+        // TODO: add CRD for terms
+        terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD));
+        terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD));
+        terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD));
 
         kruizeObject.setTerms(terms);
     }
