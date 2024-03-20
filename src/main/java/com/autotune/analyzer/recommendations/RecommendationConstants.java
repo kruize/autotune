@@ -722,7 +722,9 @@ public class RecommendationConstants {
     }
 
     public static final class RecommendationValueConstants {
-        public static final Double CPU_ZERO = 0.0;
+        public static final Double ZERO_VALUE = 0.0;
+        public static final Double MEM_ZERO = ZERO_VALUE;
+        public static final Double CPU_ZERO = ZERO_VALUE;
         public static final Double CPU_ONE_MILLICORE = 0.001;
         public static final Double CPU_TEN_MILLICORE = 0.01;
         public static final Double CPU_HUNDRED_MILLICORE = 0.1;

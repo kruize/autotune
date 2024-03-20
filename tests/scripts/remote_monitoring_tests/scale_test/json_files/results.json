@@ -1,5 +1,5 @@
 {
-  "version": "3.0",
+  "version": "v2.0",
   "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_4",
   "interval_start_time": "2023-01-01T00:00:00.000Z",
   "interval_end_time": "2023-01-01T00:00:00.000Z",

@@ -55,6 +55,7 @@ Here are the test scenarios:
 - List recommendations with invalid parameter values for experiment_name & monitoring_end_time
 	- Non-existing experiment_name
 	- Non-existing time stamp, incorrect timestamp format
+- List recommendations after sending 15 days of constant results matching requests and limits
 - List recommendations with valid and invalid notification codes
 - List recommendations with valid and invalid minimum data threshold
 	- Valid contiguous and non-contiguous minimum data points for each term

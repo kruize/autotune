@@ -65,6 +65,8 @@ recommendation associated with a given duration term.
 **Duration**: The "duration" in the term analysis refers to the amount of historical data taken into account when
 assessing resource utilization.
 
+Read more about the Term Threshold scenarios [here](TermThresholdDesign.md) 
+
 ### Profile Algorithm's (How Kruize calculate's the recommendations)
 
 **Profile:**

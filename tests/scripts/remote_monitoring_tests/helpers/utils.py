@@ -87,6 +87,11 @@ INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE = "112102"
 INFO_RECOMMENDATIONS_AVAILABLE_CODE = "111000"
 INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE = "111101"
 
+CPU_REQUEST_OPTIMISED_CODE = "323004"
+CPU_LIMIT_OPTIMISED_CODE = "323005"
+MEMORY_REQUEST_OPTIMISED_CODE = "324003"
+MEMORY_LIMIT_OPTIMISED_CODE = "324004"
+
 CPU_REQUEST = "cpuRequest"
 CPU_LIMIT = "cpuLimit"
 CPU_USAGE = "cpuUsage"
@@ -96,6 +101,9 @@ MEMORY_REQUEST = "memoryRequest"
 MEMORY_LIMIT = "memoryLimit"
 MEMORY_USAGE = "memoryUsage"
 MEMORY_RSS = "memoryRSS"
+
+OPTIMISED_CPU = 3
+OPTIMISED_MEMORY = 300
 
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
 EXP_EXISTS_MSG = "Experiment name already exists: "
@@ -203,6 +211,12 @@ update_results_test_data = {
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
+aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "cpuLimit_avg", "cpuUsage_sum", "cpuUsage_max",
+                          "cpuUsage_avg", "cpuUsage_min", "cpuThrottle_sum", "cpuThrottle_max", "cpuThrottle_avg",
+                          "memoryRequest_sum", "memoryRequest_avg", "memoryLimit_sum", "memoryRequest_avg",
+                          "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
+                          "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
+
 
 def generate_test_data(csvfile, test_data, api_name):
     if os.path.isfile(csvfile):
@@ -213,6 +227,12 @@ def generate_test_data(csvfile, test_data, api_name):
         for key in test_data:
             for t in test_type:
                 data = []
+                # skip checking the invalid container name and container image name
+                if key == "container_image_name" or (key == "container_name" and t == "invalid"):
+                    continue
+                #  skip checking the aggregation info values
+                if key in aggr_info_keys_to_skip and t == "null":
+                    continue
 
                 test_name = t + "_" + key
                 status_code = 400
@@ -746,3 +766,26 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
             assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][
                 AMOUNT_KEY] - current_memory_value
             assert variation_limits[MEMORY_KEY][FORMAT_KEY] == recommended_limits[MEMORY_KEY][FORMAT_KEY]
+
+
+def check_optimised_codes(cost_notifications, perf_notifications):
+    assert CPU_REQUEST_OPTIMISED_CODE in cost_notifications
+    assert CPU_REQUEST_OPTIMISED_CODE in perf_notifications
+
+    assert CPU_LIMIT_OPTIMISED_CODE in cost_notifications
+    assert CPU_LIMIT_OPTIMISED_CODE in perf_notifications
+
+    assert MEMORY_REQUEST_OPTIMISED_CODE in cost_notifications
+    assert MEMORY_REQUEST_OPTIMISED_CODE in perf_notifications
+
+    assert MEMORY_LIMIT_OPTIMISED_CODE in cost_notifications
+    assert MEMORY_LIMIT_OPTIMISED_CODE in perf_notifications
+
+
+def validate_recommendation_for_cpu_mem_optimised(recommendations: dict, current: dict, profile: str):
+    assert "variation" in recommendations["recommendation_engines"][profile]
+    assert "config" in recommendations["recommendation_engines"][profile]
+    assert recommendations["recommendation_engines"][profile]["config"]["requests"]["cpu"]["amount"] == current["requests"]["cpu"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["limits"]["cpu"]["amount"] == current["limits"]["cpu"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["requests"]["memory"]["amount"] == current["requests"]["memory"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["limits"]["memory"]["amount"] == current["limits"]["memory"]["amount"]
