@@ -32,10 +32,10 @@ public class KruizeHibernateUtil {
     private static SessionFactory sessionFactory;
 
     static {
-        generateFactory();
+        buildSessionFactory();
     }
 
-    public static SessionFactory generateFactory() {
+    public static void buildSessionFactory() {
         SessionFactory sfTemp = null;
         try {
             Configuration configuration = new Configuration();
@@ -68,7 +68,7 @@ public class KruizeHibernateUtil {
         } finally {
             sessionFactory = sfTemp;
         }
-        return sfTemp;
+
     }
 
     public static Session getSession() {
