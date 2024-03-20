@@ -2,6 +2,7 @@ package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.plots.PlotManager;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
@@ -23,6 +24,7 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import org.slf4j.Logger;
@@ -35,20 +37,18 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
-import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.MEM_ZERO;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 
 public class RecommendationEngine {
-    private String performanceProfile;
-    private String experimentName;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
     private final String intervalEndTimeStr;
     private final String intervalStartTimeStr; // TODO: to be used in future
-    private Map<String, Terms> terms;
     List<RecommendationModel> recommendationModels;
+    private String performanceProfile;
+    private String experimentName;
+    private Map<String, Terms> terms;
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
@@ -58,7 +58,26 @@ public class RecommendationEngine {
         this.init();
     }
 
-    private void init() {        
+    private static int getNumPods(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        Double max_pods_cpu = filteredResultsMap.values()
+                .stream()
+                .map(e -> {
+                    Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
+                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    double numPods = 0;
+
+                    if (0 != cpuUsageAvg) {
+                        numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+                    }
+                    return numPods;
+                })
+                .max(Double::compareTo).get();
+
+        return (int) Math.ceil(max_pods_cpu);
+    }
+
+    private void init() {
         // Add new models
         recommendationModels = new ArrayList<>();
         // Create Cost based model
@@ -70,6 +89,7 @@ public class RecommendationEngine {
         registerModel(performanceBasedRecommendationModel);
         // TODO: Add profile based once recommendation algos are available
     }
+
     private void registerModel(RecommendationModel recommendationModel) {
         if (null == recommendationModel) {
             return;
@@ -219,7 +239,7 @@ public class RecommendationEngine {
             }
         } catch (Exception e) {
             LOGGER.error("Exception occurred while generating recommendations for experiment: {} and interval_end_time: " +
-                            "{} : {}", experimentName, interval_end_time, e.getMessage());
+                    "{} : {}", experimentName, interval_end_time, e.getMessage());
             LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
             kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
         }
@@ -504,7 +524,13 @@ public class RecommendationEngine {
                 mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
             }
             Terms.setDurationBasedOnTerm(containerData, mappedRecommendationForTerm, recommendationTerm);
+            if (KruizeDeploymentInfo.plots == true) {
+                if (null != monitoringStartTime) {
+                    mappedRecommendationForTerm.setPlots(new PlotManager(containerData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots());
+                }
+            }
             timestampRecommendation.setRecommendationForTermHashMap(recommendationTerm, mappedRecommendationForTerm);
+
         }
         return recommendationAvailable;
 
@@ -610,31 +636,12 @@ public class RecommendationEngine {
                     cpuThreshold,
                     memoryThreshold
             );
-        }  else {
+        } else {
             RecommendationNotification notification = new RecommendationNotification(
                     RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
             mappedRecommendationForModel.addNotification(notification);
         }
         return mappedRecommendationForModel;
-    }
-
-    private static int getNumPods(Map<Timestamp, IntervalResults> filteredResultsMap) {
-        Double max_pods_cpu = filteredResultsMap.values()
-                .stream()
-                .map(e -> {
-                    Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
-                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
-                    double numPods = 0;
-
-                    if (0 != cpuUsageAvg) {
-                        numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
-                    }
-                    return numPods;
-                })
-                .max(Double::compareTo).get();
-
-        return (int) Math.ceil(max_pods_cpu);
     }
 
     /**
