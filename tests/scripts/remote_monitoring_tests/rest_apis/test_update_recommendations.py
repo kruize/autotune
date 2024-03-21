@@ -68,7 +68,7 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file)
+            response = update_results(update_results_json_file, False)
 
             data = response.json()
             print("message = ", data['message'])
@@ -193,7 +193,7 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file)
+            response = update_results(update_results_json_file, False)
 
             data = response.json()
             print("message = ", data['message'])

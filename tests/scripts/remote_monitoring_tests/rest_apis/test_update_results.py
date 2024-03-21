@@ -299,7 +299,7 @@ def test_update_multiple_valid_results_after_create_exp(cluster_type):
         with open(filename, 'w') as file:
             file.write(data)
 
-        response = update_results(filename)
+        response = update_results(filename, False)
 
         data = response.json()
         print("message = ", data['message'])
@@ -361,7 +361,7 @@ def test_update_multiple_valid_results_with_supported_cpu_format_types(format_ty
         with open(filename, 'w') as file:
             file.write(data)
 
-        response = update_results(filename)
+        response = update_results(filename, False)
 
         data = response.json()
         print("message = ", data['message'])
@@ -419,7 +419,7 @@ def test_update_multiple_valid_results_with_supported_mem_format_types(format_ty
         with open(filename, 'w') as file:
             file.write(data)
 
-        response = update_results(filename)
+        response = update_results(filename, False)
 
         data = response.json()
         print("message = ", data['message'])
