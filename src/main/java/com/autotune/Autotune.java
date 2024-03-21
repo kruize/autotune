@@ -102,8 +102,9 @@ public class Autotune {
             InitializeDeployment.setup_deployment_info();
             // Read and execute the DDLs here
             executeDDLs();
+            KruizeHibernateUtil.buildSessionFactory();  //Regenerate a Hibernate session following the creation of new tables.
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
-                 MonitoringAgentNotFoundException e) {
+                MonitoringAgentNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
         }
