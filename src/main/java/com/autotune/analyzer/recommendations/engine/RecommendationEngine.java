@@ -390,17 +390,18 @@ public class RecommendationEngine {
                                                         MappedRecommendationForTimestamp timestampRecommendation) {
 
         boolean recommendationAvailable = false;
-
+        double measurementDuration = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
         for (Map.Entry<String, Terms> termsEntry : kruizeObject.getTerms().entrySet()) {
             String recommendationTerm = termsEntry.getKey();
             Terms terms = termsEntry.getValue();
-            LOGGER.info("recommendationTerm = {}", recommendationTerm);
+            LOGGER.debug("recommendationTerm = {}", recommendationTerm);
             int duration = termsEntry.getValue().getDays();
-            Timestamp monitoringStartTime = Terms.getMonitoringStartTime(containerData.getResults(), monitoringEndTime, duration);
+            Timestamp monitoringStartTime = Terms.getMonitoringStartTime(monitoringEndTime, duration);
+            LOGGER.debug("monitoringStartTime = {}", monitoringStartTime);
 
             TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
             // Check if there is min data available for the term
-            if (!Terms.checkIfMinDataAvailableForTerm(containerData, terms)) {
+            if (!Terms.checkIfMinDataAvailableForTerm(containerData, terms, monitoringEndTime, measurementDuration)) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(
                         RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
@@ -419,6 +420,7 @@ public class RecommendationEngine {
 
                     // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
+                            monitoringStartTime,
                             model,
                             containerData,
                             monitoringEndTime,
@@ -476,7 +478,7 @@ public class RecommendationEngine {
 
     }
 
-    private MappedRecommendationForModel generateRecommendationBasedOnModel(RecommendationModel model, ContainerData containerData,
+    private MappedRecommendationForModel generateRecommendationBasedOnModel(Timestamp monitoringStartTime, RecommendationModel model, ContainerData containerData,
                                                                             Timestamp monitoringEndTime,
                                                                             RecommendationSettings recommendationSettings,
                                                                             HashMap<AnalyzerConstants.ResourceSetting,
@@ -484,7 +486,6 @@ public class RecommendationEngine {
                                                                                             RecommendationConfigItem>> currentConfigMap,
                                                                             Map.Entry<String, Terms> termEntry) {
 
-        Timestamp monitoringStartTime = Terms.getMonitoringStartTime(containerData.getResults(), monitoringEndTime, termEntry.getValue().getDays());
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
         // Set CPU threshold to default
         double cpuThreshold = DEFAULT_CPU_THRESHOLD;
