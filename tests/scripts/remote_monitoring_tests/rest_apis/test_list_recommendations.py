@@ -31,7 +31,7 @@ term_input = [
     ("short_term_test_2_data_points", 2, list_reco_json_schema, 0.5, 0, True),
     ("medium_term_test_192_data_points", 192, medium_term_list_reco_json_schema, 48.0, 0, False),
     ("long_term_test_768_data_points", 768, long_term_list_reco_json_schema, 192.0, 0, False),
-    ("long_term_test_769_data_points", 769, long_term_list_reco_json_schema, 192.3, 0, False),
+    ("long_term_test_769_data_points", 769, long_term_list_reco_json_schema, 192.25, 0, False),
     ("long_term_test_1440_data_points", 1440, long_term_list_reco_json_schema, 360.0, 0, False),
     ("short_term_test_2_data_points_non_contiguous", 2, list_reco_json_schema, 0.5, 0, True),
     ("medium_term_test_192_data_points_non_contiguous", 192, medium_term_list_reco_json_schema, 48.0, 0, False),
@@ -165,7 +165,7 @@ def test_list_recommendations_without_parameters(cluster_type):
     result_json_file = "../json_files/multiple_results_single_exp.json"
 
     result_json_arr = read_json_data_from_file(result_json_file)
-    response = update_results(result_json_file)
+    response = update_results(result_json_file, False)
 
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
@@ -314,7 +314,7 @@ def test_list_recommendations_single_exp_multiple_results(cluster_type):
 
     # Update results for the experiment
     result_json_file = "../json_files/multiple_results_single_exp.json"
-    response = update_results(result_json_file)
+    response = update_results(result_json_file, False)
 
     # Get the experiment name
     json_data = json.load(open(input_json_file))
@@ -400,7 +400,7 @@ def test_list_recommendations_supported_metric_formats(memory_format_type, cpu_f
     write_json_data_to_file(tmp_update_results_json_file, result_json)
 
     # Update the results
-    response = update_results(tmp_update_results_json_file)
+    response = update_results(tmp_update_results_json_file, False)
 
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
@@ -878,8 +878,8 @@ def test_list_recommendations_multiple_exps_with_missing_metrics(cluster_type):
 
 
 @pytest.mark.extended
-@pytest.mark.parametrize("test_name, num_days, reco_json_schema, expected_duration_in_hours, latest", reco_term_input)
-def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, num_days, reco_json_schema, expected_duration_in_hours, latest, cluster_type):
+@pytest.mark.parametrize("test_name, num_days, reco_json_schema, expected_duration_in_hours, latest, logging", reco_term_input)
+def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, num_days, reco_json_schema, expected_duration_in_hours, latest, logging, cluster_type):
     """
         Test Description: This test validates list recommendations for all the terms for multiple experiments posted using different json files
                           and query with only the parameter latest and with both latest=true and latest=false
@@ -938,7 +938,7 @@ def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, nu
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file)
+            response = update_results(update_results_json_file, logging)
 
             data = response.json()
             print("message = ", data['message'])

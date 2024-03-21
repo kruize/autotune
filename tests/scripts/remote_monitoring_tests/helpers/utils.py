@@ -505,11 +505,10 @@ def validate_container(update_results_container, update_results_json, list_reco_
                                 assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
                                     f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
                         else:
-                            duration_in_hours_rounded_off = math.ceil(duration_in_hours * 10) / 10
                             print(
-                                f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours_rounded_off}")
-                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours_rounded_off, \
-                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours_rounded_off}"
+                                f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
                             duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time,
                                                                             interval_end_time)
 
