@@ -8,9 +8,9 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.HashMap;
 
-public class MappedRecommendationForEngine {
+public class MappedRecommendationForModel {
 
-    public MappedRecommendationForEngine() {
+    public MappedRecommendationForModel() {
         this.podsCount = 0;
         this.confidence_level = 0.0;
         this.config = new HashMap<>();

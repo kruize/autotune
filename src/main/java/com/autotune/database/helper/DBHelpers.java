@@ -21,10 +21,8 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
-import com.autotune.analyzer.recommendations.Recommendation;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.serviceObjects.*;
-import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
@@ -399,9 +397,8 @@ public class DBHelpers {
                 return listRecommendationsAPIObject;
             }
 
-            public static KruizeRecommendationEntry convertKruizeObjectTORecommendation(KruizeObject kruizeObject, ExperimentResultData experimentResultData) {
+            public static KruizeRecommendationEntry convertKruizeObjectTORecommendation(KruizeObject kruizeObject, Timestamp monitoringEndTime) {
                 KruizeRecommendationEntry kruizeRecommendationEntry = null;
-                Timestamp monitoringEndTime = null;
                 Boolean checkForTimestamp = false;
                 Boolean getLatest = true;
                 Gson gson = new GsonBuilder()
@@ -412,9 +409,6 @@ public class DBHelpers {
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                         .create();
                 try {
-                    if (null != experimentResultData) {
-                        monitoringEndTime = experimentResultData.getIntervalEndTime();
-                    }
                     ListRecommendationsAPIObject listRecommendationsAPIObject = getListRecommendationAPIObjectForDB(
                             kruizeObject, monitoringEndTime);
                     if (null == listRecommendationsAPIObject) {

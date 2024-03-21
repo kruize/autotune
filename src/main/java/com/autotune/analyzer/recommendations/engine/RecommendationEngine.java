@@ -1,69 +1,590 @@
-/*******************************************************************************
- * Copyright (c) 2023 Red Hat, IBM Corporation and others.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
 package com.autotune.analyzer.recommendations.engine;
 
+import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
-import com.autotune.analyzer.recommendations.objects.MappedRecommendationForEngine;
+import com.autotune.analyzer.recommendations.model.CostBasedRecommendationModel;
+import com.autotune.analyzer.recommendations.model.PerformanceBasedRecommendationModel;
+import com.autotune.analyzer.recommendations.model.RecommendationModel;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
+import com.autotune.analyzer.recommendations.objects.TermRecommendations;
+import com.autotune.analyzer.recommendations.term.Terms;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.metrics.MetricAggregationInfoResults;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_CPU_PERCENTILE;
-import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_MEMORY_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
-import static com.autotune.analyzer.utils.AnalyzerConstants.PercentileConstants.*;
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.MEM_ZERO;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 
-public class CostRecommendationEngine implements KruizeRecommendationEngine {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CostRecommendationEngine.class);
-    private String name;
-    private String key;
-    private RecommendationConstants.RecommendationCategory category;
+public class RecommendationEngine {
+    private String performanceProfile;
+    private String experimentName;
+    private final String intervalEndTimeStr;
+    private final String intervalStartTimeStr; // TODO: to be used in future
+    private Map<String, Terms> terms;
+    List<RecommendationModel> recommendationModels;
+    private KruizeObject kruizeObject;
+    private Timestamp interval_end_time;
 
-    public CostRecommendationEngine() {
-        this.name = RecommendationConstants.RecommendationEngine.EngineNames.COST;
-        this.key = RecommendationConstants.RecommendationEngine.EngineKeys.COST_KEY;
-        this.category = RecommendationConstants.RecommendationCategory.COST;
+    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
+
+
+    public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
+        this.experimentName = experimentName;
+        this.intervalEndTimeStr = intervalEndTimeStr;
+        this.intervalStartTimeStr = intervalStartTimeStr;
+        this.init();
     }
 
-    public CostRecommendationEngine(String name) {
-        this.name = name;
+    private void init() {        
+        // Add new models
+        recommendationModels = new ArrayList<>();
+        // Create Cost based model
+        CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
+        // TODO: Create profile based model
+        registerModel(costBasedRecommendationModel);
+        // Create Performance based model
+        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+        registerModel(performanceBasedRecommendationModel);
+        // TODO: Add profile based once recommendation algos are available
+    }
+    private void registerModel(RecommendationModel recommendationModel) {
+        if (null == recommendationModel) {
+            return;
+        }
+        for (RecommendationModel model : getModels()) {
+            if (model.getModelName().equalsIgnoreCase(recommendationModel.getModelName()))
+                return;
+        }
+        // Add models
+        getModels().add(recommendationModel);
     }
 
-    /**
-     * Calculate the number of pods being used as per the latest results
-     * <p>
-     * pods are calculated independently based on both the CPU and Memory usage results.
-     * The max of both is then returned
-     *
-     * @param filteredResultsMap
-     * @return
-     */
+    public List<RecommendationModel> getModels() {
+        return this.recommendationModels;
+    }
+
+    public String getPerformanceProfile() {
+        return performanceProfile;
+    }
+
+    public void setPerformanceProfile(String performanceProfile) {
+        this.performanceProfile = performanceProfile;
+    }
+
+    public String getExperimentName() {
+        return experimentName;
+    }
+
+    public void setExperimentName(String experimentName) {
+        this.experimentName = experimentName;
+    }
+
+    public Timestamp getInterval_end_time() {
+        return interval_end_time;
+    }
+
+    public void setInterval_end_time(Timestamp interval_end_time) {
+        this.interval_end_time = interval_end_time;
+    }
+
+    public Map<String, Terms> getTerms() {
+        return terms;
+    }
+
+    public void setTerms(Map<String, Terms> terms) {
+        this.terms = terms;
+    }
+
+    public KruizeObject getKruizeObject() {
+        return kruizeObject;
+    }
+
+    public void setKruizeObject(KruizeObject kruizeObject) {
+        this.kruizeObject = kruizeObject;
+    }
+
+    private KruizeObject createKruizeObject() {
+        Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
+        KruizeObject kruizeObject = new KruizeObject();
+        try {
+            new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
+            if (null != mainKruizeExperimentMAP.get(experimentName)) {
+                kruizeObject = mainKruizeExperimentMAP.get(experimentName);
+                kruizeObject.setValidation_data(new ValidationOutputData(true, null, null));
+            } else {
+                kruizeObject.setValidation_data(new ValidationOutputData(false, String.format("%s%s",
+                        MISSING_EXPERIMENT_NAME, experimentName), HttpServletResponse.SC_BAD_REQUEST));
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to load experiment from DB: {}", e.getMessage());
+            kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+        }
+        return kruizeObject;
+    }
+
+    public String validate() {
+
+        String validationFailureMsg = "";
+        // Check if experiment_name is provided
+        if (experimentName == null || experimentName.isEmpty()) {
+            validationFailureMsg += AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.EXPERIMENT_NAME_MANDATORY + ", ";
+        }
+
+        // Check if interval_end_time is provided
+        if (intervalEndTimeStr == null || intervalEndTimeStr.isEmpty()) {
+            validationFailureMsg += AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INTERVAL_END_TIME_MANDATORY;
+        } else if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
+            validationFailureMsg += String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStr);
+        }
+
+        // Check if interval_start_time is provided
+        // TODO: to be considered in future
+
+        return validationFailureMsg;
+    }
+
+    public KruizeObject prepareRecommendations(int calCount) {
+        Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
+        Map<String, Terms> terms = new HashMap<>();
+        ValidationOutputData validationOutputData;
+        interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
+                intervalEndTimeStr);
+        setInterval_end_time(interval_end_time);
+        KruizeObject kruizeObject = createKruizeObject();
+        if (!kruizeObject.getValidation_data().isSuccess())
+            return kruizeObject;
+        // continue to generate recommendation when kruizeObject is successfully created
+        setKruizeObject(kruizeObject);
+        try {
+            if (null != kruizeObject) {
+                // set the default terms if the terms aren't provided by the user
+                if (kruizeObject.getTerms() == null)
+                    KruizeObject.setDefaultTerms(terms, kruizeObject);
+                // set the performance profile
+                setPerformanceProfile(kruizeObject.getPerformanceProfile());
+                // get the datasource
+                String dataSource = kruizeObject.getDataSource();
+                int maxDay = Terms.getMaxDays(terms);
+                Timestamp interval_start_time = Timestamp.valueOf(Objects.requireNonNull(getInterval_end_time()).toLocalDateTime().minusDays(maxDay));
+
+                // update the KruizeObject to have the results data from the available datasource
+                getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
+
+                // generate recommendation
+                try {
+                    generateRecommendations(kruizeObject);
+                    // store the recommendations in the DB
+                    validationOutputData = addRecommendationsToDB(mainKruizeExperimentMAP, kruizeObject);
+                    if (!validationOutputData.isSuccess()) {
+                        LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                        validationOutputData = new ValidationOutputData(false, validationOutputData.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+                    } else {
+                        LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
+                    }
+                    kruizeObject.setValidation_data(validationOutputData);
+                } catch (Exception e) {
+                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                    LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
+                            experimentName, interval_start_time, interval_end_time);
+                    kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+                }
+            } else {
+                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                kruizeObject = new KruizeObject();
+                kruizeObject.setValidation_data(new ValidationOutputData(false, String.format("%s%s", MISSING_EXPERIMENT_NAME, experimentName),
+                        HttpServletResponse.SC_BAD_REQUEST));
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while generating recommendations for experiment: {} and interval_end_time: " +
+                            "{} : {}", experimentName, interval_end_time, e.getMessage());
+            LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+            kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+        }
+        return kruizeObject;
+    }
+
+    public void generateRecommendations(KruizeObject kruizeObject) {
+
+        for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+            for (String containerName : k8sObject.getContainerDataMap().keySet()) {
+                ContainerData containerData = k8sObject.getContainerDataMap().get(containerName);
+
+                if (containerData.getResults() == null || containerData.getResults().isEmpty()) {
+                    continue;
+                }
+
+                // generate recommendations based on each container
+                generateRecommendationsBasedOnContainer(containerData, kruizeObject);
+                // TODO: generate recommendations based on namespace, kubernetes_object name and type
+            }
+        }
+    }
+
+    private void generateRecommendationsBasedOnContainer(ContainerData containerData, KruizeObject kruizeObject) {
+
+        // Get the monitoringEndTime from ResultData's ContainerData. Should have only one element
+        Timestamp monitoringEndTime = containerData.getResults().keySet().stream().max(Timestamp::compareTo).get();
+
+        ContainerRecommendations containerRecommendations = containerData.getContainerRecommendations();
+        // Just to make sure the container recommendations object is not empty
+        if (null == containerRecommendations) {
+            containerRecommendations = new ContainerRecommendations();
+        }
+
+        HashMap<Integer, RecommendationNotification> recommendationLevelNM = containerRecommendations.getNotificationMap();
+        if (null == recommendationLevelNM) {
+            recommendationLevelNM = new HashMap<>();
+        }
+
+        // Get the engine recommendation map for a time stamp if it exists else create one
+        HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap
+                = containerRecommendations.getData();
+
+        if (null == timestampBasedRecommendationMap) {
+            timestampBasedRecommendationMap = new HashMap<>();
+        }
+        // check if engines map exists else create one
+        MappedRecommendationForTimestamp timestampRecommendation;
+        if (timestampBasedRecommendationMap.containsKey(monitoringEndTime)) {
+            timestampRecommendation = timestampBasedRecommendationMap.get(monitoringEndTime);
+        } else {
+            timestampRecommendation = new MappedRecommendationForTimestamp();
+        }
+
+        timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
+
+        // get the current config data
+        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
+                RecommendationConfigItem>> currentConfig = getCurrentConfigData(containerData, monitoringEndTime,
+                timestampRecommendation);
+        timestampRecommendation.setCurrentConfig(currentConfig);
+
+        // get recommendations based on terms
+        boolean recommendationAvailable = generateRecommendationsBasedOnTerms(containerData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
+
+        RecommendationNotification recommendationsLevelNotifications;
+        if (recommendationAvailable) {
+            // put recommendations tagging to timestamp
+            timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);
+            // set the Recommendations object level notifications
+            recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
+        } else {
+            recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+            timestampBasedRecommendationMap = new HashMap<>();
+        }
+
+        recommendationLevelNM.put(recommendationsLevelNotifications.getCode(), recommendationsLevelNotifications);
+        containerRecommendations.setNotificationMap(recommendationLevelNM);
+        // set the data object to map
+        containerRecommendations.setData(timestampBasedRecommendationMap);
+        // set the container recommendations in container object
+        containerData.setContainerRecommendations(containerRecommendations);
+    }
+
+    private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
+            RecommendationConfigItem>> getCurrentConfigData(ContainerData containerData, Timestamp monitoringEndTime,
+                                                            MappedRecommendationForTimestamp timestampRecommendation) {
+
+        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem,
+                RecommendationConfigItem>> currentConfig = new HashMap<>();
+
+        ArrayList<RecommendationConstants.RecommendationNotification> notifications = new ArrayList<>();
+
+        // Create Current Requests Map
+        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentRequestsMap = new HashMap<>();
+
+        // Create Current Limits Map
+        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> currentLimitsMap = new HashMap<>();
+
+        for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
+            for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
+                RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(containerData.getResults(),
+                        monitoringEndTime,
+                        resourceSetting,
+                        recommendationItem,
+                        notifications);
+
+                if (null == configItem)
+                    continue;
+                if (null == configItem.getAmount()) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
+                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
+                    continue;
+                }
+                if (null == configItem.getFormat()) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
+                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
+                    continue;
+                }
+                if (configItem.getAmount() <= 0.0) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
+                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
+                    continue;
+                }
+                if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
+                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                        notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
+                    continue;
+                }
+
+                if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
+                    currentRequestsMap.put(recommendationItem, configItem);
+                }
+                if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                    currentLimitsMap.put(recommendationItem, configItem);
+                }
+            }
+        }
+
+        // Iterate over notifications and set to recommendations
+        for (RecommendationConstants.RecommendationNotification recommendationNotification : notifications) {
+            timestampRecommendation.addNotification(new RecommendationNotification(recommendationNotification));
+        }
+        // Check if map is not empty and set requests map to current config
+        if (!currentRequestsMap.isEmpty()) {
+            currentConfig.put(AnalyzerConstants.ResourceSetting.requests, currentRequestsMap);
+        }
+        // Check if map is not empty and set limits map to current config
+        if (!currentLimitsMap.isEmpty()) {
+            currentConfig.put(AnalyzerConstants.ResourceSetting.limits, currentLimitsMap);
+        }
+        return currentConfig;
+    }
+
+    private boolean generateRecommendationsBasedOnTerms(ContainerData containerData, KruizeObject kruizeObject,
+                                                        Timestamp monitoringEndTime,
+                                                        HashMap<AnalyzerConstants.ResourceSetting,
+                                                                HashMap<AnalyzerConstants.RecommendationItem,
+                                                                        RecommendationConfigItem>> currentConfig,
+                                                        MappedRecommendationForTimestamp timestampRecommendation) {
+
+        boolean recommendationAvailable = false;
+
+        for (Map.Entry<String, Terms> termsEntry : kruizeObject.getTerms().entrySet()) {
+            String recommendationTerm = termsEntry.getKey();
+            Terms terms = termsEntry.getValue();
+            LOGGER.info("recommendationTerm = {}", recommendationTerm);
+            int duration = termsEntry.getValue().getDays();
+            Timestamp monitoringStartTime = Terms.getMonitoringStartTime(containerData.getResults(), monitoringEndTime, duration);
+
+            TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
+            // Check if there is min data available for the term
+            if (!Terms.checkIfMinDataAvailableForTerm(containerData, terms)) {
+                RecommendationNotification recommendationNotification = new RecommendationNotification(
+                        RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                mappedRecommendationForTerm.addNotification(recommendationNotification);
+            } else {
+                ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
+                for (RecommendationModel model : getModels()) {
+                    boolean isCostModel = false;
+                    boolean isPerfModel = false;
+
+                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
+                        isCostModel = true;
+                    }
+                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
+                        isPerfModel = true;
+                    }
+
+                    // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
+                    MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
+                            model,
+                            containerData,
+                            monitoringEndTime,
+                            kruizeObject.getRecommendation_settings(),
+                            currentConfig,
+                            termsEntry);
+
+                    if (null == mappedRecommendationForModel) {
+                        continue;
+                    }
+
+                    // Adding the term level recommendation availability after confirming the recommendation exists
+                    RecommendationNotification rn = RecommendationNotification.getNotificationForTermAvailability(recommendationTerm);
+                    if (null != rn) {
+                        timestampRecommendation.addNotification(rn);
+                    }
+
+                    RecommendationNotification recommendationNotification = null;
+                    if (isCostModel) {
+                        // Setting it as at least one recommendation available
+                        recommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
+                        );
+                    }
+
+                    if (isPerfModel) {
+                        // Setting it as at least one recommendation available
+                        recommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
+                        );
+                    }
+
+                    if (null != recommendationNotification) {
+                        termLevelNotifications.add(recommendationNotification);
+                    } else {
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA
+                        );
+                        termLevelNotifications.add(recommendationNotification);
+                    }
+                    mappedRecommendationForTerm.setRecommendationForEngineHashMap(model.getModelName(), mappedRecommendationForModel);
+                }
+
+                for (RecommendationNotification recommendationNotification : termLevelNotifications) {
+                    mappedRecommendationForTerm.addNotification(recommendationNotification);
+                }
+                mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
+            }
+            Terms.setDurationBasedOnTerm(containerData, mappedRecommendationForTerm, recommendationTerm);
+            timestampRecommendation.setRecommendationForTermHashMap(recommendationTerm, mappedRecommendationForTerm);
+        }
+        return recommendationAvailable;
+
+    }
+
+    private MappedRecommendationForModel generateRecommendationBasedOnModel(RecommendationModel model, ContainerData containerData,
+                                                                            Timestamp monitoringEndTime,
+                                                                            RecommendationSettings recommendationSettings,
+                                                                            HashMap<AnalyzerConstants.ResourceSetting,
+                                                                                    HashMap<AnalyzerConstants.RecommendationItem,
+                                                                                            RecommendationConfigItem>> currentConfigMap,
+                                                                            Map.Entry<String, Terms> termEntry) {
+
+        Timestamp monitoringStartTime = Terms.getMonitoringStartTime(containerData.getResults(), monitoringEndTime, termEntry.getValue().getDays());
+        MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
+        // Set CPU threshold to default
+        double cpuThreshold = DEFAULT_CPU_THRESHOLD;
+        // Set Memory threshold to default
+        double memoryThreshold = DEFAULT_MEMORY_THRESHOLD;
+        if (null != recommendationSettings) {
+            Double threshold = recommendationSettings.getThreshold();
+            if (null == threshold) {
+                LOGGER.info("Threshold is not set, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
+            } else if (threshold <= 0.0) {
+                LOGGER.error("Given Threshold is invalid, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
+            } else {
+                cpuThreshold = threshold;
+                memoryThreshold = threshold;
+            }
+        } else {
+            LOGGER.error("Recommendation Settings are null, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
+        }
+
+        RecommendationConfigItem currentCPURequest = null;
+        RecommendationConfigItem currentCPULimit = null;
+        RecommendationConfigItem currentMemRequest = null;
+        RecommendationConfigItem currentMemLimit = null;
+
+        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
+            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
+                currentCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            }
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
+                currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            }
+        }
+        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
+            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
+                currentCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            }
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
+                currentMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            }
+        }
+        if (null != monitoringStartTime) {
+            Timestamp finalMonitoringStartTime = monitoringStartTime;
+            Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
+                    .filter((x -> ((x.getKey().compareTo(finalMonitoringStartTime) >= 0)
+                            && (x.getKey().compareTo(monitoringEndTime) <= 0))))
+                    .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
+
+            // Set number of pods
+            int numPods = getNumPods(filteredResultsMap);
+
+            mappedRecommendationForModel.setPodsCount(numPods);
+
+            // Pass Notification object to all callers to update the notifications required
+            ArrayList<RecommendationNotification> notifications = new ArrayList<>();
+
+            // Get the Recommendation Items
+            RecommendationConfigItem recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
+            RecommendationConfigItem recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
+
+            // Get the Recommendation Items
+            // Calling requests on limits as we are maintaining limits and requests as same
+            // Maintaining different flow for both of them even though if they are same as in future we might have
+            // a different implementation for both and this avoids confusion
+            RecommendationConfigItem recommendationCpuLimits = recommendationCpuRequest;
+            RecommendationConfigItem recommendationMemLimits = recommendationMemRequest;
+
+            // Create an internal map to send data to populate
+            HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<>();
+            // Add current values
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_REQUEST, currentCPURequest);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_LIMIT, currentCPULimit);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_REQUEST, currentMemRequest);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_LIMIT, currentMemLimit);
+            // Add recommended values
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_REQUEST, recommendationCpuRequest);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, recommendationCpuLimits);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
+            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
+
+
+            // Call the populate method to validate and populate the recommendation object
+            boolean isSuccess = populateRecommendation(
+                    termEntry,
+                    mappedRecommendationForModel,
+                    notifications,
+                    internalMapToPopulate,
+                    numPods,
+                    cpuThreshold,
+                    memoryThreshold
+            );
+        }  else {
+            RecommendationNotification notification = new RecommendationNotification(
+                    RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+            mappedRecommendationForModel.addNotification(notification);
+        }
+        return mappedRecommendationForModel;
+    }
+
     private static int getNumPods(Map<Timestamp, IntervalResults> filteredResultsMap) {
         Double max_pods_cpu = filteredResultsMap.values()
                 .stream()
@@ -83,331 +604,26 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         return (int) Math.ceil(max_pods_cpu);
     }
 
-    private static RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap,
-                                                                        Timestamp monitoringEndTimestamp,
-                                                                        ArrayList<RecommendationNotification> notifications) {
-        boolean setNotification = true;
-        if (null == notifications) {
-            LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
-            setNotification = false;
-        }
-        RecommendationConfigItem recommendationConfigItem = null;
-        String format = "";
-        List<Double> cpuUsageList = filteredResultsMap.values()
-                .stream()
-                .map(e -> {
-                    Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
-                    Optional<MetricResults> cpuThrottleResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuThrottle));
-                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
-                    double cpuUsageMax = cpuUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
-                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double cpuThrottleAvg = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
-                    double cpuThrottleMax = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
-                    double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double cpuRequestInterval = 0.0;
-                    double cpuUsagePod = 0;
-                    int numPods = 0;
-
-                    // Use the Max value when available, if not use the Avg
-                    double cpuUsage = (cpuUsageMax > 0) ? cpuUsageMax : cpuUsageAvg;
-                    double cpuThrottle = (cpuThrottleMax > 0) ? cpuThrottleMax : cpuThrottleAvg;
-                    double cpuUsageTotal = cpuUsage + cpuThrottle;
-
-                    // Usage is less than 1 core, set it to the observed value.
-                    if (CPU_ONE_CORE > cpuUsageTotal) {
-                        cpuRequestInterval = cpuUsageTotal;
-                    } else {
-                        // Sum/Avg should give us the number of pods
-                        if (0 != cpuUsageAvg) {
-                            numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
-                            if (0 < numPods) {
-                                cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
-                            }
-                        }
-                        cpuRequestInterval = Math.max(cpuUsagePod, cpuUsageTotal);
-                    }
-                    return cpuRequestInterval;
-                })
-                .collect(Collectors.toList());
-
-        Double cpuRequest = 0.0;
-        Double cpuRequestMax = Collections.max(cpuUsageList);
-        if (null != cpuRequestMax && CPU_ONE_CORE > cpuRequestMax) {
-            cpuRequest = cpuRequestMax;
-        } else {
-            cpuRequest = CommonUtils.percentile(COST_CPU_PERCENTILE, cpuUsageList);
-        }
-
-        // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO
-        // Make sure that the recommendation cannot be null
-        // Check if the cpu request is null
-        if (null == cpuRequest) {
-            cpuRequest = CPU_ZERO;
-        }
-
-        // Set notifications only if notification object is available
-        if (setNotification) {
-            // Check for Zero CPU
-            if (CPU_ZERO.equals(cpuRequest)) {
-                // Add notification for CPU_RECORDS_ARE_ZERO
-                notifications.add(new RecommendationNotification(
-                        RecommendationConstants.RecommendationNotification.NOTICE_CPU_RECORDS_ARE_ZERO
-                ));
-                // Returning null will make sure that the map is not populated with values
-                return null;
-            }
-            // Check for IDLE CPU
-            else if (CPU_ONE_MILLICORE >= cpuRequest) {
-                // Add notification for CPU_RECORDS_ARE_IDLE
-                notifications.add(new RecommendationNotification(
-                        RecommendationConstants.RecommendationNotification.NOTICE_CPU_RECORDS_ARE_IDLE
-                ));
-                // Returning null will make sure that the map is not populated with values
-                return null;
-            }
-        }
-
-        for (IntervalResults intervalResults : filteredResultsMap.values()) {
-            MetricResults cpuUsageResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage);
-            if (cpuUsageResults != null) {
-                MetricAggregationInfoResults aggregationInfoResult = cpuUsageResults.getAggregationInfoResult();
-                if (aggregationInfoResult != null) {
-                    format = aggregationInfoResult.getFormat();
-                    if (format != null && !format.isEmpty()) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        recommendationConfigItem = new RecommendationConfigItem(cpuRequest, format);
-        return recommendationConfigItem;
-    }
-
-    private static RecommendationConfigItem getCPULimitRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
-        // This method is not used for now
-        return null;
-    }
-
-    private static RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap,
-                                                                           Timestamp monitoringEndTimestamp,
-                                                                           ArrayList<RecommendationNotification> notifications) {
-        boolean setNotification = true;
-        if (null == notifications) {
-            LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
-            setNotification = false;
-        }
-        RecommendationConfigItem recommendationConfigItem = null;
-        String format = "";
-        List<Double> memUsageList = filteredResultsMap.values()
-                .stream()
-                .map(e -> {
-                    Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
-                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
-                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    Optional<MetricResults> memoryUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
-                    double memUsageAvg = memoryUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
-                    double memUsageMax = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
-                    double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double memUsage = 0;
-                    int numPods = 0;
-
-                    if (0 != cpuUsageAvg) {
-                        numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
-                    }
-                    // If numPods is still zero, could be because there is no CPU info
-                    // We can use mem data to calculate pods, this is not as reliable as cpu
-                    // but better than nothing!
-                    if (0 == numPods) {
-                        if (0 != memUsageAvg) {
-                            numPods = (int) Math.ceil(memUsageSum / memUsageAvg);
-                        }
-                    }
-                    if (0 < numPods) {
-                        memUsage = (memUsageSum / numPods);
-                    }
-                    memUsage = Math.max(memUsage, memUsageMax);
-
-                    return memUsage;
-                })
-                .collect(Collectors.toList());
-
-        // spikeList is the max spike observed in each measurementDuration
-        List<Double> spikeList = filteredResultsMap.values()
-                .stream()
-                .map(e -> {
-                    Optional<MetricResults> memoryUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
-                    Optional<MetricResults> memoryRSSResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS));
-                    double memUsageMax = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
-                    double memUsageMin = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
-                    double memRSSMax = memoryRSSResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
-                    double memRSSMin = memoryRSSResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
-                    // Calculate the spike in each interval
-                    double intervalSpike = Math.max(Math.ceil(memUsageMax - memUsageMin), Math.ceil(memRSSMax - memRSSMin));
-
-                    return intervalSpike;
-                })
-                .collect(Collectors.toList());
-
-        // Add a buffer to the current usage max
-        Double memRecUsage = CommonUtils.percentile(COST_MEMORY_PERCENTILE, memUsageList);
-        Double memRecUsageBuf = memRecUsage + (memRecUsage * MEM_USAGE_BUFFER_DECIMAL);
-
-        // Add a small buffer to the current usage spike max and add it to the current usage max
-        Double memRecSpike = CommonUtils.percentile(COST_MEMORY_PERCENTILE, spikeList);
-        memRecSpike += (memRecSpike * MEM_SPIKE_BUFFER_DECIMAL);
-        Double memRecSpikeBuf = memRecUsage + memRecSpike;
-
-        // We'll use the minimum of the above two values
-        Double memRec = Math.min(memRecUsageBuf, memRecSpikeBuf);
-
-        // Set notifications only if notification object is available
-        if (setNotification) {
-            // Check if the memory recommendation is 0
-            if (null == memRec || 0.0 == memRec) {
-                // Add appropriate Notification - MEMORY_RECORDS_ARE_ZERO
-                notifications.add(new RecommendationNotification(
-                        RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_RECORDS_ARE_ZERO
-                ));
-                // Returning null will make sure that the map is not populated with values
-                return null;
-            }
-        }
-
-        for (IntervalResults intervalResults : filteredResultsMap.values()) {
-            MetricResults memoryUsageResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage);
-            if (memoryUsageResults != null) {
-                MetricAggregationInfoResults aggregationInfoResult = memoryUsageResults.getAggregationInfoResult();
-                if (aggregationInfoResult != null) {
-                    format = aggregationInfoResult.getFormat();
-                    if (format != null && !format.isEmpty()) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        recommendationConfigItem = new RecommendationConfigItem(memRec, format);
-        return recommendationConfigItem;
-    }
-
-    private static RecommendationConfigItem getMemoryLimitRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap) {
-        // This method is not used for now
-        return null;
-    }
-
-    private static RecommendationConfigItem getCurrentValue(Map<Timestamp, IntervalResults> filteredResultsMap,
-                                                            Timestamp timestampToExtract,
-                                                            AnalyzerConstants.ResourceSetting resourceSetting,
-                                                            AnalyzerConstants.RecommendationItem recommendationItem,
-                                                            ArrayList<RecommendationNotification> notifications) {
-        Double currentValue = null;
-        String format = null;
-        RecommendationConfigItem recommendationConfigItem = null;
-        AnalyzerConstants.MetricName metricName = null;
-        for (Timestamp timestamp : filteredResultsMap.keySet()) {
-            if (!timestamp.equals(timestampToExtract))
-                continue;
-            IntervalResults intervalResults = filteredResultsMap.get(timestamp);
-            if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
-                    metricName = AnalyzerConstants.MetricName.cpuRequest;
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
-                    metricName = AnalyzerConstants.MetricName.memoryRequest;
-            }
-            if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
-                    metricName = AnalyzerConstants.MetricName.cpuLimit;
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
-                    metricName = AnalyzerConstants.MetricName.memoryLimit;
-            }
-            if (null != metricName) {
-                if (intervalResults.getMetricResultsMap().containsKey(metricName)) {
-                    Optional<MetricResults> metricResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(metricName));
-                    currentValue = metricResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(null);
-                    format = metricResults.map(m -> m.getAggregationInfoResult().getFormat()).orElse(null);
-                }
-                if (null == currentValue) {
-                    setNotificationsFor(resourceSetting, recommendationItem, notifications);
-                }
-                return new RecommendationConfigItem(currentValue, format);
-            }
-        }
-        setNotificationsFor(resourceSetting, recommendationItem, notifications);
-        return null;
-    }
-
-    private static void setNotificationsFor(AnalyzerConstants.ResourceSetting resourceSetting,
-                                            AnalyzerConstants.RecommendationItem recommendationItem,
-                                            ArrayList<RecommendationNotification> notifications) {
-        // Check notifications is null, If it's null -> return.
-        if (null == notifications)
-            return;
-        // Check if the item is CPU
-        if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu) {
-            // Check if the setting is REQUESTS
-            if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
-                notifications.add(new RecommendationNotification(
-                        RecommendationConstants.RecommendationNotification.CRITICAL_CPU_REQUEST_NOT_SET
-                ));
-            }
-            // Check if the setting is LIMITS
-            else if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
-                notifications.add(new RecommendationNotification(
-                        RecommendationConstants.RecommendationNotification.WARNING_CPU_LIMIT_NOT_SET
-                ));
-            }
-
-        }
-        // Check if the item is Memory
-        else if (recommendationItem == AnalyzerConstants.RecommendationItem.memory) {
-            // Check if the setting is REQUESTS
-            if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
-                notifications.add(new RecommendationNotification(
-                        RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_REQUEST_NOT_SET
-                ));
-            }
-            // Check if the setting is LIMITS
-            else if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
-                notifications.add(new RecommendationNotification(
-                        RecommendationConstants.RecommendationNotification.CRITICAL_MEMORY_LIMIT_NOT_SET
-                ));
-            }
-        }
-    }
-
-    @Override
-    public String getEngineName() {
-        return this.name;
-    }
-
-    @Override
-    public String getEngineKey() {
-        return this.key;
-    }
-
-    @Override
-    public RecommendationConstants.RecommendationCategory getEngineCategory() {
-        return this.category;
-    }
-
     /**
      * This method handles validating the data and populating to the recommendation object
      * <p>
      * DO NOT EDIT THIS METHOD UNLESS THERE ARE ANY CHANGES TO BE ADDED IN VALIDATION OR POPULATION MECHANISM
      * EDITING THIS METHOD MIGHT LEAD TO UNEXPECTED OUTCOMES IN RECOMMENDATIONS, PLEASE PROCEED WITH CAUTION
      *
-     * @param recommendationTerm
+     * @param termEntry
      * @param recommendation
      * @param notifications
      * @param internalMapToPopulate
      */
-    private boolean populateRecommendation(String recommendationTerm,
-                                           MappedRecommendationForEngine recommendation,
+    private boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
+                                           MappedRecommendationForModel recommendation,
                                            ArrayList<RecommendationNotification> notifications,
                                            HashMap<String, RecommendationConfigItem> internalMapToPopulate,
-                                           int numPods, double hours, double cpuThreshold, double memoryThreshold) {
+                                           int numPods, double cpuThreshold, double memoryThreshold) {
         // Check for cpu & memory Thresholds (Duplicate check if the caller is generate recommendations)
+        String recommendationTerm = termEntry.getKey();
+        double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
+                NO_OF_MINUTES_PER_HOUR;
         if (cpuThreshold <= 0.0) {
             LOGGER.error("Given CPU Threshold is invalid, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD);
             cpuThreshold = DEFAULT_CPU_THRESHOLD;
@@ -988,126 +1204,30 @@ public class CostRecommendationEngine implements KruizeRecommendationEngine {
         return isSuccess;
     }
 
-    @Override
-    public MappedRecommendationForEngine generateRecommendation(Timestamp monitoringStartTime, ContainerData containerData,
-                                                                Timestamp monitoringEndTime,
-                                                                String recPeriod,
-                                                                RecommendationSettings recommendationSettings,
-                                                                HashMap<AnalyzerConstants.ResourceSetting,
-                                                                        HashMap<AnalyzerConstants.RecommendationItem,
-                                                                                RecommendationConfigItem>> currentConfigMap,
-                                                                Double durationInHrs) {
-        MappedRecommendationForEngine mappedRecommendationForEngine = new MappedRecommendationForEngine();
-        // Set CPU threshold to default
-        double cpuThreshold = DEFAULT_CPU_THRESHOLD;
-        // Set Memory threshold to default
-        double memoryThreshold = DEFAULT_MEMORY_THRESHOLD;
-        if (null != recommendationSettings) {
-            Double threshold = recommendationSettings.getThreshold();
-            if (null == threshold) {
-                LOGGER.info("Threshold is not set, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
-            } else if (threshold.doubleValue() <= 0.0) {
-                LOGGER.error("Given Threshold is invalid, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
-            } else {
-                cpuThreshold = threshold.doubleValue();
-                memoryThreshold = threshold.doubleValue();
-            }
-        } else {
-            LOGGER.error("Recommendation Settings are null, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
+    private ValidationOutputData addRecommendationsToDB(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject) {
+        ValidationOutputData validationOutputData;
+        try {
+            validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, kruizeObject, interval_end_time);
+        } catch (Exception e) {
+            LOGGER.error("Failed to add recommendations to the DB: {}", e.getMessage());
+            validationOutputData = new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
-
-        RecommendationConfigItem currentCPURequest = null;
-        RecommendationConfigItem currentCPULimit = null;
-        RecommendationConfigItem currentMemRequest = null;
-        RecommendationConfigItem currentMemLimit = null;
-
-        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
-                currentCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
-            }
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
-                currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
-            }
-        }
-        if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
-            HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
-                currentCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
-            }
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
-                currentMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
-            }
-        }
-        if (null != monitoringStartTime) {
-            Timestamp finalMonitoringStartTime = monitoringStartTime;
-            // Set the timestamp to extract
-            Timestamp timestampToExtract = monitoringEndTime;
-
-            Map<Timestamp, IntervalResults> filteredResultsMap = containerData.getResults().entrySet().stream()
-                    .filter((x -> ((x.getKey().compareTo(finalMonitoringStartTime) >= 0)
-                            && (x.getKey().compareTo(monitoringEndTime) <= 0))))
-                    .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
-
-            // Set number of pods
-            int numPods = getNumPods(filteredResultsMap);
-
-            mappedRecommendationForEngine.setPodsCount(numPods);
-
-            // Pass Notification object to all callers to update the notifications required
-            ArrayList<RecommendationNotification> notifications = new ArrayList<RecommendationNotification>();
-
-            // Get the Recommendation Items
-            RecommendationConfigItem recommendationCpuRequest = getCPURequestRecommendation(
-                    filteredResultsMap,
-                    monitoringEndTime,
-                    notifications);
-            RecommendationConfigItem recommendationMemRequest = getMemoryRequestRecommendation(
-                    filteredResultsMap,
-                    monitoringEndTime,
-                    notifications);
-
-            // Get the Recommendation Items
-            // Calling requests on limits as we are maintaining limits and requests as same
-            // Maintaining different flow for both of them even though if they are same as in future we might have
-            // a different implementation for both and this avoids confusion
-            RecommendationConfigItem recommendationCpuLimits = recommendationCpuRequest;
-            RecommendationConfigItem recommendationMemLimits = recommendationMemRequest;
-
-            // Create an internal map to send data to populate
-            HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<String, RecommendationConfigItem>();
-            // Add current values
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_REQUEST, currentCPURequest);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_CPU_LIMIT, currentCPULimit);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_REQUEST, currentMemRequest);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_LIMIT, currentMemLimit);
-            // Add recommended values
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_REQUEST, recommendationCpuRequest);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, recommendationCpuLimits);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
-            internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
-
-            // Call the populate method to validate and populate the recommendation object
-            boolean isSuccess = populateRecommendation(
-                    recPeriod,
-                    mappedRecommendationForEngine,
-                    notifications,
-                    internalMapToPopulate,
-                    numPods,
-                    durationInHrs,
-                    cpuThreshold,
-                    memoryThreshold
-            );
-        }  else {
-            RecommendationNotification notification = new RecommendationNotification(
-                    RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-            mappedRecommendationForEngine.addNotification(notification);
-        }
-        return mappedRecommendationForEngine;
+        return validationOutputData;
     }
 
-    @Override
-    public void validateRecommendations() {
+    private void getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject, String
+            experimentName, Timestamp intervalStartTime, String dataSource) {
+        // get data from the DB in case of remote monitoring
+        if (kruizeObject.getExperiment_usecase_type().isRemote_monitoring()) {
+            mainKruizeExperimentMAP.put(experimentName, kruizeObject);
+            try {
+                new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
+            } catch (Exception e) {
+                LOGGER.error("Failed to fetch the results from the DB: {}", e.getMessage());
+            }
+        } else if (kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
+            // TODO: get data from Thanos/other data sources in case of Local monitoring
+        }
 
     }
 }

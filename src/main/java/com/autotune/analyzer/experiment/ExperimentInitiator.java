@@ -17,7 +17,6 @@ package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.PerfProfileInterface;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -118,20 +117,6 @@ public class ExperimentInitiator {
             LOGGER.error("Validate and push experiment falied: " + e.getMessage());
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage("Validation failed: " + e.getMessage());
-        }
-    }
-
-    // Generate recommendations and add it to the kruize object
-    public void generateAndAddRecommendations(KruizeObject kruizeObject, List<ExperimentResultData> experimentResultDataList, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
-        if (AnalyzerConstants.PerformanceProfileConstants.perfProfileInstances.containsKey(kruizeObject.getPerformanceProfile())) {
-            PerfProfileInterface perfProfileInstance =
-                    (PerfProfileInterface) AnalyzerConstants.PerformanceProfileConstants
-                            .perfProfileInstances.get(kruizeObject.getPerformanceProfile())
-                            .getDeclaredConstructor().newInstance();
-            perfProfileInstance.generateRecommendation(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);
-        } else {
-            throw new Exception("No Recommendation Engine mapping found for performance profile: " +
-                    kruizeObject.getPerformanceProfile() + ". Cannot process recommendations for the experiment");
         }
     }
 
