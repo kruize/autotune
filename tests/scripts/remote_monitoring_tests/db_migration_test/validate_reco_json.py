@@ -1,6 +1,6 @@
+import sys, getopt
 import datetime
 import json
-import sys, getopt
 sys.path.append("..")
 
 from helpers.fixtures import *
@@ -18,64 +18,55 @@ def validate_reco_json(json_file, end_time):
 
     list_reco_json = json.load(open(json_file))
 
-    # Validate the json against the json schema
-    #errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
-    #print(f"errorMsg = {errorMsg}")
-    #if errorMsg != "":
-    #    failed = 1
 
     # Validate the json values
     for containers in list_reco_json[0]["kubernetes_objects"][0]["containers"]:
         actual_container_name = containers["container_name"]
-        print(f"actual container name = {actual_container_name}")
+    
         recommendation_section = containers["recommendations"]
 
         if recommendation_section is None:
             print("Recommendation section is null")
-            failed = 1
+            failed += 1
 
         high_level_notifications = recommendation_section["notifications"]
 
         # Check for Recommendation level notifications
-        if INFO_RECOMMENDATIONS_AVAILABLE_CODE not in high_level_notifications:
+        if NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE not in high_level_notifications:
             print("Recommendations available code not present in highl level notifications")
-            failed = 1
+            failed += 1
 
         data_section = recommendation_section["data"]
         
         # Check if recommendation exists
-        if str(end_time) not in data_section:
+        if end_time not in data_section:
             print("Interval end time not in data section")
-            failed = 1
- 
+            failed += 1
+
         # Check for timestamp level notifications
-        timestamp_level_notifications = data_section[str(end_time)]["notifications"]
-        print(timestamp_level_notifications)
-        if INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE not in timestamp_level_notifications:
+        timestamp_level_notifications = data_section[end_time]["notifications"]
+        if NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE not in timestamp_level_notifications:
             print("Short term recommendations available code not present in timestamp level notifications")
-            failed = 1
-        if INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE_CODE not in timestamp_level_notifications:
+            failed += 1
+        if NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE not in timestamp_level_notifications:
             print("Medium term recommendations available code not present in timestamp level notifications")
-            failed = 1
-        if INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE_CODE not in timestamp_level_notifications:
+            failed += 1
+        if NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE not in timestamp_level_notifications:
             print("Long term recommendations available code not present in timestamp level notifications")
-            failed = 1
+            failed += 1
 
         # Check for current recommendation
         recommendation_current = None
-        if "current" in data_section[str(end_time)]:
-            recommendation_current = data_section[str(end_time)]["current"]
+        if "current" in data_section[end_time]:
+            recommendation_current = data_section[end_time]["current"]
 
-        short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
-        medium_term_recommendation = None
-        long_term_recommendation = None
-                    
-                    
-        medium_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["medium_term"]
+        short_term_recommendation = data_section[end_time]["recommendation_terms"]["short_term"]
         
-        long_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["long_term"]
+        medium_term_recommendation = data_section[end_time]["recommendation_terms"]["medium_term"]
+        
+        long_term_recommendation = data_section[end_time]["recommendation_terms"]["long_term"]
 
-        return failed
+    return failed
 
 
 
@@ -95,7 +86,7 @@ def main(argv):
         elif opt == '-f':
             json_file = arg
         elif opt == '-e':
-            end_time = arg
+            end_time = str(arg)
 
     failed = validate_reco_json(json_file, end_time)
     if failed == 0:

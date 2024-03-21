@@ -155,6 +155,9 @@ popd > /dev/null
 # Validate the recommendations json
 failed=0
 end_time="2024-01-05T00:00:00.000Z"
+pushd ${CURRENT_DIR} > /dev/null
+echo "Validating the recommendations..."
+
 for ((loop=1; loop<=num_clients; loop++));
 do
 	for ((j=1; j<=num_exps; j++));
@@ -168,12 +171,15 @@ do
         	mkdir -p ${reco_json_dir}
 	        curl -s http://${SERVER_IP_ADDR}/listRecommendations?experiment_name=${exp_name} > ${reco_json_dir}/${exp_name}_reco.json
 
-		python3 validate_reco_json.py -f ${reco_json_dir}/${exp_name}_reco.json -t ${end_time}
+		python3 validate_reco_json.py -f ${reco_json_dir}/${exp_name}_reco.json -e ${end_time}
 		if [ $? != 0 ]; then
 			failed=1
 		fi
 	done
 done
+popd > /dev/null
+
+echo "Validating the recommendations...Done"
 
 
 end_time=$(get_date)
