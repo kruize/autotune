@@ -219,31 +219,28 @@ public class ExperimentDBService {
     }
 
 
-    public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, List<ExperimentResultData> experimentResultDataList) {
+    public ValidationOutputData addRecommendationToDB(Map<String, KruizeObject> experimentsMap, KruizeObject kruizeObject,
+                                                      Timestamp interval_end_time) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, "", null);
-        if (null == experimentResultDataList) {
+        if (null == kruizeObject) {
             return validationOutputData;
         }
-        if (experimentResultDataList.size() == 0) {
+        if (kruizeObject.getKubernetes_objects().isEmpty()) {
             return validationOutputData;
         }
-        for (ExperimentResultData experimentResultData : experimentResultDataList) {
-            // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
-            if (!experimentsMap.containsKey(experimentResultData.getExperiment_name())) {
-                LOGGER.error("Trying to locate Recommendation for non existent experiment: " +
-                        experimentResultData.getExperiment_name());
-                continue;
-            }
-            KruizeObject kruizeObject = experimentsMap.get(experimentResultData.getExperiment_name());
-            KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
-                    convertKruizeObjectTORecommendation(kruizeObject, experimentResultData);
-            if (null != kr) {
-                ValidationOutputData tempValObj = new ExperimentDAOImpl().addRecommendationToDB(kr);
-                if (!tempValObj.isSuccess()) {
-                    validationOutputData.setSuccess(false);
-                    String errMsg = String.format("Experiment name : %s , Interval end time : %s | ", experimentResultData.getExperiment_name(), experimentResultData.getIntervalEndTime());
-                    validationOutputData.setMessage(validationOutputData.getMessage() + errMsg);
-                }
+        // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
+        if (!experimentsMap.containsKey(kruizeObject.getExperimentName())) {
+            LOGGER.error("Trying to locate Recommendation for non existent experiment: "+kruizeObject.getExperimentName());
+            return validationOutputData; // todo: need to set the correct message
+        }
+        KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
+                convertKruizeObjectTORecommendation(kruizeObject, interval_end_time);
+        if (null != kr) {
+            ValidationOutputData tempValObj = new ExperimentDAOImpl().addRecommendationToDB(kr);
+            if (!tempValObj.isSuccess()) {
+                validationOutputData.setSuccess(false);
+                String errMsg = String.format("Experiment name : %s , Interval end time : %s | ", kruizeObject.getExperimentName(), interval_end_time);
+                validationOutputData.setMessage(validationOutputData.getMessage() + errMsg);
             }
         }
         if (validationOutputData.getMessage().equals(""))

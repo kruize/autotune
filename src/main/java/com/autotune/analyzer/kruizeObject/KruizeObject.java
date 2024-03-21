@@ -16,10 +16,12 @@
 package com.autotune.analyzer.kruizeObject;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.TrialSettings;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.Utils;
 import com.google.gson.annotations.SerializedName;
@@ -27,6 +29,7 @@ import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Container class for the Autotune kubernetes kind objects.
@@ -59,6 +62,10 @@ public final class KruizeObject {
     private ExperimentUseCaseType experiment_usecase_type;
     private ValidationOutputData validation_data;
     private List<K8sObject> kubernetes_objects;
+    private Map<String, Terms> terms;
+
+    // Constant field for data source
+    private static final String DataSource = "postgres";
 
 
     public KruizeObject(String experimentName,
@@ -246,9 +253,36 @@ public final class KruizeObject {
         this.namespace = namespace;
     }
 
+    public Map<String, Terms> getTerms() {
+        return terms;
+    }
+    public void setTerms(Map<String, Terms> terms) {
+        this.terms = terms;
+    }
+
+    public static void setDefaultTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
+        // TODO: define term names like daily, weekly, fortnightly etc
+        // TODO: add CRD for terms
+        terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD));
+        terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD));
+        terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD));
+
+        kruizeObject.setTerms(terms);
+    }
+
+    public String getDataSource() {
+        return DataSource;
+    }
+
     @Override
     public String toString() {
-        // Creating a temparory cluster name as we allow null for cluster name now
+        // Creating a temporary cluster name as we allow null for cluster name now
         // Please change it to use `clusterName` variable itself if there is a null check already in place for that
         String tmpClusterName = "";
         if (clusterName != null)

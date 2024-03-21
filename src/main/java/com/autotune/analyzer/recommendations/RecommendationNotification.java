@@ -50,4 +50,16 @@ public class RecommendationNotification {
     public int getCode() {
         return code;
     }
+
+    public static RecommendationNotification getNotificationForTermAvailability(String recommendationTerm) {
+        RecommendationNotification recommendationNotification = null;
+        if (recommendationTerm.equalsIgnoreCase(RecommendationConstants.RecommendationTerms.SHORT_TERM.getValue())) {
+            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE);
+        } else if (recommendationTerm.equalsIgnoreCase(RecommendationConstants.RecommendationTerms.MEDIUM_TERM.getValue())) {
+            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE);
+        } else if (recommendationTerm.equalsIgnoreCase(RecommendationConstants.RecommendationTerms.LONG_TERM.getValue())) {
+            recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE);
+        }
+        return recommendationNotification;
+    }
 }
