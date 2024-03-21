@@ -690,7 +690,7 @@ public class DBHelpers {
                 for (KruizeDataSource kruizeDataSource : kruizeDataSourceList) {
                     try {
                         DataSourceInfo dataSourceInfo = null;
-                        if(null != kruizeDataSource.getUrl())
+                        if(kruizeDataSource.getServiceName().isEmpty() && null != kruizeDataSource.getUrl())
                              dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
                                     .getProvider(), new URL(kruizeDataSource.getUrl()));
                         else{
