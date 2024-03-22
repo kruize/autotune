@@ -69,6 +69,10 @@ public class IntervalResults {
         return intervalStartTime;
     }
 
+    public Timestamp getIntervalEndTime() {
+        return intervalEndTime;
+    }
+
     @Override
     public String toString() {
         return "IntervalResults{" +

@@ -1,5 +1,5 @@
 # TODO: Need add appropriate required fields
-medium_term_list_reco_json_schema = {
+short_term_list_reco_json_schema = {
 "type": "array",
   "items": {
     "type": "object",
@@ -109,25 +109,6 @@ medium_term_list_reco_json_schema = {
                                 "type": "object",
                                 "properties": {
                                   "short_term": {
-                                    "type": "object",
-                                    "properties": {
-                                      "notifications": {
-                                        "type": "object",
-                                        "items": {
-                                          "type": "object",
-                                          "properties": {
-                                            "type": { "type": "string" },
-                                            "message": { "type": "string" },
-                                            "code": { "type": "number" }
-                                          },
-                                          "required": ["type", "message", "code"]
-                                        }
-                                      },
-                                      "duration_in_hours": { "type": "number" }
-                                    },
-                                    "required": []
-                                  },
-                                  "medium_term": {
                                     "type": "object",
                                     "properties": {
                                       "notifications": {
@@ -394,6 +375,25 @@ medium_term_list_reco_json_schema = {
                                     },
                                     "required": []
                                   },
+                                  "medium_term": {
+                                    "type": "object",
+                                    "properties": {
+                                      "notifications": {
+                                        "type": "object",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "type": { "type": "string" },
+                                            "message": { "type": "string" },
+                                            "code": { "type": "number" }
+                                          },
+                                          "required": ["type", "message", "code"]
+                                        }
+                                      },
+                                      "duration_in_hours": { "type": "number" }
+                                    },
+                                    "required": []
+                                  },
                                   "long_term": {
                                     "type": "object",
                                     "properties": {
@@ -412,7 +412,7 @@ medium_term_list_reco_json_schema = {
                                       "duration_in_hours": { "type": "number" }
                                     },
                                     "required": []
-                                  }
+                                  },
                                 },
                                 "required": []
                               }

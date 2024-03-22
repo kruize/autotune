@@ -6,6 +6,7 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.utils.KruizeConstants;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.*;
 
 import static com.autotune.utils.KruizeConstants.JSONKeys.*;
@@ -61,24 +62,40 @@ public class Terms {
         return maxTerms.map(term -> term.days).orElse(0); // Return the max days or 0 if terms is empty
     }
 
-    public static boolean checkIfMinDataAvailableForTerm(ContainerData containerData, Terms term) {
-        // Check if data available
+    public static boolean checkIfMinDataAvailableForTerm(ContainerData containerData, Terms term, Timestamp monitoringEndTime,
+                                                         double measurementDuration) {
+        // Check if data is available
         if (null == containerData || null == containerData.getResults() || containerData.getResults().isEmpty()) {
             return false;
         }
-        double duration = term.getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
-                NO_OF_MINUTES_PER_HOUR;
 
+        // Get the maximum duration allowed for the term in hours
+        double maxDurationInHrs = getMaxDuration(term.getName());
+
+        // calculate the start time based on the monitoringEndTime
+        LocalDateTime intervalEndDateTime = monitoringEndTime.toLocalDateTime();
+        LocalDateTime intervalStartDateTime = intervalEndDateTime.minusHours((long) maxDurationInHrs);
+
+        double sum = 0.0;
+        // get the sum of available data by going back to the start time calculated in the previous step
+        for (LocalDateTime current = intervalEndDateTime; current.isAfter(intervalStartDateTime); current = current.minusMinutes((long) measurementDuration)) {
+            Timestamp currentTimestamp = Timestamp.valueOf(current);
+            if (containerData.getResults().containsKey(currentTimestamp)) {
+                sum = sum + measurementDuration;
+            }
+        }
+
+        // get the minimum threshold value of the term in minutes
+        double minimumDurationInMins = term.getThreshold_in_days() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
+                NO_OF_MINUTES_PER_HOUR;
         // Set bounds to check if we get minimum requirement satisfied
-        double lowerBound = duration - BUFFER_VALUE_IN_MINS;
-        double sum = getDurationSummation(containerData);
+        double lowerBound = minimumDurationInMins - MEASUREMENT_DURATION_BUFFER_IN_MINS;
         // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
         if (sum >= lowerBound)
             return true;
 
         return false;
     }
-
     public static double getDurationSummation(ContainerData containerData) {
         // Loop over the data to check if there is min data available
         double sum = 0.0;
@@ -113,32 +130,19 @@ public class Terms {
         };
     }
 
-    public static Timestamp getMonitoringStartTime(HashMap<Timestamp, IntervalResults> resultsHashMap,
-                                                   Timestamp endTime,
-                                                   int durationInDays) {
+    public static Timestamp getMonitoringStartTime(Timestamp endTime, int durationInDays) {
 
-        // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
-        TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
-        sortedResultsHashMap.putAll(resultsHashMap);
-
-        double sum = 0.0;
         double durationInHrs = KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * durationInDays;
-        Timestamp intervalEndTime = null;
-        for (Timestamp timestamp : sortedResultsHashMap.keySet()) {
-            if (!timestamp.after(endTime)) {
-                if (sortedResultsHashMap.containsKey(timestamp)) {
-                    sum = sum + sortedResultsHashMap.get(timestamp).getDurationInMinutes();
-                    if (sum >= ((durationInHrs * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR)
-                            - (KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE))) {
-                        // Storing the timestamp value in startTimestamp variable to return
-                        intervalEndTime = timestamp;
-                        break;
-                    }
-                }
-            }
-        }
+        Timestamp intervalEndTime;
         try {
-            return sortedResultsHashMap.get(intervalEndTime).getIntervalStartTime();
+            // Convert Timestamp to LocalDateTime
+            LocalDateTime localDateTime = endTime.toLocalDateTime();
+            long maxTermDuration = (long) durationInHrs;
+            // Subtract hours
+            LocalDateTime newLocalDateTime = localDateTime.minusHours(maxTermDuration);
+            // Convert back to Timestamp
+            intervalEndTime = Timestamp.valueOf(newLocalDateTime);
+            return intervalEndTime;
         } catch (NullPointerException npe) {
             return null;
         }

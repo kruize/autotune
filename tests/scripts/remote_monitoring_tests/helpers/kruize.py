@@ -97,13 +97,14 @@ def create_experiment(input_json_file, invalid_header=False):
 
 # Description: This function validates the result json and posts the experiment results using updateResults API to Kruize Autotune
 # Input Parameters: experiment input json
-def update_results(result_json_file):
+def update_results(result_json_file, logging=True):
     # read the json
     json_file = open(result_json_file, "r")
     result_json = json.loads(json_file.read())
-    print("\n************************************************************")
-    print(result_json)
-    print("\n************************************************************")
+    if logging:
+        print("\n************************************************************")
+        print(result_json)
+        print("\n************************************************************")
 
     print("\nUpdating the results...")
     url = URL + "/updateResults"
