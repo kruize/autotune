@@ -458,24 +458,22 @@ public class KruizeConstants {
             }
 
             public static final class RecommendationDurationRanges {
-                public static final double BUFFER_VALUE_IN_MINS = (TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / TimeConv.NO_OF_SECONDS_PER_MINUTE);
-                /* SHORT TERM */
-                public static final Integer DURATION_COUNT_ONE_HOUR = TimeConv.NO_OF_MINUTES_PER_HOUR / TimeConv.MEASUREMENT_DURATION_THRESHOLD_MINUTES;
+                public static final double MEASUREMENT_DURATION_BUFFER_IN_MINS = (TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / TimeConv.NO_OF_SECONDS_PER_MINUTE);
                 public static final double SHORT_TERM_MIN_DATA_THRESHOLD_MINS = 30;
-                public static final double MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS * TimeConv.NO_OF_HOURS_PER_DAY * DURATION_COUNT_ONE_HOUR;
-                public static final double LONG_TERM_MIN_DATA_THRESHOLD_MINS = MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS * DURATION_COUNT_ONE_HOUR;
+                public static final double MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS = 2 * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR;
+                public static final double LONG_TERM_MIN_DATA_THRESHOLD_MINS = 8 * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR;
                 /* LONG TERM */
-                public static final double LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = LONG_TERM_MIN_DATA_THRESHOLD_MINS + BUFFER_VALUE_IN_MINS;
+                public static final double LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = LONG_TERM_MIN_DATA_THRESHOLD_MINS + MEASUREMENT_DURATION_BUFFER_IN_MINS;
                 public static final double LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
-                        LONG_TERM_MIN_DATA_THRESHOLD_MINS - BUFFER_VALUE_IN_MINS;
+                        LONG_TERM_MIN_DATA_THRESHOLD_MINS - MEASUREMENT_DURATION_BUFFER_IN_MINS;
                 /* MEDIUM TERM */
-                public static final double MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS + BUFFER_VALUE_IN_MINS;
-                public static final double MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS = MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS - BUFFER_VALUE_IN_MINS;
+                public static final double MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS + MEASUREMENT_DURATION_BUFFER_IN_MINS;
+                public static final double MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS = MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS - MEASUREMENT_DURATION_BUFFER_IN_MINS;
                 public static final double SHORT_TERM_HOURS = DurationAmount.SHORT_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 public static final double MEDIUM_TERM_HOURS = DurationAmount.MEDIUM_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 public static final double LONG_TERM_HOURS = DurationAmount.LONG_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
-                public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS + BUFFER_VALUE_IN_MINS;
-                public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS - BUFFER_VALUE_IN_MINS;
+                public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS + MEASUREMENT_DURATION_BUFFER_IN_MINS;
+                public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS - MEASUREMENT_DURATION_BUFFER_IN_MINS;
 
                 private RecommendationDurationRanges() {
 

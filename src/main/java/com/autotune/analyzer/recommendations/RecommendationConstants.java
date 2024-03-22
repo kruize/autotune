@@ -670,6 +670,7 @@ public class RecommendationConstants {
         public static final String CPU_LIMITS_OPTIMISED = "Workload is optimised wrt CPU LIMITS, no changes needed";
         public static final String MEMORY_REQUESTS_OPTIMISED = "Workload is optimised wrt MEMORY REQUESTS, no changes needed";
         public static final String MEMORY_LIMITS_OPTIMISED = "Workload is optimised wrt MEMORY LIMITS, no changes needed";
+        public static final String ADDING_RECOMMENDATIONS_TO_DB_FAILED = "Failed to add recommendations to the DB ";
 
         private RecommendationNotificationMsgConstant() {
 

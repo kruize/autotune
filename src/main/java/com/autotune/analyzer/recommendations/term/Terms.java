@@ -89,7 +89,7 @@ public class Terms {
         double minimumDurationInMins = term.getThreshold_in_days() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
                 NO_OF_MINUTES_PER_HOUR;
         // Set bounds to check if we get minimum requirement satisfied
-        double lowerBound = minimumDurationInMins - BUFFER_VALUE_IN_MINS;
+        double lowerBound = minimumDurationInMins - MEASUREMENT_DURATION_BUFFER_IN_MINS;
         // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
         if (sum >= lowerBound)
             return true;

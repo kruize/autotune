@@ -330,31 +330,63 @@ public class RecommendationEngine {
                 if (null == configItem)
                     continue;
                 if (null == configItem.getAmount()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
-                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION
+                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                        experimentName, interval_end_time)));
+                    }
+                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
+                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION
+                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                        experimentName, interval_end_time)));
+                    }
                     continue;
                 }
                 if (null == configItem.getFormat()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
-                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION
+                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                        experimentName, interval_end_time)));
+                    }
+                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
+                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION
+                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                        experimentName, interval_end_time)));
+                    }
                     continue;
                 }
                 if (configItem.getAmount() <= 0.0) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
-                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION
+                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                        experimentName, interval_end_time)));
+                    }
+                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
+                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION
+                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                        experimentName, interval_end_time)));
+                    }
                     continue;
                 }
                 if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu))
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
-                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory)))
+                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION
+                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                        experimentName, interval_end_time)));
+                    }
+                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
+                        LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION
+                                .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                        experimentName, interval_end_time)));
+                    }
                     continue;
                 }
 
@@ -612,12 +644,12 @@ public class RecommendationEngine {
      * EDITING THIS METHOD MIGHT LEAD TO UNEXPECTED OUTCOMES IN RECOMMENDATIONS, PLEASE PROCEED WITH CAUTION
      *
      * @param termEntry
-     * @param recommendation
+     * @param recommendationModel
      * @param notifications
      * @param internalMapToPopulate
      */
     private boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
-                                           MappedRecommendationForModel recommendation,
+                                           MappedRecommendationForModel recommendationModel,
                                            ArrayList<RecommendationNotification> notifications,
                                            HashMap<String, RecommendationConfigItem> internalMapToPopulate,
                                            int numPods, double cpuThreshold, double memoryThreshold) {
@@ -649,12 +681,12 @@ public class RecommendationEngine {
                                 !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)
                 )
         ) {
-            LOGGER.error("Invalid Recommendation Term");
+            LOGGER.error("Invalid Recommendation Term : {}", recommendationTerm);
             return false;
         }
 
         // Check if recommendation is null
-        if (null == recommendation) {
+        if (null == recommendationModel) {
             LOGGER.error("Recommendation cannot be null");
             return false;
         }
@@ -704,12 +736,16 @@ public class RecommendationEngine {
         if (hours == 0.0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_HOURS_CANNOT_BE_ZERO);
             notifications.add(recommendationNotification);
-            LOGGER.debug("Duration hours cannot be zero");
+            LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.HOURS_CANNOT_BE_ZERO.concat(
+                    String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName,
+                            interval_end_time)));
             isSuccess = false;
         } else if (hours < 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_HOURS_CANNOT_BE_NEGATIVE);
             notifications.add(recommendationNotification);
-            LOGGER.debug("Duration hours cannot be negative");
+            LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.HOURS_CANNOT_BE_NEGATIVE.concat(
+                    String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName,
+                            interval_end_time)));
             isSuccess = false;
         }
 
@@ -783,7 +819,9 @@ public class RecommendationEngine {
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             }
         }
 
@@ -797,7 +835,9 @@ public class RecommendationEngine {
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             }
         }
 
@@ -831,7 +871,9 @@ public class RecommendationEngine {
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             }
         }
 
@@ -845,7 +887,9 @@ public class RecommendationEngine {
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             }
         }
 
@@ -860,11 +904,15 @@ public class RecommendationEngine {
             if (currentCpuRequest.getAmount() <= 0.0) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             } else if (null == currentCpuRequest.getFormat() || currentCpuRequest.getFormat().isEmpty()) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             } else {
                 isCurrentCPURequestAvailable = true;
                 currentRequestsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuRequest);
@@ -876,11 +924,15 @@ public class RecommendationEngine {
             if (currentMemRequest.getAmount() <= 0) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             } else if (null == currentMemRequest.getFormat() || currentMemRequest.getFormat().isEmpty()) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             } else {
                 isCurrentMemoryRequestAvailable = true;
                 currentRequestsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemRequest);
@@ -895,11 +947,15 @@ public class RecommendationEngine {
             if (currentCpuLimit.getAmount() <= 0.0) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             } else if (null == currentCpuLimit.getFormat() || currentCpuLimit.getFormat().isEmpty()) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             } else {
                 isCurrentCPULimitAvailable = true;
                 currentLimitsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuLimit);
@@ -911,11 +967,15 @@ public class RecommendationEngine {
             if (currentMemLimit.getAmount() <= 0.0) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             } else if (null == currentMemLimit.getFormat() || currentMemLimit.getFormat().isEmpty()) {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
-                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION);
+                LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION
+                        .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                                experimentName, interval_end_time)));
             } else {
                 isCurrentMemoryLimitAvailable = true;
                 currentLimitsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemLimit);
@@ -984,15 +1044,19 @@ public class RecommendationEngine {
         if (numPods == 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_ZERO);
             engineNotifications.add(recommendationNotification);
-            LOGGER.debug("Number of pods cannot be zero");
+            LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_ZERO
+                    .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                    experimentName, interval_end_time)));
             isSuccess = false;
         } else if (numPods < 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE);
             engineNotifications.add(recommendationNotification);
-            LOGGER.debug("Number of pods cannot be negative");
+            LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_NEGATIVE
+                    .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
+                    experimentName, interval_end_time)));
             isSuccess = false;
         } else {
-            recommendation.setPodsCount(numPods);
+            recommendationModel.setPodsCount(numPods);
         }
 
         // Check for thresholds
@@ -1159,7 +1223,7 @@ public class RecommendationEngine {
 
         // set the engine level notifications here
         for (RecommendationNotification recommendationNotification : engineNotifications) {
-            recommendation.addNotification(recommendationNotification);
+            recommendationModel.addNotification(recommendationNotification);
         }
 
         // Set Request Map
@@ -1174,7 +1238,7 @@ public class RecommendationEngine {
 
         // Set Config
         if (!config.isEmpty()) {
-            recommendation.setConfig(config);
+            recommendationModel.setConfig(config);
         }
 
         // Check if map is not empty and set requests map to current config
@@ -1199,7 +1263,7 @@ public class RecommendationEngine {
 
         // Set Variation Map
         if (!variation.isEmpty()) {
-            recommendation.setVariation(variation);
+            recommendationModel.setVariation(variation);
         }
 
         return isSuccess;
@@ -1210,7 +1274,9 @@ public class RecommendationEngine {
         try {
             validationOutputData = new ExperimentDBService().addRecommendationToDB(mainKruizeExperimentMAP, kruizeObject, interval_end_time);
         } catch (Exception e) {
-            LOGGER.error("Failed to add recommendations to the DB: {}", e.getMessage());
+            LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.ADDING_RECOMMENDATIONS_TO_DB_FAILED
+                    .concat(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME)
+                    .concat(" : "+e.getMessage()));
             validationOutputData = new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
