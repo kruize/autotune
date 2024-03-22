@@ -3261,8 +3261,8 @@ structured and easily interpretable way for users or external systems to access 
 | middle term      | 7 | 1 |
 | long term        | 7 | 1 |
 
-### Example Response
-
+<details>
+<summary><b>Example Response Body</b></summary>
 ```json
 [
   {
@@ -5000,6 +5000,7 @@ structured and easily interpretable way for users or external systems to access 
   }
 ]
 ```
+</details>
 
 ---
 
