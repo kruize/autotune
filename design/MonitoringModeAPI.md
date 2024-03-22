@@ -3263,6 +3263,7 @@ structured and easily interpretable way for users or external systems to access 
 
 <details>
 <summary><b>Example Response Body</b></summary>
+
 ```json
 [
   {
@@ -5000,6 +5001,7 @@ structured and easily interpretable way for users or external systems to access 
   }
 ]
 ```
+
 </details>
 
 ---
