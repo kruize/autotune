@@ -3250,134 +3250,6 @@ The response will contain a array of JSON object with the updated recommendation
 | 500              | Internal Server Error                                                                              |
 
 ---
-
-## Implementing Retry Mechanism for Kruize API Consumers
-
-When consuming a REST API, it's essential to handle scenarios where the API may respond with errors or encounter
-temporary issues such as a 504 Gateway Timeout. To ensure robustness and reliability, implementing a retry mechanism
-with exponential backoff is a good practice. In this guide, we'll discuss how to implement a retry mechanism with at
-least three attempts for the following scenarios:
-
-```POST /createExperiment```
-
-If the API responds with "Profile Name not found," implement retry logic.
-
-<details>
-<summary><b>Example Response</b></summary>
-
-### Example Response
-
-```json
-{
-  "message": "Not Found: performance_profile does not exist: resource-optimization-openshift",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "ERROR"
-}
-```
-
-</details>
-
-```POST /updateResults```
-
-If the API responds with:
-
-- "Experiment_name not found"
-- "Profile_name not found"
-
-Implement retry logic.
-
-<details>
-<summary><b>Example Response</b></summary>
-
-### Example Response
-
-```json
-{
-  "message": "Out of a total of 2 records, 1 failed to save",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "ERROR",
-  "data": [
-    {
-      "interval_start_time": "2023-04-01T00:00:00.000Z",
-      "interval_end_time": "2023-04-01T00:15:00.000Z",
-      "errors": [
-        {
-          "message": "Not Found: experiment_name does not exist: quarkus-resteasy-kruize-min-http-response-time-db_1_1_1",
-          "httpcode": 400,
-          "documentationLink": "",
-          "status": "ERROR"
-        }
-      ],
-      "version": "3.0",
-      "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1_1"
-    }
-  ]
-}
-```
-
-```json
-{
-  "message": "Out of a total of 2 records, 1 failed to save",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "ERROR",
-  "data": [
-    {
-      "interval_start_time": "2023-04-01T00:00:00.000Z",
-      "interval_end_time": "2023-04-01T00:15:00.000Z",
-      "errors": [
-        {
-          "message": "Not Found: performance_profile does not exist: resource-optimization-openshift",
-          "httpcode": 400,
-          "documentationLink": "",
-          "status": "ERROR"
-        }
-      ],
-      "version": "3.0",
-      "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
-    }
-  ]
-}
-```
-
-</details>
-
-
-
-```POST /updateRecommendations?interval_end_time=&experiment_name=```
-
-If the API responds with:
-
-- "Experiment_name not found"
-- "interval_end_time not found"
-
-Implement retry logic.
-
-<details>
-<summary><b>Example Response</b></summary>
-
-### Example Response
-
-```json
-{
-  "message": "Not Found: experiment_name does not exist: quarkus-resteasy-kruize-min-http-response-time-db_1_2",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "ERROR"
-}
-```
-
-```json
-{
-  "message": "Not Found: interval_end_time does not exist: 2023-02-02T00:00:00.000Z",
-  "httpcode": 400,
-  "documentationLink": "",
-  "status": "ERROR"
-}
-```
-
 **Box Plots**
 
 The box plot graphs will be shared with users in JSON format through a updateRecommendations REST API. This ensures a
@@ -5129,9 +5001,136 @@ structured and easily interpretable way for users or external systems to access 
 ]
 ```
 
+---
+
+## Implementing Retry Mechanism for Kruize API Consumers
+
+When consuming a REST API, it's essential to handle scenarios where the API may respond with errors or encounter
+temporary issues such as a 504 Gateway Timeout. To ensure robustness and reliability, implementing a retry mechanism
+with exponential backoff is a good practice. In this guide, we'll discuss how to implement a retry mechanism with at
+least three attempts for the following scenarios:
+
+```POST /createExperiment```
+
+If the API responds with "Profile Name not found," implement retry logic.
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+{
+  "message": "Not Found: performance_profile does not exist: resource-optimization-openshift",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
+
+```POST /updateResults```
+
+If the API responds with:
+
+- "Experiment_name not found"
+- "Profile_name not found"
+
+Implement retry logic.
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+{
+  "message": "Out of a total of 2 records, 1 failed to save",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR",
+  "data": [
+    {
+      "interval_start_time": "2023-04-01T00:00:00.000Z",
+      "interval_end_time": "2023-04-01T00:15:00.000Z",
+      "errors": [
+        {
+          "message": "Not Found: experiment_name does not exist: quarkus-resteasy-kruize-min-http-response-time-db_1_1_1",
+          "httpcode": 400,
+          "documentationLink": "",
+          "status": "ERROR"
+        }
+      ],
+      "version": "3.0",
+      "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1_1"
+    }
+  ]
+}
+```
+
+```json
+{
+  "message": "Out of a total of 2 records, 1 failed to save",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR",
+  "data": [
+    {
+      "interval_start_time": "2023-04-01T00:00:00.000Z",
+      "interval_end_time": "2023-04-01T00:15:00.000Z",
+      "errors": [
+        {
+          "message": "Not Found: performance_profile does not exist: resource-optimization-openshift",
+          "httpcode": 400,
+          "documentationLink": "",
+          "status": "ERROR"
+        }
+      ],
+      "version": "3.0",
+      "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1_1"
+    }
+  ]
+}
+```
+
 </details>
 
 
+
+```POST /updateRecommendations?interval_end_time=&experiment_name=```
+
+If the API responds with:
+
+- "Experiment_name not found"
+- "interval_end_time not found"
+
+Implement retry logic.
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+{
+  "message": "Not Found: experiment_name does not exist: quarkus-resteasy-kruize-min-http-response-time-db_1_2",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+```json
+{
+  "message": "Not Found: interval_end_time does not exist: 2023-02-02T00:00:00.000Z",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
 
 ```POST /*```
 
