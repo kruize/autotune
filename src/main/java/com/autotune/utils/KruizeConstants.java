@@ -210,6 +210,8 @@ public class KruizeConstants {
         public static final String RECOMMENDATION_TERMS = "recommendation_terms";
         public static final String RECOMMENDATION_ENGINES = "recommendation_engines";
         public static final String RECOMMENDATION_MODELS = "recommendation_models";
+        public static final String PLOTS_DATAPOINTS = "datapoints";
+        public static final String PLOTS_DATA = "plots_data";
         public static final String CONFIDENCE_LEVEL = "confidence_level";
 
         private JSONKeys() {
@@ -432,6 +434,7 @@ public class KruizeConstants {
         public static final String SETTINGS_HIBERNATE_HBM2DDL_AUTO = "hibernate_hbm2ddlauto";
         public static final String SETTINGS_HIBERNATE_SHOW_SQL = "hibernate_showsql";
         public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
+        public static final String PLOTS = "plots";
     }
 
     public static final class RecommendationEngineConstants {
