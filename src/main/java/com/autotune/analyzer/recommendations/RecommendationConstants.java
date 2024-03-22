@@ -735,7 +735,9 @@ public class RecommendationConstants {
             public static final Integer COST_MEMORY_PERCENTILE = 100;
             public static final Integer PERFORMANCE_CPU_PERCENTILE = 98;
             public static final Integer PERFORMANCE_MEMORY_PERCENTILE = 100;
-
+            public static final Integer TWENTYFIVE_PERCENTILE = 25;
+            public static final Integer SEVENTYFIVE_PERCENTILE = 75;
+            public static final Integer FIFTY_PERCENTILE = 50;
         }
     }
 }
