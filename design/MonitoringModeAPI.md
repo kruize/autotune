@@ -38,6 +38,7 @@ Documentation still in progress stay tuned.
     - Introduction
     - Example Request and Response
     - Invalid Scenarios
+    - Box plots
 
 <a name="resource-analysis-terms-and-defaults"></a>
 
@@ -2700,8 +2701,8 @@ Returns all the results of that experiment
 Returns the recommendation at a particular timestamp if it exists
 
 **Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0` and Monitoring End Time
-- `2022-12-20T17:55:05.000Z`**
 
+- `2022-12-20T17:55:05.000Z`**
 
 <details>
 <summary><b>Example Response</b></summary>
