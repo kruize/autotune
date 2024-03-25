@@ -38,6 +38,7 @@ Documentation still in progress stay tuned.
     - Introduction
     - Example Request and Response
     - Invalid Scenarios
+    - Box plots
 
 <a name="resource-analysis-terms-and-defaults"></a>
 
@@ -65,7 +66,7 @@ recommendation associated with a given duration term.
 **Duration**: The "duration" in the term analysis refers to the amount of historical data taken into account when
 assessing resource utilization.
 
-Read more about the Term Threshold scenarios [here](TermThresholdDesign.md) 
+Read more about the Term Threshold scenarios [here](TermThresholdDesign.md)
 
 ### Profile Algorithm's (How Kruize calculate's the recommendations)
 
@@ -2699,9 +2700,9 @@ Returns all the results of that experiment
 
 Returns the recommendation at a particular timestamp if it exists
 
-**Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0` and Monitoring End
-Time - `2022-12-20T17:55:05.000Z`**
+**Response for experiment name - `quarkus-resteasy-kruize-min-http-response-time-db_0` and Monitoring End Time
 
+- `2022-12-20T17:55:05.000Z`**
 
 <details>
 <summary><b>Example Response</b></summary>
@@ -2982,18 +2983,16 @@ Generate the recommendations for a specific experiment based on provided paramet
 | interval_end_time   | string | Yes      | The end time of the interval in the format "yyyy-MM-ddTHH:mm:sssZ".   |
 | interval_start_time | string | optional | The start time of the interval in the format "yyyy-MM-ddTHH:mm:sssZ". |
 
-The recommendation API requires two mandatory fields, namely "experiment_name" and "interval_end_time".
-By utilizing these parameters, the API generates recommendations based on short-term, medium-term, and long-term
-factors.
-For instance, if the long-term setting is configured for 15 days and the interval_end_time is set to "Jan 15 2023 00:00:
+The recommendation API requires two mandatory fields, namely "experiment_name" and "interval_end_time". By utilizing
+these parameters, the API generates recommendations based on short-term, medium-term, and long-term factors. For
+instance, if the long-term setting is configured for 15 days and the interval_end_time is set to "Jan 15 2023 00:00:
 00.000Z", the API retrieves data from the past 15 days, starting from January 1st. Using this data, the API generates
 three recommendations for Jan 15th 2023.
 
 If an optional interval_start_time is provided, the API generates recommendations for each date within the range of
 interval_start_time and interval_end_time. However, it is important to ensure that the difference between these dates
-does
-not exceed 15 days. This restriction is in place to prevent potential timeouts, as generating recommendations beyond
-this threshold might require more time.
+does not exceed 15 days. This restriction is in place to prevent potential timeouts, as generating recommendations
+beyond this threshold might require more time.
 
 **Request**
 
@@ -3251,6 +3250,1761 @@ The response will contain a array of JSON object with the updated recommendation
 | 500              | Internal Server Error                                                                              |
 
 ---
+**Box Plots**
+
+The box plot graphs will be shared with users in JSON format through a updateRecommendations REST API. This ensures a
+structured and easily interpretable way for users or external systems to access and process the data.
+
+| Terms | datapoints | Delta between datapoints in days                                                                 |
+|-------|------------|---------------------------------------------------------------------------------------|
+| short term       | 4 | 0.25|
+| middle term      | 7 | 1 |
+| long term        | 7 | 1 |
+
+<details>
+<summary><b>Example Response Body</b></summary>
+
+```json
+[
+  {
+    "cluster_name": "cluster-one-division-bell",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment_5",
+        "namespace": "default_5",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1",
+            "recommendations": {
+              "version": "1.0",
+              "notifications": {
+                "111000": {
+                  "type": "info",
+                  "message": "Recommendations Are Available",
+                  "code": 111000
+                }
+              },
+              "data": {
+                "2023-01-21T00:00:00.000Z": {
+                  "notifications": {
+                    "111101": {
+                      "type": "info",
+                      "message": "Short Term Recommendations Available",
+                      "code": 111101
+                    },
+                    "111103": {
+                      "type": "info",
+                      "message": "Long Term Recommendations Available",
+                      "code": 111103
+                    },
+                    "111102": {
+                      "type": "info",
+                      "message": "Medium Term Recommendations Available",
+                      "code": 111102
+                    }
+                  },
+                  "monitoring_end_time": "2023-01-21T00:00:00.000Z",
+                  "current": {
+                    "requests": {
+                      "memory": {
+                        "amount": 50.21,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 1.1,
+                        "format": "cores"
+                      }
+                    },
+                    "limits": {
+                      "memory": {
+                        "amount": 100.0,
+                        "format": "MiB"
+                      },
+                      "cpu": {
+                        "amount": 0.5,
+                        "format": "cores"
+                      }
+                    }
+                  },
+                  "recommendation_terms": {
+                    "short_term": {
+                      "duration_in_hours": 24.0,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2023-01-20T00:00:00.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 7,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": -0.17000000000000015,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.42999999999999994,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        },
+                        "performance": {
+                          "pods_count": 7,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": -0.17000000000000015,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.42999999999999994,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        }
+                      },
+                      "plots": {
+                        "datapoints": 4,
+                        "plots_data": {
+                          "2023-01-20T18:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-20T06:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-20T12:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-21T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "medium_term": {
+                      "duration_in_hours": 168.0,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2023-01-14T00:00:00.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 7,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": -0.17000000000000015,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.42999999999999994,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        },
+                        "performance": {
+                          "pods_count": 7,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": -0.17000000000000015,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.42999999999999994,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        }
+                      },
+                      "plots": {
+                        "datapoints": 7,
+                        "plots_data": {
+                          "2023-01-17T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-16T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-19T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-18T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-21T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-15T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-20T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "long_term": {
+                      "duration_in_hours": 360.0,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2023-01-06T00:00:00.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 7,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": -0.17000000000000015,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.42999999999999994,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        },
+                        "performance": {
+                          "pods_count": 7,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.9299999999999999,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": -0.17000000000000015,
+                                "format": "cores"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              },
+                              "cpu": {
+                                "amount": 0.42999999999999994,
+                                "format": "cores"
+                              }
+                            }
+                          },
+                          "notifications": {}
+                        }
+                      },
+                      "plots": {
+                        "datapoints": 15,
+                        "plots_data": {
+                          "2023-01-07T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-12T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-17T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-11T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-16T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-08T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-13T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-18T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-09T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-14T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-19T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-21T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-15T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-20T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-10T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.84,
+                              "q1": 0.84,
+                              "median": 0.84,
+                              "q3": 0.84,
+                              "max": 0.84,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 198.5,
+                              "q1": 198.5,
+                              "median": 198.5,
+                              "q3": 198.5,
+                              "max": 198.5,
+                              "format": "MiB"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          {
+            "container_image_name": "kruize/tfb-db:1.15",
+            "container_name": "tfb-server-0",
+            "recommendations": {
+              "version": "1.0",
+              "notifications": {
+                "111000": {
+                  "type": "info",
+                  "message": "Recommendations Are Available",
+                  "code": 111000
+                }
+              },
+              "data": {
+                "2023-01-21T00:00:00.000Z": {
+                  "notifications": {
+                    "223002": {
+                      "type": "error",
+                      "message": "Invalid Amount in CPU Section",
+                      "code": 223002
+                    },
+                    "111101": {
+                      "type": "info",
+                      "message": "Short Term Recommendations Available",
+                      "code": 111101
+                    },
+                    "111103": {
+                      "type": "info",
+                      "message": "Long Term Recommendations Available",
+                      "code": 111103
+                    },
+                    "111102": {
+                      "type": "info",
+                      "message": "Medium Term Recommendations Available",
+                      "code": 111102
+                    }
+                  },
+                  "monitoring_end_time": "2023-01-21T00:00:00.000Z",
+                  "current": {
+                    "requests": {
+                      "memory": {
+                        "amount": 50.21,
+                        "format": "MiB"
+                      }
+                    },
+                    "limits": {
+                      "memory": {
+                        "amount": 100.0,
+                        "format": "MiB"
+                      }
+                    }
+                  },
+                  "recommendation_terms": {
+                    "short_term": {
+                      "duration_in_hours": 24.0,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2023-01-20T00:00:00.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 0,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "221001": {
+                              "type": "error",
+                              "message": "Number of pods cannot be zero",
+                              "code": 221001
+                            }
+                          }
+                        },
+                        "performance": {
+                          "pods_count": 0,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "221001": {
+                              "type": "error",
+                              "message": "Number of pods cannot be zero",
+                              "code": 221001
+                            }
+                          }
+                        }
+                      },
+                      "plots": {
+                        "datapoints": 4,
+                        "plots_data": {
+                          "2023-01-20T18:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-20T06:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-20T12:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-21T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "medium_term": {
+                      "duration_in_hours": 168.0,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2023-01-14T00:00:00.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 0,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "221001": {
+                              "type": "error",
+                              "message": "Number of pods cannot be zero",
+                              "code": 221001
+                            }
+                          }
+                        },
+                        "performance": {
+                          "pods_count": 0,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "221001": {
+                              "type": "error",
+                              "message": "Number of pods cannot be zero",
+                              "code": 221001
+                            }
+                          }
+                        }
+                      },
+                      "plots": {
+                        "datapoints": 7,
+                        "plots_data": {
+                          "2023-01-17T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-16T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-19T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-18T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-21T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-15T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-20T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          }
+                        }
+                      }
+                    },
+                    "long_term": {
+                      "duration_in_hours": 360.0,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2023-01-06T00:00:00.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 0,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "221001": {
+                              "type": "error",
+                              "message": "Number of pods cannot be zero",
+                              "code": 221001
+                            }
+                          }
+                        },
+                        "performance": {
+                          "pods_count": 0,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "requests": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 238.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "requests": {
+                              "memory": {
+                                "amount": 187.98999999999998,
+                                "format": "MiB"
+                              }
+                            },
+                            "limits": {
+                              "memory": {
+                                "amount": 138.2,
+                                "format": "MiB"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "221001": {
+                              "type": "error",
+                              "message": "Number of pods cannot be zero",
+                              "code": 221001
+                            }
+                          }
+                        }
+                      },
+                      "plots": {
+                        "datapoints": 15,
+                        "plots_data": {
+                          "2023-01-07T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-12T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-17T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-11T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-16T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-08T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-13T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-18T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-09T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-14T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-19T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-21T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-15T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-20T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          },
+                          "2023-01-10T00:00:00.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 298.5,
+                              "q1": 298.5,
+                              "median": 298.5,
+                              "q3": 298.5,
+                              "max": 298.5,
+                              "format": "MiB"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1"
+  }
+]
+```
+
+</details>
+
+---
 
 ## Implementing Retry Mechanism for Kruize API Consumers
 
@@ -3380,8 +5134,6 @@ Implement retry logic.
 ```
 
 </details>
-
-
 
 ```POST /*```
 

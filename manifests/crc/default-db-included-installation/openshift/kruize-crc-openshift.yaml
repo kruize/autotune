@@ -91,6 +91,7 @@ data:
       "monitoringendpoint": "prometheus-k8s",
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
+      "plots": "false",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -366,12 +367,12 @@ data:
         server_name localhost;
 
         root   /usr/share/nginx/html;
-    
+
         location ^~ /api/ {
           rewrite ^/api(.*)$ $1 break;
           proxy_pass http://kruize-api;
         }
-    
+
         location / {
           index index.html;
           error_page 404 =200 /index.html;

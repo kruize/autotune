@@ -37,6 +37,8 @@ import java.util.Map;
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
 public final class KruizeObject {
+    // Constant field for data source
+    private static final String DataSource = "postgres";
     @SerializedName("version")
     private String apiVersion;
     private String experiment_id;
@@ -63,9 +65,6 @@ public final class KruizeObject {
     private ValidationOutputData validation_data;
     private List<K8sObject> kubernetes_objects;
     private Map<String, Terms> terms;
-
-    // Constant field for data source
-    private static final String DataSource = "postgres";
 
 
     public KruizeObject(String experimentName,
@@ -110,6 +109,33 @@ public final class KruizeObject {
 
     public KruizeObject() {
 
+    }
+
+    /***
+     * Sets default terms for a KruizeObject.
+     * This method initializes a map with predefined terms like "SHORT_TERM", "MEDIUM_TERM", and "LONG_TERM".
+     * Each term is defined by a Terms object containing: Name of the term (e.g., "SHORT_TERM"), Duration (in days) to
+        be considered under that term, Threshold for the duration.
+     * Note: Currently, specific term names like "daily", "weekly", and "fortnightly" are not defined.
+     * This method also requires implementing CustomResourceDefinition yaml for managing terms. This
+        functionality is not currently included.
+     @param terms A map to store the default terms with term name as the key and Terms object as the value.
+     @param kruizeObject The KruizeObject for which the default terms are being set.
+     */
+    public static void setDefaultTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
+        // TODO: define term names like daily, weekly, fortnightly etc
+        // TODO: add CRD for terms
+        terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD, 4, 0.25));
+        terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD, 7, 1));
+        terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD, 15, 1));
+
+        kruizeObject.setTerms(terms);
     }
 
     public String getExperimentName() {
@@ -208,7 +234,6 @@ public final class KruizeObject {
         this.experiment_usecase_type = experiment_usecase_type;
     }
 
-
     public ValidationOutputData getValidation_data() {
         return validation_data;
     }
@@ -256,24 +281,9 @@ public final class KruizeObject {
     public Map<String, Terms> getTerms() {
         return terms;
     }
+
     public void setTerms(Map<String, Terms> terms) {
         this.terms = terms;
-    }
-
-    public static void setDefaultTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
-        // TODO: define term names like daily, weekly, fortnightly etc
-        // TODO: add CRD for terms
-        terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
-                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
-                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD));
-        terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM, KruizeConstants
-                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants
-                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD));
-        terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM, KruizeConstants
-                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants
-                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD));
-
-        kruizeObject.setTerms(terms);
     }
 
     public String getDataSource() {

@@ -17,11 +17,15 @@ public class Terms {
     double threshold_in_days;
     String name;
     String performanceProfile;
+    private int plots_datapoints;
+    private double plots_datapoints_delta_in_days;
 
-    public Terms(String name, int days, double threshold_in_days) {
+    public Terms(String name, int days, double threshold_in_days,int plots_datapoints, double plots_datapoints_delta_in_days) {
         this.name = name;
         this.days = days;
         this.threshold_in_days = threshold_in_days;
+	this.plots_datapoints = plots_datapoints;
+        this.plots_datapoints_delta_in_days = plots_datapoints_delta_in_days;
     }
 
     public int getDays() {
@@ -146,5 +150,20 @@ public class Terms {
         } catch (NullPointerException npe) {
             return null;
         }
+    }
+    public int getPlots_datapoints() {
+        return plots_datapoints;
+    }
+
+    public void setPlots_datapoints(int plots_datapoints) {
+        this.plots_datapoints = plots_datapoints;
+    }
+
+    public double getPlots_datapoints_delta_in_days() {
+        return plots_datapoints_delta_in_days;
+    }
+
+    public void setPlots_datapoints_delta_in_days(double plots_datapoints_delta_in_days) {
+        this.plots_datapoints_delta_in_days = plots_datapoints_delta_in_days;
     }
 }

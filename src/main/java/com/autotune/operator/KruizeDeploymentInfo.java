@@ -60,6 +60,7 @@ public class KruizeDeploymentInfo {
     public static String cluster_type;
     public static String k8s_type;       // ABC
     public static String auth_type;
+    public static Boolean plots = false;
     public static String auth_token;
     public static String database_admin_username;
     public static String database_admin_password;
@@ -172,6 +173,6 @@ public class KruizeDeploymentInfo {
         LOGGER.info("Monitoring Agent URL: {}", KruizeDeploymentInfo.monitoring_agent_endpoint);
         LOGGER.info("Monitoring agent service: {}\n\n", KruizeDeploymentInfo.monitoring_service);
     }
-
-
 }
+
+
