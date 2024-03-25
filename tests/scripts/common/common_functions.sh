@@ -45,7 +45,8 @@ TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "autotune_id_tests"
 "kruize_layer_id_tests"
 "em_standalone_tests"
-"remote_monitoring_tests")
+"remote_monitoring_tests"
+"local_monitoring_tests")
 
 modify_kruize_layer_tests=("add_new_tunable"
 "apply_null_tunable"

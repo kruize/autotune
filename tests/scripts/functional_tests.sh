@@ -32,6 +32,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 . ${SCRIPTS_DIR}/da/kruize_layer_id_tests.sh
 . ${SCRIPTS_DIR}/em/em_standalone_tests.sh
 . ${SCRIPTS_DIR}/remote_monitoring_tests/remote_monitoring_tests.sh
+. ${SCRIPTS_DIR}/local_monitoring_tests/local_monitoring_tests.sh
 
 # Iterate through the commandline options
 while getopts i:o:r:-: gopts
@@ -85,7 +86,7 @@ mkdir -p "${RESULTS}"
 
 SETUP_LOG="${TEST_DIR}/setup.log"
 
-if [ ! $testsuite == "remote_monitoring_tests" ]; then
+if [[ "$testsuite" != "remote_monitoring_tests" && "$testsuite" != "local_monitoring_tests" ]];  then
 	CONFIGMAP="${RESULTS}/test_configmap"
 	mkdir ${CONFIGMAP}
 
@@ -155,6 +156,13 @@ function execute_remote_monitoring_testsuites() {
         testcase=""
         # perform the Remote monitoring tests
         remote_monitoring_tests > >(tee "${RESULTS}/remote_monitoring_tests.log") 2>&1
+}
+
+# Execute all tests for Local monitoring
+function execute_local_monitoring_testsuites() {
+        testcase=""
+        # perform the Remote monitoring tests
+        local_monitoring_tests > >(tee "${RESULTS}/local_monitoring_tests.log") 2>&1
 }
 
 # Perform the specific testsuite if specified
