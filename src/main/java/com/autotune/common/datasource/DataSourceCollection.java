@@ -18,6 +18,7 @@ package com.autotune.common.datasource;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.exceptions.*;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
@@ -41,6 +42,7 @@ public class DataSourceCollection {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCollection.class);
     private static DataSourceCollection dataSourceCollectionInstance = new DataSourceCollection();
     private HashMap<String, DataSourceInfo> dataSourceCollection;
+    private String defaultDataSource = KruizeConstants.DataSourceConstants.DEFAULT_DATASOURCE_NAME;
 
     private DataSourceCollection() {
         this.dataSourceCollection = new HashMap<>();
@@ -60,6 +62,33 @@ public class DataSourceCollection {
      */
     public HashMap<String, DataSourceInfo> getDataSourcesCollection() {
         return dataSourceCollection;
+    }
+
+    /**
+     * Returns the object of default dataSource
+     * @return DataSourceInfo object
+     */
+    public DataSourceInfo getDefaultDataSource() {
+        return dataSourceCollection.get(defaultDataSource);
+    }
+
+    /**
+     * Update or set the default data source
+     * @param updatedDefaultDataSourceName String name of the new default data source
+     */
+    public void setDefaultDataSource(String updatedDefaultDataSourceName) {
+        try {
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.UPDATING_DEFAULT_DATASOURCE + updatedDefaultDataSourceName);
+            if (dataSourceCollection.containsKey(updatedDefaultDataSourceName)) {
+                defaultDataSource = updatedDefaultDataSourceName;
+                KruizeDeploymentInfo.setDefaultDataSource();
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DEFAULT_DATASOURCE_UPDATED);
+            } else {
+                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_EXIST);
+            }
+        } catch (DataSourceNotExist e) {
+            LOGGER.error(e.getMessage());
+        }
     }
 
     /**

@@ -1,6 +1,5 @@
 package com.autotune.common.datasource;
 
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
@@ -175,33 +174,6 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
             LOGGER.error("Unable to proceed due to invalid connection to URL: "+ queryURL);
         }
         return valuesList;
-    }
-
-    /**
-     * TODO: monitoring agent will be replaced by default datasource later
-     * returns DataSourceInfo objects for default datasource which is currently monitoring agent
-     * @return DataSourceInfo objects
-     */
-    public static DataSourceInfo getMonitoringAgent(String dataSource) throws MonitoringAgentNotFoundException, MalformedURLException {
-        String monitoringAgentEndpoint;
-        DataSourceInfo monitoringAgent = null;
-
-        if (dataSource.toLowerCase().equals(KruizeDeploymentInfo.monitoring_agent)) {
-            monitoringAgentEndpoint = KruizeDeploymentInfo.monitoring_agent_endpoint;
-            // Monitoring agent endpoint not set in the configmap
-            if (monitoringAgentEndpoint == null || monitoringAgentEndpoint.isEmpty()) {
-                monitoringAgentEndpoint = getServiceEndpoint(KruizeDeploymentInfo.monitoring_service);
-            }
-            if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE)) {
-                monitoringAgent = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, new URL(monitoringAgentEndpoint));
-            }
-        }
-
-        if (monitoringAgent == null) {
-            LOGGER.error("Datasource " + dataSource + " not supported");
-        }
-
-        return monitoringAgent;
     }
 
     /**

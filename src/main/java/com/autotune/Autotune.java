@@ -16,10 +16,9 @@
 package com.autotune;
 
 import com.autotune.analyzer.Analyzer;
+import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -123,8 +122,7 @@ public class Autotune {
 //            DataSourceManager dataSourceManager = new DataSourceManager();
 //            dataSourceManager.saveDataFromAllSourcesToDB(dataSourceCollection.getDataSourcesCollection());
 
-        } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
-                 MonitoringAgentNotFoundException e) {
+        } catch (Exception | K8sTypeNotSupportedException | DefaultDataSourceNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
         }

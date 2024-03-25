@@ -31,7 +31,7 @@ public class LayerPresenceQuery {
 							  String layerPresenceQuery,
 							  String layerPresenceKey) throws MonitoringAgentNotSupportedException {
 
-		if (KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(datasource)) {
+		if (KruizeSupportedTypes.DATASOURCE_PROVIDERS_SUPPORTED.contains(datasource)) {
 			this.dataSource = datasource;
 		} else {
 			throw new MonitoringAgentNotSupportedException();

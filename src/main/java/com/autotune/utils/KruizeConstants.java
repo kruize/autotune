@@ -336,6 +336,7 @@ public class KruizeConstants {
 
     public static class DataSourceConstants {
         public static final String DATASOURCE_NAME = "name";
+        public static final String DEFAULT_DATASOURCE_NAME = "prometheus";
         public static final String DATASOURCE_PROVIDER = "provider";
         public static final String DATASOURCE_SERVICE_NAME = "serviceName";
         public static final String DATASOURCE_SERVICE_NAMESPACE = "namespace";
@@ -347,6 +348,7 @@ public class KruizeConstants {
 
         public static class DataSourceInfoMsgs {
             public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: ";
+            public static final String UPDATING_DEFAULT_DATASOURCE = "Trying to update the default datasource: ";
             public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: ";
             public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
             private DataSourceInfoMsgs() {
@@ -355,6 +357,7 @@ public class KruizeConstants {
 
         public static class DataSourceSuccessMsgs {
             public static final String DATASOURCE_ADDED = "Datasource added to the collection successfully.";
+            public static final String DEFAULT_DATASOURCE_UPDATED = "Default datasource is updated successfully.";
             public static final String DATASOURCE_FOUND = "Datasource found: ";
             public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
             private DataSourceSuccessMsgs() {
@@ -379,7 +382,10 @@ public class KruizeConstants {
             public static final String DATASOURCE_NOT_SUPPORTED = "Datasource is not supported: ";
             public static final String SERVICE_NOT_FOUND = "Can not find service with specified name.";
             public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
+            public static final String INVALID_DEFAULT_DATASOURCE_NAME = "Invalid default datasource name.";
+            public static final String DEFAULT_DATASOURCE_NOT_FOUND = "Default datasource is not set.";
             public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
+
         }
 
         public static class DataSourceQueryJSONKeys {
@@ -555,9 +561,6 @@ public class KruizeConstants {
         public static final String K8S_TYPE = "k8stype";
         public static final String AUTH_TYPE = "authtype";
         public static final String AUTH_TOKEN = "authtoken";
-        public static final String MONITORING_AGENT = "monitoringagent";
-        public static final String MONITORING_SERVICE = "monitoringservice";
-        public static final String MONITORING_AGENT_ENDPOINT = "monitoringendpoint";
         public static final String CLUSTER_TYPE = "clustertype";
         public static final String AUTOTUNE_MODE = "autotunemode";
         public static final String EM_ONLY_MODE = "emonly";

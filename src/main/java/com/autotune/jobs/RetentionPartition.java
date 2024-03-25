@@ -1,8 +1,8 @@
 package com.autotune.jobs;
 
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
-import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.exceptions.DefaultDataSourceNotFoundException;
+import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.operator.InitializeDeployment;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -18,8 +18,7 @@ public class RetentionPartition {
         try {
             InitializeDeployment.setup_deployment_info();
             new ExperimentDAOImpl().deletePartitions(KruizeDeploymentInfo.delete_partition_threshold_in_days);
-        } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
-                 MonitoringAgentNotFoundException e) {
+        } catch (Exception | K8sTypeNotSupportedException | DefaultDataSourceNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
         }
