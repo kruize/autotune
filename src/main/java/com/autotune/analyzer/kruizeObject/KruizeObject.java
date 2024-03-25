@@ -111,6 +111,17 @@ public final class KruizeObject {
 
     }
 
+    /***
+     * Sets default terms for a KruizeObject.
+     * This method initializes a map with predefined terms like "SHORT_TERM", "MEDIUM_TERM", and "LONG_TERM".
+     * Each term is defined by a Terms object containing: Name of the term (e.g., "SHORT_TERM"), Duration (in days) to
+        be considered under that term, Threshold for the duration.
+     * Note: Currently, specific term names like "daily", "weekly", and "fortnightly" are not defined.
+     * This method also requires implementing CustomResourceDefinition yaml for managing terms. This
+        functionality is not currently included.
+     @param terms A map to store the default terms with term name as the key and Terms object as the value.
+     @param kruizeObject The KruizeObject for which the default terms are being set.
+     */
     public static void setDefaultTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
         // TODO: define term names like daily, weekly, fortnightly etc
         // TODO: add CRD for terms
