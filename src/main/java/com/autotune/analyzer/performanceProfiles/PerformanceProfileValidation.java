@@ -144,7 +144,7 @@ public class PerformanceProfileValidation {
             String expression = null;
             for (Metric functionVariable : sloInfo.getFunctionVariables()) {
                 // Check if datasource is supported
-                if (!KruizeSupportedTypes.DATASOURCES_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase())) {
+                if (!KruizeSupportedTypes.DATASOURCE_PROVIDERS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase())) {
                     errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE)
                             .append(functionVariable.getName())
                             .append(AnalyzerErrorConstants.AutotuneObjectErrors.DATASOURCE_NOT_SUPPORTED);
