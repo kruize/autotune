@@ -18,9 +18,9 @@ data:
         {
           "name": "prometheus-1",
           "provider": "prometheus",
-          "serviceName": "",
-          "namespace": "",
-          "url": "http://prometheus-k8s-openshift-monitoring.apps.bm.example.com/"
+          "serviceName": "prometheus-k8s",
+          "namespace": "monitoring",
+          "url": ""
         }
       ]
     }
