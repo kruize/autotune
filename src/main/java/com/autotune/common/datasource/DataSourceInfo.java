@@ -37,20 +37,16 @@ public class DataSourceInfo {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataSourceInfo.class);
 
-    public DataSourceInfo(String name, String provider, URL url) {
+    public DataSourceInfo(String name, String provider, String serviceName, String namespace, URL url) {
         this.name = name;
         this.provider = provider;
-        this.url = url;
-        this.serviceName = "";
-        this.namespace = "";
-    }
-
-    public DataSourceInfo(String name, String provider, String serviceName, String namespace) {
-        this.name = name;
-        this.provider = provider;
+        if (null == url) {
+            this.url = getDNSBasedUrlForService(serviceName, namespace, provider);
+        } else {
+            this.url = url;
+        }
         this.serviceName = serviceName;
         this.namespace = namespace;
-        this.url = getDNSBasedUrlForService(serviceName, namespace, provider);
     }
 
     /**
