@@ -7,7 +7,9 @@ import com.autotune.utils.KruizeConstants;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Comparator;
+import java.util.Map;
+import java.util.Optional;
 
 import static com.autotune.utils.KruizeConstants.JSONKeys.*;
 import static com.autotune.utils.KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.*;
@@ -81,10 +83,15 @@ public class Terms {
         LocalDateTime intervalStartDateTime = intervalEndDateTime.minusHours((long) maxDurationInHrs);
 
         double sum = 0.0;
+        // Define threshold in milliseconds
+        long toleranceInMillis = KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS * 1000;
         // get the sum of available data by going back to the start time calculated in the previous step
         for (LocalDateTime current = intervalEndDateTime; current.isAfter(intervalStartDateTime); current = current.minusMinutes((long) measurementDuration)) {
             Timestamp currentTimestamp = Timestamp.valueOf(current);
-            if (containerData.getResults().containsKey(currentTimestamp)) {
+            // Check if there exists a timestamp within the tolerance range around currentTimestamp
+            boolean found = containerData.getResults().entrySet().stream()
+                    .anyMatch(entry -> Math.abs(entry.getKey().getTime() - currentTimestamp.getTime()) <= toleranceInMillis);
+            if (found) {
                 sum = sum + measurementDuration;
             }
         }

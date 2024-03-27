@@ -461,7 +461,7 @@ public class KruizeConstants {
             }
 
             public static final class RecommendationDurationRanges {
-                public static final double MEASUREMENT_DURATION_BUFFER_IN_MINS = (TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                public static final double MEASUREMENT_DURATION_BUFFER_IN_MINS = ((double) TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS / TimeConv.NO_OF_SECONDS_PER_MINUTE);
                 public static final double SHORT_TERM_MIN_DATA_THRESHOLD_MINS = 30;
                 public static final double MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS = 2 * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR;
                 public static final double LONG_TERM_MIN_DATA_THRESHOLD_MINS = 8 * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR;
