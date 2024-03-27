@@ -5,6 +5,15 @@ import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * DataSourceManager is an interface to manage (create and update) metadata
+ * of data sources
+ *
+ *
+ * Currently Supported Implementations:
+ *  - importMetadataFromDataSource
+ *  - getMetadataFromDataSource
+ */
 public class DataSourceManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceManager.class);
     DataSourceMetadataOperator dataSourceMetadataOperator = DataSourceMetadataOperator.getInstance();
