@@ -15,7 +15,12 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import java.net.MalformedURLException;
 import java.net.URL;
+
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.KruizeConstants;
 import org.slf4j.LoggerFactory;
 /**
  * This DataSourceInfo object is used to store information about metric collectors like Prometheus, LogicMonitor, Dynatrace, Amazon Timestream etc
@@ -95,7 +100,20 @@ public class DataSourceInfo {
      */
     private URL getDNSBasedUrlForService(String serviceName, String namespace, String provider) {
         URL dnsUrl = null;
-        // TODO: Implement this method
+        try {
+            String url = "";
+            DataSourceOperator op = DataSourceOperatorImpl.getInstance();
+            String servicePort = op.getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS).getDefaultServicePortForProvider();
+
+            if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.MINIKUBE)) {
+                url  = AnalyzerConstants.HTTP_PROTOCOL + "://" + serviceName + "." + namespace + KruizeConstants.DataSourceConstants.SERVICE_DNS + ":" + servicePort;
+            } else if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
+                url = AnalyzerConstants.HTTPS_PROTOCOL + "://" + serviceName + "." + namespace + KruizeConstants.DataSourceConstants.SERVICE_DNS + ":" + servicePort;
+            }
+            dnsUrl = new URL(url);
+        } catch (MalformedURLException e) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DATASOURCE_URL);
+        }
         return dnsUrl;
     }
 
