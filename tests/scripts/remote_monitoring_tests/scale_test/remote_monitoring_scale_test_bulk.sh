@@ -38,15 +38,20 @@ interval_hours=6
 initial_start_date="2023-01-10T00:00:00.000Z"
 query_db_interval=10
 
+kruize_setup=true
+restore_db=false
+db_backup_file="./db_backup.sql"
+
 replicas=10
 
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
 hours=6
+total_results_count=0
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>]"
+	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)]"
 	exit -1
 }
 
@@ -77,7 +82,7 @@ function get_kruize_service_log() {
         kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
-while getopts r:i:u:d:t:n:m:s:q:h gopts
+while getopts r:i:u:d:t:n:m:s:l:f:b:e:q:h gopts
 do
 	case ${gopts} in
 	r)
@@ -107,6 +112,18 @@ do
 	q)
 		query_db_interval="${OPTARG}"		
 		;;
+	l)
+		restore_db="${OPTARG}"		
+		;;
+	f)
+		db_backup_file="${OPTARG}"		
+		;;
+	b)
+		kruize_setup="${OPTARG}"
+		;;
+	e)
+		total_results_count="${OPTARG}"
+		;;
 	h)
 		usage
 		;;
@@ -130,28 +147,30 @@ KRUIZE_SETUP_LOG="${LOG_DIR}/kruize_setup.log"
 KRUIZE_SERVICE_LOG="${LOG_DIR}/kruize_service.log"
 
 # Setup kruize
-echo "Setting up kruize..." | tee -a ${LOG}
-pushd ${KRUIZE_REPO} > /dev/null
-        echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
-        ./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG} 2>&1
+if [ ${kruize_setup} == true ]; then
+	echo "Setting up kruize..." | tee -a ${LOG}
+	pushd ${KRUIZE_REPO} > /dev/null
+        	echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
+		./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG} 2>&1
 
-        sleep 30
-        echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
-        ./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${KRUIZE_SETUP_LOG} 2>&1 &
-        sleep 120
+        	sleep 30
+	        echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
+        	./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} >> ${KRUIZE_SETUP_LOG} 2>&1 &
+	        sleep 120
 
-	# scale kruize pods
-	echo "Scaling kruize replicas to ${replicas}..." | tee -a ${LOG}
-	echo "kubectl scale deployments/kruize -n ${NAMESPACE} --replicas=${replicas}" | tee -a ${LOG}
-	kubectl scale deployments/kruize -n ${NAMESPACE} --replicas=${replicas} | tee -a ${LOG}
-	sleep 60
+		# scale kruize pods
+		echo "Scaling kruize replicas to ${replicas}..." | tee -a ${LOG}
+		echo "kubectl scale deployments/kruize -n ${NAMESPACE} --replicas=${replicas}" | tee -a ${LOG}
+		kubectl scale deployments/kruize -n ${NAMESPACE} --replicas=${replicas} | tee -a ${LOG}
+		sleep 60
 
-	echo "List the pods..." | tee -a ${LOG} | tee -a ${LOG}
-	kubectl get pods -n ${NAMESPACE} | tee -a ${LOG}
+		echo "List the pods..." | tee -a ${LOG} | tee -a ${LOG}
+		kubectl get pods -n ${NAMESPACE} | tee -a ${LOG}
 
 
-popd > /dev/null
-echo "Setting up kruize...Done" | tee -a ${LOG}
+	popd > /dev/null
+	echo "Setting up kruize...Done" | tee -a ${LOG}
+fi
 
 if [ -z "${SERVER_IP_ADDR}" ]; then
 	oc expose svc/kruize -n ${NAMESPACE}
@@ -166,12 +185,18 @@ echo | tee -a ${LOG}
 get_kruize_pod_log ${LOG_DIR}
 get_kruize_service_log ${KRUIZE_SERVICE_LOG}
 
+if [ ${restore_db} == true ]; then
+	# Load DB
+	DB_RESTORE_LOG="${LOG_DIR}/db_restore.log"
+	restore_db ${db_backup_file} ${DB_RESTORE_LOG}
+fi
+
 # Run the scale test
 echo ""
 echo "Running scale test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 echo ""
-echo "nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" | tee -a ${LOG} "
-nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" | tee -a ${LOG}
+echo "nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" | tee -a ${LOG} "
+nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" | tee -a ${LOG}
 
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
