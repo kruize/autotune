@@ -19,6 +19,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.datasource.DataSourceOperator;
+import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.datasource.KruizeDataSourceOperator;
 import com.autotune.common.k8sObjects.KubernetesContexts;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
@@ -118,11 +119,11 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             String updatedPodQuery = EMUtil.replaceQueryVars(podMetric.getQuery(), queryVarList);
                             updatedPodQuery = EMUtil.formatQueryByPodName(updatedPodQuery, podName);
                             // Need to run the updated query by calling the datasource
-                            KruizeDataSourceOperator ado = DataSourceOperator.getOperator(podMetric.getDatasource());
+                            DataSourceOperatorImpl ado = DataSourceOperatorImpl.getInstance().getOperator(podMetric.getDatasource());
                             if (null == ado) {
                                 // TODO: Return an error saying unsupported datasource
                             }
-                            String queryResult = (String) ado.extract(experimentTrial.getDatasourceInfoHashMap()
+                            String queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
                                     .get(podMetric.getDatasource())
                                     .getUrl().toString(), updatedPodQuery);
                             if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
@@ -155,13 +156,13 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                 updatedContainerQuery = EMUtil.formatQueryByPodName(updatedContainerQuery, podName);
                                 updatedContainerQuery = EMUtil.formatQueryByContainerName(updatedContainerQuery, containerName);
                                 // Need to run the updated query by calling the datasource
-                                KruizeDataSourceOperator ado = DataSourceOperator.getOperator(containerMetric.getDatasource());
+                                DataSourceOperatorImpl ado = DataSourceOperatorImpl.getInstance().getOperator(containerMetric.getDatasource());
                                 if (null == ado) {
                                     // TODO: Return an error saying unsupported datasource
                                 }
                                 if (null != updatedContainerQuery) {
                                     LOGGER.debug("Updated Query - " + updatedContainerQuery);
-                                    String queryResult = (String) ado.extract(experimentTrial.getDatasourceInfoHashMap()
+                                    String queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
                                             .get(containerMetric.getDatasource())
                                             .getUrl().toString(), updatedContainerQuery);
                                     if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
