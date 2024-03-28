@@ -4,6 +4,8 @@ import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.utils.KruizeConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -19,6 +21,8 @@ public class Terms {
     String performanceProfile;
     private int plots_datapoints;
     private double plots_datapoints_delta_in_days;
+    private static final Logger LOGGER = LoggerFactory.getLogger(Terms.class);
+
 
     public Terms(String name, int days, double threshold_in_days,int plots_datapoints, double plots_datapoints_delta_in_days) {
         this.name = name;
@@ -73,25 +77,34 @@ public class Terms {
             return false;
         }
 
-        // Get the maximum duration allowed for the term in hours
-        double maxDurationInHrs = getMaxDuration(term.getName());
+        // Initialize sum of durations
+        double sum = 0;
+        // Threshold in milliseconds
+        long thresholdInMillis = KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC;
+        LocalDateTime monitoringStartDateTime = monitoringEndTime.toLocalDateTime().minusDays(term.days);
 
-        // calculate the start time based on the monitoringEndTime
-        LocalDateTime intervalEndDateTime = monitoringEndTime.toLocalDateTime();
-        LocalDateTime intervalStartDateTime = intervalEndDateTime.minusHours((long) maxDurationInHrs);
+        double durationInSeconds = measurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+            try {
+                for (LocalDateTime current = monitoringEndTime.toLocalDateTime(); current.isAfter(monitoringStartDateTime); current = current.minusSeconds((long) durationInSeconds)) {
+                    Timestamp currentTimestamp = Timestamp.valueOf(current);
 
-        double sum = 0.0;
-        // get the sum of available data by going back to the start time calculated in the previous step
-        for (LocalDateTime current = intervalEndDateTime; current.isAfter(intervalStartDateTime); current = current.minusMinutes((long) measurementDuration)) {
-            Timestamp currentTimestamp = Timestamp.valueOf(current);
-            if (containerData.getResults().containsKey(currentTimestamp)) {
-                sum = sum + measurementDuration;
+                    // Check if the current timestamp exists in the resultsMap or within the tolerance range
+                    Double diffInSec = getTimestampWithinTolerance(currentTimestamp, containerData.getResults().keySet(), thresholdInMillis);
+                    if (containerData.getResults().containsKey(currentTimestamp) || diffInSec != null) {
+                        // If there's a change in the timestamp within the threshold value, add the difference in the duration
+                        if (diffInSec != null) {
+                            durationInSeconds += diffInSec;
+                        }
+                        sum += measurementDuration;
+                    }
+                }
+            } catch (Exception e) {
+                LOGGER.error("Exception occurred while checking min data : {}", e.getMessage());
+                return false;
             }
-        }
 
-        // get the minimum threshold value of the term in minutes
-        double minimumDurationInMins = term.getThreshold_in_days() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
-                NO_OF_MINUTES_PER_HOUR;
+        double minimumDurationInMins = term.getThreshold_in_days() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY *
+                KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
         // Set bounds to check if we get minimum requirement satisfied
         double lowerBound = minimumDurationInMins - MEASUREMENT_DURATION_BUFFER_IN_MINS;
         // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
@@ -100,6 +113,17 @@ public class Terms {
 
         return false;
     }
+
+    private static Double getTimestampWithinTolerance(Timestamp currentTimestamp, Set<Timestamp> timestamps, long toleranceInMillis) {
+        for (Timestamp timestamp : timestamps) {
+            long timeDiff = currentTimestamp.getTime() - timestamp.getTime();
+            if (Math.abs(timeDiff) <= toleranceInMillis) {
+                return (double) ((timeDiff)/KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
+            }
+        }
+        return null;
+    }
+
     public static double getDurationSummation(ContainerData containerData) {
         // Loop over the data to check if there is min data available
         double sum = 0.0;
