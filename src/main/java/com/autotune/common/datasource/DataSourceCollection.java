@@ -20,6 +20,7 @@ import com.autotune.common.exceptions.*;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.authModels.BearerAccessToken;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -70,6 +71,7 @@ public class DataSourceCollection {
         final String name = datasource.getName();
         final String provider = datasource.getProvider();
         final String url = datasource.getUrl().toString();
+        BearerAccessToken authToken = datasource.getAuthToken();
 
         LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE + name);
 
@@ -81,7 +83,7 @@ public class DataSourceCollection {
             if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
                 LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY + name);
                 DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
-                if (op.isServiceable(url) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
+                if (op.isServiceable(url, authToken) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
                     dataSourceCollection.put(name, datasource);
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_ADDED);
@@ -132,12 +134,17 @@ public class DataSourceCollection {
                 String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
                 String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
                 String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
+                String authToken = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_AUTH_TOKEN);
                 DataSourceInfo datasource = null;
                 if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) {
                     continue;
                 }
-                if (dataSourceURL.isEmpty()) {
+                if (dataSourceURL.isEmpty() && authToken.isEmpty()) {
                     datasource = new DataSourceInfo(name, provider, serviceName, namespace);
+                } else if (dataSourceURL.isEmpty() && !authToken.isEmpty()) {
+                    datasource = new DataSourceInfo(name, provider, serviceName, namespace, new BearerAccessToken(authToken));
+                } else if (!dataSourceURL.isEmpty() && !authToken.isEmpty()) {
+                    datasource = new DataSourceInfo(name, provider, new URL(dataSourceURL), new BearerAccessToken(authToken));
                 } else {
                     datasource = new DataSourceInfo(name, provider, new URL(dataSourceURL));
                 }

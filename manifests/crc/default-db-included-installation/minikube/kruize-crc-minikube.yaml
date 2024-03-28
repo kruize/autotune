@@ -127,7 +127,8 @@ data:
           "provider": "prometheus",
           "serviceName": "prometheus-k8s",
           "namespace": "monitoring",
-          "url": ""
+          "url": "",
+          "authToken": ""
         }
       ]
     }
