@@ -9,10 +9,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.util.Comparator;
-import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static com.autotune.utils.KruizeConstants.JSONKeys.*;
 import static com.autotune.utils.KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.*;
@@ -85,32 +82,26 @@ public class Terms {
         // Threshold in milliseconds
         long thresholdInMillis = KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC;
         LocalDateTime monitoringStartDateTime = monitoringEndTime.toLocalDateTime().minusDays(term.days);
-        IntervalResults intervalResults;
-        long durationInSeconds = (long) (measurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-        try {
-            for (LocalDateTime current = monitoringEndTime.toLocalDateTime(); current.isAfter(monitoringStartDateTime); current = current.minusSeconds(durationInSeconds)) {
-                Timestamp currentTimestamp = Timestamp.valueOf(current);
 
-                // Check if the current timestamp exists in the resultsMap or within the tolerance range
-                Timestamp updatedTimestamp = getTimestampWithinTolerance(currentTimestamp, containerData.getResults().keySet(), thresholdInMillis);
-                if (containerData.getResults().containsKey(currentTimestamp) || updatedTimestamp != null) {
-                    if (updatedTimestamp != null) {
-                        currentTimestamp = updatedTimestamp;
+        double durationInSeconds = measurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+            try {
+                for (LocalDateTime current = monitoringEndTime.toLocalDateTime(); current.isAfter(monitoringStartDateTime); current = current.minusSeconds((long) durationInSeconds)) {
+                    Timestamp currentTimestamp = Timestamp.valueOf(current);
+
+                    // Check if the current timestamp exists in the resultsMap or within the tolerance range
+                    Double diffInSec = getTimestampWithinTolerance(currentTimestamp, containerData.getResults().keySet(), thresholdInMillis);
+                    if (containerData.getResults().containsKey(currentTimestamp) || diffInSec != null) {
+                        // If there's a change in the timestamp within the threshold value, add the difference in the duration
+                        if (diffInSec != null) {
+                            durationInSeconds += diffInSec;
+                        }
+                        sum += measurementDuration;
                     }
-                    // If present within the tolerance range, increment the interval count
-                    sum += ((double) durationInSeconds / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                 }
-                // Get the current IntervalResults object and Calculate the exact difference between "interval_end_time" and "interval_start_time" in seconds
-                intervalResults = containerData.getResults().get(currentTimestamp);
-                if (intervalResults != null) {
-                    durationInSeconds = (intervalResults.getIntervalEndTime().getTime() - intervalResults
-                            .getIntervalStartTime().getTime()) / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC;
-                }
+            } catch (Exception e) {
+                LOGGER.error("Exception occurred while checking min data : {}", e.getMessage());
+                return false;
             }
-        } catch (Exception e) {
-            LOGGER.error("Exception occurred while checking min data : {}", e.getMessage());
-            return false;
-        }
 
         double minimumDurationInMins = term.getThreshold_in_days() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY *
                 KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
@@ -123,10 +114,11 @@ public class Terms {
         return false;
     }
 
-    private static Timestamp getTimestampWithinTolerance(Timestamp currentTimestamp, Set<Timestamp> timestamps, long toleranceInMillis) {
+    private static Double getTimestampWithinTolerance(Timestamp currentTimestamp, Set<Timestamp> timestamps, long toleranceInMillis) {
         for (Timestamp timestamp : timestamps) {
-            if (Math.abs(currentTimestamp.getTime() - timestamp.getTime()) <= toleranceInMillis) {
-                return timestamp;
+            long timeDiff = currentTimestamp.getTime() - timestamp.getTime();
+            if (Math.abs(timeDiff) <= toleranceInMillis) {
+                return (double) ((timeDiff)/KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
             }
         }
         return null;
