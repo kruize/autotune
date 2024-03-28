@@ -145,8 +145,7 @@ public class TrialHelpers {
                 trialNumber,
                 trialResultUrl.toString());
 
-        DataSourceInfo datasourceInfo = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent,
-                new URL(KruizeDeploymentInfo.monitoring_agent_endpoint));
+        DataSourceInfo datasourceInfo = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, KruizeConstants.SupportedDatasources.PROMETHEUS, null, null, new URL(KruizeDeploymentInfo.monitoring_agent_endpoint));
         HashMap<String, DataSourceInfo> datasourceInfoHashMap = new HashMap<>();
         datasourceInfoHashMap.put(KruizeDeploymentInfo.monitoring_agent, datasourceInfo);  //Change key value as per YAML input
         DeploymentTracking deploymentTracking = new DeploymentTracking();
