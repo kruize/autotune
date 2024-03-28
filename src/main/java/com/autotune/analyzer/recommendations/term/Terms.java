@@ -4,6 +4,8 @@ import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.utils.KruizeConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
@@ -22,6 +24,8 @@ public class Terms {
     String performanceProfile;
     private int plots_datapoints;
     private double plots_datapoints_delta_in_days;
+    private static final Logger LOGGER = LoggerFactory.getLogger(Terms.class);
+
 
     public Terms(String name, int days, double threshold_in_days,int plots_datapoints, double plots_datapoints_delta_in_days) {
         this.name = name;
@@ -79,26 +83,33 @@ public class Terms {
         // Initialize sum of durations
         double sum = 0;
         // Threshold in milliseconds
-        long thresholdInMillis = KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS * 1000;
+        long thresholdInMillis = KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC;
+        LocalDateTime monitoringStartDateTime = monitoringEndTime.toLocalDateTime().minusDays(term.days);
+        IntervalResults intervalResults;
+        long durationInSeconds = (long) (measurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+        try {
+            for (LocalDateTime current = monitoringEndTime.toLocalDateTime(); current.isAfter(monitoringStartDateTime); current = current.minusSeconds(durationInSeconds)) {
+                Timestamp currentTimestamp = Timestamp.valueOf(current);
 
-        // Iterate backward in time
-        for (Map.Entry<Timestamp, IntervalResults> entry : containerData.getResults().entrySet()) {
-            IntervalResults intervalResults = entry.getValue();
-            Timestamp intervalStartTime = intervalResults.getIntervalStartTime();
-            Timestamp intervalEndTime = intervalResults.getIntervalEndTime();
-
-            // Calculate the exact difference between "interval_end_time" and "interval_start_time" in seconds
-            long differenceInSeconds = (intervalEndTime.getTime() - intervalStartTime.getTime()) / 1000;
-
-            // Subtract the exact difference from the monitoringEndTime in each iteration
-            Timestamp currentTimestamp = Timestamp.valueOf(monitoringEndTime.toLocalDateTime().minusSeconds(differenceInSeconds));
-
-            // Check if the currentTimestamp exists in the resultsMap as it is or within the tolerance range
-            if (containerData.getResults().containsKey(currentTimestamp) || isWithinThreshold(currentTimestamp,
-                    containerData.getResults().keySet(), thresholdInMillis)) {
-                // If present within the threshold range, add the duration of the interval to the sum
-                sum += intervalResults.getDurationInMinutes();
+                // Check if the current timestamp exists in the resultsMap or within the tolerance range
+                Timestamp updatedTimestamp = getTimestampWithinTolerance(currentTimestamp, containerData.getResults().keySet(), thresholdInMillis);
+                if (containerData.getResults().containsKey(currentTimestamp) || updatedTimestamp != null) {
+                    if (updatedTimestamp != null) {
+                        currentTimestamp = updatedTimestamp;
+                    }
+                    // If present within the tolerance range, increment the interval count
+                    sum += ((double) durationInSeconds / KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                }
+                // Get the current IntervalResults object and Calculate the exact difference between "interval_end_time" and "interval_start_time" in seconds
+                intervalResults = containerData.getResults().get(currentTimestamp);
+                if (intervalResults != null) {
+                    durationInSeconds = (intervalResults.getIntervalEndTime().getTime() - intervalResults
+                            .getIntervalStartTime().getTime()) / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC;
+                }
             }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while checking min data : {}", e.getMessage());
+            return false;
         }
 
         double minimumDurationInMins = term.getThreshold_in_days() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY *
@@ -112,13 +123,13 @@ public class Terms {
         return false;
     }
 
-    private static boolean isWithinThreshold(Timestamp currentTimestamp, Set<Timestamp> timestamps, long thresholdInMillis) {
+    private static Timestamp getTimestampWithinTolerance(Timestamp currentTimestamp, Set<Timestamp> timestamps, long toleranceInMillis) {
         for (Timestamp timestamp : timestamps) {
-            if (Math.abs(currentTimestamp.getTime() - timestamp.getTime()) <= thresholdInMillis) {
-                return true;
+            if (Math.abs(currentTimestamp.getTime() - timestamp.getTime()) <= toleranceInMillis) {
+                return timestamp;
             }
         }
-        return false;
+        return null;
     }
 
     public static double getDurationSummation(ContainerData containerData) {
