@@ -12,3 +12,15 @@ data:
   monitoring_agent_endpoint: ""
   root_logging_level: "info"
   logging_level: "info"
+  kruizeconfigjson: |
+    {
+      "datasource": [
+        {
+          "name": "prometheus-1",
+          "provider": "prometheus",
+          "serviceName": "",
+          "namespace": "",
+          "url": "http://prometheus-k8s-openshift-monitoring.apps.bm.example.com/"
+        }
+      ]
+    }

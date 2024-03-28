@@ -121,7 +121,16 @@ data:
         "hbm2ddlauto": "none",
         "showsql": "false",
         "timezone": "UTC"
-      }
+      },
+      "datasource": [
+        {
+          "name": "prometheus-1",
+          "provider": "prometheus",
+          "serviceName": "prometheus-k8s",
+          "namespace": "monitoring",
+          "url": ""
+        }
+      ]
     }
 ---
 apiVersion: apps/v1
