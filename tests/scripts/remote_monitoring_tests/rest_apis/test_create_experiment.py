@@ -87,9 +87,12 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, version, expe
     data = response.json()
     print(data['message'])
 
+    # temporarily moved this up to avoid failures in the subsequent tests, this will be reverted once the create
+    # experiment validation PR goes in
+    response_delete_exp = delete_experiment(tmp_json_file)
+    print("delete exp = ", response_delete_exp.status_code)
+
     assert response.status_code == int(expected_status_code)
-    response = delete_experiment(tmp_json_file)
-    print("delete exp = ", response.status_code)
 
 
 @pytest.mark.sanity

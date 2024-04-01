@@ -110,6 +110,7 @@ data:
       "monitoringendpoint": "prometheus-k8s",
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
+      "plots": "false",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -143,7 +144,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.20.2_rm
+          image: kruize/autotune_operator:0.0.20.3_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -208,7 +209,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: kruize/autotune_operator:0.0.20.2_rm
+              image: kruize/autotune_operator:0.0.20.3_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -270,12 +271,12 @@ data:
         server_name localhost;
 
         root   /usr/share/nginx/html;
-    
+
         location ^~ /api/ {
           rewrite ^/api(.*)$ $1 break;
           proxy_pass http://kruize-api;
         }
-    
+
         location / {
           index index.html;
           error_page 404 =200 /index.html;
@@ -334,7 +335,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: kruize/autotune_operator:0.0.20.2_rm
+              image: kruize/autotune_operator:0.0.20.3_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume

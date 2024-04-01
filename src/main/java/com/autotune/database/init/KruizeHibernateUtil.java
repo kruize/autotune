@@ -28,10 +28,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class KruizeHibernateUtil {
-    private static final SessionFactory sessionFactory;
     private static final Logger LOGGER = LoggerFactory.getLogger(KruizeHibernateUtil.class);
+    private static SessionFactory sessionFactory;
 
     static {
+        buildSessionFactory();
+    }
+
+    public static void buildSessionFactory() {
         SessionFactory sfTemp = null;
         try {
             Configuration configuration = new Configuration();
@@ -64,6 +68,7 @@ public class KruizeHibernateUtil {
         } finally {
             sessionFactory = sfTemp;
         }
+
     }
 
     public static Session getSession() {
@@ -72,5 +77,12 @@ public class KruizeHibernateUtil {
 
     public static SessionFactory getSessionFactory() {
         return sessionFactory;
+    }
+
+    public static void closeSessionFactory() {
+        if (sessionFactory != null) {
+            sessionFactory.close();
+            sessionFactory = null;
+        }
     }
 }

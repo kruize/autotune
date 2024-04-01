@@ -42,7 +42,7 @@ function remote_monitoring_tests() {
 	target="crc"
 	perf_profile_json="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
 
-	remote_monitoring_tests=("test_e2e" "sanity" "extended" "negative")
+	remote_monitoring_tests=("test_e2e" "sanity" "negative" "extended")
 	
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then

@@ -1,115 +1,15 @@
 package com.autotune.analyzer.recommendations;
 
-import com.autotune.analyzer.recommendations.subCategory.CostRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.subCategory.PerformanceRecommendationSubCategory;
-import com.autotune.analyzer.recommendations.subCategory.RecommendationSubCategory;
 import com.autotune.utils.KruizeConstants;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
+
+import static com.autotune.utils.KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.*;
 
 public class RecommendationConstants {
 
-    public enum RecommendationCategory {
-        COST(
-                KruizeConstants.JSONKeys.COST,
-                new CostRecommendationSubCategory[]{
-                        new CostRecommendationSubCategory(
-                                KruizeConstants.JSONKeys.SHORT_TERM,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
-                                TimeUnit.DAYS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                        ),
-                        new CostRecommendationSubCategory(
-                                KruizeConstants.JSONKeys.MEDIUM_TERM,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
-                                TimeUnit.DAYS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                        ),
-                        new CostRecommendationSubCategory(
-                                KruizeConstants.JSONKeys.LONG_TERM,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
-                                TimeUnit.DAYS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                                KruizeConstants.RecommendationEngineConstants
-                                        .DurationBasedEngine.RecommendationDurationRanges
-                                        .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                        ),
-                }
-        ),
-        // Need to update with profile based sub categories
-        PERFORMANCE(KruizeConstants.JSONKeys.PERFORMANCE, new PerformanceRecommendationSubCategory[]{
-                new PerformanceRecommendationSubCategory(
-                        KruizeConstants.JSONKeys.SHORT_TERM,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
-                        TimeUnit.DAYS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                ),
-                new PerformanceRecommendationSubCategory(
-                        KruizeConstants.JSONKeys.MEDIUM_TERM,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
-                        TimeUnit.DAYS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                ),
-                new PerformanceRecommendationSubCategory(
-                        KruizeConstants.JSONKeys.LONG_TERM,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
-                        TimeUnit.DAYS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
-                        KruizeConstants.RecommendationEngineConstants
-                                .DurationBasedEngine.RecommendationDurationRanges
-                                .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS
-                ),
-        });
-
-        private String name;
-        private RecommendationSubCategory[] recommendationSubCategories;
-
-        private RecommendationCategory(String name, RecommendationSubCategory[] recommendationSubCategories) {
-            this.name = name;
-            this.recommendationSubCategories = recommendationSubCategories;
-        }
-
-        public String getName() {
-            return this.name;
-        }
-
-        public RecommendationSubCategory[] getRecommendationSubCategories() {
-            return this.recommendationSubCategories;
-        }
-    }
     public enum RecommendationNotificationTypes {
         INFO("info", 1),
         ERROR("error", 2),
@@ -135,19 +35,19 @@ public class RecommendationConstants {
     }
 
     public enum RecommendationTerms {
-        SHORT_TERM (KruizeConstants.JSONKeys.SHORT_TERM, 24, KruizeConstants.RecommendationEngineConstants
+        SHORT_TERM(KruizeConstants.JSONKeys.SHORT_TERM, SHORT_TERM_HOURS, KruizeConstants.RecommendationEngineConstants
                 .DurationBasedEngine.RecommendationDurationRanges
                 .SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
                 KruizeConstants.RecommendationEngineConstants
                         .DurationBasedEngine.RecommendationDurationRanges
                         .SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS),
-        MEDIUM_TERM (KruizeConstants.JSONKeys.MEDIUM_TERM, 24 * 7,KruizeConstants.RecommendationEngineConstants
+        MEDIUM_TERM(KruizeConstants.JSONKeys.MEDIUM_TERM, MEDIUM_TERM_HOURS, KruizeConstants.RecommendationEngineConstants
                 .DurationBasedEngine.RecommendationDurationRanges
                 .MEDIUM_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
                 KruizeConstants.RecommendationEngineConstants
                         .DurationBasedEngine.RecommendationDurationRanges
                         .MEDIUM_TERM_TOTAL_DURATION_LOWER_BOUND_MINS),
-        LONG_TERM (KruizeConstants.JSONKeys.LONG_TERM, 24 * 15, KruizeConstants.RecommendationEngineConstants
+        LONG_TERM(KruizeConstants.JSONKeys.LONG_TERM, LONG_TERM_HOURS, KruizeConstants.RecommendationEngineConstants
                 .DurationBasedEngine.RecommendationDurationRanges
                 .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
                 KruizeConstants.RecommendationEngineConstants
@@ -159,7 +59,8 @@ public class RecommendationConstants {
 
         private double upperBound;
         private double lowerBound;
-        private RecommendationTerms(String value, int durationInHrs, double upperBound, double lowerBound){
+
+        private RecommendationTerms(String value, double durationInHrs, double upperBound, double lowerBound) {
             this.value = value;
             this.durationInHrs = durationInHrs;
             this.upperBound = upperBound;
@@ -185,6 +86,14 @@ public class RecommendationConstants {
 
         public double getUpperBound() {
             return this.upperBound;
+        }
+
+        public static double getMaxDuration(RecommendationTerms termValue) {
+            return switch (termValue) {
+                case SHORT_TERM -> SHORT_TERM_HOURS;
+                case MEDIUM_TERM -> MEDIUM_TERM_HOURS;
+                case LONG_TERM -> LONG_TERM_HOURS;
+            };
         }
     }
 
@@ -355,7 +264,7 @@ public class RecommendationConstants {
         private String message;
         private RecommendationConstants.RecommendationNotificationTypes type;
 
-        private RecommendationNotification (
+        private RecommendationNotification(
                 int code,
                 String msg,
                 RecommendationConstants.RecommendationNotificationTypes type
@@ -379,8 +288,7 @@ public class RecommendationConstants {
     }
 
     public static final class NotificationCodes {
-        private NotificationCodes() {
-        }
+        public static final int SECTION_INFO_START = 100000;
 
         // Section - Info:                  100000 - 199999
         //      SubSection - General Info:  110000 - 119999
@@ -393,22 +301,17 @@ public class RecommendationConstants {
         //          SubSystem - Network     125000 - 125999 (10% of availability)
         //          SubSystem - Disk        126000 - 126999 (10% of availability)
         //          SubSystem - Power       127000 - 127999 (10% of availability)
-
-        public static final int SECTION_INFO_START = 100000;
         public static final int SECTION_INFO_END = 199999;
-
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_START = 110000;
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_END = 119999;
-
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_START = 110000;
-        // Subsystem section: Recommendation Engines
-        // Range: 112000 - 112999 (Each subsection can be given 100 entries which fit total of 10 entries or engines)
-
         // Subsystem subsection: Default Engine
         // Range: 112000 - 112099
         // Subsystem subsection: Cost Engine
         // Range: 112100 - 112199
         public static final int COST_ENGINE_START = 112100;
+        // Subsystem section: Recommendation Engines
+        // Range: 112000 - 112999 (Each subsection can be given 100 entries which fit total of 10 entries or engines)
         public static final int INFO_RECOMMENDATIONS_AVAILABLE = 111000; // TODO: need to discuss the code
         public static final int INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE = 111101; // TODO: need to discuss the code
         public static final int INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = 111102; // TODO: need to discuss the code
@@ -416,35 +319,27 @@ public class RecommendationConstants {
         public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
         public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
         public static final int COST_ENGINE_END = 112199;
+        public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 112999;
         // Subsystem subsection: Profile Based Engine
         // Range: 112200 - 112299
-
-        public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 112999;
-
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_START = 113000;
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_END = 119999;
-
         public static final int SECTION_INFO_SUBSECTION_DATA_START = 120000;
         public static final int SECTION_INFO_SUBSECTION_DATA_END = 129999;
-
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 120000;
         public static final int INFO_NOT_ENOUGH_DATA = 120001;
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 122999;
-
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 123000;
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 123999;
-
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 124000;
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 124999;
-
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 125000;
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_NETWORK_END = 125999;
-
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_DISK_START = 126000;
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 126999;
-
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 127000;
         public static final int SECTION_INFO_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 127999;
+        public static final int SECTION_ERROR_START = 200000;
 
         // Section - Error:                 200000 - 299999
         //      SubSection - General Info:  210000 - 219999
@@ -457,51 +352,40 @@ public class RecommendationConstants {
         //          SubSystem - Network:    225000 - 225999 (10% of availability)
         //          SubSystem - Disk:       226000 - 226999 (10% of availability)
         //          SubSystem - Power:      227000 - 227999 (10% of availability)
-
-        public static final int SECTION_ERROR_START = 200000;
         public static final int SECTION_ERROR_END = 299999;
-
         public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_START = 210000;
         public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_END = 219999;
-
         public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_START = 210000;
         public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 212999;
-
         public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_START = 213000;
         public static final int SECTION_ERROR_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_END = 219999;
-
         public static final int SECTION_ERROR_SUBSECTION_DATA_START = 220000;
         public static final int SECTION_ERROR_SUBSECTION_DATA_END = 229999;
-
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 221000;
         public static final int ERROR_NUM_PODS_CANNOT_BE_ZERO = 221001;
         public static final int ERROR_NUM_PODS_CANNOT_BE_NEGATIVE = 221002;
         public static final int ERROR_HOURS_CANNOT_BE_ZERO = 221003;
         public static final int ERROR_HOURS_CANNOT_BE_NEGATIVE = 221004;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 222999;
-
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 223000;
         public static final int ERROR_AMOUNT_MISSING_IN_CPU_SECTION = 223001;
         public static final int ERROR_INVALID_AMOUNT_IN_CPU_SECTION = 223002;
         public static final int ERROR_FORMAT_MISSING_IN_CPU_SECTION = 223003;
         public static final int ERROR_INVALID_FORMAT_IN_CPU_SECTION = 223004;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 223999;
-
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 224000;
         public static final int ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION = 224001;
         public static final int ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION = 224002;
         public static final int ERROR_FORMAT_MISSING_IN_MEMORY_SECTION = 224003;
         public static final int ERROR_INVALID_FORMAT_IN_MEMORY_SECTION = 224004;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 224999;
-
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 225000;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_NETWORK_END = 225999;
-
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_DISK_START = 226000;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 226999;
-
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 227000;
         public static final int SECTION_ERROR_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 227999;
+        public static final int SECTION_NOTICE_START = 300000;
 
         // Section - Notice:                300000 - 399999
         //      SubSection - General Info:  310000 - 319999
@@ -514,25 +398,17 @@ public class RecommendationConstants {
         //          SubSystem - Network:    325000 - 325999 (10% of availability)
         //          SubSystem - Disk:       326000 - 326999 (10% of availability)
         //          SubSystem - Power:      327000 - 327999 (10% of availability)
-
-        public static final int SECTION_NOTICE_START = 300000;
         public static final int SECTION_NOTICE_END = 399999;
-
         public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_START = 310000;
         public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_END = 319999;
-
         public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_START = 310000;
         public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 312999;
-
         public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_START = 313000;
         public static final int SECTION_NOTICE_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_END = 319999;
-
         public static final int SECTION_NOTICE_SUBSECTION_DATA_START = 320000;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_END = 329999;
-
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 321000;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 322999;
-
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 323000;
         public static final int NOTICE_CPU_RECORDS_ARE_IDLE = 323001;
         public static final int NOTICE_CPU_RECORDS_ARE_ZERO = 323002;
@@ -540,22 +416,19 @@ public class RecommendationConstants {
         public static final int NOTICE_CPU_REQUESTS_OPTIMISED = 323004;
         public static final int NOTICE_CPU_LIMITS_OPTIMISED = 323005;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 323999;
-
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 324000;
         public static final int NOTICE_MEMORY_RECORDS_ARE_ZERO = 324001;
         public static final int NOTICE_MEMORY_RECORDS_NOT_AVAILABLE = 324002;
         public static final int NOTICE_MEMORY_REQUESTS_OPTIMISED = 324003;
         public static final int NOTICE_MEMORY_LIMITS_OPTIMISED = 324004;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 324999;
-
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 325000;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_NETWORK_END = 325999;
-
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_DISK_START = 326000;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 326999;
-
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 327000;
         public static final int SECTION_NOTICE_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 327999;
+        public static final int SECTION_WARNING_START = 400000;
 
         // Section - Warning:               400000 - 499999
         //      SubSection - General Info:  410000 - 419999
@@ -568,40 +441,29 @@ public class RecommendationConstants {
         //          SubSystem - Network:    425000 - 425999 (10% of availability)
         //          SubSystem - Disk:       426000 - 426999 (10% of availability)
         //          SubSystem - Power:      427000 - 427999 (10% of availability)
-
-        public static final int SECTION_WARNING_START = 400000;
         public static final int SECTION_WARNING_END = 499999;
-
         public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_START = 410000;
         public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_END = 419999;
-
         public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_START = 410000;
         public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 412999;
-
         public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_START = 413000;
         public static final int SECTION_WARNING_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_END = 419999;
-
         public static final int SECTION_WARNING_SUBSECTION_DATA_START = 420000;
         public static final int SECTION_WARNING_SUBSECTION_DATA_END = 429999;
-
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 421000;
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 422999;
-
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 423000;
         public static final int WARNING_CPU_LIMIT_NOT_SET = 423001;
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 423999;
-
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 424000;
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 424999;
-
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 425000;
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_NETWORK_END = 425999;
-
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_DISK_START = 426000;
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 426999;
-
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 427000;
         public static final int SECTION_WARNING_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 427999;
+        public static final int SECTION_CRITICAL_START = 500000;
 
         // Section - Critical:              500000 - 599999
         //      SubSection - General Info:  510000 - 519999
@@ -614,43 +476,30 @@ public class RecommendationConstants {
         //          SubSystem - Network:    525000 - 525999 (10% of availability)
         //          SubSystem - Disk:       526000 - 526999 (10% of availability)
         //          SubSystem - Power:      527000 - 527999 (10% of availability)
-
-        public static final int SECTION_CRITICAL_START = 500000;
         public static final int SECTION_CRITICAL_END = 599999;
-
         public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_START = 510000;
         public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_END = 519999;
-
         public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_START = 510000;
         public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 512999;
-
         public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_START = 513000;
         public static final int SECTION_CRITICAL_SUBSECTION_GENERAL_INFO_SUBSYSTEM_RESERVED_END = 519999;
-
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_START = 520000;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_END = 529999;
-
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_GENERAL_START = 521000;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_GENERAL_END = 522999;
-
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_CPU_START = 523000;
         public static final int CRITICAL_CPU_REQUEST_NOT_SET = 523001;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_CPU_END = 523999;
-
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_MEMORY_START = 524000;
         public static final int CRITICAL_MEMORY_REQUEST_NOT_SET = 524001;
         public static final int CRITICAL_MEMORY_LIMIT_NOT_SET = 524002;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_MEMORY_END = 524999;
-
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_NETWORK_START = 525000;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_NETWORK_END = 525999;
-
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_DISK_START = 526000;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 526999;
-
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 527000;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 527999;
-
         public static final HashMap<Integer, List<Integer>> CONTRADICTING_MAP = new HashMap<>();
 
         // Add contents in static block instead of initialising every var as static
@@ -764,6 +613,9 @@ public class RecommendationConstants {
                     Arrays.asList(CODES_CONTRADICT_MEMORY_LIMIT_NOT_SET)
             );
         }
+
+        private NotificationCodes() {
+        }
     }
 
     public static final class RecommendationValueConstants {
@@ -818,6 +670,7 @@ public class RecommendationConstants {
         public static final String CPU_LIMITS_OPTIMISED = "Workload is optimised wrt CPU LIMITS, no changes needed";
         public static final String MEMORY_REQUESTS_OPTIMISED = "Workload is optimised wrt MEMORY REQUESTS, no changes needed";
         public static final String MEMORY_LIMITS_OPTIMISED = "Workload is optimised wrt MEMORY LIMITS, no changes needed";
+        public static final String ADDING_RECOMMENDATIONS_TO_DB_FAILED = "Failed to add recommendations to the DB ";
 
         private RecommendationNotificationMsgConstant() {
 
@@ -829,21 +682,21 @@ public class RecommendationConstants {
 
         }
 
-        public static class EngineNames {
+        public static class ModelNames {
             public static String DEFAULT_NAME = "default";
             public static String COST = "cost";
             public static String PERFORMANCE = "performance";
 
-            private EngineNames() {
+            private ModelNames() {
 
             }
         }
 
-        public static class EngineKeys {
+        public static class ModelKeys {
             public static String COST_KEY = "cost";
             public static String PERFORMANCE_BASED_KEY = "performance";
 
-            private EngineKeys() {
+            private ModelKeys() {
 
             }
         }
@@ -854,18 +707,15 @@ public class RecommendationConstants {
             }
 
             public static class CPU {
+                public static final double CPU_MIN_RECOMMENDATION_VALUE = 0.1;
+
                 private CPU() {
 
                 }
-                public static final double CPU_MIN_RECOMMENDATION_VALUE = 0.1;
             }
         }
 
         public static class InternalConstants {
-            private InternalConstants() {
-
-            }
-
             public static final String CURRENT_CPU_REQUEST = "CURRENT_CPU_REQUEST";
             public static final String CURRENT_MEMORY_REQUEST = "CURRENT_MEMORY_REQUEST";
             public static final String CURRENT_CPU_LIMIT = "CURRENT_CPU_LIMIT";
@@ -874,13 +724,20 @@ public class RecommendationConstants {
             public static final String RECOMMENDED_MEMORY_REQUEST = "RECOMMENDED_MEMORY_REQUEST";
             public static final String RECOMMENDED_CPU_LIMIT = "RECOMMENDED_CPU_LIMIT";
             public static final String RECOMMENDED_MEMORY_LIMIT = "RECOMMENDED_MEMORY_LIMIT";
+
+            private InternalConstants() {
+
+            }
         }
+
         public static class PercentileConstants {
             public static final Integer COST_CPU_PERCENTILE = 60;
             public static final Integer COST_MEMORY_PERCENTILE = 100;
             public static final Integer PERFORMANCE_CPU_PERCENTILE = 98;
             public static final Integer PERFORMANCE_MEMORY_PERCENTILE = 100;
-
+            public static final Integer TWENTYFIVE_PERCENTILE = 25;
+            public static final Integer SEVENTYFIVE_PERCENTILE = 75;
+            public static final Integer FIFTY_PERCENTILE = 50;
         }
     }
 }

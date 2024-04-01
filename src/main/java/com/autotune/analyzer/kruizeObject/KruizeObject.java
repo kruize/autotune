@@ -16,10 +16,12 @@
 package com.autotune.analyzer.kruizeObject;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.TrialSettings;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.Utils;
 import com.google.gson.annotations.SerializedName;
@@ -27,6 +29,7 @@ import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Container class for the Autotune kubernetes kind objects.
@@ -34,6 +37,8 @@ import java.util.List;
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
 public final class KruizeObject {
+    // Constant field for data source
+    private static final String DataSource = "postgres";
     @SerializedName("version")
     private String apiVersion;
     private String experiment_id;
@@ -59,6 +64,7 @@ public final class KruizeObject {
     private ExperimentUseCaseType experiment_usecase_type;
     private ValidationOutputData validation_data;
     private List<K8sObject> kubernetes_objects;
+    private Map<String, Terms> terms;
 
 
     public KruizeObject(String experimentName,
@@ -103,6 +109,33 @@ public final class KruizeObject {
 
     public KruizeObject() {
 
+    }
+
+    /***
+     * Sets default terms for a KruizeObject.
+     * This method initializes a map with predefined terms like "SHORT_TERM", "MEDIUM_TERM", and "LONG_TERM".
+     * Each term is defined by a Terms object containing: Name of the term (e.g., "SHORT_TERM"), Duration (in days) to
+        be considered under that term, Threshold for the duration.
+     * Note: Currently, specific term names like "daily", "weekly", and "fortnightly" are not defined.
+     * This method also requires implementing CustomResourceDefinition yaml for managing terms. This
+        functionality is not currently included.
+     @param terms A map to store the default terms with term name as the key and Terms object as the value.
+     @param kruizeObject The KruizeObject for which the default terms are being set.
+     */
+    public static void setDefaultTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
+        // TODO: define term names like daily, weekly, fortnightly etc
+        // TODO: add CRD for terms
+        terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
+                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD, 4, 0.25));
+        terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD, 7, 1));
+        terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants
+                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD, 15, 1));
+
+        kruizeObject.setTerms(terms);
     }
 
     public String getExperimentName() {
@@ -201,7 +234,6 @@ public final class KruizeObject {
         this.experiment_usecase_type = experiment_usecase_type;
     }
 
-
     public ValidationOutputData getValidation_data() {
         return validation_data;
     }
@@ -246,9 +278,21 @@ public final class KruizeObject {
         this.namespace = namespace;
     }
 
+    public Map<String, Terms> getTerms() {
+        return terms;
+    }
+
+    public void setTerms(Map<String, Terms> terms) {
+        this.terms = terms;
+    }
+
+    public String getDataSource() {
+        return DataSource;
+    }
+
     @Override
     public String toString() {
-        // Creating a temparory cluster name as we allow null for cluster name now
+        // Creating a temporary cluster name as we allow null for cluster name now
         // Please change it to use `clusterName` variable itself if there is a null check already in place for that
         String tmpClusterName = "";
         if (clusterName != null)

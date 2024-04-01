@@ -68,7 +68,7 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file)
+            response = update_results(update_results_json_file, False)
 
             data = response.json()
             print("message = ", data['message'])
@@ -193,7 +193,7 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file)
+            response = update_results(update_results_json_file, False)
 
             data = response.json()
             print("message = ", data['message'])
@@ -258,13 +258,15 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
 @pytest.mark.negative
 def test_update_recommendations_without_experiment_name_end_time(cluster_type):
     '''
-        try to update recommendation without experiment name and end time and get 400 status with UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE
+        try to update recommendation without experiment name and end time and get 400 status with
+        UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE and UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE
     '''
     form_kruize_url(cluster_type)
     response = update_recommendations(None, None, None)
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    assert data['message'] == UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE
+    assert data['message'] == UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE + ", " + \
+           UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE
 
 
 @pytest.mark.negative
@@ -291,7 +293,7 @@ def test_update_recommendations_with_invalid_date_format_end_time(cluster_type):
     response = update_recommendations(experiment_name, None, end_time)
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    assert data['message'] == UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT % (end_time)
+    assert data['message'] == UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT % end_time
 
 
 @pytest.mark.negative
