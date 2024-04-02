@@ -40,6 +40,7 @@ function local_monitoring_tests() {
 	err_exit "ERROR: python3 not installed"
 
 	target="crc"
+	perf_profile_json="${LOCAL_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
 
 	local_monitoring_tests=("test_e2e" "sanity" "extended" "negative")
 
@@ -65,6 +66,8 @@ function local_monitoring_tests() {
 
 		sleep 60
 
+    # create performance profile
+    create_performance_profile ${perf_profile_json}
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi
