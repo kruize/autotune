@@ -118,7 +118,7 @@ public class DataSourceCollection {
                 String name = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_NAME);
                 // check the DB if the datasource already exists
 //                try {
-                    DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
+//                    DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
 //                    if (null != dataSourceInfo) {
 //                        LOGGER.error("Datasource: {} already exists!", name);
 //                        continue;
