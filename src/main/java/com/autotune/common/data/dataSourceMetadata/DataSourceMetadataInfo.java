@@ -33,6 +33,12 @@ public class DataSourceMetadataInfo {
         }
         this.dataSourceHashMap = dataSourceHashMap;
     }
+    public DataSource getDataSourceObject(String dataSourceName) {
+        if (null != dataSourceHashMap && dataSourceHashMap.containsKey(dataSourceName)) {
+            return dataSourceHashMap.get(dataSourceName);
+        }
+        return null;
+    }
 
     @Override
     public String toString() {

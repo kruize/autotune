@@ -38,6 +38,12 @@ public class DataSource {
         this.clusterHashMap = clusterHashMap;
     }
 
+    public DataSourceCluster getDataSourceClusterObject(String clusterName) {
+        if (null != clusterHashMap && clusterHashMap.containsKey(clusterName)) {
+            return clusterHashMap.get(clusterName);
+        }
+        return null;
+    }
 
     @Override
     public String toString() {

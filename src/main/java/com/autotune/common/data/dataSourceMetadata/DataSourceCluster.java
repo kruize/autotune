@@ -38,6 +38,13 @@ public class DataSourceCluster {
         this.namespaceHashMap = namespaceHashMap;
     }
 
+    public DataSourceNamespace getDataSourceNamespaceObject(String namespace) {
+        if  (null != namespaceHashMap && namespaceHashMap.containsKey(namespace)) {
+            return namespaceHashMap.get(namespace);
+        }
+        return null;
+    }
+
     @Override
     public String toString() {
         return "DataSourceCluster{" +

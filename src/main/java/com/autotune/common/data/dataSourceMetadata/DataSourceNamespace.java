@@ -38,6 +38,14 @@ public class DataSourceNamespace {
         this.workloadHashMap = workloadHashMap;
     }
 
+    public DataSourceWorkload getDataSourceWorkloadObject(String workloadName) {
+        if (null != workloadHashMap && workloadHashMap.containsKey(workloadName)) {
+            return workloadHashMap.get(workloadName);
+        }
+
+        return null;
+    }
+
     @Override
     public String toString() {
         return "DataSourceNamespace{" +
