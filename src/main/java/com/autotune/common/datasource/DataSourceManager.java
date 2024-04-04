@@ -1,6 +1,7 @@
 package com.autotune.common.datasource;
 
 import com.autotune.common.exceptions.datasource.DataSourceDoesNotExist;
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,15 +44,16 @@ public class DataSourceManager {
      * @return DataSourceMetadataInfo containing details about the data source, or null if not found.
      * @throws DataSourceDoesNotExist Thrown when the provided data source information is null.
      */
-    public void getMetadataFromDataSource(DataSourceInfo dataSource) {
+    public DataSourceMetadataInfo getMetadataFromDataSource(DataSourceInfo dataSource) {
         try {
             if (null == dataSource) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSource);
+            return dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSource);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
+        return null;
     }
 
 }
