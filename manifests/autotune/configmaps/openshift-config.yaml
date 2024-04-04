@@ -20,7 +20,7 @@ data:
           "provider": "prometheus",
           "serviceName": "",
           "namespace": "",
-          "url": "http://prometheus-k8s-openshift-monitoring.apps.bm.example.com/"
+          "url": "https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9091"
         }
       ]
     }
