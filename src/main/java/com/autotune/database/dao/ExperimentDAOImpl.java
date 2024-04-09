@@ -1,6 +1,8 @@
 package com.autotune.database.dao;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -28,10 +30,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
@@ -542,6 +541,66 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to load experiment {} due to {}", experimentName, e.getMessage());
             throw new Exception("Error while loading existing experiment from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadExpName) {
+                MetricsConfig.timerLoadExpName = MetricsConfig.timerBLoadExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
+            }
+
+        }
+        return entries;
+    }
+
+    /**
+     * @param clusterName
+     * @param kubernetesAPIObject
+     * @return list of experiments from the DB matching the input params
+     */
+    @Override
+    public List<KruizeExperimentEntry> loadExperimentFromDBByInputJSON(StringBuilder clusterName, KubernetesAPIObject kubernetesAPIObject) throws Exception {
+        //todo load only experimentStatus=inprogress , playback may not require completed experiments
+        List<KruizeExperimentEntry> entries;
+        String statusValue = "failure";
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            String sqlQuery = SELECT_FROM_EXPERIMENTS_BY_INPUT_JSON;
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("clusterName", clusterName);
+
+            String kubernetesObjectFilter = "AND EXISTS (" +
+                    "    SELECT * FROM jsonb_array_elements(extended_data->'kubernetes_objects') AS kubernetes_object" +
+                    "    WHERE kubernetes_object->>'name' = :name" +
+                    "    AND kubernetes_object->>'namespace' = :namespace" +
+                    "    AND kubernetes_object->>'type' = :type";
+            sqlQuery += kubernetesObjectFilter;
+
+            parameters.put("name", kubernetesAPIObject.getName());
+            parameters.put("namespace", kubernetesAPIObject.getNamespace());
+            parameters.put("type", kubernetesAPIObject.getType());
+            // Add container filters for the current Kubernetes object, assuming there will be only one container
+            ContainerAPIObject containerAPIObject = kubernetesAPIObject.getContainerAPIObjects().get(0);
+            String containerFilter = " AND EXISTS (" +
+                    "    SELECT * FROM jsonb_array_elements(kubernetes_object->'containers') AS container" +
+                    "    WHERE container->>'container_name' = :containerName" +
+                    "    AND container->>'container_image_name' = :containerImageName" +
+                    ")";
+            sqlQuery += containerFilter;
+
+            parameters.put("containerName", containerAPIObject.getContainer_name());
+            parameters.put("containerImageName", containerAPIObject.getContainer_image_name());
+
+            sqlQuery += ")";
+            LOGGER.info("Query formed : {}", sqlQuery);
+            Query<KruizeExperimentEntry> query = session.createNativeQuery(sqlQuery, KruizeExperimentEntry.class);
+            LOGGER.info("query: {}",query);
+            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+                query.setParameter(entry.getKey(), entry.getValue());
+            }
+            entries = query.list();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Error fetching experiment data: {}", e.getMessage());
+            throw new Exception("Error while fetching experiment data from database: " + e.getMessage());
         } finally {
             if (null != timerLoadExpName) {
                 MetricsConfig.timerLoadExpName = MetricsConfig.timerBLoadExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());

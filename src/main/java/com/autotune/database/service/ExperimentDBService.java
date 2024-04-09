@@ -21,10 +21,7 @@ import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
-import com.autotune.analyzer.serviceObjects.Converters;
-import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
-import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
-import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
+import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -300,6 +297,25 @@ public class ExperimentDBService {
         }
     }
 
+    public void loadExperimentFromDBByInputJSON(Map<String, KruizeObject> mKruizeExperimentMap, StringBuilder clusterName, List<KubernetesAPIObject> kubernetesAPIObjectList) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        // assuming there will be only one Kubernetes object
+        KubernetesAPIObject kubernetesAPIObject = kubernetesAPIObjectList.get(0);
+        List<KruizeExperimentEntry> entries = experimentDAO.loadExperimentFromDBByInputJSON(clusterName, kubernetesAPIObject);
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+            if (!createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    }
+                }
+                experimentInterface.addExperimentToLocalStorage(mKruizeExperimentMap, kruizeExpList);
+            }
+        }
+    }
 
     public void loadExperimentAndResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
 
