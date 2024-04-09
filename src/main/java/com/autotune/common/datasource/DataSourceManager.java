@@ -13,6 +13,7 @@ import org.slf4j.LoggerFactory;
  * Currently Supported Implementations:
  *  - importMetadataFromDataSource
  *  - getMetadataFromDataSource
+ *  TODO - Implement update and delete functionalities
  */
 public class DataSourceManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceManager.class);
@@ -53,32 +54,4 @@ public class DataSourceManager {
         }
     }
 
-    /*
-    TODO - Implement update and delete functionalities
-
-    public DataSourceMetadataInfo updateMetadataFromDataSource(DataSourceInfo dataSource) {
-
-        try {
-            if (null == dataSource) {
-                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
-            }
-            return dataSourceMetadataOperator.updateDataSourceMetadata(dataSource);
-        } catch (DataSourceNotExist e) {
-            LOGGER.error(e.getMessage());
-        }
-        return null;
-    }
-    public void deleteMetadataFromDataSource(DataSourceInfo dataSource) {
-
-        try {
-            if (null != dataSource) {
-                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
-            }
-            dataSourceMetadataOperator.deleteDataSourceMetadata(dataSource);
-        } catch (DataSourceNotExist e) {
-            LOGGER.error(e.getMessage());
-        }
-    }
-
-     */
 }

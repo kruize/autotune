@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
  *
  *  TODO -
  *  object is currently stored in memory going forward need to store cluster metadata in Kruize DB
+ *  Implement methods to support update and delete operations for periodic update of DataSourceMetadataInfo
  */
 public class DataSourceMetadataOperator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceMetadataOperator.class);
@@ -24,15 +25,4 @@ public class DataSourceMetadataOperator {
         //TODO - Implementation
     }
 
-    /*
-    TODO - Implement methods to support update and delete operations for periodic update of DataSourceMetadataInfo
-    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSource) {
-
-    }
-
-    public void deleteDataSourceMetadata(DataSourceInfo dataSource) {
-
-    }
-
-     */
 }
