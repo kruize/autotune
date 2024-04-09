@@ -131,13 +131,13 @@ public class ListExperiments extends HttpServlet {
                     // Check if JSON input is provided in the request body and validate it
                     if (!requestBody.isEmpty()) {
                         isJSONValid = validateInputJSON(requestBody);
-                        // parse the requestBody JSON into corresponding classes
-                        parseInputJSON(requestBody, clusterName, kubernetesAPIObjectList);
                     }
                     if (isJSONValid) {
                         try {
                             // Fetch experiments data based on request body input, if it's present
                             if (!requestBody.isEmpty()) {
+                                // parse the requestBody JSON into corresponding classes
+                                parseInputJSON(requestBody, clusterName, kubernetesAPIObjectList);
                                 try {
                                     new ExperimentDBService().loadExperimentFromDBByInputJSON(mKruizeExperimentMap, clusterName, kubernetesAPIObjectList);
                                 } catch (Exception e) {
@@ -146,17 +146,18 @@ public class ListExperiments extends HttpServlet {
                             } else {
                                 // Fetch experiments data from the DB and check if the requested experiment exists
                                 loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
-                                // Check if experiment exists
-                                if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
-                                    error = true;
-                                    sendErrorResponse(
-                                            response,
-                                            new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
-                                            HttpServletResponse.SC_BAD_REQUEST,
-                                            String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
-                                    );
-                                }
-                                if (!error) {
+                            }
+                            // Check if experiment exists
+                            if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
+                                error = true;
+                                sendErrorResponse(
+                                        response,
+                                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
+                                        HttpServletResponse.SC_BAD_REQUEST,
+                                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
+                                );
+                            }
+                            if (!error) {
                                     // create Gson Object
                                     Gson gsonObj = createGsonObject();
 
@@ -169,7 +170,6 @@ public class ListExperiments extends HttpServlet {
                                     response.getWriter().close();
                                     statusValue = "success";
                                 }
-                            }
                         } catch (Exception e) {
                             LOGGER.error("Exception: " + e.getMessage());
                             e.printStackTrace();
@@ -212,29 +212,29 @@ public class ListExperiments extends HttpServlet {
         JsonObject jsonObject = new Gson().fromJson(requestBody, JsonObject.class);
 
         // Extract cluster name
-        clusterName.append(jsonObject.get("cluster_name").getAsString());
+        clusterName.append(jsonObject.get(KruizeConstants.JSONKeys.CLUSTER_NAME).getAsString());
 
         // Extract Kubernetes objects
-        JsonArray kubernetesObjectsArray = jsonObject.getAsJsonArray("kubernetes_objects");
+        JsonArray kubernetesObjectsArray = jsonObject.getAsJsonArray(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
         for (JsonElement element : kubernetesObjectsArray) {
             JsonObject kubernetesObjectJson = element.getAsJsonObject();
-            String type = kubernetesObjectJson.get("type").getAsString();
-            String name = kubernetesObjectJson.get("name").getAsString();
-            String namespace = kubernetesObjectJson.get("namespace").getAsString();
+            String type = kubernetesObjectJson.get(KruizeConstants.JSONKeys.TYPE).getAsString();
+            String name = kubernetesObjectJson.get(KruizeConstants.JSONKeys.NAME).getAsString();
+            String namespace = kubernetesObjectJson.get(KruizeConstants.JSONKeys.NAMESPACE).getAsString();
             List<ContainerAPIObject> containerAPIObjects = extractContainersFromJson(kubernetesObjectJson);
-            KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject(type, name, namespace);
+            KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject(name, type, namespace);
             kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
             kubernetesAPIObjectList.add(kubernetesAPIObject);
         }
     }
 
     public List<ContainerAPIObject> extractContainersFromJson(JsonObject jsonObject) {
-        JsonArray containersArray = jsonObject.getAsJsonArray("containers");
+        JsonArray containersArray = jsonObject.getAsJsonArray(KruizeConstants.JSONKeys.CONTAINERS);
         List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
         for (JsonElement element : containersArray) {
             JsonObject containerJson = element.getAsJsonObject();
-            String containerName = containerJson.get("container_name").getAsString();
-            String containerImageName = containerJson.get("container_image_name").getAsString();
+            String containerName = containerJson.get(KruizeConstants.JSONKeys.CONTAINER_NAME).getAsString();
+            String containerImageName = containerJson.get(KruizeConstants.JSONKeys.CONTAINER_IMAGE_NAME).getAsString();
             ContainerAPIObject containerAPIObject = new ContainerAPIObject(containerName, containerImageName, null, null);
             containerAPIObjects.add(containerAPIObject);
         }

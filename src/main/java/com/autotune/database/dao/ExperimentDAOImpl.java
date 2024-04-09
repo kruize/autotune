@@ -563,40 +563,18 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         String statusValue = "failure";
         Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            String sqlQuery = SELECT_FROM_EXPERIMENTS_BY_INPUT_JSON;
-            Map<String, Object> parameters = new HashMap<>();
-            parameters.put("clusterName", clusterName);
-
-            String kubernetesObjectFilter = "AND EXISTS (" +
-                    "    SELECT * FROM jsonb_array_elements(extended_data->'kubernetes_objects') AS kubernetes_object" +
-                    "    WHERE kubernetes_object->>'name' = :name" +
-                    "    AND kubernetes_object->>'namespace' = :namespace" +
-                    "    AND kubernetes_object->>'type' = :type";
-            sqlQuery += kubernetesObjectFilter;
-
-            parameters.put("name", kubernetesAPIObject.getName());
-            parameters.put("namespace", kubernetesAPIObject.getNamespace());
-            parameters.put("type", kubernetesAPIObject.getType());
-            // Add container filters for the current Kubernetes object, assuming there will be only one container
+            // assuming there will be only one container
             ContainerAPIObject containerAPIObject = kubernetesAPIObject.getContainerAPIObjects().get(0);
-            String containerFilter = " AND EXISTS (" +
-                    "    SELECT * FROM jsonb_array_elements(kubernetes_object->'containers') AS container" +
-                    "    WHERE container->>'container_name' = :containerName" +
-                    "    AND container->>'container_image_name' = :containerImageName" +
-                    ")";
-            sqlQuery += containerFilter;
+            // Set parameters for KubernetesObject and Container
+            Query<KruizeExperimentEntry> query = session.createNativeQuery(SELECT_FROM_EXPERIMENTS_BY_INPUT_JSON, KruizeExperimentEntry.class);
+            query.setParameter(CLUSTER_NAME, clusterName.toString());
+            query.setParameter(KruizeConstants.JSONKeys.NAME, kubernetesAPIObject.getName());
+            query.setParameter(KruizeConstants.JSONKeys.NAMESPACE, kubernetesAPIObject.getNamespace());
+            query.setParameter(KruizeConstants.JSONKeys.TYPE, kubernetesAPIObject.getType());
+            query.setParameter(KruizeConstants.JSONKeys.CONTAINER_NAME, containerAPIObject.getContainer_name());
+            query.setParameter(KruizeConstants.JSONKeys.CONTAINER_IMAGE_NAME, containerAPIObject.getContainer_image_name());
 
-            parameters.put("containerName", containerAPIObject.getContainer_name());
-            parameters.put("containerImageName", containerAPIObject.getContainer_image_name());
-
-            sqlQuery += ")";
-            LOGGER.info("Query formed : {}", sqlQuery);
-            Query<KruizeExperimentEntry> query = session.createNativeQuery(sqlQuery, KruizeExperimentEntry.class);
-            LOGGER.info("query: {}",query);
-            for (Map.Entry<String, Object> entry : parameters.entrySet()) {
-                query.setParameter(entry.getKey(), entry.getValue());
-            }
-            entries = query.list();
+            entries = query.getResultList();
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Error fetching experiment data: {}", e.getMessage());
