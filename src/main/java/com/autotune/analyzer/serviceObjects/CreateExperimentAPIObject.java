@@ -19,6 +19,7 @@ import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
@@ -46,7 +47,7 @@ public class CreateExperimentAPIObject extends BaseSO {
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
     private RecommendationSettings recommendationSettings;
     @SerializedName(KruizeConstants.JSONKeys.DATASOURCE) //TODO: to be used in future
-    private String datasource;
+    private DataSourceInfo datasource;
     private AnalyzerConstants.ExperimentStatus status;
     private String experiment_id;   // this id is UUID and getting set at createExperiment API
     private ValidationOutputData validationData;  // This object indicates if this API object is valid or invalid
@@ -139,11 +140,11 @@ public class CreateExperimentAPIObject extends BaseSO {
         this.validationData = validationData;
     }
 
-    public String getDatasource() {
+    public DataSourceInfo getDatasource() {
         return datasource;
     }
 
-    public void setDatasource(String datasource) {
+    public void setDatasource(DataSourceInfo datasource) {
         this.datasource = datasource;
     }
 

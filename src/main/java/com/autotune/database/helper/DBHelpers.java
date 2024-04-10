@@ -269,7 +269,6 @@ public class DBHelpers {
                     kruizeExperimentEntry.setVersion(apiObject.getApiVersion());
                     kruizeExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
                     kruizeExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-                    kruizeExperimentEntry.setDatasource(apiObject.getDatasource());
                     // get metadata from the DB based on the datasource
                     if (apiObject.getDatasource() != null) {
                         KruizeMetadata kruizeMetadata = getMetadata(apiObject.getDatasource());
@@ -283,6 +282,14 @@ public class DBHelpers {
                                         new Gson().toJson(apiObject)
                                 )
                         );
+                        // set datasource object
+                        if (apiObject.getDatasource() != null) {
+                            kruizeExperimentEntry.setDatasource(
+                                    objectMapper.readTree(
+                                            new Gson().toJson(apiObject.getDatasource())
+                                    )
+                            );
+                        }
                     } catch (JsonProcessingException e) {
                         throw new Exception("Error while creating Extended data due to : " + e.getMessage());
                     }
@@ -465,10 +472,12 @@ public class DBHelpers {
                     try {
                         JsonNode extended_data = entry.getExtended_data();
                         String extended_data_rawJson = extended_data.toString();
+                        JsonNode datasourceJson = entry.getDatasource();
+                        DataSourceInfo datasource = new Gson().fromJson(datasourceJson.toString(), DataSourceInfo.class);
                         CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
                         apiObj.setExperiment_id(entry.getExperiment_id());
                         apiObj.setStatus(entry.getStatus());
-                        apiObj.setDatasource(entry.getDatasource());
+                        apiObj.setDatasource(datasource);
                         createExperimentAPIObjects.add(apiObj);
                     } catch (Exception e) {
                         LOGGER.error("Error in converting to apiObj from db object due to : {}", e.getMessage());
@@ -820,6 +829,8 @@ public class DBHelpers {
             }
 
             public static List<KruizeMetadata> convertDataSourceDetailsToMetadataObj(DataSourceDetailsInfo dataSourceDetailsInfo) {
+                if (dataSourceDetailsInfo == null)
+                    return null;
                 List<KruizeMetadata> kruizeMetadataList = new ArrayList<>();
                 try {
 
@@ -953,12 +964,12 @@ public class DBHelpers {
         return dataSourceContainer;
     }
 
-    private static KruizeMetadata getMetadata(String datasource) {
+    private static KruizeMetadata getMetadata(DataSourceInfo datasource) {
         DataSourceDetailsOperator dataSourceDetailsOperator = DataSourceDetailsOperator.getInstance();
         HashMap<String, DataSourceInfo> dataSources = DataSourceCollection.getInstance().getDataSourcesCollection();
-        DataSourceDetailsInfo dataSourceDetailsInfo = dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSources.get(datasource));
+        DataSourceDetailsInfo dataSourceDetailsInfo = dataSourceDetailsOperator.getDataSourceDetailsInfo(dataSources.get(datasource.getName()));
         List<KruizeMetadata> kruizeMetadataList = Converters.KruizeObjectConverters.convertDataSourceDetailsToMetadataObj(dataSourceDetailsInfo);
-        if (kruizeMetadataList.isEmpty())
+        if (null == kruizeMetadataList || kruizeMetadataList.isEmpty())
             return null;
         else
             return kruizeMetadataList.get(0);
