@@ -1,0 +1,86 @@
+[
+    {
+        "name": "valid_without_serviceName",
+        "provider": "prometheus",
+        "serviceName": "",
+        "namespace": "",
+        "url": "http://prometheus-k8s.monitoring.svc.cluster.local:9091"
+    },
+    {
+        "name": "valid_without_serviceName_with_namespace",
+        "provider": "prometheus",
+        "serviceName": "",
+        "namespace": "monitoring",
+        "url": "http://prometheus-k8s.monitoring.svc.cluster.local:9091"
+    },
+    {
+        "name": "valid_without_url",
+        "provider": "prometheus",
+        "serviceName": "prometheus-k8s",
+        "namespace": "monitoring",
+        "url": ""
+    },
+    {
+        "name": "invalid_unsupported_provider",
+        "provider": "abc",
+        "serviceName": "prometheus-k8s",
+        "namespace": "monitoring",
+        "url": ""
+    },
+    {
+        "name": "valid_datasource_repeat",
+        "provider": "prometheus",
+        "serviceName": "prometheus-k8s",
+        "namespace": "monitoring",
+        "url": ""
+    },
+    {
+        "name": "valid_datasource_repeat",
+        "provider": "prometheus",
+        "serviceName": "prometheus-k8s",
+        "namespace": "monitoring",
+        "url": ""
+    },
+    {
+        "name": "invalid_both_url_servicename",
+        "provider": "prometheus",
+        "serviceName": "prometheus-k8s",
+        "namespace": "monitoring",
+        "url": "http://prometheus-k8s.monitoring.svc.cluster.local:9091"
+    },
+    {
+        "name": "not_reachable_datasource",
+        "provider": "prometheus",
+        "serviceName": "",
+        "namespace": "",
+        "url": "http://thisisnotarealdomain123.com"
+    },
+    {
+        "name": "invalid_missing_provider",
+        "provider": "",
+        "serviceName": "prometheus-k8s",
+        "namespace": "monitoring",
+        "url": ""
+    },
+    {
+        "name": "invalid_missing_url_and_servicename",
+        "provider": "prometheus",
+        "serviceName": "",
+        "namespace": "",
+        "url": ""
+    },
+    {
+        "name": "invalid_missing_namespace",
+        "provider": "prometheus",
+        "serviceName": "prometheus-k8s",
+        "namespace": "",
+        "url": ""
+    },
+    {
+        "name": "",
+        "provider": "prometheus",
+        "serviceName": "prometheus-k8s",
+        "namespace": "",
+        "url": ""
+    }
+]

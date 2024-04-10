@@ -1,0 +1,16 @@
+name,provider,serviceName,namespace,url,test_scenario,expected_outcome
+valid_without_serviceName,prometheus,null,null,http://prometheus-k8s.monitoring.svc.cluster.local:9091
+valid_without_serviceName_with_namespace,prometheus,null,monitoring,http://prometheus-k8s.monitoring.svc.cluster.local:9091
+valid_without_url,prometheus,prometheus-k8s,monitoring,null
+invalid_unsupported_provider,abc,prometheus-k8s,monitoring,null
+valid_datasource_repeat,prometheus,prometheus-k8s,monitoring,null
+valid_datasource_repeat,prometheus,prometheus-k8s,monitoring,null
+invalid_both_url_servicename,prometheus,prometheus-k8s,monitoring,http://prometheus-k8s.monitoring.svc.cluster.local:9091
+not_reachable_datasource,prometheus,null,null,http://thisisnotarealdomain123.com
+invalid_missing_provider,null,prometheus-k8s,monitoring,null
+invalid_missing_url_and_servicename,prometheus,null,null,null
+invalid_missing_namespace,prometheus,prometheus-k8s,null,null
+null,prometheus,prometheus-k8s,null,null
+
+
+
