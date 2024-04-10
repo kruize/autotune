@@ -18,7 +18,7 @@ import sys, getopt
 import json
 import os
 import time
-sys.path.append("..")
+sys.path.append("../../")
 from helpers.kruize import *
 from helpers.utils import *
 from helpers.generate_rm_jsons import *

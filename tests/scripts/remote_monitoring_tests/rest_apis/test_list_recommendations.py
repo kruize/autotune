@@ -2,6 +2,8 @@ import datetime
 import json
 
 import pytest
+import sys
+sys.path.append("../../")
 from helpers.fixtures import *
 from helpers.generate_rm_jsons import *
 from helpers.kruize import *
