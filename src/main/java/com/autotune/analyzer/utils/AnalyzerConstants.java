@@ -83,7 +83,8 @@ public class AnalyzerConstants {
     public static final int GC_THRESHOLD_COUNT = 100;
     public static final String TARGET = "target/bin";
     public static final String MIGRATIONS = "migrations";
-    public static final String DDL = "kruize_experiments_ddl.sql";
+    public static final String ROS_DDL_SQL = "kruize_ros_ddl.sql";
+    public static final String KRUIZE_LOCAL_DDL_SQL = "kruize_local_ddl.sql";
 
 
     private AnalyzerConstants() {
