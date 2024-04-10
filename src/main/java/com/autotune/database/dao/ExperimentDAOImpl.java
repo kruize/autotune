@@ -6,10 +6,7 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
-import com.autotune.database.table.KruizeExperimentEntry;
-import com.autotune.database.table.KruizePerformanceProfileEntry;
-import com.autotune.database.table.KruizeRecommendationEntry;
-import com.autotune.database.table.KruizeResultsEntry;
+import com.autotune.database.table.*;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Timer;
@@ -388,6 +385,64 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+    /**
+     * @param kruizeDataSource 
+     * @return validationOutputData contains the status of the DB insert operation
+     */
+    @Override
+    public ValidationOutputData addDataSourceToDB(KruizeDataSource kruizeDataSource) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);        
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeDataSource);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save data source due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save data source due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * @param kruizeMetadata
+     * @return
+     */
+    @Override
+    public ValidationOutputData addMetadataToDB(KruizeMetadata kruizeMetadata) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeMetadata);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save metadata due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save metadata source due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        }
+        return validationOutputData;
+    }
+
 
     @Override
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
@@ -550,6 +605,120 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
         }
         return entries;
+    }
+
+    /**
+     * @param name
+     * @return single element list of datasource after fetching from the DB
+     * @throws Exception
+     */
+    @Override
+    public List<KruizeDataSource> loadDataSourceByName(String name) throws Exception {
+        List<KruizeDataSource> kruizeDataSourceList;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            kruizeDataSourceList = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_DATASOURCE_BY_NAME, KruizeDataSource.class)
+                    .setParameter("name", name).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load datasource: {} : {}", name, e.getMessage());
+            throw new Exception("Error while loading existing datasource from database : " + e.getMessage());
+        }
+        return kruizeDataSourceList;
+    }
+    /**
+     * @return list of datasources after fetching from the DB
+     */
+    @Override
+    public List<KruizeDataSource> loadAllDataSources() throws Exception {
+        List<KruizeDataSource> entries;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(SELECT_FROM_DATASOURCE, KruizeDataSource.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load datasource: {}", e.getMessage());
+            throw new Exception("Error while loading existing datasources from database: " + e.getMessage());
+        }
+        return entries;
+    }
+
+    /**
+     * @param clusterGroupName
+     * @return
+     */
+    @Override
+    public List<KruizeMetadata> loadMetadataByName(String clusterGroupName) throws Exception {
+        List<KruizeMetadata> kruizeMetadataList;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME, KruizeMetadata.class)
+                    .setParameter("clusterGroupName", clusterGroupName).list();
+        } catch (Exception e) {
+            LOGGER.error("Unable to load metadata with clusterGroupName: {} : {}", clusterGroupName, e.getMessage());
+            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
+        }
+        return kruizeMetadataList;
+    }
+
+    /**
+     * Retrieves a list of KruizeMetadata objects based on the specified cluster group name and cluster name.
+     *
+     * @param clusterGroupName The name of the cluster group.
+     * @param clusterName The name of the cluster.
+     * @return A list of KruizeMetadata objects associated with the provided cluster group and cluster names.
+     * @throws Exception If there is an error while loading metadata from the database.
+     */
+    @Override
+    public List<KruizeMetadata> loadMetadataByClusterName(String clusterGroupName, String clusterName) throws Exception {
+        List<KruizeMetadata> kruizeMetadataList;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<KruizeMetadata> kruizeMetadataQuery = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME_AND_CLUSTER_NAME, KruizeMetadata.class)
+                    .setParameter("cluster_group_name", clusterGroupName)
+                    .setParameter("cluster_name", clusterName);
+
+            kruizeMetadataList = kruizeMetadataQuery.list();
+        } catch (Exception e) {
+            LOGGER.error("Unable to load metadata with clusterGroupName: {} and clusterName : {} : {}", clusterGroupName, clusterName, e.getMessage());
+            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
+        }
+        return kruizeMetadataList;
+    }
+
+    /**
+     * Retrieves a list of KruizeMetadata objects based on the specified
+     * cluster group name, cluster name and namespace.
+     *
+     * @param clusterGroupName The name of the cluster group.
+     * @param clusterName The name of the cluster.
+     * @param namespace namespace
+     * @return A list of KruizeMetadata objects associated with the provided cluster group, cluster name and namespaces.
+     * @throws Exception If there is an error while loading metadata from the database.
+     */
+    public List<KruizeMetadata> loadMetadataByNamespace(String clusterGroupName, String clusterName, String namespace) throws Exception {
+        List<KruizeMetadata> kruizeMetadataList;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<KruizeMetadata> kruizeMetadataQuery = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME_CLUSTER_NAME_AND_NAMESPACE, KruizeMetadata.class)
+                    .setParameter("cluster_group_name", clusterGroupName)
+                    .setParameter("cluster_name", clusterName)
+                    .setParameter("namespace",namespace);
+
+            kruizeMetadataList = kruizeMetadataQuery.list();
+        } catch (Exception e) {
+            LOGGER.error("Unable to load metadata with clusterGroupName: {}, clusterName : {} and namespace : {} : {}", clusterGroupName, clusterName, namespace, e.getMessage());
+            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
+        }
+        return kruizeMetadataList;
+    }
+
+    /**
+     * @return
+     */
+    @Override
+    public List<KruizeMetadata> loadMetadata() throws Exception {
+        List<KruizeMetadata> kruizeMetadataList;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA, KruizeMetadata.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Unable to load metadata : {}", e.getMessage());
+            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
+        }
+        return kruizeMetadataList;
     }
 
     @Override

@@ -65,6 +65,8 @@ public final class KruizeObject {
     private ValidationOutputData validation_data;
     private List<K8sObject> kubernetes_objects;
     private Map<String, Terms> terms;
+    private String dataSource;
+
 
 
     public KruizeObject(String experimentName,
@@ -287,7 +289,11 @@ public final class KruizeObject {
     }
 
     public String getDataSource() {
-        return DataSource;
+        return dataSource;
+    }
+
+    public void setDataSource(String dataSource) {
+        this.dataSource = dataSource;
     }
 
     @Override

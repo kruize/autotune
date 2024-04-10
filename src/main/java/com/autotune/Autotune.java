@@ -78,6 +78,7 @@ public class Autotune {
         // Create a connector (e.g., HTTP)
         ServerConnector connector = new ServerConnector(server);
         connector.setPort(KRUIZE_SERVER_PORT);
+        connector.setIdleTimeout(60000*10);
         // Set the connector to the server
         server.addConnector(connector);
 

@@ -34,7 +34,10 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import javax.net.ssl.SSLContext;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -59,14 +62,29 @@ public class GenericRestApiClient {
 
     /**
      * Initializes a new instance just by passing baseURL which does not need any authentication.
+     *
      * @param baseURL
      */
     public GenericRestApiClient(String baseURL) {
         this.baseURL = baseURL;
+        String tokenFilePath = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+        String token = null;
+        try {
+            // Read the token from the file
+            BufferedReader reader = new BufferedReader(new FileReader(tokenFilePath));
+            token = reader.readLine();
+            reader.close();
+            this.bearerAccessToken = new BearerAccessToken(token);
+            this.setAuthHeaderString(this.bearerAccessToken.getAuthHeader());
+            // Print the service account token
+        } catch (Exception e) {
+            LOGGER.error("Error reading service account token: " + e.getMessage());
+        }
     }
 
     /**
      * Use this constructor to initializes a new instance if RESTAPI need Basic authentication.
+     *
      * @param baseURL
      * @param basicAuthentication
      */
@@ -78,6 +96,7 @@ public class GenericRestApiClient {
 
     /**
      * Use this constructor to initializes a new instance if RESTAPI need Bearer authentication.
+     *
      * @param baseURL
      * @param bearerAccessToken
      */
@@ -89,6 +108,7 @@ public class GenericRestApiClient {
 
     /**
      * Use this constructor to initializes a new instance if RESTAPI need APIKeys authentication.
+     *
      * @param baseURL
      * @param apiKeysAuthentication
      */
@@ -100,6 +120,7 @@ public class GenericRestApiClient {
 
     /**
      * Use this constructor to initializes a new instance if RESTAPI need OAuth2 authentication.
+     *
      * @param baseURL
      * @param oAuth2Config
      */
@@ -118,7 +139,8 @@ public class GenericRestApiClient {
 
     /**
      * This methode appends aueryString with baseURL and returns response in JSON using specified authentication.
-     * @param methodType    Http methods like GET,POST,PATCH etc
+     *
+     * @param methodType  Http methods like GET,POST,PATCH etc
      * @param queryString
      * @return Json object which contains API response.
      * @throws IOException
@@ -129,7 +151,7 @@ public class GenericRestApiClient {
         SSLContext sslContext = SSLContexts.custom().loadTrustMaterial((chain, authType) -> true).build();  //overriding the standard certificate verification process and trust all certificate chains regardless of their validity
         SSLConnectionSocketFactory sslConnectionSocketFactory =
                 new SSLConnectionSocketFactory(sslContext, new String[]
-                        {"TLSv1.2" }, null,
+                        {"TLSv1.2"}, null,
                         NoopHostnameVerifier.INSTANCE);
         try (CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build()) {
             HttpRequestBase httpRequestBase = null;
@@ -142,9 +164,9 @@ public class GenericRestApiClient {
             if (null != this.authHeaderString && !this.authHeaderString.isEmpty()) {
                 httpRequestBase.setHeader("Authorization", this.authHeaderString);
             }
-            LOGGER.debug("Executing request " + httpRequestBase.getRequestLine());
+            LOGGER.info("Executing request {} ", httpRequestBase.getRequestLine());
             jsonOutputInString = httpclient.execute(httpRequestBase, new StringResponseHandler());
-
+            LOGGER.info(jsonOutputInString);
         }
         return new JSONObject(jsonOutputInString);
     }

@@ -76,6 +76,10 @@ public class KruizeSupportedTypes
 
 	public static final Set<String> KUBERNETES_OBJECTS_SUPPORTED =
 			new HashSet<>(Arrays.asList("deployment", "pod", "container"));
+
+	public static final Set<String> DSMETADATA_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
+			"datasource", "cluster_name", "namespace", "verbose"
+	));
 	
   public static final Set<String> SUPPORTED_FORMATS =
 			new HashSet<>(Arrays.asList("cores", "m", "Bytes", "bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "kB", "KB", "MB", "GB", "TB", "PB", "EB", "K", "k", "M", "G", "T", "P", "E"));

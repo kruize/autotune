@@ -30,7 +30,7 @@ public class KruizeConstants {
     }
 
 
-    public static enum KRUIZE_RECOMMENDATION_API_VERSION {
+    public enum KRUIZE_RECOMMENDATION_API_VERSION {
         V1_0("1.0"),
         LATEST("1.0");
         private final String versionNumber;
@@ -131,6 +131,7 @@ public class KruizeConstants {
         public static final String NAME = "name";
         public static final String QUERY = "query";
         public static final String DATASOURCE = "datasource";
+        public static final String DATASOURCE_NAME = "datasource_name";
         public static final String CPU = "cpu";
         public static final String MEMORY = "memory";
         public static final String REQUESTS = "requests";
@@ -176,6 +177,10 @@ public class KruizeConstants {
         public static final String COUNT = "count";
         public static final String MEDIAN = "median";
         public static final String RANGE = "range";
+
+        // DataSource JSON keys
+        public static final String DATASOURCES = "datasources";
+
         // UI support JSON keys
         public static final String DATA = "data";
         public static final String NAMESPACES = "namespaces";
@@ -400,9 +405,148 @@ public class KruizeConstants {
             public static final String SUCCESS = "success";
             public static final String ERROR = "error";
         }
+
+        public static class DataSourceQueryMetricKeys {
+            private DataSourceQueryMetricKeys() {
+            }
+
+            public static final String NAMESPACE = "namespace";
+            public static final String WORKLOAD = "workload";
+            public static final String WORKLOAD_TYPE = "workload_type";
+            public static final String CONTAINER_NAME = "container";
+            public static final String CONTAINER_IMAGE_NAME = "image";
+        }
+
+        public static class DataSourceDetailsInfoConstants {
+            private DataSourceDetailsInfoConstants() {
+            }
+
+            public static final String version = "v1.0";
+            public static final String CLUSTER_NAME = "default";
+        }
+
+        public static class DataSourceDetailsErrorMsgs {
+            private DataSourceDetailsErrorMsgs() {
+            }
+
+            public static final String MISSING_DATASOURCE_DETAILS_CLUSTER_GROUP_NAME = "DataSourceDetails Cluster group name cannot be empty";
+            public static final String MISSING_DATASOURCE_DETAILS_WORKLOAD_MAP = "DataSourceDetails Workload data cannot be empty or null";
+            public static final String MISSING_DATASOURCE_DETAILS_CONTAINER_MAP = "DataSourceDetails Container data cannot be empty or null";
+            public static final String MISSING_DATASOURCE_DETAILS_INFO_OBJECT = "DataSourceDetailsInfo Object cannot be null";
+            public static final String MISSING_DATASOURCE_DETAILS_CLUSTER_GROUP_OBJECT = "DataSourceDetails DataSourceClusterGroup Object cannot be empty or null";
+            public static final String NAMESPACE_JSON_PARSING_ERROR = "Error parsing namespace JSON array: ";
+            public static final String WORKLOAD_JSON_PARSING_ERROR = "Error parsing workload JSON array: ";
+            public static final String CONTAINER_JSON_PARSING_ERROR = "Error parsing container JSON array: ";
+            public static final String DATASOURCE_DETAILS_INFO_CREATION_ERROR = "Error creating DataSourceDetailsInfo: ";
+            public static final String WORKLOAD_METADATA_UPDATE_ERROR = "Error updating DataSourceDetailsInfo with workload metadata: ";
+            public static final String CONTAINER_METADATA_UPDATE_ERROR = "Error updating DataSourceDetailsInfo with container metadata: ";
+            public static final String SET_CLUSTER_MAP_ERROR = "clusterHashMap is null, no clusters provided for cluster group: ";
+            public static final String SET_WORKLOAD_MAP_ERROR = "workloadHashMap is null, no workloads provided for namespace: ";
+            public static final String SET_CONTAINER_MAP_ERROR = "containerHashMap is null, no containers provided for workload: ";
+            public static final String NAMESPACE_MAP_NOT_POPULATED = "The namespaceMap is not populated, is either null or empty.";
+            public static final String NAMESPACE_WORKLOAD_MAP_NOT_POPULATED = "The namespaceWorkloadMap is not populated, is either null or empty.";
+            public static final String WORKLOAD_CONTAINER_MAP_NOT_POPULATED = "The workloadContainerMap is not populated, is either null or empty.";
+            public static final String INVALID_DATASOURCE_DETAILS_CLUSTER = "dataSourceCluster object is null";
+            public static final String INVALID_DATASOURCE_DETAILS_NAMESPACE = "dataSourceNamespace object is null";
+            public static final String INVALID_DATASOURCE_DETAILS_NAMESPACE_DATA = "namespaceHashMap is either null or empty";
+            public static final String DATASOURCE_DETAILS_INFO_NOT_AVAILABLE = "DataSourceDetailsInfo is null. Metadata is not populated.";
+            public static final String DATASOURCE_DETAILS_CLUSTER_GROUP_NOT_AVAILABLE = "DataSourceClusterGroup information is not available for the specified DataSource provider: ";
+            public static final String DATASOURCE_DETAILS_CLUSTER_NOT_AVAILABLE = "DataSourceCluster information is not available for the specified Cluster {} and DataSource provider {}";
+            public static final String DATASOURCE_DETAILS_NAMESPACE_NOT_AVAILABLE = "DataSourceNamespace information is not available for the specified Namespace {}, Cluster {} and DataSource provider {}";
+            public static final String SET_NAMESPACE_MAP_ERROR = "namespaceHashMap is null, no namespaces provided for cluster: ";
+        }
+
+        public static class DataSourceDetailsInfoJSONKeys {
+            private DataSourceDetailsInfoJSONKeys() {
+            }
+            public static final String CLUSTER_GROUPS = "cluster_groups";
+            public static final String CLUSTER_GROUP_NAME = "cluster_group_name";
+            public static final String CLUSTERS = "clusters";
+            public static final String CLUSTER_NAME = "cluster_name";
+            public static final String NAMESPACES = "namespaces";
+            public static final String NAMESPACE = "namespace";
+            public static final String WORKLOADS = "workloads";
+            public static final String WORKLOAD_NAME = "workload_name";
+            public static final String WORKLOAD_TYPE = "workload_type";
+            public static final String CONTAINERS = "containers";
+            public static final String CONTAINER_NAME = "container_name";
+            public static final String CONTAINER_IMAGE_NAME = "container_image_name";
+        }
+
         private DataSourceConstants() {
         }
     }
+
+//    public static class DataSourceConstants {
+//        public static final String DATASOURCE_NAME = "name";
+//        public static final String DATASOURCE_PROVIDER = "provider";
+//        public static final String DATASOURCE_SERVICE_NAME = "serviceName";
+//        public static final String DATASOURCE_SERVICE_NAMESPACE = "namespace";
+//        public static final String DATASOURCE_URL = "url";
+//        public static final String KRUIZE_DATASOURCE = "datasource";
+//        public static final String SERVICE_DNS = ".svc.cluster.local";
+//        public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";
+//        public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
+//
+//        public static class DataSourceInfoMsgs {
+//            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: ";
+//            public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: ";
+//            public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
+//            private DataSourceInfoMsgs() {
+//            }
+//        }
+//
+//        public static class DataSourceSuccessMsgs {
+//            public static final String DATASOURCE_ADDED = "Datasource added to the collection successfully.";
+//            public static final String DATASOURCE_FOUND = "Datasource found: ";
+//            public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
+//            private DataSourceSuccessMsgs() {
+//            }
+//        }
+//
+//        public static class DataSourceErrorMsgs {
+//            private DataSourceErrorMsgs() {
+//            }
+//
+//            public static final String MISSING_DATASOURCE_NAME = "Datasource name cannot be empty.";
+//            public static final String MISSING_DATASOURCE_PROVIDER = "Datasource provider cannot be empty.";
+//            public static final String MISSING_DATASOURCE_NAMESPACE = "Datasource namespace cannot be empty.";
+//            public static final String DATASOURCE_URL_SERVICENAME_BOTH_SET = "Datasource url and servicename both can not be set.";
+//            public static final String MISSING_DATASOURCE_SERVICENAME_AND_URL = "Datasource servicename and url both cannot be empty.";
+//            public static final String UNSUPPORTED_DATASOURCE_PROVIDER = "Datasource provider is invalid.";
+//            public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
+//            public static final String DATASOURCE_CONNECTION_FAILED = "Datasource connection refused or timed out.";
+//            public static final String DATASOURCE_ALREADY_EXIST = "Datasource with the name already exist.";
+//            public static final String DATASOURCE_NOT_EXIST = "Datasource with the name does not exist.";
+//            public static final String INVALID_DATASOURCE_URL = "Datasource url is not valid.";
+//            public static final String DATASOURCE_NOT_SUPPORTED = "Datasource is not supported: ";
+//            public static final String SERVICE_NOT_FOUND = "Can not find service with specified name.";
+//            public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
+//            public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
+//        }
+//
+//        public static class DataSourceQueryJSONKeys {
+//            private DataSourceQueryJSONKeys() {
+//            }
+//
+//            public static final String STATUS = "status";
+//            public static final String DATA = "data";
+//            public static final String RESULT = "result";
+//            public static final String METRIC = "metric";
+//            public static final String VALUE = "value";
+//
+//        }
+//
+//        public static class DataSourceQueryStatus {
+//            private DataSourceQueryStatus() {
+//            }
+//
+//            public static final String SUCCESS = "success";
+//            public static final String ERROR = "error";
+//        }
+//        private DataSourceConstants() {
+//        }
+//    }
 
     public static class ErrorMsgs {
         private ErrorMsgs() {

@@ -15,17 +15,17 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.LoggerFactory;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 /**
  * This DataSourceInfo object is used to store information about metric collectors like Prometheus, LogicMonitor, Dynatrace, Amazon Timestream etc
  * Example
- * "datasource": {
+ * "datasource_info": {
  *     "name": "prometheus-1",
  *     "provider": "prometheus",
  *     "serviceName": "prometheus-k8s",

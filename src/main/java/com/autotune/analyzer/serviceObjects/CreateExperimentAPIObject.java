@@ -45,6 +45,8 @@ public class CreateExperimentAPIObject extends BaseSO {
     private TrialSettings trialSettings;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_SETTINGS)
     private RecommendationSettings recommendationSettings;
+    @SerializedName(KruizeConstants.JSONKeys.DATASOURCE) //TODO: to be used in future
+    private String datasource;
     private AnalyzerConstants.ExperimentStatus status;
     private String experiment_id;   // this id is UUID and getting set at createExperiment API
     private ValidationOutputData validationData;  // This object indicates if this API object is valid or invalid
@@ -135,6 +137,14 @@ public class CreateExperimentAPIObject extends BaseSO {
 
     public void setValidationData(ValidationOutputData validationData) {
         this.validationData = validationData;
+    }
+
+    public String getDatasource() {
+        return datasource;
+    }
+
+    public void setDatasource(String datasource) {
+        this.datasource = datasource;
     }
 
     @Override
