@@ -18,20 +18,31 @@ import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Method;
+import java.net.URLEncoder;
 import java.sql.Timestamp;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -1291,17 +1302,164 @@ public class RecommendationEngine {
 
     private void getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject, String
             experimentName, Timestamp intervalStartTime, String dataSource) {
+        mainKruizeExperimentMAP.put(experimentName, kruizeObject);
         // get data from the DB in case of remote monitoring
         if (kruizeObject.getExperiment_usecase_type().isRemote_monitoring()) {
-            mainKruizeExperimentMAP.put(experimentName, kruizeObject);
             try {
                 new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
             } catch (Exception e) {
                 LOGGER.error("Failed to fetch the results from the DB: {}", e.getMessage());
             }
         } else if (kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
-            // TODO: get data from Thanos/other data sources in case of Local monitoring
+            // if the datasource is empty, set default to 'prometheus'
+            if (dataSource == null)
+                dataSource = AnalyzerConstants.PROMETHEUS_DATA_SOURCE;
+            // get data from the provided datasource in case of Local monitoring
+            getResultsFromDatasource(intervalStartTime, dataSource);
         }
+    }
 
+    private void getResultsFromDatasource(Timestamp intervalStartTime, String dataSource) {
+        try {
+            long interval_end_time_epoc = interval_end_time.getTime() / 1000 - (interval_end_time.getTimezoneOffset() * 60L);
+            long interval_start_time_epoc = intervalStartTime.getTime() / 1000 - (intervalStartTime.getTimezoneOffset() * 60L);
+
+            LOGGER.info("getting dataSourceInfo");
+            DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(dataSource);
+            LOGGER.info("dataSource : {}", dataSourceInfo);
+            // Get DataSource and connect
+            // Get MetricsProfile name and list of promQL to fetch
+            // Find LongTerm duration  keep Start , End and Step(measurement Duration)
+            // prepare <List>ExperimentResultData
+            // and call new ExperimentInitiator().generateAndAddRecommendations(kruizeObject, experimentResultDataList, interval_start_time, interval_end_time);    // TODO: experimentResultDataList not required
+            Map<AnalyzerConstants.MetricName, String> promQls = new HashMap<>();
+            promQls.put(AnalyzerConstants.MetricName.cpuUsage,
+                    "%s by(container, namespace)(%s_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\" }[%sm]))"
+            );
+            promQls.put(AnalyzerConstants.MetricName.cpuThrottle,
+                    "%s by(container,namespace) (rate(container_cpu_cfs_throttled_seconds_total{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\"}[%sm]))"
+            );
+            promQls.put(AnalyzerConstants.MetricName.cpuLimit,
+                    "%s by(container,namespace) (kube_pod_container_resource_limits{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='cpu', unit='core',namespace=\"%s\",container=\"%s\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase='Running'}))"
+            );
+            promQls.put(AnalyzerConstants.MetricName.cpuRequest,
+                    "%s by(container, namespace) (kube_pod_container_resource_requests{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='cpu', unit='core' ,namespace=\"%s\",container=\"%s\"} * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase='Running'}))"
+            );
+            promQls.put(AnalyzerConstants.MetricName.memoryUsage,
+                    "%s by(container, namespace) (%s_over_time(container_memory_working_set_bytes{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\" }[%sm]))"
+            );
+            promQls.put(AnalyzerConstants.MetricName.memoryRSS,
+                    "%s by(container, namespace) (%s_over_time(container_memory_rss{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\"}[%sm]))"
+            );
+            promQls.put(AnalyzerConstants.MetricName.memoryLimit,
+                    "%s by(container,namespace) (kube_pod_container_resource_limits{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='memory', unit='byte', namespace=\"%s\",container=\"%s\" } * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase='Running'}))"
+            );
+            promQls.put(AnalyzerConstants.MetricName.memoryRequest,
+                    "%s by(container,namespace) (kube_pod_container_resource_requests{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='memory', unit='byte',namespace=\"%s\",container=\"%s\"} * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase='Running'}))"
+            );
+            List<String> aggregationMethods = Arrays.asList("sum", "avg", "max", "min");
+            Double measurementDurationMinutesInDouble = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
+            List<K8sObject> kubernetes_objects = kruizeObject.getKubernetes_objects();
+            for (K8sObject k8sObject : kubernetes_objects) {
+                String namespace = k8sObject.getNamespace();
+                HashMap<String, ContainerData> containerDataMap = k8sObject.getContainerDataMap();
+                for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
+                    ContainerData containerData = entry.getValue();
+                    String containerName = containerData.getContainer_name();
+                    HashMap<Timestamp, IntervalResults> containerDataResults = new HashMap<>();
+                    IntervalResults intervalResults;
+                    HashMap<AnalyzerConstants.MetricName, MetricResults> resMap;
+                    MetricResults metricResults;
+                    MetricAggregationInfoResults metricAggregationInfoResults;
+                    for (Map.Entry<AnalyzerConstants.MetricName, String> metricEntry : promQls.entrySet()) {
+                        for (String methodName : aggregationMethods) {
+                            String promQL = null;
+                            String format = null;
+                            if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuUsage) {
+                                String secondmethodeName = methodName;
+                                if (secondmethodeName == "sum") secondmethodeName = "avg";
+                                promQL = String.format(metricEntry.getValue(), methodName, secondmethodeName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                format = "cores";
+                            } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuThrottle) {
+                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                format = "cores";
+                            } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.cpuRequest) {
+                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
+                                format = "cores";
+                            } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryUsage || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRSS) {
+                                String secondmethodeName = methodName;
+                                if (secondmethodeName == "sum") secondmethodeName = "avg";
+                                promQL = String.format(metricEntry.getValue(), methodName, secondmethodeName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                format = "GiB";
+                            } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRequest) {
+                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
+                                format = "GiB";
+                            }
+                            LOGGER.info(promQL);
+                            String podMetricsUrl;
+                            String podMetricsResponse = null;
+                            try {
+                                podMetricsUrl = String.format("%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s",
+                                        dataSourceInfo.getUrl(),
+                                        URLEncoder.encode(promQL, "UTF-8"),
+                                        interval_start_time_epoc,
+                                        interval_end_time_epoc,
+                                        measurementDurationMinutesInDouble.intValue() * 60);
+                                LOGGER.info(podMetricsUrl);
+                                JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson("get", "");
+                                JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+                                JsonArray resultArray = jsonObject.getAsJsonObject("data").getAsJsonArray("result");
+                                if (null != resultArray && resultArray.size() > 0) {
+                                    resultArray = jsonObject.getAsJsonObject("data").getAsJsonArray("result").get(0).getAsJsonObject().getAsJsonArray("values");
+                                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'", Locale.ROOT);
+                                    sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+                                    Timestamp sTime = intervalStartTime;
+                                    for (JsonElement element : resultArray) {
+                                        JsonArray valueArray = element.getAsJsonArray();
+                                        long epochTime = valueArray.get(0).getAsLong();
+                                        double value = valueArray.get(1).getAsDouble();
+                                        String timestamp = sdf.format(new Date(epochTime * 1000));
+                                        Date date = sdf.parse(timestamp);
+                                        Timestamp eTime = new Timestamp(date.getTime());
+                                        if (containerDataResults.containsKey(eTime)) {
+                                            intervalResults = containerDataResults.get(eTime);
+                                            resMap = intervalResults.getMetricResultsMap();
+                                        } else {
+                                            intervalResults = new IntervalResults();
+                                            resMap = new HashMap<>();
+                                        }
+                                        if (resMap.containsKey(metricEntry.getKey())) {
+                                            metricResults = resMap.get(metricEntry.getKey());
+                                            metricAggregationInfoResults = metricResults.getAggregationInfoResult();
+                                        } else {
+                                            metricResults = new MetricResults();
+                                            metricAggregationInfoResults = new MetricAggregationInfoResults();
+                                        }
+                                        Method method = MetricAggregationInfoResults.class.getDeclaredMethod("set" + methodName.substring(0, 1).toUpperCase() + methodName.substring(1), Double.class);
+                                        method.invoke(metricAggregationInfoResults, value);
+                                        metricAggregationInfoResults.setFormat(format);
+                                        metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+                                        metricResults.setName(String.valueOf(metricEntry.getKey()));
+                                        metricResults.setFormat(format);
+                                        resMap.put(metricEntry.getKey(), metricResults);
+                                        intervalResults.setMetricResultsMap(resMap);
+                                        intervalResults.setIntervalStartTime(sTime);  //Todo this will change
+                                        intervalResults.setIntervalEndTime(eTime);
+                                        intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime()) / (6 * 1000)));
+                                        containerDataResults.put(eTime, intervalResults);
+                                        sTime = eTime;
+                                    }
+                                }
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+                        }
+                    }
+                    containerData.setResults(containerDataResults);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to fetch the results from the datasource: {}", e.getMessage());
+        }
     }
 }
