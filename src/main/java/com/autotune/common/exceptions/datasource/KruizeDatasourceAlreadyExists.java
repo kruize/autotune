@@ -14,18 +14,17 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.common.exceptions;
+package com.autotune.common.exceptions.datasource;
 
 /**
- * KruizeDatasourceDoesNotExist is a exception which needs to be raised when the datasource
- * doesnot exist in the collection we search
+ * KruizeDatasourceAlreadyExists is an exception which needs to be raised when there is
+ * a duplicate entry trying to get added in the collection of datasources
  */
-
-public class KruizeDatasourceDoesNotExist extends Exception {
-    public KruizeDatasourceDoesNotExist() {
+public class KruizeDatasourceAlreadyExists extends Exception {
+    public KruizeDatasourceAlreadyExists() {
     }
 
-    public KruizeDatasourceDoesNotExist(String message) {
+    public KruizeDatasourceAlreadyExists(String message) {
         super(message);
     }
 }

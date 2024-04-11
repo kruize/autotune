@@ -1,4 +1,4 @@
-package com.autotune.common.exceptions;
+package com.autotune.common.exceptions.datasource;
 
 public class ServiceNotFound extends Exception {
     public ServiceNotFound() {

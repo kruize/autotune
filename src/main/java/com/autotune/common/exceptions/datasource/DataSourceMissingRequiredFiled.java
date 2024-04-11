@@ -1,4 +1,4 @@
-package com.autotune.common.exceptions;
+package com.autotune.common.exceptions.datasource;
 
 public class DataSourceMissingRequiredFiled extends Exception {
     public DataSourceMissingRequiredFiled() {

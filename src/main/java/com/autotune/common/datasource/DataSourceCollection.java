@@ -15,12 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
-import com.autotune.common.exceptions.DataSourceAlreadyExist;
-import com.autotune.common.exceptions.DataSourceMissingRequiredFiled;
-import com.autotune.common.exceptions.DataSourceNotServiceable;
-import com.autotune.common.exceptions.UnsupportedDataSourceProvider;
+import com.autotune.common.exceptions.datasource.*;
 import com.autotune.common.utils.CommonUtils;
-import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -182,6 +178,45 @@ public class DataSourceCollection {
         } catch (DataSourceMissingRequiredFiled e) {
             LOGGER.error(e.getMessage());
             return false;
+        }
+    }
+
+    /**
+     * deletes the datasource from the Hashmap
+     * @param name String containing the name of the datasource to be deleted
+     */
+    public void deleteDataSource(String name) {
+        try {
+            if (name == null) {
+                throw new DataSourceMissingRequiredFiled(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_NAME);
+            }
+            if (dataSourceCollection.containsKey(name)) {
+                dataSourceCollection.remove(name);
+            } else {
+                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_EXIST);
+            }
+        } catch (DataSourceMissingRequiredFiled e) {
+            LOGGER.error(e.getMessage());
+        } catch (DataSourceNotExist e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    /**
+     * updates the existing datasource in the Hashmap
+     * @param name String containing the name of the datasource to be updated
+     * @param newDataSource DataSourceInfo object with updated values
+     */
+    public void updateDataSource(String name, DataSourceInfo newDataSource) {
+        try {
+            if (dataSourceCollection.containsKey(name)) {
+                dataSourceCollection.remove(name);
+                addDataSource(newDataSource);
+            } else {
+                throw new DataSourceNotExist(name + ": " + KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_EXIST);
+            }
+        } catch (DataSourceNotExist e) {
+            LOGGER.error(e.getMessage());
         }
     }
 }
