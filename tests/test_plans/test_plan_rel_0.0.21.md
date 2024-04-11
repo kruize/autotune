@@ -26,23 +26,27 @@ This document describes the test plan for Kruize remote monitoring release 0.0.2
 * Kruize local changes
 
 Kruize local changes have been included in this release which allows a user to add datasources, import datasource metadata, create an experiment and generate recommendations
- from using the metric results from the specified datasource
+ using the metric results from the specified datasource. Refer [doc]() for further details.
 
 * Kruize Security vulnerability issues
 
-* [1150](https://github.com/kruize/autotune/pull/1150)
-* [1153](https://github.com/kruize/autotune/pull/1153)
+  Security Vulnerabilities in the Kruize dependencies have been fixed through the below issues:
+
+
+  * [1150](https://github.com/kruize/autotune/pull/1150)
+  * [1153](https://github.com/kruize/autotune/pull/1153)
+
 
 * Kruize logging using CloudWatch
 
 Send kruize logs to CloudWatch so that these logs can be viewed using tools like kibana to debug issues
 
-* Recommendation code refactoring
 
 ------
 
 ## BUG FIXES TO BE TESTED
 
+* [1156](https://github.com/kruize/autotune/pull/1156) - Notification is not displayed when the CPU usage is less than a millicore
 
 ---
 
@@ -57,17 +61,20 @@ Send kruize logs to CloudWatch so that these logs can be viewed using tools like
 
 ### New Test Cases Developed
 
-| #   | ISSUE (NEW FEATURE) | TEST DESCRIPTION | TEST DELIVERABLES | RESULTS | COMMENTS |
-| --- | --------- | ---------------- | ----------------- |  -----  | --- |
-| 1   |  [Kruize local changes](https://github.com/kruize/autotune/issues/1059) |       | |  |  |
+| #   | ISSUE (NEW FEATURE)                                                                                                                  | TEST DESCRIPTION | TEST DELIVERABLES | RESULTS | COMMENTS |
+| --- |--------------------------------------------------------------------------------------------------------------------------------------| ---------------- | ----------------- |  -----  | --- |
+| 1   | [Kruize local changes](https://github.com/kruize/autotune/issues/)                                                                   | Basic functional tests (both positive & negative) to be included | |  |  |
+| 2   | [Kruize CloudWatch logging](https://github.com/kruize/autotune/issues/)                                                              | Kruize logging to CloudWatch is tested by using a CloudWatch in AWS cluster manually | Manual test |  |  |
+| 3   | [Notifications are not displayed when the CPU usage is less than a millicore or zero](https://github.com/kruize/autotune/pull/1156) | Kruize Functiona testsuite will be updated to post results with cpu usage of less than millicore or zero to validate these notifications | | |  |
 
 ### Regression Testing
 
-| #   | ISSUE (BUG/NEW FEATURE) |  TEST CASE | RESULTS | COMMENTS |
-| --- | --------- | ---------------- | -------- | --- |
-| 1   | Term Design Changes | Functional test suite | | |
-| 2   | Kruize remote monitoring demo | kruize demo | |
-| 2   | Short Scalability test | 5k exps / 15 days | |
+| #   | ISSUE (BUG/NEW FEATURE)        |  TEST CASE | RESULTS | COMMENTS |
+| --- |--------------------------------| ---------------- | -------- | --- |
+| 1   | Kruize remote monitoring tests | Functional test suite | | |
+| 2   | Kruize local monitoring demo   | kruize demo | |
+| 3   | Short Scalability test         | 5k exps / 15 days | |
+| 3   | Fault tolerant test            | |
 
 ---
 
@@ -97,7 +104,8 @@ Kruize Release | Exps / Results / Recos | Execution time | Latency (Max/ Avg) in
 ## RELEASE TESTING
 
 As part of the release testing, test the following will be executed:
-- [Functional tests](/tests/scripts/remote_monitoring_tests/Remote_monitoring_tests.md)
+- [Kruize Remote monitoring Functional tests](/tests/scripts/remote_monitoring_tests/Remote_monitoring_tests.md)
+- [Kruize Local monitoring Functional tests](/tests/scripts/remote_monitoring_tests/Local_monitoring_tests.md)
 - [Fault tolerant test](/tests/scripts/remote_monitoring_tests/fault_tolerant_tests.md)
 - [Stress test](/tests/scripts/remote_monitoring_tests/README.md)
 - [Scalability test (On openshift)](/tests/scripts/remote_monitoring_tests/scalability_test.md) - scalability test with 5000 exps / 15 days usage data
@@ -106,11 +114,12 @@ As part of the release testing, test the following will be executed:
 
 | #   | TEST SUITE | EXPECTED RESULTS | ACTUAL RESULTS | COMMENTS |
 | --- | ---------- | ---------------- | -------------- | -------- | 
-| 1   |  Functional testsuite |  |  | |
-| 2   |  Fault tolerant test | | | |
-| 3   |  Stress test | | | |
-| 4   |  Scalability test | | | |
-| 5   |  Kruize remote monitoring demo | | | |
+| 1   |  Kruize Remote monitoring Functional testsuite | | | |
+| 2   |  Kruize Local monitoring Functional testsuite | | | |
+| 3   |  Fault tolerant test | | | |
+| 4   |  Stress test | | | |
+| 5   |  Scalability test (short run)| | | |
+| 6   |  Kruize remote monitoring demo | | | |
 
 ---
 
