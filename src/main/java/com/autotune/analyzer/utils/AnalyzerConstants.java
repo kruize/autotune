@@ -86,7 +86,6 @@ public class AnalyzerConstants {
     public static final String ROS_DDL_SQL = "kruize_experiments_ddl.sql";
     public static final String KRUIZE_LOCAL_DDL_SQL = "kruize_local_ddl.sql";
 
-
     private AnalyzerConstants() {
     }
 

@@ -111,6 +111,7 @@ data:
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
       "plots": "false",
+      "local": "false",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
