@@ -56,8 +56,10 @@ public class KruizeHibernateUtil {
             configuration.addAnnotatedClass(KruizeResultsEntry.class);
             configuration.addAnnotatedClass(KruizeRecommendationEntry.class);
             configuration.addAnnotatedClass(KruizePerformanceProfileEntry.class);
-            configuration.addAnnotatedClass(KruizeDataSource.class);
-            configuration.addAnnotatedClass(KruizeMetadata.class);
+            if (KruizeDeploymentInfo.local) {
+                configuration.addAnnotatedClass(KruizeDataSource.class);
+                configuration.addAnnotatedClass(KruizeMetadata.class);
+            }
             LOGGER.info("DB is trying to connect to {}", connectionURL);
             sfTemp = configuration.buildSessionFactory();
             LOGGER.info("DB build session is successful !");

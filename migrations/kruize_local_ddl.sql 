@@ -1,0 +1,3 @@
+create table IF NOT EXISTS kruize_datasources (version varchar(255), name varchar(255), provider varchar(255), serviceName varchar(255), namespace varchar(255), url varchar(255), primary key (name));
+create table IF NOT EXISTS kruize_metadata (id serial, version varchar(255), cluster_group_name varchar(255), cluster_name varchar(255), namespace varchar(255), workload_type varchar(255), workload_name varchar(255), container_name varchar(255), container_image_name varchar(255), primary key (id));
+alter table kruize_experiments add column metadata_id bigint references kruize_metadata(id), alter column datasource type varchar(255);
