@@ -60,8 +60,11 @@ public class KruizeExperimentEntry {
     private String datasource;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode extended_data;
-    @OneToOne //TODO: to be updated in future
-    private KruizeMetadata metadata;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode meta_data;
+//    TODO: to be updated in future
+//    @OneToOne
+//    private KruizeMetadata metadata;
 
 
     public String getVersion() {
@@ -120,13 +123,21 @@ public class KruizeExperimentEntry {
         this.extended_data = extended_data;
     }
 
-    public KruizeMetadata getMetadata() {
-        return metadata;
+    public JsonNode getMeta_data() {
+        return meta_data;
     }
 
-    public void setMetadata(KruizeMetadata metadata) {
-        this.metadata = metadata;
+    public void setMeta_data(JsonNode meta_data) {
+        this.meta_data = meta_data;
     }
+//    TODO: to be updated in future
+//    public KruizeMetadata getMetadata() {
+//        return metadata;
+//    }
+
+//    public void setMetadata(KruizeMetadata metadata) {
+//        this.metadata = metadata;
+//    }
 
     public AnalyzerConstants.ExperimentStatus getStatus() {
         return status;
