@@ -101,6 +101,8 @@ do
 done
 
 start_time=$(get_date)
+
+
 LOG_DIR="${RESULTS_DIR}/db-migration-test-$(date +%Y%m%d%H%M)"
 mkdir -p ${LOG_DIR}
 
@@ -136,7 +138,7 @@ pushd ${SCALE_TEST} > /dev/null
 	echo "Run scalability test to load 50 exps / 1 day data and update Recommendations after restoring DB with ${kruize_image_current}..."
 
 	num_days_of_res=1
-	initial_start_date="2024-01-04T00:00:00.000Z"
+	initial_start_date=$(increment_timestamp_by_days $initial_start_date $num_days_of_res)
 	restore_db=true
 
 	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days -e ${total_results_count}"

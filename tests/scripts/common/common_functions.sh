@@ -110,6 +110,25 @@ function get_date() {
 	date "+%Y-%m-%d %H:%M:%S"
 }
 
+function increment_timestamp_by_days() {
+        initial_start_date=$1
+        days_to_add=$2
+        # Extract the date, time, and timezone parts from the initial date string
+        date_part=$(echo "$initial_start_date" | cut -d'T' -f1)
+        time_part=$(echo "$initial_start_date" | cut -d'T' -f2 | cut -d'.' -f1)
+        timezone_part=$(echo "$initial_start_date" | awk -F'T' '{print $2}' | cut -d'.' -f2)
+
+        # Remove trailing zeros from timezone part (e.g., 000000000Z to 000Z)
+        trimmed_timezone=$(echo "$timezone_part" | sed 's/0*$//')
+
+        # Use date command to increment the date by days_to_add days
+        incremented_date=$(date -u -d "$date_part + $days_to_add days" +%Y-%m-%dT$time_part.${trimmed_timezone}Z)
+
+        #echo "Initial Start Date: $initial_start_date"
+        #echo "Incremented Date (+$days_to_add days): $incremented_date"
+        echo "$incremented_date"
+}
+
 function time_diff() {
 	ssec=`date --utc --date "$1" +%s`
 	esec=`date --utc --date "$2" +%s`
