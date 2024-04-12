@@ -57,13 +57,14 @@ public class KruizeExperimentEntry {
     private String performance_profile;
     @Enumerated(EnumType.STRING)
     private AnalyzerConstants.ExperimentStatus status;
-    private String datasource;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode datasource;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode extended_data;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode meta_data;
 //    TODO: to be updated in future
-//    @OneToOne
+//    @OneToMany
 //    private KruizeMetadata metadata;
 
 
@@ -155,11 +156,11 @@ public class KruizeExperimentEntry {
         this.experiment_id = experiment_id;
     }
 
-    public String getDatasource() {
+    public JsonNode getDatasource() {
         return datasource;
     }
 
-    public void setDatasource(String datasource) {
+    public void setDatasource(JsonNode datasource) {
         this.datasource = datasource;
     }
 }
