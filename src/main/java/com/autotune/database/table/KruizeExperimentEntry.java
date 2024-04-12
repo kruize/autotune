@@ -63,9 +63,8 @@ public class KruizeExperimentEntry {
     private JsonNode extended_data;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode meta_data;
-//    TODO: to be updated in future
-//    @OneToMany
-//    private KruizeMetadata metadata;
+
+//    TODO: update KruizeMetadataEntry
 
 
     public String getVersion() {
@@ -131,14 +130,6 @@ public class KruizeExperimentEntry {
     public void setMeta_data(JsonNode meta_data) {
         this.meta_data = meta_data;
     }
-//    TODO: to be updated in future
-//    public KruizeMetadata getMetadata() {
-//        return metadata;
-//    }
-
-//    public void setMetadata(KruizeMetadata metadata) {
-//        this.metadata = metadata;
-//    }
 
     public AnalyzerConstants.ExperimentStatus getStatus() {
         return status;

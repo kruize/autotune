@@ -26,7 +26,7 @@ public interface ExperimentDAO {
     public ValidationOutputData addPerformanceProfileToDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry);
 
     // Add DataSource to DB
-    ValidationOutputData addDataSourceToDB(KruizeDataSource kruizeDataSource);
+    ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry);
 
     // Update experiment status
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status);
@@ -50,7 +50,7 @@ public interface ExperimentDAO {
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
 
     // Load a single data source based on name
-    List<KruizeDataSource> loadDataSourceByName(String name) throws Exception;
+    List<KruizeDataSourceEntry> loadDataSourceByName(String name) throws Exception;
 
     // Load all results for a particular experimentName
 
@@ -77,15 +77,15 @@ public interface ExperimentDAO {
     List<KruizeExperimentEntry> loadExperimentFromDBByInputJSON(StringBuilder clusterName, KubernetesAPIObject kubernetesAPIObject) throws Exception;
 
     // Load all the datasources
-    List<KruizeDataSource> loadAllDataSources() throws Exception;
+    List<KruizeDataSourceEntry> loadAllDataSources() throws Exception;
 
     // Load data source cluster group by name
-    List<KruizeMetadata> loadDataSourceClusterGroupByName(String clusterGroupName) throws Exception;
+    List<KruizeMetadataEntry> loadDataSourceClusterGroupByName(String clusterGroupName) throws Exception;
 
     // add metadata
-    ValidationOutputData addMetadataToDB(KruizeMetadata kruizeMetadata);
+    ValidationOutputData addMetadataToDB(KruizeMetadataEntry kruizeMetadataEntry);
 
     // Load metadata
-    List<KruizeMetadata> loadMetadata() throws Exception;
+    List<KruizeMetadataEntry> loadMetadata() throws Exception;
 
 }

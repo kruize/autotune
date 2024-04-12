@@ -18,10 +18,8 @@ package com.autotune.database.table;
 
 import jakarta.persistence.*;
 
-import java.util.List;
-
 /**
- * This is a Java class named KruizeMetadata annotated with JPA annotations.
+ * This is a Java class named KruizeMetadataEntry annotated with JPA annotations.
  * It represents a table named kruize_metadata in a relational database.
  * <p>
  * The class has the following fields:
@@ -38,7 +36,7 @@ import java.util.List;
  */
 @Entity
 @Table(name = "kruize_metadata")
-public class KruizeMetadata {
+public class KruizeMetadataEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -54,10 +52,10 @@ public class KruizeMetadata {
 //    @OneToMany(mappedBy = "metadata", cascade = CascadeType.ALL)
 //    private List<KruizeExperimentEntry> experimentEntries;
 
-    public KruizeMetadata() {
+    public KruizeMetadataEntry() {
     }
 
-    public KruizeMetadata(String version, String clusterGroupName, String clusterName, String namespace, String workloadType, String workloadName, String containerName, String containerImageName) {
+    public KruizeMetadataEntry(String version, String clusterGroupName, String clusterName, String namespace, String workloadType, String workloadName, String containerName, String containerImageName) {
         this.version = version;
         this.clusterGroupName = clusterGroupName;
         this.clusterName = clusterName;
@@ -138,7 +136,7 @@ public class KruizeMetadata {
 
     @Override
     public String toString() {
-        return "KruizeMetadata{" +
+        return "KruizeMetadataEntry{" +
                 "id=" + id +
                 ", version='" + version + '\'' +
                 ", clusterGroupName='" + clusterGroupName + '\'' +

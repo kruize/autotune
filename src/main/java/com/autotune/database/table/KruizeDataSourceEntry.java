@@ -19,7 +19,7 @@ package com.autotune.database.table;
 import jakarta.persistence.*;
 
 /**
- * This is a Java class named KruizeDataSource annotated with JPA annotations.
+ * This is a Java class named KruizeDataSourceEntry annotated with JPA annotations.
  * It represents a table named kruize_data_source in a relational database.
  * <p>
  * The class has the following fields:
@@ -34,7 +34,7 @@ import jakarta.persistence.*;
 
 @Entity
 @Table(name = "kruize_datasources")
-public class KruizeDataSource {
+public class KruizeDataSourceEntry {
     private String version;
     @Id
     private String name;

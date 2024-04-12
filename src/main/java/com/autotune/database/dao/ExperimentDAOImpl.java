@@ -385,17 +385,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
-     * @param kruizeDataSource
+     * @param kruizeDataSourceEntry
      * @return validationOutputData contains the status of the DB insert operation
      */
     @Override
-    public ValidationOutputData addDataSourceToDB(KruizeDataSource kruizeDataSource) {
+    public ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         Transaction tx = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
                 tx = session.beginTransaction();
-                session.persist(kruizeDataSource);
+                session.persist(kruizeDataSourceEntry);
                 tx.commit();
                 validationOutputData.setSuccess(true);
             } catch (HibernateException e) {
@@ -414,17 +414,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
-     * @param kruizeMetadata
+     * @param kruizeMetadataEntry
      * @return
      */
     @Override
-    public ValidationOutputData addMetadataToDB(KruizeMetadata kruizeMetadata) {
+    public ValidationOutputData addMetadataToDB(KruizeMetadataEntry kruizeMetadataEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         Transaction tx = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
                 tx = session.beginTransaction();
-                session.persist(kruizeMetadata);
+                session.persist(kruizeMetadataEntry);
                 tx.commit();
                 validationOutputData.setSuccess(true);
             } catch (HibernateException e) {
@@ -814,10 +814,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * @return
      */
     @Override
-    public List<KruizeMetadata> loadDataSourceClusterGroupByName(String clusterGroupName) throws Exception {
-        List<KruizeMetadata> kruizeMetadataList;
+    public List<KruizeMetadataEntry> loadDataSourceClusterGroupByName(String clusterGroupName) throws Exception {
+        List<KruizeMetadataEntry> kruizeMetadataList;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME, KruizeMetadata.class)
+            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME, KruizeMetadataEntry.class)
                     .setParameter("cluster_group_name", clusterGroupName).list();
         } catch (Exception e) {
             LOGGER.error("Unable to load metadata with clusterGroupName: {} : {}", clusterGroupName, e.getMessage());
@@ -827,10 +827,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizeMetadata> loadMetadata() throws Exception {
-        List<KruizeMetadata> kruizeMetadataList;
+    public List<KruizeMetadataEntry> loadMetadata() throws Exception {
+        List<KruizeMetadataEntry> kruizeMetadataList;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA, KruizeMetadata.class).list();
+            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA, KruizeMetadataEntry.class).list();
         } catch (Exception e) {
             LOGGER.error("Unable to load metadata : {}", e.getMessage());
             throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
@@ -844,10 +844,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * @throws Exception
      */
     @Override
-    public List<KruizeDataSource> loadDataSourceByName(String name) throws Exception {
-        List<KruizeDataSource> kruizeDataSourceList;
+    public List<KruizeDataSourceEntry> loadDataSourceByName(String name) throws Exception {
+        List<KruizeDataSourceEntry> kruizeDataSourceList;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            kruizeDataSourceList = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_DATASOURCE_BY_NAME, KruizeDataSource.class)
+            kruizeDataSourceList = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_DATASOURCE_BY_NAME, KruizeDataSourceEntry.class)
                     .setParameter("name", name).list();
         } catch (Exception e) {
             LOGGER.error("Not able to load datasource: {} : {}", name, e.getMessage());
@@ -860,10 +860,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * @return list of datasources after fetching from the DB
      */
     @Override
-    public List<KruizeDataSource> loadAllDataSources() throws Exception {
-        List<KruizeDataSource> entries;
+    public List<KruizeDataSourceEntry> loadAllDataSources() throws Exception {
+        List<KruizeDataSourceEntry> entries;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            entries = session.createQuery(SELECT_FROM_DATASOURCE, KruizeDataSource.class).list();
+            entries = session.createQuery(SELECT_FROM_DATASOURCE, KruizeDataSourceEntry.class).list();
         } catch (Exception e) {
             LOGGER.error("Not able to load datasource: {}", e.getMessage());
             throw new Exception("Error while loading existing datasources from database: " + e.getMessage());
