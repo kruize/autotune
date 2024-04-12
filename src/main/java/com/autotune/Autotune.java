@@ -28,6 +28,7 @@ import com.autotune.operator.InitializeDeployment;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
+import com.autotune.utils.CloudWatchLogSender;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.ServerContext;
@@ -100,6 +101,8 @@ public class Autotune {
 
         try {
             InitializeDeployment.setup_deployment_info();
+            // Configure AWS CloudWatch
+            CloudWatchLogSender.configureCloudWatchLog();
             // Read and execute the DDLs here
             executeDDLs();
             // close the existing session factory before recreating

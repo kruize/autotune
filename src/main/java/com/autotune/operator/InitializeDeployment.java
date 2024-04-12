@@ -43,6 +43,7 @@ public class InitializeDeployment {
     public static void setup_deployment_info() throws Exception, K8sTypeNotSupportedException, MonitoringAgentNotSupportedException, MonitoringAgentNotFoundException {
         setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.KRUIZE_CONFIG_ENV_NAME.class);
         setConfigValues(KruizeConstants.DBConstants.CONFIG_FILE, KruizeConstants.DATABASE_ENV_NAME.class);
+        setConfigValues(KruizeConstants.CloudWatchLogsConstants.CONFIG_FILE, KruizeConstants.CLOUDWATCH_LOGS_ENV_NAME.class);
         KruizeDeploymentInfo.setCluster_type(KruizeDeploymentInfo.cluster_type);
         KruizeDeploymentInfo.setKubernetesType(KruizeDeploymentInfo.k8s_type);
         KruizeDeploymentInfo.setAuth_type(KruizeDeploymentInfo.auth_type);
