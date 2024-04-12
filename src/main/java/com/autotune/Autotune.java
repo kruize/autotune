@@ -101,7 +101,11 @@ public class Autotune {
         try {
             InitializeDeployment.setup_deployment_info();
             // Read and execute the DDLs here
-            executeDDLs();
+            executeDDLs(AnalyzerConstants.ROS_DDL_SQL);
+            if (KruizeDeploymentInfo.local == true) {
+                LOGGER.info("Now running kruize local DDL's ");
+                executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
+            }
             // close the existing session factory before recreating
             KruizeHibernateUtil.closeSessionFactory();
             //Regenerate a Hibernate session following the creation of new tables
@@ -173,12 +177,12 @@ public class Autotune {
         ExperimentManager.launch(contextHandler);
     }
 
-    private static void executeDDLs() throws Exception {
+    private static void executeDDLs(String ddlFileName) throws Exception {
         SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
         Session session = null;
         try {
             session = factory.openSession();
-            Path sqlFilePath = Paths.get(AnalyzerConstants.TARGET, AnalyzerConstants.MIGRATIONS, AnalyzerConstants.DDL);
+            Path sqlFilePath = Paths.get(AnalyzerConstants.TARGET, AnalyzerConstants.MIGRATIONS, ddlFileName);
             File sqlFile = sqlFilePath.toFile();
             Scanner scanner = new Scanner(sqlFile);
             Transaction transaction = session.beginTransaction();
