@@ -18,7 +18,6 @@ package com.autotune.analyzer;
 import com.autotune.analyzer.experiment.Experimentator;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.services.*;
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -31,10 +30,8 @@ public class Analyzer {
 
         try {
             addServlets(contextHandler);
-            if (KruizeDeploymentInfo.local == true) {
-                PerformanceProfilesDeployment.getPerformanceProfiles(); //  Performance profile should be called first
-                KruizeOperator.getKruizeObjects(kruizeOperator);
-            }
+            PerformanceProfilesDeployment.getPerformanceProfiles(); //  Performance profile should be called first
+            KruizeOperator.getKruizeObjects(kruizeOperator);
         } catch (Exception e) {
             e.printStackTrace();
         }
