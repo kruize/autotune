@@ -46,6 +46,16 @@ public class DBConstants {
         public static final String DB_PARTITION_DATERANGE = "CREATE TABLE IF NOT EXISTS %s_%s%s%s PARTITION OF %s FOR VALUES FROM ('%s-%s-%s 00:00:00.000') TO ('%s-%s-%s 23:59:59');";
         public static final String SELECT_ALL_KRUIZE_TABLES = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' " +
                 "and (table_name like 'kruize_results_%' or table_name like 'kruize_recommendations_%') ";
+        public static final String SELECT_FROM_EXPERIMENTS_BY_INPUT_JSON = "SELECT * FROM kruize_experiments WHERE cluster_name = :cluster_name " +
+                "AND EXISTS (SELECT 1 FROM jsonb_array_elements(extended_data->'kubernetes_objects') AS kubernetes_object" +
+                " WHERE kubernetes_object->>'name' = :name " +
+                " AND kubernetes_object->>'namespace' = :namespace " +
+                " AND kubernetes_object->>'type' = :type " +
+                " AND EXISTS (SELECT 1 FROM jsonb_array_elements(kubernetes_object->'containers') AS container" +
+                " WHERE container->>'container_name' = :container_name" +
+                " AND container->>'container_image_name' = :container_image_name" +
+                " ))";
+
     }
 
     public static final class TABLE_NAMES {

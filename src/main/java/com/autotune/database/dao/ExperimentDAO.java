@@ -1,6 +1,7 @@
 package com.autotune.database.dao;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.table.KruizeExperimentEntry;
@@ -70,4 +71,5 @@ public interface ExperimentDAO {
 
     public void addPartitions(String tableName, String month, String year, int dayOfTheMonth, String partitionType) throws Exception;
 
+    List<KruizeExperimentEntry> loadExperimentFromDBByInputJSON(StringBuilder clusterName, KubernetesAPIObject kubernetesAPIObject) throws Exception;
 }

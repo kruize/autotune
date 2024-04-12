@@ -1,6 +1,8 @@
 package com.autotune.database.dao;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -28,10 +30,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
@@ -542,6 +541,44 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to load experiment {} due to {}", experimentName, e.getMessage());
             throw new Exception("Error while loading existing experiment from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadExpName) {
+                MetricsConfig.timerLoadExpName = MetricsConfig.timerBLoadExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
+            }
+
+        }
+        return entries;
+    }
+
+    /**
+     * @param clusterName
+     * @param kubernetesAPIObject
+     * @return list of experiments from the DB matching the input params
+     */
+    @Override
+    public List<KruizeExperimentEntry> loadExperimentFromDBByInputJSON(StringBuilder clusterName, KubernetesAPIObject kubernetesAPIObject) throws Exception {
+        //todo load only experimentStatus=inprogress , playback may not require completed experiments
+        List<KruizeExperimentEntry> entries;
+        String statusValue = "failure";
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            // assuming there will be only one container
+            ContainerAPIObject containerAPIObject = kubernetesAPIObject.getContainerAPIObjects().get(0);
+            // Set parameters for KubernetesObject and Container
+            Query<KruizeExperimentEntry> query = session.createNativeQuery(SELECT_FROM_EXPERIMENTS_BY_INPUT_JSON, KruizeExperimentEntry.class);
+            query.setParameter(CLUSTER_NAME, clusterName.toString());
+            query.setParameter(KruizeConstants.JSONKeys.NAME, kubernetesAPIObject.getName());
+            query.setParameter(KruizeConstants.JSONKeys.NAMESPACE, kubernetesAPIObject.getNamespace());
+            query.setParameter(KruizeConstants.JSONKeys.TYPE, kubernetesAPIObject.getType());
+            query.setParameter(KruizeConstants.JSONKeys.CONTAINER_NAME, containerAPIObject.getContainer_name());
+            query.setParameter(KruizeConstants.JSONKeys.CONTAINER_IMAGE_NAME, containerAPIObject.getContainer_image_name());
+
+            entries = query.getResultList();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Error fetching experiment data: {}", e.getMessage());
+            throw new Exception("Error while fetching experiment data from database: " + e.getMessage());
         } finally {
             if (null != timerLoadExpName) {
                 MetricsConfig.timerLoadExpName = MetricsConfig.timerBLoadExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
