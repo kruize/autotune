@@ -31,7 +31,7 @@ SCALE_TEST="${CURRENT_DIR}/../scale_test"
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
 
-RESULTS_DIR=kruize_scale_test_results
+RESULTS_DIR=kruize_db_migration_test_without_postgres_restart_results
 APP_NAME=kruize
 CLUSTER_TYPE=openshift
 DEPLOYMENT_NAME=kruize
@@ -102,17 +102,17 @@ do
 done
 
 start_time=$(get_date)
-LOG_DIR="${RESULTS_DIR}/db-migration-test-$(date +%Y%m%d%H%M)"
+LOG_DIR="${RESULTS_DIR}/db-migration-test-without-postgres-restart-$(date +%Y%m%d%H%M)"
 mkdir -p ${LOG_DIR}
 
-LOG="${LOG_DIR}/db-migration-test.log"
+LOG="${LOG_DIR}/db-migration-test-without-postgres-restart.log"
 
 # Run scalability test to load 50 exps / 15 days data and update Recommendations with previous release
 pushd ${SCALE_TEST} > /dev/null
 	echo ""
 	echo "Run scalability test to load 50 exps / 15 days data and update Recommendations with ${kruize_image_prev}"
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/kruize_scale_test_logs_50_15days"
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/kruize_scale_test_logs_50_15days
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days"
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days
 popd > /dev/null 
 	echo ""
 
@@ -140,12 +140,13 @@ pushd ${SCALE_TEST} > /dev/null
 	echo ""
 	echo "Run scalability test to load 50 exps / 1 day data and update Recommendations with ${kruize_image_current}..."
 
-	num_days_of_res=1
 	initial_start_date=$(increment_timestamp_by_days $initial_start_date $num_days_of_res)
 	kruize_setup=false
 
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days -e ${total_results_count}"
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days -e ${total_results_count}
+	num_days_of_res=1
+
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count}"
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -b ${kruize_setup} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count}
 
 	echo | tee -a ${LOG}
 	echo ""
@@ -154,7 +155,7 @@ popd > /dev/null
 
 # Validate the recommendations json
 failed=0
-end_time="2024-01-05T00:00:00.000Z"
+end_time=$(increment_timestamp_by_days $initial_start_date $num_days_of_res)
 pushd ${CURRENT_DIR} > /dev/null
 echo "Validating the recommendations..."
 
@@ -188,10 +189,10 @@ echo ""
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
 
 if [ ${failed} == 0 ]; then
-	echo "DB Migration test Passed!"
+	echo "DB Migration test without postgres restart - Passed!"
 	exit 0
 else
-	echo "DB Migration test failed! Check logs for details"
+	echo "DB Migration test without postgres restart - Failed! Check logs for details"
 	exit 1
 fi
 

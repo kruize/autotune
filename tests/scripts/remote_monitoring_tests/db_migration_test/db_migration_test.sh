@@ -31,7 +31,7 @@ SCALE_TEST="${CURRENT_DIR}/../scale_test"
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
 
-RESULTS_DIR=kruize_scale_test_results
+RESULTS_DIR=kruize_db_migration_test_results
 APP_NAME=kruize
 CLUSTER_TYPE=openshift
 DEPLOYMENT_NAME=kruize
@@ -114,8 +114,8 @@ LOG="${LOG_DIR}/db-migration-test.log"
 pushd ${SCALE_TEST} > /dev/null
 	echo ""
 	echo "Run scalability test to load 50 exps / 15 days data and update Recommendations with ${kruize_image_prev}"
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/kruize_scale_test_logs_50_15days"
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/kruize_scale_test_logs_50_15days
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days"
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days
 popd > /dev/null 
 	echo ""
 
@@ -124,7 +124,7 @@ total_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
 # Backup DB
 echo ""
 echo "Backing up DB..."
-db_backup_file="${LOG_DIR}/kruize_scale_test_logs_50_15days/db_backup.sql"
+db_backup_file="${LOG_DIR}/test_logs_50_15days/db_backup.sql"
 echo "kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}"
 kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}
 echo "Backing up DB...Done"
@@ -137,12 +137,12 @@ pushd ${SCALE_TEST} > /dev/null
 	echo ""
 	echo "Run scalability test to load 50 exps / 1 day data and update Recommendations after restoring DB with ${kruize_image_current}..."
 
-	num_days_of_res=1
 	initial_start_date=$(increment_timestamp_by_days $initial_start_date $num_days_of_res)
 	restore_db=true
+	num_days_of_res=1
 
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days -e ${total_results_count}"
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/kruize_scale_test_logs_50_16days -e ${total_results_count}
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count}"
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count}
 
 	echo | tee -a ${LOG}
 	echo ""
@@ -151,7 +151,7 @@ popd > /dev/null
 
 # Validate the recommendations json
 failed=0
-end_time="2024-01-05T00:00:00.000Z"
+end_time=$(increment_timestamp_by_days $initial_start_date $num_days_of_res)
 pushd ${CURRENT_DIR} > /dev/null
 echo "Validating the recommendations..."
 
@@ -184,9 +184,9 @@ echo ""
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
 
 if [ ${failed} == 0 ]; then
-	echo "DB Migration test Passed!"
+	echo "DB Migration test - Passed!"
 	exit 0
 else
-	echo "DB Migration test failed! Check logs for details"
+	echo "DB Migration test - Failed! Check logs for details"
 	exit 1
 fi
