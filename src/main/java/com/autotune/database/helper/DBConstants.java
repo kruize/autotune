@@ -11,8 +11,8 @@ public class DBConstants {
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME = "from KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_DATASOURCE = "from KruizeDataSourceEntry";
         public static final String SELECT_FROM_DATASOURCE_BY_NAME = "from KruizeDataSourceEntry kd WHERE kd.name = :name";
-        public static final String SELECT_FROM_METADATA = "from KruizeMetadataEntry";
-        public static final String SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME = "from KruizeMetadataEntry km WHERE km.cluster_group_name = :clusterGroupName";
+        public static final String SELECT_FROM_METADATA = "from KruizeDSMetadataEntry";
+        public static final String SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME = "from KruizeDSMetadataEntry km WHERE km.cluster_group_name = :clusterGroupName";
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT =
                 String.format("from KruizeResultsEntry k " +
                                 "WHERE k.experiment_name = :%s and " +

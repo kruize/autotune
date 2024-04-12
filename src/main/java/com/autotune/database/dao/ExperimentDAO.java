@@ -80,12 +80,12 @@ public interface ExperimentDAO {
     List<KruizeDataSourceEntry> loadAllDataSources() throws Exception;
 
     // Load data source cluster group by name
-    List<KruizeMetadataEntry> loadDataSourceClusterGroupByName(String clusterGroupName) throws Exception;
+    List<KruizeDSMetadataEntry> loadDataSourceClusterGroupByName(String clusterGroupName) throws Exception;
 
     // add metadata
-    ValidationOutputData addMetadataToDB(KruizeMetadataEntry kruizeMetadataEntry);
+    ValidationOutputData addMetadataToDB(KruizeDSMetadataEntry kruizeDSMetadataEntry);
 
     // Load metadata
-    List<KruizeMetadataEntry> loadMetadata() throws Exception;
+    List<KruizeDSMetadataEntry> loadMetadata() throws Exception;
 
 }

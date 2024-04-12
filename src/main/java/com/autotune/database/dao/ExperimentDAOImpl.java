@@ -414,17 +414,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
-     * @param kruizeMetadataEntry
+     * @param kruizeDSMetadataEntry
      * @return
      */
     @Override
-    public ValidationOutputData addMetadataToDB(KruizeMetadataEntry kruizeMetadataEntry) {
+    public ValidationOutputData addMetadataToDB(KruizeDSMetadataEntry kruizeDSMetadataEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         Transaction tx = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
                 tx = session.beginTransaction();
-                session.persist(kruizeMetadataEntry);
+                session.persist(kruizeDSMetadataEntry);
                 tx.commit();
                 validationOutputData.setSuccess(true);
             } catch (HibernateException e) {
@@ -814,10 +814,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * @return
      */
     @Override
-    public List<KruizeMetadataEntry> loadDataSourceClusterGroupByName(String clusterGroupName) throws Exception {
-        List<KruizeMetadataEntry> kruizeMetadataList;
+    public List<KruizeDSMetadataEntry> loadDataSourceClusterGroupByName(String clusterGroupName) throws Exception {
+        List<KruizeDSMetadataEntry> kruizeMetadataList;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME, KruizeMetadataEntry.class)
+            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME, KruizeDSMetadataEntry.class)
                     .setParameter("cluster_group_name", clusterGroupName).list();
         } catch (Exception e) {
             LOGGER.error("Unable to load metadata with clusterGroupName: {} : {}", clusterGroupName, e.getMessage());
@@ -827,10 +827,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizeMetadataEntry> loadMetadata() throws Exception {
-        List<KruizeMetadataEntry> kruizeMetadataList;
+    public List<KruizeDSMetadataEntry> loadMetadata() throws Exception {
+        List<KruizeDSMetadataEntry> kruizeMetadataList;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA, KruizeMetadataEntry.class).list();
+            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA, KruizeDSMetadataEntry.class).list();
         } catch (Exception e) {
             LOGGER.error("Unable to load metadata : {}", e.getMessage());
             throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());

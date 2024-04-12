@@ -64,7 +64,7 @@ public class KruizeExperimentEntry {
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode meta_data;
 
-//    TODO: update KruizeMetadataEntry
+//    TODO: update KruizeDSMetadataEntry
 
 
     public String getVersion() {

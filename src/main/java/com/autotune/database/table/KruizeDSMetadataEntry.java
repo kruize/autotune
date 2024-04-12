@@ -19,7 +19,7 @@ package com.autotune.database.table;
 import jakarta.persistence.*;
 
 /**
- * This is a Java class named KruizeMetadataEntry annotated with JPA annotations.
+ * This is a Java class named KruizeDSMetadataEntry annotated with JPA annotations.
  * It represents a table named kruize_metadata in a relational database.
  * <p>
  * The class has the following fields:
@@ -35,8 +35,8 @@ import jakarta.persistence.*;
  * containerImageName: A String representing the container image name.
  */
 @Entity
-@Table(name = "kruize_metadata")
-public class KruizeMetadataEntry {
+@Table(name = "kruize_dsmetadata")
+public class KruizeDSMetadataEntry {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -52,10 +52,10 @@ public class KruizeMetadataEntry {
 //    @OneToMany(mappedBy = "metadata", cascade = CascadeType.ALL)
 //    private List<KruizeExperimentEntry> experimentEntries;
 
-    public KruizeMetadataEntry() {
+    public KruizeDSMetadataEntry() {
     }
 
-    public KruizeMetadataEntry(String version, String clusterGroupName, String clusterName, String namespace, String workloadType, String workloadName, String containerName, String containerImageName) {
+    public KruizeDSMetadataEntry(String version, String clusterGroupName, String clusterName, String namespace, String workloadType, String workloadName, String containerName, String containerImageName) {
         this.version = version;
         this.clusterGroupName = clusterGroupName;
         this.clusterName = clusterName;
@@ -136,7 +136,7 @@ public class KruizeMetadataEntry {
 
     @Override
     public String toString() {
-        return "KruizeMetadataEntry{" +
+        return "KruizeDSMetadataEntry{" +
                 "id=" + id +
                 ", version='" + version + '\'' +
                 ", clusterGroupName='" + clusterGroupName + '\'' +
