@@ -1656,11 +1656,9 @@ name parameter**
 
 Returns all the recommendations and all the results of the specified experiment.
 <br><br>
-
-
-###List Experiments also allows the user to send a request body to fetch the records based on `cluster_name` and 
-`kubernetes_object`. 
-**Note: This request body can be sent along with other query params which are mentioned above. 
+**List Experiments also allows the user to send a request body to fetch the records based on `cluster_name` and `kubernetes_object`.**
+<br><br>
+*Note: This request body can be sent along with other query params which are mentioned above.* 
 
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/listExperiments`
 
