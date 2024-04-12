@@ -1,6 +1,6 @@
 package com.autotune.common.datasource;
 
-import com.autotune.common.exceptions.KruizeDatasourceDoesNotExist;
+import com.autotune.common.exceptions.datasource.KruizeDatasourceDoesNotExist;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
