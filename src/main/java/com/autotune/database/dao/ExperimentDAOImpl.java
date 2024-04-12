@@ -608,7 +608,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
-<<<<<<< HEAD
      * @param clusterName
      * @param kubernetesAPIObject
      * @return list of experiments from the DB matching the input params
