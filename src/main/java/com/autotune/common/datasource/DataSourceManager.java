@@ -1,6 +1,6 @@
 package com.autotune.common.datasource;
 
-import com.autotune.common.exceptions.datasource.KruizeDatasourceDoesNotExist;
+import com.autotune.common.exceptions.datasource.DataSourceDoesNotExist;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,7 @@ public class DataSourceManager {
     public void importMetadataFromDataSource(DataSourceInfo dataSource) {
         try {
             if (null == dataSource) {
-                throw new KruizeDatasourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
             dataSourceMetadataOperator.createDataSourceMetadata(dataSource);
         } catch (Exception e) {
@@ -41,12 +41,12 @@ public class DataSourceManager {
      *
      * @param dataSource The information about the data source to retrieve data from.
      * @return DataSourceMetadataInfo containing details about the data source, or null if not found.
-     * @throws KruizeDatasourceDoesNotExist Thrown when the provided data source information is null.
+     * @throws DataSourceDoesNotExist Thrown when the provided data source information is null.
      */
     public void getMetadataFromDataSource(DataSourceInfo dataSource) {
         try {
             if (null == dataSource) {
-                throw new KruizeDatasourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
             dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSource);
         } catch (Exception e) {

@@ -193,11 +193,11 @@ public class DataSourceCollection {
             if (dataSourceCollection.containsKey(name)) {
                 dataSourceCollection.remove(name);
             } else {
-                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_EXIST);
+                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_EXIST);
             }
         } catch (DataSourceMissingRequiredFiled e) {
             LOGGER.error(e.getMessage());
-        } catch (DataSourceNotExist e) {
+        } catch (DataSourceDoesNotExist e) {
             LOGGER.error(e.getMessage());
         }
     }
@@ -213,9 +213,9 @@ public class DataSourceCollection {
                 dataSourceCollection.remove(name);
                 addDataSource(newDataSource);
             } else {
-                throw new DataSourceNotExist(name + ": " + KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_EXIST);
+                throw new DataSourceDoesNotExist(name + ": " + KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_EXIST);
             }
-        } catch (DataSourceNotExist e) {
+        } catch (DataSourceDoesNotExist e) {
             LOGGER.error(e.getMessage());
         }
     }
