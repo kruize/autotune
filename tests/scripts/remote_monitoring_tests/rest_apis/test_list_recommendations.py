@@ -81,23 +81,31 @@ term_input_exceeding_limit = [
     ("long_term_test_non_contiguous_768_data_points_exceeding_15_days", 768, long_term_list_reco_json_schema, 192.0, 360, False)
 ]
 
-notifications = [
+profile_notifications = [
     ("cpu_zero_test",1,True, [
-            {"cpuRequest" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}},
-            {"cpuLimit" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}},
+            {"cpuRequest" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
+            {"cpuLimit" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
             {"cpuUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}},
             {"cpuThrottle" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}}
         ],
         NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO,NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO_MESSAGE
     ),
      ("cpu_usage_less_than_millicore_test",1,True, [
-                {"cpuRequest" : {'sum':0.000001 , "avg":0.000001 , "min":0.000001 , "max":0.000001 , "format": "cores"}},
-                {"cpuLimit" : {'sum':0.000001 , "avg":0.000001 , "min":0.000001 , "max":0.000001 , "format": "cores"}},
+                {"cpuRequest" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
+                {"cpuLimit" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
                 {"cpuUsage" : {'sum':0.000001 , "avg":0.000001 , "min":0.000001 , "max":0.000001 , "format": "cores"}},
                 {"cpuThrottle" : {'sum':0.000001 , "avg":0.000001 , "min":0.000001 , "max":0.000001 , "format": "cores"}}
             ],
             NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE,NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE
-        )
+        ),
+         ("memory_zero_test",1,True, [
+                 {"memoryRequest" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
+                 {"memoryLimit" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
+                 {"memoryUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}},
+                 {"memoryRSS" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}}
+             ],
+             NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO,NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO_MESSAGE
+         )
 ]
 
 
@@ -2783,7 +2791,7 @@ def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
 
 
 @pytest.mark.sanity
-@pytest.mark.parametrize("test_name,num_days,logging,update_metrics,code,message",notifications)
+@pytest.mark.parametrize("test_name,num_days,logging,update_metrics,code,message",profile_notifications)
 def test_list_recommendations_profile_notifications(test_name,num_days,logging,update_metrics,code,message,cluster_type: str):
     """
         Test Description: Check if notifications are generated at profile level if cpu_usage is less than millicore
