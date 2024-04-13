@@ -81,6 +81,25 @@ term_input_exceeding_limit = [
     ("long_term_test_non_contiguous_768_data_points_exceeding_15_days", 768, long_term_list_reco_json_schema, 192.0, 360, False)
 ]
 
+notifications = [
+    ("cpu_zero_test",1,True, [
+            {"cpuRequest" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}},
+            {"cpuLimit" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}},
+            {"cpuUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}},
+            {"cpuThrottle" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}}
+        ],
+        NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO,NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO_MESSAGE
+    ),
+     ("cpu_usage_less_than_millicore_test",1,True, [
+                {"cpuRequest" : {'sum':0.000001 , "avg":0.000001 , "min":0.000001 , "max":0.000001 , "format": "cores"}},
+                {"cpuLimit" : {'sum':0.000001 , "avg":0.000001 , "min":0.000001 , "max":0.000001 , "format": "cores"}},
+                {"cpuUsage" : {'sum':0.000001 , "avg":0.000001 , "min":0.000001 , "max":0.000001 , "format": "cores"}},
+                {"cpuThrottle" : {'sum':0.000001 , "avg":0.000001 , "min":0.000001 , "max":0.000001 , "format": "cores"}}
+            ],
+            NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE,NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE
+        )
+]
+
 
 @pytest.mark.sanity
 def test_list_recommendations_single_result(cluster_type):
@@ -2761,3 +2780,106 @@ def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
 
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+@pytest.mark.parametrize("test_name,num_days,logging,update_metrics,code,message",notifications)
+def test_list_recommendations_profile_notifications(test_name,num_days,logging,update_metrics,code,message,cluster_type: str):
+    """
+        Test Description: Check if notifications are generated at profile level if cpu_usage is less than millicore
+    """
+    input_json_file = "../json_files/create_exp.json"
+    result_json_file = "../json_files/update_results.json"
+    print ("Test Name --- %s " %(test_name) )
+    find = []
+    json_data = json.load(open(input_json_file))
+
+    find.append(json_data[0]['experiment_name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['namespace'])
+
+    form_kruize_url(cluster_type)
+
+    # Create experiment using the specified json
+    num_exps = 1
+    num_res = 96 * num_days
+    list_of_result_json_arr = []
+    for i in range(num_exps):
+        create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
+        generate_json(find, input_json_file, create_exp_json_file, i)
+
+        response = delete_experiment(create_exp_json_file)
+        print("delete exp = ", response.status_code)
+
+        response = create_experiment(create_exp_json_file)
+
+        data = response.json()
+        print("message = ", data['message'])
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+        # Update results for the experiment
+        update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
+
+        result_json_arr = []
+        # Get the experiment name
+        json_data = json.load(open(create_exp_json_file))
+        experiment_name = json_data[0]['experiment_name']
+        interval_start_time = get_datetime()
+        for j in range(num_res):
+            update_timestamps = True
+            update_metrics_json(find, result_json_file, update_results_json_file, i, update_metrics, update_timestamps)
+            result_json = read_json_data_from_file(update_results_json_file)
+            if j == 0:
+                start_time = interval_start_time
+            else:
+                start_time = end_time
+            result_json[0]['interval_start_time'] = start_time
+            end_time = increment_timestamp_by_given_mins(start_time, 15)
+            result_json[0]['interval_end_time'] = end_time
+            result_json_arr.append(result_json[0])
+        write_json_data_to_file(update_results_json_file, result_json_arr)
+        response = update_results(update_results_json_file, logging)
+
+        data = response.json()
+        print("message = ", data['message'])
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+        # Get the experiment name
+        json_data = json.load(open(create_exp_json_file))
+        experiment_name = json_data[0]['experiment_name']
+
+        response = update_recommendations(experiment_name, None, end_time)
+        data = response.json()
+        assert response.status_code == SUCCESS_STATUS_CODE
+        validate_recommendations_notifications(experiment_name,end_time,code,message,data)
+
+        response = list_recommendations(experiment_name)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+        data = response.json()
+        validate_recommendations_notifications(experiment_name,end_time,code,message,data)
+
+    # Delete the experiments
+    for i in range(num_exps):
+        json_file = "/tmp/create_exp_" + str(i) + ".json"
+
+        response = delete_experiment(json_file)
+        print("delete exp = ", response.status_code)
+
+def validate_recommendations_notifications(experiment_name,end_time,code,message,data):
+    assert data[0]['experiment_name'] == experiment_name
+    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+               NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+               'message'] == RECOMMENDATIONS_AVAILABLE
+    short_term_recommendation = data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['data'][str(end_time)]["recommendation_terms"]["short_term"]
+
+    assert short_term_recommendation['notifications'][NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE][
+               'message'] == COST_RECOMMENDATIONS_AVAILABLE
+    assert short_term_recommendation['notifications'][NOTIFICATION_CODE_FOR_PERFORMANCE_RECOMMENDATIONS_AVAILABLE][
+               'message'] == PERFORMANCE_RECOMMENDATIONS_AVAILABLE
+
+    short_term_recommendation['recommendation_engines']['cost']['notifications'][code]['message'] == message
+    short_term_recommendation['recommendation_engines']['performance']['notifications'][code]['message'] == message
