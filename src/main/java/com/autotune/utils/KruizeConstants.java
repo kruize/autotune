@@ -174,9 +174,12 @@ public class KruizeConstants {
         public static final String PERCENTILE_INFO = "percentile_info";
         public static final String FORMAT = "format";
         public static final String SUM = "sum";
+        public static final String AVG = "avg";
         public static final String COUNT = "count";
         public static final String MEDIAN = "median";
         public static final String RANGE = "range";
+        public static final String CORES = "cores";
+        public static final String GIBIBYTE = "GiB";
 
         // DataSource JSON keys
         public static final String DATASOURCES = "datasources";
@@ -251,6 +254,10 @@ public class KruizeConstants {
         public static final String HOUR_SHORT_UC_SINGULAR = HOUR_SHORT_LC_SINGULAR.toUpperCase();
         public static final String HOUR_SINGLE_LC = "h";
         public static final String HOUR_SINGLE_UC = HOUR_SINGLE_LC.toUpperCase();
+
+        public static final class TimeZones {
+            public static final String UTC = "UTC";
+        }
 
         private TimeUnitsExt() {
         }
@@ -344,6 +351,7 @@ public class KruizeConstants {
         public static final String SERVICE_DNS = ".svc.cluster.local";
         public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";
         public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
+        public static final String DATASOURCE_ENDPOINT_WITH_QUERY = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
 
         public static class DataSourceInfoMsgs {
             public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: ";
@@ -391,6 +399,7 @@ public class KruizeConstants {
             public static final String RESULT = "result";
             public static final String METRIC = "metric";
             public static final String VALUE = "value";
+            public static final String VALUES = "values";
 
         }
 
