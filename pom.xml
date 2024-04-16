@@ -20,7 +20,7 @@
         <appassembler-maven-plugin-version>1.1.1</appassembler-maven-plugin-version>
         <apachehttpclient-version>4.5.13</apachehttpclient-version>
         <gson-version>2.9.0</gson-version>
-        <postgresql-version>42.3.1</postgresql-version>
+        <postgresql-version>42.3.9</postgresql-version>
         <hibernatecore-version>6.1.7.Final</hibernatecore-version>
         <hibernatecp30-version>6.1.7.Final</hibernatecp30-version>
         <hibernate-Validator>8.0.1.Final</hibernate-Validator>
