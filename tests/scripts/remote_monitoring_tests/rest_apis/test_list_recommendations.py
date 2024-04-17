@@ -2889,5 +2889,5 @@ def validate_recommendations_notifications(experiment_name,end_time,code,message
     assert short_term_recommendation['notifications'][NOTIFICATION_CODE_FOR_PERFORMANCE_RECOMMENDATIONS_AVAILABLE][
                'message'] == PERFORMANCE_RECOMMENDATIONS_AVAILABLE
 
-    short_term_recommendation['recommendation_engines']['cost']['notifications'][code]['message'] == message
-    short_term_recommendation['recommendation_engines']['performance']['notifications'][code]['message'] == message
+    assert short_term_recommendation['recommendation_engines']['cost']['notifications'][code]['message'] == message
+    assert short_term_recommendation['recommendation_engines']['performance']['notifications'][code]['message'] == message
