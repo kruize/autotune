@@ -272,6 +272,7 @@ public class KruizeConstants {
         public static final String DURATION_PATTERN = "(\\d+)([a-zA-Z]+)";
         public static final String WHITESPACE_PATTERN = "\\s";
         public static final String QUERY_WITH_TIME_RANGE_PATTERN = ".*\\[(\\d+)([a-zA-Z]+)\\].*";
+        public static final String CLOUDWATCH_LOG_PATTERN = "%d{yyyy-MM-ddHH:mm:ss.SSS} %level [%t][%F(%L)]-%msg%n";
 
         private Patterns() {
         }
@@ -377,13 +378,6 @@ public class KruizeConstants {
         }
     }
 
-    public static final class CloudWatchLogsConstants {
-        public static final String CONFIG_FILE = "DB_CONFIG_FILE";
-
-        private CloudWatchLogsConstants() {
-        }
-    }
-
     public static final class DateFormats {
         public static final String STANDARD_JSON_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
         public static final String DB_EXTRACTION_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
@@ -418,21 +412,6 @@ public class KruizeConstants {
      * if any new variables are added, their corresponding declaration is necessary.
      * Ref InitializeDeployment.setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.KRUIZE_CONFIG_ENV_NAME.class);
      */
-    public static final class CLOUDWATCH_LOGS_ENV_NAME {
-        public static final String CLOUDWATCH_LOGS_ACCESS_KEY_ID = "logging_cloudwatch_accessKeyId";
-        public static final String CLOUDWATCH_LOGS_SECRET_ACCESS_KEY = "logging_cloudwatch_secretAccessKey";
-        public static final String CLOUDWATCH_LOGS_LOG_GROUP = "logging_cloudwatch_logGroup";
-        public static final String CLOUDWATCH_LOGS_REGION = "logging_cloudwatch_region";
-        public static final String CLOUDWATCH_LOGS_LOG_STREAM = "logging_cloudwatch_logStream";
-        public static final String CLOUDWATCH_LOGS_LOG_LEVEL = "logging_cloudwatch_logLevel";
-    }
-
-    /**
-     * In order to assign values to the static variables of KruizeDeploymentInfo
-     * using Java reflection, the class variables are utilized, and therefore,
-     * if any new variables are added, their corresponding declaration is necessary.
-     * Ref InitializeDeployment.setConfigValues(KruizeConstants.CONFIG_FILE, KruizeConstants.KRUIZE_CONFIG_ENV_NAME.class);
-     */
     public static final class KRUIZE_CONFIG_ENV_NAME {
         public static final String K8S_TYPE = "k8stype";
         public static final String AUTH_TYPE = "authtype";
@@ -457,6 +436,12 @@ public class KruizeConstants {
         public static final String SETTINGS_HIBERNATE_SHOW_SQL = "hibernate_showsql";
         public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
         public static final String PLOTS = "plots";
+        public static final String CLOUDWATCH_LOGS_ACCESS_KEY_ID = "cloudwatch_accessKeyId";
+        public static final String CLOUDWATCH_LOGS_SECRET_ACCESS_KEY = "cloudwatch_secretAccessKey";
+        public static final String CLOUDWATCH_LOGS_LOG_GROUP = "cloudwatch_logGroup";
+        public static final String CLOUDWATCH_LOGS_REGION = "cloudwatch_region";
+        public static final String CLOUDWATCH_LOGS_LOG_STREAM = "cloudwatch_logStream";
+        public static final String CLOUDWATCH_LOGS_LOG_LEVEL = "cloudwatch_logLevel";
     }
 
     public static final class RecommendationEngineConstants {
