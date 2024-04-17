@@ -109,18 +109,10 @@ public class Autotune {
                 LOGGER.info("Now running kruize local DDL's ");
                 executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
             }
-            // set up DataSource
-            DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
-            dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
-
-            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
-            HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
-            for (String name: dataSources.keySet()) {
-                DataSourceInfo dataSource = dataSources.get(name);
-                String dataSourceName = dataSource.getName();
-                String url = dataSource.getUrl().toString();
-                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
-            }
+            // setting up DataSources
+            setUpDataSources();
+            // checking available DataSources
+            checkAvailableDataSources();
             // close the existing session factory before recreating
             KruizeHibernateUtil.closeSessionFactory();
             //Regenerate a Hibernate session following the creation of new tables
@@ -167,6 +159,29 @@ public class Autotune {
             e.printStackTrace();
         }
 
+    }
+
+    /**
+     * Set up the data sources available at installation time from config file
+     */
+    private static void setUpDataSources() {
+        DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
+        dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
+    }
+
+    /**
+     * checks the data sources available
+     */
+    private static void checkAvailableDataSources() {
+        DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
+        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
+        HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
+        for (String name: dataSources.keySet()) {
+            DataSourceInfo dataSource = dataSources.get(name);
+            String dataSourceName = dataSource.getName();
+            String url = dataSource.getUrl().toString();
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
+        }
     }
 
     private static void addAutotuneServlets(ServletContextHandler context) {

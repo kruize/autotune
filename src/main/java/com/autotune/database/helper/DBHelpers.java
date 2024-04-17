@@ -652,6 +652,11 @@ public class DBHelpers {
                 return performanceProfiles;
             }
 
+            /**
+             * converts KruizeDataSourceEntry table objects to DataSourceInfo objects
+             * @param kruizeDataSourceList List containing the KruizeDataSourceEntry table objects
+             * @return List containing the DataSourceInfo objects
+             */
             public static List<DataSourceInfo> convertKruizeDataSourceToDataSourceObject(List<KruizeDataSourceEntry> kruizeDataSourceList) throws Exception {
                 List<DataSourceInfo> dataSourceInfoList = new ArrayList<>();
                 int failureThreshHold = kruizeDataSourceList.size();
@@ -679,6 +684,11 @@ public class DBHelpers {
                 return dataSourceInfoList;
             }
 
+            /**
+             * converts DataSourceInfo objects to KruizeDataSourceEntry table objects
+             * @param dataSourceInfo DataSourceInfo objects
+             * @return KruizeDataSourceEntry table object
+             */
             public static KruizeDataSourceEntry convertDataSourceToDataSourceDBObj(DataSourceInfo dataSourceInfo) {
                 KruizeDataSourceEntry kruizeDataSource;
                 try {

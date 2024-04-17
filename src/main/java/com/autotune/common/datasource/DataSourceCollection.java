@@ -98,7 +98,6 @@ public class DataSourceCollection {
     /**
      * Loads the data sources available at installation time
      * @param configFileName name of the config file mounted
-     * TODO:// add support for datasource operations
      */
     public void addDataSourcesFromConfigFile(String configFileName) {
         try {
@@ -114,7 +113,7 @@ public class DataSourceCollection {
             for (Object dataSourceObj: dataSourceArr) {
                 JSONObject dataSourceObject = (JSONObject) dataSourceObj;
                 String name = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_NAME);
-//              check the DB if the datasource already exists
+                // check the DB if the datasource already exists
                 try {
                     DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
                     if (null != dataSourceInfo) {
@@ -185,6 +184,7 @@ public class DataSourceCollection {
     /**
      * deletes the datasource from the Hashmap
      * @param name String containing the name of the datasource to be deleted
+     * TODO: add db related operations
      */
     public void deleteDataSource(String name) {
         try {
@@ -207,6 +207,7 @@ public class DataSourceCollection {
      * updates the existing datasource in the Hashmap
      * @param name String containing the name of the datasource to be updated
      * @param newDataSource DataSourceInfo object with updated values
+     * TODO: add db related operations
      */
     public void updateDataSource(String name, DataSourceInfo newDataSource) {
         try {

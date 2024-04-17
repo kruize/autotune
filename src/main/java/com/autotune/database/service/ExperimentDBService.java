@@ -373,6 +373,11 @@ public class ExperimentDBService {
         return experimentResultDataList;
     }
 
+    /**
+     * adds datasource to database table
+     * @param dataSourceInfo DataSourceInfo object
+     * @return ValidationOutputData object
+     */
     public ValidationOutputData addDataSourceToDB(DataSourceInfo dataSourceInfo) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
@@ -384,6 +389,11 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
+    /**
+     * fetches datasource with specified name from database
+     * @param name String containing the name of datasource
+     * @return DataSourceInfo object containing the details
+     */
     public DataSourceInfo loadDataSourceFromDBByName(String name) throws Exception {
         List<KruizeDataSourceEntry> kruizeDataSourceList = experimentDAO.loadDataSourceByName(name);
         List<DataSourceInfo> dataSourceInfoList = new ArrayList<>();
@@ -397,6 +407,10 @@ public class ExperimentDBService {
             return dataSourceInfoList.get(0);
     }
 
+    /**
+     * fetches all available datasource from database
+     * @return List containing DataSourceInfo objects
+     */
     public List<DataSourceInfo> loadAllDataSources() throws Exception {
         List<KruizeDataSourceEntry> entries = experimentDAO.loadAllDataSources();
         List<DataSourceInfo> dataSourceInfoList = null;
