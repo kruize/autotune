@@ -112,9 +112,9 @@ public class Autotune {
                 setUpDataSources();
                 // checking available DataSources
                 checkAvailableDataSources();
-                // close the existing session factory before recreating
-            }
 
+            }
+            // close the existing session factory before recreating
             KruizeHibernateUtil.closeSessionFactory();
             //Regenerate a Hibernate session following the creation of new tables
             KruizeHibernateUtil.buildSessionFactory();
