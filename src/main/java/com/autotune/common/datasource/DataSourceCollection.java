@@ -16,7 +16,9 @@
 package com.autotune.common.datasource;
 
 import com.autotune.common.exceptions.datasource.*;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -102,7 +104,7 @@ public class DataSourceCollection {
         try {
             String configFile = System.getenv(configFileName);
             JSONObject configObject = null;
-            // ValidationOutputData addedToDB = null;
+            ValidationOutputData addedToDB = null;
 
             InputStream is = new FileInputStream(configFile);
             String jsonTxt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -112,16 +114,16 @@ public class DataSourceCollection {
             for (Object dataSourceObj: dataSourceArr) {
                 JSONObject dataSourceObject = (JSONObject) dataSourceObj;
                 String name = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_NAME);
-                // check the DB if the datasource already exists
-//                try {
-//                    DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
-//                    if (null != dataSourceInfo) {
-//                        LOGGER.error("Datasource: {} already exists!", name);
-//                        continue;
-//                    }
-//                } catch (Exception e) {
-//                    LOGGER.error("Loading saved datasource {} failed: {} ", name, e.getMessage());
-//                }
+//              check the DB if the datasource already exists
+                try {
+                    DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
+                    if (null != dataSourceInfo) {
+                        LOGGER.error("Datasource: {} already exists!", name);
+                        continue;
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Loading saved datasource {} failed: {} ", name, e.getMessage());
+                }
                 String provider = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_PROVIDER);
                 String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
                 String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
@@ -136,15 +138,14 @@ public class DataSourceCollection {
                     datasource = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL));
                 }
                 // add the data source to DB
-                // TODO: add datasource to database
-                // addedToDB = new ExperimentDBService().addDataSourceToDB(datasource);
-                // if (addedToDB.isSuccess()) {
+                 addedToDB = new ExperimentDBService().addDataSourceToDB(datasource);
+                 if (addedToDB.isSuccess()) {
                     LOGGER.info("Datasource added to the DB successfully.");
                     // add to local map
                     addDataSource(datasource);
-                // } else {
-                //    LOGGER.error("Failed to add datasource to DB: {}", addedToDB.getMessage());
-                // }
+                 } else {
+                    LOGGER.error("Failed to add datasource to DB: {}", addedToDB.getMessage());
+                 }
             }
         } catch (IOException e) {
             LOGGER.error(e.getMessage());

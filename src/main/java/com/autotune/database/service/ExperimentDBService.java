@@ -25,13 +25,11 @@ import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.helper.DBHelpers;
-import com.autotune.database.table.KruizeExperimentEntry;
-import com.autotune.database.table.KruizePerformanceProfileEntry;
-import com.autotune.database.table.KruizeRecommendationEntry;
-import com.autotune.database.table.KruizeResultsEntry;
+import com.autotune.database.table.*;
 import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -373,5 +371,29 @@ public class ExperimentDBService {
             }
         }
         return experimentResultDataList;
+    }
+
+    public ValidationOutputData addDataSourceToDB(DataSourceInfo dataSourceInfo) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeDataSourceEntry kruizeDataSource = DBHelpers.Converters.KruizeObjectConverters.convertDataSourceToDataSourceDBObj(dataSourceInfo);
+            validationOutputData = this.experimentDAO.addDataSourceToDB(kruizeDataSource);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save data source due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    public DataSourceInfo loadDataSourceFromDBByName(String name) throws Exception {
+        List<KruizeDataSourceEntry> kruizeDataSourceList = experimentDAO.loadDataSourceByName(name);
+        List<DataSourceInfo> dataSourceInfoList = new ArrayList<>();
+        if (null != kruizeDataSourceList && !kruizeDataSourceList.isEmpty()) {
+            dataSourceInfoList = DBHelpers.Converters.KruizeObjectConverters
+                    .convertKruizeDataSourceToDataSourceObject(kruizeDataSourceList);
+        }
+        if (dataSourceInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceInfoList.get(0);
     }
 }
