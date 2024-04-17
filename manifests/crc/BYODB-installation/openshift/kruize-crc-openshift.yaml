@@ -49,7 +49,7 @@ data:
         "logStream": "kruize-stream",
         "region": "",
         "secretAccessKey": "",
-        "logLevel": "WARN"
+        "logLevel": "INFO"
       }
     }
 ---
