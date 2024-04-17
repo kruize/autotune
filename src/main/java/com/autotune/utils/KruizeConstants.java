@@ -507,6 +507,7 @@ public class KruizeConstants {
         public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
         public static final String PLOTS = "plots";
         public static final String LOCAL = "local";
+        public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
     }
 
     public static final class RecommendationEngineConstants {

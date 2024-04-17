@@ -38,6 +38,7 @@ import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_INTERVAL_END_TIME;
 
 public class RecommendationEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
@@ -211,7 +212,17 @@ public class RecommendationEngine {
                 Timestamp interval_start_time = Timestamp.valueOf(Objects.requireNonNull(getInterval_end_time()).toLocalDateTime().minusDays(maxDay));
 
                 // update the KruizeObject to have the results data from the available datasource
-                getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
+                try {
+                    String errorMsg = getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
+                    if (!errorMsg.isEmpty()) {
+                        throw new Exception(errorMsg);
+                    }
+                } catch (Exception e) {
+                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                    kruizeObject = new KruizeObject();
+                    kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_BAD_REQUEST));
+                    return kruizeObject;
+                }
 
                 // generate recommendation
                 try {
@@ -1289,13 +1300,19 @@ public class RecommendationEngine {
         return validationOutputData;
     }
 
-    private void getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject, String
+    private String getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject, String
             experimentName, Timestamp intervalStartTime, String dataSource) {
+        String errorMsg = "";
         // get data from the DB in case of remote monitoring
         if (kruizeObject.getExperiment_usecase_type().isRemote_monitoring()) {
             mainKruizeExperimentMAP.put(experimentName, kruizeObject);
             try {
-                new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
+                boolean resultsAvailable = new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
+                if (!resultsAvailable) {
+                    errorMsg = String.format("%s%s", MISSING_INTERVAL_END_TIME, intervalEndTimeStr);
+                    LOGGER.debug(errorMsg);
+                    return errorMsg;
+                }
             } catch (Exception e) {
                 LOGGER.error("Failed to fetch the results from the DB: {}", e.getMessage());
             }
@@ -1303,5 +1320,6 @@ public class RecommendationEngine {
             // TODO: get data from Thanos/other data sources in case of Local monitoring
         }
 
+        return errorMsg;
     }
 }
