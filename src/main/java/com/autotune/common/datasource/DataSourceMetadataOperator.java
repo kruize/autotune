@@ -8,6 +8,7 @@ import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.xml.crypto.Data;
 import java.util.HashMap;
 
 /**
@@ -127,4 +128,98 @@ public class DataSourceMetadataOperator {
         }
     }
 
+    /**
+     * Updates the metadata information of a data source with the provided DataSourceInfo object,
+     * while preserving existing metadata information.
+     *
+     * @param dataSourceInfo      The DataSourceInfo object containing information about the
+     *                            data source to be updated.
+     * @param existingMetadataInfo The existing DataSourceMetadataInfo object containing the current
+     *                            metadata information of the data source.
+     */
+    public void updateDataSourceMetadata(DataSourceInfo dataSourceInfo, DataSourceMetadataInfo existingMetadataInfo) {
+        if (dataSourceInfo == null || existingMetadataInfo == null) {
+            return;
+        }
+        String dataSourceName = dataSourceInfo.getName();
+
+        DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
+        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
+
+        if (null == op) {
+            return;
+        }
+
+        // Update fields as needed - namespaces, workloads, and containers
+        try {
+            JsonArray namespacesDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(),
+                    PromQLDataSourceQueries.NAMESPACE_QUERY);
+            if (!op.validateResultArray(namespacesDataResultArray)) {
+                return;
+            }
+            HashMap<String, DataSourceNamespace> newNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
+            dataSourceDetailsHelper.updateNamespaceDataSourceMetadataInfoObject(dataSourceName, existingMetadataInfo, newNamespaces);
+
+            /**
+             * Outer map:
+             * Key: Name of namespace
+             * <p>
+             * Inner map:
+             * Key: Name of workload
+             * Value: DataSourceWorkload object matching the name
+             * TODO -  get workload metadata for a given namespace
+             */
+            HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
+            JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(),
+                    PromQLDataSourceQueries.WORKLOAD_QUERY);
+            if (op.validateResultArray(workloadDataResultArray)) {
+                datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
+            }
+            dataSourceDetailsHelper.updateWorkloadDataSourceMetadataInfoObject(dataSourceName, existingMetadataInfo,
+                    datasourceWorkloads);
+
+            /**
+             * Outer map:
+             * Key: Name of workload
+             * <p>
+             * Inner map:
+             * Key: Name of container
+             * Value: DataSourceContainer object matching the name
+             * TODO - get container metadata for a given workload
+             */
+            HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
+            JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(),
+                    PromQLDataSourceQueries.CONTAINER_QUERY);
+            if (op.validateResultArray(containerDataResultArray)) {
+                datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
+            }
+            dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, existingMetadataInfo,
+                    datasourceWorkloads, datasourceContainers);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    /**
+     * Deletes the metadata information of a data source with the provided DataSourceInfo object,
+     * @param dataSourceInfo      The DataSourceInfo object containing information about the
+     *                            metadata to be deleted.
+     */
+    public void deleteDataSourceMetadata(DataSourceInfo dataSourceInfo) {
+        try{
+            if (null == dataSourceMetadataInfo) {
+                LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
+            }
+            String dataSourceName = dataSourceInfo.getName();
+            HashMap<String, DataSource> dataSourceHashMap = dataSourceMetadataInfo.getDataSourceHashMap();
+
+            if (null == dataSourceHashMap || !dataSourceHashMap.containsKey(dataSourceName)) {
+                LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_DATASOURCE_NOT_AVAILABLE + "{}", dataSourceName);
+            }
+
+            dataSourceHashMap.remove(dataSourceName);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
 }

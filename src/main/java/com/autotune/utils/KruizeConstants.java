@@ -446,6 +446,7 @@ public class KruizeConstants {
             public static final String DATASOURCE_METADATA_INFO_CREATION_ERROR = "Error creating DataSourceMetadataInfo: ";
             public static final String WORKLOAD_METADATA_UPDATE_ERROR = "Error updating DataSourceMetadataInfo with workload metadata: ";
             public static final String CONTAINER_METADATA_UPDATE_ERROR = "Error updating DataSourceMetadataInfo with container metadata: ";
+            public static final String NAMESPACE_METADATA_UPDATE_ERROR = "Error updating DataSourceMetadataInfo with namespace metadata: ";
             public static final String NAMESPACE_MAP_NOT_POPULATED = "The namespaceMap is not populated, is either null or empty.";
             public static final String NAMESPACE_WORKLOAD_MAP_NOT_POPULATED = "The namespaceWorkloadMap is not populated, is either null or empty.";
             public static final String WORKLOAD_CONTAINER_MAP_NOT_POPULATED = "The workloadContainerMap is not populated, is either null or empty.";

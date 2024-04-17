@@ -3,6 +3,8 @@ package com.autotune.common.datasource;
 import com.autotune.common.exceptions.datasource.DataSourceDoesNotExist;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,4 +58,39 @@ public class DataSourceManager {
         return null;
     }
 
+    /**
+     * Updates metadata of the specified data source and metadata object
+     * @param dataSource The information about the data source to be updated.
+     * @param dataSourceMetadataInfo The existing DataSourceMetadataInfo object containing the current
+     *                             metadata information of the data source.
+     */
+    public void updateMetadataFromDataSource(DataSourceInfo dataSource, DataSourceMetadataInfo dataSourceMetadataInfo) {
+        try {
+            if (null == dataSource) {
+                throw new KruizeDatasourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            }
+            if (null == dataSourceMetadataInfo) {
+                throw new KruizeDatasourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
+            }
+            dataSourceMetadataOperator.updateDataSourceMetadata(dataSource, dataSourceMetadataInfo);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    /**
+     * Deletes metadata of the specified data source
+     * @param dataSource The metadata associated with the specified data source to be deleted.
+     */
+    public void deleteMetadataFromDataSource(DataSourceInfo dataSource) {
+
+        try {
+            if (null == dataSource) {
+                throw new KruizeDatasourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            }
+            dataSourceMetadataOperator.deleteDataSourceMetadata(dataSource);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
 }

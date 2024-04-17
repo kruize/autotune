@@ -288,6 +288,35 @@ public class DataSourceMetadataHelper {
     }
 
     /**
+     * Updates the namespace metadata in the provided DataSourceMetadataInfo object for a specific data source.
+     *
+     * @param dataSourceName        The name of the data source to update.
+     * @param dataSourceMetadataInfo The DataSourceMetadataInfo object to update.
+     * @param namespaceMap          A map containing namespace name as keys and namespace object as values.
+     */
+    public void updateNamespaceDataSourceMetadataInfoObject(String dataSourceName, DataSourceMetadataInfo dataSourceMetadataInfo,
+                                                            HashMap<String, DataSourceNamespace> namespaceMap) {
+        try {
+            DataSourceCluster dataSourceCluster = dataSourceMetadataInfo.getDataSourceObject(dataSourceName)
+                    .getDataSourceClusterObject("default");
+
+            dataSourceCluster.getDataSourceNamespaceHashMap().entrySet().removeIf(entry -> !namespaceMap.containsKey(entry.getKey()));
+
+            //Add new namespaces, if not present
+            for (HashMap.Entry<String, DataSourceNamespace> entry : namespaceMap.entrySet()) {
+                String namespaceName = entry.getKey();
+                DataSourceNamespace namespace = entry.getValue();
+                if (!dataSourceCluster.getDataSourceNamespaceHashMap().containsKey(namespaceName)) {
+                    dataSourceCluster.getDataSourceNamespaceHashMap().put(namespaceName, namespace);
+                }
+            }
+
+        } catch (Exception e) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_METADATA_UPDATE_ERROR + "{}", e.getMessage());
+        }
+    }
+
+    /**
      * Validates input parameters and retrieves the DataSourceCluster object.
      *
      * @param dataSourceName      The name of the data source.
