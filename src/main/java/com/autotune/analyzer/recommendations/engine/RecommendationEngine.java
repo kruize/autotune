@@ -15,12 +15,15 @@ import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTime
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
+import com.autotune.analyzer.services.GenerateRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
@@ -1290,7 +1293,7 @@ public class RecommendationEngine {
     }
 
     private void getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject, String
-            experimentName, Timestamp intervalStartTime, String dataSource) {
+            experimentName, Timestamp intervalStartTime, String dataSource) throws Exception {
         // get data from the DB in case of remote monitoring
         if (kruizeObject.getExperiment_usecase_type().isRemote_monitoring()) {
             mainKruizeExperimentMAP.put(experimentName, kruizeObject);
@@ -1300,7 +1303,13 @@ public class RecommendationEngine {
                 LOGGER.error("Failed to fetch the results from the DB: {}", e.getMessage());
             }
         } else if (kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
-            // TODO: get data from Thanos/other data sources in case of Local monitoring
+            // get data from the provided datasource in case of local monitoring
+            DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(kruizeObject.getDataSource());
+            if (dataSourceInfo == null) {
+                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            }
+            // Fetch metrics based on the datasource
+            GenerateRecommendations.fetchMetricsBasedOnDatasource(kruizeObject, interval_end_time, intervalStartTime, dataSourceInfo);
         }
 
     }
