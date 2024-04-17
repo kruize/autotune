@@ -31,6 +31,7 @@ import java.io.InputStream;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+import java.util.List;
 
 public class DataSourceCollection {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCollection.class);
@@ -41,6 +42,24 @@ public class DataSourceCollection {
         this.dataSourceCollection = new HashMap<>();
     }
 
+    public void loadDataSourcesFromDB() {
+        try {
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE_FROM_DB);
+            List<DataSourceInfo> availableDataSources = new ExperimentDBService().loadAllDataSources();
+            if (null == availableDataSources) {
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.NO_DATASOURCE_FOUND_IN_DB);
+            }else {
+                for (DataSourceInfo dataSourceInfo : availableDataSources) {
+                    LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceInfo.getName());
+                    dataSourceCollection.put(dataSourceInfo.getName(), dataSourceInfo);
+                }
+            }
+
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+
+    }
     /**
      * Returns the instance of dataSourceCollection class
      * @return DataSourceCollection instance
@@ -65,6 +84,7 @@ public class DataSourceCollection {
         final String name = datasource.getName();
         final String provider = datasource.getProvider();
         final String url = datasource.getUrl().toString();
+        ValidationOutputData addedToDB = null;
 
         LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE + name);
 
@@ -78,6 +98,13 @@ public class DataSourceCollection {
                 DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
                 if (op.isServiceable(url) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
+                    // add the data source to DB
+                    addedToDB = new ExperimentDBService().addDataSourceToDB(datasource);
+                    if (addedToDB.isSuccess()) {
+                        LOGGER.info("Datasource added to the DB successfully.");
+                    } else {
+                        LOGGER.error("Failed to add datasource to DB: {}", addedToDB.getMessage());
+                    }
                     dataSourceCollection.put(name, datasource);
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_ADDED);
                 } else {
@@ -103,7 +130,6 @@ public class DataSourceCollection {
         try {
             String configFile = System.getenv(configFileName);
             JSONObject configObject = null;
-            ValidationOutputData addedToDB = null;
 
             InputStream is = new FileInputStream(configFile);
             String jsonTxt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -136,15 +162,7 @@ public class DataSourceCollection {
                 } else {
                     datasource = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL));
                 }
-                // add the data source to DB
-                 addedToDB = new ExperimentDBService().addDataSourceToDB(datasource);
-                 if (addedToDB.isSuccess()) {
-                    LOGGER.info("Datasource added to the DB successfully.");
-                    // add to local map
-                    addDataSource(datasource);
-                 } else {
-                    LOGGER.error("Failed to add datasource to DB: {}", addedToDB.getMessage());
-                 }
+                addDataSource(datasource);
             }
         } catch (IOException e) {
             LOGGER.error(e.getMessage());

@@ -108,6 +108,8 @@ public class Autotune {
             if (KruizeDeploymentInfo.local == true) {
                 LOGGER.info("Now running kruize local DDL's ");
                 executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
+                // load available datasources from db
+                loadDataSourcesFromDB();
                 // setting up DataSources
                 setUpDataSources();
                 // checking available DataSources
@@ -168,6 +170,14 @@ public class Autotune {
     private static void setUpDataSources() {
         DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
         dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
+    }
+
+    /**
+     * loads datasources from database
+     */
+    private static void loadDataSourcesFromDB() {
+        DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
+        dataSourceCollection.loadDataSourcesFromDB();
     }
 
     /**
