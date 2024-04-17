@@ -106,6 +106,32 @@ profile_notifications = [
              ],
              NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO,NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO_MESSAGE
          )
+     ,
+              ("cpu_memory_zero_test",1,True, [
+                      {"memoryRequest" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
+                      {"memoryLimit" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
+                      {"memoryUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}},
+                      {"memoryRSS" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}},
+                        {"cpuRequest" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
+                                  {"cpuLimit" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
+                                  {"cpuUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}},
+                                  {"cpuThrottle" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}}
+                  ],
+                  NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO,NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO_MESSAGE
+              )
+    ,
+              ("memory_cpu_zero_test",1,True, [
+                      {"memoryRequest" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
+                      {"memoryLimit" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
+                      {"memoryUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}},
+                      {"memoryRSS" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}},
+                        {"cpuRequest" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
+                                  {"cpuLimit" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
+                                  {"cpuUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}},
+                                  {"cpuThrottle" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}}
+                  ],
+                  NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO,NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO_MESSAGE
+              )
 ]
 
 
