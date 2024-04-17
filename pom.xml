@@ -25,6 +25,7 @@
         <hibernatecp30-version>6.1.7.Final</hibernatecp30-version>
         <hibernate-Validator>8.0.1.Final</hibernate-Validator>
         <micrometer-version>1.9.9</micrometer-version>
+        <awssdk-version>2.17.102</awssdk-version>
     </properties>
     <dependencies>
         <dependency>
@@ -91,7 +92,7 @@
         <dependency>
             <groupId>software.amazon.awssdk</groupId>
             <artifactId>cloudwatchlogs</artifactId>
-            <version>2.17.102</version>
+            <version>${awssdk-version}</version>
         </dependency>
 
         <dependency>
