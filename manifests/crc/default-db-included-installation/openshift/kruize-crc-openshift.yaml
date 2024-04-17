@@ -92,6 +92,7 @@ data:
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
       "plots": "false",
+      "local": "false",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -110,7 +111,16 @@ data:
         "region": "",
         "secretAccessKey": "",
         "logLevel": "WARN"
-      }
+      },
+      "datasource": [
+        {
+          "name": "prometheus-1",
+          "provider": "prometheus",
+          "serviceName": "",
+          "namespace": "",
+          "url": "https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9091"
+        }
+      ]
     }
 ---
 apiVersion: apps/v1

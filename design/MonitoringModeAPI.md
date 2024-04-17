@@ -1655,6 +1655,40 @@ name parameter**
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?recommendations=true&results=true&latest=false`
 
 Returns all the recommendations and all the results of the specified experiment.
+<br><br>
+**List Experiments also allows the user to send a request body to fetch the records based on `cluster_name` and `kubernetes_object`.**
+<br><br>
+*Note: This request body can be sent along with other query params which are mentioned above.* 
+
+`curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/listExperiments`
+
+<details>
+
+<summary><b>Example Request</b></summary>
+
+### Example Request
+
+```json
+{
+  "cluster_name": "cluster-one-division-bell",
+  "kubernetes_objects": [
+    {
+      "type": "deployment",
+      "name": "tfb-qrh-deployment",
+      "namespace": "default",
+      "containers": [
+        {
+          "container_image_name": "kruize/tfb-db:1.15",
+          "container_name": "tfb-server-1"
+        }
+      ]
+    }
+  ]
+}
+```
+
+</details>
+Returns all the experiments matching the input JSON data.
 
 <a name="list-recommendations-api"></a>
 

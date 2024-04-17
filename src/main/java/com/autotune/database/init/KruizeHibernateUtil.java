@@ -16,10 +16,7 @@
 package com.autotune.database.init;
 
 
-import com.autotune.database.table.KruizeExperimentEntry;
-import com.autotune.database.table.KruizePerformanceProfileEntry;
-import com.autotune.database.table.KruizeRecommendationEntry;
-import com.autotune.database.table.KruizeResultsEntry;
+import com.autotune.database.table.*;
 import com.autotune.operator.KruizeDeploymentInfo;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -59,6 +56,10 @@ public class KruizeHibernateUtil {
             configuration.addAnnotatedClass(KruizeResultsEntry.class);
             configuration.addAnnotatedClass(KruizeRecommendationEntry.class);
             configuration.addAnnotatedClass(KruizePerformanceProfileEntry.class);
+            if (KruizeDeploymentInfo.local) {
+                configuration.addAnnotatedClass(KruizeDataSourceEntry.class);
+                configuration.addAnnotatedClass(KruizeDSMetadataEntry.class);
+            }
             LOGGER.info("DB is trying to connect to {}", connectionURL);
             sfTemp = configuration.buildSessionFactory();
             LOGGER.info("DB build session is successful !");

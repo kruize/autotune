@@ -76,6 +76,7 @@ public class KruizeDeploymentInfo {
     public static Boolean settings_save_to_db;
     public static String em_only_mode;
     public static Integer bulk_update_results_limit = 100;
+    public static Boolean local = false;
 
     public static int generate_recommendations_date_range_limit_in_days = 15;
     public static Integer delete_partition_threshold_in_days = DELETE_PARTITION_THRESHOLD_IN_DAYS;
@@ -179,7 +180,8 @@ public class KruizeDeploymentInfo {
         LOGGER.info("Auth Type: {}", KruizeDeploymentInfo.auth_type);
         LOGGER.info("Monitoring Agent: {}", KruizeDeploymentInfo.monitoring_agent);
         LOGGER.info("Monitoring Agent URL: {}", KruizeDeploymentInfo.monitoring_agent_endpoint);
-        LOGGER.info("Monitoring agent service: {}\n\n", KruizeDeploymentInfo.monitoring_service);
+        LOGGER.info("Monitoring agent service: {}", KruizeDeploymentInfo.monitoring_service);
+        LOGGER.info("Kruize Local Flag: {}\n\n", KruizeDeploymentInfo.local);
     }
 }
 

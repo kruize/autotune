@@ -334,6 +334,87 @@ public class KruizeConstants {
         }
     }
 
+    public static class DataSourceConstants {
+        public static final String DATASOURCE_NAME = "name";
+        public static final String DATASOURCE_PROVIDER = "provider";
+        public static final String DATASOURCE_SERVICE_NAME = "serviceName";
+        public static final String DATASOURCE_SERVICE_NAMESPACE = "namespace";
+        public static final String DATASOURCE_URL = "url";
+        public static final String KRUIZE_DATASOURCE = "datasource";
+        public static final String SERVICE_DNS = ".svc.cluster.local";
+        public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";
+        public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
+
+        public static class DataSourceDetailsInfoConstants {
+            private DataSourceDetailsInfoConstants() {
+            }
+
+            public static final String version = "v1.0";
+            public static final String CLUSTER_NAME = "default";
+        }
+
+        public static class DataSourceInfoMsgs {
+            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: ";
+            public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: ";
+            public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
+            public static final String CHECKING_AVAILABLE_DATASOURCE_FROM_DB  = "Checking available datasources from database:";
+            public static final String NO_DATASOURCE_FOUND_IN_DB  = "No datasource found in database.";
+            private DataSourceInfoMsgs() {
+            }
+        }
+
+        public static class DataSourceSuccessMsgs {
+            public static final String DATASOURCE_ADDED = "Datasource added to the collection successfully.";
+            public static final String DATASOURCE_FOUND = "Datasource found: ";
+            public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
+            private DataSourceSuccessMsgs() {
+            }
+        }
+
+        public static class DataSourceErrorMsgs {
+            private DataSourceErrorMsgs() {
+            }
+
+            public static final String MISSING_DATASOURCE_NAME = "Datasource name cannot be empty.";
+            public static final String MISSING_DATASOURCE_PROVIDER = "Datasource provider cannot be empty.";
+            public static final String MISSING_DATASOURCE_NAMESPACE = "Datasource namespace cannot be empty.";
+            public static final String DATASOURCE_URL_SERVICENAME_BOTH_SET = "Datasource url and servicename both can not be set.";
+            public static final String MISSING_DATASOURCE_SERVICENAME_AND_URL = "Datasource servicename and url both cannot be empty.";
+            public static final String UNSUPPORTED_DATASOURCE_PROVIDER = "Datasource provider is invalid.";
+            public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
+            public static final String DATASOURCE_CONNECTION_FAILED = "Datasource connection refused or timed out.";
+            public static final String DATASOURCE_ALREADY_EXIST = "Datasource with the name already exist.";
+            public static final String DATASOURCE_NOT_EXIST = "Datasource with the name does not exist.";
+            public static final String INVALID_DATASOURCE_URL = "Datasource url is not valid.";
+            public static final String DATASOURCE_NOT_SUPPORTED = "Datasource is not supported: ";
+            public static final String SERVICE_NOT_FOUND = "Can not find service with specified name.";
+            public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
+            public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
+        }
+
+        public static class DataSourceQueryJSONKeys {
+            private DataSourceQueryJSONKeys() {
+            }
+
+            public static final String STATUS = "status";
+            public static final String DATA = "data";
+            public static final String RESULT = "result";
+            public static final String METRIC = "metric";
+            public static final String VALUE = "value";
+
+        }
+
+        public static class DataSourceQueryStatus {
+            private DataSourceQueryStatus() {
+            }
+
+            public static final String SUCCESS = "success";
+            public static final String ERROR = "error";
+        }
+        private DataSourceConstants() {
+        }
+    }
+
     public static class ErrorMsgs {
         private ErrorMsgs() {
         }
@@ -442,6 +523,7 @@ public class KruizeConstants {
         public static final String CLOUDWATCH_LOGS_REGION = "cloudwatch_region";
         public static final String CLOUDWATCH_LOGS_LOG_STREAM = "cloudwatch_logStream";
         public static final String CLOUDWATCH_LOGS_LOG_LEVEL = "cloudwatch_logLevel";
+        public static final String LOCAL = "local";
     }
 
     public static final class RecommendationEngineConstants {

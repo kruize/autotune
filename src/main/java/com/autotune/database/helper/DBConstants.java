@@ -9,6 +9,10 @@ public class DBConstants {
         public static final String SELECT_FROM_EXPERIMENTS_BY_EXP_NAME = "from KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_RESULTS = "from KruizeResultsEntry";
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME = "from KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
+        public static final String SELECT_FROM_DATASOURCE = "from KruizeDataSourceEntry";
+        public static final String SELECT_FROM_DATASOURCE_BY_NAME = "from KruizeDataSourceEntry kd WHERE kd.name = :name";
+        public static final String SELECT_FROM_METADATA = "from KruizeDSMetadataEntry";
+        public static final String SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME = "from KruizeDSMetadataEntry km WHERE km.cluster_group_name = :clusterGroupName";
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT =
                 String.format("from KruizeResultsEntry k " +
                                 "WHERE k.experiment_name = :%s and " +
@@ -46,6 +50,16 @@ public class DBConstants {
         public static final String DB_PARTITION_DATERANGE = "CREATE TABLE IF NOT EXISTS %s_%s%s%s PARTITION OF %s FOR VALUES FROM ('%s-%s-%s 00:00:00.000') TO ('%s-%s-%s 23:59:59');";
         public static final String SELECT_ALL_KRUIZE_TABLES = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' " +
                 "and (table_name like 'kruize_results_%' or table_name like 'kruize_recommendations_%') ";
+        public static final String SELECT_FROM_EXPERIMENTS_BY_INPUT_JSON = "SELECT * FROM kruize_experiments WHERE cluster_name = :cluster_name " +
+                "AND EXISTS (SELECT 1 FROM jsonb_array_elements(extended_data->'kubernetes_objects') AS kubernetes_object" +
+                " WHERE kubernetes_object->>'name' = :name " +
+                " AND kubernetes_object->>'namespace' = :namespace " +
+                " AND kubernetes_object->>'type' = :type " +
+                " AND EXISTS (SELECT 1 FROM jsonb_array_elements(kubernetes_object->'containers') AS container" +
+                " WHERE container->>'container_name' = :container_name" +
+                " AND container->>'container_image_name' = :container_image_name" +
+                " ))";
+
     }
 
     public static final class TABLE_NAMES {
@@ -73,8 +87,10 @@ public class DBConstants {
         public static final String INVALID_PARTITION_TYPE = "Invalid Partition Type";
         public static final String DATA_NOT_FOUND_KRUIZE_RESULTS = "Data not found in kruizeResultsEntry for exp_name : {} interval_end_time : {} ";
         public static final String ADD_CONSTRAINT = "add constraint";
+        public static final String ADD_COLUMN = "add column";
         public static final String DB_CREATION_SUCCESS = "DB creation successful !";
         public static final String DB_LIVELINESS_PROBE_SUCCESS = "DB Liveliness probe connection successful!";
+        public static final String DUPLICATE_DB_OPERATION = " - Attempted operation has already been executed";
 
     }
 

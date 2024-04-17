@@ -58,9 +58,12 @@ NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "111102"
 NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE = "111103"
 NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA = "120001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE = "323001"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO = "323002"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO_MESSAGE = "CPU usage is zero, No CPU Recommendations can be generated"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_NOT_AVAILABLE = "323003"
 NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO = "324001"
+NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO_MESSAGE = "Memory Usage is zero, No Memory Recommendations can be generated"
 NOTIFICATION_CODE_FOR_MEMORY_RECORDS_NOT_AVAILABLE = "324002"
 NOTIFICATION_CODE_FOR_CPU_REQUEST_NOT_SET = "523001"
 NOTIFICATION_CODE_FOR_CPU_LIMIT_NOT_SET = "423001"
@@ -301,6 +304,40 @@ def read_test_data_from_csv(csv_file):
             test_data.append(row)
 
     return test_data
+
+
+def update_metrics_json(find_arr, json_file, filename, i, update_metrics,update_timestamps=False ):
+    with open(json_file, 'r') as file:
+        data = file.read()
+
+    for find in find_arr:
+        replace = find + "_" + str(i)
+        data = data.replace(find, replace)
+
+    if update_timestamps == True:
+        find = "2022-01-23T18:25:43.511Z"
+        replace = increment_timestamp(find, i)
+        data = data.replace(find, replace)
+
+        find = "2022-01-23T18:40:43.570Z"
+        replace = increment_timestamp(find, i)
+        data = data.replace(find, replace)
+
+    data = json.loads(data)
+
+    if update_metrics != None:
+        containers = data[0]['kubernetes_objects'][0]['containers']
+        for container in containers:
+            for metric in container['metrics']:
+                for metric_dict in update_metrics:
+                    for key, value in metric_dict.items():
+                        if key == metric['name']:
+                            metric['results']['aggregation_info']=value
+
+    data = json.dumps(data)
+    with open(filename, 'w') as file:
+        file.write(data)
+
 
 
 def generate_json(find_arr, json_file, filename, i, update_timestamps=False):

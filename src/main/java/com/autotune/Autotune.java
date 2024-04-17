@@ -21,6 +21,8 @@ import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.datasource.DataSourceCollection;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.experimentManager.core.ExperimentManager;
@@ -50,6 +52,7 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Scanner;
 
 import static com.autotune.utils.ServerContext.*;
@@ -101,7 +104,18 @@ public class Autotune {
             // Configure AWS CloudWatch
             CloudWatchAppender.configureLoggerForCloudWatchLog();
             // Read and execute the DDLs here
-            executeDDLs();
+            executeDDLs(AnalyzerConstants.ROS_DDL_SQL);
+            if (KruizeDeploymentInfo.local == true) {
+                LOGGER.info("Now running kruize local DDL's ");
+                executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
+                // load available datasources from db
+                loadDataSourcesFromDB();
+                // setting up DataSources
+                setUpDataSources();
+                // checking available DataSources
+                checkAvailableDataSources();
+
+            }
             // close the existing session factory before recreating
             KruizeHibernateUtil.closeSessionFactory();
             //Regenerate a Hibernate session following the creation of new tables
@@ -150,6 +164,37 @@ public class Autotune {
 
     }
 
+    /**
+     * Set up the data sources available at installation time from config file
+     */
+    private static void setUpDataSources() {
+        DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
+        dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
+    }
+
+    /**
+     * loads datasources from database
+     */
+    private static void loadDataSourcesFromDB() {
+        DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
+        dataSourceCollection.loadDataSourcesFromDB();
+    }
+
+    /**
+     * checks the data sources available
+     */
+    private static void checkAvailableDataSources() {
+        DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
+        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
+        HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
+        for (String name: dataSources.keySet()) {
+            DataSourceInfo dataSource = dataSources.get(name);
+            String dataSourceName = dataSource.getName();
+            String url = dataSource.getUrl().toString();
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
+        }
+    }
+
     private static void addAutotuneServlets(ServletContextHandler context) {
         context.addServlet(HealthService.class, HEALTH_SERVICE);
         // Start the Prometheus end point (/metrics) for Autotune
@@ -173,12 +218,12 @@ public class Autotune {
         ExperimentManager.launch(contextHandler);
     }
 
-    private static void executeDDLs() throws Exception {
+    private static void executeDDLs(String ddlFileName) throws Exception {
         SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
         Session session = null;
         try {
             session = factory.openSession();
-            Path sqlFilePath = Paths.get(AnalyzerConstants.TARGET, AnalyzerConstants.MIGRATIONS, AnalyzerConstants.DDL);
+            Path sqlFilePath = Paths.get(AnalyzerConstants.TARGET, AnalyzerConstants.MIGRATIONS, ddlFileName);
             File sqlFile = sqlFilePath.toFile();
             Scanner scanner = new Scanner(sqlFile);
             Transaction transaction = session.beginTransaction();
@@ -192,7 +237,9 @@ public class Autotune {
                         session.createNativeQuery(sqlStatement).executeUpdate();
                     } catch (Exception e) {
                         if (e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_CONSTRAINT)) {
-                            LOGGER.warn("sql: {} failed due to : {}", sqlStatement, e.getMessage());
+                            LOGGER.warn("sql: {} failed due to : {}", sqlStatement, DBConstants.DB_MESSAGES.ADD_CONSTRAINT + DBConstants.DB_MESSAGES.DUPLICATE_DB_OPERATION);
+                        } else if (e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_COLUMN)) {
+                            LOGGER.warn("sql: {} failed due to : {}", sqlStatement, DBConstants.DB_MESSAGES.ADD_COLUMN + DBConstants.DB_MESSAGES.DUPLICATE_DB_OPERATION);
                         } else {
                             LOGGER.error("sql: {} failed due to : {}", sqlStatement, e.getMessage());
                         }
