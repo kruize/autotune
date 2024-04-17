@@ -108,12 +108,13 @@ public class Autotune {
             if (KruizeDeploymentInfo.local == true) {
                 LOGGER.info("Now running kruize local DDL's ");
                 executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
+                // setting up DataSources
+                setUpDataSources();
+                // checking available DataSources
+                checkAvailableDataSources();
+                // close the existing session factory before recreating
             }
-            // setting up DataSources
-            setUpDataSources();
-            // checking available DataSources
-            checkAvailableDataSources();
-            // close the existing session factory before recreating
+
             KruizeHibernateUtil.closeSessionFactory();
             //Regenerate a Hibernate session following the creation of new tables
             KruizeHibernateUtil.buildSessionFactory();
@@ -225,7 +226,7 @@ public class Autotune {
                     try {
                         session.createNativeQuery(sqlStatement).executeUpdate();
                     } catch (Exception e) {
-                        if (e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_CONSTRAINT)) {
+                        if (e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_CONSTRAINT) || e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_COLUMN)) {
                             LOGGER.warn("sql: {} failed due to : {}", sqlStatement, e.getMessage());
                         } else {
                             LOGGER.error("sql: {} failed due to : {}", sqlStatement, e.getMessage());

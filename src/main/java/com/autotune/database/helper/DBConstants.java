@@ -87,6 +87,7 @@ public class DBConstants {
         public static final String INVALID_PARTITION_TYPE = "Invalid Partition Type";
         public static final String DATA_NOT_FOUND_KRUIZE_RESULTS = "Data not found in kruizeResultsEntry for exp_name : {} interval_end_time : {} ";
         public static final String ADD_CONSTRAINT = "add constraint";
+        public static final String ADD_COLUMN = "add column";
         public static final String DB_CREATION_SUCCESS = "DB creation successful !";
         public static final String DB_LIVELINESS_PROBE_SUCCESS = "DB Liveliness probe connection successful!";
 
