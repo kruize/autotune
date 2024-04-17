@@ -457,6 +457,27 @@ public class KruizeConstants {
             public static final String DATASOURCE_METADATA_DATASOURCE_NOT_AVAILABLE = "DataSource information is not available for the specified DataSource: ";
             public static final String DATASOURCE_METADATA_CLUSTER_NOT_AVAILABLE = "DataSourceCluster information is not available for the specified Cluster {} and DataSource {}";
             public static final String DATASOURCE_METADATA_NAMESPACE_NOT_AVAILABLE = "DataSourceNamespace information is not available for the specified Namespace {}, Cluster {} and DataSource {}";
+            public static final String SET_CLUSTER_MAP_ERROR = "clusterHashMap is null, no clusters provided for cluster group: ";
+            public static final String SET_WORKLOAD_MAP_ERROR = "workloadHashMap is null, no workloads provided for namespace: ";
+            public static final String SET_CONTAINER_MAP_ERROR = "containerHashMap is null, no containers provided for workload: ";
+            public static final String SET_NAMESPACE_MAP_ERROR = "namespaceHashMap is null, no namespaces provided for cluster: ";
+        }
+
+        public static class DataSourceMetadataInfoJSONKeys {
+            private DataSourceMetadataInfoJSONKeys() {
+            }
+            public static final String DATASOURCES = "datasources";
+            public static final String DATASOURCE_NAME = "datasource_name";
+            public static final String CLUSTERS = "clusters";
+            public static final String CLUSTER_NAME = "cluster_name";
+            public static final String NAMESPACES = "namespaces";
+            public static final String NAMESPACE = "namespace";
+            public static final String WORKLOADS = "workloads";
+            public static final String WORKLOAD_NAME = "workload_name";
+            public static final String WORKLOAD_TYPE = "workload_type";
+            public static final String CONTAINERS = "containers";
+            public static final String CONTAINER_NAME = "container_name";
+            public static final String CONTAINER_IMAGE_NAME = "container_image_name";
         }
     }
 
