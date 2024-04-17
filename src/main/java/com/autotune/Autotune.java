@@ -236,8 +236,10 @@ public class Autotune {
                     try {
                         session.createNativeQuery(sqlStatement).executeUpdate();
                     } catch (Exception e) {
-                        if (e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_CONSTRAINT) || e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_COLUMN)) {
-                            LOGGER.warn("sql: {} failed due to : {}", sqlStatement, e.getMessage());
+                        if (e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_CONSTRAINT)) {
+                            LOGGER.warn("sql: {} failed due to : {}", sqlStatement, DBConstants.DB_MESSAGES.ADD_CONSTRAINT + DBConstants.DB_MESSAGES.DUPLICATE_DB_OPERATION);
+                        } else if (e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_COLUMN)) {
+                            LOGGER.warn("sql: {} failed due to : {}", sqlStatement, DBConstants.DB_MESSAGES.ADD_COLUMN + DBConstants.DB_MESSAGES.DUPLICATE_DB_OPERATION);
                         } else {
                             LOGGER.error("sql: {} failed due to : {}", sqlStatement, e.getMessage());
                         }

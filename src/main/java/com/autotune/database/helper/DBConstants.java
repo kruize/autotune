@@ -90,6 +90,7 @@ public class DBConstants {
         public static final String ADD_COLUMN = "add column";
         public static final String DB_CREATION_SUCCESS = "DB creation successful !";
         public static final String DB_LIVELINESS_PROBE_SUCCESS = "DB Liveliness probe connection successful!";
+        public static final String DUPLICATE_DB_OPERATION = " - Attempted operation has already been executed";
 
     }
 
