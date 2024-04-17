@@ -396,4 +396,14 @@ public class ExperimentDBService {
         else
             return dataSourceInfoList.get(0);
     }
+
+    public List<DataSourceInfo> loadAllDataSources() throws Exception {
+        List<KruizeDataSourceEntry> entries = experimentDAO.loadAllDataSources();
+        List<DataSourceInfo> dataSourceInfoList = null;
+        if (null != entries && !entries.isEmpty()) {
+            dataSourceInfoList = DBHelpers.Converters.KruizeObjectConverters.convertKruizeDataSourceToDataSourceObject(entries);
+            return dataSourceInfoList;
+        }
+        return dataSourceInfoList;
+    }
 }
