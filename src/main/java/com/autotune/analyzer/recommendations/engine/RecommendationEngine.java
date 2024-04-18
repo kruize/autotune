@@ -218,7 +218,7 @@ public class RecommendationEngine {
                         throw new Exception(errorMsg);
                     }
                 } catch (Exception e) {
-                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                    LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
                     kruizeObject = new KruizeObject();
                     kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_BAD_REQUEST));
                     return kruizeObject;
@@ -230,20 +230,20 @@ public class RecommendationEngine {
                     // store the recommendations in the DB
                     validationOutputData = addRecommendationsToDB(mainKruizeExperimentMAP, kruizeObject);
                     if (!validationOutputData.isSuccess()) {
-                        LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                        LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
                         validationOutputData = new ValidationOutputData(false, validationOutputData.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                     } else {
                         LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
                     }
                     kruizeObject.setValidation_data(validationOutputData);
                 } catch (Exception e) {
-                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                    LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
                     LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
                             experimentName, interval_start_time, interval_end_time);
                     kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
                 }
             } else {
-                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
                 kruizeObject = new KruizeObject();
                 kruizeObject.setValidation_data(new ValidationOutputData(false, String.format("%s%s", MISSING_EXPERIMENT_NAME, experimentName),
                         HttpServletResponse.SC_BAD_REQUEST));
@@ -251,7 +251,7 @@ public class RecommendationEngine {
         } catch (Exception e) {
             LOGGER.error("Exception occurred while generating recommendations for experiment: {} and interval_end_time: " +
                     "{} : {}", experimentName, interval_end_time, e.getMessage());
-            LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+            LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
             kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
         }
         return kruizeObject;
@@ -1315,7 +1315,7 @@ public class RecommendationEngine {
                 boolean resultsAvailable = new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
                 if (!resultsAvailable) {
                     errorMsg = String.format("%s%s", MISSING_INTERVAL_END_TIME, intervalEndTimeStr);
-                    LOGGER.debug(errorMsg);
+                    LOGGER.error(errorMsg);
                     return errorMsg;
                 }
             } catch (Exception e) {

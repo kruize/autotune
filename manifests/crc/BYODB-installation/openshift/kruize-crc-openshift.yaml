@@ -32,6 +32,9 @@ data:
       "monitoringendpoint": "prometheus-k8s",
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
+      "plots": "false",
+      "local": "false",
+      "logAllHttpReqAndResp": "true",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
