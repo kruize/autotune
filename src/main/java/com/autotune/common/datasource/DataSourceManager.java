@@ -67,10 +67,10 @@ public class DataSourceManager {
     public void updateMetadataFromDataSource(DataSourceInfo dataSource, DataSourceMetadataInfo dataSourceMetadataInfo) {
         try {
             if (null == dataSource) {
-                throw new KruizeDatasourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
             if (null == dataSourceMetadataInfo) {
-                throw new KruizeDatasourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
+                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
             }
             dataSourceMetadataOperator.updateDataSourceMetadata(dataSource, dataSourceMetadataInfo);
         } catch (Exception e) {
@@ -86,7 +86,7 @@ public class DataSourceManager {
 
         try {
             if (null == dataSource) {
-                throw new KruizeDatasourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
             dataSourceMetadataOperator.deleteDataSourceMetadata(dataSource);
         } catch (Exception e) {
