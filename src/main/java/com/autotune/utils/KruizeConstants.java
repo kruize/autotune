@@ -272,6 +272,7 @@ public class KruizeConstants {
         public static final String DURATION_PATTERN = "(\\d+)([a-zA-Z]+)";
         public static final String WHITESPACE_PATTERN = "\\s";
         public static final String QUERY_WITH_TIME_RANGE_PATTERN = ".*\\[(\\d+)([a-zA-Z]+)\\].*";
+        public static final String CLOUDWATCH_LOG_PATTERN = "%d{yyyy-MM-ddHH:mm:ss.SSS} %level [%t][%F(%L)]-%msg%n";
 
         private Patterns() {
         }
@@ -583,6 +584,12 @@ public class KruizeConstants {
         public static final String SETTINGS_HIBERNATE_SHOW_SQL = "hibernate_showsql";
         public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
         public static final String PLOTS = "plots";
+        public static final String CLOUDWATCH_LOGS_ACCESS_KEY_ID = "cloudwatch_accessKeyId";
+        public static final String CLOUDWATCH_LOGS_SECRET_ACCESS_KEY = "cloudwatch_secretAccessKey";
+        public static final String CLOUDWATCH_LOGS_LOG_GROUP = "cloudwatch_logGroup";
+        public static final String CLOUDWATCH_LOGS_REGION = "cloudwatch_region";
+        public static final String CLOUDWATCH_LOGS_LOG_STREAM = "cloudwatch_logStream";
+        public static final String CLOUDWATCH_LOGS_LOG_LEVEL = "cloudwatch_logLevel";
         public static final String LOCAL = "local";
     }
 

@@ -48,6 +48,14 @@ data:
         "c3p0maxstatements": 50,
         "hbm2ddlauto": "update",
         "showsql": "true"
+      },
+      "cloudwatch": {
+        "accessKeyId": "",
+        "secretAccessKey": "",
+        "region": "",
+        "logGroup": "kruize-logs",
+        "logStream": "kruize-stream",
+        "logLevel": "INFO"
       }
     }
 ```

@@ -65,6 +65,14 @@ public class KruizeDeploymentInfo {
     public static String database_admin_username;
     public static String database_admin_password;
     public static String database_ssl_mode;
+
+    public static String cloudwatch_logs_access_key_id;
+    public static String cloudwatch_logs_secret_access_key;
+    public static String cloudwatch_logs_log_group;
+    public static String cloudwatch_logs_region;
+    public static String cloudwatch_logs_log_level;
+    public static String cloudwatch_logs_log_stream;
+
     public static Boolean settings_save_to_db;
     public static String em_only_mode;
     public static Integer bulk_update_results_limit = 100;
