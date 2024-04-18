@@ -35,33 +35,32 @@ public class DataSourceManager {
             if (null == dataSourceInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo);
+            String dataSourceName = dataSourceInfo.getName();
+            if(checkIfDataSourceMetadataExists(dataSourceName)) {
+                LOGGER.error("Metadata already exists for datasource: {}!", dataSourceName);
+                return;
+            }
 
             try {
+                dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo);
                 DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSourceInfo);
 
                 if (null == dataSourceMetadataInfo) {
-                    LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
+                    LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
                     return;
                 }
                 // save the metadata to DB
                 ValidationOutputData addedToDB = null;
-                for (DataSource dataSource : dataSourceMetadataInfo.getDataSourceHashMap().values()) {
-                    String dataSourceName = dataSource.getDataSourceName();
-                    // check if dataSource already exists in the DB and proceed to add accordingly
-                    if (!checkIfDataSourceExists(dataSourceName)) {
-                        try {
-                            // add the data source to DB
-                            addedToDB = new ExperimentDBService().addMetadataToDB(dataSourceMetadataInfo);
-                            if (addedToDB.isSuccess()) {
-                                LOGGER.info("Metadata added to the DB successfully.");
-                            } else {
-                                LOGGER.error("Failed to add metadata to DB: {}", addedToDB.getMessage());
-                            }
-                        } catch (Exception e) {
-                            LOGGER.error("Exception occurred while adding metadata : {} ", e.getMessage());
-                        }
+                try {
+                    // add the data source metadata to DB
+                    addedToDB = new ExperimentDBService().addMetadataToDB(dataSourceMetadataInfo);
+                    if (addedToDB.isSuccess()) {
+                        LOGGER.info("Metadata added to the DB successfully.");
+                    } else {
+                        LOGGER.error("Failed to add metadata to DB: {}", addedToDB.getMessage());
                     }
+                } catch (Exception e) {
+                    LOGGER.error("Exception occurred while adding metadata : {} ", e.getMessage());
                 }
 
             } catch (Exception e) {
@@ -84,9 +83,17 @@ public class DataSourceManager {
             if (null == dataSource) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            return dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSource);
-        } catch (Exception e) {
+            String dataSourceName = dataSource.getName();
+            DataSourceMetadataInfo dataSourceMetadataInfo = new ExperimentDBService().loadMetadataFromDBByName(dataSource.getName(), "true");
+            if (null == dataSourceMetadataInfo) {
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceName);
+                return null;
+            }
+            return dataSourceMetadataInfo;
+        } catch (DataSourceDoesNotExist e) {
             LOGGER.error(e.getMessage());
+        }catch (Exception e) {
+            LOGGER.error("Loading saved datasource metadata failed: {} ", e.getMessage());
         }
         return null;
     }
@@ -127,16 +134,16 @@ public class DataSourceManager {
         }
     }
 
-    private boolean checkIfDataSourceExists(String dataSourceName) {
+    private boolean checkIfDataSourceMetadataExists(String dataSourceName) {
         boolean isPresent = false;
         try {
             DataSourceMetadataInfo dataSourceMetadataInfo = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName,"false");
             if (null != dataSourceMetadataInfo) {
-                LOGGER.warn("Cluster group: {} already exists!", dataSourceName);
+                LOGGER.error("Metadata already exists for datasource: {}!", dataSourceName);
                 isPresent = true;
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to load metadata for the cluster group: {}: {} ", dataSourceName, e.getMessage());
+            LOGGER.error("Failed to load metadata for the datasource: {}: {} ", dataSourceName, e.getMessage());
         }
         return isPresent;
     }
