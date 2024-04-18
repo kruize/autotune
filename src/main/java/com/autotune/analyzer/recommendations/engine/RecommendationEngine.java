@@ -1417,7 +1417,7 @@ public class RecommendationEngine {
                                             URLEncoder.encode(promQL, CHARACTER_ENCODING),
                                             interval_start_time_epoc,
                                             interval_end_time_epoc,
-                                            measurementDurationMinutesInDouble.intValue() * 60);
+                                            measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                                     LOGGER.info(podMetricsUrl);
                                     JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson("get", "");
                                     JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
