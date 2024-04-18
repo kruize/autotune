@@ -1,14 +1,13 @@
 package com.autotune.common.datasource;
 
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
-import com.autotune.common.utils.DataSourceMetadataHelper;
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataHelper;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.xml.crypto.Data;
 import java.util.HashMap;
 
 /**
@@ -42,6 +41,7 @@ public class DataSourceMetadataOperator {
         DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
 
         if (null == op) {
+            LOGGER.error("Failed to retrieve data source operator for provider: {}", dataSourceInfo.getProvider());
             return;
         }
 
@@ -54,6 +54,7 @@ public class DataSourceMetadataOperator {
             JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(), PromQLDataSourceQueries.NAMESPACE_QUERY);
             if (false == op.validateResultArray(namespacesDataResultArray)){
                 dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceInfo.getName(), null);
+                LOGGER.error("Validation failed for namespace data query.");
                 return;
             }
 
@@ -107,14 +108,14 @@ public class DataSourceMetadataOperator {
     public DataSourceMetadataInfo getDataSourceMetadataInfo(DataSourceInfo dataSourceInfo) {
         try {
             if (null == dataSourceMetadataInfo) {
-                LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
                 return null;
             }
             String dataSourceName = dataSourceInfo.getName();
             HashMap<String, DataSource> dataSourceHashMap = dataSourceMetadataInfo.getDataSourceHashMap();
 
             if (null == dataSourceHashMap || !dataSourceHashMap.containsKey(dataSourceName)) {
-                LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_DATASOURCE_NOT_AVAILABLE + dataSourceName);
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_DATASOURCE_NOT_AVAILABLE + "{}", dataSourceName);
                 return null;
             }
 
@@ -138,7 +139,12 @@ public class DataSourceMetadataOperator {
      *                            metadata information of the data source.
      */
     public void updateDataSourceMetadata(DataSourceInfo dataSourceInfo, DataSourceMetadataInfo existingMetadataInfo) {
-        if (dataSourceInfo == null || existingMetadataInfo == null) {
+        if (null == dataSourceInfo) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            return;
+        }
+        if (null == existingMetadataInfo) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
             return;
         }
         String dataSourceName = dataSourceInfo.getName();
@@ -147,6 +153,7 @@ public class DataSourceMetadataOperator {
         DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
 
         if (null == op) {
+            LOGGER.error("Failed to retrieve data source operator for provider: {}", dataSourceInfo.getProvider());
             return;
         }
 
@@ -155,6 +162,7 @@ public class DataSourceMetadataOperator {
             JsonArray namespacesDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(),
                     PromQLDataSourceQueries.NAMESPACE_QUERY);
             if (!op.validateResultArray(namespacesDataResultArray)) {
+                LOGGER.debug("Validation failed for namespace data query.");
                 return;
             }
             HashMap<String, DataSourceNamespace> newNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
@@ -209,6 +217,7 @@ public class DataSourceMetadataOperator {
         try{
             if (null == dataSourceMetadataInfo) {
                 LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
+                return;
             }
             String dataSourceName = dataSourceInfo.getName();
             HashMap<String, DataSource> dataSourceHashMap = dataSourceMetadataInfo.getDataSourceHashMap();

@@ -1,6 +1,5 @@
-package com.autotune.common.utils;
+package com.autotune.common.data.dataSourceMetadata;
 
-import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
