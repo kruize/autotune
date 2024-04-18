@@ -351,19 +351,6 @@ public class ExperimentDBService {
         loadAllRecommendations(mainKruizeExperimentMap);
     }
 
-    public DataSourceInfo loadDataSourceFromDBByName(String name) throws Exception {
-        List<KruizeDataSourceEntry> kruizeDataSourceList = experimentDAO.loadDataSourceByName(name);
-        List<DataSourceInfo> dataSourceInfoList = new ArrayList<>();
-        if (null != kruizeDataSourceList && !kruizeDataSourceList.isEmpty()) {
-            dataSourceInfoList = DBHelpers.Converters.KruizeObjectConverters
-                    .convertKruizeDataSourceToDataSourceObject(kruizeDataSourceList);
-        }
-        if (dataSourceInfoList.isEmpty())
-            return null;
-        else
-            return dataSourceInfoList.get(0);
-    }
-
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
         kruizeObject.setStatus(status);
         // TODO   update into database
