@@ -652,21 +652,24 @@ public class DBHelpers {
                 return performanceProfiles;
             }
 
+            /**
+             * converts KruizeDataSourceEntry table objects to DataSourceInfo objects
+             * @param kruizeDataSourceList List containing the KruizeDataSourceEntry table objects
+             * @return List containing the DataSourceInfo objects
+             */
             public static List<DataSourceInfo> convertKruizeDataSourceToDataSourceObject(List<KruizeDataSourceEntry> kruizeDataSourceList) throws Exception {
                 List<DataSourceInfo> dataSourceInfoList = new ArrayList<>();
                 int failureThreshHold = kruizeDataSourceList.size();
                 int failureCount = 0;
-                for (KruizeDataSourceEntry kruizeDataSourceEntry : kruizeDataSourceList) {
+                for (KruizeDataSourceEntry kruizeDataSource : kruizeDataSourceList) {
                     try {
-                        DataSourceInfo dataSourceInfo;
-                        if (kruizeDataSourceEntry.getServiceName().isEmpty() && null != kruizeDataSourceEntry.getUrl()) {
-                            dataSourceInfo = new DataSourceInfo(kruizeDataSourceEntry.getName(), kruizeDataSourceEntry
-                                    .getProvider(), null, kruizeDataSourceEntry
-                                    .getNamespace(), new URL(kruizeDataSourceEntry.getUrl()));
+                        DataSourceInfo dataSourceInfo = null;
+                        if (kruizeDataSource.getServiceName().isEmpty() && null != kruizeDataSource.getUrl()) {
+                            dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
+                                    .getProvider(), null, null, new URL(kruizeDataSource.getUrl()));
                         } else{
-                            dataSourceInfo = new DataSourceInfo(kruizeDataSourceEntry.getName(), kruizeDataSourceEntry
-                                    .getProvider(), kruizeDataSourceEntry.getServiceName(), kruizeDataSourceEntry
-                                    .getNamespace(), null);
+                            dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
+                                    .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace(), null);
                         }
                         dataSourceInfoList.add(dataSourceInfo);
                     } catch (Exception e) {
@@ -681,6 +684,29 @@ public class DBHelpers {
                 return dataSourceInfoList;
             }
 
+            /**
+             * converts DataSourceInfo objects to KruizeDataSourceEntry table objects
+             * @param dataSourceInfo DataSourceInfo objects
+             * @return KruizeDataSourceEntry table object
+             */
+            public static KruizeDataSourceEntry convertDataSourceToDataSourceDBObj(DataSourceInfo dataSourceInfo) {
+                KruizeDataSourceEntry kruizeDataSource;
+                try {
+                    kruizeDataSource = new KruizeDataSourceEntry();
+                    kruizeDataSource.setVersion(KruizeConstants.DataSourceConstants.DataSourceDetailsInfoConstants.version);
+                    kruizeDataSource.setName(dataSourceInfo.getName());
+                    kruizeDataSource.setProvider(dataSourceInfo.getProvider());
+                    kruizeDataSource.setServiceName(dataSourceInfo.getServiceName());
+                    kruizeDataSource.setNamespace(dataSourceInfo.getNamespace());
+                    kruizeDataSource.setUrl(dataSourceInfo.getUrl().toString());
+                } catch (Exception e) {
+                    kruizeDataSource = null;
+                    LOGGER.error("Error while converting DataSource Object to KruizeDataSource table due to {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeDataSource;
+            }
         }
+
     }
 }
