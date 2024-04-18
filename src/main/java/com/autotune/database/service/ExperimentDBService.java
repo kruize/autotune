@@ -24,6 +24,7 @@ import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.database.dao.ExperimentDAO;
@@ -420,4 +421,47 @@ public class ExperimentDBService {
         }
         return dataSourceInfoList;
     }
+
+    /**
+     * adds metadata to database table
+     * @param dataSourceMetadataInfo DataSourceMetadataInfo object
+     * @return
+     */
+    public ValidationOutputData addMetadataToDB(DataSourceMetadataInfo dataSourceMetadataInfo) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            List<KruizeDSMetadataEntry> kruizeMetadataList = DBHelpers.Converters.KruizeObjectConverters.convertDataSourceMetadataToMetadataObj(dataSourceMetadataInfo);
+            for(KruizeDSMetadataEntry kruizeMetadata : kruizeMetadataList) {
+                validationOutputData = this.experimentDAO.addMetadataToDB(kruizeMetadata);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save metadata due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * fetches metadata of specified datasource name from database
+     * @param dataSourceName String containing the name of datasource
+     * @param verbose
+     * @return DataSourceMetadataInfo object containing metadata
+     */
+    public DataSourceMetadataInfo loadMetadataFromDBByName(String dataSourceName, String verbose) throws Exception {
+        List<KruizeDSMetadataEntry> kruizeMetadataList = experimentDAO.loadMetadataByName(dataSourceName);
+        List<DataSourceMetadataInfo> dataSourceDetailsInfoList = new ArrayList<>();
+        if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
+            if (verbose.equals("false")) {
+                dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToClusterLevelDataSourceMetadata(kruizeMetadataList);
+            } else {
+                dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToDataSourceMetadataObject(kruizeMetadataList);
+            }
+        }
+        if (dataSourceDetailsInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceDetailsInfoList.get(0);
+    }
+
 }
