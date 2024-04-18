@@ -1239,6 +1239,11 @@ public class RecommendationEngine {
             }
         }
 
+        //Set all existing notifications
+        for (RecommendationNotification recommendationNotification : notifications) {
+            recommendationModel.addNotification(recommendationNotification);
+        }
+
         // set the engine level notifications here
         for (RecommendationNotification recommendationNotification : engineNotifications) {
             recommendationModel.addNotification(recommendationNotification);

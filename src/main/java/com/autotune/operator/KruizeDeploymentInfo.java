@@ -173,7 +173,8 @@ public class KruizeDeploymentInfo {
         LOGGER.info("Auth Type: {}", KruizeDeploymentInfo.auth_type);
         LOGGER.info("Monitoring Agent: {}", KruizeDeploymentInfo.monitoring_agent);
         LOGGER.info("Monitoring Agent URL: {}", KruizeDeploymentInfo.monitoring_agent_endpoint);
-        LOGGER.info("Monitoring agent service: {}\n\n", KruizeDeploymentInfo.monitoring_service);
+        LOGGER.info("Monitoring agent service: {}", KruizeDeploymentInfo.monitoring_service);
+        LOGGER.info("Kruize Local Flag: {}\n\n", KruizeDeploymentInfo.local);
     }
 }
 
