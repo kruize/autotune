@@ -107,7 +107,7 @@ public class UpdateRecommendations extends HttpServlet {
                     sendSuccessResponse(response, kruizeObject, interval_end_time);
                     statusValue = "success";
                 } else {
-                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                    LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
                     sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject.getValidation_data().getMessage());
                 }
             } else {
@@ -116,8 +116,8 @@ public class UpdateRecommendations extends HttpServlet {
             }
 
         } catch (Exception e) {
-            LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
-            LOGGER.debug("UpdateRecommendations API, experiment_name: {},  intervalEndTimeStr: {}", experiment_name, intervalEndTimeStr);
+            LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
+            LOGGER.error("UpdateRecommendations API, experiment_name: {},  intervalEndTimeStr: {}", experiment_name, intervalEndTimeStr);
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());

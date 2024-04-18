@@ -120,7 +120,7 @@ public class UpdateResults extends HttpServlet {
                 );
                 request.setAttribute("data", jsonObjectList);
                 String errorMessage = String.format("Out of a total of %s records, %s failed to save", updateResultsAPIObjects.size(), failureAPIObjs.size());
-                LOGGER.debug("updateResults API request payload for requestID {} failed", calCount);
+                LOGGER.error("updateResults API request payload for requestID {} failed", calCount);
                 sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
             } else {
                 LOGGER.debug("updateResults API request payload for requestID {} success", calCount);
@@ -128,7 +128,7 @@ public class UpdateResults extends HttpServlet {
                 statusValue = "success";
             }
         } catch (Exception e) {
-            LOGGER.debug("updateResults API request payload for requestID {} failed", calCount);
+            LOGGER.error("updateResults API request payload for requestID {} failed", calCount);
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(inputData, request, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
