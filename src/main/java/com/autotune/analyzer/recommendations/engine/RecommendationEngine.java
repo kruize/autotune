@@ -1314,7 +1314,7 @@ public class RecommendationEngine {
             try {
                 boolean resultsAvailable = new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
                 if (!resultsAvailable) {
-                    errorMsg = String.format("%s%s", MISSING_INTERVAL_END_TIME, intervalEndTimeStr);
+                    errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.NO_METRICS_AVAILABLE, intervalEndTimeStr, intervalStartTime);
                     LOGGER.error(errorMsg);
                     return errorMsg;
                 }

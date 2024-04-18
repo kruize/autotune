@@ -315,6 +315,15 @@ def test_update_recommendations_with_unknown_interval_end_time(cluster_type):
     input_json_file = "../json_files/create_exp.json"
     # creating a random end_time timestamp
     end_time = "2023-01-02T00:15:00.000Z"
+    # Convert end_time to datetime object
+    end_time_dt = datetime.strptime(end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+
+    # Subtract 15 days from end_time
+    start_time_dt = end_time_dt - timedelta(days=15)
+
+    # Format start_time_dt back to string
+    start_time = start_time_dt.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
     find = []
     json_data = json.load(open(input_json_file))
 
@@ -348,7 +357,7 @@ def test_update_recommendations_with_unknown_interval_end_time(cluster_type):
     response = update_recommendations(experiment_name, None, end_time)
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    assert data['message'] == UPDATE_RECOMMENDATIONS_INTERVAL_END_TIME_NOT_FOUND + end_time
+    assert data['message'] == UPDATE_RECOMMENDATIONS_METRICS_NOT_FOUND % (end_time, start_time)
 
 
 @pytest.mark.negative
