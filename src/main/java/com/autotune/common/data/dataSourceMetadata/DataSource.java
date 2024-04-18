@@ -1,5 +1,7 @@
 package com.autotune.common.data.dataSourceMetadata;
 
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,13 +13,14 @@ import java.util.HashMap;
  */
 public class DataSource {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSource.class);
-    // TODO - add KruizeConstants for attributes
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCE_NAME)
     private String dataSourceName;
 
     /**
      * Key: Cluster name
      * Value: Associated DataSourceCluster object
      */
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS)
     private HashMap<String, DataSourceCluster> clusterHashMap;
 
     public DataSource(String dataSourceName, HashMap<String,DataSourceCluster> clusterHashMap) {
@@ -34,16 +37,24 @@ public class DataSource {
     }
 
     public void setDataSourceClusterHashMap(HashMap<String, DataSourceCluster> clusterHashMap) {
-        // TODO: Validate input before setting the clusterHashMap
+        if (null == clusterHashMap) {
+            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.SET_CLUSTER_MAP_ERROR + "{}", dataSourceName);
+        }
         this.clusterHashMap = clusterHashMap;
     }
 
+    public DataSourceCluster getDataSourceClusterObject(String clusterName) {
+        if (null != clusterHashMap && clusterHashMap.containsKey(clusterName)) {
+            return clusterHashMap.get(clusterName);
+        }
+        return null;
+    }
 
     @Override
     public String toString() {
         return "DataSource{" +
-                "dataSourceName='" + dataSourceName + '\'' +
-                ", clusterHashMap=" + clusterHashMap +
+                "datasource_name='" + dataSourceName + '\'' +
+                ", clusters=" + clusterHashMap +
                 '}';
     }
 }
