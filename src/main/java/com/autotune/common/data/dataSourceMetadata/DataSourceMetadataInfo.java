@@ -1,5 +1,7 @@
 package com.autotune.common.data.dataSourceMetadata;
 
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,11 +14,12 @@ import java.util.HashMap;
 
 public class DataSourceMetadataInfo {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceMetadataInfo.class);
-    // TODO - add KruizeConstants for attributes
+
     /**
      * Key: Data Source name
      * Value: Associated DataSource object
      */
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCES)
     private HashMap<String, DataSource> dataSourceHashMap;
 
     public DataSourceMetadataInfo(HashMap<String, DataSource> dataSourceHashMap) {
@@ -33,11 +36,17 @@ public class DataSourceMetadataInfo {
         }
         this.dataSourceHashMap = dataSourceHashMap;
     }
+    public DataSource getDataSourceObject(String dataSourceName) {
+        if (null != dataSourceHashMap && dataSourceHashMap.containsKey(dataSourceName)) {
+            return dataSourceHashMap.get(dataSourceName);
+        }
+        return null;
+    }
 
     @Override
     public String toString() {
         return "DataSourceMetadataInfo{" +
-                "dataSourceHashMap=" + dataSourceHashMap +
+                "datasources=" + dataSourceHashMap +
                 '}';
     }
 }

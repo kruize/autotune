@@ -1,5 +1,7 @@
 package com.autotune.common.data.dataSourceMetadata;
 
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -11,13 +13,14 @@ import java.util.HashMap;
  */
 public class DataSourceCluster {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCluster.class);
-    // TODO - add KruizeConstants for attributes
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTER_NAME)
     private String clusterName;
 
     /**
      * Key: Namespace
      * Value: Associated DataSourceNamespace object
      */
+    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.NAMESPACES)
     private HashMap<String, DataSourceNamespace> namespaceHashMap;
 
     public DataSourceCluster(String clusterName, HashMap<String, DataSourceNamespace> namespaceHashMap) {
@@ -34,15 +37,24 @@ public class DataSourceCluster {
     }
 
     public void setDataSourceNamespaceHashMap(HashMap<String, DataSourceNamespace> namespaceHashMap) {
-        // TODO: Validate input before setting the namespaceHashMap
+        if (null == namespaceHashMap) {
+            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.SET_NAMESPACE_MAP_ERROR + "{}", clusterName);
+        }
         this.namespaceHashMap = namespaceHashMap;
+    }
+
+    public DataSourceNamespace getDataSourceNamespaceObject(String namespace) {
+        if  (null != namespaceHashMap && namespaceHashMap.containsKey(namespace)) {
+            return namespaceHashMap.get(namespace);
+        }
+        return null;
     }
 
     @Override
     public String toString() {
         return "DataSourceCluster{" +
-                "clusterName='" + clusterName + '\'' +
-                ", namespaceHashMap=" + namespaceHashMap +
+                "cluster_name='" + clusterName + '\'' +
+                ", namespaces=" + namespaceHashMap +
                 '}';
     }
 }
