@@ -20,19 +20,19 @@ import jakarta.persistence.*;
 
 /**
  * This is a Java class named KruizeDSMetadataEntry annotated with JPA annotations.
- * It represents a table named kruize_metadata in a relational database.
+ * It represents a table named kruize_dsmetadata in a relational database.
  * <p>
  * The class has the following fields:
  * <p>
  * id: A unique identifier for each experiment detail.
  * version: A String representing the version of the experiment.
- * clusterGroupName: A String representing the datasource name.
- * clusterName: A String representing the cluster name.
+ * datasource_name: A String representing the datasource name.
+ * cluster_name: A String representing the cluster name.
  * namespace: A String representing the namespace name.
- * workloadType: A String representing the type of workload.
- * workloadName: A String representing the workload name.
- * containerName: A String representing the container name.
- * containerImageName: A String representing the container image name.
+ * workload_type: A String representing the type of workload.
+ * workload_name: A String representing the workload name.
+ * container_name: A String representing the container name.
+ * container_image_name: A String representing the container image name.
  */
 @Entity
 @Table(name = "kruize_dsmetadata")
@@ -41,13 +41,13 @@ public class KruizeDSMetadataEntry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String version;
-    private String clusterGroupName;
-    private String clusterName;
+    private String datasource_name;
+    private String cluster_name;
     private String namespace;
-    private String workloadType;
-    private String workloadName;
-    private String containerName;
-    private String containerImageName;
+    private String workload_type;
+    private String workload_name;
+    private String container_name;
+    private String container_image_name;
 //    TODO: Relation mapping needs to be done later
 //    @OneToMany(mappedBy = "metadata", cascade = CascadeType.ALL)
 //    private List<KruizeExperimentEntry> experimentEntries;
@@ -55,15 +55,15 @@ public class KruizeDSMetadataEntry {
     public KruizeDSMetadataEntry() {
     }
 
-    public KruizeDSMetadataEntry(String version, String clusterGroupName, String clusterName, String namespace, String workloadType, String workloadName, String containerName, String containerImageName) {
+    public KruizeDSMetadataEntry(String version, String datasource_name, String cluster_name, String namespace, String workload_type, String workload_name, String container_name, String container_image_name) {
         this.version = version;
-        this.clusterGroupName = clusterGroupName;
-        this.clusterName = clusterName;
+        this.datasource_name = datasource_name;
+        this.cluster_name = cluster_name;
         this.namespace = namespace;
-        this.workloadType = workloadType;
-        this.workloadName = workloadName;
-        this.containerName = containerName;
-        this.containerImageName = containerImageName;
+        this.workload_type = workload_type;
+        this.workload_name = workload_name;
+        this.container_name = container_name;
+        this.container_image_name = container_image_name;
     }
 
     public Long getId() {
@@ -78,20 +78,20 @@ public class KruizeDSMetadataEntry {
         this.version = version;
     }
 
-    public String getClusterGroupName() {
-        return clusterGroupName;
+    public String getDataSourceName() {
+        return datasource_name;
     }
 
-    public void setClusterGroupName(String clusterGroupName) {
-        this.clusterGroupName = clusterGroupName;
+    public void setDataSourceName(String datasource_name) {
+        this.datasource_name = datasource_name;
     }
 
     public String getClusterName() {
-        return clusterName;
+        return cluster_name;
     }
 
-    public void setClusterName(String clusterName) {
-        this.clusterName = clusterName;
+    public void setClusterName(String cluster_name) {
+        this.cluster_name = cluster_name;
     }
 
     public String getNamespace() {
@@ -103,35 +103,35 @@ public class KruizeDSMetadataEntry {
     }
 
     public String getWorkloadType() {
-        return workloadType;
+        return workload_type;
     }
 
-    public void setWorkloadType(String workloadType) {
-        this.workloadType = workloadType;
+    public void setWorkloadType(String workload_type) {
+        this.workload_type = workload_type;
     }
 
     public String getWorkloadName() {
-        return workloadName;
+        return workload_name;
     }
 
-    public void setWorkloadName(String workloadName) {
-        this.workloadName = workloadName;
+    public void setWorkloadName(String workload_name) {
+        this.workload_name = workload_name;
     }
 
     public String getContainerName() {
-        return containerName;
+        return container_name;
     }
 
-    public void setContainerName(String containerName) {
-        this.containerName = containerName;
+    public void setContainerName(String container_name) {
+        this.container_name = container_name;
     }
 
     public String getContainerImageName() {
-        return containerImageName;
+        return container_image_name;
     }
 
-    public void setContainerImageName(String containerImageName) {
-        this.containerImageName = containerImageName;
+    public void setContainerImageName(String container_image_name) {
+        this.container_image_name = container_image_name;
     }
 
     @Override
@@ -139,13 +139,13 @@ public class KruizeDSMetadataEntry {
         return "KruizeDSMetadataEntry{" +
                 "id=" + id +
                 ", version='" + version + '\'' +
-                ", clusterGroupName='" + clusterGroupName + '\'' +
-                ", clusterName='" + clusterName + '\'' +
+                ", datasource_name='" + datasource_name + '\'' +
+                ", cluster_name='" + cluster_name + '\'' +
                 ", namespace='" + namespace + '\'' +
-                ", workloadType='" + workloadType + '\'' +
-                ", workloadName='" + workloadName + '\'' +
-                ", containerName='" + containerName + '\'' +
-                ", containerImageName='" + containerImageName + '\'' +
+                ", workload_type='" + workload_type + '\'' +
+                ", workload_name='" + workload_name + '\'' +
+                ", container_name='" + container_name + '\'' +
+                ", container_image_name='" + container_image_name + '\'' +
                 '}';
     }
 }
