@@ -38,7 +38,6 @@ import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
-import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_INTERVAL_END_TIME;
 
 public class RecommendationEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
