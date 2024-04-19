@@ -3283,7 +3283,8 @@ The response will contain a array of JSON object with the updated recommendation
 | 400              | experiment_name is mandatory.                                                                      |
 | 400              | interval_end_time is mandatory.                                                                    |
 | 400              | Given timestamp - \" 2023-011-02T00:00:00.000Z \" is not a valid timestamp format.                 |
-| 400              | Data not found!.                                                                                   |
+| 400              | No metrics available from `2024-01-15T00:00:00.000Z` to `2023-12-31T00:00:00.000Z`.                |
+| 400              | Not Found: experiment_name does not exist: exp1.                                                   |
 | 400              | The gap between the interval_start_time and interval_end_time must be within a maximum of 15 days! |
 | 400              | The Start time should precede the End time!                                                        |                                           |
 | 500              | Internal Server Error                                                                              |

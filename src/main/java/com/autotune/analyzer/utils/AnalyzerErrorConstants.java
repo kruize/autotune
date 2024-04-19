@@ -80,7 +80,7 @@ public class AnalyzerErrorConstants {
         public static final String DUPLICATE_PERF_PROFILE = "Performance Profile already exists: ";
         public static final String MISSING_PERF_PROFILE = "Not Found: performance_profile does not exist: ";
         public static final String MISSING_EXPERIMENT_NAME = "Not Found: experiment_name does not exist: ";
-        public static final String MISSING_INTERVAL_END_TIME = "Not Found: interval_end_time does not exist: ";
+        public static final String NO_METRICS_AVAILABLE = "No metrics available from %s to %s";
         public static final String UNSUPPORTED_EXPERIMENT = String.format("At present, the system does not support bulk entries!");
         public static final String UNSUPPORTED_EXPERIMENT_RESULTS = String.format("At present, the system does not support bulk entries exceeding %s in quantity!", KruizeDeploymentInfo.bulk_update_results_limit);
         public static final String UNSUPPORTED_BULK_KUBERNETES = "Bulk Kubernetes objects are currently unsupported!";

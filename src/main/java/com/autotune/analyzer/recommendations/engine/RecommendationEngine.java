@@ -231,7 +231,17 @@ public class RecommendationEngine {
             Timestamp interval_start_time = Timestamp.valueOf(Objects.requireNonNull(getInterval_end_time()).toLocalDateTime().minusDays(maxDay));
 
             // update the KruizeObject to have the results data from the available datasource
-            getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
+            try {
+                String errorMsg = getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
+                if (!errorMsg.isEmpty()) {
+                    throw new Exception(errorMsg);
+                }
+            } catch (Exception e) {
+                LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
+                kruizeObject = new KruizeObject();
+                kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_BAD_REQUEST));
+                return kruizeObject;
+            }
 
             // generate recommendation
             try {
@@ -239,14 +249,14 @@ public class RecommendationEngine {
                 // store the recommendations in the DB
                 validationOutputData = addRecommendationsToDB(mainKruizeExperimentMAP, kruizeObject);
                 if (!validationOutputData.isSuccess()) {
-                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                    LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
                     validationOutputData = new ValidationOutputData(false, validationOutputData.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 } else {
                     LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
                 }
                 kruizeObject.setValidation_data(validationOutputData);
             } catch (Exception e) {
-                LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
                 LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
                         experimentName, interval_start_time, interval_end_time);
                 kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
@@ -254,7 +264,7 @@ public class RecommendationEngine {
         } catch (Exception e) {
             LOGGER.error("Exception occurred while generating recommendations for experiment: {} and interval_end_time: " +
                     "{} : {}", experimentName, interval_end_time, e.getMessage());
-            LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+            LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
             kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
         }
         return kruizeObject;
@@ -1318,13 +1328,19 @@ public class RecommendationEngine {
      * @param dataSource              The data source used for monitoring.
      * @throws Exception if an error occurs during the process of fetching and storing results.
      */
-    private void getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject,
+    private String getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject,
                             String experimentName, Timestamp intervalStartTime, String dataSource) throws Exception {
+        String errorMsg = "";
         // get data from the DB in case of remote monitoring
         if (kruizeObject.getExperiment_usecase_type().isRemote_monitoring()) {
             mainKruizeExperimentMAP.put(experimentName, kruizeObject);
             try {
-                new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
+                boolean resultsAvailable = new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
+                if (!resultsAvailable) {
+                    errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.NO_METRICS_AVAILABLE, intervalEndTimeStr, intervalStartTime);
+                    LOGGER.error(errorMsg);
+                    return errorMsg;
+                }
             } catch (Exception e) {
                 LOGGER.error("Failed to fetch the results from the DB: {}", e.getMessage());
             }
@@ -1337,6 +1353,7 @@ public class RecommendationEngine {
             // Fetch metrics based on the datasource
             fetchMetricsBasedOnDatasource(kruizeObject, interval_end_time, intervalStartTime, dataSourceInfo);
         }
+        return errorMsg;
     }
 
 
