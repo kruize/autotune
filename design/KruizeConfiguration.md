@@ -91,6 +91,32 @@ The following environment variables are set using the `kubectl apply` command wi
     - Description: Timezone configuration for Hibernate.
     - Value: "UTC"
 
+## CloudWatch Configuration
+
+- **accessKeyId**
+  - Description: AWS account's access key ID. If not provided, CloudWatch logging is disabled.
+  - Value: ""
+
+- **secretAccessKey**
+  - Description: AWS account's secret access key. If not provided, CloudWatch logging is disabled.
+  - Value: ""
+
+- **region**
+  - Description: AWS region where CloudWatch logs are stored. If not provided, CloudWatch logging is disabled.
+  - Value: ""
+
+- **logGroup**
+  - Description: Name of the CloudWatch log group. Defaults to "kruize-logs".
+  - Value: "kruize-logs"
+
+- **logStream**
+  - Description: Name of the CloudWatch log stream within the log group. Defaults to "kruize-stream".
+  - Value: "kruize-stream"
+
+- **logLevel**
+  - Description:  The minimum level of log events to send to CloudWatch. Defaults to "INFO".
+  - Value: "INFO"
+
 ## Other Configuration
 
 - **deletepartitionsthreshold**

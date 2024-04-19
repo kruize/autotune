@@ -173,9 +173,13 @@ public class KruizeConstants {
         public static final String PERCENTILE_INFO = "percentile_info";
         public static final String FORMAT = "format";
         public static final String SUM = "sum";
+        public static final String AVG = "avg";
         public static final String COUNT = "count";
         public static final String MEDIAN = "median";
         public static final String RANGE = "range";
+        public static final String CORES = "cores";
+        public static final String GIBIBYTE = "GiB";
+
         // UI support JSON keys
         public static final String DATA = "data";
         public static final String NAMESPACES = "namespaces";
@@ -250,6 +254,10 @@ public class KruizeConstants {
         public static final String HOUR_SINGLE_LC = "h";
         public static final String HOUR_SINGLE_UC = HOUR_SINGLE_LC.toUpperCase();
 
+        public static final class TimeZones {
+            public static final String UTC = "UTC";
+        }
+
         private TimeUnitsExt() {
         }
     }
@@ -272,6 +280,7 @@ public class KruizeConstants {
         public static final String DURATION_PATTERN = "(\\d+)([a-zA-Z]+)";
         public static final String WHITESPACE_PATTERN = "\\s";
         public static final String QUERY_WITH_TIME_RANGE_PATTERN = ".*\\[(\\d+)([a-zA-Z]+)\\].*";
+        public static final String CLOUDWATCH_LOG_PATTERN = "%d{yyyy-MM-ddHH:mm:ss.SSS} %level [%t][%F(%L)]-%msg%n";
 
         private Patterns() {
         }
@@ -343,6 +352,7 @@ public class KruizeConstants {
         public static final String SERVICE_DNS = ".svc.cluster.local";
         public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";
         public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
+        public static final String DATASOURCE_ENDPOINT_WITH_QUERY = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
 
         public static class DataSourceDetailsInfoConstants {
             private DataSourceDetailsInfoConstants() {
@@ -400,6 +410,7 @@ public class KruizeConstants {
             public static final String RESULT = "result";
             public static final String METRIC = "metric";
             public static final String VALUE = "value";
+            public static final String VALUES = "values";
 
         }
 
@@ -583,6 +594,12 @@ public class KruizeConstants {
         public static final String SETTINGS_HIBERNATE_SHOW_SQL = "hibernate_showsql";
         public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
         public static final String PLOTS = "plots";
+        public static final String CLOUDWATCH_LOGS_ACCESS_KEY_ID = "cloudwatch_accessKeyId";
+        public static final String CLOUDWATCH_LOGS_SECRET_ACCESS_KEY = "cloudwatch_secretAccessKey";
+        public static final String CLOUDWATCH_LOGS_LOG_GROUP = "cloudwatch_logGroup";
+        public static final String CLOUDWATCH_LOGS_REGION = "cloudwatch_region";
+        public static final String CLOUDWATCH_LOGS_LOG_STREAM = "cloudwatch_logStream";
+        public static final String CLOUDWATCH_LOGS_LOG_LEVEL = "cloudwatch_logLevel";
         public static final String LOCAL = "local";
         public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
     }

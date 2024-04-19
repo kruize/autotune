@@ -45,6 +45,14 @@ data:
         "hbm2ddlauto": "update",
         "showsql": "false",
         "timezone": "UTC"
+      },
+      "cloudwatch": {
+        "accessKeyId": "",
+        "logGroup": "kruize-logs",
+        "logStream": "kruize-stream",
+        "region": "",
+        "secretAccessKey": "",
+        "logLevel": "INFO"
       }
     }
 ---

@@ -30,9 +30,7 @@ import com.autotune.operator.InitializeDeployment;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
-import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.ServerContext;
+import com.autotune.utils.*;
 import com.autotune.utils.filter.KruizeCORSFilter;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
@@ -103,6 +101,8 @@ public class Autotune {
 
         try {
             InitializeDeployment.setup_deployment_info();
+            // Configure AWS CloudWatch
+            CloudWatchAppender.configureLoggerForCloudWatchLog();
             // Read and execute the DDLs here
             executeDDLs(AnalyzerConstants.ROS_DDL_SQL);
             if (KruizeDeploymentInfo.local == true) {
