@@ -1353,6 +1353,7 @@ public class RecommendationEngine {
             // Fetch metrics based on the datasource
             fetchMetricsBasedOnDatasource(kruizeObject, interval_end_time, intervalStartTime, dataSourceInfo);
         }
+        return errorMsg;
     }
 
 
