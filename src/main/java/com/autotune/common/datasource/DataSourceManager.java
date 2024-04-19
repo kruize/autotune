@@ -35,7 +35,6 @@ public class DataSourceManager {
             }
             String dataSourceName = dataSourceInfo.getName();
             if(checkIfDataSourceMetadataExists(dataSourceName)) {
-                LOGGER.error("Metadata already exists for datasource: {}!", dataSourceName);
                 return;
             }
             dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo);
@@ -138,7 +137,7 @@ public class DataSourceManager {
             // add the data source to DB
             addedToDB = new ExperimentDBService().addMetadataToDB(dataSourceMetadataInfo);
             if (addedToDB.isSuccess()) {
-                LOGGER.info("Metadata added to the DB successfully.");
+                LOGGER.debug("Metadata added to the DB successfully.");
             } else {
                 LOGGER.error("Failed to add metadata to DB: {}", addedToDB.getMessage());
             }

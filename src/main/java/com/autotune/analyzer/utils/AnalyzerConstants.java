@@ -315,6 +315,8 @@ public class AnalyzerConstants {
         public static final String DATASOURCE_PROVIDER = "provider";
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String VERBOSE = "verbose";
+        public static final String FALSE = "false";
+
 
         private ServiceConstants() {
         }

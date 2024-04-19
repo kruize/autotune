@@ -453,7 +453,7 @@ public class ExperimentDBService {
         List<KruizeDSMetadataEntry> kruizeMetadataList = experimentDAO.loadMetadataByName(dataSourceName);
         List<DataSourceMetadataInfo> dataSourceDetailsInfoList = new ArrayList<>();
         if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
-            if (verbose.equals("false")) {
+            if (verbose.equals(AnalyzerConstants.ServiceConstants.FALSE)) {
                 dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
                         .convertKruizeMetadataToClusterLevelDataSourceMetadata(kruizeMetadataList);
             } else {
@@ -478,7 +478,7 @@ public class ExperimentDBService {
         List<KruizeDSMetadataEntry> kruizeMetadataList = experimentDAO.loadMetadataByClusterName(dataSourceName, clusterName);
         List<DataSourceMetadataInfo> dataSourceMetadataInfoList = new ArrayList<>();
         if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
-            if (verbose.equals("false")) {
+            if (verbose.equals(AnalyzerConstants.ServiceConstants.FALSE)) {
                 dataSourceMetadataInfoList = DBHelpers.Converters.KruizeObjectConverters
                         .convertKruizeMetadataToNamespaceLevelDataSourceMetadata(kruizeMetadataList);
             } else {
