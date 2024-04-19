@@ -182,6 +182,7 @@ public class KruizeConstants {
 
         // Datasource JSON keys
         public static final String DATASOURCES = "datasources";
+        public static final String DATASOURCE_NAME = "datasource_name";
 
         // UI support JSON keys
         public static final String DATA = "data";

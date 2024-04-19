@@ -65,6 +65,7 @@ public class ServerContext {
 
     //Datasource EndPoints
     public static final String LIST_DATASOURCES = ROOT_CONTEXT + "datasources";
+    public static final String DATASOURCE_METADATA = ROOT_CONTEXT + "dsmetadata";
 
     // UI support EndPoints
     public static final String QUERY_CONTEXT = ROOT_CONTEXT + "query/";
