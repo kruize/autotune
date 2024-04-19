@@ -180,6 +180,10 @@ public class KruizeConstants {
         public static final String CORES = "cores";
         public static final String GIBIBYTE = "GiB";
 
+        // Datasource JSON keys
+        public static final String DATASOURCES = "datasources";
+        public static final String DATASOURCE_NAME = "datasource_name";
+
         // UI support JSON keys
         public static final String DATA = "data";
         public static final String NAMESPACES = "namespaces";

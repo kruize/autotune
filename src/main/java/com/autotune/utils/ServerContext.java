@@ -63,6 +63,10 @@ public class ServerContext {
     public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS = ROOT_CONTEXT + "listTrialStatus";
     public static final String EXPERIMENT_MANAGER_LIST_TRIAL_STATUS_END_POINT = EXPERIMENT_MANAGER_SERVER_URL + EXPERIMENT_MANAGER_LIST_TRIAL_STATUS;
 
+    //Datasource EndPoints
+    public static final String LIST_DATASOURCES = ROOT_CONTEXT + "datasources";
+    public static final String DATASOURCE_METADATA = ROOT_CONTEXT + "dsmetadata";
+
     // UI support EndPoints
     public static final String QUERY_CONTEXT = ROOT_CONTEXT + "query/";
     public static final String LIST_NAMESPACES = QUERY_CONTEXT + "listNamespaces";
