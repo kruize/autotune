@@ -1,10 +1,10 @@
 package com.autotune.common.datasource;
 
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.exceptions.datasource.DataSourceDoesNotExist;
-import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
+import com.autotune.common.data.dataSourceMetadata.*;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,7 +16,7 @@ import org.slf4j.LoggerFactory;
  * Currently Supported Implementations:
  *  - importMetadataFromDataSource
  *  - getMetadataFromDataSource
- *  TODO - Implement update and delete functionalities
+ *  TODO - DB integration for update and delete functionalities
  */
 public class DataSourceManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceManager.class);
@@ -28,12 +28,19 @@ public class DataSourceManager {
     /**
      * Imports Metadata for a specific data source using associated DataSourceInfo.
      */
-    public void importMetadataFromDataSource(DataSourceInfo dataSource) {
+    public void importMetadataFromDataSource(DataSourceInfo dataSourceInfo) {
         try {
-            if (null == dataSource) {
+            if (null == dataSourceInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            dataSourceMetadataOperator.createDataSourceMetadata(dataSource);
+            String dataSourceName = dataSourceInfo.getName();
+            if(checkIfDataSourceMetadataExists(dataSourceName)) {
+                LOGGER.error("Metadata already exists for datasource: {}!", dataSourceName);
+                return;
+            }
+            dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo);
+            // save the metadata to DB
+            saveMetadataFromDataSourceToDB(dataSourceInfo);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
@@ -51,9 +58,17 @@ public class DataSourceManager {
             if (null == dataSource) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            return dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSource);
-        } catch (Exception e) {
+            String dataSourceName = dataSource.getName();
+            DataSourceMetadataInfo dataSourceMetadataInfo = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "true");
+            if (null == dataSourceMetadataInfo) {
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceName);
+                return null;
+            }
+            return dataSourceMetadataInfo;
+        } catch (DataSourceDoesNotExist e) {
             LOGGER.error(e.getMessage());
+        }catch (Exception e) {
+            LOGGER.error("Loading saved datasource metadata failed: {} ", e.getMessage());
         }
         return null;
     }
@@ -92,5 +107,58 @@ public class DataSourceManager {
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
+    }
+
+    /**
+     * retrieves and adds Metadata object from the specified data source
+     * @param dataSourceInfo DataSourceInfo object
+     */
+    public void saveMetadataFromDataSourceToDB(DataSourceInfo dataSourceInfo) {
+        try {
+            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSourceInfo);
+            if (null == dataSourceMetadataInfo) {
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceInfo.getName());
+                return;
+            }
+            // add the metadata to DB
+            addMetadataToDB(dataSourceMetadataInfo);
+
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    /**
+     * Adds Metadata object to DB
+     * @param dataSourceMetadataInfo DataSourceMetadataInfo object
+     */
+    public void addMetadataToDB(DataSourceMetadataInfo dataSourceMetadataInfo) {
+        ValidationOutputData addedToDB = null;
+        try {
+            // add the data source to DB
+            addedToDB = new ExperimentDBService().addMetadataToDB(dataSourceMetadataInfo);
+            if (addedToDB.isSuccess()) {
+                LOGGER.info("Metadata added to the DB successfully.");
+            } else {
+                LOGGER.error("Failed to add metadata to DB: {}", addedToDB.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while adding metadata : {} ", e.getMessage());
+        }
+
+    }
+
+    private boolean checkIfDataSourceMetadataExists(String dataSourceName) {
+        boolean isPresent = false;
+        try {
+            DataSourceMetadataInfo dataSourceMetadataInfo = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName,"false");
+            if (null != dataSourceMetadataInfo) {
+                LOGGER.error("Metadata already exists for datasource: {}!", dataSourceName);
+                isPresent = true;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to load metadata for the datasource: {}: {} ", dataSourceName, e.getMessage());
+        }
+        return isPresent;
     }
 }

@@ -810,17 +810,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
-     * @param clusterGroupName
+     * @param dataSourceName
      * @return
      */
     @Override
-    public List<KruizeDSMetadataEntry> loadDataSourceClusterGroupByName(String clusterGroupName) throws Exception {
+    public List<KruizeDSMetadataEntry> loadMetadataByName(String dataSourceName) throws Exception {
         List<KruizeDSMetadataEntry> kruizeMetadataList;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA_BY_CLUSTER_GROUP_NAME, KruizeDSMetadataEntry.class)
-                    .setParameter("cluster_group_name", clusterGroupName).list();
+            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA_BY_DATASOURCE_NAME, KruizeDSMetadataEntry.class)
+                    .setParameter("dataSourceName", dataSourceName).list();
         } catch (Exception e) {
-            LOGGER.error("Unable to load metadata with clusterGroupName: {} : {}", clusterGroupName, e.getMessage());
+            LOGGER.error("Unable to load metadata with dataSourceName: {} : {}", dataSourceName, e.getMessage());
             throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
         }
         return kruizeMetadataList;
