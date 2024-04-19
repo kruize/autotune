@@ -13,6 +13,20 @@ public class DBConstants {
         public static final String SELECT_FROM_DATASOURCE_BY_NAME = "from KruizeDataSourceEntry kd WHERE kd.name = :name";
         public static final String SELECT_FROM_METADATA = "from KruizeDSMetadataEntry";
         public static final String SELECT_FROM_METADATA_BY_DATASOURCE_NAME = "from KruizeDSMetadataEntry km WHERE km.datasource_name = :dataSourceName";
+        public static final String SELECT_FROM_METADATA_BY_DATASOURCE_NAME_AND_CLUSTER_NAME =
+                String.format("from KruizeDSMetadataEntry km " +
+                                "WHERE km.datasource_name = :%s and " +
+                                "km.cluster_name = :%s",
+                        KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCE_NAME,
+                        KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTER_NAME);
+        public static final String SELECT_FROM_METADATA_BY_DATASOURCE_NAME_CLUSTER_NAME_AND_NAMESPACE =
+                String.format("from KruizeDSMetadataEntry km " +
+                                "WHERE km.datasource_name = :%s and " +
+                                "km.cluster_name = :%s and " +
+                                "km.namespace = :%s",
+                        KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCE_NAME,
+                        KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTER_NAME,
+                        KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.NAMESPACE);
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME_AND_DATE_RANGE_AND_LIMIT =
                 String.format("from KruizeResultsEntry k " +
                                 "WHERE k.experiment_name = :%s and " +

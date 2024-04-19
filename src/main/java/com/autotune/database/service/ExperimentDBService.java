@@ -467,4 +467,49 @@ public class ExperimentDBService {
             return dataSourceDetailsInfoList.get(0);
     }
 
+    /**
+     * fetches metadata of specified datasource and cluster name from database
+     * @param dataSourceName String containing the name of datasource
+     * @param clusterName    String containing the cluster name
+     * @param verbose
+     * @return DataSourceMetadataInfo object containing metadata
+     */
+    public DataSourceMetadataInfo loadMetadataFromDBByClusterName(String dataSourceName, String clusterName, String verbose) throws Exception {
+        List<KruizeDSMetadataEntry> kruizeMetadataList = experimentDAO.loadMetadataByClusterName(dataSourceName, clusterName);
+        List<DataSourceMetadataInfo> dataSourceMetadataInfoList = new ArrayList<>();
+        if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
+            if (verbose.equals("false")) {
+                dataSourceMetadataInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToNamespaceLevelDataSourceMetadata(kruizeMetadataList);
+            } else {
+                dataSourceMetadataInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToDataSourceMetadataObject(kruizeMetadataList);
+            }
+        }
+        if (dataSourceMetadataInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceMetadataInfoList.get(0);
+    }
+
+    /**
+     * fetches metadata of specified datasource,cluster and namespace from database
+     * @param dataSourceName    String containing the name of datasource
+     * @param clusterName       String containing the name of datasource
+     * @param namespace         String containing the name of datasource
+     * @return DataSourceMetadataInfo object containing metadata
+     * @throws Exception
+     */
+    public DataSourceMetadataInfo loadMetadataFromDBByNamespace(String dataSourceName, String clusterName, String namespace) throws Exception {
+        List<KruizeDSMetadataEntry> kruizeMetadataList = experimentDAO.loadMetadataByNamespace(dataSourceName, clusterName, namespace);
+        List<DataSourceMetadataInfo> dataSourceMetadataInfoList = new ArrayList<>();
+        if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
+            dataSourceMetadataInfoList = DBHelpers.Converters.KruizeObjectConverters
+                    .convertKruizeMetadataToDataSourceMetadataObject(kruizeMetadataList);
+        }
+        if (dataSourceMetadataInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceMetadataInfoList.get(0);
+    }
 }

@@ -826,6 +826,56 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return kruizeMetadataList;
     }
 
+    /**
+     * Retrieves a list of KruizeDSMetadataEntry objects based on the specified datasource name and cluster name.
+     *
+     * @param dataSourceName The name of the datasource.
+     * @param clusterName The name of the cluster.
+     * @return A list of KruizeDSMetadataEntry objects associated with the provided datasource and cluster name.
+     * @throws Exception If there is an error while loading metadata from the database.
+     */
+    @Override
+    public List<KruizeDSMetadataEntry> loadMetadataByClusterName(String dataSourceName, String clusterName) throws Exception {
+        List<KruizeDSMetadataEntry> kruizeMetadataList;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<KruizeDSMetadataEntry> kruizeMetadataQuery = session.createQuery(SELECT_FROM_METADATA_BY_DATASOURCE_NAME_AND_CLUSTER_NAME, KruizeDSMetadataEntry.class)
+                    .setParameter("datasource_name", dataSourceName)
+                    .setParameter("cluster_name", clusterName);
+
+            kruizeMetadataList = kruizeMetadataQuery.list();
+        } catch (Exception e) {
+            LOGGER.error("Unable to load metadata with dataSourceName: {} and clusterName : {} : {}", dataSourceName, clusterName, e.getMessage());
+            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
+        }
+        return kruizeMetadataList;
+    }
+
+    /**
+     * Retrieves a list of KruizeDSMetadataEntry objects based on the specified
+     * datasource name, cluster name and namespace.
+     *
+     * @param dataSourceName The name of the datasource.
+     * @param clusterName The name of the cluster.
+     * @param namespace namespace
+     * @return A list of KruizeDSMetadataEntry objects associated with the provided datasource, cluster name and namespaces.
+     * @throws Exception If there is an error while loading metadata from the database.
+     */
+    public List<KruizeDSMetadataEntry> loadMetadataByNamespace(String dataSourceName, String clusterName, String namespace) throws Exception {
+        List<KruizeDSMetadataEntry> kruizeMetadataList;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            Query<KruizeDSMetadataEntry> kruizeMetadataQuery = session.createQuery(SELECT_FROM_METADATA_BY_DATASOURCE_NAME_CLUSTER_NAME_AND_NAMESPACE, KruizeDSMetadataEntry.class)
+                    .setParameter("datasource_name", dataSourceName)
+                    .setParameter("cluster_name", clusterName)
+                    .setParameter("namespace",namespace);
+
+            kruizeMetadataList = kruizeMetadataQuery.list();
+        } catch (Exception e) {
+            LOGGER.error("Unable to load metadata with dataSourceName: {}, clusterName : {} and namespace : {} : {}", dataSourceName, clusterName, namespace, e.getMessage());
+            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
+        }
+        return kruizeMetadataList;
+    }
+
     @Override
     public List<KruizeDSMetadataEntry> loadMetadata() throws Exception {
         List<KruizeDSMetadataEntry> kruizeMetadataList;

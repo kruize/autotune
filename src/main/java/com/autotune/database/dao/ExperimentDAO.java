@@ -79,8 +79,14 @@ public interface ExperimentDAO {
     // Load all the datasources
     List<KruizeDataSourceEntry> loadAllDataSources() throws Exception;
 
-    // Load data source cluster group by name
-    List<KruizeDSMetadataEntry> loadMetadataByName(String clusterGroupName) throws Exception;
+    // Load data source metadata by datasource name
+    List<KruizeDSMetadataEntry> loadMetadataByName(String dataSourceName) throws Exception;
+
+    // Load data source metadata by cluster name
+    List<KruizeDSMetadataEntry> loadMetadataByClusterName(String dataSourceName, String clusterName) throws Exception;
+
+    // Load data source metadata by namespace
+    List<KruizeDSMetadataEntry> loadMetadataByNamespace(String dataSourceName, String clusterName, String namespace) throws Exception;
 
     // add metadata
     ValidationOutputData addMetadataToDB(KruizeDSMetadataEntry kruizeDSMetadataEntry);
