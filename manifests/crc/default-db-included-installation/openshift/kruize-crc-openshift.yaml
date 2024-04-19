@@ -209,7 +209,7 @@ spec:
       serviceAccountName: kruize-sa
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.20.3_rm
+          image: kruize/autotune_operator:0.0.21_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -281,7 +281,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: kruize/autotune_operator:0.0.20.3_rm
+              image: kruize/autotune_operator:0.0.21_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -322,7 +322,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: kruize/autotune_operator:0.0.20.3_rm
+              image: kruize/autotune_operator:0.0.21_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
