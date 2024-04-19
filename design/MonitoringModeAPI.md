@@ -5050,26 +5050,27 @@ structured and easily interpretable way for users or external systems to access 
 
 **Note: This API is specific to the Local Monitoring use case.** <br>
 Generates the recommendation for a specific experiment based on provided parameters similar to update recommendations API.
-This can be called directly after creating the experiment and doesn't require the update results API as metrics are fetched from the provided `datasource` (E.g. Prometheus) instead of the database.
+This can be called directly after creating the experiment and doesn't require the update results API as metrics are 
+fetched from the provided `datasource` (E.g. Prometheus) instead of the database.
 
 **Request Parameters**
 
 | Parameter           | Type   | Required | Description                                                                                                                                |
 |---------------------|--------|----------|--------------------------------------------------------------------------------------------------------------------------------------------|
 | experiment_name     | string | Yes      | The name of the experiment.                                                                                                                |
-| interval_end_time   | string | Yes      | The end time of the interval in the format `yyyy-MM-ddTHH:mm:sssZ`. This should be the date on which recommendation needs to be generated. |
+| interval_end_time   | string | optional | The end time of the interval in the format `yyyy-MM-ddTHH:mm:sssZ`. This should be the date on which recommendation needs to be generated. |
 | interval_start_time | string | optional | The start time of the interval in the format `yyyy-MM-ddTHH:mm:sssZ`.                                                                      |
 
-The recommendation API requires two mandatory fields, namely `experiment_name` and `interval_end_time`. By utilizing
+The recommendation API requires only one mandatory field i.e. `experiment_name`. Other optional parameter like `interval_end_time` will be fetched from the provided datasource. 
+Similarly, `interval_start_time` will be calculated based on `interval_end_time`, if not provided. By utilizing
 these parameters, the API generates recommendations based on short-term, medium-term, and long-term factors. For
 instance, if the long-term setting is configured for `15 days` and the interval_end_time is set to `Jan 15 2023 00:00:
 00.000Z`, the API retrieves data from the past 15 days, starting from January 1st. Using this data, the API generates
 three recommendations for `Jan 15th 2023`.
 
-If an optional interval_start_time is provided, the API generates recommendations for each date within the range of
-interval_start_time and interval_end_time. However, it is important to ensure that the difference between these dates
-does not exceed 15 days. This restriction is in place to prevent potential timeouts, as generating recommendations
-beyond this threshold might require more time.
+It is important to ensure that the difference between `interval_end_time` and `interval_start_time` should not exceed 15
+days. This restriction is in place to prevent potential timeouts, as generating recommendations beyond this threshold 
+might require more time.
 
 **Request**
 
@@ -5319,10 +5320,9 @@ The response will contain a array of JSON object with the recommendations for th
 | HTTP Status Code | Description                                                                                        |
 |------------------|----------------------------------------------------------------------------------------------------|
 | 400              | experiment_name is mandatory.                                                                      |
-| 400              | interval_end_time is mandatory.                                                                    |
 | 400              | Given timestamp - \" 2023-011-02T00:00:00.000Z \" is not a valid timestamp format.                 |
 | 400              | Not Found: experiment_name does not exist: exp_1.                                                  |
-| 400              | Not Found: interval_end_time does not exist: 2023-04-02T13:30:00.680Z.                             |
+| 400              | No metrics available from `2024-01-15T00:00:00.000Z` to `2023-12-31T00:00:00.000Z`.                |
 | 400              | The gap between the interval_start_time and interval_end_time must be within a maximum of 15 days! |
 | 400              | The Start time should precede the End time!                                                        |                                           |
 | 500              | Internal Server Error                                                                              |
