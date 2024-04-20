@@ -225,8 +225,10 @@ public class RecommendationEngine {
             // set the performance profile
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
             // get the datasource
-            // TODO: temporarily setting the only supported datasource, this needs to fetched from the KruizeObject
-            String dataSource = KruizeConstants.SupportedDatasources.PROMETHEUS;
+            // TODO: If no data source given use KruizeDeploymentInfo.monitoring_agent / default datasource
+            String dataSource = kruizeObject.getDataSource();
+            LOGGER.debug("Experiment: {},  Datasource: {}", kruizeObject.getExperimentName(), dataSource);
+
             int maxDay = Terms.getMaxDays(terms);
             Timestamp interval_start_time = Timestamp.valueOf(Objects.requireNonNull(getInterval_end_time()).toLocalDateTime().minusDays(maxDay));
 
@@ -1331,9 +1333,10 @@ public class RecommendationEngine {
     private String getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject,
                             String experimentName, Timestamp intervalStartTime, String dataSource) throws Exception {
         String errorMsg = "";
+
+        mainKruizeExperimentMAP.put(experimentName, kruizeObject);
         // get data from the DB in case of remote monitoring
         if (kruizeObject.getExperiment_usecase_type().isRemote_monitoring()) {
-            mainKruizeExperimentMAP.put(experimentName, kruizeObject);
             try {
                 boolean resultsAvailable = new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
                 if (!resultsAvailable) {

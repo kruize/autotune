@@ -37,8 +37,7 @@ import java.util.Map;
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
 public final class KruizeObject {
-    // Constant field for data source
-    private static final String DataSource = "postgres";
+
     @SerializedName("version")
     private String apiVersion;
     private String experiment_id;
@@ -46,6 +45,8 @@ public final class KruizeObject {
     private String experimentName;
     @SerializedName("cluster_name")
     private String clusterName;
+    @SerializedName("datasource")
+    private String datasource = "postgres";
     private String namespace;               // TODO: Currently adding it at this level with an assumption that there is only one entry in k8s object needs to be changed
     private String mode;                    //Todo convert into Enum
     @SerializedName("target_cluster")
@@ -75,6 +76,7 @@ public final class KruizeObject {
                         String hpoAlgoImpl,
                         SelectorInfo selectorInfo,
                         String performanceProfile,
+                        String datasource,
                         ObjectReference objectReference
     ) throws InvalidValueException {
 
@@ -85,6 +87,7 @@ public final class KruizeObject {
         map.put(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER, targetCluster);
         map.put(AnalyzerConstants.AutotuneObjectConstants.SELECTOR, selectorInfo);
         map.put(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME, clusterName);
+        map.put(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE, datasource);
 
         StringBuilder error = ValidateKruizeObject.validate(map);
         if (error.toString().isEmpty()) {
@@ -287,7 +290,11 @@ public final class KruizeObject {
     }
 
     public String getDataSource() {
-        return DataSource;
+        return datasource;
+    }
+
+    public void setDataSource(String datasource) {
+        this.datasource = datasource;
     }
 
     @Override
@@ -300,7 +307,8 @@ public final class KruizeObject {
         return "KruizeObject{" +
                 "experimentId='" + experiment_id + '\'' +
                 ", experimentName='" + experimentName + '\'' +
-                ", clusterName=" + tmpClusterName +
+                ", clusterName=" + tmpClusterName + '\'' +
+                ", datasource=" + datasource + '\'' +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
                 ", hpoAlgoImpl=" + hpoAlgoImpl +
