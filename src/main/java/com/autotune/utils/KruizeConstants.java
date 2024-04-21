@@ -357,6 +357,7 @@ public class KruizeConstants {
         public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";
         public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
         public static final String DATASOURCE_ENDPOINT_WITH_QUERY = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
+	    public static final String DATE_ENDPOINT_WITH_QUERY = "%s/api/v1/query?query=%s";
 
         public static class DataSourceDetailsInfoConstants {
             private DataSourceDetailsInfoConstants() {
