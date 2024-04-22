@@ -1337,7 +1337,9 @@ public class RecommendationEngine {
             try {
                 boolean resultsAvailable = new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
                 if (!resultsAvailable) {
-                    errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.NO_METRICS_AVAILABLE, intervalEndTimeStr, intervalStartTime);
+                    SimpleDateFormat dateFormat = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+                    errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.NO_METRICS_AVAILABLE,
+                            dateFormat.format(intervalStartTime), dateFormat.format(interval_end_time));
                     LOGGER.error(errorMsg);
                     return errorMsg;
                 }
