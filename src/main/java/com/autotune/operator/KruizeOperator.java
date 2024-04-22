@@ -336,6 +336,7 @@ public class KruizeOperator {
             String targetCluster;
             String clusterName;
             String namespace;
+            String datasource;
             SelectorInfo selectorInfo;
             JSONObject sloJson = null;
             String hpoAlgoImpl = null;
@@ -347,6 +348,7 @@ public class KruizeOperator {
             targetCluster = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER,
                     AnalyzerConstants.AutotuneObjectConstants.DEFAULT_TARGET_CLUSTER);
             clusterName = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME);
+            datasource = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE);
             name = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
             namespace = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE);
             hpoAlgoImpl = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL,
@@ -411,6 +413,7 @@ public class KruizeOperator {
                     hpoAlgoImpl,
                     selectorInfo,
                     perfProfileName,
+                    datasource,
                     objectReference
             );
 
