@@ -46,7 +46,7 @@ public final class KruizeObject {
     @SerializedName("cluster_name")
     private String clusterName;
     @SerializedName("datasource")
-    private String datasource = "postgres";
+    private String datasource;
     private String namespace;               // TODO: Currently adding it at this level with an assumption that there is only one entry in k8s object needs to be changed
     private String mode;                    //Todo convert into Enum
     @SerializedName("target_cluster")

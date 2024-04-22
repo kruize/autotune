@@ -98,6 +98,7 @@ public class AnalyzerErrorConstants {
         public static final String NULL_OR_BLANK_CONTAINER_IMAGE_NAME = "container_image_name cannot be null or blank";
         public static final String NULL_OR_BLANK_CONTAINER_NAME = "container_name cannot be null or blank";
         public static final String EXPERIMENT_AND_INTERVAL_END_TIME = " for experiment : %s interval_end_time: %s";
+        public static final String LOCAL_MONITORING_DATASOURCE_MANDATORY = "Experiment %s: datasource mandatory for Local Monitoring type";
 
 
         private AutotuneObjectErrors() {
