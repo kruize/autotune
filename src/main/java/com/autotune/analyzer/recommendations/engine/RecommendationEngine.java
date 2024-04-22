@@ -218,6 +218,7 @@ public class RecommendationEngine {
             return kruizeObject;
         // continue to generate recommendation when kruizeObject is successfully created
         setKruizeObject(kruizeObject);
+        mainKruizeExperimentMAP.put(kruizeObject.getExperimentName(), kruizeObject);
         try {
             // set the default terms if the terms aren't provided by the user
             if (kruizeObject.getTerms() == null)
