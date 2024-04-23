@@ -157,10 +157,10 @@ spec:
               value: /var/lib/pg_data
           resources:
             requests:
-              memory: "10Gi"
+              memory: "2Gi"
               cpu: "2"
             limits:
-              memory: "30Gi"
+              memory: "2Gi"
               cpu: "2"
           ports:
             - containerPort: 5432
@@ -227,10 +227,10 @@ spec:
               value: "-XX:MaxRAMPercentage=80"
           resources:
             requests:
-              memory: "4Gi"
+              memory: "2Gi"
               cpu: "2"
             limits:
-              memory: "8Gi"
+              memory: "2Gi"
               cpu: "2"
           ports:
             - name: kruize-port
