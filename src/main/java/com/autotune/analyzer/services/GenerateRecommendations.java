@@ -86,7 +86,7 @@ public class GenerateRecommendations extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int calCount = ++requestCount;
-        LOGGER.debug("UpdateRecommendations API request count: {}", calCount);
+        LOGGER.debug("GenerateRecommendations API request count: {}", calCount);
         String statusValue = "failure";
         Timer.Sample timerBUpdateRecommendations = Timer.start(MetricsConfig.meterRegistry());
         try {
@@ -101,7 +101,7 @@ public class GenerateRecommendations extends HttpServlet {
             // create recommendation engine object
             RecommendationEngine recommendationEngine = new RecommendationEngine(experiment_name, intervalEndTimeStr, intervalStartTimeStr);
             // validate and create KruizeObject if successful
-            String validationMessage = recommendationEngine.validate();
+            String validationMessage = recommendationEngine.validate_local();
             if (validationMessage.isEmpty()) {
                 KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount);
                 if (kruizeObject.getValidation_data().isSuccess()) {

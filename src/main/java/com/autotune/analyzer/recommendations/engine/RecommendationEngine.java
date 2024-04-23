@@ -200,6 +200,27 @@ public class RecommendationEngine {
         return validationFailureMsg;
     }
 
+    public String validate_local() {            //TODO Instead of relying on the 'local=true' check everywhere, aim to avoid this complexity by introducing a higher-level abstraction in the code.
+
+        String validationFailureMsg = "";
+        // Check if experiment_name is provided
+        if (experimentName == null || experimentName.isEmpty()) {
+            validationFailureMsg += AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.EXPERIMENT_NAME_MANDATORY + ", ";
+        }
+
+        // Check if interval_end_time is provided
+        if (intervalEndTimeStr != null) {
+            if (!Utils.DateUtils.isAValidDate(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, intervalEndTimeStr)) {
+                validationFailureMsg += String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_TIMESTAMP_MSG, intervalEndTimeStr);
+            }
+        }
+
+        // Check if interval_start_time is provided
+        // TODO: to be considered in future
+
+        return validationFailureMsg;
+    }
+
     /**
      * Prepares recommendations based on the input params received in the previous step.
      *
@@ -210,14 +231,18 @@ public class RecommendationEngine {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
         Map<String, Terms> terms = new HashMap<>();
         ValidationOutputData validationOutputData;
-        interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
-                intervalEndTimeStr);
-        setInterval_end_time(interval_end_time);
+        Timestamp interval_start_time = null;
+        if (intervalEndTimeStr != null) {       //TODO remove this check and avoid same if across this flow
+            interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
+                    intervalEndTimeStr);
+            setInterval_end_time(interval_end_time);
+        }
         KruizeObject kruizeObject = createKruizeObject();
         if (!kruizeObject.getValidation_data().isSuccess())
             return kruizeObject;
-        // continue to generate recommendation when kruizeObject is successfully created
         setKruizeObject(kruizeObject);
+        mainKruizeExperimentMAP.put(kruizeObject.getExperimentName(), kruizeObject);
+        // continue to generate recommendation when kruizeObject is successfully created
         try {
             // set the default terms if the terms aren't provided by the user
             if (kruizeObject.getTerms() == null)
@@ -230,8 +255,9 @@ public class RecommendationEngine {
             LOGGER.debug("Experiment: {},  Datasource: {}", kruizeObject.getExperimentName(), dataSource);
 
             int maxDay = Terms.getMaxDays(terms);
-            Timestamp interval_start_time = Timestamp.valueOf(Objects.requireNonNull(getInterval_end_time()).toLocalDateTime().minusDays(maxDay));
-
+            if (intervalEndTimeStr != null) {  //TODO remove this check and avoid same if across this flow
+                interval_start_time = Timestamp.valueOf(Objects.requireNonNull(getInterval_end_time()).toLocalDateTime().minusDays(maxDay));
+            }
             // update the KruizeObject to have the results data from the available datasource
             try {
                 String errorMsg = getResults(mainKruizeExperimentMAP, kruizeObject, experimentName, interval_start_time, dataSource);
@@ -1374,11 +1400,9 @@ public class RecommendationEngine {
      */
     public void fetchMetricsBasedOnDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception {
         try {
-            // Convert timestamps to epoch time
-            long interval_end_time_epoc = interval_end_time.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
-                    - ((long) interval_end_time.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-            long interval_start_time_epoc = interval_start_time.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
-                    - ((long) interval_start_time.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
+            long interval_end_time_epoc = 0;
+            long interval_start_time_epoc = 0;
+            SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
 
             // Get MetricsProfile name and list of promQL to fetch
             Map<AnalyzerConstants.MetricName, String> promQls = new HashMap<>();
@@ -1396,6 +1420,39 @@ public class RecommendationEngine {
                 for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
                     ContainerData containerData = entry.getValue();
                     String containerName = containerData.getContainer_name();
+                    if (null == interval_end_time) {
+                        LOGGER.info("Determine the date of the last activity for the container based on its usage. ");
+                        String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
+                                dataSourceInfo.getUrl(),
+                                URLEncoder.encode(String.format(PromQLDataSourceQueries.MAX_DATE, containerName, namespace), CHARACTER_ENCODING)
+                        );
+                        LOGGER.info(dateMetricsUrl);
+                        JSONObject genericJsonObject = new GenericRestApiClient(dateMetricsUrl).fetchMetricsJson("get", "");
+                        JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+                        JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+                        // Process fetched metrics
+                        if (null != resultArray && !resultArray.isEmpty()) {
+                            resultArray = resultArray.get(0)
+                                    .getAsJsonObject().getAsJsonArray("value");
+                            long epochTime = resultArray.get(0).getAsLong();
+                            String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                            Date date = sdf.parse(timestamp);
+                            Timestamp dateTS = new Timestamp(date.getTime());
+                            interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                                    - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                            int maxDay = Terms.getMaxDays(kruizeObject.getTerms());
+                            LOGGER.info("maxDay : {}", maxDay);
+                            Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
+                            interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                                    - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
+                        }
+                    } else {
+                        // Convert timestamps to epoch time
+                        interval_end_time_epoc = interval_end_time.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                                - ((long) interval_end_time.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                        interval_start_time_epoc = interval_start_time.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                                - ((long) interval_start_time.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
+                    }
                     HashMap<Timestamp, IntervalResults> containerDataResults = new HashMap<>();
                     IntervalResults intervalResults;
                     HashMap<AnalyzerConstants.MetricName, MetricResults> resMap;
@@ -1450,11 +1507,11 @@ public class RecommendationEngine {
                                                         KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
                                                 .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
                                                         .DataSourceQueryJSONKeys.VALUES);
-                                        SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
                                         sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
 
                                         // Iterate over fetched metrics
-                                        Timestamp sTime = interval_start_time;
+                                        Timestamp sTime = new Timestamp(interval_start_time_epoc);
+                                        ;
                                         for (JsonElement element : resultArray) {
                                             JsonArray valueArray = element.getAsJsonArray();
                                             long epochTime = valueArray.get(0).getAsLong();
