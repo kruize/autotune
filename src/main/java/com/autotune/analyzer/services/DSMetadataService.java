@@ -16,13 +16,18 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.DSMetadataAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
+import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
@@ -38,10 +43,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.io.PrintWriter;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -282,5 +285,97 @@ public class DSMetadataService extends HttpServlet {
     }
     private boolean isValidBooleanValue(String value) {
         return value != null && (value.equals("true") || value.equals("false"));
+    }
+
+    /**
+     * TODO temp solution to delete metadata, Need to evaluate use cases
+     *
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        HashMap<String, DataSourceMetadataInfo> dataSourceMetadataMap = new HashMap<>();
+        String inputData = "";
+        try {
+            // Set the character encoding of the request to UTF-8
+            request.setCharacterEncoding(CHARACTER_ENCODING);
+
+            inputData = request.getReader().lines().collect(Collectors.joining());
+            if (null == inputData || inputData.isEmpty()) {
+                throw new Exception("Request input data cannot be null or empty");
+            }
+            DSMetadataAPIObject metadataAPIObject = new Gson().fromJson(inputData, DSMetadataAPIObject.class);
+            metadataAPIObject.validateInputFields();
+            String dataSourceName = metadataAPIObject.getDataSourceName();
+
+            if (null == dataSourceName || dataSourceName.isEmpty()) {
+                sendErrorResponse(
+                        inputData,
+                        response,
+                        null,
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_NAME_MANDATORY);
+            }
+
+            DataSourceInfo datasource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
+
+            if (null == datasource) {
+                sendErrorResponse(
+                        inputData,
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName)
+                );
+            }
+
+            try {
+                DataSourceMetadataInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "false");
+                if (null == dataSourceMetadata) {
+                    sendErrorResponse(
+                            inputData,
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName)
+                    );
+                }
+                dataSourceMetadataMap.put(dataSourceName, dataSourceMetadata);
+
+                if (!dataSourceMetadataMap.isEmpty() && dataSourceMetadataMap.containsKey(dataSourceName)) {
+                    ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeDSMetadataEntryByName(dataSourceName);
+                    if (validationOutputData.isSuccess()) {
+                        new DataSourceManager().deleteMetadataFromDataSource(datasource);
+                        dataSourceMetadataMap.remove(dataSourceName);
+                    } else {
+                        throw new Exception("Datasource metadata not deleted due to : " + validationOutputData.getMessage());
+                    }
+                } else {
+                    throw new Exception("Datasource metadata not found!");
+                }
+                sendSuccessResponse(response, "Datasource metadata deleted successfully.");
+            } catch (Exception e) {
+                LOGGER.error("Loading saved metadata for datasource {} failed: {} ", dataSourceName, e.getMessage());
+            }
+
+        } catch (Exception e) {
+            sendErrorResponse(inputData, response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        }
+    }
+
+    private void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
+        response.setStatus(HttpServletResponse.SC_CREATED);
+        PrintWriter out = response.getWriter();
+        out.append(
+                new Gson().toJson(
+                        new KruizeResponse(message + " View imported metadata at GET /dsmetadata", HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                )
+        );
+        out.flush();
     }
 }

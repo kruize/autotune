@@ -185,6 +185,7 @@ public class AnalyzerErrorConstants {
             public static final String MISSING_DATASOURCE_METADATA_MSG = "Metadata for a given datasource - \" %s \", cluster name - \" %s \", namespace - \"%s \" " +
                     "either does not exist or is not valid";
             public static final String DATASOURCE_METADATA_IMPORT_ERROR_MSG = "Metadata cannot be imported for datasource - \" %s \" , either does not exist or is not valid";
+            public static final String DATASOURCE_METADATA_DELETE_ERROR_MSG = "Metadata cannot be deleted for datasource - \" %s \" , either does not exist or is not valid";
             public static final String INVALID_QUERY_PARAM = "The query param(s) - \" %s \" is/are invalid";
             public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
         }
