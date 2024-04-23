@@ -964,7 +964,7 @@ see [Create Experiment](/design/CreateExperiment.md)
 
 <details>
 
-<summary><b>Example Request</b></summary>
+<summary><b>Example Request for datasource - `prometheus-1`</b></summary>
 
 ### Example Request
 
@@ -995,11 +995,12 @@ see [Create Experiment](/design/CreateExperiment.md)
       }
     ],
     "trial_settings": {
-      "measurement_duration": "60min"
+      "measurement_duration": "15min"
     },
     "recommendation_settings": {
       "threshold": "0.1"
-    }
+    },
+    "datasource": "prometheus-1"
   }
 ]
 ```
@@ -1033,7 +1034,8 @@ see [Create Experiment](/design/CreateExperiment.md)
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?experiment_name=<experiment_name>`
 
 Returns the experiment details of the specified experiment
-<br>
+<br><br>
+
 **Request with recommendations set to true**
 
 `GET /listExperiments`
@@ -1056,6 +1058,7 @@ Returns the latest recommendations of all the experiments
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "default|default_0|deployment|tfb-qrh-deployment_0",
     "cluster_name": "default",
+    "datasource": "prometheus-1",
     "mode": "monitor",
     "target_cluster": "local",
     "status": "IN_PROGRESS",
@@ -1225,6 +1228,7 @@ Returns the latest recommendations of all the experiments
     "experiment_id": "ab0a31a522cebdde52561482300d078ed1448fa7b75834fa216677d1d9d5cda6",
     "experiment_name": "default|default_1|deployment|tfb-qrh-deployment_1",
     "cluster_name": "default",
+    "datasource": "prometheus-1",
     "mode": "monitor",
     "target_cluster": "local",
     "status": "IN_PROGRESS",
@@ -1323,6 +1327,7 @@ Returns all the recommendations of all the experiments
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "default|default_0|deployment|tfb-qrh-deployment_0",
     "cluster_name": "default",
+    "datasource": "prometheus-1",
     "mode": "monitor",
     "target_cluster": "local",
     "status": "IN_PROGRESS",
