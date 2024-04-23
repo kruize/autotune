@@ -232,16 +232,16 @@ public class RecommendationEngine {
         Map<String, Terms> terms = new HashMap<>();
         ValidationOutputData validationOutputData;
         Timestamp interval_start_time = null;
-        KruizeObject kruizeObject = createKruizeObject();
-        if (!kruizeObject.getValidation_data().isSuccess())
-            return kruizeObject;
-        setKruizeObject(kruizeObject);
-        mainKruizeExperimentMAP.put(kruizeObject.getExperimentName(), kruizeObject);
         if (intervalEndTimeStr != null) {       //TODO remove this check and avoid same if across this flow
             interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
                     intervalEndTimeStr);
             setInterval_end_time(interval_end_time);
         }
+        KruizeObject kruizeObject = createKruizeObject();
+        if (!kruizeObject.getValidation_data().isSuccess())
+            return kruizeObject;
+        setKruizeObject(kruizeObject);
+        mainKruizeExperimentMAP.put(kruizeObject.getExperimentName(), kruizeObject);
         // continue to generate recommendation when kruizeObject is successfully created
         try {
             // set the default terms if the terms aren't provided by the user
