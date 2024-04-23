@@ -17,8 +17,6 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.DSMetadataAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
