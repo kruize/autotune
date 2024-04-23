@@ -7,6 +7,7 @@ public class DBConstants {
     public static final class SQLQUERY {
         public static final String SELECT_FROM_EXPERIMENTS = "from KruizeExperimentEntry";
         public static final String SELECT_FROM_EXPERIMENTS_BY_EXP_NAME = "from KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
+        public static final String SELECT_FROM_EXPERIMENTS_BY_DATASOURCE_NAME = "from KruizeExperimentEntry k WHERE k.datasource = :dataSourceName";
         public static final String SELECT_FROM_RESULTS = "from KruizeResultsEntry";
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME = "from KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_DATASOURCE = "from KruizeDataSourceEntry";
@@ -61,6 +62,7 @@ public class DBConstants {
         public static final String DELETE_FROM_EXPERIMENTS_BY_EXP_NAME = "DELETE FROM KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RESULTS_BY_EXP_NAME = "DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RECOMMENDATIONS_BY_EXP_NAME = "DELETE FROM KruizeRecommendationEntry k WHERE k.experiment_name = :experimentName";
+        public static final String DELETE_FROM_METADATA_BY_DATASOURCE_NAME = "DELETE FROM KruizeDSMetadataEntry km WHERE km.datasource_name = :dataSourceName";
         public static final String DB_PARTITION_DATERANGE = "CREATE TABLE IF NOT EXISTS %s_%s%s%s PARTITION OF %s FOR VALUES FROM ('%s-%s-%s 00:00:00.000') TO ('%s-%s-%s 23:59:59');";
         public static final String SELECT_ALL_KRUIZE_TABLES = "SELECT table_name FROM information_schema.tables WHERE table_schema = 'public' " +
                 "and (table_name like 'kruize_results_%' or table_name like 'kruize_recommendations_%') ";
