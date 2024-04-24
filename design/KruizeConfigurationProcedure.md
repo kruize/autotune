@@ -49,13 +49,15 @@ data:
         "hbm2ddlauto": "update",
         "showsql": "true"
       },
-      "cloudwatch": {
-        "accessKeyId": "",
-        "secretAccessKey": "",
-        "region": "",
-        "logGroup": "kruize-logs",
-        "logStream": "kruize-stream",
-        "logLevel": "INFO"
+      "logging": {
+        "cloudwatch": {
+          "accessKeyId": "",
+          "secretAccessKey": "",
+          "region": "",
+          "logGroup": "kruize-logs",
+          "logStream": "kruize-stream",
+          "logLevel": "INFO"
+        }
       }
     }
 ```
