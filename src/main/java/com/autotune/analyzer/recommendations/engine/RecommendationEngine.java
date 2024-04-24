@@ -91,6 +91,22 @@ public class RecommendationEngine {
         return (int) Math.ceil(max_pods_cpu);
     }
 
+    /**
+     * Populates the given map with Prometheus Query Language (PromQL) queries for various metrics.
+     *
+     * @param promQls The map to be populated with PromQL queries.
+     */
+    private static void getPromQls(Map<AnalyzerConstants.MetricName, String> promQls) {
+        promQls.put(AnalyzerConstants.MetricName.cpuUsage, PromQLDataSourceQueries.CPU_USAGE);
+        promQls.put(AnalyzerConstants.MetricName.cpuThrottle, PromQLDataSourceQueries.CPU_THROTTLE);
+        promQls.put(AnalyzerConstants.MetricName.cpuLimit, PromQLDataSourceQueries.CPU_LIMIT);
+        promQls.put(AnalyzerConstants.MetricName.cpuRequest, PromQLDataSourceQueries.CPU_REQUEST);
+        promQls.put(AnalyzerConstants.MetricName.memoryUsage, PromQLDataSourceQueries.MEMORY_USAGE);
+        promQls.put(AnalyzerConstants.MetricName.memoryRSS, PromQLDataSourceQueries.MEMORY_RSS);
+        promQls.put(AnalyzerConstants.MetricName.memoryLimit, PromQLDataSourceQueries.MEMORY_LIMIT);
+        promQls.put(AnalyzerConstants.MetricName.memoryRequest, PromQLDataSourceQueries.MEMORY_REQUEST);
+    }
+
     private void init() {
         // Add new models
         recommendationModels = new ArrayList<>();
@@ -407,8 +423,7 @@ public class RecommendationEngine {
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    }
-                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -422,8 +437,7 @@ public class RecommendationEngine {
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    }
-                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -437,8 +451,7 @@ public class RecommendationEngine {
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    }
-                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -452,8 +465,7 @@ public class RecommendationEngine {
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    }
-                    else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -1105,14 +1117,14 @@ public class RecommendationEngine {
             engineNotifications.add(recommendationNotification);
             LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_ZERO
                     .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
-                    experimentName, interval_end_time)));
+                            experimentName, interval_end_time)));
             isSuccess = false;
         } else if (numPods < 0) {
             RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_NUM_PODS_CANNOT_BE_NEGATIVE);
             engineNotifications.add(recommendationNotification);
             LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.NUM_PODS_CANNOT_BE_NEGATIVE
                     .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
-                    experimentName, interval_end_time)));
+                            experimentName, interval_end_time)));
             isSuccess = false;
         } else {
             recommendationModel.setPodsCount(numPods);
@@ -1340,7 +1352,7 @@ public class RecommendationEngine {
         } catch (Exception e) {
             LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.ADDING_RECOMMENDATIONS_TO_DB_FAILED
                     .concat(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME)
-                    .concat(" : "+e.getMessage()));
+                    .concat(" : " + e.getMessage()));
             validationOutputData = new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
@@ -1357,7 +1369,7 @@ public class RecommendationEngine {
      * @throws Exception if an error occurs during the process of fetching and storing results.
      */
     private String getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject,
-                            String experimentName, Timestamp intervalStartTime, String dataSource) throws Exception {
+                              String experimentName, Timestamp intervalStartTime, String dataSource) throws Exception {
         String errorMsg = "";
 
         mainKruizeExperimentMAP.put(experimentName, kruizeObject);
@@ -1387,16 +1399,15 @@ public class RecommendationEngine {
         return errorMsg;
     }
 
-
     /**
      * Fetches metrics based on the specified datasource for the given time interval.
      *
-     * @param kruizeObject     The KruizeObject containing the experiment data.
-     * @param interval_end_time The end time of the interval for fetching metrics.
+     * @param kruizeObject        The KruizeObject containing the experiment data.
+     * @param interval_end_time   The end time of the interval for fetching metrics.
      * @param interval_start_time The start time of the interval for fetching metrics.
-     * @param dataSourceInfo   The datasource object to fetch metrics from.
+     * @param dataSourceInfo      The datasource object to fetch metrics from.
      * @throws Exception if an error occurs during the fetching process.
-     * TODO: Need to add right abstractions for this
+     *                   TODO: Need to add right abstractions for this
      */
     public void fetchMetricsBasedOnDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception {
         try {
@@ -1559,27 +1570,12 @@ public class RecommendationEngine {
                         }
                     }
                     containerData.setResults(containerDataResults);
+                    setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalide date is set if experiment having two container with different last seen date
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new Exception("Exception occurred while fetching metrics from the datasource: "+e.getMessage());
+            throw new Exception("Exception occurred while fetching metrics from the datasource: " + e.getMessage());
         }
-    }
-
-    /**
-     * Populates the given map with Prometheus Query Language (PromQL) queries for various metrics.
-     *
-     * @param promQls The map to be populated with PromQL queries.
-     */
-    private static void getPromQls(Map<AnalyzerConstants.MetricName, String> promQls) {
-        promQls.put(AnalyzerConstants.MetricName.cpuUsage, PromQLDataSourceQueries.CPU_USAGE);
-        promQls.put(AnalyzerConstants.MetricName.cpuThrottle, PromQLDataSourceQueries.CPU_THROTTLE);
-        promQls.put(AnalyzerConstants.MetricName.cpuLimit, PromQLDataSourceQueries.CPU_LIMIT);
-        promQls.put(AnalyzerConstants.MetricName.cpuRequest, PromQLDataSourceQueries.CPU_REQUEST);
-        promQls.put(AnalyzerConstants.MetricName.memoryUsage, PromQLDataSourceQueries.MEMORY_USAGE);
-        promQls.put(AnalyzerConstants.MetricName.memoryRSS, PromQLDataSourceQueries.MEMORY_RSS);
-        promQls.put(AnalyzerConstants.MetricName.memoryLimit, PromQLDataSourceQueries.MEMORY_LIMIT);
-        promQls.put(AnalyzerConstants.MetricName.memoryRequest, PromQLDataSourceQueries.MEMORY_REQUEST);
     }
 }
