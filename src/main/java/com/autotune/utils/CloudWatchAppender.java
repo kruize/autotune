@@ -109,7 +109,7 @@ public class CloudWatchAppender extends AbstractAppender {
                 LoggerConfig loggerConfig = config.getLoggerConfig("com.autotune");
                 loggerConfig.addAppender(appender, level, filter);
                 context.updateLoggers(config);
-                LOGGER.info("Enabled CloudWatch logs");
+                LOGGER.debug("Enabled CloudWatch logs");
 
             } catch (Exception e) {
                 LOGGER.error(e.getMessage());
