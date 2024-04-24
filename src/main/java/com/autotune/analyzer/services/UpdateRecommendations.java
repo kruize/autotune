@@ -22,6 +22,7 @@ import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
@@ -81,16 +82,18 @@ public class UpdateRecommendations extends HttpServlet {
         LOGGER.debug("UpdateRecommendations API request count: {}", calCount);
         String statusValue = "failure";
         Timer.Sample timerBUpdateRecommendations = Timer.start(MetricsConfig.meterRegistry());
-        try {
-            // Set the character encoding of the request to UTF-8
-            request.setCharacterEncoding(CHARACTER_ENCODING);
-            // Get the values from the request parameters
-            String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
-            String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
+        // Set the character encoding of the request to UTF-8
+        request.setCharacterEncoding(CHARACTER_ENCODING);
+        // Get the values from the request parameters
+        String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
+        String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
 
-            String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
-            Timestamp interval_end_time;
-            Timestamp interval_start_time = null;
+        String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
+        Timestamp interval_end_time;
+        Timestamp interval_start_time = null;
+        if (KruizeDeploymentInfo.logAllHttpReqAndResp)
+            LOGGER.info("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
+        try {
             // create recommendation engine object
             RecommendationEngine recommendationEngine = new RecommendationEngine(experiment_name, intervalEndTimeStr, intervalStartTimeStr);
             // validate and create KruizeObject if successful
@@ -104,7 +107,7 @@ public class UpdateRecommendations extends HttpServlet {
                     sendSuccessResponse(response, kruizeObject, interval_end_time);
                     statusValue = "success";
                 } else {
-                    LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+                    LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
                     sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject.getValidation_data().getMessage());
                 }
             } else {
@@ -113,7 +116,8 @@ public class UpdateRecommendations extends HttpServlet {
             }
 
         } catch (Exception e) {
-            LOGGER.debug("UpdateRecommendations API request count: {} failed", calCount);
+            LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
+            LOGGER.error("UpdateRecommendations API, experiment_name: {},  intervalEndTimeStr: {}", experiment_name, intervalEndTimeStr);
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
@@ -166,6 +170,8 @@ public class UpdateRecommendations extends HttpServlet {
                     .create();
             gsonStr = gsonObj.toJson(recommendationList);
         }
+        if (KruizeDeploymentInfo.logAllHttpReqAndResp)
+            LOGGER.info("Update Recommendation API response: {}", recommendationList);
         response.getWriter().println(gsonStr);
         response.getWriter().close();
     }

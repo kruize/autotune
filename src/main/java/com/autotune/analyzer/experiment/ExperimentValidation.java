@@ -36,6 +36,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 
+import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.LOCAL_MONITORING_DATASOURCE_MANDATORY;
 import static com.autotune.utils.Utils.getApproriateK8sObjectType;
 
 /**
@@ -199,6 +200,7 @@ public class ExperimentValidation {
         List<String> missingMandatoryFields = new ArrayList<>();
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         boolean missingDeploySelector = true;
+        boolean missingLocalDatasource = false;
         String errorMsg = "";
         mandatoryFields.forEach(
                 mField -> {
@@ -246,6 +248,11 @@ public class ExperimentValidation {
                             break;
                         }
                     }
+                } else if (expObj.getExperiment_usecase_type().isLocal_monitoring()) {
+                    if (null == expObj.getDataSource()) {
+                        errorMsg = errorMsg.concat(String.format(LOCAL_MONITORING_DATASOURCE_MANDATORY, expObj.getExperimentName()));
+                        missingLocalDatasource = true;
+                    }
                 }
 
                 for (String mField : mandatoryDeploymentSelector) {
@@ -263,7 +270,7 @@ public class ExperimentValidation {
                     errorMsg = errorMsg.concat(String.format("Invalid deployment type: %s", depType));
                 if (missingDeploySelector)
                     errorMsg = errorMsg.concat(String.format("Either parameter should be present: %s", mandatoryDeploymentSelector));
-                if (invalidType || missingDeploySelector) {
+                if (invalidType || missingDeploySelector || missingLocalDatasource) {
                     validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(errorMsg);

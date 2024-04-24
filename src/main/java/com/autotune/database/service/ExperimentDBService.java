@@ -21,25 +21,24 @@ import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
-import com.autotune.analyzer.serviceObjects.Converters;
-import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
-import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
-import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
+import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
-import com.autotune.database.table.KruizeExperimentEntry;
-import com.autotune.database.table.KruizePerformanceProfileEntry;
-import com.autotune.database.table.KruizeRecommendationEntry;
-import com.autotune.database.table.KruizeResultsEntry;
+import com.autotune.database.table.*;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -141,12 +140,14 @@ public class ExperimentDBService {
         }
     }
 
-    public void loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {
+    public boolean loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         KruizeObject kruizeObject = mainKruizeExperimentMap.get(experimentName);
+        boolean resultsAvailable = false;
         // Load results from the DB and save to local
         List<KruizeResultsEntry> kruizeResultsEntries = experimentDAO.loadResultsByExperimentName(experimentName, kruizeObject.getClusterName(), calculated_start_time, interval_end_time);
         if (null != kruizeResultsEntries && !kruizeResultsEntries.isEmpty()) {
+            resultsAvailable = true;
             List<UpdateResultsAPIObject> updateResultsAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertResultEntryToUpdateResultsAPIObject(kruizeResultsEntries);
             if (null != updateResultsAPIObjects && !updateResultsAPIObjects.isEmpty()) {
                 List<ExperimentResultData> resultDataList = new ArrayList<>();
@@ -167,6 +168,7 @@ public class ExperimentDBService {
                 experimentInterface.addResultsToLocalStorage(mainKruizeExperimentMap, resultDataList);
             }
         }
+        return resultsAvailable;
     }
 
     public void loadRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
@@ -230,12 +232,22 @@ public class ExperimentDBService {
         }
         // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
         if (!experimentsMap.containsKey(kruizeObject.getExperimentName())) {
-            LOGGER.error("Trying to locate Recommendation for non existent experiment: "+kruizeObject.getExperimentName());
+            LOGGER.error("Trying to locate Recommendation for non existent experiment: " + kruizeObject.getExperimentName());
             return validationOutputData; // todo: need to set the correct message
         }
         KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
                 convertKruizeObjectTORecommendation(kruizeObject, interval_end_time);
         if (null != kr) {
+            if (KruizeDeploymentInfo.local == true) {   //todo this code will be removed
+                LocalDateTime localDateTime = kr.getInterval_end_time().toLocalDateTime();
+                ExperimentDAO dao = new ExperimentDAOImpl();
+                int dayOfTheMonth = localDateTime.getDayOfMonth();
+                try {
+                    dao.addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+                } catch (Exception e) {
+                    LOGGER.warn(e.getMessage());
+                }
+            }
             ValidationOutputData tempValObj = new ExperimentDAOImpl().addRecommendationToDB(kr);
             if (!tempValObj.isSuccess()) {
                 validationOutputData.setSuccess(false);
@@ -300,6 +312,25 @@ public class ExperimentDBService {
         }
     }
 
+    public void loadExperimentFromDBByInputJSON(Map<String, KruizeObject> mKruizeExperimentMap, StringBuilder clusterName, List<KubernetesAPIObject> kubernetesAPIObjectList) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        // assuming there will be only one Kubernetes object
+        KubernetesAPIObject kubernetesAPIObject = kubernetesAPIObjectList.get(0);
+        List<KruizeExperimentEntry> entries = experimentDAO.loadExperimentFromDBByInputJSON(clusterName, kubernetesAPIObject);
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertExperimentEntryToCreateExperimentAPIObject(entries);
+            if (!createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    }
+                }
+                experimentInterface.addExperimentToLocalStorage(mKruizeExperimentMap, kruizeExpList);
+            }
+        }
+    }
 
     public void loadExperimentAndResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
 
@@ -357,5 +388,148 @@ public class ExperimentDBService {
             }
         }
         return experimentResultDataList;
+    }
+
+    /**
+     * adds datasource to database table
+     *
+     * @param dataSourceInfo DataSourceInfo object
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData addDataSourceToDB(DataSourceInfo dataSourceInfo) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeDataSourceEntry kruizeDataSource = DBHelpers.Converters.KruizeObjectConverters.convertDataSourceToDataSourceDBObj(dataSourceInfo);
+            validationOutputData = this.experimentDAO.addDataSourceToDB(kruizeDataSource);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save data source due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * fetches datasource with specified name from database
+     *
+     * @param name String containing the name of datasource
+     * @return DataSourceInfo object containing the details
+     */
+    public DataSourceInfo loadDataSourceFromDBByName(String name) throws Exception {
+        List<KruizeDataSourceEntry> kruizeDataSourceList = experimentDAO.loadDataSourceByName(name);
+        List<DataSourceInfo> dataSourceInfoList = new ArrayList<>();
+        if (null != kruizeDataSourceList && !kruizeDataSourceList.isEmpty()) {
+            dataSourceInfoList = DBHelpers.Converters.KruizeObjectConverters
+                    .convertKruizeDataSourceToDataSourceObject(kruizeDataSourceList);
+        }
+        if (dataSourceInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceInfoList.get(0);
+    }
+
+    /**
+     * fetches all available datasource from database
+     *
+     * @return List containing DataSourceInfo objects
+     */
+    public List<DataSourceInfo> loadAllDataSources() throws Exception {
+        List<KruizeDataSourceEntry> entries = experimentDAO.loadAllDataSources();
+        List<DataSourceInfo> dataSourceInfoList = null;
+        if (null != entries && !entries.isEmpty()) {
+            dataSourceInfoList = DBHelpers.Converters.KruizeObjectConverters.convertKruizeDataSourceToDataSourceObject(entries);
+            return dataSourceInfoList;
+        }
+        return dataSourceInfoList;
+    }
+
+    /**
+     * adds metadata to database table
+     *
+     * @param dataSourceMetadataInfo DataSourceMetadataInfo object
+     * @return
+     */
+    public ValidationOutputData addMetadataToDB(DataSourceMetadataInfo dataSourceMetadataInfo) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            List<KruizeDSMetadataEntry> kruizeMetadataList = DBHelpers.Converters.KruizeObjectConverters.convertDataSourceMetadataToMetadataObj(dataSourceMetadataInfo);
+            for (KruizeDSMetadataEntry kruizeMetadata : kruizeMetadataList) {
+                validationOutputData = this.experimentDAO.addMetadataToDB(kruizeMetadata);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save metadata due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * fetches metadata of specified datasource name from database
+     *
+     * @param dataSourceName String containing the name of datasource
+     * @param verbose
+     * @return DataSourceMetadataInfo object containing metadata
+     */
+    public DataSourceMetadataInfo loadMetadataFromDBByName(String dataSourceName, String verbose) throws Exception {
+        List<KruizeDSMetadataEntry> kruizeMetadataList = experimentDAO.loadMetadataByName(dataSourceName);
+        List<DataSourceMetadataInfo> dataSourceDetailsInfoList = new ArrayList<>();
+        if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
+            if (verbose.equals(AnalyzerConstants.ServiceConstants.FALSE)) {
+                dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToClusterLevelDataSourceMetadata(kruizeMetadataList);
+            } else {
+                dataSourceDetailsInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToDataSourceMetadataObject(kruizeMetadataList);
+            }
+        }
+        if (dataSourceDetailsInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceDetailsInfoList.get(0);
+    }
+
+    /**
+     * fetches metadata of specified datasource and cluster name from database
+     *
+     * @param dataSourceName String containing the name of datasource
+     * @param clusterName    String containing the cluster name
+     * @param verbose
+     * @return DataSourceMetadataInfo object containing metadata
+     */
+    public DataSourceMetadataInfo loadMetadataFromDBByClusterName(String dataSourceName, String clusterName, String verbose) throws Exception {
+        List<KruizeDSMetadataEntry> kruizeMetadataList = experimentDAO.loadMetadataByClusterName(dataSourceName, clusterName);
+        List<DataSourceMetadataInfo> dataSourceMetadataInfoList = new ArrayList<>();
+        if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
+            if (verbose.equals(AnalyzerConstants.ServiceConstants.FALSE)) {
+                dataSourceMetadataInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToNamespaceLevelDataSourceMetadata(kruizeMetadataList);
+            } else {
+                dataSourceMetadataInfoList = DBHelpers.Converters.KruizeObjectConverters
+                        .convertKruizeMetadataToDataSourceMetadataObject(kruizeMetadataList);
+            }
+        }
+        if (dataSourceMetadataInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceMetadataInfoList.get(0);
+    }
+
+    /**
+     * fetches metadata of specified datasource,cluster and namespace from database
+     *
+     * @param dataSourceName String containing the name of datasource
+     * @param clusterName    String containing the name of datasource
+     * @param namespace      String containing the name of datasource
+     * @return DataSourceMetadataInfo object containing metadata
+     * @throws Exception
+     */
+    public DataSourceMetadataInfo loadMetadataFromDBByNamespace(String dataSourceName, String clusterName, String namespace) throws Exception {
+        List<KruizeDSMetadataEntry> kruizeMetadataList = experimentDAO.loadMetadataByNamespace(dataSourceName, clusterName, namespace);
+        List<DataSourceMetadataInfo> dataSourceMetadataInfoList = new ArrayList<>();
+        if (null != kruizeMetadataList && !kruizeMetadataList.isEmpty()) {
+            dataSourceMetadataInfoList = DBHelpers.Converters.KruizeObjectConverters
+                    .convertKruizeMetadataToDataSourceMetadataObject(kruizeMetadataList);
+        }
+        if (dataSourceMetadataInfoList.isEmpty())
+            return null;
+        else
+            return dataSourceMetadataInfoList.get(0);
     }
 }

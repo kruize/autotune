@@ -1,12 +1,10 @@
 package com.autotune.database.dao;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.database.table.KruizeExperimentEntry;
-import com.autotune.database.table.KruizePerformanceProfileEntry;
-import com.autotune.database.table.KruizeRecommendationEntry;
-import com.autotune.database.table.KruizeResultsEntry;
+import com.autotune.database.table.*;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -26,6 +24,9 @@ public interface ExperimentDAO {
 
     // Add Performance Profile  to DB
     public ValidationOutputData addPerformanceProfileToDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry);
+
+    // Add DataSource to DB
+    ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry);
 
     // Update experiment status
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status);
@@ -48,6 +49,9 @@ public interface ExperimentDAO {
     // Load a single experiment based on experimentName
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
 
+    // Load a single data source based on name
+    List<KruizeDataSourceEntry> loadDataSourceByName(String name) throws Exception;
+
     // Load all results for a particular experimentName
 
     List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception;
@@ -69,5 +73,25 @@ public interface ExperimentDAO {
     void deletePartitions(int thresholdDaysCount);
 
     public void addPartitions(String tableName, String month, String year, int dayOfTheMonth, String partitionType) throws Exception;
+
+    List<KruizeExperimentEntry> loadExperimentFromDBByInputJSON(StringBuilder clusterName, KubernetesAPIObject kubernetesAPIObject) throws Exception;
+
+    // Load all the datasources
+    List<KruizeDataSourceEntry> loadAllDataSources() throws Exception;
+
+    // Load data source metadata by datasource name
+    List<KruizeDSMetadataEntry> loadMetadataByName(String dataSourceName) throws Exception;
+
+    // Load data source metadata by cluster name
+    List<KruizeDSMetadataEntry> loadMetadataByClusterName(String dataSourceName, String clusterName) throws Exception;
+
+    // Load data source metadata by namespace
+    List<KruizeDSMetadataEntry> loadMetadataByNamespace(String dataSourceName, String clusterName, String namespace) throws Exception;
+
+    // add metadata
+    ValidationOutputData addMetadataToDB(KruizeDSMetadataEntry kruizeDSMetadataEntry);
+
+    // Load metadata
+    List<KruizeDSMetadataEntry> loadMetadata() throws Exception;
 
 }
