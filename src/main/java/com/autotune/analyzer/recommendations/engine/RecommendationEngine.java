@@ -1407,7 +1407,7 @@ public class RecommendationEngine {
      * @param interval_start_time The start time of the interval for fetching metrics.
      * @param dataSourceInfo      The datasource object to fetch metrics from.
      * @throws Exception if an error occurs during the fetching process.
-     *                   TODO: Need to add right abstractions for this
+     *                                                                                                                               TODO: Need to add right abstractions for this
      */
     public void fetchMetricsBasedOnDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception {
         try {
@@ -1570,7 +1570,8 @@ public class RecommendationEngine {
                         }
                     }
                     containerData.setResults(containerDataResults);
-                    setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalide date is set if experiment having two container with different last seen date
+                    if (containerDataResults.size() > 0)
+                        setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalide date is set if experiment having two container with different last seen date
                 }
             }
         } catch (Exception e) {
