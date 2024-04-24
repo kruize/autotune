@@ -1,4 +1,5 @@
 package com.autotune.utils;
+
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.core.Filter;
@@ -16,13 +17,15 @@ import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsAsyncClient;
 import software.amazon.awssdk.services.cloudwatchlogs.CloudWatchLogsClient;
 import software.amazon.awssdk.services.cloudwatchlogs.model.*;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import static com.autotune.operator.KruizeDeploymentInfo.*;
 
 public class CloudWatchAppender extends AbstractAppender {
+    private static final Logger LOGGER = LoggerFactory.getLogger(CloudWatchAppender.class);
     private final String logGroupName;
     private final String logStreamName;
     private final CloudWatchLogsAsyncClient cloudWatchLogsClient;
@@ -106,6 +109,7 @@ public class CloudWatchAppender extends AbstractAppender {
                 LoggerConfig loggerConfig = config.getLoggerConfig("com.autotune");
                 loggerConfig.addAppender(appender, level, filter);
                 context.updateLoggers(config);
+                LOGGER.info("Enabled CloudWatch logs");
 
             } catch (Exception e) {
                 LOGGER.error(e.getMessage());

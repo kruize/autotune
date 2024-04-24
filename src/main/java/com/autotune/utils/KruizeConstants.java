@@ -599,12 +599,12 @@ public class KruizeConstants {
         public static final String SETTINGS_HIBERNATE_SHOW_SQL = "hibernate_showsql";
         public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
         public static final String PLOTS = "plots";
-        public static final String CLOUDWATCH_LOGS_ACCESS_KEY_ID = "cloudwatch_accessKeyId";
-        public static final String CLOUDWATCH_LOGS_SECRET_ACCESS_KEY = "cloudwatch_secretAccessKey";
-        public static final String CLOUDWATCH_LOGS_LOG_GROUP = "cloudwatch_logGroup";
-        public static final String CLOUDWATCH_LOGS_REGION = "cloudwatch_region";
-        public static final String CLOUDWATCH_LOGS_LOG_STREAM = "cloudwatch_logStream";
-        public static final String CLOUDWATCH_LOGS_LOG_LEVEL = "cloudwatch_logLevel";
+        public static final String CLOUDWATCH_LOGS_ACCESS_KEY_ID = "logging_cloudwatch_accessKeyId";
+        public static final String CLOUDWATCH_LOGS_SECRET_ACCESS_KEY = "logging_cloudwatch_secretAccessKey";
+        public static final String CLOUDWATCH_LOGS_LOG_GROUP = "logging_cloudwatch_logGroup";
+        public static final String CLOUDWATCH_LOGS_REGION = "logging_cloudwatch_region";
+        public static final String CLOUDWATCH_LOGS_LOG_STREAM = "logging_cloudwatch_logStream";
+        public static final String CLOUDWATCH_LOGS_LOG_LEVEL = "logging_cloudwatch_logLevel";
         public static final String LOCAL = "local";
         public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
     }
