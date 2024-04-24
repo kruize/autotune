@@ -124,13 +124,15 @@ data:
         "showsql": "false",
         "timezone": "UTC"
       },
-      "cloudwatch": {
-        "accessKeyId": "",
-        "logGroup": "kruize-logs",
-        "logStream": "kruize-stream",
-        "region": "",
-        "secretAccessKey": "",
-        "logLevel": "INFO"
+      "logging" : {
+        "cloudwatch": {
+          "accessKeyId": "",
+          "logGroup": "kruize-logs",
+          "logStream": "kruize-stream",
+          "region": "",
+          "secretAccessKey": "",
+          "logLevel": "INFO"
+        }
       },
       "datasource": [
         {
