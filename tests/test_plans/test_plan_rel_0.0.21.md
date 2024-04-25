@@ -26,7 +26,7 @@ This document describes the test plan for Kruize remote monitoring release 0.0.2
 * Kruize local changes
 
 Kruize local changes have been included in this release which allows a user to add datasources, import datasource metadata, create an experiment and generate recommendations
- using the metric results from the specified datasource. Refer [doc]() for further details.
+ using the metric results from the specified datasource. Refer [doc](https://github.com/kruize/autotune/pull/1174/files#diff-a23fa581de2556a8ab7cec3efa3b03833fdfa86d42d96209cf691b8f288210f8) for further details.
 
 * Kruize Security vulnerability issues
 
@@ -66,7 +66,7 @@ Send kruize logs to CloudWatch so that these logs can be viewed using tools like
 | --- |--------------------------------------------------------------------------------------------------------------------------------------| ---------------- | ----------------- |  -----  | --- |
 | 1   | [Kruize local changes](https://github.com/kruize/autotune/issues/)                                                                   | Test scenarios identified - [1134](https://github.com/kruize/autotune/issues/1134), [1129](https://github.com/kruize/autotune/issues/1129), [1160](https://github.com/kruize/autotune/issues/1160) |Kruize local is PoC, tests will be implemented while productizing | Kruize local workflow tested manually | PASSED on Openshift | Debugging generate recommendations issue on minikube
 | 2   | [Kruize CloudWatch logging](https://github.com/kruize/autotune/pull/1173)                                                              | Kruize logging to CloudWatch is tested by using a CloudWatch in AWS cluster manually | Manual test | PASSED |  |
-| 3   | [Notifications are not displayed when the CPU usage is less than a millicore or zero](https://github.com/kruize/autotune/pull/1156) | Kruize Functiona testsuite will be updated to post results with cpu usage of less than millicore or zero to validate these notifications | Functional tests included in the same PR | PASSED |  |
+| 3   | [Notifications are not displayed when the CPU usage is less than a millicore or zero](https://github.com/kruize/autotune/pull/1156) | Kruize Functional testsuite will be updated to post results with cpu usage of less than millicore or zero to validate these notifications | Functional tests included in the same PR | PASSED |  |
 
 ### Regression Testing
 
@@ -75,7 +75,7 @@ Send kruize logs to CloudWatch so that these logs can be viewed using tools like
 | 1   | Kruize remote monitoring tests | Functional test suite | PASSED | |
 | 1   | Kruize fault tolerant tests | Functional test suite | PASSED | |
 | 1   | Kruize stress tests | Functional test suite | PASSED | |
-| 2   | Kruize local monitoring demo   | kruize demo | Tested it manually | Authentication failure on Openshift, recommendations issue on minikube
+| 2   | Kruize local monitoring demo   | kruize demo | Tested it manually | Authentication failure on Openshift has been fixed, recommendations issue on minikube is being debugged
 | 3   | Short Scalability test         | 5k exps / 15 days | PASSED |
 
 ---
@@ -85,9 +85,10 @@ Send kruize logs to CloudWatch so that these logs can be viewed using tools like
 Evaluate Kruize Scalability on OCP, with 5k experiments by uploading resource usage data for 15 days and update recommendations.
 Changes do not have scalability implications. Short scalability test will be run as part of the release testing
 
-Short Scalability run - 5K exps / 15 days of results / 2 containers per exp
-Kruize replicas - 10
-OCP - Scalelab cluster
+Short Scalability run
+- 5K exps / 15 days of results / 2 containers per exp
+- Kruize replicas - 10
+- OCP - Scalelab cluster
 
 Kruize Release | Exps / Results / Recos | Execution time | Latency (Max/ Avg) in seconds ||| Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB)
 -- | -- | -- | -- | -- | -- | --| -- | --
@@ -100,19 +101,19 @@ Kruize Release | Exps / Results / Recos | Execution time | Latency (Max/ Avg) in
 ----
 ## RELEASE TESTING
 
-As part of the release testing, test the following will be executed:
+As part of the release testing, following tests will be executed:
 - [Kruize Remote monitoring Functional tests](/tests/scripts/remote_monitoring_tests/Remote_monitoring_tests.md)
-- [Kruize Local monitoring workflow](Tested manually)
+- Kruize Local monitoring workflow - Tested manually
 - [Fault tolerant test](/tests/scripts/remote_monitoring_tests/fault_tolerant_tests.md)
 - [Stress test](/tests/scripts/remote_monitoring_tests/README.md)
 - [Scalability test (On openshift)](/tests/scripts/remote_monitoring_tests/scalability_test.md) - scalability test with 5000 exps / 15 days usage data
-- [Kruize remote monitoring demo (On minikube)](https://github.com/kruize/kruize-demos/blob/main/remote_monitoring_demo/README.md)
+- [Kruize remote monitoring demo (On minikube)](https://github.com/kruize/kruize-demos/blob/main/monitoring/remote_monitoring_demo/README.md)
 
 
 | #   | TEST SUITE | EXPECTED RESULTS | ACTUAL RESULTS | COMMENTS |
 | --- | ---------- | ---------------- | -------------- | -------- | 
 | 1   |  Kruize Remote monitoring Functional testsuite | TOTAL - 356, PASSED - 313 / FAILED - 43 | TOTAL - 356, PASSED - 313 / FAILED - 43 | No new regressions seen, existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
-| 2   |  Kruize Local monitoring workflow | PASSED | PASSED on Openshift | PoC code, tested it manually |
+| 2   |  Kruize Local monitoring workflow | PASSED | PASSED on Openshift, recommendations issue on minikube | PoC code, tested it manually |
 | 3   |  Fault tolerant test | PASSED | PASSED | |
 | 4   |  Stress test | PASSED | FAILED | [Intermittent failure](https://github.com/kruize/autotune/issues/1106) |
 | 5   |  Scalability test (short run)| PASSED | PASSED | |
