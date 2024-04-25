@@ -114,7 +114,7 @@ As part of the release testing, test the following will be executed:
 | 1   |  Kruize Remote monitoring Functional testsuite | TOTAL - 356, PASSED - 313 / FAILED - 43 | TOTAL - 356, PASSED - 313 / FAILED - 43 | No new regressions seen, existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
 | 2   |  Kruize Local monitoring workflow | PASSED | PASSED on Openshift | PoC code, tested it manually |
 | 3   |  Fault tolerant test | PASSED | PASSED | |
-| 4   |  Stress test | PASSED | FAILED | |
+| 4   |  Stress test | PASSED | FAILED | [Intermittent failure](https://github.com/kruize/autotune/issues/1106) |
 | 5   |  Scalability test (short run)| PASSED | PASSED | |
 | 6   |  Kruize remote monitoring demo | PASSED | PASSED | |
 
