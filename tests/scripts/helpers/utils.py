@@ -213,6 +213,12 @@ update_results_test_data = {
     "memoryRSS_format": "MiB"
 }
 
+# version, datasource_name
+import_metadata_test_data = {
+    "version": "v1.0",
+    "datasource_name": "prometheus-1",
+}
+
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
 aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "cpuLimit_avg", "cpuUsage_sum", "cpuUsage_max",
