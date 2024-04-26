@@ -2,6 +2,8 @@ import datetime
 import json
 
 import pytest
+import sys
+sys.path.append("../../")
 
 from helpers.all_terms_list_reco_json_schema import all_terms_list_reco_json_schema
 from helpers.fixtures import *

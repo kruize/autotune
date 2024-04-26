@@ -1,4 +1,7 @@
 import pytest
+import sys
+sys.path.append("../../")
+
 from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
