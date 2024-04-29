@@ -141,6 +141,8 @@ If no parameter is passed API returns all the datasources available.
 }
 ```
 
+</details>
+
 **Request with datasource name parameter**
 
 `GET /datasources`
@@ -1023,6 +1025,9 @@ see [Create Experiment](/design/CreateExperiment.md)
   "status": "SUCCESS"
 }
 ```
+
+</details>
+
 <a name="list-experiments-api"></a>
 
 ### List Experiments API
