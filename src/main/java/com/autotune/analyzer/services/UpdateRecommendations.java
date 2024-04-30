@@ -26,10 +26,7 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -91,7 +88,7 @@ public class UpdateRecommendations extends HttpServlet {
         String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
         Timestamp interval_end_time;
         Timestamp interval_start_time = null;
-        if (KruizeDeploymentInfo.logAllHttpReqAndResp)
+        if (KruizeDeploymentInfo.log_http_req_resp)
             LOGGER.info("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
         try {
             // create recommendation engine object
@@ -170,8 +167,8 @@ public class UpdateRecommendations extends HttpServlet {
                     .create();
             gsonStr = gsonObj.toJson(recommendationList);
         }
-        if (KruizeDeploymentInfo.logAllHttpReqAndResp)
-            LOGGER.info("Update Recommendation API response: {}", recommendationList);
+        if (KruizeDeploymentInfo.log_http_req_resp)
+            LOGGER.info("Update Recommendation API response: {}", new Gson().toJson(JsonParser.parseString(gsonStr)));
         response.getWriter().println(gsonStr);
         response.getWriter().close();
     }
