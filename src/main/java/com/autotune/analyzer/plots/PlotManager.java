@@ -13,6 +13,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.*;
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.CPU_ONE_CORE;
 
 public class PlotManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlotManager.class);
@@ -68,27 +69,46 @@ public class PlotManager {
     }
 
     PlotData.UsageData getUsageData(Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName, String format) {
-        // Extract CPU values
-        List<Double> cpuValues = resultInRange.values().stream()
+        // Extract metric values
+        List<Double> metricValues = resultInRange.values().stream()
                 .filter(intervalResults -> intervalResults.getMetricResultsMap().containsKey(metricName))
-                .mapToDouble(intervalResults -> {
+                .map(intervalResults -> {
                     MetricResults metricResults = intervalResults.getMetricResultsMap().get(metricName);
-                    return (metricResults != null && metricResults.getAggregationInfoResult() != null) ? metricResults.getAggregationInfoResult().getSum() : 0.0;
+                    double metricUsageAvg = (metricResults != null) ? metricResults.getAggregationInfoResult().getAvg() : 0.0;
+                    double metricUsageMax = (metricResults != null) ? metricResults.getAggregationInfoResult().getMax() : 0.0;
+                    double metricUsageSum = (metricResults != null) ? metricResults.getAggregationInfoResult().getSum() : 0.0;
+
+                    double metricUsage = (metricUsageMax > 0) ? metricUsageMax : metricUsageAvg;
+
+                    double metricRequestInterval;
+                    double cpuUsagePod = 0;
+                    int numPods;
+
+                    if (CPU_ONE_CORE > metricUsage) {
+                        metricRequestInterval = metricUsage;
+                    } else {
+                        if (metricUsageAvg != 0) {
+                            numPods = (int) Math.ceil(metricUsageSum / metricUsageAvg);
+                            cpuUsagePod = (numPods > 0) ? metricUsageSum / numPods : 0.0;
+                        }
+                        metricRequestInterval = Math.max(cpuUsagePod, metricUsage);
+                    }
+                    return metricRequestInterval;
                 })
-                .boxed() // Convert double to Double
                 .collect(Collectors.toList());
-        if (cpuValues.size() > 0) {
-            double q1 = CommonUtils.percentile(TWENTYFIVE_PERCENTILE, cpuValues);
-            double q3 = CommonUtils.percentile(SEVENTYFIVE_PERCENTILE, cpuValues);
-            double median = CommonUtils.percentile(FIFTY_PERCENTILE, cpuValues);
+        LOGGER.debug("metricValues : {}", metricValues);
+        if (!metricValues.isEmpty()) {
+            double q1 = CommonUtils.percentile(TWENTYFIVE_PERCENTILE, metricValues);
+            double q3 = CommonUtils.percentile(SEVENTYFIVE_PERCENTILE, metricValues);
+            double median = CommonUtils.percentile(FIFTY_PERCENTILE, metricValues);
             // Find max and min
-            double max = Collections.max(cpuValues);
-            double min = Collections.min(cpuValues);
+            double max = Collections.max(metricValues);
+            double min = Collections.min(metricValues);
+            LOGGER.debug("q1 : {}, q3 : {}, median : {}, max : {}, min : {}", q1, q3, median, max, min);
             return new PlotData.UsageData(min, q1, median, q3, max, format);
         } else {
             return null;
         }
-
 
     }
 }
