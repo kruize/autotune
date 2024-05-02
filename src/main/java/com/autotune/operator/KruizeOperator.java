@@ -32,8 +32,8 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.datasource.DataSource;
-import com.autotune.common.datasource.DataSourceFactory;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.k8sObjects.KubernetesContexts;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl;
@@ -336,6 +336,7 @@ public class KruizeOperator {
             String targetCluster;
             String clusterName;
             String namespace;
+            String datasource;
             SelectorInfo selectorInfo;
             JSONObject sloJson = null;
             String hpoAlgoImpl = null;
@@ -347,6 +348,7 @@ public class KruizeOperator {
             targetCluster = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.TARGET_CLUSTER,
                     AnalyzerConstants.AutotuneObjectConstants.DEFAULT_TARGET_CLUSTER);
             clusterName = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.CLUSTER_NAME);
+            datasource = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE);
             name = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
             namespace = metadataJson.optString(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE);
             hpoAlgoImpl = specJson.optString(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL,
@@ -411,6 +413,7 @@ public class KruizeOperator {
                     hpoAlgoImpl,
                     selectorInfo,
                     perfProfileName,
+                    datasource,
                     objectReference
             );
 
@@ -664,9 +667,9 @@ public class KruizeOperator {
                 LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
                 return;
             }
-            DataSource autotuneDataSource = null;
+            DataSourceInfo autotuneDataSource = null;
             try {
-                autotuneDataSource = DataSourceFactory.getDataSource(KruizeDeploymentInfo.monitoring_agent);
+                autotuneDataSource = DataSourceOperatorImpl.getMonitoringAgent(KruizeDeploymentInfo.monitoring_agent);
             } catch (MonitoringAgentNotFoundException e) {
                 e.printStackTrace();
             }
@@ -677,7 +680,7 @@ public class KruizeOperator {
                 for (LayerPresenceQuery layerPresenceQuery : layerPresenceQueries) {
                     try {
                         // TODO: Check the datasource in the query is the same as the Autotune one
-                        ArrayList<String> apps = (ArrayList<String>) autotuneDataSource.getAppsForLayer(layerPresenceQuery.getLayerPresenceQuery(),
+                        ArrayList<String> apps = (ArrayList<String>) DataSourceOperatorImpl.getInstance().getAppsForLayer(autotuneDataSource, layerPresenceQuery.getLayerPresenceQuery(),
                                 layerPresenceQuery.getLayerPresenceKey());
                         appsForAllQueries.addAll(apps);
                     } catch (MalformedURLException | NullPointerException e) {

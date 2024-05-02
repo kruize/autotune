@@ -194,7 +194,7 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file)
+            response = update_results(update_results_json_file, False)
 
             data = response.json()
             print("message = ", data['message'])
@@ -319,7 +319,7 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
 
             write_json_data_to_file(update_results_json_file, result_json)
             result_json_arr.append(result_json[0])
-            response = update_results(update_results_json_file)
+            response = update_results(update_results_json_file, False)
 
             data = response.json()
             print("message = ", data['message'])
@@ -384,13 +384,15 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
 @pytest.mark.negative
 def test_update_recommendations_without_experiment_name_end_time(cluster_type):
     '''
-        try to update recommendation without experiment name and end time and get 400 status with UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE
+        try to update recommendation without experiment name and end time and get 400 status with
+        UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE and UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE
     '''
     form_kruize_url(cluster_type)
     response = update_recommendations(None, None, None)
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    assert data['message'] == UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE
+    assert data['message'] == UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE + ", " + \
+           UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE
 
 
 @pytest.mark.negative
@@ -417,11 +419,11 @@ def test_update_recommendations_with_invalid_date_format_end_time(cluster_type):
     response = update_recommendations(experiment_name, None, end_time)
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    assert data['message'] == UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT % (end_time)
+    assert data['message'] == UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT % end_time
 
 
 @pytest.mark.negative
-def test_update_recommendations_with_unknown_experiment_name_and_end_time(cluster_type):
+def test_update_recommendations_with_unknown_experiment_name(cluster_type):
     '''
         Update recommendation with unknown experiment name and end date.
     '''
@@ -432,6 +434,56 @@ def test_update_recommendations_with_unknown_experiment_name_and_end_time(cluste
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
     assert data['message'] == UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND + experiment_name
+
+
+@pytest.mark.negative
+def test_update_recommendations_with_unknown_interval_end_time(cluster_type):
+    input_json_file = "../json_files/create_exp.json"
+    # creating a random end_time timestamp
+    end_time = "2023-01-02T00:15:00.000Z"
+    # Convert end_time to datetime object
+    end_time_dt = datetime.strptime(end_time, "%Y-%m-%dT%H:%M:%S.%fZ")
+
+    # Subtract 15 days from end_time
+    start_time_dt = end_time_dt - timedelta(days=15)
+
+    # Format start_time_dt back to string
+    start_time = start_time_dt.strftime("%Y-%m-%dT%H:%M:%S.%f")[:-3] + 'Z'
+
+    find = []
+    json_data = json.load(open(input_json_file))
+
+    find.append(json_data[0]['experiment_name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['namespace'])
+
+    form_kruize_url(cluster_type)
+
+    # Create experiment using the specified json
+    create_exp_json_file = "/tmp/create_exp_" + str(0) + ".json"
+    generate_json(find, input_json_file, create_exp_json_file, 0)
+
+    # Delete the experiment
+    response = delete_experiment(create_exp_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create the experiment
+    response = create_experiment(create_exp_json_file)
+
+    data = response.json()
+    print("message = ", data['message'])
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Get the experiment name
+    json_data = json.load(open(create_exp_json_file))
+    experiment_name = json_data[0]['experiment_name']
+
+    response = update_recommendations(experiment_name, None, end_time)
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['message'] == UPDATE_RECOMMENDATIONS_METRICS_NOT_FOUND + start_time + " to " + end_time
 
 
 @pytest.mark.negative

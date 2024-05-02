@@ -69,6 +69,22 @@ public class IntervalResults {
         return intervalStartTime;
     }
 
+    public Timestamp getIntervalEndTime() {
+        return intervalEndTime;
+    }
+
+    public void setIntervalStartTime(Timestamp intervalStartTime) {
+        this.intervalStartTime = intervalStartTime;
+    }
+
+    public void setIntervalEndTime(Timestamp intervalEndTime) {
+        this.intervalEndTime = intervalEndTime;
+    }
+
+    public void setDurationInMinutes(Double durationInMinutes) {
+        this.durationInMinutes = durationInMinutes;
+    }
+
     @Override
     public String toString() {
         return "IntervalResults{" +

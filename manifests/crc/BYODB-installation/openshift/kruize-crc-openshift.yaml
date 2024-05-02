@@ -32,6 +32,9 @@ data:
       "monitoringendpoint": "prometheus-k8s",
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
+      "plots": "false",
+      "local": "false",
+      "logAllHttpReqAndResp": "true",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -42,6 +45,16 @@ data:
         "hbm2ddlauto": "none",
         "showsql": "false",
         "timezone": "UTC"
+      },
+      "logging" : {
+        "cloudwatch": {
+          "accessKeyId": "",
+          "logGroup": "kruize-logs",
+          "logStream": "kruize-stream",
+          "region": "",
+          "secretAccessKey": "",
+          "logLevel": "INFO"
+        }
       }
     }
 ---
@@ -65,7 +78,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.20.1_rm
+          image: kruize/autotune_operator:0.0.21_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -83,10 +96,11 @@ spec:
               value: "-XX:MaxRAMPercentage=80"
           resources:
             requests:
-              memory: "4Gi"
-              cpu: "4"
+              memory: "2Gi"
+              cpu: "2"
             limits:
-              memory: "8Gi"
+              memory: "2Gi"
+              cpu: "2"
           ports:
             - name: kruize-port
               containerPort: 8080
@@ -207,3 +221,16 @@ spec:
     - name: nginx-config-volume
       configMap:
         name: nginx-config
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kruize-monitoring-view
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+roleRef:
+  kind: ClusterRole
+  name: cluster-monitoring-view
+  apiGroup: rbac.authorization.k8s.io

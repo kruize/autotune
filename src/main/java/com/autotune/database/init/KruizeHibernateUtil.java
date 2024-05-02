@@ -16,10 +16,7 @@
 package com.autotune.database.init;
 
 
-import com.autotune.database.table.KruizeExperimentEntry;
-import com.autotune.database.table.KruizePerformanceProfileEntry;
-import com.autotune.database.table.KruizeRecommendationEntry;
-import com.autotune.database.table.KruizeResultsEntry;
+import com.autotune.database.table.*;
 import com.autotune.operator.KruizeDeploymentInfo;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -28,10 +25,14 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class KruizeHibernateUtil {
-    private static final SessionFactory sessionFactory;
     private static final Logger LOGGER = LoggerFactory.getLogger(KruizeHibernateUtil.class);
+    private static SessionFactory sessionFactory;
 
     static {
+        buildSessionFactory();
+    }
+
+    public static void buildSessionFactory() {
         SessionFactory sfTemp = null;
         try {
             Configuration configuration = new Configuration();
@@ -55,6 +56,10 @@ public class KruizeHibernateUtil {
             configuration.addAnnotatedClass(KruizeResultsEntry.class);
             configuration.addAnnotatedClass(KruizeRecommendationEntry.class);
             configuration.addAnnotatedClass(KruizePerformanceProfileEntry.class);
+            if (KruizeDeploymentInfo.local) {
+                configuration.addAnnotatedClass(KruizeDataSourceEntry.class);
+                configuration.addAnnotatedClass(KruizeDSMetadataEntry.class);
+            }
             LOGGER.info("DB is trying to connect to {}", connectionURL);
             sfTemp = configuration.buildSessionFactory();
             LOGGER.info("DB build session is successful !");
@@ -64,6 +69,7 @@ public class KruizeHibernateUtil {
         } finally {
             sessionFactory = sfTemp;
         }
+
     }
 
     public static Session getSession() {
@@ -72,5 +78,12 @@ public class KruizeHibernateUtil {
 
     public static SessionFactory getSessionFactory() {
         return sessionFactory;
+    }
+
+    public static void closeSessionFactory() {
+        if (sessionFactory != null) {
+            sessionFactory.close();
+            sessionFactory = null;
+        }
     }
 }

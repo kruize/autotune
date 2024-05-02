@@ -15,8 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.utils;
 
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.DefaultImpl;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.ResourceOptimizationOpenshiftImpl;
 import com.autotune.utils.KruizeConstants;
 
 import java.util.Map;
@@ -85,7 +83,8 @@ public class AnalyzerConstants {
     public static final int GC_THRESHOLD_COUNT = 100;
     public static final String TARGET = "target/bin";
     public static final String MIGRATIONS = "migrations";
-    public static final String DDL = "kruize_experiments_ddl.sql";
+    public static final String ROS_DDL_SQL = "kruize_experiments_ddl.sql";
+    public static final String KRUIZE_LOCAL_DDL_SQL = "kruize_local_ddl.sql";
 
 
     private AnalyzerConstants() {
@@ -171,7 +170,7 @@ public class AnalyzerConstants {
         DAEMONSET,
     }
 
-    public enum RegisterRecommendationEngineStatus {
+    public enum RegisterRecommendationModelStatus {
         SUCCESS,
         ALREADY_EXISTS,
         INVALID
@@ -311,6 +310,13 @@ public class AnalyzerConstants {
         public static final String LATEST = "latest";
         public static final String EXPERIMENT_REGISTERED = "Registered successfully with Kruize! View registered experiments at /listExperiments";
         public static final String RESULT_SAVED = "Results added successfully! View saved results at /listExperiments.";
+        public static final String DATASOURCE_NAME = "name";
+        public static final String DATASOURCE = "datasource";
+        public static final String DATASOURCE_PROVIDER = "provider";
+        public static final String CLUSTER_NAME = "cluster_name";
+        public static final String VERBOSE = "verbose";
+        public static final String FALSE = "false";
+
 
         private ServiceConstants() {
         }
@@ -463,12 +469,6 @@ public class AnalyzerConstants {
                 RESOURCE_OPT_OPENSHIFT_PROFILE, "ResourceOptimizationOpenshiftImpl",
                 RESOURCE_OPT_LOCAL_MON_PROFILE, "ResourceOptimizationOpenshiftImpl"
         );
-
-        public static final Map<String, Class> perfProfileInstances = Map.of(
-                DEFAULT_PROFILE, DefaultImpl.class,
-                RESOURCE_OPT_OPENSHIFT_PROFILE, ResourceOptimizationOpenshiftImpl.class,
-                RESOURCE_OPT_LOCAL_MON_PROFILE, ResourceOptimizationOpenshiftImpl.class
-        );
     }
 
     public static final class K8sObjectConstants {
@@ -533,18 +533,21 @@ public class AnalyzerConstants {
     }
 
     public static final class VersionConstants {
+        public static final String CURRENT_KRUIZE_OBJECT_VERSION = "v2.0";
+
+        private VersionConstants() {
+
+        }
+
         public static final class APIVersionConstants {
             public static final String CURRENT_CREATE_EXPERIMENT_VERSION = "v2.0";
             public static final String CURRENT_UPDATE_RESULTS_VERSION = "v2.0";
             public static final String CURRENT_LIST_RECOMMENDATIONS_VERSION = "v2.0";
             public static final String CURRENT_UPDATE_RECOMMENDATIONS_VERSION = "v2.0";
+
             private APIVersionConstants() {
 
             }
-        }
-        public static final String CURRENT_KRUIZE_OBJECT_VERSION = "v2.0";
-        private VersionConstants() {
-
         }
     }
 }

@@ -79,7 +79,8 @@ public class UpdateResults extends HttpServlet {
                     .registerTypeAdapter(Double.class, new CustomNumberDeserializer())
                     .registerTypeAdapter(Integer.class, new CustomNumberDeserializer())
                     .create();
-            LOGGER.debug("updateResults API request payload for requestID {} is {}", calCount, inputData);
+            if (KruizeDeploymentInfo.logAllHttpReqAndResp)
+                LOGGER.info("updateResults API request payload for requestID {} is {}", calCount, inputData);
             try {
                 updateResultsAPIObjects = Arrays.asList(gson.fromJson(inputData, UpdateResultsAPIObject[].class));
             } catch (JsonParseException e) {
@@ -119,7 +120,7 @@ public class UpdateResults extends HttpServlet {
                 );
                 request.setAttribute("data", jsonObjectList);
                 String errorMessage = String.format("Out of a total of %s records, %s failed to save", updateResultsAPIObjects.size(), failureAPIObjs.size());
-                LOGGER.debug("updateResults API request payload for requestID {} failed", calCount);
+                LOGGER.error("updateResults API request payload for requestID {} failed", calCount);
                 sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
             } else {
                 LOGGER.debug("updateResults API request payload for requestID {} success", calCount);
@@ -127,7 +128,7 @@ public class UpdateResults extends HttpServlet {
                 statusValue = "success";
             }
         } catch (Exception e) {
-            LOGGER.debug("updateResults API request payload for requestID {} failed", calCount);
+            LOGGER.error("updateResults API request payload for requestID {} failed", calCount);
             LOGGER.error("Exception: " + e.getMessage());
             e.printStackTrace();
             sendErrorResponse(inputData, request, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
@@ -148,7 +149,8 @@ public class UpdateResults extends HttpServlet {
         String successOutput = new Gson().toJson(
                 new KruizeResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
         );
-        LOGGER.debug(successOutput);
+        if (KruizeDeploymentInfo.logAllHttpReqAndResp)
+            LOGGER.info("Update Results API response: {}", successOutput);
         out.append(
                 successOutput
         );
@@ -162,7 +164,8 @@ public class UpdateResults extends HttpServlet {
             e.printStackTrace();
             if (null == errorMsg) errorMsg = e.getMessage();
         }
-        LOGGER.debug("UpdateRequestsAPI  input pay load {} ", inputPayload);
+        if (KruizeDeploymentInfo.logAllHttpReqAndResp)
+            LOGGER.info("UpdateRequestsAPI  input pay load {} ", inputPayload);
         response.sendError(httpStatusCode, errorMsg);
     }
 

@@ -21,6 +21,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import java.util.List;
 
 /**
  * This is a Java class named KruizeExperimentEntry annotated with JPA annotations.
@@ -62,6 +63,8 @@ public class KruizeExperimentEntry {
     private JsonNode extended_data;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode meta_data;
+
+//    TODO: update KruizeDSMetadataEntry
 
 
     public String getVersion() {

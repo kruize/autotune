@@ -19,6 +19,7 @@ import os
 import re
 import subprocess
 import time
+import math
 from datetime import datetime, timedelta
 
 SUCCESS_STATUS_CODE = 201
@@ -40,6 +41,7 @@ CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entrie
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
 UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE = 'interval_end_time is mandatory'
 UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND = 'Not Found: experiment_name does not exist: '
+UPDATE_RECOMMENDATIONS_METRICS_NOT_FOUND = 'No metrics available from '
 UPDATE_RECOMMENDATIONS_START_TIME_PRECEDE_END_TIME = 'The Start time should precede the End time!'
 UPDATE_RECOMMENDATIONS_START_TIME_END_TIME_GAP_ERROR = 'The gap between the interval_start_time and interval_end_time must be within a maximum of 15 days!'
 UPDATE_RECOMMENDATIONS_INVALID_DATE_TIME_FORMAT = "Given timestamp - \" %s \" is not a valid timestamp format"
@@ -52,11 +54,17 @@ CONTAINER_AND_EXPERIMENT_NAME = " for container : %s for experiment: %s.]"
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
 NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE = "112101"
 NOTIFICATION_CODE_FOR_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "112102"
+NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE = "111101"
+NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "111102"
+NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE = "111103"
 NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA = "120001"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE = "323001"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO = "323002"
+NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO_MESSAGE = "CPU usage is zero, No CPU Recommendations can be generated"
 NOTIFICATION_CODE_FOR_CPU_RECORDS_NOT_AVAILABLE = "323003"
 NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO = "324001"
+NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO_MESSAGE = "Memory Usage is zero, No Memory Recommendations can be generated"
 NOTIFICATION_CODE_FOR_MEMORY_RECORDS_NOT_AVAILABLE = "324002"
 NOTIFICATION_CODE_FOR_CPU_REQUEST_NOT_SET = "523001"
 NOTIFICATION_CODE_FOR_CPU_LIMIT_NOT_SET = "423001"
@@ -83,6 +91,11 @@ INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE = "112102"
 INFO_RECOMMENDATIONS_AVAILABLE_CODE = "111000"
 INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE = "111101"
 
+CPU_REQUEST_OPTIMISED_CODE = "323004"
+CPU_LIMIT_OPTIMISED_CODE = "323005"
+MEMORY_REQUEST_OPTIMISED_CODE = "324003"
+MEMORY_LIMIT_OPTIMISED_CODE = "324004"
+
 CPU_REQUEST = "cpuRequest"
 CPU_LIMIT = "cpuLimit"
 CPU_USAGE = "cpuUsage"
@@ -93,6 +106,9 @@ MEMORY_LIMIT = "memoryLimit"
 MEMORY_USAGE = "memoryUsage"
 MEMORY_RSS = "memoryRSS"
 
+OPTIMISED_CPU = 3
+OPTIMISED_MEMORY = 300
+
 NOT_ENOUGH_DATA_MSG = "There is not enough data available to generate a recommendation."
 EXP_EXISTS_MSG = "Experiment name already exists: "
 INVALID_DEPLOYMENT_TYPE_MSG = "Invalid deployment type: xyz"
@@ -101,13 +117,32 @@ INVALID_INTERVAL_DURATION_MSG = "Interval duration cannot be less than or greate
 time_log_csv = "/tmp/time_log.csv"
 
 # DURATION - No. of days * 24.0 hrs
+SHORT_TERM_DURATION_IN_HRS_MIN = 1 * 0.5
 SHORT_TERM_DURATION_IN_HRS_MAX = 1 * 24.0
+MEDIUM_TERM_DURATION_IN_HRS_MIN = 2 * 24.0
 MEDIUM_TERM_DURATION_IN_HRS_MAX = 7 * 24.0
+LONG_TERM_DURATION_IN_HRS_MIN = 8 * 24.0
 LONG_TERM_DURATION_IN_HRS_MAX = 15 * 24.0
 
 SHORT_TERM = "short_term"
 MEDIUM_TERM = "medium_term"
 LONG_TERM = "long_term"
+NO_TERM = "no_term"
+SHORT_AND_MEDIUM = "short_term_and_medium_term"
+SHORT_AND_LONG = "short_term_and_long_term"
+MEDIUM_AND_LONG = "medium_term_and_long_term"
+ONLY_LONG = "only_long_term"
+ONLY_MEDIUM = "only_medium_term"
+SHORT_TERM_TEST = "short_term_test"
+MEDIUM_TERM_TEST = "medium_term_test"
+LONG_TERM_TEST = "long_term_test"
+
+TERMS_NOTIFICATION_CODES = {
+    SHORT_TERM: NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE,
+    MEDIUM_TERM: NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE,
+    LONG_TERM: NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE,
+}
+
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -180,6 +215,12 @@ update_results_test_data = {
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
+aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "cpuLimit_avg", "cpuUsage_sum", "cpuUsage_max",
+                          "cpuUsage_avg", "cpuUsage_min", "cpuThrottle_sum", "cpuThrottle_max", "cpuThrottle_avg",
+                          "memoryRequest_sum", "memoryRequest_avg", "memoryLimit_sum", "memoryRequest_avg",
+                          "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
+                          "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
+
 
 def generate_test_data(csvfile, test_data, api_name):
     if os.path.isfile(csvfile):
@@ -190,6 +231,12 @@ def generate_test_data(csvfile, test_data, api_name):
         for key in test_data:
             for t in test_type:
                 data = []
+                # skip checking the invalid container name and container image name
+                if key == "container_image_name" or (key == "container_name" and t == "invalid"):
+                    continue
+                #  skip checking the aggregation info values
+                if key in aggr_info_keys_to_skip and t == "null":
+                    continue
 
                 test_name = t + "_" + key
                 status_code = 400
@@ -258,6 +305,40 @@ def read_test_data_from_csv(csv_file):
             test_data.append(row)
 
     return test_data
+
+
+def update_metrics_json(find_arr, json_file, filename, i, update_metrics,update_timestamps=False ):
+    with open(json_file, 'r') as file:
+        data = file.read()
+
+    for find in find_arr:
+        replace = find + "_" + str(i)
+        data = data.replace(find, replace)
+
+    if update_timestamps == True:
+        find = "2022-01-23T18:25:43.511Z"
+        replace = increment_timestamp(find, i)
+        data = data.replace(find, replace)
+
+        find = "2022-01-23T18:40:43.570Z"
+        replace = increment_timestamp(find, i)
+        data = data.replace(find, replace)
+
+    data = json.loads(data)
+
+    if update_metrics != None:
+        containers = data[0]['kubernetes_objects'][0]['containers']
+        for container in containers:
+            for metric in container['metrics']:
+                for metric_dict in update_metrics:
+                    for key, value in metric_dict.items():
+                        if key == metric['name']:
+                            metric['results']['aggregation_info']=value
+
+    data = json.dumps(data)
+    with open(filename, 'w') as file:
+        file.write(data)
+
 
 
 def generate_json(find_arr, json_file, filename, i, update_timestamps=False):
@@ -446,23 +527,28 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
 
                         # Validate duration in hrs
-                        if expected_duration_in_hours == None:
-                            diff = time_diff_in_hours(interval_start_time, interval_end_time)
-                            print(f"difference in hours = {diff}")
-                            duration_in_hours += diff
-                            print(f"duration in hours = {duration_in_hours}")
+                        if expected_duration_in_hours is None:
+                            duration_in_hours = set_duration_based_on_terms(duration_in_hours, term,
+                                                                            interval_start_time, interval_end_time)
 
-                            if term == "short_term" and duration_in_hours > SHORT_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
-                            elif term == "medium_term" and duration_in_hours > MEDIUM_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = MEDIUM_TERM_DURATION_IN_HRS_MAX
-                            elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
-                                duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
+                        if test_name is not None:
 
-                        print(
-                            f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
-                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
-                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            if MEDIUM_TERM_TEST in test_name and term == MEDIUM_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            elif SHORT_TERM_TEST in test_name and term == SHORT_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            elif LONG_TERM_TEST in test_name and term == LONG_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                        else:
+                            print(
+                                f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time,
+                                                                            interval_end_time)
 
                         # Get engine objects
                         engines_list = ["cost", "performance"]
@@ -497,6 +583,21 @@ def validate_container(update_results_container, update_results_json, list_reco_
         print("Checking for recommendation notifications message...")
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
+
+
+def set_duration_based_on_terms(duration_in_hours, term, interval_start_time, interval_end_time):
+    diff = time_diff_in_hours(interval_start_time, interval_end_time)
+    duration_in_hours += diff
+    print(f"duration in hours = {duration_in_hours}")
+
+    if term == "short_term" and duration_in_hours > SHORT_TERM_DURATION_IN_HRS_MAX:
+        duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+    elif term == "medium_term" and duration_in_hours > MEDIUM_TERM_DURATION_IN_HRS_MAX:
+        duration_in_hours = MEDIUM_TERM_DURATION_IN_HRS_MAX
+    elif term == "long_term" and duration_in_hours > LONG_TERM_DURATION_IN_HRS_MAX:
+        duration_in_hours = LONG_TERM_DURATION_IN_HRS_MAX
+
+    return duration_in_hours
 
 
 def validate_config(reco_config, metrics):
@@ -713,3 +814,26 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
             assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][
                 AMOUNT_KEY] - current_memory_value
             assert variation_limits[MEMORY_KEY][FORMAT_KEY] == recommended_limits[MEMORY_KEY][FORMAT_KEY]
+
+
+def check_optimised_codes(cost_notifications, perf_notifications):
+    assert CPU_REQUEST_OPTIMISED_CODE in cost_notifications
+    assert CPU_REQUEST_OPTIMISED_CODE in perf_notifications
+
+    assert CPU_LIMIT_OPTIMISED_CODE in cost_notifications
+    assert CPU_LIMIT_OPTIMISED_CODE in perf_notifications
+
+    assert MEMORY_REQUEST_OPTIMISED_CODE in cost_notifications
+    assert MEMORY_REQUEST_OPTIMISED_CODE in perf_notifications
+
+    assert MEMORY_LIMIT_OPTIMISED_CODE in cost_notifications
+    assert MEMORY_LIMIT_OPTIMISED_CODE in perf_notifications
+
+
+def validate_recommendation_for_cpu_mem_optimised(recommendations: dict, current: dict, profile: str):
+    assert "variation" in recommendations["recommendation_engines"][profile]
+    assert "config" in recommendations["recommendation_engines"][profile]
+    assert recommendations["recommendation_engines"][profile]["config"]["requests"]["cpu"]["amount"] == current["requests"]["cpu"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["limits"]["cpu"]["amount"] == current["limits"]["cpu"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["requests"]["memory"]["amount"] == current["requests"]["memory"]["amount"]
+    assert recommendations["recommendation_engines"][profile]["config"]["limits"]["memory"]["amount"] == current["limits"]["memory"]["amount"]

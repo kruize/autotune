@@ -16,9 +16,7 @@
 
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.experiment.KruizeExperiment;
-import com.autotune.analyzer.experiment.RunExperiment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
@@ -35,18 +33,13 @@ import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.database.service.ExperimentDBService;
-import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.TrialHelpers;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import io.micrometer.core.instrument.Timer;
 import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,14 +49,12 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.experiment.Experimentator.experimentsMap;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
-import static com.autotune.utils.TrialHelpers.updateExperimentTrial;
 
 /**
  * Rest API used to list experiments.
@@ -110,9 +101,13 @@ public class ListExperiments extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         String gsonStr;
         String results = request.getParameter(KruizeConstants.JSONKeys.RESULTS);
-        String latest = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
+        String latest = request.getParameter(LATEST);
         String recommendations = request.getParameter(KruizeConstants.JSONKeys.RECOMMENDATIONS);
-        String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
+        String experimentName = request.getParameter(EXPERIMENT_NAME);
+        String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
+        StringBuilder clusterName = new StringBuilder();
+        List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
+        boolean isJSONValid = true;
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<>();
         boolean error = false;
         // validate Query params
@@ -133,36 +128,60 @@ public class ListExperiments extends HttpServlet {
                     latest = "true";
                 // Validate query parameter values
                 if (isValidBooleanValue(results) && isValidBooleanValue(recommendations) && isValidBooleanValue(latest)) {
-                    try {
-                        // Fetch experiments data from the DB and check if the requested experiment exists
-                        loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
-                        // Check if experiment exists
-                        if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
-                            error = true;
-                            sendErrorResponse(
-                                    response,
-                                    new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
-                                    HttpServletResponse.SC_BAD_REQUEST,
-                                    String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
-                            );
-                        }
-                        if (!error) {
-                            // create Gson Object
-                            Gson gsonObj = createGsonObject();
-
-                            // Modify the JSON response here based on query params.
-                            gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
-                            if (gsonStr.isEmpty()) {
-                                gsonStr = generateDefaultResponse();
+                    // Check if JSON input is provided in the request body and validate it
+                    if (!requestBody.isEmpty()) {
+                        isJSONValid = validateInputJSON(requestBody);
+                    }
+                    if (isJSONValid) {
+                        try {
+                            // Fetch experiments data based on request body input, if it's present
+                            if (!requestBody.isEmpty()) {
+                                // parse the requestBody JSON into corresponding classes
+                                parseInputJSON(requestBody, clusterName, kubernetesAPIObjectList);
+                                try {
+                                    new ExperimentDBService().loadExperimentFromDBByInputJSON(mKruizeExperimentMap, clusterName, kubernetesAPIObjectList);
+                                } catch (Exception e) {
+                                    LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
+                                }
+                            } else {
+                                // Fetch experiments data from the DB and check if the requested experiment exists
+                                loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
                             }
-                            response.getWriter().println(gsonStr);
-                            response.getWriter().close();
-                            statusValue = "success";
+                            // Check if experiment exists
+                            if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
+                                error = true;
+                                sendErrorResponse(
+                                        response,
+                                        new Exception(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_EXCPTN),
+                                        HttpServletResponse.SC_BAD_REQUEST,
+                                        String.format(AnalyzerErrorConstants.APIErrors.ListRecommendationsAPI.INVALID_EXPERIMENT_NAME_MSG, experimentName)
+                                );
+                            }
+                            if (!error) {
+                                    // create Gson Object
+                                    Gson gsonObj = createGsonObject();
+
+                                    // Modify the JSON response here based on query params.
+                                    gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
+                                    if (gsonStr.isEmpty()) {
+                                        gsonStr = generateDefaultResponse();
+                                    }
+                                    response.getWriter().println(gsonStr);
+                                    response.getWriter().close();
+                                    statusValue = "success";
+                                }
+                        } catch (Exception e) {
+                            LOGGER.error("Exception: " + e.getMessage());
+                            e.printStackTrace();
+                            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                         }
-                    } catch (Exception e) {
-                        LOGGER.error("Exception: " + e.getMessage());
-                        e.printStackTrace();
-                        sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                    } else {
+                        sendErrorResponse(
+                                response,
+                                new Exception(AnalyzerErrorConstants.AutotuneObjectErrors.JSON_PARSING_ERROR),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                String.format(AnalyzerErrorConstants.AutotuneObjectErrors.JSON_PARSING_ERROR)
+                        );
                     }
                 } else {
                     sendErrorResponse(
@@ -186,6 +205,45 @@ public class ListExperiments extends HttpServlet {
                 timerListExp.stop(MetricsConfig.timerListExp);
             }
         }
+    }
+
+    private void parseInputJSON(String requestBody, StringBuilder clusterName, List<KubernetesAPIObject> kubernetesAPIObjectList) {
+        // Parse the JSON string into a JsonObject
+        JsonObject jsonObject = new Gson().fromJson(requestBody, JsonObject.class);
+
+        // Extract cluster name
+        clusterName.append(jsonObject.get(KruizeConstants.JSONKeys.CLUSTER_NAME).getAsString());
+
+        // Extract Kubernetes objects
+        JsonArray kubernetesObjectsArray = jsonObject.getAsJsonArray(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
+        for (JsonElement element : kubernetesObjectsArray) {
+            JsonObject kubernetesObjectJson = element.getAsJsonObject();
+            String type = kubernetesObjectJson.get(KruizeConstants.JSONKeys.TYPE).getAsString();
+            String name = kubernetesObjectJson.get(KruizeConstants.JSONKeys.NAME).getAsString();
+            String namespace = kubernetesObjectJson.get(KruizeConstants.JSONKeys.NAMESPACE).getAsString();
+            List<ContainerAPIObject> containerAPIObjects = extractContainersFromJson(kubernetesObjectJson);
+            KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject(name, type, namespace);
+            kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
+            kubernetesAPIObjectList.add(kubernetesAPIObject);
+        }
+    }
+
+    public List<ContainerAPIObject> extractContainersFromJson(JsonObject jsonObject) {
+        JsonArray containersArray = jsonObject.getAsJsonArray(KruizeConstants.JSONKeys.CONTAINERS);
+        List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
+        for (JsonElement element : containersArray) {
+            JsonObject containerJson = element.getAsJsonObject();
+            String containerName = containerJson.get(KruizeConstants.JSONKeys.CONTAINER_NAME).getAsString();
+            String containerImageName = containerJson.get(KruizeConstants.JSONKeys.CONTAINER_IMAGE_NAME).getAsString();
+            ContainerAPIObject containerAPIObject = new ContainerAPIObject(containerName, containerImageName, null, null);
+            containerAPIObjects.add(containerAPIObject);
+        }
+        return containerAPIObjects;
+    }
+
+    private boolean validateInputJSON(String requestBody) {
+        //TODO: add validations for the requestBody
+        return true;
     }
 
     private boolean isValidBooleanValue(String value) {
