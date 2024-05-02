@@ -575,7 +575,8 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         assert datapoint is not None, f"Expected datapoint to be available"
                         assert datapoint == duration_terms[term], f"datapoint Expected: {duration_terms[term]}, Obtained: {datapoint}"
                         assert len(plots_data) == duration_terms[term], f"plots_data size Expected: {duration_terms[term]}, Obtained: {len(plots_data)}"
-        else:
+
+            else:
                 data = list_reco_container["recommendations"]["data"]
                 assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
 
