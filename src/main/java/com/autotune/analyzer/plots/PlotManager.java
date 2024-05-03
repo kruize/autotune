@@ -2,6 +2,7 @@ package com.autotune.analyzer.plots;
 
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
@@ -59,10 +60,10 @@ public class PlotManager {
             calendar.add(Calendar.MILLISECOND, (int) millisecondsToAdd);
             // Convert the modified Calendar back to a Timestamp
             Timestamp newTimestamp = new Timestamp(calendar.getTimeInMillis());
-            PlotData.UsageData cpuUsage = getUsageData(sortedResultsHashMap.subMap(newTimestamp, true, incrementStartTime,
-                    true), AnalyzerConstants.MetricName.cpuUsage);
+            PlotData.UsageData cpuUsage = getUsageData(sortedResultsHashMap.subMap(newTimestamp, true,
+                    incrementStartTime,false), AnalyzerConstants.MetricName.cpuUsage);
             PlotData.UsageData memoryUsage = getUsageData(sortedResultsHashMap.subMap(newTimestamp, true,
-                    incrementStartTime, true), AnalyzerConstants.MetricName.memoryUsage);
+                    incrementStartTime, false), AnalyzerConstants.MetricName.memoryUsage);
             plotsDataMap.put(newTimestamp, new PlotData.PlotPoint(cpuUsage, memoryUsage));
             incrementStartTime = newTimestamp;
         }
@@ -85,26 +86,20 @@ public class PlotManager {
                 .filter(intervalResults -> intervalResults.getMetricResultsMap().containsKey(metricName))
                 .map(intervalResults -> {
                     MetricResults metricResults = intervalResults.getMetricResultsMap().get(metricName);
-                    double metricUsageAvg = (metricResults != null) ? metricResults.getAggregationInfoResult().getAvg() : 0.0;
-                    double metricUsageMax = (metricResults != null) ? metricResults.getAggregationInfoResult().getMax() : 0.0;
-                    double metricUsageSum = (metricResults != null) ? metricResults.getAggregationInfoResult().getSum() : 0.0;
+                    double metricUsageAvg = Optional.ofNullable(metricResults)
+                            .map(MetricResults::getAggregationInfoResult)
+                            .map(MetricAggregationInfoResults::getAvg)
+                            .orElse(0.0);
+                    double metricUsageMax = Optional.ofNullable(metricResults)
+                            .map(MetricResults::getAggregationInfoResult)
+                            .map(MetricAggregationInfoResults::getMax)
+                            .orElse(0.0);
+                    double metricUsageSum = Optional.ofNullable(metricResults)
+                            .map(MetricResults::getAggregationInfoResult)
+                            .map(MetricAggregationInfoResults::getSum)
+                            .orElse(0.0);
 
-                    double metricUsage = (metricUsageMax > 0) ? metricUsageMax : metricUsageAvg;
-
-                    double metricRequestInterval;
-                    double cpuUsagePod = 0;
-                    int numPods;
-
-                    if (CPU_ONE_CORE > metricUsage) {
-                        metricRequestInterval = metricUsage;
-                    } else {
-                        if (metricUsageAvg != 0) {
-                            numPods = (int) Math.ceil(metricUsageSum / metricUsageAvg);
-                            cpuUsagePod = (numPods > 0) ? metricUsageSum / numPods : 0.0;
-                        }
-                        metricRequestInterval = Math.max(cpuUsagePod, metricUsage);
-                    }
-                    return metricRequestInterval;
+                    return getMetricRequestInterval(metricUsageMax, metricUsageAvg, metricUsageSum);
                 })
                 .collect(Collectors.toList());
         LOGGER.debug("metricValues : {}", metricValues);
@@ -122,5 +117,24 @@ public class PlotManager {
             return null;
         }
 
+    }
+
+    private static double getMetricRequestInterval(double metricUsageMax, double metricUsageAvg, double metricUsageSum) {
+        double metricUsage = (metricUsageMax > 0) ? metricUsageMax : metricUsageAvg;
+
+        double metricRequestInterval;
+        double cpuUsagePod = 0;
+        int numPods;
+
+        if (CPU_ONE_CORE > metricUsage) {
+            metricRequestInterval = metricUsage;
+        } else {
+            if (metricUsageAvg != 0) {
+                numPods = (int) Math.ceil(metricUsageSum / metricUsageAvg);
+                cpuUsagePod = (numPods > 0) ? metricUsageSum / numPods : 0.0;
+            }
+            metricRequestInterval = Math.max(cpuUsagePod, metricUsage);
+        }
+        return metricRequestInterval;
     }
 }
