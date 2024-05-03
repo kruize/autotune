@@ -257,7 +257,12 @@ def list_datasources(name=None):
         url += "?" + query_string
     print("URL = ", url)
     response = requests.get(url)
+
+    print("PARAMS = ", query_params)
     print("Response status code = ", response.status_code)
+    print("\n************************************************************")
+    print(response.text)
+    print("\n************************************************************")
     return response
 
 
