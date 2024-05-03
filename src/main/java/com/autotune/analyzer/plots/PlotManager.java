@@ -59,8 +59,10 @@ public class PlotManager {
             calendar.add(Calendar.MILLISECOND, (int) millisecondsToAdd);
             // Convert the modified Calendar back to a Timestamp
             Timestamp newTimestamp = new Timestamp(calendar.getTimeInMillis());
-            PlotData.UsageData cpuUsage = getUsageData(sortedResultsHashMap.subMap(newTimestamp, true, incrementStartTime, true), AnalyzerConstants.MetricName.cpuUsage, "cores");
-            PlotData.UsageData memoryUsage = getUsageData(sortedResultsHashMap.subMap(newTimestamp, true, incrementStartTime, true), AnalyzerConstants.MetricName.memoryUsage, "MiB");
+            PlotData.UsageData cpuUsage = getUsageData(sortedResultsHashMap.subMap(newTimestamp, true, incrementStartTime,
+                    true), AnalyzerConstants.MetricName.cpuUsage);
+            PlotData.UsageData memoryUsage = getUsageData(sortedResultsHashMap.subMap(newTimestamp, true,
+                    incrementStartTime, true), AnalyzerConstants.MetricName.memoryUsage);
             plotsDataMap.put(newTimestamp, new PlotData.PlotPoint(cpuUsage, memoryUsage));
             incrementStartTime = newTimestamp;
         }
@@ -68,7 +70,16 @@ public class PlotManager {
         return new PlotData.PlotsData(recommendationTerm.getPlots_datapoints(), plotsDataMap);
     }
 
-    PlotData.UsageData getUsageData(Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName, String format) {
+    PlotData.UsageData getUsageData(Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName) {
+        // Extract the format value
+        String format = resultInRange.values().stream()
+                .filter(intervalResults -> intervalResults.getMetricResultsMap().containsKey(metricName))
+                .map(intervalResults -> intervalResults.getMetricResultsMap().get(metricName))
+                .filter(Objects::nonNull)
+                .map(metricResults -> metricResults.getAggregationInfoResult().getFormat())
+                .findFirst()
+                .orElse(null);
+
         // Extract metric values
         List<Double> metricValues = resultInRange.values().stream()
                 .filter(intervalResults -> intervalResults.getMetricResultsMap().containsKey(metricName))
@@ -97,6 +108,7 @@ public class PlotManager {
                 })
                 .collect(Collectors.toList());
         LOGGER.debug("metricValues : {}", metricValues);
+        LOGGER.debug("format : {}", format);
         if (!metricValues.isEmpty()) {
             double q1 = CommonUtils.percentile(TWENTYFIVE_PERCENTILE, metricValues);
             double q3 = CommonUtils.percentile(SEVENTYFIVE_PERCENTILE, metricValues);
