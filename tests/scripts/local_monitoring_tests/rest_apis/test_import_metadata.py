@@ -119,3 +119,81 @@ def test_import_metadata_invalid_test(test_name, expected_status_code, version, 
     print("delete metadata = ", response_delete_metadata.status_code)
 
     assert response.status_code == int(expected_status_code)
+
+
+@pytest.mark.extended
+@pytest.mark.parametrize("field, expected_status_code, expected_status", mandatory_fields)
+def test_import_metadata_mandatory_fields(cluster_type, field, expected_status_code, expected_status):
+    form_kruize_url(cluster_type)
+
+    # Import metadata using the specified json
+    json_file = "/tmp/import_metadata.json"
+    input_json_file = "../json_files/import_metadata_mandatory.json"
+    json_data = json.load(open(input_json_file))
+
+    if field == 'version':
+        json_data.pop("version", None)
+    else:
+        json_data.pop("datasource_name", None)
+
+    print("\n*****************************************")
+    print(json_data)
+    print("*****************************************\n")
+    data = json.dumps(json_data)
+    with open(json_file, 'w') as file:
+        file.write(data)
+
+    response = delete_metadata(json_file)
+    print("delete metadata = ", response.status_code)
+
+    # Import metadata using the specified json
+    response = import_metadata(json_file)
+    metadata_json = response.json()
+
+    assert response.status_code == expected_status_code, \
+        f"Mandatory field check failed for {field} actual - {response.status_code} expected - {expected_status_code}"
+    assert metadata_json['status'] == expected_status
+
+    response = delete_metadata(json_file)
+    print("delete metadata = ", response.status_code)
+
+
+@pytest.mark.sanity
+def test_duplicate_import_metadata(cluster_type):
+    """
+    Test Description: This test validates the response status code of /dsmetadata API by specifying the
+    same datasource name
+    """
+    input_json_file = "../json_files/import_metadata.json"
+    json_data = json.load(open(input_json_file))
+
+    datasource_name = json_data['datasource_name']
+    print("datasource_name = ", datasource_name)
+
+    form_kruize_url(cluster_type)
+
+    response = delete_metadata(input_json_file)
+    print("delete metadata = ", response.status_code)
+
+    # Import metadata using the specified json
+    response = import_metadata(input_json_file)
+    metadata_json = response.json()
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Validate the json against the json schema
+    errorMsg = validate_import_metadata_json(metadata_json, import_metadata_json_schema)
+    assert errorMsg == ""
+
+    # Import metadata using the specified json
+    response = import_metadata(input_json_file)
+    metadata_json = response.json()
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Validate the json against the json schema
+    errorMsg = validate_import_metadata_json(metadata_json, import_metadata_json_schema)
+    assert errorMsg == ""
+
+    response = delete_metadata(input_json_file)
+    print("delete metadata = ", response.status_code)

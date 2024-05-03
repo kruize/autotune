@@ -316,8 +316,6 @@ def delete_metadata(input_json_file, invalid_header=False):
     url = URL + "/dsmetadata"
     print("URL = ", url)
 
-    datasource_name = input_json['datasource_name']
-
     headers = {'content-type': 'application/xml'}
     if invalid_header:
         print("Invalid header")
