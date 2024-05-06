@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+# Copyright (c) 2020, 2024 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -1822,4 +1822,20 @@ function create_performance_profile() {
                 echo "Failed! Create performance profile failed. Status - ${perf_profile_status}"
                 exit 1
         fi
+}
+
+#
+# "local" flag is turned off by default for now. This needs to be set to true.
+#
+function kruize_local_patch() {
+	CRC_DIR="./manifests/crc/default-db-included-installation"
+	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
+
+
+  if [ ${cluster_type} == "minikube" ]; then
+    sed -i 's/"local": "false"/"local": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+  elif [ ${cluster_type} == "openshift" ]; then
+    sed -i 's/"local": "false"/"local": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+  fi
 }

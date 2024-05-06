@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2023, 2023 Red Hat, IBM Corporation and others.
+# Copyright (c) 2024, 2024 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -56,6 +56,9 @@ function local_monitoring_tests() {
 	KRUIZE_POD_LOG="${TEST_SUITE_DIR}/kruize_pod.log"
 
 	mkdir -p ${TEST_SUITE_DIR}
+
+  # check for 'local' flag
+  kruize_local_patch
 
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
