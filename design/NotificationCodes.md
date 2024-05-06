@@ -57,6 +57,10 @@
 | 112101 |   INFO   |    COST_RECOMMENDATIONS_AVAILABLE     |           Specifies that the Cost Based Recommendations are available           |                        Cost Recommendations Available                        | API USER  |
 | 112102 |   INFO   | PERFORMANCE_RECOMMENDATION_AVAILABLE  |       Specifies that the Performance Based Recommendations are available        |                    Performance Recommendations Available                     | API USER  |
 | 120001 |   INFO   |            NOT_ENOUGH_DATA            |      Specifies that required data is not enough to create a recommendation      |       There is not enough data available to generate a recommendation.       | API USER  |
+| 111104 |   INFO   |           CPU_OVER_UTILIZED           |          Overutilized: *Utilization Ratio > *Recommended Ratio + Threshold      |                           The CPU is overutilized.                           | API USER  |
+| 111105 |   INFO   |           CPU_UNDER_UTILIZED          |          underutilized: *Utilization Ratio < *Recommended Ratio - Threshold     |                           The CPU is underutilized.                          | API USER  |
+| 111107 |   INFO   |           MEMORY_OVER_UTILIZED        |          Overutilized: *Utilization Ratio > *Recommended Ratio + Threshold      |                           The MEMORY is overutilized.                        | API USER  |
+| 111108 |   INFO   |           MEMORY_UNDER_UTILIZED       |          underutilized: *Utilization Ratio < *Recommended Ratio - Threshold     |                           The MEMORY is underutilized.                       | API USER  |
 | 221001 |  ERROR   |        NUM_PODS_CANNOT_BE_ZERO        |                Specifies that the number of pods cannot be zero                 |                        Number of pods cannot be zero                         | API USER  |
 | 221002 |  ERROR   |      NUM_PODS_CANNOT_BE_NEGATIVE      |              Specifies that the number of pods cannot be negative               |                      Number of pods cannot be negative                       | API USER  |
 | 221003 |  ERROR   |         HOURS_CANNOT_BE_ZERO          |                  Specifies that duration hours cannot be zero                   |                        Duration hours cannot be zero                         | API USER  |
@@ -120,3 +124,14 @@
 | 324004              |  NOTICE  |        MEMORY_LIMITS_OPTIMISED        |                0                 |          0          |       0        |        1         |
 | 221001              |  ERROR   |        NUM_PODS_CANNOT_BE_ZERO        |                0                 |          0          |       0        |        1         |
 | 221002              |  ERROR   |      NUM_PODS_CANNOT_BE_NEGATIVE      |                0                 |          0          |       0        |        1         |
+| 111104              |   INFO   |           CPU_OVER_UTILIZED           |                0                 |          0          |       0        |        1         |
+| 111105              |   INFO   |           CPU_UNDER_UTILIZED          |                0                 |          0          |       0        |        1         |
+| 111107              |   INFO   |           MEMORY_OVER_UTILIZED        |                0                 |          0          |       0        |        1         |
+| 111108              |   INFO   |           MEMORY_UNDER_UTILIZED       |                0                 |          0          |       0        |        1         |
+
+
+*Note:* 
+
+**Utilization Ratio =** (Current Request CPU / Current Limit CPU) * 100
+
+**Recommended Ratio =** (Recommended Request CPU / Recommended Limit CPU) * 100

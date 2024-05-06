@@ -67,6 +67,14 @@ public class RecommendationConstants {
             this.lowerBound = lowerBound;
         }
 
+        public static double getMaxDuration(RecommendationTerms termValue) {
+            return switch (termValue) {
+                case SHORT_TERM -> SHORT_TERM_HOURS;
+                case MEDIUM_TERM -> MEDIUM_TERM_HOURS;
+                case LONG_TERM -> LONG_TERM_HOURS;
+            };
+        }
+
         public String getValue() {
             return value;
         }
@@ -86,14 +94,6 @@ public class RecommendationConstants {
 
         public double getUpperBound() {
             return this.upperBound;
-        }
-
-        public static double getMaxDuration(RecommendationTerms termValue) {
-            return switch (termValue) {
-                case SHORT_TERM -> SHORT_TERM_HOURS;
-                case MEDIUM_TERM -> MEDIUM_TERM_HOURS;
-                case LONG_TERM -> LONG_TERM_HOURS;
-            };
         }
     }
 
@@ -257,6 +257,26 @@ public class RecommendationConstants {
                 RecommendationConstants.NotificationCodes.CRITICAL_MEMORY_LIMIT_NOT_SET,
                 RecommendationConstants.RecommendationNotificationMsgConstant.MEMORY_LIMIT_NOT_SET,
                 RecommendationConstants.RecommendationNotificationTypes.CRITICAL
+        ),
+        INFO_CPU_OVER_UTILIZED(
+                NotificationCodes.INFO_CPU_OVER_UTILIZED,
+                RecommendationConstants.RecommendationNotificationMsgConstant.CPU_OVER_UTILIZED,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_CPU_UNDER_UTILIZED(
+                NotificationCodes.INFO_CPU_UNDER_UTILIZED,
+                RecommendationConstants.RecommendationNotificationMsgConstant.CPU_UNDER_UTILIZED,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_MEMORY_OVER_UTILIZED(
+                NotificationCodes.INFO_MEMORY_OVER_UTILIZED,
+                RecommendationConstants.RecommendationNotificationMsgConstant.MEMORY_OVER_UTILIZED,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_MEMORY_UNDER_UTILIZED(
+                NotificationCodes.INFO_MEMORY_UNDER_UTILIZED,
+                RecommendationConstants.RecommendationNotificationMsgConstant.MEMORY_UNDER_UTILIZED,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
         );
 
 
@@ -316,6 +336,10 @@ public class RecommendationConstants {
         public static final int INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE = 111101; // TODO: need to discuss the code
         public static final int INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = 111102; // TODO: need to discuss the code
         public static final int INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE = 111103; // TODO: need to discuss the code;
+        public static final int INFO_CPU_OVER_UTILIZED = 111104; // TODO: need to discuss the code;
+        public static final int INFO_CPU_UNDER_UTILIZED = 111105; // TODO: need to discuss the code;
+        public static final int INFO_MEMORY_OVER_UTILIZED = 111107; // TODO: need to discuss the code;
+        public static final int INFO_MEMORY_UNDER_UTILIZED = 111108; // TODO: need to discuss the code;
         public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
         public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
         public static final int COST_ENGINE_END = 112199;
@@ -631,6 +655,8 @@ public class RecommendationConstants {
         public static final Double MEM_SPIKE_BUFFER_DECIMAL = 0.05;
         public static final Double DEFAULT_CPU_THRESHOLD = 0.1;
         public static final Double DEFAULT_MEMORY_THRESHOLD = 0.1;
+        public static final Double CPU_UTILIZATION_THRESHOLD = 0.0;
+        public static final Double MEMORY_UTILIZATION_THRESHOLD = 0.0;
 
         public static final int THRESHOLD_HRS_SHORT_TERM = 6;
         public static final int THRESHOLD_HRS_MEDIUM_TERM = 6;
@@ -671,6 +697,12 @@ public class RecommendationConstants {
         public static final String MEMORY_REQUESTS_OPTIMISED = "Workload is optimised wrt MEMORY REQUESTS, no changes needed";
         public static final String MEMORY_LIMITS_OPTIMISED = "Workload is optimised wrt MEMORY LIMITS, no changes needed";
         public static final String ADDING_RECOMMENDATIONS_TO_DB_FAILED = "Failed to add recommendations to the DB ";
+        public static final String CPU_OVER_UTILIZED = "The CPU is overutilized.";
+        public static final String CPU_UNDER_UTILIZED = "The CPU is underutilized.";
+        public static final String CPU_IDLE = "The CPU is idle.";
+        public static final String MEMORY_OVER_UTILIZED = "The MEMORY is overutilized.";
+        public static final String MEMORY_UNDER_UTILIZED = "The MEMORY is underutilized.";
+        public static final String MEMORY_IDLE = "The MEMORY is idle.";
 
         private RecommendationNotificationMsgConstant() {
 
