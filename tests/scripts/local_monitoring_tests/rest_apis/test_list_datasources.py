@@ -52,7 +52,7 @@ def test_list_datasources_with_name(cluster_type):
 
 @pytest.mark.negative
 @pytest.mark.parametrize("datasource_name", ["", "null", "xyz"])
-def test_list_datasources_invalid_datasorce_name(datasource_name, cluster_type):
+def test_list_datasources_invalid_datasource_name(datasource_name, cluster_type):
     """
     Test Description: This test validates the response status code of list datasources API against
     invalid input (blank, null, empty) for the json parameters.
@@ -67,5 +67,8 @@ def test_list_datasources_invalid_datasorce_name(datasource_name, cluster_type):
     name = datasource_name
     response = list_datasources(name)
 
+    list_datasources_json = response.json()
     assert response.status_code == ERROR_STATUS_CODE
+    assert list_datasources_json['message'] == LIST_DATASOURCES_ERROR_MSG % name
+
 

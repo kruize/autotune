@@ -1,5 +1,5 @@
 """
-Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
+Copyright (c) 2022, 2024 Red Hat, IBM Corporation and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available"
 COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available"
 PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available"
 CONTAINER_AND_EXPERIMENT_NAME = " for container : %s for experiment: %s.]"
+LIST_DATASOURCES_ERROR_MSG = "Given datasource name - \" %s \" either does not exist or is not valid"
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"

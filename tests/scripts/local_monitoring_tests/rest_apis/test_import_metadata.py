@@ -112,8 +112,6 @@ def test_import_metadata_invalid_test(test_name, expected_status_code, version, 
     response = import_metadata(tmp_json_file)
     metadata_json = response.json()
 
-    print(metadata_json['message'])
-
     # temporarily moved this up to avoid failures in the subsequent tests
     response_delete_metadata = delete_metadata(tmp_json_file)
     print("delete metadata = ", response_delete_metadata.status_code)
