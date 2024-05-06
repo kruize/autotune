@@ -10,14 +10,6 @@ import java.util.HashMap;
 
 public class MappedRecommendationForModel {
 
-    public MappedRecommendationForModel() {
-        this.podsCount = 0;
-        this.confidence_level = 0.0;
-        this.config = new HashMap<>();
-        this.variation = new HashMap<>();
-        this.notificationHashMap = new HashMap<>();
-    }
-
     @SerializedName(KruizeConstants.JSONKeys.PODS_COUNT)
     private int podsCount;
     @SerializedName(KruizeConstants.JSONKeys.CONFIDENCE_LEVEL)
@@ -26,9 +18,16 @@ public class MappedRecommendationForModel {
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config;
     @SerializedName(KruizeConstants.JSONKeys.VARIATION)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> variation;
-
     @SerializedName(KruizeConstants.JSONKeys.NOTIFICATIONS)
     private HashMap<Integer, RecommendationNotification> notificationHashMap;
+
+    public MappedRecommendationForModel() {
+        this.podsCount = 0;
+        this.confidence_level = 0.0;
+        this.config = new HashMap<>();
+        this.variation = new HashMap<>();
+        this.notificationHashMap = new HashMap<>();
+    }
 
     public int getPodsCount() {
         return podsCount;
@@ -69,6 +68,7 @@ public class MappedRecommendationForModel {
     public void setNotificationHashMap(HashMap<Integer, RecommendationNotification> notificationHashMap) {
         this.notificationHashMap = notificationHashMap;
     }
+
 
     public void addNotification(RecommendationNotification recommendationNotification) {
         if (null == this.notificationHashMap)

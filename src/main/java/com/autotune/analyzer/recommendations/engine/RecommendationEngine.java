@@ -17,6 +17,7 @@ import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.CPUMEMORYUtilizationAnalyzer;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
@@ -586,6 +587,8 @@ public class RecommendationEngine {
                     mappedRecommendationForTerm.addNotification(recommendationNotification);
                 }
                 mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
+
+
             }
             Terms.setDurationBasedOnTerm(containerData, mappedRecommendationForTerm, recommendationTerm);
             if (KruizeDeploymentInfo.plots == true) {
@@ -1340,6 +1343,12 @@ public class RecommendationEngine {
         // Set Variation Map
         if (!variation.isEmpty()) {
             recommendationModel.setVariation(variation);
+            recommendationModel.addNotification(CPUMEMORYUtilizationAnalyzer.analyzeCPUState(currentCpuRequestValue, currentCpuLimitValue,
+                    generatedCpuRequest, generatedCpuLimit,
+                    CPU_UTILIZATION_THRESHOLD));
+            recommendationModel.addNotification(CPUMEMORYUtilizationAnalyzer.analyzeMEMORYState(currentMemRequestValue, currentMemLimitValue,
+                    generatedMemRequest, generatedMemLimit,
+                    MEMORY_UTILIZATION_THRESHOLD));
         }
 
         return isSuccess;
@@ -1407,7 +1416,7 @@ public class RecommendationEngine {
      * @param interval_start_time The start time of the interval for fetching metrics.
      * @param dataSourceInfo      The datasource object to fetch metrics from.
      * @throws Exception if an error occurs during the fetching process.
-     *                                                                                                                               TODO: Need to add right abstractions for this
+     *                                                                                                                                                                                                                                                                                                                                                                         TODO: Need to add right abstractions for this
      */
     public void fetchMetricsBasedOnDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception {
         try {
