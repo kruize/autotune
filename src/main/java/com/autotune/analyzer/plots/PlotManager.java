@@ -72,17 +72,8 @@ public class PlotManager {
     }
 
     PlotData.UsageData getUsageData(Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName) {
-        // Extract the format value
-        String format = resultInRange.values().stream()
-                .filter(intervalResults -> intervalResults.getMetricResultsMap().containsKey(metricName))
-                .map(intervalResults -> intervalResults.getMetricResultsMap().get(metricName))
-                .filter(Objects::nonNull)
-                .map(metricResults -> metricResults.getAggregationInfoResult().getFormat())
-                .findFirst()
-                .orElse(null);
-
-        // Extract metric values
-        List<Double> metricValues = resultInRange.values().stream()
+        // stream through the results value and extract the format and the metric values
+        PlotData.UsageData usageData = resultInRange.values().stream()
                 .filter(intervalResults -> intervalResults.getMetricResultsMap().containsKey(metricName))
                 .map(intervalResults -> {
                     MetricResults metricResults = intervalResults.getMetricResultsMap().get(metricName);
@@ -99,24 +90,35 @@ public class PlotManager {
                             .map(MetricAggregationInfoResults::getSum)
                             .orElse(0.0);
 
-                    return getMetricRequestInterval(metricUsageMax, metricUsageAvg, metricUsageSum);
-                })
-                .collect(Collectors.toList());
-        LOGGER.debug("metricValues : {}", metricValues);
-        LOGGER.debug("format : {}", format);
-        if (!metricValues.isEmpty()) {
-            double q1 = CommonUtils.percentile(TWENTYFIVE_PERCENTILE, metricValues);
-            double q3 = CommonUtils.percentile(SEVENTYFIVE_PERCENTILE, metricValues);
-            double median = CommonUtils.percentile(FIFTY_PERCENTILE, metricValues);
-            // Find max and min
-            double max = Collections.max(metricValues);
-            double min = Collections.min(metricValues);
-            LOGGER.debug("q1 : {}, q3 : {}, median : {}, max : {}, min : {}", q1, q3, median, max, min);
-            return new PlotData.UsageData(min, q1, median, q3, max, format);
-        } else {
-            return null;
-        }
+                    String format = Optional.ofNullable(metricResults)
+                            .map(MetricResults::getAggregationInfoResult)
+                            .map(MetricAggregationInfoResults::getFormat)
+                            .orElse(null);
 
+                    return new AbstractMap.SimpleEntry<>(format, getMetricRequestInterval(metricUsageMax, metricUsageAvg, metricUsageSum));
+                })
+                .filter(entry -> entry.getValue() != null) // Filter out entries where metric is null
+                .collect(Collectors.collectingAndThen(
+                        Collectors.toList(),
+                        list -> {
+                            if (list.isEmpty()) {
+                                return null;
+                            } else {
+                                List<Double> metricValues = list.stream().map(Map.Entry::getValue).collect(Collectors.toList());
+                                String format = list.get(0).getKey(); // Since format is common, take it from any entry
+                                double q1 = CommonUtils.percentile(TWENTYFIVE_PERCENTILE, metricValues);
+                                double q3 = CommonUtils.percentile(SEVENTYFIVE_PERCENTILE, metricValues);
+                                double median = CommonUtils.percentile(FIFTY_PERCENTILE, metricValues);
+                                // Find max and min
+                                double max = Collections.max(metricValues);
+                                double min = Collections.min(metricValues);
+                                LOGGER.debug("q1 : {}, q3 : {}, median : {}, max : {}, min : {}", q1, q3, median, max, min);
+                                return new PlotData.UsageData(min, q1, median, q3, max, format);
+                            }
+                        }));
+
+        LOGGER.debug("usageData : {}", usageData);
+        return usageData;
     }
 
     private static double getMetricRequestInterval(double metricUsageMax, double metricUsageAvg, double metricUsageSum) {
