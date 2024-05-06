@@ -137,6 +137,10 @@ SHORT_TERM_TEST = "short_term_test"
 MEDIUM_TERM_TEST = "medium_term_test"
 LONG_TERM_TEST = "long_term_test"
 
+PLOTS = "plots"
+DATA_POINTS = "datapoints"
+PLOTS_DATA = "plots_data"
+
 TERMS_NOTIFICATION_CODES = {
     SHORT_TERM: NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE,
     MEDIUM_TERM: NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE,
@@ -557,25 +561,18 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         recommendation_engines_object = None
                         if "recommendation_engines" in terms_obj[term]:
                             recommendation_engines_object = terms_obj[term]["recommendation_engines"]
-                        if None != recommendation_engines_object:
+                        if recommendation_engines_object is not None:
                             for engine_entry in engines_list:
                                 if engine_entry in terms_obj[term]["recommendation_engines"]:
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
                                     validate_config(engine_obj["config"], metrics)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
-                        # Extract Plots data
-                        plots = None
-                        datapoint = None
-                        if "plots" in terms_obj[term]:
-                            plots = terms_obj[term]["plots"]
-                            datapoint = plots["datapoints"]
-                            plots_data = plots["plots_data"]
-
-                        assert plots is not None, f"Expected plots to be available"
-                        assert datapoint is not None, f"Expected datapoint to be available"
-                        assert datapoint == duration_terms[term], f"datapoint Expected: {duration_terms[term]}, Obtained: {datapoint}"
-                        assert len(plots_data) == duration_terms[term], f"plots_data size Expected: {duration_terms[term]}, Obtained: {len(plots_data)}"
-
+                        # validate Plots data
+                        if PLOTS in terms_obj[term]:
+                            validate_plots(terms_obj, duration_terms, term)
+                    # verify that plots isn't generated in case of no recommendations
+                    else:
+                        assert PLOTS not in terms_obj[term], f"Expected plots to be absent in case of no recommendations"
             else:
                 data = list_reco_container["recommendations"]["data"]
                 assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
@@ -584,6 +581,18 @@ def validate_container(update_results_container, update_results_json, list_reco_
         print("Checking for recommendation notifications message...")
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
+
+
+def validate_plots(terms_obj, duration_terms, term):
+    plots = terms_obj[term][PLOTS]
+    datapoint = plots[DATA_POINTS]
+    plots_data = plots[PLOTS_DATA]
+
+    assert plots is not None, f"Expected plots to be available"
+    assert datapoint is not None, f"Expected datapoint to be available"
+    # validate the count of data points for the specific term
+    assert datapoint == duration_terms[term], f"datapoint Expected: {duration_terms[term]}, Obtained: {datapoint}"
+    assert len(plots_data) == duration_terms[term], f"plots_data size Expected: {duration_terms[term]}, Obtained: {len(plots_data)}"
 
 
 def set_duration_based_on_terms(duration_in_hours, term, interval_start_time, interval_end_time):
