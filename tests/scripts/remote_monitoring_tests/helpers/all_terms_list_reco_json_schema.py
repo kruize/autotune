@@ -371,6 +371,49 @@ all_terms_list_reco_json_schema = {
                                           }
                                         },
                                         "required": []
+                                      },
+                                      "plots": {
+                                        "type": "object",
+                                        "properties": {
+                                          "datapoints": { "type": "number" },
+                                          "plots_data": {
+                                            "type": "object",
+                                            "patternProperties": {
+                                              "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z$": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "cpuUsage": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "min": { "type": "number" },
+                                                      "q1": { "type": "number" },
+                                                      "median": { "type": "number" },
+                                                      "q3": { "type": "number" },
+                                                      "max": { "type": "number" },
+                                                      "format": { "type": "string" }
+                                                    },
+                                                    "required": ["min", "q1", "median", "q3", "max", "format"]
+                                                  },
+                                                  "memoryUsage": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "min": { "type": "number" },
+                                                      "q1": { "type": "number" },
+                                                      "median": { "type": "number" },
+                                                      "q3": { "type": "number" },
+                                                      "max": { "type": "number" },
+                                                      "format": { "type": "string" }
+                                                    },
+                                                    "required": ["min", "q1", "median", "q3", "max", "format"]
+                                                  },
+                                                },
+                                                "required": ["cpuUsage", "memoryUsage"]
+                                              }
+                                            },
+                                            "required": []
+                                          }
+                                       },
+                                        "required": ["datapoints", "plots_data"]
                                       }
                                     },
                                     "required": []
@@ -638,6 +681,49 @@ all_terms_list_reco_json_schema = {
                                           }
                                         },
                                         "required": []
+                                      },
+                                      "plots": {
+                                        "type": "object",
+                                        "properties": {
+                                          "datapoints": { "type": "number" },
+                                          "plots_data": {
+                                            "type": "object",
+                                            "patternProperties": {
+                                              "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z$": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "cpuUsage": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "min": { "type": "number" },
+                                                      "q1": { "type": "number" },
+                                                      "median": { "type": "number" },
+                                                      "q3": { "type": "number" },
+                                                      "max": { "type": "number" },
+                                                      "format": { "type": "string" }
+                                                    },
+                                                    "required": ["min", "q1", "median", "q3", "max", "format"]
+                                                  },
+                                                  "memoryUsage": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "min": { "type": "number" },
+                                                      "q1": { "type": "number" },
+                                                      "median": { "type": "number" },
+                                                      "q3": { "type": "number" },
+                                                      "max": { "type": "number" },
+                                                      "format": { "type": "string" }
+                                                    },
+                                                    "required": ["min", "q1", "median", "q3", "max", "format"]
+                                                  },
+                                                },
+                                                "required": ["cpuUsage", "memoryUsage"]
+                                              }
+                                            },
+                                            "required": []
+                                          }
+                                       },
+                                        "required": ["datapoints", "plots_data"]
                                       }
                                     },
                                     "required": []
@@ -905,6 +991,49 @@ all_terms_list_reco_json_schema = {
                                           }
                                         },
                                         "required": []
+                                      },
+                                      "plots": {
+                                        "type": "object",
+                                        "properties": {
+                                          "datapoints": { "type": "number" },
+                                          "plots_data": {
+                                            "type": "object",
+                                            "patternProperties": {
+                                              "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z$": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "cpuUsage": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "min": { "type": "number" },
+                                                      "q1": { "type": "number" },
+                                                      "median": { "type": "number" },
+                                                      "q3": { "type": "number" },
+                                                      "max": { "type": "number" },
+                                                      "format": { "type": "string" }
+                                                    },
+                                                    "required": ["min", "q1", "median", "q3", "max", "format"]
+                                                  },
+                                                  "memoryUsage": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "min": { "type": "number" },
+                                                      "q1": { "type": "number" },
+                                                      "median": { "type": "number" },
+                                                      "q3": { "type": "number" },
+                                                      "max": { "type": "number" },
+                                                      "format": { "type": "string" }
+                                                    },
+                                                    "required": ["min", "q1", "median", "q3", "max", "format"]
+                                                  },
+                                                },
+                                                "required": ["cpuUsage", "memoryUsage"]
+                                              }
+                                            },
+                                            "required": []
+                                          }
+                                       },
+                                        "required": ["datapoints", "plots_data"]
                                       }
                                     },
                                     "required": []
