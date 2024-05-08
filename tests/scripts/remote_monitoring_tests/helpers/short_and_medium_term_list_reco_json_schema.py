@@ -407,7 +407,7 @@ short_and_medium_term_list_reco_json_schema = {
                                                     "required": ["min", "q1", "median", "q3", "max", "format"]
                                                   },
                                                 },
-                                                "required": ["cpuUsage", "memoryUsage"]
+                                                "required": []
                                               }
                                             },
                                             "required": []
@@ -717,7 +717,7 @@ short_and_medium_term_list_reco_json_schema = {
                                                     "required": ["min", "q1", "median", "q3", "max", "format"]
                                                   },
                                                 },
-                                                "required": ["cpuUsage", "memoryUsage"]
+                                                "required": []
                                               }
                                             },
                                             "required": []

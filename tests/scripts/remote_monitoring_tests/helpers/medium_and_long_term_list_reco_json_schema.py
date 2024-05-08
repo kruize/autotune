@@ -426,7 +426,7 @@ medium_and_long_term_list_reco_json_schema = {
                                                     "required": ["min", "q1", "median", "q3", "max", "format"]
                                                   },
                                                 },
-                                                "required": ["cpuUsage", "memoryUsage"]
+                                                "required": []
                                               }
                                             },
                                             "required": []
@@ -736,7 +736,7 @@ medium_and_long_term_list_reco_json_schema = {
                                                     "required": ["min", "q1", "median", "q3", "max", "format"]
                                                   },
                                                 },
-                                                "required": ["cpuUsage", "memoryUsage"]
+                                                "required": []
                                               }
                                             },
                                             "required": []

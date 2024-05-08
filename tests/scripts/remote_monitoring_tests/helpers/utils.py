@@ -401,7 +401,7 @@ def term_based_start_time(input_date_str, term):
 
 
 def validate_reco_json(create_exp_json, update_results_json, list_reco_json, expected_duration_in_hours=None,
-                       test_name=None):
+                       plots_available=False, test_name=None):
     # Validate experiment
     assert create_exp_json["version"] == list_reco_json["version"]
     assert create_exp_json["experiment_name"] == list_reco_json["experiment_name"]
@@ -414,14 +414,14 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
             update_results_kubernetes_obj = update_results_json[0]["kubernetes_objects"][i]
             create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][i]
             list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][i]
-            validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
-                                    list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
+            validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
+                                    list_reco_kubernetes_obj, expected_duration_in_hours, test_name, plots_available)
     else:
         update_results_kubernetes_obj = None
         create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][0]
         list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
-        validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
-                                list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
+        validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
+                                list_reco_kubernetes_obj, expected_duration_in_hours, test_name, plots_available)
 
 
 def validate_list_exp_results_count(expected_results_count, list_exp_json):
@@ -448,7 +448,7 @@ def count_results_objects(list_exp_json):
 
 
 def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
-                            list_reco_kubernetes_obj, expected_duration_in_hours, test_name):
+                            list_reco_kubernetes_obj, expected_duration_in_hours, test_name, plots_available):
     # Validate type, name, namespace
     if update_results_kubernetes_obj == None:
         assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
@@ -481,10 +481,11 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                 update_results_container = create_exp_kubernetes_obj["containers"][i]
                 list_reco_container = list_reco_kubernetes_obj["containers"][j]
                 validate_container(update_results_container, update_results_json, list_reco_container,
-                                   expected_duration_in_hours, test_name)
+                                   expected_duration_in_hours, test_name, plots_available)
 
 
-def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours, test_name):
+def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours,
+                       test_name, plots_available):
     # Validate container image name and container name
     if update_results_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == update_results_container["container_image_name"], \
@@ -567,8 +568,8 @@ def validate_container(update_results_container, update_results_json, list_reco_
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
                                     validate_config(engine_obj["config"], metrics)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
-                        # validate Plots data
-                        if PLOTS in terms_obj[term]:
+                        # validate Plots data if it's available
+                        if plots_available:
                             validate_plots(terms_obj, duration_terms, term)
                     # verify that plots isn't generated in case of no recommendations
                     else:

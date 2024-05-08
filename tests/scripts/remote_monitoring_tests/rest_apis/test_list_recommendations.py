@@ -175,6 +175,8 @@ def test_list_recommendations_single_result(cluster_type):
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['120001'][
                'message'] == 'There is not enough data available to generate a recommendation.'
 
+    # if update recommendations response is available then plots data should be available as well
+    plots_available = True
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
@@ -188,7 +190,7 @@ def test_list_recommendations_single_result(cluster_type):
     create_exp_json = read_json_data_from_file(input_json_file)
     update_results_json = read_json_data_from_file(result_json_file)
 
-    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
+    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], plots_available)
 
     # Delete the experiment
     response = delete_experiment(input_json_file)
@@ -237,6 +239,8 @@ def test_list_recommendations_without_parameters(cluster_type):
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
                'message'] == 'Recommendations Are Available'
 
+    # if update recommendations response is available then plots data should be available as well
+    plots_available = True
     # Get the experiment name
     experiment_name = None
     response = list_recommendations(experiment_name)
@@ -255,7 +259,7 @@ def test_list_recommendations_without_parameters(cluster_type):
 
     # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
     expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
-    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours, plots_available)
 
     # Delete the experiment
     response = delete_experiment(input_json_file)
@@ -339,7 +343,8 @@ def test_list_recommendations_without_results(cluster_type):
 
     # Validate recommendation message
     update_results_json = None
-    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
+    plots_available = False
+    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], plots_available)
 
     # Delete the experiment
     response = delete_experiment(input_json_file)
@@ -386,6 +391,8 @@ def test_list_recommendations_single_exp_multiple_results(cluster_type):
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
             NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
 
+    # if update recommendations response is available then plots data should be available as well
+    plots_available = True
 
     response = list_recommendations(experiment_name)
 
@@ -404,7 +411,7 @@ def test_list_recommendations_single_exp_multiple_results(cluster_type):
     update_results_json = []
     result_json_arr = read_json_data_from_file(result_json_file)
     update_results_json.append(result_json_arr[len(result_json_arr) - 1])
-    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours, plots_available)
 
     # Delete the experiment
     response = delete_experiment(input_json_file)
@@ -472,6 +479,8 @@ def test_list_recommendations_supported_metric_formats(memory_format_type, cpu_f
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
             NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
 
+    # if update recommendations response is available then plots data should be available as well
+    plots_available = True
     response = list_recommendations(experiment_name)
 
     list_reco_json = response.json()
@@ -490,7 +499,7 @@ def test_list_recommendations_supported_metric_formats(memory_format_type, cpu_f
     result_json_arr = read_json_data_from_file(tmp_update_results_json_file)
     update_results_json.append(result_json_arr[len(result_json_arr) - 1])
 
-    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours, plots_available)
 
 
 @pytest.mark.extended
@@ -574,6 +583,8 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                    'message'] == RECOMMENDATIONS_AVAILABLE
 
+        # if update recommendations response is available then plots data should be available as well
+        plots_available = True
         # Invoke list recommendations for the specified experiment
         response = list_recommendations(experiment_name)
         assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -590,7 +601,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
 
         # Expected duration in hours is 24h as for short term only 24h plus or minus 30s of data is considered to generate recommendations
         expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
-        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours, plots_available)
 
     # Delete the experiments
     for i in range(num_exps):
@@ -665,6 +676,8 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                'message'] == RECOMMENDATIONS_AVAILABLE
 
+    # if update recommendations response is available then plots data should be available as well
+    plots_available = True
     response = list_recommendations(experiment_name, latest)
 
     list_reco_json = response.json()
@@ -703,7 +716,7 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     # Validate the json values
     create_exp_json = read_json_data_from_file(input_json_file)
 
-    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours, plots_available)
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -815,6 +828,8 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                'message'] == RECOMMENDATIONS_AVAILABLE
 
+    # if update recommendations response is available then plots data should be available as well
+    plots_available = True
     latest = None
     response = list_recommendations(experiment_name, latest, monitoring_end_time)
 
@@ -834,7 +849,7 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
         # Validate the json values
         create_exp_json = read_json_data_from_file(input_json_file)
 
-        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours,
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours, plots_available,
                            test_name)
     elif test_name == "invalid_monitoring_end_time":
         print(list_reco_json)
@@ -921,7 +936,8 @@ def test_list_recommendations_multiple_exps_with_missing_metrics(cluster_type):
         create_exp_json = read_json_data_from_file(create_exp_json_file)
         update_results_json = read_json_data_from_file(update_results_json_file)
 
-        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
+        plots_available = False
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], plots_available)
 
     # Delete the experiments
     for i in range(num_exps):
@@ -1054,7 +1070,9 @@ def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, nu
         exp_found = False
         for list_reco in list_reco_json:
             if create_exp_json[0]['experiment_name'] == list_reco['experiment_name']:
-                validate_reco_json(create_exp_json[0], update_results_json, list_reco, expected_duration_in_hours, test_name)
+                plots_available = False
+                validate_reco_json(create_exp_json[0], update_results_json, list_reco, expected_duration_in_hours,
+                                   plots_available, test_name)
                 exp_found = True
             continue
 
@@ -1760,8 +1778,9 @@ def test_list_recommendations_term_min_data_threshold(test_name, num_res, reco_j
         for list_reco in list_reco_json:
             if create_exp_json[0]['experiment_name'] == list_reco['experiment_name']:
                 print(f"expected_duration_in_hours = {expected_duration_in_hours}")
+                plots_available = False
                 validate_reco_json(create_exp_json[0], update_results_json, list_reco, expected_duration_in_hours,
-                                   test_name)
+                                   plots_available, test_name)
                 exp_found = True
             continue
 
@@ -1949,8 +1968,9 @@ def test_list_recommendations_invalid_term_min_data_threshold(test_name, num_res
         for list_reco in list_reco_json:
             if create_exp_json[0]['experiment_name'] == list_reco['experiment_name']:
                 print(f"expected_duration_in_hours = {expected_duration_in_hours}")
+                plots_available = False
                 validate_reco_json(create_exp_json[0], update_results_json, list_reco, expected_duration_in_hours,
-                                   test_name)
+                                   plots_available, test_name)
                 exp_found = True
             continue
 
@@ -2139,8 +2159,9 @@ def test_list_recommendations_min_data_threshold_exceeding_max_duration(test_nam
         for list_reco in list_reco_json:
             if create_exp_json[0]['experiment_name'] == list_reco['experiment_name']:
                 print(f"expected_duration_in_hours = {expected_duration_in_hours}")
+                plots_available = False
                 validate_reco_json(create_exp_json[0], update_results_json, list_reco, expected_duration_in_hours,
-                                   test_name)
+                                   plots_available, test_name)
                 exp_found = True
             continue
 
@@ -2344,8 +2365,9 @@ def test_list_recommendations_for_missing_terms(test_name, num_res, reco_json_sc
             for list_reco in list_reco_json:
                 if create_exp_json[0]['experiment_name'] == list_reco['experiment_name']:
                     print(f"expected_duration_in_hours = {expected_duration_in_hours}")
+                    plots_available = False
                     validate_reco_json(create_exp_json[0], update_results_json, list_reco, expected_duration_in_hours,
-                                       test_name)
+                                       plots_available, test_name)
                     exp_found = True
                 continue
 
@@ -2544,8 +2566,9 @@ def test_list_recommendations_for_missing_terms_non_contiguous(test_name, num_re
             for list_reco in list_reco_json:
                 if create_exp_json[0]['experiment_name'] == list_reco['experiment_name']:
                     print(f"expected_duration_in_hours = {expected_duration_in_hours}")
+                    plots_available = False
                     validate_reco_json(create_exp_json[0], update_results_json, list_reco, expected_duration_in_hours,
-                                       test_name)
+                                       plots_available, test_name)
                     exp_found = True
                 continue
 

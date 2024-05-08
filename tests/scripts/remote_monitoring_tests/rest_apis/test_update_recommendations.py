@@ -121,7 +121,9 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
         update_results_json.append(result_json_arr[len(result_json_arr) - 1])
 
         expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MIN
-        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+        plots_available = True
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours,
+                           plots_available)
 
     # Delete all the experiments
     for i in range(num_exps):
@@ -247,7 +249,9 @@ def test_plots_with_no_recommendations_in_some_terms(cluster_type):
         update_results_json.append(result_json_arr[len(result_json_arr) - 1])
 
         expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MIN
-        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+        plots_available = False
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours,
+                           plots_available)
 
     # Delete all the experiments
     for i in range(num_exps):
@@ -372,7 +376,9 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
         update_results_json.append(result_json_arr[len(result_json_arr) - 1])
 
         expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
-        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+        plots_available = False
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours,
+                           plots_available)
 
     # Delete all the experiments
     for i in range(num_exps):
