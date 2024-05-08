@@ -1,3 +1,18 @@
+"""
+Copyright (c) 2024, 2024 Red Hat, IBM Corporation and others.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 import pytest
 import json
 import sys
@@ -51,8 +66,14 @@ def test_list_datasources_with_name(cluster_type):
 
 
 @pytest.mark.negative
-@pytest.mark.parametrize("datasource_name", ["", "null", "xyz"])
-def test_list_datasources_invalid_datasource_name(datasource_name, cluster_type):
+@pytest.mark.parametrize("test_name, expected_status_code, datasource_name",
+    [
+        ("blank_name", 400, ""),
+        ("null_name", 400, "null"),
+        ("invalid_name", 400, "xyz")
+    ]
+)
+def test_list_datasources_invalid_datasource_name(test_name, expected_status_code, datasource_name, cluster_type):
     """
     Test Description: This test validates the response status code of list datasources API against
     invalid input (blank, null, empty) for the json parameters.

@@ -1,3 +1,18 @@
+"""
+Copyright (c) 2024, 2024 Red Hat, IBM Corporation and others.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 import pytest
 import json
 import sys
@@ -157,7 +172,7 @@ def test_import_metadata_mandatory_fields(cluster_type, field, expected_status_c
 
 
 @pytest.mark.sanity
-def test_duplicate_import_metadata(cluster_type):
+def test_repeated_metadata_import(cluster_type):
     """
     Test Description: This test validates the response status code of /dsmetadata API by specifying the
     same datasource name

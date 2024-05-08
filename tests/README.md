@@ -149,12 +149,14 @@ Here we test Kruize [Local monitoring APIs](/design/KruizeLocalAPI.md).
 
 #### API tests
 
-The tests does the following:
-- Deploys kruize in non-CRD mode using the deploy script from the autotune repo
-- Validates the behaviour of list datasources, import metadata and list metadata APIs in various scenarios covering both positive and negative usecases.
+  The tests does the following:
+  - Deploys kruize in non-CRD mode using the deploy script from the autotune repo
+  - Validates the behaviour of list datasources, import metadata and list metadata APIs in various scenarios covering both positive and negative usecases.
+
+  For details refer this [doc](/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md)
 
 ## Supported Clusters
-- Minikube
+- Minikube, Openshift
 
 ## Prerequisites for running the tests:
 

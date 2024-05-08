@@ -42,7 +42,7 @@ function local_monitoring_tests() {
 	target="crc"
 	perf_profile_json="${LOCAL_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
 
-	local_monitoring_tests=("test_e2e" "sanity" "extended" "negative")
+	local_monitoring_tests=("sanity" "extended" "negative")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
