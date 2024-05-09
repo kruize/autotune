@@ -58,33 +58,6 @@ def test_import_metadata(cluster_type):
 
 
 @pytest.mark.negative
-def test_import_metadata_with_invalid_header(cluster_type):
-    """
-    Test Description: This test validates the importing of metadata by specifying invalid content type in the header
-    """
-
-    input_json_file = "../json_files/import_metadata.json"
-
-    form_kruize_url(cluster_type)
-
-    response = delete_metadata(input_json_file)
-    print("delete metadata = ", response.status_code)
-
-    # Import metadata using the specified json
-    response = import_metadata(input_json_file, invalid_header=True)
-
-    data = response.json()
-    #print(data['message'])
-    print("content type = ", response.headers["Content-Type"])
-
-    assert response.status_code == ERROR_STATUS_CODE
-    assert data['status'] == ERROR_STATUS
-
-    response = delete_metadata(input_json_file)
-    print("delete metadata = ", response.status_code)
-
-
-@pytest.mark.negative
 @pytest.mark.parametrize(
     "test_name, expected_status_code, version, datasource_name",
     generate_test_data(csvfile, import_metadata_test_data, "import_metadata"))

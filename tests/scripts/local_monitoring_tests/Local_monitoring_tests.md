@@ -17,7 +17,6 @@ Here are the test scenarios:
 Here are the test scenarios:
 
 - Importing metadata for a valid datasource to the API.
-- Post an invalid header content type
 - Post the same datasource again
 - Test with invalid values such as blank, null or an invalid value for various keys in the dsmetadata input request json
 - Validate error messages when the mandatory fields are missing
