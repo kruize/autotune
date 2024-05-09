@@ -104,8 +104,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
             assert data[0]['experiment_name'] == experiment_name
             assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                        'message'] == RECOMMENDATIONS_AVAILABLE
-            # if update recommendations response is available then plots data should be available as well
-            plots_available = True
+
             response = list_recommendations(experiment_name)
             if response.status_code == SUCCESS_200_STATUS_CODE:
                 recommendation_json = response.json()
@@ -136,8 +135,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
         update_results_json.append(result_json_arr[len(result_json_arr) - 1])
 
         expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
-        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours,
-                           plots_available)
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
 
     # Invoke list recommendations for a non-existing experiment
     experiment_name = "Non-existing-exp"
