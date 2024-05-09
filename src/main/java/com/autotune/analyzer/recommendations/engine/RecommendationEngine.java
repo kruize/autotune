@@ -44,6 +44,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1492,10 +1493,10 @@ public class RecommendationEngine {
                                 if (secondMethodName.equals(KruizeConstants.JSONKeys.SUM))
                                     secondMethodName = KruizeConstants.JSONKeys.AVG;
                                 promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
-                                format = KruizeConstants.JSONKeys.GIBIBYTE;
+                                format = KruizeConstants.JSONKeys.KIBIBYTE;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRequest) {
                                 promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
-                                format = KruizeConstants.JSONKeys.GIBIBYTE;
+                                format = KruizeConstants.JSONKeys.KIBIBYTE;
                             }
                             // If promQL is determined, fetch metrics from the datasource
                             if (promQL != null) {
@@ -1527,6 +1528,15 @@ public class RecommendationEngine {
                                             JsonArray valueArray = element.getAsJsonArray();
                                             long epochTime = valueArray.get(0).getAsLong();
                                             double value = valueArray.get(1).getAsDouble();
+
+                                            if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryUsage || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRSS
+                                                    || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRequest) {
+                                                value = value * KruizeConstants.ConvUnits.Memory.BYTES_TO_KIBIBYTES;
+                                            }
+
+                                            DecimalFormat df = new DecimalFormat("0.000");
+                                            value = Double.parseDouble(df.format(value));
+
                                             String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
                                             Date date = sdf.parse(timestamp);
                                             Timestamp eTime = new Timestamp(date.getTime());
