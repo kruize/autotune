@@ -42,42 +42,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         }
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
-        List<Double> cpuUsageList = filteredResultsMap.values()
-                .stream()
-                .map(e -> {
-                    Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
-                    Optional<MetricResults> cpuThrottleResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuThrottle));
-                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
-                    double cpuUsageMax = cpuUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
-                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double cpuThrottleAvg = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
-                    double cpuThrottleMax = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
-                    double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double cpuRequestInterval = 0.0;
-                    double cpuUsagePod = 0;
-                    int numPods = 0;
-
-                    // Use the Max value when available, if not use the Avg
-                    double cpuUsage = (cpuUsageMax > 0) ? cpuUsageMax : cpuUsageAvg;
-                    double cpuThrottle = (cpuThrottleMax > 0) ? cpuThrottleMax : cpuThrottleAvg;
-                    double cpuUsageTotal = cpuUsage + cpuThrottle;
-
-                    // Usage is less than 1 core, set it to the observed value.
-                    if (CPU_ONE_CORE > cpuUsageTotal) {
-                        cpuRequestInterval = cpuUsageTotal;
-                    } else {
-                        // Sum/Avg should give us the number of pods
-                        if (0 != cpuUsageAvg) {
-                            numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
-                            if (0 < numPods) {
-                                cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
-                            }
-                        }
-                        cpuRequestInterval = Math.max(cpuUsagePod, cpuUsageTotal);
-                    }
-                    return cpuRequestInterval;
-                })
-                .collect(Collectors.toList());
+        List<Double> cpuUsageList = getCPUUsageList(filteredResultsMap);
 
         Double cpuRequest = 0.0;
         Double cpuRequestMax = Collections.max(cpuUsageList);
@@ -116,21 +81,49 @@ public class CostBasedRecommendationModel implements RecommendationModel {
             }
         }
 
-        for (IntervalResults intervalResults : filteredResultsMap.values()) {
-            MetricResults cpuUsageResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage);
-            if (cpuUsageResults != null) {
-                MetricAggregationInfoResults aggregationInfoResult = cpuUsageResults.getAggregationInfoResult();
-                if (aggregationInfoResult != null) {
-                    format = aggregationInfoResult.getFormat();
-                    if (format != null && !format.isEmpty()) {
-                        break;
-                    }
-                }
-            }
-        }
+        format = getFormatValue(filteredResultsMap, AnalyzerConstants.MetricName.cpuUsage);
 
         recommendationConfigItem = new RecommendationConfigItem(cpuRequest, format);
         return recommendationConfigItem;
+    }
+
+    public static List<Double> getCPUUsageList(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        return filteredResultsMap.values()
+                .stream()
+                .map(e -> {
+                    Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
+                    Optional<MetricResults> cpuThrottleResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuThrottle));
+                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    double cpuUsageMax = cpuUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double cpuThrottleAvg = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    double cpuThrottleMax = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+                    double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+                    double cpuRequestInterval = 0.0;
+                    double cpuUsagePod = 0;
+                    int numPods = 0;
+
+                    // Use the Max value when available, if not use the Avg
+                    double cpuUsage = (cpuUsageMax > 0) ? cpuUsageMax : cpuUsageAvg;
+                    double cpuThrottle = (cpuThrottleMax > 0) ? cpuThrottleMax : cpuThrottleAvg;
+                    double cpuUsageTotal = cpuUsage + cpuThrottle;
+
+                    // Usage is less than 1 core, set it to the observed value.
+                    if (CPU_ONE_CORE > cpuUsageTotal) {
+                        cpuRequestInterval = cpuUsageTotal;
+                    } else {
+                        // Sum/Avg should give us the number of pods
+                        if (0 != cpuUsageAvg) {
+                            numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+                            if (0 < numPods) {
+                                cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
+                            }
+                        }
+                        cpuRequestInterval = Math.max(cpuUsagePod, cpuUsageTotal);
+                    }
+                    return cpuRequestInterval;
+                })
+                .collect(Collectors.toList());
     }
 
     @Override
@@ -169,8 +162,16 @@ public class CostBasedRecommendationModel implements RecommendationModel {
             return null;
         }
 
+        format = getFormatValue(filteredResultsMap, AnalyzerConstants.MetricName.memoryUsage);
+
+        recommendationConfigItem = new RecommendationConfigItem(memRec, format);
+        return recommendationConfigItem;
+    }
+
+    public static String getFormatValue(Map<Timestamp, IntervalResults> filteredResultsMap, AnalyzerConstants.MetricName metricName) {
+        String format = "";
         for (IntervalResults intervalResults : filteredResultsMap.values()) {
-            MetricResults memoryUsageResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage);
+            MetricResults memoryUsageResults = intervalResults.getMetricResultsMap().get(metricName);
             if (memoryUsageResults != null) {
                 MetricAggregationInfoResults aggregationInfoResult = memoryUsageResults.getAggregationInfoResult();
                 if (aggregationInfoResult != null) {
@@ -181,9 +182,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
                 }
             }
         }
-
-        recommendationConfigItem = new RecommendationConfigItem(memRec, format);
-        return recommendationConfigItem;
+        return format;
     }
 
     @Override
@@ -196,7 +195,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
 
     }
 
-    private static double calculateMemoryUsage(IntervalResults intervalResults) {
+    public static double calculateMemoryUsage(IntervalResults intervalResults) {
         Optional<MetricResults> cpuUsageResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
         double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
         double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);

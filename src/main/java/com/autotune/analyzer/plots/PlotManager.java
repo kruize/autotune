@@ -1,9 +1,8 @@
 package com.autotune.analyzer.plots;
 
+import com.autotune.analyzer.recommendations.model.CostBasedRecommendationModel;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.metrics.MetricAggregationInfoResults;
-import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
 import org.slf4j.Logger;
@@ -11,10 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.*;
-import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.CPU_ONE_CORE;
 
 public class PlotManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlotManager.class);
@@ -37,7 +34,7 @@ public class PlotManager {
         sortedResultsHashMap.putAll(containerResultsMap);
 
         // Retrieve entries within the specified range
-        Map<Timestamp, IntervalResults> resultInRange = sortedResultsHashMap.subMap(monitoringEndTime, true, monitoringStartTime, true);
+        Map<Timestamp, IntervalResults> resultInRange = sortedResultsHashMap.subMap(monitoringEndTime, true, monitoringStartTime, false);
 
         int delimiterNumber = (int) (resultInRange.size() / recommendationTerm.getPlots_datapoints());
 
@@ -72,71 +69,34 @@ public class PlotManager {
     }
 
     PlotData.UsageData getUsageData(Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName) {
-        // stream through the results value and extract the format and the metric values
-        PlotData.UsageData usageData = resultInRange.values().stream()
-                .filter(intervalResults -> intervalResults.getMetricResultsMap().containsKey(metricName))
-                .map(intervalResults -> {
-                    MetricResults metricResults = intervalResults.getMetricResultsMap().get(metricName);
-                    double metricUsageAvg = Optional.ofNullable(metricResults)
-                            .map(MetricResults::getAggregationInfoResult)
-                            .map(MetricAggregationInfoResults::getAvg)
-                            .orElse(0.0);
-                    double metricUsageMax = Optional.ofNullable(metricResults)
-                            .map(MetricResults::getAggregationInfoResult)
-                            .map(MetricAggregationInfoResults::getMax)
-                            .orElse(0.0);
-                    double metricUsageSum = Optional.ofNullable(metricResults)
-                            .map(MetricResults::getAggregationInfoResult)
-                            .map(MetricAggregationInfoResults::getSum)
-                            .orElse(0.0);
-
-                    String format = Optional.ofNullable(metricResults)
-                            .map(MetricResults::getAggregationInfoResult)
-                            .map(MetricAggregationInfoResults::getFormat)
-                            .orElse(null);
-
-                    return new AbstractMap.SimpleEntry<>(format, getMetricRequestInterval(metricUsageMax, metricUsageAvg, metricUsageSum));
-                })
-                .filter(entry -> entry.getValue() != null) // Filter out entries where metric is null
-                .collect(Collectors.collectingAndThen(
-                        Collectors.toList(),
-                        list -> {
-                            if (list.isEmpty()) {
-                                return null;
-                            } else {
-                                List<Double> metricValues = list.stream().map(Map.Entry::getValue).collect(Collectors.toList());
-                                String format = list.get(0).getKey(); // Since format is common, take it from any entry
-                                double q1 = CommonUtils.percentile(TWENTYFIVE_PERCENTILE, metricValues);
-                                double q3 = CommonUtils.percentile(SEVENTYFIVE_PERCENTILE, metricValues);
-                                double median = CommonUtils.percentile(FIFTY_PERCENTILE, metricValues);
-                                // Find max and min
-                                double max = Collections.max(metricValues);
-                                double min = Collections.min(metricValues);
-                                LOGGER.debug("q1 : {}, q3 : {}, median : {}, max : {}, min : {}", q1, q3, median, max, min);
-                                return new PlotData.UsageData(min, q1, median, q3, max, format);
-                            }
-                        }));
-
-        LOGGER.debug("usageData : {}", usageData);
-        return usageData;
+        // stream through the results value and extract the CPU values
+        if (metricName.equals(AnalyzerConstants.MetricName.cpuUsage)) {
+            List<Double> cpuValues = CostBasedRecommendationModel.getCPUUsageList(resultInRange);
+            return getPercentileData(cpuValues, resultInRange, metricName);
+        } else {
+            // stream through the results value and extract the memory values
+            List<Double> memUsageList = resultInRange.values()
+                    .stream()
+                    .map(CostBasedRecommendationModel::calculateMemoryUsage)
+                    .toList();
+            return getPercentileData(memUsageList, resultInRange, metricName);
+        }
     }
 
-    private static double getMetricRequestInterval(double metricUsageMax, double metricUsageAvg, double metricUsageSum) {
-        double metricUsage = (metricUsageMax > 0) ? metricUsageMax : metricUsageAvg;
-
-        double metricRequestInterval;
-        double cpuUsagePod = 0;
-        int numPods;
-
-        if (CPU_ONE_CORE > metricUsage) {
-            metricRequestInterval = metricUsage;
+    private PlotData.UsageData getPercentileData(List<Double> metricValues, Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName) {
+        if (!metricValues.isEmpty()) {
+            LOGGER.debug("metricValues : {}", metricValues);
+            double q1 = CommonUtils.percentile(TWENTYFIVE_PERCENTILE, metricValues);
+            double q3 = CommonUtils.percentile(SEVENTYFIVE_PERCENTILE, metricValues);
+            double median = CommonUtils.percentile(FIFTY_PERCENTILE, metricValues);
+            // Find max and min
+            double max = Collections.max(metricValues);
+            double min = Collections.min(metricValues);
+            LOGGER.debug("q1 : {}, q3 : {}, median : {}, max : {}, min : {}", q1, q3, median, max, min);
+            String format = CostBasedRecommendationModel.getFormatValue(resultInRange, metricName);
+            return new PlotData.UsageData(min, q1, median, q3, max, format);
         } else {
-            if (metricUsageAvg != 0) {
-                numPods = (int) Math.ceil(metricUsageSum / metricUsageAvg);
-                cpuUsagePod = (numPods > 0) ? metricUsageSum / numPods : 0.0;
-            }
-            metricRequestInterval = Math.max(cpuUsagePod, metricUsage);
+            return null;
         }
-        return metricRequestInterval;
     }
 }
