@@ -85,7 +85,7 @@ public class PlotManager {
                     for (int i = 0; i < cpuValues.length(); i++) {
                         JSONObject jsonObject = cpuValues.getJSONObject(i);
                         double maxValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
-                        double minValue = jsonObject.optDouble(KruizeConstants.JSONKeys.MIN, 0.0);
+                        double minValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MIN);
                         cpuMaxValues.add(maxValue);
                         cpuMinValues.add(minValue);
                     }
@@ -105,7 +105,7 @@ public class PlotManager {
                     if (!jsonObject.isEmpty()) {
                         memDataAvailable = true;
                         Double memUsageMax = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
-                        Double memUsageMin = jsonObject.optDouble(KruizeConstants.JSONKeys.MIN, 0.0);
+                        Double memUsageMin = jsonObject.getDouble(KruizeConstants.JSONKeys.MIN);
                         memUsageMaxList.add(memUsageMax);
                         memUsageMinList.add(memUsageMin);
                     }
@@ -128,7 +128,11 @@ public class PlotManager {
                 double median = CommonUtils.percentile(FIFTY_PERCENTILE, metricValuesMax);
                 // Find max and min
                 double max = Collections.max(metricValuesMax);
-                double min = Collections.min(metricValuesMin);
+                Double min = null;
+                boolean zeroesCheck = metricValuesMin.stream().allMatch(value -> value.equals(0.0));
+                if (!zeroesCheck)
+                    min = Collections.min(metricValuesMin);
+
                 LOGGER.debug("q1 : {}, q3 : {}, median : {}, max : {}, min : {}", q1, q3, median, max, min);
                 String format = CostBasedRecommendationModel.getFormatValue(resultInRange, metricName);
                 return new PlotData.UsageData(min, q1, median, q3, max, format);

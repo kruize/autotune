@@ -8,15 +8,15 @@ import java.util.Map;
 
 public class PlotData {
     public static class UsageData {
-        public double min;
+        public Double min;
         public double q1;
         public double median;
         public double q3;
         public double max;
         public String format;
 
-        public UsageData(double min, double q1, double median, double q3, double max, String format) {
-            this.min = min;
+        public UsageData(Double min, double q1, double median, double q3, double max, String format) {
+            this.min = (min != null && min.equals(0.0)) ? null : min; // Conditionally set min to null if it's 0.0
             this.q1 = q1;
             this.median = median;
             this.q3 = q3;

@@ -136,9 +136,11 @@ public class CostBasedRecommendationModel implements RecommendationModel {
             }
             double cpuMinTotal = cpuUsageMin + cpuThrottleMin;
             cpuRequestIntervalMin = Collections.min(Arrays.asList(cpuUsagePod, cpuUsageTotal, cpuMinTotal));
+            if (cpuRequestIntervalMin == 0.0)
+                cpuRequestIntervalMin = Collections.min(Arrays.asList(cpuUsagePod, cpuUsageTotal));
+
+            cpuRequestInterval.put(KruizeConstants.JSONKeys.MIN, cpuRequestIntervalMin);
             cpuRequestInterval.put(KruizeConstants.JSONKeys.MAX, cpuRequestIntervalMax);
-            if (cpuRequestIntervalMin > 0.0)
-                cpuRequestInterval.put(KruizeConstants.JSONKeys.MIN, cpuRequestIntervalMin);
             LOGGER.debug("cpuRequestInterval : {}", cpuRequestInterval);
             cpuRequestIntervalArray.put(cpuRequestInterval);
         }
@@ -241,10 +243,11 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         }
         memUsageMax = Math.max(memUsage, memUsageMax);
         memUsageMin = Collections.min(Arrays.asList(memUsage, memUsageMax, memUsageMin));
+        if (memUsageMin == 0.0)
+            memUsageMin = Collections.min(Arrays.asList(memUsage, memUsageMax));
 
+        jsonObject.put(KruizeConstants.JSONKeys.MIN, memUsageMin);
         jsonObject.put(KruizeConstants.JSONKeys.MAX, memUsageMax);
-        if (memUsageMin > 0.0)
-            jsonObject.put(KruizeConstants.JSONKeys.MIN, memUsageMin);
 
         LOGGER.debug("memRequestInterval : {}", jsonObject);
         return jsonObject;
