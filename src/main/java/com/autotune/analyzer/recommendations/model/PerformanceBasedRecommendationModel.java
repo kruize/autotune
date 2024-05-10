@@ -49,7 +49,7 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         JSONArray cpuUsageList = CostBasedRecommendationModel.getCPUUsageList(filteredResultsMap);
-        LOGGER.info("cpuUsageList : {}", cpuUsageList);
+        LOGGER.debug("cpuUsageList : {}", cpuUsageList);
         // Extract "max" values from cpuUsageList
         List<Double> cpuMaxValues = new ArrayList<>();
         try {

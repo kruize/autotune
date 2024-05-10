@@ -85,7 +85,7 @@ public class PlotManager {
                     for (int i = 0; i < cpuValues.length(); i++) {
                         JSONObject jsonObject = cpuValues.getJSONObject(i);
                         double maxValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
-                        double minValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MIN);
+                        double minValue = jsonObject.optDouble(KruizeConstants.JSONKeys.MIN, 0.0);
                         cpuMaxValues.add(maxValue);
                         cpuMinValues.add(minValue);
                     }
@@ -105,7 +105,7 @@ public class PlotManager {
                     if (!jsonObject.isEmpty()) {
                         memDataAvailable = true;
                         Double memUsageMax = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
-                        Double memUsageMin = jsonObject.getDouble(KruizeConstants.JSONKeys.MIN);
+                        Double memUsageMin = jsonObject.optDouble(KruizeConstants.JSONKeys.MIN, 0.0);
                         memUsageMaxList.add(memUsageMax);
                         memUsageMinList.add(memUsageMin);
                     }
