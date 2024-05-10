@@ -23,6 +23,8 @@ This document describes the test plan for Kruize remote monitoring release 0.0.2
 
 ## FEATURES TO BE TESTED
 
+* Box plots feature is enabled by default
+
 * Refactoring of Kruize logging
 
 Enabled logging of success and failures for APIs
@@ -60,10 +62,10 @@ Enabled logging of success and failures for APIs
 
 | #   | ISSUE (BUG/NEW FEATURE)        |  TEST CASE | RESULTS | COMMENTS |
 | --- |--------------------------------| ---------------- | -------- | --- |
-| 1   | Kruize remote monitoring tests | Functional test suite | PASSED | |
-| 2   | Kruize fault tolerant tests | Functional test suite | PASSED | |
-| 3   | Kruize stress tests | Functional test suite | PASSED | |
-| 4   | Short Scalability test         | 5k exps / 15 days | PASSED |
+| 1   | Kruize remote monitoring tests | Functional test suite | | |
+| 2   | Kruize fault tolerant tests | Functional test suite | | |
+| 3   | Kruize stress tests | Functional test suite | | |
+| 4   | Short Scalability test         | 5k exps / 15 days | |
 
 ---
 
@@ -83,18 +85,6 @@ Kruize Release | Exps / Results / Recos | Execution time | Latency (Max/ Avg) in
 0.0.21_mvp | 5K / 72L / 3L | 3h 50 mins | 0.62 / 0.39 | 0.25 / 0.17 | 0.34 / 0.25 |  21417.14  | 6.04 | 35.37
 0.0.21_mvp (With Box plots) | 5K / 72L / 3L | 3h 53 mins | 0.63 / 0.39 |  0.25 / 0.17 | 0.35 / 0. 25 |  21868.5  | 4.4 | 40.71
 0.0.22_mvp | |  | | | | | |
-0.0.22_mvp (With Box plots) |  | | | | | | | 
-
-Long Scalability run
-- 100K exps / 15 days of results / 2 containers per exp
-- Kruize replicas - 10
-- OCP - AWS cluster
-
-Kruize Release | Exps / Results / Recos | Execution time | Latency (Max/ Avg) in seconds ||| Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB)
--- | -- | -- | -- | -- | -- | --| -- | --
-  |   |   | UpdateRecommendations | UpdateResults | LoadResultsByExpName |   |   |  
-0.0.22_mvp | |  | | | | | |
-0.0.22_mvp (With Box plots) |  | | | | | | | 
 
 ----
 ## RELEASE TESTING
