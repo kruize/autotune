@@ -9,12 +9,15 @@ import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.utils.KruizeConstants;
+import org.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_CPU_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_MEMORY_PERCENTILE;
@@ -45,14 +48,25 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
         }
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
-        List<Double> cpuUsageList = CostBasedRecommendationModel.getCPUUsageList(filteredResultsMap);
+        JSONArray cpuUsageList = CostBasedRecommendationModel.getCPUUsageList(filteredResultsMap);
+        LOGGER.info("cpuUsageList : {}", cpuUsageList);
+        // Extract "max" values from cpuUsageList
+        List<Double> cpuMaxValues = new ArrayList<>();
+        try {
+             cpuMaxValues = IntStream.range(0, cpuUsageList.length())
+                    .mapToObj(cpuUsageList::getJSONObject)
+                    .map(jsonObject -> jsonObject.getDouble(KruizeConstants.JSONKeys.MAX))
+                    .toList();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
 
         Double cpuRequest = 0.0;
-        Double cpuRequestMax = Collections.max(cpuUsageList);
+        Double cpuRequestMax = Collections.max(cpuMaxValues);
         if (null != cpuRequestMax && CPU_ONE_CORE > cpuRequestMax) {
             cpuRequest = cpuRequestMax;
         } else {
-            cpuRequest = CommonUtils.percentile(PERFORMANCE_CPU_PERCENTILE, cpuUsageList);
+            cpuRequest = CommonUtils.percentile(PERFORMANCE_CPU_PERCENTILE, cpuMaxValues);
         }
 
         // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO

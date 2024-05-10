@@ -5,6 +5,10 @@ import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.utils.KruizeConstants;
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,33 +74,70 @@ public class PlotManager {
 
     PlotData.UsageData getUsageData(Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName) {
         // stream through the results value and extract the CPU values
-        if (metricName.equals(AnalyzerConstants.MetricName.cpuUsage)) {
-            List<Double> cpuValues = CostBasedRecommendationModel.getCPUUsageList(resultInRange);
-            return getPercentileData(cpuValues, resultInRange, metricName);
-        } else {
-            // stream through the results value and extract the memory values
-            List<Double> memUsageList = resultInRange.values()
-                    .stream()
-                    .map(CostBasedRecommendationModel::calculateMemoryUsage)
-                    .toList();
-            return getPercentileData(memUsageList, resultInRange, metricName);
+        try {
+            if (metricName.equals(AnalyzerConstants.MetricName.cpuUsage)) {
+                JSONArray cpuValues = CostBasedRecommendationModel.getCPUUsageList(resultInRange);
+                LOGGER.debug("cpuValues : {}", cpuValues);
+                if (!cpuValues.isEmpty()) {
+                    // Extract "max" values from cpuUsageList
+                    List<Double> cpuMaxValues = new ArrayList<>();
+                    List<Double> cpuMinValues = new ArrayList<>();
+                    for (int i = 0; i < cpuValues.length(); i++) {
+                        JSONObject jsonObject = cpuValues.getJSONObject(i);
+                        double maxValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
+                        double minValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MIN);
+                        cpuMaxValues.add(maxValue);
+                        cpuMinValues.add(minValue);
+                    }
+                    LOGGER.debug("cpuMaxValues : {}", cpuMaxValues);
+                    LOGGER.debug("cpuMinValues : {}", cpuMinValues);
+                    return getPercentileData(cpuMaxValues, cpuMinValues, resultInRange, metricName);
+                }
+
+            } else {
+                // loop through the results value and extract the memory values
+                CostBasedRecommendationModel costBasedRecommendationModel  = new CostBasedRecommendationModel();
+                List<Double> memUsageMinList = new ArrayList<>();
+                List<Double> memUsageMaxList = new ArrayList<>();
+                boolean memDataAvailable = false;
+                for (IntervalResults intervalResults: resultInRange.values()) {
+                    JSONObject jsonObject = costBasedRecommendationModel.calculateMemoryUsage(intervalResults);
+                    if (!jsonObject.isEmpty()) {
+                        memDataAvailable = true;
+                        Double memUsageMax = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
+                        Double memUsageMin = jsonObject.getDouble(KruizeConstants.JSONKeys.MIN);
+                        memUsageMaxList.add(memUsageMax);
+                        memUsageMinList.add(memUsageMin);
+                    }
+                }
+                LOGGER.debug("memValues Max : {}, Min : {}", memUsageMaxList, memUsageMinList);
+                if (memDataAvailable)
+                    return getPercentileData(memUsageMaxList, memUsageMinList, resultInRange, metricName);
+            }
+        } catch (JSONException e) {
+            LOGGER.error("Exception occurred while extracting metric values: {}", e.getMessage());
         }
+        return null;
     }
 
-    private PlotData.UsageData getPercentileData(List<Double> metricValues, Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName) {
-        if (!metricValues.isEmpty()) {
-            LOGGER.debug("metricValues : {}", metricValues);
-            double q1 = CommonUtils.percentile(TWENTYFIVE_PERCENTILE, metricValues);
-            double q3 = CommonUtils.percentile(SEVENTYFIVE_PERCENTILE, metricValues);
-            double median = CommonUtils.percentile(FIFTY_PERCENTILE, metricValues);
-            // Find max and min
-            double max = Collections.max(metricValues);
-            double min = Collections.min(metricValues);
-            LOGGER.debug("q1 : {}, q3 : {}, median : {}, max : {}, min : {}", q1, q3, median, max, min);
-            String format = CostBasedRecommendationModel.getFormatValue(resultInRange, metricName);
-            return new PlotData.UsageData(min, q1, median, q3, max, format);
-        } else {
-            return null;
+    private PlotData.UsageData getPercentileData(List<Double> metricValuesMax, List<Double> metricValuesMin, Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName) {
+        try {
+            if (!metricValuesMax.isEmpty()) {
+                double q1 = CommonUtils.percentile(TWENTYFIVE_PERCENTILE, metricValuesMax);
+                double q3 = CommonUtils.percentile(SEVENTYFIVE_PERCENTILE, metricValuesMax);
+                double median = CommonUtils.percentile(FIFTY_PERCENTILE, metricValuesMax);
+                // Find max and min
+                double max = Collections.max(metricValuesMax);
+                double min = Collections.min(metricValuesMin);
+                LOGGER.debug("q1 : {}, q3 : {}, median : {}, max : {}, min : {}", q1, q3, median, max, min);
+                String format = CostBasedRecommendationModel.getFormatValue(resultInRange, metricName);
+                return new PlotData.UsageData(min, q1, median, q3, max, format);
+            } else {
+                return null;
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while generating percentiles: {}", e.getMessage());
         }
+        return null;
     }
 }
