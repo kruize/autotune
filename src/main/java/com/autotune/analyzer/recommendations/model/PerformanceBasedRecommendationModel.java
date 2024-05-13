@@ -11,6 +11,7 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,13 +53,10 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
         LOGGER.debug("cpuUsageList : {}", cpuUsageList);
         // Extract "max" values from cpuUsageList
         List<Double> cpuMaxValues = new ArrayList<>();
-        try {
-             cpuMaxValues = IntStream.range(0, cpuUsageList.length())
-                    .mapToObj(cpuUsageList::getJSONObject)
-                    .map(jsonObject -> jsonObject.getDouble(KruizeConstants.JSONKeys.MAX))
-                    .toList();
-        } catch (Exception e) {
-            e.printStackTrace();
+        for (int i = 0; i < cpuUsageList.length(); i++) {
+            JSONObject jsonObject = cpuUsageList.getJSONObject(i);
+            double maxValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
+            cpuMaxValues.add(maxValue);
         }
 
         Double cpuRequest = 0.0;

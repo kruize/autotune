@@ -49,10 +49,12 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         String format = "";
         JSONArray cpuUsageList = getCPUUsageList(filteredResultsMap);
         // Extract 'max' values from cpuUsageList
-        List<Double> cpuMaxValues = IntStream.range(0, cpuUsageList.length())
-                .mapToObj(cpuUsageList::getJSONObject)
-                .map(jsonObject -> jsonObject.getDouble(KruizeConstants.JSONKeys.MAX))
-                .toList();
+        List<Double> cpuMaxValues = new ArrayList<>();
+        for (int i = 0; i < cpuUsageList.length(); i++) {
+            JSONObject jsonObject = cpuUsageList.getJSONObject(i);
+            double maxValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
+            cpuMaxValues.add(maxValue);
+        }
 
         Double cpuRequest;
         Double cpuRequestMax = Collections.max(cpuMaxValues);
