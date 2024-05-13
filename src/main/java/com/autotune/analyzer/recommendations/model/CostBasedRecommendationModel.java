@@ -18,6 +18,7 @@ import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_CPU_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_MEMORY_PERCENTILE;
@@ -135,9 +136,11 @@ public class CostBasedRecommendationModel implements RecommendationModel {
                 cpuRequestIntervalMax = Math.max(cpuUsagePod, cpuUsageTotal);
             }
             double cpuMinTotal = cpuUsageMin + cpuThrottleMin;
-            cpuRequestIntervalMin = Collections.min(Arrays.asList(cpuUsagePod, cpuUsageTotal, cpuMinTotal));
-            if (cpuRequestIntervalMin == 0.0)
-                cpuRequestIntervalMin = Collections.min(Arrays.asList(cpuUsagePod, cpuUsageTotal));
+            // traverse over a stream of positive values and find the minimum value
+            cpuRequestIntervalMin = Stream.of(cpuUsagePod, cpuUsageTotal, cpuMinTotal)
+                    .filter(value -> value > 0.0)
+                    .min(Double::compare)
+                    .orElse(0.0);
 
             cpuRequestInterval.put(KruizeConstants.JSONKeys.MIN, cpuRequestIntervalMin);
             cpuRequestInterval.put(KruizeConstants.JSONKeys.MAX, cpuRequestIntervalMax);
@@ -242,9 +245,11 @@ public class CostBasedRecommendationModel implements RecommendationModel {
             memUsage = (memUsageSum / numPods);
         }
         memUsageMax = Math.max(memUsage, memUsageMax);
-        memUsageMin = Collections.min(Arrays.asList(memUsage, memUsageMax, memUsageMin));
-        if (memUsageMin == 0.0)
-            memUsageMin = Collections.min(Arrays.asList(memUsage, memUsageMax));
+        // traverse over a stream of positive values and find the minimum value
+        memUsageMin = Stream.of(memUsage, memUsageMax, memUsageMin)
+                .filter(value -> value > 0.0)
+                .min(Double::compare)
+                .orElse(0.0);
 
         jsonObject.put(KruizeConstants.JSONKeys.MIN, memUsageMin);
         jsonObject.put(KruizeConstants.JSONKeys.MAX, memUsageMax);

@@ -128,10 +128,14 @@ public class PlotManager {
                 double median = CommonUtils.percentile(FIFTY_PERCENTILE, metricValuesMax);
                 // Find max and min
                 double max = Collections.max(metricValuesMax);
-                Double min = null;
-                boolean zeroesCheck = metricValuesMin.stream().allMatch(value -> value.equals(0.0));
-                if (!zeroesCheck)
+                double min;
+                // check for non zero values
+                boolean nonZeroCheck = metricValuesMin.stream().noneMatch(value -> value.equals(0.0));
+                if (nonZeroCheck) {
                     min = Collections.min(metricValuesMin);
+                } else {
+                    min = 0.0;
+                }
 
                 LOGGER.debug("q1 : {}, q3 : {}, median : {}, max : {}, min : {}", q1, q3, median, max, min);
                 String format = CostBasedRecommendationModel.getFormatValue(resultInRange, metricName);
