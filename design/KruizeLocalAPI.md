@@ -25,6 +25,11 @@ Documentation still in progress stay tuned.
   - Example Request and Response
   - Invalid Scenarios
 
+- [Delete Metadata API](#delete-metadata-api)
+  - Introduction
+  - Example Request and Response
+  - Invalid Scenarios
+
 - [Create Experiment API](#create-experiment-api)
     - Introduction
     - Example Request and Response
@@ -951,6 +956,52 @@ Returns the container metadata of the specified namespace, cluster name of the s
 
 <br>
 
+<a name="delete-metadata-api"></a>
+
+### Delete Metadata API
+
+This is quick guide instructions to delete metadata using input JSON as follows.
+
+**Request**
+`DELETE /dsmetadata`
+
+`curl -H 'Accept: application/json' -X DELETE --data 'copy paste below JSON' http://<URL>:<PORT>/dsmetadata`
+
+<details>
+
+<summary><b>Example Request</b></summary>
+
+### Example Request
+
+```json
+{
+  "version": "v1.0",
+  "datasource_name": "prometheus-1"
+}
+```
+
+</details>
+
+
+**Response**
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+{
+  "message": "Datasource metadata deleted successfully. View imported metadata at GET /dsmetadata",
+  "httpcode": 201,
+  "documentationLink": "",
+  "status": "SUCCESS"
+}
+```
+
+</details>
+
+<br>
 
 <a name="create-experiment-api"></a>
 
