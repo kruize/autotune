@@ -1492,10 +1492,10 @@ public class RecommendationEngine {
                                 if (secondMethodName.equals(KruizeConstants.JSONKeys.SUM))
                                     secondMethodName = KruizeConstants.JSONKeys.AVG;
                                 promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
-                                format = KruizeConstants.JSONKeys.GIBIBYTE;
+                                format = KruizeConstants.JSONKeys.BYTES;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRequest) {
                                 promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
-                                format = KruizeConstants.JSONKeys.GIBIBYTE;
+                                format = KruizeConstants.JSONKeys.BYTES;
                             }
                             // If promQL is determined, fetch metrics from the datasource
                             if (promQL != null) {
