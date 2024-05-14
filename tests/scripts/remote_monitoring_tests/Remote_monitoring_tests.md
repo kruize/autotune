@@ -97,7 +97,7 @@ Use the below command to test :
 Where values for test_autotune.sh are:
 
 ```
-usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube
+usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube, openshift. Default - minikube
                         [ -i ] : optional. Kruize docker image to be used for testing, default - kruize/autotune_operator:test
 			[ -r ] : Location of benchmarks. Not required for remote_monitoring_tests
 			[ --tctype ] : optional. Testcases type to run, default is functional (runs all functional tests)

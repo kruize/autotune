@@ -1,5 +1,5 @@
 """
-Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
+Copyright (c) 2022, 2024 Red Hat, IBM Corporation and others.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -49,6 +49,7 @@ RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available"
 COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available"
 PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available"
 CONTAINER_AND_EXPERIMENT_NAME = " for container : %s for experiment: %s.]"
+LIST_DATASOURCES_ERROR_MSG = "Given datasource name - \" %s \" either does not exist or is not valid"
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
@@ -211,6 +212,12 @@ update_results_test_data = {
     "memoryRSS_avg": 46.5,
     "memoryRSS_min": 26.5,
     "memoryRSS_format": "MiB"
+}
+
+# version, datasource_name
+import_metadata_test_data = {
+    "version": "v1.0",
+    "datasource_name": "prometheus-1",
 }
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}

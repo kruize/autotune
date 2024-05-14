@@ -239,3 +239,95 @@ def list_experiments(results=None, recommendations=None, latest=None, experiment
     response = requests.get(url)
     print("Response status code = ", response.status_code)
     return response
+
+
+# Description: This function obtains the list of datasources from Kruize Autotune using datasources API
+# Input Parameters: None
+def list_datasources(name=None):
+    print("\nListing the datasources...")
+    query_params = {}
+
+    if name is not None:
+        query_params['name'] = name
+
+    query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
+
+    url = URL + "/datasources"
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
+    response = requests.get(url)
+
+    print("PARAMS = ", query_params)
+    print("Response status code = ", response.status_code)
+    print("\n************************************************************")
+    print(response.text)
+    print("\n************************************************************")
+    return response
+
+
+# Description: This function validates the input json and imports metadata using POST dsmetadata API to Kruize Autotune
+# Input Parameters: datasource input json
+def import_metadata(input_json_file, invalid_header=False):
+    json_file = open(input_json_file, "r")
+    input_json = json.loads(json_file.read())
+    print("\n************************************************************")
+    pretty_json_str = json.dumps(input_json, indent=4)
+    print(pretty_json_str)
+    print("\n************************************************************")
+
+    # read the json
+    print("\nImporting the metadata...")
+
+    url = URL + "/dsmetadata"
+    print("URL = ", url)
+
+    headers = {'content-type': 'application/xml'}
+    if invalid_header:
+        print("Invalid header")
+        response = requests.post(url, json=input_json, headers=headers)
+    else:
+        response = requests.post(url, json=input_json)
+
+    print("Response status code = ", response.status_code)
+    try:
+        # Parse the response content as JSON into a Python dictionary
+        response_json = response.json()
+
+        # Check if the response_json is a valid JSON object or array
+        if isinstance(response_json, (dict, list)):
+            # Convert the response_json back to a JSON-formatted string with double quotes and pretty print it
+            pretty_response_json_str = json.dumps(response_json, indent=4)
+
+            # Print the JSON string
+            print(pretty_response_json_str)
+        else:
+            print("Invalid JSON format in the response.")
+            print(response.text)  # Print the response text as-is
+    except json.JSONDecodeError:
+        print("Response content is not valid JSON.")
+        print(response.text)  # Print the response text as-is
+    return response
+
+
+# Description: This function deletes the metadata and posts the metadata using dsmetadata API to Kruize Autotune
+# Input Parameters: datasource input json
+def delete_metadata(input_json_file, invalid_header=False):
+    json_file = open(input_json_file, "r")
+    input_json = json.loads(json_file.read())
+
+    print("\nDeleting the metadata...")
+
+    url = URL + "/dsmetadata"
+    print("URL = ", url)
+
+    headers = {'content-type': 'application/xml'}
+    if invalid_header:
+        print("Invalid header")
+        response = requests.delete(url, json=input_json, headers=headers)
+    else:
+        response = requests.delete(url, json=input_json)
+
+    print(response)
+    print("Response status code = ", response.status_code)
+    return response
