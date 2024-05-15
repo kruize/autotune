@@ -91,7 +91,7 @@ data:
       "monitoringendpoint": "prometheus-k8s",
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
-      "plots": "false",
+      "plots": "true",
       "local": "false",
       "logAllHttpReqAndResp": "true",
       "hibernate": {

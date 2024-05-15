@@ -1,5 +1,5 @@
 # TODO: Need add appropriate required fields
-medium_and_long_term_list_reco_json_schema = {
+short_term_list_reco_json_schema = {
 "type": "array",
   "items": {
     "type": "object",
@@ -123,7 +123,298 @@ medium_and_long_term_list_reco_json_schema = {
                                           "required": ["type", "message", "code"]
                                         }
                                       },
-                                      "duration_in_hours": { "type": "number" }
+                                      "monitoring_start_time": { "type": "string" },
+                                      "duration_in_hours": { "type": "number" },
+                                      "recommendation_engines": {
+                                        "type": "object",
+                                        "properties": {
+                                          "cost": {
+                                            "type": "object",
+                                            "properties": {
+                                              "pods_count": { "type": "number" },
+                                              "confidence_level": { "type": "number" },
+                                              "config": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "requests": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "memory": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      },
+                                                      "cpu": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      }
+                                                    },
+                                                    "required": ["memory", "cpu"]
+                                                  },
+                                                  "limits": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "memory": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      },
+                                                      "cpu": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      }
+                                                    },
+                                                    "required": ["memory", "cpu"]
+                                                  }
+                                                },
+                                                "required": ["requests", "limits"]
+                                              },
+                                              "variation": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "requests": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "memory": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      },
+                                                      "cpu": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      }
+                                                    },
+                                                    "required": ["memory", "cpu"]
+                                                  },
+                                                  "limits": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "memory": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      },
+                                                      "cpu": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      }
+                                                    },
+                                                    "required": ["memory", "cpu"]
+                                                  }
+                                                },
+                                                "required": ["requests", "limits"]
+                                              },
+                                              "notifications": {
+                                                "type": "object",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "type": { "type": "string" },
+                                                    "message": { "type": "string" },
+                                                    "code": { "type": "number" }
+                                                  },
+                                                  "required": ["type", "message", "code"]
+                                                }
+                                              }
+                                            },
+                                            "required": ["pods_count", "confidence_level", "config", "variation", "notifications"]
+                                          },
+                                          "performance": {
+                                            "type": "object",
+                                            "properties": {
+                                              "monitoring_start_time": { "type": "string" },
+                                              "pods_count": { "type": "number" },
+                                              "confidence_level": { "type": "number" },
+                                              "config": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "requests": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "memory": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      },
+                                                      "cpu": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      }
+                                                    },
+                                                    "required": ["memory", "cpu"]
+                                                  },
+                                                  "limits": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "memory": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      },
+                                                      "cpu": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      }
+                                                    },
+                                                    "required": ["memory", "cpu"]
+                                                  }
+                                                },
+                                                "required": ["requests", "limits"]
+                                              },
+                                              "variation": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "requests": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "memory": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      },
+                                                      "cpu": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      }
+                                                    },
+                                                    "required": ["memory", "cpu"]
+                                                  },
+                                                  "limits": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "memory": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      },
+                                                      "cpu": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                          "amount": { "type": "number" },
+                                                          "format": { "type": "string" }
+                                                        },
+                                                        "required": ["amount", "format"]
+                                                      }
+                                                    },
+                                                    "required": ["memory", "cpu"]
+                                                  }
+                                                },
+                                                "required": ["requests", "limits"]
+                                              },
+                                              "notifications": {
+                                                "type": "object",
+                                                "items": {
+                                                  "type": "object",
+                                                  "properties": {
+                                                    "type": { "type": "string" },
+                                                    "message": { "type": "string" },
+                                                    "code": { "type": "number" }
+                                                  },
+                                                  "required": ["type", "message", "code"]
+                                                }
+                                              }
+                                            },
+                                            "required": []
+                                          }
+                                        },
+                                        "required": []
+                                      },
+                                      "plots": {
+                                        "type": "object",
+                                        "properties": {
+                                          "datapoints": { "type": "number" },
+                                          "plots_data": {
+                                            "type": "object",
+                                            "patternProperties": {
+                                              "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z$": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "cpuUsage": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "min": { "type": "number" },
+                                                      "q1": { "type": "number" },
+                                                      "median": { "type": "number" },
+                                                      "q3": { "type": "number" },
+                                                      "max": { "type": "number" },
+                                                      "format": { "type": "string" }
+                                                    },
+                                                    "required": ["min", "q1", "median", "q3", "max", "format"]
+                                                  },
+                                                  "memoryUsage": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "min": { "type": "number" },
+                                                      "q1": { "type": "number" },
+                                                      "median": { "type": "number" },
+                                                      "q3": { "type": "number" },
+                                                      "max": { "type": "number" },
+                                                      "format": { "type": "string" }
+                                                    },
+                                                    "required": ["min", "q1", "median", "q3", "max", "format"]
+                                                  },
+                                                },
+                                                "required": []
+                                              }
+                                            },
+                                            "required": []
+                                          }
+                                       },
+                                        "required": ["datapoints", "plots_data"]
+                                      }
                                     },
                                     "required": []
                                   },
@@ -142,255 +433,7 @@ medium_and_long_term_list_reco_json_schema = {
                                           "required": ["type", "message", "code"]
                                         }
                                       },
-                                      "monitoring_start_time": { "type": "string" },
-                                      "duration_in_hours": { "type": "number" },
-                                      "recommendation_engines": {
-                                        "type": "object",
-                                        "properties": {
-                                          "cost": {
-                                            "type": "object",
-                                            "properties": {
-                                              "pods_count": { "type": "number" },
-                                              "confidence_level": { "type": "number" },
-                                              "config": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "requests": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  },
-                                                  "limits": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  }
-                                                },
-                                                "required": ["requests", "limits"]
-                                              },
-                                              "variation": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "requests": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  },
-                                                  "limits": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  }
-                                                },
-                                                "required": ["requests", "limits"]
-                                              },
-                                              "notifications": {
-                                                "type": "object",
-                                                "items": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "type": { "type": "string" },
-                                                    "message": { "type": "string" },
-                                                    "code": { "type": "number" }
-                                                  },
-                                                  "required": ["type", "message", "code"]
-                                                }
-                                              }
-                                            },
-                                            "required": ["pods_count", "confidence_level", "config", "variation", "notifications"]
-                                          },
-                                          "performance": {
-                                            "type": "object",
-                                            "properties": {
-                                              "monitoring_start_time": { "type": "string" },
-                                              "pods_count": { "type": "number" },
-                                              "confidence_level": { "type": "number" },
-                                              "config": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "requests": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  },
-                                                  "limits": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  }
-                                                },
-                                                "required": ["requests", "limits"]
-                                              },
-                                              "variation": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "requests": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  },
-                                                  "limits": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  }
-                                                },
-                                                "required": ["requests", "limits"]
-                                              },
-                                              "notifications": {
-                                                "type": "object",
-                                                "items": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "type": { "type": "string" },
-                                                    "message": { "type": "string" },
-                                                    "code": { "type": "number" }
-                                                  },
-                                                  "required": ["type", "message", "code"]
-                                                }
-                                              }
-                                            },
-                                            "required": []
-                                          }
-                                        },
-                                        "required": []
-                                      }
+                                      "duration_in_hours": { "type": "number" }
                                     },
                                     "required": []
                                   },
@@ -409,258 +452,10 @@ medium_and_long_term_list_reco_json_schema = {
                                           "required": ["type", "message", "code"]
                                         }
                                       },
-                                      "monitoring_start_time": { "type": "string" },
-                                      "duration_in_hours": { "type": "number" },
-                                      "recommendation_engines": {
-                                        "type": "object",
-                                        "properties": {
-                                          "cost": {
-                                            "type": "object",
-                                            "properties": {
-                                              "pods_count": { "type": "number" },
-                                              "confidence_level": { "type": "number" },
-                                              "config": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "requests": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  },
-                                                  "limits": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  }
-                                                },
-                                                "required": ["requests", "limits"]
-                                              },
-                                              "variation": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "requests": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  },
-                                                  "limits": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  }
-                                                },
-                                                "required": ["requests", "limits"]
-                                              },
-                                              "notifications": {
-                                                "type": "object",
-                                                "items": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "type": { "type": "string" },
-                                                    "message": { "type": "string" },
-                                                    "code": { "type": "number" }
-                                                  },
-                                                  "required": ["type", "message", "code"]
-                                                }
-                                              }
-                                            },
-                                            "required": ["pods_count", "confidence_level", "config", "variation", "notifications"]
-                                          },
-                                          "performance": {
-                                            "type": "object",
-                                            "properties": {
-                                              "monitoring_start_time": { "type": "string" },
-                                              "pods_count": { "type": "number" },
-                                              "confidence_level": { "type": "number" },
-                                              "config": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "requests": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  },
-                                                  "limits": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  }
-                                                },
-                                                "required": ["requests", "limits"]
-                                              },
-                                              "variation": {
-                                                "type": "object",
-                                                "properties": {
-                                                  "requests": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  },
-                                                  "limits": {
-                                                    "type": "object",
-                                                    "properties": {
-                                                      "memory": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      },
-                                                      "cpu": {
-                                                        "type": "object",
-                                                        "properties": {
-                                                          "amount": { "type": "number" },
-                                                          "format": { "type": "string" }
-                                                        },
-                                                        "required": ["amount", "format"]
-                                                      }
-                                                    },
-                                                    "required": ["memory", "cpu"]
-                                                  }
-                                                },
-                                                "required": ["requests", "limits"]
-                                              },
-                                              "notifications": {
-                                                "type": "object",
-                                                "items": {
-                                                  "type": "object",
-                                                  "properties": {
-                                                    "type": { "type": "string" },
-                                                    "message": { "type": "string" },
-                                                    "code": { "type": "number" }
-                                                  },
-                                                  "required": ["type", "message", "code"]
-                                                }
-                                              }
-                                            },
-                                            "required": []
-                                          }
-                                        },
-                                        "required": []
-                                      }
+                                      "duration_in_hours": { "type": "number" }
                                     },
                                     "required": []
-                                  }
+                                  },
                                 },
                                 "required": []
                               }

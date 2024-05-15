@@ -75,6 +75,22 @@ Here are the test scenarios:
 	- for non-contiguous data:
 		- similar tests as mentioned above for contiguous
 
+
+### **Update Recommendation API tests**
+
+
+Here are the test scenarios:
+
+- Update recommendations with valid results and plots available
+- Update recommendations with no plots available when no recommendations available for medium and long term
+- Update recommendations with just interval_end_time in input
+- Update recommendations without experiment name or end_time
+- Update recommendations without end_time
+- Update recommendations with invalid end_time format
+- Update recommendations with unknown experiment_name
+- Update recommendations with unknown end_time
+- Update recommendations with end_time preceding start_time
+
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
    - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
    - Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md) 
@@ -97,7 +113,7 @@ Use the below command to test :
 Where values for test_autotune.sh are:
 
 ```
-usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube
+usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube, openshift. Default - minikube
                         [ -i ] : optional. Kruize docker image to be used for testing, default - kruize/autotune_operator:test
 			[ -r ] : Location of benchmarks. Not required for remote_monitoring_tests
 			[ --tctype ] : optional. Testcases type to run, default is functional (runs all functional tests)

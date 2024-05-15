@@ -31,7 +31,7 @@ def convert_date_format(input_date_str):
     output_date_str = input_date.strftime("%Y-%m-%dT%H:%M:%S.000Z")
     return output_date_str
 
-def create_exp_jsons(split = False, split_count = 1, exp_json_dir = "/tmp/exp_jsons", total_exps = 10):
+def create_exp_jsons(split = False, split_count = 1, exp_json_dir = "/tmp/exp_jsons", total_exps = 10, target_cluster="remote"):
     complete_json_data = []
     single_json_data = []
     multi_json_data = []

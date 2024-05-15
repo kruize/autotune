@@ -1,5 +1,5 @@
 # TODO: Need add appropriate required fields
-short_term_list_reco_json_schema = {
+long_term_list_reco_json_schema = {
 "type": "array",
   "items": {
     "type": "object",
@@ -109,6 +109,44 @@ short_term_list_reco_json_schema = {
                                 "type": "object",
                                 "properties": {
                                   "short_term": {
+                                    "type": "object",
+                                    "properties": {
+                                      "notifications": {
+                                        "type": "object",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "type": { "type": "string" },
+                                            "message": { "type": "string" },
+                                            "code": { "type": "number" }
+                                          },
+                                          "required": ["type", "message", "code"]
+                                        }
+                                      },
+                                      "duration_in_hours": { "type": "number" }
+                                    },
+                                    "required": []
+                                  },
+                                  "medium_term": {
+                                    "type": "object",
+                                    "properties": {
+                                      "notifications": {
+                                        "type": "object",
+                                        "items": {
+                                          "type": "object",
+                                          "properties": {
+                                            "type": { "type": "string" },
+                                            "message": { "type": "string" },
+                                            "code": { "type": "number" }
+                                          },
+                                          "required": ["type", "message", "code"]
+                                        }
+                                      },
+                                      "duration_in_hours": { "type": "number" }
+                                    },
+                                    "required": []
+                                  },
+                                  "long_term": {
                                     "type": "object",
                                     "properties": {
                                       "notifications": {
@@ -371,48 +409,53 @@ short_term_list_reco_json_schema = {
                                           }
                                         },
                                         "required": []
+                                      },
+                                      "plots": {
+                                        "type": "object",
+                                        "properties": {
+                                          "datapoints": { "type": "number" },
+                                          "plots_data": {
+                                            "type": "object",
+                                            "patternProperties": {
+                                              "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}.\\d{3}Z$": {
+                                                "type": "object",
+                                                "properties": {
+                                                  "cpuUsage": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "min": { "type": "number" },
+                                                      "q1": { "type": "number" },
+                                                      "median": { "type": "number" },
+                                                      "q3": { "type": "number" },
+                                                      "max": { "type": "number" },
+                                                      "format": { "type": "string" }
+                                                    },
+                                                    "required": ["min", "q1", "median", "q3", "max", "format"]
+                                                  },
+                                                  "memoryUsage": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                      "min": { "type": "number" },
+                                                      "q1": { "type": "number" },
+                                                      "median": { "type": "number" },
+                                                      "q3": { "type": "number" },
+                                                      "max": { "type": "number" },
+                                                      "format": { "type": "string" }
+                                                    },
+                                                    "required": ["min", "q1", "median", "q3", "max", "format"]
+                                                  },
+                                                },
+                                                "required": []
+                                              }
+                                            },
+                                            "required": []
+                                          }
+                                       },
+                                        "required": ["datapoints", "plots_data"]
                                       }
                                     },
                                     "required": []
-                                  },
-                                  "medium_term": {
-                                    "type": "object",
-                                    "properties": {
-                                      "notifications": {
-                                        "type": "object",
-                                        "items": {
-                                          "type": "object",
-                                          "properties": {
-                                            "type": { "type": "string" },
-                                            "message": { "type": "string" },
-                                            "code": { "type": "number" }
-                                          },
-                                          "required": ["type", "message", "code"]
-                                        }
-                                      },
-                                      "duration_in_hours": { "type": "number" }
-                                    },
-                                    "required": []
-                                  },
-                                  "long_term": {
-                                    "type": "object",
-                                    "properties": {
-                                      "notifications": {
-                                        "type": "object",
-                                        "items": {
-                                          "type": "object",
-                                          "properties": {
-                                            "type": { "type": "string" },
-                                            "message": { "type": "string" },
-                                            "code": { "type": "number" }
-                                          },
-                                          "required": ["type", "message", "code"]
-                                        }
-                                      },
-                                      "duration_in_hours": { "type": "number" }
-                                    },
-                                    "required": []
-                                  },
+                                  }
                                 },
                                 "required": []
                               }

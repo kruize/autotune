@@ -586,13 +586,14 @@ public class RecommendationEngine {
                     mappedRecommendationForTerm.addNotification(recommendationNotification);
                 }
                 mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
-            }
-            Terms.setDurationBasedOnTerm(containerData, mappedRecommendationForTerm, recommendationTerm);
-            if (KruizeDeploymentInfo.plots == true) {
-                if (null != monitoringStartTime) {
-                    mappedRecommendationForTerm.setPlots(new PlotManager(containerData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots());
+                // generate plots when minimum data is available for the term
+                if (KruizeDeploymentInfo.plots) {
+                    if (null != monitoringStartTime) {
+                        mappedRecommendationForTerm.setPlots(new PlotManager(containerData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots());
+                    }
                 }
             }
+            Terms.setDurationBasedOnTerm(containerData, mappedRecommendationForTerm, recommendationTerm);
             timestampRecommendation.setRecommendationForTermHashMap(recommendationTerm, mappedRecommendationForTerm);
 
         }
@@ -1492,10 +1493,10 @@ public class RecommendationEngine {
                                 if (secondMethodName.equals(KruizeConstants.JSONKeys.SUM))
                                     secondMethodName = KruizeConstants.JSONKeys.AVG;
                                 promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
-                                format = KruizeConstants.JSONKeys.GIBIBYTE;
+                                format = KruizeConstants.JSONKeys.BYTES;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRequest) {
                                 promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
-                                format = KruizeConstants.JSONKeys.GIBIBYTE;
+                                format = KruizeConstants.JSONKeys.BYTES;
                             }
                             // If promQL is determined, fetch metrics from the datasource
                             if (promQL != null) {
