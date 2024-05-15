@@ -246,6 +246,11 @@ This is quick guide instructions to get metadata for a specific datasource as fo
 | namespace    | string | optional | The namespace                             |
 | verbose      | string | optional | Flag to retrieve container-level metadata |
 
+In the context of `GET /dsmetadata` REST API, the term `verbose` refers to a parameter or option that controls
+granularity of metadata included in the API response. When the verbose parameter is set to true, the API response 
+includes granular container-level details in the metadata, offering a more comprehensive view of the clusters, namespaces,
+workloads and containers associated with the specified datasource. When the verbose parameter is not provided or set to
+false, the API response provides basic information like list of clusters, namespaces associated with the specified datasource.
 
 **Request with datasource name parameter**
 
@@ -257,7 +262,10 @@ Returns the list of cluster details of the specified datasource
 
 **Response for datasource name - `prometheus-1`**
 
-***Note : Currently, only `default` cluster is supported for POC***
+***Note:***
+- Currently, only `default` cluster is supported for POC.
+- When the `verbose` parameter is not provided, is set to `false` by default - the response provides basic information
+about the clusters of the specified datasource.
 
 <details>
 <summary><b>Example Response</b></summary>
@@ -290,9 +298,12 @@ Returns the list of cluster details of the specified datasource
 
 Returns the metadata of all the containers present in the specified datasource
 
-***Note : When we don't pass `verbose` in the query URL, it takes as `false` by default.***
+***Note : When we don't pass `verbose` in the query URL, it is set to `false` by default.***
 
 **Response for datasource name - `prometheus-1` and verbose - `true`**
+
+With `verbose` parameter set to `true`, the response includes detailed metadata about all namespaces, workloads and
+containers in addition to cluster information with the specified datasource.
 
 <details>
 <summary><b>Example Response</b></summary>
@@ -516,6 +527,9 @@ Returns the list of namespaces present in the specified cluster name and datasou
 
 **Response for datasource name - `prometheus-1` and cluster name - `default`**
 
+With `verbose` parameter set to `false`, the response includes list of namespaces present in the specified cluster name 
+and datasource.
+
 <details>
 <summary><b>Example Response</b></summary>
 
@@ -569,6 +583,9 @@ Returns the list of namespaces present in the specified cluster name and datasou
 Returns the container-level metadata of all the namespaces present in the specified cluster name and datasource
 
 **Response for datasource name - `prometheus-1`, cluster name - `default` and verbose - `true`**
+
+With `verbose` parameter set to `true`, the response includes detailed metadata about workloads and containers 
+in addition to namespace information with the specified cluster name and datasource.
 
 <details>
 <summary><b>Example Response</b></summary>
@@ -787,11 +804,14 @@ Returns the container-level metadata of all the namespaces present in the specif
 
 `curl -H 'Accept: application/json' "http://<URL>:<PORT>/dsmetadata?datasource=<datasource_name>&cluster_name=<cluster_name>&namespace=<namespace>"`
 
-Returns the container metadata of the specified namespace, cluster name of the specified datasource
+Returns the container-level metadata of the specified namespace, cluster name and datasource
 
 ***Note : `verbose` in the query URL to fetch container-level metadata is set to `true` by default***
 
 **Response for datasource name - `prometheus-1`, cluster name - `default` and namespace - `monitoring`**
+
+The response includes granular metadata about workloads and associated containers within specified namespace, cluster 
+and datasource.
 
 <details>
 <summary><b>Example Response</b></summary>
