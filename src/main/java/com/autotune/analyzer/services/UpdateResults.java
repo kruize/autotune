@@ -129,7 +129,7 @@ public class UpdateResults extends HttpServlet {
             }
         } catch (Exception e) {
             LOGGER.error("updateResults API request payload for requestID {} failed", calCount);
-            LOGGER.error("Exception: " + e.getMessage());
+            LOGGER.error("Exception: {}", e.getMessage());
             e.printStackTrace();
             sendErrorResponse(inputData, request, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {

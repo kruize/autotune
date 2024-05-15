@@ -101,21 +101,26 @@ public class UpdateRecommendations extends HttpServlet {
                     LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
                     interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
                             intervalEndTimeStr);
+                    LOGGER.info("Update Recommendation API success response, experiment_name: {} and intervalEndTimeStr : {}",
+                            experiment_name, intervalEndTimeStr);
                     sendSuccessResponse(response, kruizeObject, interval_end_time);
                     statusValue = "success";
                 } else {
                     LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
+                    LOGGER.error("UpdateRecommendations API failure response, experiment_name: {} and intervalEndTimeStr : {}",
+                            experiment_name, intervalEndTimeStr);
                     sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject.getValidation_data().getMessage());
                 }
             } else {
-                LOGGER.error("Validation failed: {}", validationMessage);
+                LOGGER.error("Validation failed: {} for experiment_name: {} and interval_end_time: {}", validationMessage,
+                        experiment_name, intervalEndTimeStr);
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage);
             }
 
         } catch (Exception e) {
             LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
             LOGGER.error("UpdateRecommendations API, experiment_name: {},  intervalEndTimeStr: {}", experiment_name, intervalEndTimeStr);
-            LOGGER.error("Exception: " + e.getMessage());
+            LOGGER.error("Exception: {}", e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
