@@ -91,9 +91,6 @@ public interface ExperimentDAO {
     // add metadata
     ValidationOutputData addMetadataToDB(KruizeDSMetadataEntry kruizeDSMetadataEntry);
 
-    // Load metadata
-    List<KruizeDSMetadataEntry> loadMetadata() throws Exception;
-
     // Delete metadata
     public ValidationOutputData deleteKruizeDSMetadataEntryByName(String dataSourceName);
 }

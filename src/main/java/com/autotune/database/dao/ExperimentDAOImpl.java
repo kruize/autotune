@@ -914,18 +914,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return kruizeMetadataList;
     }
 
-    @Override
-    public List<KruizeDSMetadataEntry> loadMetadata() throws Exception {
-        List<KruizeDSMetadataEntry> kruizeMetadataList;
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA, KruizeDSMetadataEntry.class).list();
-        } catch (Exception e) {
-            LOGGER.error("Unable to load metadata : {}", e.getMessage());
-            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
-        }
-        return kruizeMetadataList;
-    }
-
     /**
      * @param name
      * @return single element list of datasource after fetching from the DB
