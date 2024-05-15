@@ -39,9 +39,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -101,8 +100,10 @@ public class UpdateRecommendations extends HttpServlet {
                     LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
                     interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
                             intervalEndTimeStr);
-                    LOGGER.info("Update Recommendation API success response, experiment_name: {} and intervalEndTimeStr : {}",
-                            experiment_name, intervalEndTimeStr);
+                    SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
+                    sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+                    LOGGER.info("Update Recommendation API success response, experiment_name: {} and interval_end_time : {}",
+                            experiment_name, sdf.format(interval_end_time));
                     sendSuccessResponse(response, kruizeObject, interval_end_time);
                     statusValue = "success";
                 } else {
