@@ -178,7 +178,7 @@ public class KruizeConstants {
         public static final String MEDIAN = "median";
         public static final String RANGE = "range";
         public static final String CORES = "cores";
-        public static final String GIBIBYTE = "GiB";
+        public static final String BYTES = "bytes";
 
         // Datasource JSON keys
         public static final String DATASOURCES = "datasources";

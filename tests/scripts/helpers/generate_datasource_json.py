@@ -18,7 +18,7 @@ def generate_datasource_json(csv_file, json_file):
     with open(json_file, 'w') as jsonfile:
         json.dump(datasources, jsonfile, indent=4)
 
-csv_file_path = '../csv_data/datasources.csv'
-json_file_path = '../json_files/datasources.json'
+csv_file_path = '../local_monitoring_tests/csv_data/datasources.csv'
+json_file_path = '../local_monitoring_tests/json_files/datasources.json'
 
 generate_datasource_json(csv_file_path, json_file_path)

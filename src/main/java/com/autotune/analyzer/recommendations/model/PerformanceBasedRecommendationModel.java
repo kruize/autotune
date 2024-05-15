@@ -9,12 +9,16 @@ import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.utils.KruizeConstants;
+import org.json.JSONArray;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_CPU_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_MEMORY_PERCENTILE;
@@ -45,49 +49,22 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
         }
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
-        List<Double> cpuUsageList = filteredResultsMap.values()
-                .stream()
-                .map(e -> {
-                    Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuUsage));
-                    Optional<MetricResults> cpuThrottleResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.cpuThrottle));
-                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
-                    double cpuUsageMax = cpuUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
-                    double cpuUsageSum = cpuUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double cpuThrottleAvg = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
-                    double cpuThrottleMax = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
-                    double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
-                    double cpuRequestInterval = 0.0;
-                    double cpuUsagePod = 0;
-                    int numPods = 0;
-
-                    // Use the Max value when available, if not use the Avg
-                    double cpuUsage = (cpuUsageMax > 0) ? cpuUsageMax : cpuUsageAvg;
-                    double cpuThrottle = (cpuThrottleMax > 0) ? cpuThrottleMax : cpuThrottleAvg;
-                    double cpuUsageTotal = cpuUsage + cpuThrottle;
-
-                    // Usage is less than 1 core, set it to the observed value.
-                    if (CPU_ONE_CORE > cpuUsageTotal) {
-                        cpuRequestInterval = cpuUsageTotal;
-                    } else {
-                        // Sum/Avg should give us the number of pods
-                        if (0 != cpuUsageAvg) {
-                            numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
-                            if (0 < numPods) {
-                                cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
-                            }
-                        }
-                        cpuRequestInterval = Math.max(cpuUsagePod, cpuUsageTotal);
-                    }
-                    return cpuRequestInterval;
-                })
-                .collect(Collectors.toList());
+        JSONArray cpuUsageList = CostBasedRecommendationModel.getCPUUsageList(filteredResultsMap);
+        LOGGER.debug("cpuUsageList : {}", cpuUsageList);
+        // Extract "max" values from cpuUsageList
+        List<Double> cpuMaxValues = new ArrayList<>();
+        for (int i = 0; i < cpuUsageList.length(); i++) {
+            JSONObject jsonObject = cpuUsageList.getJSONObject(i);
+            double maxValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
+            cpuMaxValues.add(maxValue);
+        }
 
         Double cpuRequest = 0.0;
-        Double cpuRequestMax = Collections.max(cpuUsageList);
+        Double cpuRequestMax = Collections.max(cpuMaxValues);
         if (null != cpuRequestMax && CPU_ONE_CORE > cpuRequestMax) {
             cpuRequest = cpuRequestMax;
         } else {
-            cpuRequest = CommonUtils.percentile(PERFORMANCE_CPU_PERCENTILE, cpuUsageList);
+            cpuRequest = CommonUtils.percentile(PERFORMANCE_CPU_PERCENTILE, cpuMaxValues);
         }
 
         // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO
