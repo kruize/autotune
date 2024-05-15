@@ -122,6 +122,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
             assert data[0]['experiment_name'] == experiment_name
             assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                        'message'] == RECOMMENDATIONS_AVAILABLE
+
             response = list_recommendations(experiment_name)
             if response.status_code == SUCCESS_200_STATUS_CODE:
                 recommendation_json = response.json()

@@ -138,6 +138,10 @@ SHORT_TERM_TEST = "short_term_test"
 MEDIUM_TERM_TEST = "medium_term_test"
 LONG_TERM_TEST = "long_term_test"
 
+PLOTS = "plots"
+DATA_POINTS = "datapoints"
+PLOTS_DATA = "plots_data"
+
 TERMS_NOTIFICATION_CODES = {
     SHORT_TERM: NOTIFICATION_CODE_FOR_SHORT_TERM_RECOMMENDATIONS_AVAILABLE,
     MEDIUM_TERM: NOTIFICATION_CODE_FOR_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE,
@@ -417,13 +421,13 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
             update_results_kubernetes_obj = update_results_json[0]["kubernetes_objects"][i]
             create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][i]
             list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][i]
-            validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
+            validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
                                     list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
     else:
         update_results_kubernetes_obj = None
         create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][0]
         list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
-        validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json, \
+        validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
                                 list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
 
 
@@ -487,7 +491,8 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                                    expected_duration_in_hours, test_name)
 
 
-def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours, test_name):
+def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours,
+                       test_name):
     # Validate container image name and container name
     if update_results_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == update_results_container["container_image_name"], \
@@ -521,8 +526,8 @@ def validate_container(update_results_container, update_results_json, list_reco_
                 terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
                 current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
 
-                duration_terms = ["short_term", "medium_term", "long_term"]
-                for term in duration_terms:
+                duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+                for term in duration_terms.keys():
                     if check_if_recommendations_are_present(terms_obj[term]):
                         print(f"reco present for term {term}")
                         # Validate timestamps [deprecated as monitoring end time is moved to higher level]
@@ -564,13 +569,17 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         recommendation_engines_object = None
                         if "recommendation_engines" in terms_obj[term]:
                             recommendation_engines_object = terms_obj[term]["recommendation_engines"]
-                        if None != recommendation_engines_object:
+                        if recommendation_engines_object is not None:
                             for engine_entry in engines_list:
                                 if engine_entry in terms_obj[term]["recommendation_engines"]:
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
                                     validate_config(engine_obj["config"], metrics)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
-
+                        # validate Plots data
+                        validate_plots(terms_obj, duration_terms, term)
+                    # verify that plots isn't generated in case of no recommendations
+                    else:
+                        assert PLOTS not in terms_obj[term], f"Expected plots to be absent in case of no recommendations"
             else:
                 data = list_reco_container["recommendations"]["data"]
                 assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
@@ -579,6 +588,21 @@ def validate_container(update_results_container, update_results_json, list_reco_
         print("Checking for recommendation notifications message...")
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
+
+
+def validate_plots(terms_obj, duration_terms, term):
+    plots = terms_obj[term][PLOTS]
+    datapoint = plots[DATA_POINTS]
+    plots_data = plots[PLOTS_DATA]
+
+    assert plots is not None, f"Expected plots to be available"
+    assert datapoint is not None, f"Expected datapoint to be available"
+    # validate the count of data points for the specific term
+    assert datapoint == duration_terms[term], f"datapoint Expected: {duration_terms[term]}, Obtained: {datapoint}"
+    assert len(plots_data) == duration_terms[term], f"plots_data size Expected: {duration_terms[term]}, Obtained: {len(plots_data)}"
+    # TODO: validate the datapoint JSON objects
+    # TODO: validate the actual JSONs present, how many are empty for each term, this should be passed as an input
+    # TODO: validate the format value against the results metrics
 
 
 def set_duration_based_on_terms(duration_in_hours, term, interval_start_time, interval_end_time):

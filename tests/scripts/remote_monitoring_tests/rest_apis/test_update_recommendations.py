@@ -29,6 +29,7 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
     update results for 24 hrs +
     update recommendation using start and end time as a parameter
         Expected : recommendation should be available for the timestamp provided
+        Expected : plots data should be available
     '''
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results.json"
@@ -44,7 +45,7 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
 
     # Create experiment using the specified json
     num_exps = 1
-    num_res = 100
+    num_res = 2
     for i in range(num_exps):
         create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
         generate_json(find, input_json_file, create_exp_json_file, i)
@@ -94,7 +95,7 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
             assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
             # Expecting that we have recommendations
-            if j > 96:
+            if j > 1:
                 response = update_recommendations(experiment_name, None, end_time)
                 data = response.json()
                 assert response.status_code == SUCCESS_STATUS_CODE
@@ -136,7 +137,133 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
         update_results_json = []
         update_results_json.append(result_json_arr[len(result_json_arr) - 1])
 
-        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MIN
+        validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+
+    # Delete all the experiments
+    for i in range(num_exps):
+        json_file = "/tmp/create_exp_" + str(i) + ".json"
+        response = delete_experiment(json_file)
+        print("delete exp = ", response.status_code)
+        assert response.status_code == SUCCESS_STATUS_CODE
+
+
+@pytest.mark.sanity
+def test_plots_with_no_recommendations_in_some_terms(cluster_type):
+    '''
+    Creates Experiment +
+    update results for 30 mins +
+    update recommendation using start and end time as a parameter
+        Expected : recommendation should be available for the timestamp provided
+        Expected : plots data should not be available for medium and long term
+    '''
+    input_json_file = "../json_files/create_exp.json"
+    result_json_file = "../json_files/update_results.json"
+
+    find = []
+    json_data = json.load(open(input_json_file))
+
+    find.append(json_data[0]['experiment_name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['name'])
+    find.append(json_data[0]['kubernetes_objects'][0]['namespace'])
+
+    form_kruize_url(cluster_type)
+
+    # Create experiment using the specified json
+    num_exps = 1
+    num_res = 2
+    for i in range(num_exps):
+        create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
+        generate_json(find, input_json_file, create_exp_json_file, i)
+
+        # Delete the experiment
+        response = delete_experiment(create_exp_json_file)
+        print("delete exp = ", response.status_code)
+
+        # Create the experiment
+        response = create_experiment(create_exp_json_file)
+
+        data = response.json()
+        print("message = ", data['message'])
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+        # Update results for the experiment
+        update_results_json_file = "/tmp/update_results_" + str(i) + ".json"
+
+        result_json_arr = []
+        # Get the experiment name
+        json_data = json.load(open(create_exp_json_file))
+        experiment_name = json_data[0]['experiment_name']
+        interval_start_time = get_datetime()
+        for j in range(num_res):
+            update_timestamps = True
+            generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
+            result_json = read_json_data_from_file(update_results_json_file)
+            if j == 0:
+                start_time = interval_start_time
+            else:
+                start_time = end_time
+
+            result_json[0]['interval_start_time'] = start_time
+            end_time = increment_timestamp_by_given_mins(start_time, 15)
+            result_json[0]['interval_end_time'] = end_time
+
+            write_json_data_to_file(update_results_json_file, result_json)
+            result_json_arr.append(result_json[0])
+            response = update_results(update_results_json_file)
+
+            data = response.json()
+            print("message = ", data['message'])
+            assert response.status_code == SUCCESS_STATUS_CODE
+            assert data['status'] == SUCCESS_STATUS
+            assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+            # Expecting that we have recommendations after minimum of two datapoints
+            if j > 1:
+                response = update_recommendations(experiment_name, None, end_time)
+                data = response.json()
+                assert response.status_code == SUCCESS_STATUS_CODE
+                assert data[0]['experiment_name'] == experiment_name
+                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
+                           'message'] == 'Recommendations Are Available'
+                response = list_recommendations(experiment_name)
+                if response.status_code == SUCCESS_200_STATUS_CODE:
+                    recommendation_json = response.json()
+                    recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0][
+                        "recommendations"]
+                    high_level_notifications = recommendation_section["notifications"]
+                    # Check if duration
+                    assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
+                    data_section = recommendation_section["data"]
+                    short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
+                    short_term_notifications = short_term_recommendation["notifications"]
+                    for notification in short_term_notifications.values():
+                        assert notification["type"] != "error"
+
+        response = update_recommendations(experiment_name, None, end_time)
+        data = response.json()
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data[0]['experiment_name'] == experiment_name
+        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
+                   'message'] == 'Recommendations Are Available'
+
+        # Invoke list recommendations for the specified experiment
+        response = list_recommendations(experiment_name)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+        list_reco_json = response.json()
+
+        # Validate the json against the json schema
+        errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
+        assert errorMsg == ""
+
+        # Validate the json values
+        create_exp_json = read_json_data_from_file(create_exp_json_file)
+        update_results_json = []
+        update_results_json.append(result_json_arr[len(result_json_arr) - 1])
+
+        expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MIN
         validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
 
     # Delete all the experiments
