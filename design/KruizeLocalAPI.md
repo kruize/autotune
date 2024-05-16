@@ -114,7 +114,7 @@ or above the 98th percentile, and memory usage is at the 100th percentile.
 
 ### List Datasources API
 
-This is quick guide instructions to get datasources as follows.
+This is quick guide instructions to list available datasources as follows.
 
 **Request without Parameter**
 
@@ -235,7 +235,7 @@ This is quick guide instructions to import metadata using input JSON as follows.
 
 ### List Metadata API
 
-This is quick guide instructions to get metadata for a specific datasource as follows.
+This is quick guide instructions to retrieve metadata for a specific datasource as follows.
 
 **Request Parameters**
 
