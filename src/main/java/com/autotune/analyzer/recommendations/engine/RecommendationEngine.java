@@ -31,11 +31,13 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.micrometer.core.instrument.Timer;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -586,13 +588,26 @@ public class RecommendationEngine {
                     mappedRecommendationForTerm.addNotification(recommendationNotification);
                 }
                 mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
-            }
-            Terms.setDurationBasedOnTerm(containerData, mappedRecommendationForTerm, recommendationTerm);
-            if (KruizeDeploymentInfo.plots == true) {
-                if (null != monitoringStartTime) {
-                    mappedRecommendationForTerm.setPlots(new PlotManager(containerData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots());
+                // generate plots when minimum data is available for the term
+                if (KruizeDeploymentInfo.plots) {
+                    if (null != monitoringStartTime) {
+                        Timer.Sample timerBoxPlots = null;
+                        String status = "success";   // TODO avoid this constant at multiple place
+                        try {
+                            timerBoxPlots = Timer.start(MetricsConfig.meterRegistry());
+                            mappedRecommendationForTerm.setPlots(new PlotManager(containerData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots());
+                        } catch (Exception e) {
+                            status = String.format("Box plots Failed due to - %s", e.getMessage());
+                        } finally {
+                            if (timerBoxPlots != null) {
+                                MetricsConfig.timerBoxPlots = MetricsConfig.timerBBoxPlots.tag("status", status).register(MetricsConfig.meterRegistry());
+                                timerBoxPlots.stop(MetricsConfig.timerBoxPlots);
+                            }
+                        }
+                    }
                 }
             }
+            Terms.setDurationBasedOnTerm(containerData, mappedRecommendationForTerm, recommendationTerm);
             timestampRecommendation.setRecommendationForTermHashMap(recommendationTerm, mappedRecommendationForTerm);
 
         }
@@ -1407,7 +1422,7 @@ public class RecommendationEngine {
      * @param interval_start_time The start time of the interval for fetching metrics.
      * @param dataSourceInfo      The datasource object to fetch metrics from.
      * @throws Exception if an error occurs during the fetching process.
-     *                   TODO: Need to add right abstractions for this
+     *                                                                                                                                                                                                                                           TODO: Need to add right abstractions for this
      */
     public void fetchMetricsBasedOnDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception {
         try {
@@ -1492,10 +1507,10 @@ public class RecommendationEngine {
                                 if (secondMethodName.equals(KruizeConstants.JSONKeys.SUM))
                                     secondMethodName = KruizeConstants.JSONKeys.AVG;
                                 promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
-                                format = KruizeConstants.JSONKeys.GIBIBYTE;
+                                format = KruizeConstants.JSONKeys.BYTES;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRequest) {
                                 promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
-                                format = KruizeConstants.JSONKeys.GIBIBYTE;
+                                format = KruizeConstants.JSONKeys.BYTES;
                             }
                             // If promQL is determined, fetch metrics from the datasource
                             if (promQL != null) {
@@ -1570,7 +1585,8 @@ public class RecommendationEngine {
                         }
                     }
                     containerData.setResults(containerDataResults);
-                    setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalide date is set if experiment having two container with different last seen date
+                    if (containerDataResults.size() > 0)
+                        setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalide date is set if experiment having two container with different last seen date
                 }
             }
         } catch (Exception e) {

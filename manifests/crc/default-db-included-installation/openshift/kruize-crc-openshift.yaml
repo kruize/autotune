@@ -91,7 +91,7 @@ data:
       "monitoringendpoint": "prometheus-k8s",
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
-      "plots": "false",
+      "plots": "true",
       "local": "false",
       "logAllHttpReqAndResp": "true",
       "hibernate": {
@@ -211,7 +211,7 @@ spec:
       serviceAccountName: kruize-sa
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.21_rm
+          image: kruize/autotune_operator:0.0.22_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -283,7 +283,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: kruize/autotune_operator:0.0.21_rm
+              image: kruize/autotune_operator:0.0.22_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -324,7 +324,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: kruize/autotune_operator:0.0.21_rm
+              image: kruize/autotune_operator:0.0.22_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
