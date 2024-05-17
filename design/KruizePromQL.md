@@ -93,7 +93,20 @@ The following are the available Kruize DB methods that you can monitor:
 - `addPerformanceProfileToDB`: Method to add performance profile to the database.
 - `loadPerformanceProfileByName`: Method to load a specific performance profile.
 - `loadAllPerformanceProfiles`: Method to load all performance profiles.
+
+## KruizeMethod Metrics
+
+The following are the available Kruize methods that you can monitor:
+
 - `genratePlots`: methode to generate plots for all terms.
+
+Sample Output:
+
+```
+KruizeMethod_max{application="Kruize",method="generatePlots",status="success",} 0.036112854
+KruizeMethod_count{application="Kruize",method="generatePlots",status="success",} 2.0
+KruizeMethod_sum{application="Kruize",method="generatePlots",status="success",} 0.050705769
+```
 
 ## Time taken for KruizeDB metrics
 

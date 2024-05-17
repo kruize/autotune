@@ -27,6 +27,7 @@ public class MetricsConfig {
     private static MetricsConfig INSTANCE;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
     public String DB_METRIC_DESC = "Time taken for KruizeDB methods";
+    public String METHOD_METRIC_DESC = "Time taken for Kruize methods";
 
     private MetricsConfig() {
         meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
@@ -52,7 +53,7 @@ public class MetricsConfig {
         timerBAddPerfProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addPerformanceProfileToDB");
         timerBLoadPerfProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadPerformanceProfileByName");
         timerBLoadAllPerfProfiles = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllPerformanceProfiles");
-        timerBBoxPlots = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "generatePlots");
+        timerBBoxPlots = Timer.builder("KruizeMethod").description(METHOD_METRIC_DESC).tag("method", "generatePlots");
 
         timerBListDS = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "listDataSources").tag("method", "GET");
         timerBImportDSMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "importDataSourceMetadata").tag("method", "POST");
