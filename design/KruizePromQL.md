@@ -98,7 +98,7 @@ The following are the available Kruize DB methods that you can monitor:
 
 The following are the available Kruize methods that you can monitor:
 
-- `genratePlots`: methode to generate plots for all terms.
+- `generatePlots`: Method to generate box plot metrics for all terms.
 
 Sample Output:
 
