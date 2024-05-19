@@ -61,11 +61,11 @@ Enabled logging of success and failures for APIs
 ### Regression Testing
 
 | #   | ISSUE (BUG/NEW FEATURE)        |  TEST CASE | RESULTS | COMMENTS |
-| --- |--------------------------------| ---------------- | -------- | --- |
-| 1   | Kruize remote monitoring tests | Functional test suite | | |
-| 2   | Kruize fault tolerant tests | Functional test suite | | |
-| 3   | Kruize stress tests | Functional test suite | | |
-| 4   | Short Scalability test         | 5k exps / 15 days | |
+| --- |--------------------------------| ---------------- |---------| --- |
+| 1   | Kruize remote monitoring tests | Functional test suite | Passed  | |
+| 2   | Kruize fault tolerant tests | Functional test suite | Passed  | |
+| 3   | Kruize stress tests | Functional test suite | Passed  | |
+| 4   | Short Scalability test         | 5k exps / 15 days | Passed  | Time Taken: 04H:40M on Scalelab
 
 ---
 
@@ -79,12 +79,12 @@ Short Scalability run
 - Kruize replicas - 10
 - OCP - Scalelab cluster
 
-Kruize Release | Exps / Results / Recos | Execution time | Latency (Max/ Avg) in seconds ||| Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB)
--- | -- | -- | -- | -- | -- | --| -- | --
-  |   |   | UpdateRecommendations | UpdateResults | LoadResultsByExpName |   |   |  
-0.0.21_mvp | 5K / 72L / 3L | 3h 50 mins | 0.62 / 0.39 | 0.25 / 0.17 | 0.34 / 0.25 |  21417.14  | 6.04 | 35.37
-0.0.21_mvp (With Box plots) | 5K / 72L / 3L | 3h 53 mins | 0.63 / 0.39 |  0.25 / 0.17 | 0.35 / 0. 25 |  21868.5  | 4.4 | 40.71
-0.0.22_mvp | |  | | | | | |
+Kruize Release | Exps / Results / Recos | Execution time        | Latency (Max/ Avg) in seconds |                      |              | Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB)
+-- |------------------------|-----------------------|-------------------------------|----------------------|--------------|----------------------|----------------| --
+  |   |                        | UpdateRecommendations | UpdateResults                 | LoadResultsByExpName |              |                      |  
+0.0.21_mvp | 5K / 72L / 3L          | 3h 50 mins            | 0.62 / 0.39                   | 0.25 / 0.17          | 0.34 / 0.25  | 21417.14             | 6.04           | 35.37
+0.0.21_mvp (With Box plots) | 5K / 72L / 3L          | 3h 53 mins            | 0.63 / 0.39                   | 0.25 / 0.17          | 0.35 / 0. 25 | 21868.5              | 4.4            | 40.71
+0.0.22_mvp | 5K / 72L / 3L                       | 4h 38 mins            | 0.98 / 0.53                   | 0.09 / 0.08          | 0.62 / 0.43  | 21753                | 6.83           | 16.77
 
 ----
 ## RELEASE TESTING
@@ -98,14 +98,14 @@ As part of the release testing, following tests will be executed:
 - [Kruize remote monitoring demo (On minikube)](https://github.com/kruize/kruize-demos/blob/main/monitoring/remote_monitoring_demo/README.md)
 
 
-| #   | TEST SUITE | EXPECTED RESULTS | ACTUAL RESULTS | COMMENTS |
-| --- | ---------- | ---------------- | -------------- | -------- | 
-| 1   |  Kruize Remote monitoring Functional testsuite | TOTAL - , PASSED -  / FAILED -  | TOTAL - , PASSED - / FAILED - | No new regressions seen, existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
-| 2   |  Kruize Local monitoring demo | | | |
-| 3   |  Fault tolerant test | | | |
-| 4   |  Stress test | | | |
-| 5   |  Scalability test (short run)| | | |
-| 6   |  Kruize remote monitoring demo | | | |
+| #   | TEST SUITE | EXPECTED RESULTS                        | ACTUAL RESULTS                         | COMMENTS                                                                                                                                              |
+| --- | ---------- |-----------------------------------------|----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------| 
+| 1   |  Kruize Remote monitoring Functional testsuite | TOTAL - 357, PASSED - 314 / FAILED - 43 | TOTAL - 357, PASSED - 314/ FAILED - 43 | No new regressions seen, existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
+| 2   |  Kruize Local monitoring demo |                                         |                                        |                                                                                                                                                       |
+| 3   |  Fault tolerant test | PASSED                                  | PASSED                                 |                                                                                                                                                       |
+| 4   |  Stress test | PASSED                                  | PASSED                                 |                                                                                                                                                       |
+| 5   |  Scalability test (short run)| PASSED                                  | PASSED                                 | Exps - 5000, Results - 72000, execution time - 4 hrs 38 mins                                                                                          |
+| 6   |  Kruize remote monitoring demo | PASSED                                  | PASSED                                 | Tested manually                                                                                                                                       |
 
 ---
 
