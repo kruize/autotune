@@ -26,10 +26,7 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.google.gson.*;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,9 +39,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.sql.Timestamp;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -91,7 +87,7 @@ public class UpdateRecommendations extends HttpServlet {
         String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
         Timestamp interval_end_time;
         Timestamp interval_start_time = null;
-        if (KruizeDeploymentInfo.logAllHttpReqAndResp)
+        if (KruizeDeploymentInfo.log_http_req_resp)
             LOGGER.info("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
         try {
             // create recommendation engine object
@@ -104,21 +100,28 @@ public class UpdateRecommendations extends HttpServlet {
                     LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
                     interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
                             intervalEndTimeStr);
+                    SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
+                    sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+                    LOGGER.info("Update Recommendation API success response, experiment_name: {} and interval_end_time : {}",
+                            experiment_name, sdf.format(interval_end_time));
                     sendSuccessResponse(response, kruizeObject, interval_end_time);
                     statusValue = "success";
                 } else {
                     LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
+                    LOGGER.error("UpdateRecommendations API failure response, experiment_name: {} and intervalEndTimeStr : {}",
+                            experiment_name, intervalEndTimeStr);
                     sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject.getValidation_data().getMessage());
                 }
             } else {
-                LOGGER.error("Validation failed: {}", validationMessage);
+                LOGGER.error("Validation failed: {} for experiment_name: {} and interval_end_time: {}", validationMessage,
+                        experiment_name, intervalEndTimeStr);
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage);
             }
 
         } catch (Exception e) {
             LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
             LOGGER.error("UpdateRecommendations API, experiment_name: {},  intervalEndTimeStr: {}", experiment_name, intervalEndTimeStr);
-            LOGGER.error("Exception: " + e.getMessage());
+            LOGGER.error("Exception: {}", e.getMessage());
             e.printStackTrace();
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
@@ -170,8 +173,8 @@ public class UpdateRecommendations extends HttpServlet {
                     .create();
             gsonStr = gsonObj.toJson(recommendationList);
         }
-        if (KruizeDeploymentInfo.logAllHttpReqAndResp)
-            LOGGER.info("Update Recommendation API response: {}", recommendationList);
+        if (KruizeDeploymentInfo.log_http_req_resp)
+            LOGGER.info("Update Recommendation API response: {}", new Gson().toJson(JsonParser.parseString(gsonStr)));
         response.getWriter().println(gsonStr);
         response.getWriter().close();
     }
