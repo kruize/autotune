@@ -65,7 +65,7 @@ Enabled logging of success and failures for APIs
 | 1   | Kruize remote monitoring tests | Functional test suite | Passed  | |
 | 2   | Kruize fault tolerant tests | Functional test suite | Passed  | |
 | 3   | Kruize stress tests | Functional test suite | Passed  | |
-| 4   | Short Scalability test         | 5k exps / 15 days | Passed  | Time Taken: 04H:40M on Scalelab
+| 4   | Short Scalability test         | 5k exps / 15 days | Passed  | Time Taken: 03H:51M on Scalelab
 
 ---
 
