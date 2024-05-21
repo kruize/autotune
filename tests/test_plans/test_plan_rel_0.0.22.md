@@ -81,10 +81,10 @@ Short Scalability run
 
 Kruize Release | Exps / Results / Recos | Execution time        | Latency (Max/ Avg) in seconds |                      |              | Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB)
 -- |------------------------|-----------------------|-------------------------------|----------------------|--------------|----------------------|----------------| --
-  |   |                        | UpdateRecommendations | UpdateResults                 | LoadResultsByExpName |              |                      |  
+  |   |     |                   | UpdateRecommendations | UpdateResults                 | LoadResultsByExpName |              |                      |  
 0.0.21_mvp | 5K / 72L / 3L          | 3h 50 mins            | 0.62 / 0.39                   | 0.25 / 0.17          | 0.34 / 0.25  | 21417.14             | 6.04           | 35.37
-0.0.21_mvp (With Box plots) | 5K / 72L / 3L          | 3h 53 mins            | 0.63 / 0.39                   | 0.25 / 0.17          | 0.35 / 0. 25 | 21868.5              | 4.4            | 40.71
-0.0.22_mvp | 5K / 72L / 3L                       | 4h 38 mins            | 0.98 / 0.53                   | 0.09 / 0.08          | 0.62 / 0.43  | 21753                | 6.83           | 16.77
+0.0.21_mvp (With Box plots) | 5K / 72L / 3L          | 3h 53 mins            | 0.63 / 0.39                   | 0.25 / 0.17          | 0.35 / 0.25 | 21868.5              | 4.4            | 40.71
+0.0.22_mvp | 5K / 72L / 3L                       | 3h 51 mins            | 0.62 / 0.39                   | 0.24 / 0.17          | 0.34 / 0.25  | 21756.32                | 7.12           | 33.64
 
 ----
 ## RELEASE TESTING
