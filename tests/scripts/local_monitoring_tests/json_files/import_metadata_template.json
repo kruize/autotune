@@ -1,0 +1,4 @@
+{
+  "version": "{{version}}",
+  "datasource_name": "{{datasource_name}}"
+}

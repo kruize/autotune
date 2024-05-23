@@ -32,7 +32,7 @@ data:
       "monitoringendpoint": "prometheus-k8s",
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
-      "plots": "false",
+      "plots": "true",
       "local": "false",
       "logAllHttpReqAndResp": "true",
       "hibernate": {
@@ -46,13 +46,15 @@ data:
         "showsql": "false",
         "timezone": "UTC"
       },
-      "cloudwatch": {
-        "accessKeyId": "",
-        "logGroup": "kruize-logs",
-        "logStream": "kruize-stream",
-        "region": "",
-        "secretAccessKey": "",
-        "logLevel": "INFO"
+      "logging" : {
+        "cloudwatch": {
+          "accessKeyId": "",
+          "logGroup": "kruize-logs",
+          "logStream": "kruize-stream",
+          "region": "",
+          "secretAccessKey": "",
+          "logLevel": "INFO"
+        }
       }
     }
 ---
@@ -76,7 +78,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.21_rm
+          image: kruize/autotune_operator:0.0.22_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume

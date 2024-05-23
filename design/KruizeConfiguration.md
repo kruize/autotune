@@ -93,27 +93,27 @@ The following environment variables are set using the `kubectl apply` command wi
 
 ## CloudWatch Configuration
 
-- **accessKeyId**
+- **logging_cloudwatch_accessKeyId**
   - Description: AWS account's access key ID. If not provided, CloudWatch logging is disabled.
   - Value: ""
 
-- **secretAccessKey**
+- **logging_cloudwatch_secretAccessKey**
   - Description: AWS account's secret access key. If not provided, CloudWatch logging is disabled.
   - Value: ""
 
-- **region**
+- **logging_cloudwatch_region**
   - Description: AWS region where CloudWatch logs are stored. If not provided, CloudWatch logging is disabled.
   - Value: ""
 
-- **logGroup**
+- **logging_cloudwatch_logGroup**
   - Description: Name of the CloudWatch log group. Defaults to "kruize-logs".
   - Value: "kruize-logs"
 
-- **logStream**
+- **logging_cloudwatch_logStream**
   - Description: Name of the CloudWatch log stream within the log group. Defaults to "kruize-stream".
   - Value: "kruize-stream"
 
-- **logLevel**
+- **logging_cloudwatch_logLevel**
   - Description:  The minimum level of log events to send to CloudWatch. Defaults to "INFO".
   - Value: "INFO"
 

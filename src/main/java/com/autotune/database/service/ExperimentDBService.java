@@ -29,13 +29,16 @@ import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.*;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -229,12 +232,22 @@ public class ExperimentDBService {
         }
         // TODO: Log the list of invalid experiments and return the error instead of bailing out completely
         if (!experimentsMap.containsKey(kruizeObject.getExperimentName())) {
-            LOGGER.error("Trying to locate Recommendation for non existent experiment: "+kruizeObject.getExperimentName());
+            LOGGER.error("Trying to locate Recommendation for non existent experiment: " + kruizeObject.getExperimentName());
             return validationOutputData; // todo: need to set the correct message
         }
         KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
                 convertKruizeObjectTORecommendation(kruizeObject, interval_end_time);
         if (null != kr) {
+            if (KruizeDeploymentInfo.local == true) {   //todo this code will be removed
+                LocalDateTime localDateTime = kr.getInterval_end_time().toLocalDateTime();
+                ExperimentDAO dao = new ExperimentDAOImpl();
+                int dayOfTheMonth = localDateTime.getDayOfMonth();
+                try {
+                    dao.addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+                } catch (Exception e) {
+                    LOGGER.warn(e.getMessage());
+                }
+            }
             ValidationOutputData tempValObj = new ExperimentDAOImpl().addRecommendationToDB(kr);
             if (!tempValObj.isSuccess()) {
                 validationOutputData.setSuccess(false);
@@ -379,6 +392,7 @@ public class ExperimentDBService {
 
     /**
      * adds datasource to database table
+     *
      * @param dataSourceInfo DataSourceInfo object
      * @return ValidationOutputData object
      */
@@ -395,6 +409,7 @@ public class ExperimentDBService {
 
     /**
      * fetches datasource with specified name from database
+     *
      * @param name String containing the name of datasource
      * @return DataSourceInfo object containing the details
      */
@@ -413,6 +428,7 @@ public class ExperimentDBService {
 
     /**
      * fetches all available datasource from database
+     *
      * @return List containing DataSourceInfo objects
      */
     public List<DataSourceInfo> loadAllDataSources() throws Exception {
@@ -427,6 +443,7 @@ public class ExperimentDBService {
 
     /**
      * adds metadata to database table
+     *
      * @param dataSourceMetadataInfo DataSourceMetadataInfo object
      * @return
      */
@@ -434,7 +451,7 @@ public class ExperimentDBService {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
             List<KruizeDSMetadataEntry> kruizeMetadataList = DBHelpers.Converters.KruizeObjectConverters.convertDataSourceMetadataToMetadataObj(dataSourceMetadataInfo);
-            for(KruizeDSMetadataEntry kruizeMetadata : kruizeMetadataList) {
+            for (KruizeDSMetadataEntry kruizeMetadata : kruizeMetadataList) {
                 validationOutputData = this.experimentDAO.addMetadataToDB(kruizeMetadata);
             }
         } catch (Exception e) {
@@ -445,6 +462,7 @@ public class ExperimentDBService {
 
     /**
      * fetches metadata of specified datasource name from database
+     *
      * @param dataSourceName String containing the name of datasource
      * @param verbose
      * @return DataSourceMetadataInfo object containing metadata
@@ -469,6 +487,7 @@ public class ExperimentDBService {
 
     /**
      * fetches metadata of specified datasource and cluster name from database
+     *
      * @param dataSourceName String containing the name of datasource
      * @param clusterName    String containing the cluster name
      * @param verbose
@@ -494,9 +513,10 @@ public class ExperimentDBService {
 
     /**
      * fetches metadata of specified datasource,cluster and namespace from database
-     * @param dataSourceName    String containing the name of datasource
-     * @param clusterName       String containing the name of datasource
-     * @param namespace         String containing the name of datasource
+     *
+     * @param dataSourceName String containing the name of datasource
+     * @param clusterName    String containing the name of datasource
+     * @param namespace      String containing the name of datasource
      * @return DataSourceMetadataInfo object containing metadata
      * @throws Exception
      */

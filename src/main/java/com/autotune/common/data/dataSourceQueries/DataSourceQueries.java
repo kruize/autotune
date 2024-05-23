@@ -17,7 +17,8 @@ public class DataSourceQueries {
         MEMORY_USAGE("%s by(container, namespace) (%s_over_time(container_memory_working_set_bytes{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\" }[%sm]))"),
         MEMORY_RSS("%s by(container, namespace) (%s_over_time(container_memory_rss{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\"}[%sm]))"),
         MEMORY_LIMIT("%s by(container,namespace) (kube_pod_container_resource_limits{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='memory', unit='byte', namespace=\"%s\",container=\"%s\" } * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase='Running'}))"),
-        MEMORY_REQUEST("%s by(container,namespace) (kube_pod_container_resource_requests{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='memory', unit='byte',namespace=\"%s\",container=\"%s\"} * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase='Running'}))");
+        MEMORY_REQUEST("%s by(container,namespace) (kube_pod_container_resource_requests{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='memory', unit='byte',namespace=\"%s\",container=\"%s\"} * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase='Running'}))"),
+        MAX_DATE("max(container_cpu_usage_seconds_total{container=\"%s\",namespace=\"%s\"} > 0)");
         private final String query;
 
         PromQLQuery(String query) {
