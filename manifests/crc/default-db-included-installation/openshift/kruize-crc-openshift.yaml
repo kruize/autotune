@@ -169,17 +169,6 @@ spec:
           volumeMounts:
             - name: postgres-storage
               mountPath: /var/lib/pgsql/data
-          readinessProbe:
-            exec:
-              command:
-                - sh
-                - -c
-                - exec pg_isready -U admin -d kruizeDB
-            initialDelaySeconds: 10
-            periodSeconds: 5
-            timeoutSeconds: 5
-            successThreshold: 1
-            failureThreshold: 3
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
@@ -248,7 +237,8 @@ spec:
           ports:
             - name: kruize-port
               containerPort: 8080
-          readinessProbe:
+          startupProbe:
+            # checks for the postgres connection before starting kruize pod
             exec:
               command: [ "sh", "-c", "pg_isready -h postgres-service -U admin" ]
             initialDelaySeconds: 10

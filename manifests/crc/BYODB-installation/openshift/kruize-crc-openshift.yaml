@@ -104,6 +104,14 @@ spec:
           ports:
             - name: kruize-port
               containerPort: 8080
+          startupProbe:
+            # checks for the postgres connection before starting kruize pod
+            exec:
+              command: [ "sh", "-c", "pg_isready -h postgres-service -U admin" ]
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 6
       #          livenessProbe:
       #            exec:
       #              command:
