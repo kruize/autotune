@@ -50,6 +50,9 @@ COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available"
 PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available"
 CONTAINER_AND_EXPERIMENT_NAME = " for container : %s for experiment: %s.]"
 LIST_DATASOURCES_ERROR_MSG = "Given datasource name - \" %s \" either does not exist or is not valid"
+LIST_METADATA_DATASOURCE_NAME_ERROR_MSG = "Metadata for a given datasource name - \" %s \" either does not exist or is not valid"
+LIST_METADATA_ERROR_MSG = ("Metadata for a given datasource - \" %s \", cluster name - \" %s \", namespace - \"%s \" "
+                           "either does not exist or is not valid")
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"

@@ -331,3 +331,35 @@ def delete_metadata(input_json_file, invalid_header=False):
     print(response)
     print("Response status code = ", response.status_code)
     return response
+
+
+# Description: This function obtains the metadata from Kruize Autotune using GET dsmetadata API
+# Input Parameters: datasource name, cluster name, namespace, verbose - flag indicating granularity of data to be listed
+def list_metadata(datasource=None, cluster_name=None, namespace=None, verbose=None):
+    print("\nListing the metadata...")
+
+    query_params = {}
+
+    if datasource is not None:
+        query_params['datasource'] = datasource
+        if cluster_name is not None:
+            query_params['cluster_name'] = cluster_name
+        if namespace is not None:
+            query_params['namespace'] = namespace
+        if verbose is not None:
+            query_params['verbose'] = verbose
+
+    query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
+
+    url = URL + "/dsmetadata"
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
+    print("PARAMS = ", query_params)
+    response = requests.get(url)
+
+    print("Response status code = ", response.status_code)
+    print("\n************************************************************")
+    print(response.text)
+    print("\n************************************************************")
+    return response
