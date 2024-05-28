@@ -438,3 +438,38 @@ def test_list_metadata_datasource_cluster_name_and_namespace(cluster_type):
 
     response = delete_metadata(input_json_file)
     print("delete metadata = ", response.status_code)
+
+
+@pytest.mark.negative
+def test_list_metadata_after_deleting_metadata(cluster_type):
+    """
+    Test Description: This test validates GET /dsmetadata after deleting imported metadata
+    """
+    input_json_file = "../json_files/import_metadata.json"
+
+    form_kruize_url(cluster_type)
+
+    response = delete_metadata(input_json_file)
+    print("delete metadata = ", response.status_code)
+
+    # Import metadata using the specified json
+    response = import_metadata(input_json_file)
+    metadata_json = response.json()
+
+    # Validate the json against the json schema
+    errorMsg = validate_import_metadata_json(metadata_json, import_metadata_json_schema)
+    assert errorMsg == ""
+
+    response = delete_metadata(input_json_file)
+    print("delete metadata = ", response.status_code)
+
+    json_data = json.load(open(input_json_file))
+    datasource = json_data['datasource_name']
+    cluster_name = "null"
+    namespace = "null"
+
+    response = list_metadata(datasource=datasource)
+
+    list_metadata_json = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert list_metadata_json['message'] == LIST_METADATA_ERROR_MSG % (datasource, cluster_name, namespace)
