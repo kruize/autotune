@@ -860,3 +860,29 @@ def validate_recommendation_for_cpu_mem_optimised(recommendations: dict, current
     assert recommendations["recommendation_engines"][profile]["config"]["limits"]["cpu"]["amount"] == current["limits"]["cpu"]["amount"]
     assert recommendations["recommendation_engines"][profile]["config"]["requests"]["memory"]["amount"] == current["requests"]["memory"]["amount"]
     assert recommendations["recommendation_engines"][profile]["config"]["limits"]["memory"]["amount"] == current["limits"]["memory"]["amount"]
+
+
+def validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=None, namespace=None):
+    datasources = list_metadata_json.get('datasources', {})
+
+    if len(datasources) != 1:
+        return False
+
+    # Loop through the datasources dictionary
+    for key, value in datasources.items():
+        assert import_metadata_json['datasource_name'] == value.get('datasource_name')
+
+        if cluster_name is not None:
+            # Extract clusters from the current datasource
+            clusters = value.get('clusters', {})
+
+            for clusters_key, clusters_value in clusters.items():
+                assert cluster_name == clusters_value.get('cluster_name'), f"Invalid cluster name: {cluster_name}"
+
+                # If namespace is provided, perform namespace validation
+                if namespace is not None:
+                    # Extract namespaces from the current cluster
+                    namespaces = clusters[cluster_name].get('namespaces', {})
+
+                    for namespaces_key, namespaces_value in namespaces.items():
+                        assert namespace == namespaces_value.get('namespace'), f"Invalid namespace: {namespace}"
