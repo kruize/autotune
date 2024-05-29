@@ -22,8 +22,8 @@ public class MetricsConfig {
     public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB;
     public static Timer.Builder timerBAddPerfProfileDB, timerBLoadPerfProfileName, timerBLoadAllPerfProfiles;
     public static PrometheusMeterRegistry meterRegistry;
-    public static Timer timerListDS, timerImportDSMetadata;
-    public static Timer.Builder timerBListDS, timerBImportDSMetadata;
+    public static Timer timerListDS, timerImportDSMetadata,timerListDSMetadata;
+    public static Timer.Builder timerBListDS, timerBImportDSMetadata, timerBListDSMetadata;
     private static MetricsConfig INSTANCE;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
     public String DB_METRIC_DESC = "Time taken for KruizeDB methods";
@@ -55,9 +55,9 @@ public class MetricsConfig {
         timerBLoadAllPerfProfiles = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllPerformanceProfiles");
         timerBBoxPlots = Timer.builder("KruizeMethod").description(METHOD_METRIC_DESC).tag("method", "generatePlots");
 
-        timerBListDS = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "listDataSources").tag("method", "GET");
-        timerBImportDSMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "importDataSourceMetadata").tag("method", "POST");
-        timerBImportDSMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "importDataSourceMetadata").tag("method", "GET");
+        timerBListDS = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "datasources").tag("method", "GET");
+        timerBImportDSMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "dsmetadata").tag("method", "POST");
+        timerBListDSMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "dsmetadata").tag("method", "GET");
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);
         new JvmGcMetrics().bindTo(meterRegistry);

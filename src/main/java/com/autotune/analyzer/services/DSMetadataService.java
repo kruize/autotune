@@ -153,7 +153,7 @@ public class DSMetadataService extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
         String statusValue = "failure";
-        Timer.Sample timerImportDSMetadata = Timer.start(MetricsConfig.meterRegistry());
+        Timer.Sample timerListDSMetadata = Timer.start(MetricsConfig.meterRegistry());
         response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
@@ -189,12 +189,41 @@ public class DSMetadataService extends HttpServlet {
                                 if (null == clusterName) {
                                     dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, internalVerbose);
 
+                                    if (null == dataSourceMetadata) {
+                                        error = true;
+                                        sendErrorResponse(
+                                                response,
+                                                new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                                                HttpServletResponse.SC_BAD_REQUEST,
+                                                String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG, dataSourceName)
+                                        );
+                                    }
                                 } else if (null != clusterName){
                                     if (null == namespace) {
                                         dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByClusterName(dataSourceName, clusterName, internalVerbose);
+
+                                        if (null == dataSourceMetadata) {
+                                            error = true;
+                                            sendErrorResponse(
+                                                    response,
+                                                    new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_CLUSTER_NAME_METADATA_EXCPTN),
+                                                    HttpServletResponse.SC_BAD_REQUEST,
+                                                    String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_CLUSTER_NAME_METADATA_MSG, dataSourceName, clusterName)
+                                            );
+                                        }
                                     } else {
                                         internalVerbose = "true";
                                         dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByNamespace(dataSourceName, clusterName, namespace);
+
+                                        if (null == dataSourceMetadata) {
+                                            error = true;
+                                            sendErrorResponse(
+                                                    response,
+                                                    new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
+                                                    HttpServletResponse.SC_BAD_REQUEST,
+                                                    String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_MSG, dataSourceName, clusterName, namespace)
+                                            );
+                                        }
                                     }
                                 }
 
@@ -204,17 +233,6 @@ public class DSMetadataService extends HttpServlet {
                             } catch (Exception e) {
                                 LOGGER.error("Loading saved Datasource metadata {} failed: {} ", dataSourceName, e.getMessage());
                             }
-
-                            if (!dataSourceMetadataMap.containsKey(dataSourceName)) {
-                                error = true;
-                                sendErrorResponse(
-                                        response,
-                                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
-                                        HttpServletResponse.SC_BAD_REQUEST,
-                                        String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_MSG, dataSourceName, clusterName, namespace)
-                                );
-                            }
-
                         } else {
                             error = true;
                             sendErrorResponse(
@@ -255,10 +273,14 @@ public class DSMetadataService extends HttpServlet {
                         String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM, invalidParams)
                 );
             }
+        } catch (Exception e) {
+            LOGGER.error("Exception: " + e.getMessage());
+            e.printStackTrace();
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
-            if (null != timerImportDSMetadata) {
-                MetricsConfig.timerImportDSMetadata = MetricsConfig.timerBImportDSMetadata.tag("status", statusValue).register(MetricsConfig.meterRegistry());
-                timerImportDSMetadata.stop(MetricsConfig.timerImportDSMetadata);
+            if (null != timerListDSMetadata) {
+                MetricsConfig.timerListDSMetadata = MetricsConfig.timerBListDSMetadata.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerListDSMetadata.stop(MetricsConfig.timerListDSMetadata);
             }
         }
     }
