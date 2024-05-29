@@ -21,6 +21,27 @@ Here are the test scenarios:
 - Test with invalid values such as blank, null or an invalid value for various keys in the dsmetadata input request json
 - Validate error messages when the mandatory fields are missing
 
+### **List Metadata API tests**
+
+Here are the test scenarios:
+
+- List dsmetadata specifying a valid datasource
+- List dsmetadata for a datasource with parameters by specifying the following parameters:
+  -   /dsmetadata?datasource=<datasource_name>&verbose=false
+  -   /dsmetadata?datasource=<datasource_name>&verbose=true
+  -   /dsmetadata?datasource=<datasource_name>&cluster_name=<cluster_name>&verbose=false
+  -   /dsmetadata?datasource=<datasource_name>&cluster_name=<cluster_name>&verbose=true
+  -   /dsmetadata?datasource=<datasource_name>&cluster_name=<cluster_name>&namespace=<namespace_name>&verbose=false
+  -   /dsmetadata?datasource=<datasource_name>&cluster_name=<cluster_name>&namespace=<namespace_name>&verbose=true
+- List dsmetadata with invalid parameter values for datasource, cluster_name and namespace
+  -   Non-existing datasource
+  -   Non-existing cluster_name
+  -   Non-existing namespace
+- List dsmetadata without specifying any parameters
+- List dsmetadata after creating a datasource but without importing metadata
+- List dsmetadata with datasource and namespace but without cluster_name
+- List the dsmetadata after deleting imported metadata
+
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
 - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
 - Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md)
