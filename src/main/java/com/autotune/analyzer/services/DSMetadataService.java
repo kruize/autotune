@@ -69,9 +69,14 @@ public class DSMetadataService extends HttpServlet {
             request.setCharacterEncoding(CHARACTER_ENCODING);
 
             inputData = request.getReader().lines().collect(Collectors.joining());
+            String refresh = request.getParameter(AnalyzerConstants.ServiceConstants.REFRESH);
 
             if (null == inputData || inputData.isEmpty()) {
                 throw new Exception("Request input data cannot be null or empty");
+            }
+
+            if (refresh == null || refresh.isEmpty()) {
+                refresh = "false";
             }
 
             DSMetadataAPIObject metadataAPIObject = new Gson().fromJson(inputData, DSMetadataAPIObject.class);
@@ -91,6 +96,25 @@ public class DSMetadataService extends HttpServlet {
 
             DataSourceInfo datasource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
             if(null != datasource) {
+                if (refresh.equals("true")) {
+                    DataSourceMetadataInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "false");
+                    if (null != dataSourceMetadata) {
+                        ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeDSMetadataEntryByName(dataSourceName);
+
+                        if (validationOutputData.isSuccess()) {
+                            new DataSourceManager().deleteMetadataFromDataSource(datasource);
+                        } else {
+                            String errorMessage = validationOutputData.getMessage();
+                            sendErrorResponse(
+                                    response,
+                                    new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
+                                    HttpServletResponse.SC_BAD_REQUEST,
+                                    errorMessage
+                            );
+                        }
+                    } //TODO - check if refresh without importing metadata is a valid request
+                }
+
                 new DataSourceManager().importMetadataFromDataSource(datasource);
                 DataSourceMetadataInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "false");
                 dataSourceMetadataMap.put(dataSourceName,dataSourceMetadata);
