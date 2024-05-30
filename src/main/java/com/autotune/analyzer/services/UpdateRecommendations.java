@@ -187,6 +187,7 @@ public class UpdateRecommendations extends HttpServlet {
             LOGGER.error(e.toString());
             if (null == errorMsg) errorMsg = e.getMessage();
         }
+        LOGGER.error("Update Recommendation failed due to {}", errorMsg);
         response.sendError(httpStatusCode, errorMsg);
     }
 }
