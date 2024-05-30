@@ -76,6 +76,18 @@ spec:
         app: kruize
         name: kruize
     spec:
+      initContainers:
+        - name: wait-for-postgres
+          image: quay.io/kruizehub/postgres:15.2 # Use the same Postgres version as the Postgres deployment
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h postgres-service -p 5432 -U admin; do
+                echo "Waiting for Postgres to be ready..."
+                sleep 2
+              done
       containers:
         - name: kruize
           image: kruize/autotune_operator:0.0.22_rm
@@ -97,14 +109,6 @@ spec:
           ports:
             - name: kruize-port
               containerPort: 8080
-          startupProbe:
-            # checks for the postgres connection before starting kruize pod
-            exec:
-              command: [ "sh", "-c", "pg_isready -h postgres-service -U admin" ]
-            initialDelaySeconds: 10
-            periodSeconds: 10
-            timeoutSeconds: 5
-            failureThreshold: 6
       #          livenessProbe:
       #            exec:
       #              command:
