@@ -132,9 +132,7 @@ def test_list_metadata_invalid_datasource(test_name, expected_status_code, datas
 
     list_metadata_json = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    cluster_name = "null"
-    namespace = "null"
-    assert list_metadata_json['message'] == LIST_METADATA_ERROR_MSG % (datasource, cluster_name, namespace)
+    assert list_metadata_json['message'] == LIST_METADATA_DATASOURCE_NAME_ERROR_MSG % datasource
 
 
     response = delete_metadata(input_json_file)
@@ -174,12 +172,12 @@ def test_list_metadata_datasource_invalid_cluster_name(test_name, expected_statu
 
     json_data = json.load(open(input_json_file))
     datasource = json_data['datasource_name']
-    namespace = "null"
+
     response = list_metadata(datasource=datasource, cluster_name=cluster_name)
 
     list_metadata_json = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    assert list_metadata_json['message'] == LIST_METADATA_ERROR_MSG % (datasource, cluster_name, namespace)
+    assert list_metadata_json['message'] == LIST_METADATA_DATASOURCE_NAME_CLUSTER_NAME_ERROR_MSG % (datasource, cluster_name)
 
 
     response = delete_metadata(input_json_file)
@@ -235,7 +233,8 @@ def test_list_metadata_datasource_cluster_name_invalid_namespace(test_name, expe
 @pytest.mark.negative
 def test_list_metadata_without_import_action(cluster_type):
     """
-    Test Description: This test validates GET /dsmetadata without importing metadata
+    Test Description: This test validates GET /dsmetadata without importing metadata - resulting in an error on
+    trying to list metadata as there is no metadata imported
     """
     input_json_file = "../json_files/import_metadata.json"
 
@@ -246,14 +245,12 @@ def test_list_metadata_without_import_action(cluster_type):
 
     json_data = json.load(open(input_json_file))
     datasource = json_data['datasource_name']
-    cluster_name = "null"
-    namespace = "null"
 
     response = list_metadata(datasource=datasource)
 
     list_metadata_json = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    assert list_metadata_json['message'] == LIST_METADATA_ERROR_MSG % (datasource, cluster_name, namespace)
+    assert list_metadata_json['message'] == LIST_METADATA_DATASOURCE_NAME_ERROR_MSG % datasource
 
 
 @pytest.mark.sanity
@@ -278,7 +275,10 @@ def test_list_metadata_without_cluster_name(cluster_type):
 
     json_data = json.load(open(input_json_file))
     datasource = json_data['datasource_name']
-    namespace = "monitoring"
+    if cluster_type == "minikube":
+        namespace = "monitoring"
+    elif cluster_type == "openshift":
+        namespace = "openshift-monitoring"
 
     response = list_metadata(datasource=datasource, namespace=namespace)
 
@@ -421,7 +421,11 @@ def test_list_metadata_datasource_cluster_name_and_namespace(cluster_type):
     datasource = json_data['datasource_name']
     # Currently only default cluster is supported by Kruize
     cluster_name = "default"
-    namespace = "monitoring"
+
+    if cluster_type == "minikube":
+        namespace = "monitoring"
+    elif cluster_type == "openshift":
+        namespace = "openshift-monitoring"
 
     response = list_metadata(datasource=datasource, cluster_name=cluster_name, namespace=namespace)
 
@@ -465,11 +469,9 @@ def test_list_metadata_after_deleting_metadata(cluster_type):
 
     json_data = json.load(open(input_json_file))
     datasource = json_data['datasource_name']
-    cluster_name = "null"
-    namespace = "null"
 
     response = list_metadata(datasource=datasource)
 
     list_metadata_json = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    assert list_metadata_json['message'] == LIST_METADATA_ERROR_MSG % (datasource, cluster_name, namespace)
+    assert list_metadata_json['message'] == LIST_METADATA_DATASOURCE_NAME_ERROR_MSG % datasource
