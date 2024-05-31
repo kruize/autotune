@@ -20,6 +20,7 @@ import com.autotune.analyzer.serviceObjects.DSMetadataAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
@@ -38,10 +39,9 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Set;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -75,36 +75,35 @@ public class DSMetadataService extends HttpServlet {
 
             DSMetadataAPIObject metadataAPIObject = new Gson().fromJson(inputData, DSMetadataAPIObject.class);
 
-            metadataAPIObject.validateInputFields();
+            ValidationOutputData validationOutputData = validateMandatoryFields(metadataAPIObject);
+            if (validationOutputData.isSuccess()) {
 
-            String dataSourceName = metadataAPIObject.getDataSourceName();
+                String dataSourceName = metadataAPIObject.getDataSourceName();
 
-            if (null == dataSourceName || dataSourceName.isEmpty()) {
-                sendErrorResponse(
-                        inputData,
-                        response,
-                        null,
-                        HttpServletResponse.SC_BAD_REQUEST,
-                        AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_NAME_MANDATORY);
-            }
+                DataSourceInfo datasource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
+                if (null != datasource) {
+                    new DataSourceManager().importMetadataFromDataSource(datasource);
+                    DataSourceMetadataInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "false");
+                    dataSourceMetadataMap.put(dataSourceName, dataSourceMetadata);
+                }
 
-            DataSourceInfo datasource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
-            if(null != datasource) {
-                new DataSourceManager().importMetadataFromDataSource(datasource);
-                DataSourceMetadataInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "false");
-                dataSourceMetadataMap.put(dataSourceName,dataSourceMetadata);
-            }
-
-            if (dataSourceMetadataMap.isEmpty() || !dataSourceMetadataMap.containsKey(dataSourceName)) {
-                sendErrorResponse(
-                        inputData,
-                        response,
-                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
-                        HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_IMPORT_ERROR_MSG, dataSourceName)
-                );
+                if (dataSourceMetadataMap.isEmpty() || !dataSourceMetadataMap.containsKey(dataSourceName)) {
+                    sendErrorResponse(
+                            inputData,
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_IMPORT_ERROR_MSG, dataSourceName)
+                    );
+                } else {
+                    sendSuccessResponse(response, dataSourceMetadataMap.get(dataSourceName));
+                }
             } else {
-                sendSuccessResponse(response, dataSourceMetadataMap.get(dataSourceName));
+                sendErrorResponse(
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_QUERY_PARAM_EXCPTN),
+                        validationOutputData.getErrorCode(),
+                        validationOutputData.getMessage());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -117,6 +116,42 @@ public class DSMetadataService extends HttpServlet {
             }
         }
 
+    }
+
+    private List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
+            AnalyzerConstants.VERSION,
+            AnalyzerConstants.DATASOURCE_NAME
+    ));
+
+    public ValidationOutputData validateMandatoryFields(DSMetadataAPIObject metadataAPIObject) {
+        List<String> missingMandatoryFields = new ArrayList<>();
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+
+        String errorMsg = "";
+        mandatoryFields.forEach(
+                mField -> {
+                    String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
+                    try {
+                        Method getNameMethod = metadataAPIObject.getClass().getMethod(methodName);
+                        if (getNameMethod.invoke(metadataAPIObject) == null) {
+                            missingMandatoryFields.add(mField);
+                        }
+                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                        LOGGER.error("Method name for {} does not exist and the error is {}", mField, e.getMessage());
+                    }
+                }
+        );
+
+        if(!missingMandatoryFields.isEmpty()) {
+            errorMsg = errorMsg.concat(String.format("Mandatory parameters missing %s ", missingMandatoryFields));
+            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+            validationOutputData.setSuccess(false);
+            validationOutputData.setMessage(errorMsg);
+        } else {
+            validationOutputData.setSuccess(true);
+        }
+
+        return validationOutputData;
     }
 
     private void sendSuccessResponse(HttpServletResponse response, DataSourceMetadataInfo dataSourceMetadata) throws IOException {

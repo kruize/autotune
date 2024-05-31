@@ -190,6 +190,7 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
             public static final String INVALID_DATASOURCE_NAME_CLUSTER_NAME_METADATA_EXCPTN = "Invalid Datasource name and Cluster name";
             public static final String INVALID_DATASOURCE_NAME_CLUSTER_NAME_METADATA_MSG = "Metadata for a given datasource name - %s, cluster_name - %s either does not exist or is not valid";
+            public static final String MISSING_QUERY_PARAM_EXCPTN = "Missing mandatory input param value(s)";
         }
     }
 

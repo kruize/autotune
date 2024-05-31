@@ -85,7 +85,8 @@ public class AnalyzerConstants {
     public static final String MIGRATIONS = "migrations";
     public static final String ROS_DDL_SQL = "kruize_experiments_ddl.sql";
     public static final String KRUIZE_LOCAL_DDL_SQL = "kruize_local_ddl.sql";
-
+    public static final String VERSION = "version";
+    public static final String DATASOURCE_NAME = "dataSourceName";
 
     private AnalyzerConstants() {
     }

@@ -35,11 +35,5 @@ public class DSMetadataAPIObject {
     public String getDataSourceName() {
         return dataSourceName;
     }
-    public boolean validateInputFields() {
-        if (version == null || version.isEmpty() || dataSourceName == null || dataSourceName.isEmpty()) {
-            throw new IllegalArgumentException("Invalid input fields: version and datasource_name cannot be null or empty");
-        }
-        return true;
-    }
 
 }
