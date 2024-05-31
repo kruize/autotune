@@ -191,7 +191,7 @@ public class RecommendationEngine {
                         MISSING_EXPERIMENT_NAME, experimentName), HttpServletResponse.SC_BAD_REQUEST));
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to load experiment from DB: {}", e.getMessage());
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.LOAD_EXPERIMENT_FAILURE, e.getMessage()));
             kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
         }
         return kruizeObject;
@@ -270,7 +270,7 @@ public class RecommendationEngine {
             // get the datasource
             // TODO: If no data source given use KruizeDeploymentInfo.monitoring_agent / default datasource
             String dataSource = kruizeObject.getDataSource();
-            LOGGER.debug("Experiment: {},  Datasource: {}", kruizeObject.getExperimentName(), dataSource);
+            LOGGER.debug(String.format(KruizeConstants.APIMessages.EXPERIMENT_DATASOURCE, kruizeObject.getExperimentName(), dataSource));
 
             int maxDay = Terms.getMaxDays(terms);
             if (intervalEndTimeStr != null) {  //TODO remove this check and avoid same if across this flow
@@ -283,7 +283,7 @@ public class RecommendationEngine {
                     throw new Exception(errorMsg);
                 }
             } catch (Exception e) {
-                LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
+                LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
                 kruizeObject = new KruizeObject();
                 kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_BAD_REQUEST));
                 return kruizeObject;
@@ -295,22 +295,22 @@ public class RecommendationEngine {
                 // store the recommendations in the DB
                 validationOutputData = addRecommendationsToDB(mainKruizeExperimentMAP, kruizeObject);
                 if (!validationOutputData.isSuccess()) {
-                    LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
+                    LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
                     validationOutputData = new ValidationOutputData(false, validationOutputData.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 } else {
-                    LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
+                    LOGGER.debug(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_SUCCESS_COUNT, calCount));
                 }
                 kruizeObject.setValidation_data(validationOutputData);
             } catch (Exception e) {
-                LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
-                LOGGER.error("Failed to create recommendation for experiment: {} and interval_start_time: {} and interval_end_time: {}",
-                        experimentName, interval_start_time, interval_end_time);
+                LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
+                LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_ERROR,
+                        experimentName, interval_start_time, interval_end_time));
                 kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
             }
         } catch (Exception e) {
-            LOGGER.error("Exception occurred while generating recommendations for experiment: {} and interval_end_time: " +
-                    "{} : {}", experimentName, interval_end_time, e.getMessage());
-            LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_EXCEPTION,
+                    experimentName, interval_end_time, e.getMessage()));
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
             kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
         }
         return kruizeObject;
@@ -512,10 +512,10 @@ public class RecommendationEngine {
         for (Map.Entry<String, Terms> termsEntry : kruizeObject.getTerms().entrySet()) {
             String recommendationTerm = termsEntry.getKey();
             Terms terms = termsEntry.getValue();
-            LOGGER.debug("recommendationTerm = {}", recommendationTerm);
+            LOGGER.debug(String.format(KruizeConstants.APIMessages.RECOMMENDATION_TERM, recommendationTerm));
             int duration = termsEntry.getValue().getDays();
             Timestamp monitoringStartTime = Terms.getMonitoringStartTime(monitoringEndTime, duration);
-            LOGGER.debug("monitoringStartTime = {}", monitoringStartTime);
+            LOGGER.debug(String.format(KruizeConstants.APIMessages.MONITORING_START_TIME, monitoringStartTime));
 
             TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
             // Check if there is min data available for the term
@@ -592,15 +592,16 @@ public class RecommendationEngine {
                 if (KruizeDeploymentInfo.plots) {
                     if (null != monitoringStartTime) {
                         Timer.Sample timerBoxPlots = null;
-                        String status = "success";   // TODO avoid this constant at multiple place
+                        String status = KruizeConstants.APIMessages.SUCCESS;   // TODO avoid this constant at multiple place
                         try {
                             timerBoxPlots = Timer.start(MetricsConfig.meterRegistry());
                             mappedRecommendationForTerm.setPlots(new PlotManager(containerData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots());
                         } catch (Exception e) {
-                            status = String.format("Box plots Failed due to - %s", e.getMessage());
+                            status = String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.BOX_PLOTS_FAILURE, e.getMessage());
                         } finally {
                             if (timerBoxPlots != null) {
-                                MetricsConfig.timerBoxPlots = MetricsConfig.timerBBoxPlots.tag("status", status).register(MetricsConfig.meterRegistry());
+                                MetricsConfig.timerBoxPlots = MetricsConfig.timerBBoxPlots.tag(KruizeConstants.DataSourceConstants
+                                        .DataSourceQueryJSONKeys.STATUS, status).register(MetricsConfig.meterRegistry());
                                 timerBoxPlots.stop(MetricsConfig.timerBoxPlots);
                             }
                         }
@@ -631,15 +632,18 @@ public class RecommendationEngine {
         if (null != recommendationSettings) {
             Double threshold = recommendationSettings.getThreshold();
             if (null == threshold) {
-                LOGGER.info("Threshold is not set, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
+                LOGGER.info(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.THRESHOLD_NOT_SET,
+                        DEFAULT_CPU_THRESHOLD, DEFAULT_MEMORY_THRESHOLD));
             } else if (threshold <= 0.0) {
-                LOGGER.error("Given Threshold is invalid, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
+                LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INVALID_THRESHOLD,
+                        DEFAULT_CPU_THRESHOLD, DEFAULT_MEMORY_THRESHOLD));
             } else {
                 cpuThreshold = threshold;
                 memoryThreshold = threshold;
             }
         } else {
-            LOGGER.error("Recommendation Settings are null, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD + " and Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.NULL_RECOMMENDATION_SETTINGS,
+                    DEFAULT_CPU_THRESHOLD, DEFAULT_MEMORY_THRESHOLD));
         }
 
         RecommendationConfigItem currentCPURequest = null;
@@ -729,31 +733,35 @@ public class RecommendationEngine {
      * DO NOT EDIT THIS METHOD UNLESS THERE ARE ANY CHANGES TO BE ADDED IN VALIDATION OR POPULATION MECHANISM
      * EDITING THIS METHOD MIGHT LEAD TO UNEXPECTED OUTCOMES IN RECOMMENDATIONS, PLEASE PROCEED WITH CAUTION
      *
-     * @param termEntry
-     * @param recommendationModel
-     * @param notifications
-     * @param internalMapToPopulate
+     * @param termEntry The entry containing a term key and its associated {@link Terms} object.
+     * @param recommendationModel The model used to map recommendations.
+     * @param notifications A list to which recommendation notifications will be added.
+     * @param internalMapToPopulate The internal map to populate with recommendation configuration items.
+     * @param numPods The number of pods to consider for the recommendation.
+     * @param cpuThreshold The CPU usage threshold for the recommendation.
+     * @param memoryThreshold The memory usage threshold for the recommendation.
+     * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
     private boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
                                            MappedRecommendationForModel recommendationModel,
                                            ArrayList<RecommendationNotification> notifications,
                                            HashMap<String, RecommendationConfigItem> internalMapToPopulate,
                                            int numPods, double cpuThreshold, double memoryThreshold) {
-        // Check for cpu & memory Thresholds (Duplicate check if the caller is generate recommendations)
+        // Check for cpu & memory Thresholds (Duplicate check if the caller is generateRecommendations)
         String recommendationTerm = termEntry.getKey();
         double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
                 NO_OF_MINUTES_PER_HOUR;
         if (cpuThreshold <= 0.0) {
-            LOGGER.error("Given CPU Threshold is invalid, setting Default CPU Threshold : " + DEFAULT_CPU_THRESHOLD);
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INVALID_CPU_THRESHOLD, DEFAULT_CPU_THRESHOLD));
             cpuThreshold = DEFAULT_CPU_THRESHOLD;
         }
         if (memoryThreshold <= 0.0) {
-            LOGGER.error("Given Memory Threshold is invalid, setting Default Memory Threshold : " + DEFAULT_MEMORY_THRESHOLD);
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INVALID_MEMORY_THRESHOLD, DEFAULT_MEMORY_THRESHOLD));
             memoryThreshold = DEFAULT_MEMORY_THRESHOLD;
         }
         // Check for null
         if (null == recommendationTerm) {
-            LOGGER.error("Recommendation term cannot be null");
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.NULL_RECOMMENDATION_TERM);
             return false;
         }
         // Remove whitespaces
@@ -767,25 +775,25 @@ public class RecommendationEngine {
                                 !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)
                 )
         ) {
-            LOGGER.error("Invalid Recommendation Term : {}", recommendationTerm);
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INVALID_RECOMMENDATION_TERM, recommendationTerm));
             return false;
         }
 
         // Check if recommendation is null
         if (null == recommendationModel) {
-            LOGGER.error("Recommendation cannot be null");
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.NULL_RECOMMENDATIONS);
             return false;
         }
 
         // Check if notification is null (Do not check for empty as notifications might not have been populated)
         if (null == notifications) {
-            LOGGER.error("Notifications cannot be null");
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.NULL_NOTIFICATIONS);
             return false;
         }
 
-        // Check if the map is populated with atleast one data point
+        // Check if the map is populated with at least one data point
         if (null == internalMapToPopulate || internalMapToPopulate.isEmpty()) {
-            LOGGER.error("Internal map sent to populate method cannot be null or empty");
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INTERNAL_MAP_EMPTY);
             return false;
         }
 
@@ -1148,7 +1156,7 @@ public class RecommendationEngine {
         // Check for thresholds
         if (isRecommendedCPURequestAvailable) {
             if (isCurrentCPURequestAvailable && currentCpuRequestValue > 0.0 && null != generatedCpuRequest) {
-                double diffCpuRequestPercentage = CommonUtils.getPercentage(generatedCpuRequest.doubleValue(), currentCpuRequestValue);
+                double diffCpuRequestPercentage = CommonUtils.getPercentage(generatedCpuRequest, currentCpuRequestValue);
                 // Check if variation percentage is negative
                 if (diffCpuRequestPercentage < 0.0) {
                     // Convert to positive to check with threshold
@@ -1189,7 +1197,7 @@ public class RecommendationEngine {
 
         if (isRecommendedCPULimitAvailable) {
             if (isCurrentCPULimitAvailable && currentCpuLimitValue > 0.0 && null != generatedCpuLimit) {
-                double diffCPULimitPercentage = CommonUtils.getPercentage(generatedCpuLimit.doubleValue(), currentCpuLimitValue);
+                double diffCPULimitPercentage = CommonUtils.getPercentage(generatedCpuLimit, currentCpuLimitValue);
                 // Check if variation percentage is negative
                 if (diffCPULimitPercentage < 0.0) {
                     // Convert to positive to check with threshold
@@ -1229,7 +1237,7 @@ public class RecommendationEngine {
 
         if (isRecommendedMemoryRequestAvailable) {
             if (isCurrentMemoryRequestAvailable && currentMemRequestValue > 0.0 && null != generatedMemRequest) {
-                double diffMemRequestPercentage = CommonUtils.getPercentage(generatedMemRequest.doubleValue(), currentMemRequestValue);
+                double diffMemRequestPercentage = CommonUtils.getPercentage(generatedMemRequest, currentMemRequestValue);
                 // Check if variation percentage is negative
                 if (diffMemRequestPercentage < 0.0) {
                     // Convert to positive to check with threshold
@@ -1269,7 +1277,7 @@ public class RecommendationEngine {
 
         if (isRecommendedMemoryLimitAvailable) {
             if (isCurrentMemoryLimitAvailable && currentMemLimitValue > 0.0 && null != generatedMemLimit) {
-                double diffMemLimitPercentage = CommonUtils.getPercentage(generatedMemLimit.doubleValue(), currentMemLimitValue);
+                double diffMemLimitPercentage = CommonUtils.getPercentage(generatedMemLimit, currentMemLimitValue);
                 // Check if variation percentage is negative
                 if (diffMemLimitPercentage < 0.0) {
                     // Convert to positive to check with threshold
@@ -1400,7 +1408,7 @@ public class RecommendationEngine {
                     return errorMsg;
                 }
             } catch (Exception e) {
-                LOGGER.error("Failed to fetch the results from the DB: {}", e.getMessage());
+                LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.FETCHING_RESULTS_FAILED, e.getMessage()));
             }
         } else if (kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
             // get data from the provided datasource in case of local monitoring
@@ -1447,19 +1455,19 @@ public class RecommendationEngine {
                     ContainerData containerData = entry.getValue();
                     String containerName = containerData.getContainer_name();
                     if (null == interval_end_time) {
-                        LOGGER.info("Determine the date of the last activity for the container based on its usage. ");
+                        LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
                         String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
                                 dataSourceInfo.getUrl(),
                                 URLEncoder.encode(String.format(PromQLDataSourceQueries.MAX_DATE, containerName, namespace), CHARACTER_ENCODING)
                         );
                         LOGGER.info(dateMetricsUrl);
-                        JSONObject genericJsonObject = new GenericRestApiClient(dateMetricsUrl).fetchMetricsJson("get", "");
+                        JSONObject genericJsonObject = new GenericRestApiClient(dateMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                         JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                         JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
                         // Process fetched metrics
                         if (null != resultArray && !resultArray.isEmpty()) {
                             resultArray = resultArray.get(0)
-                                    .getAsJsonObject().getAsJsonArray("value");
+                                    .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE);
                             long epochTime = resultArray.get(0).getAsLong();
                             String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
                             Date date = sdf.parse(timestamp);
@@ -1467,7 +1475,7 @@ public class RecommendationEngine {
                             interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                     - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                             int maxDay = Terms.getMaxDays(kruizeObject.getTerms());
-                            LOGGER.info("maxDay : {}", maxDay);
+                            LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
                             Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
                             interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                     - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
@@ -1524,7 +1532,7 @@ public class RecommendationEngine {
                                             interval_end_time_epoc,
                                             measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                                     LOGGER.info(podMetricsUrl);
-                                    JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson("get", "");
+                                    JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                                     JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                                     JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
                                     // Process fetched metrics
@@ -1537,7 +1545,6 @@ public class RecommendationEngine {
 
                                         // Iterate over fetched metrics
                                         Timestamp sTime = new Timestamp(interval_start_time_epoc);
-                                        ;
                                         for (JsonElement element : resultArray) {
                                             JsonArray valueArray = element.getAsJsonArray();
                                             long epochTime = valueArray.get(0).getAsLong();
@@ -1561,7 +1568,7 @@ public class RecommendationEngine {
                                                 metricResults = new MetricResults();
                                                 metricAggregationInfoResults = new MetricAggregationInfoResults();
                                             }
-                                            Method method = MetricAggregationInfoResults.class.getDeclaredMethod("set" + methodName.substring(0, 1).toUpperCase() + methodName.substring(1), Double.class);
+                                            Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + methodName.substring(0, 1).toUpperCase() + methodName.substring(1), Double.class);
                                             method.invoke(metricAggregationInfoResults, value);
                                             metricAggregationInfoResults.setFormat(format);
                                             metricResults.setAggregationInfoResult(metricAggregationInfoResults);
@@ -1585,13 +1592,13 @@ public class RecommendationEngine {
                         }
                     }
                     containerData.setResults(containerDataResults);
-                    if (containerDataResults.size() > 0)
-                        setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalide date is set if experiment having two container with different last seen date
+                    if (!containerDataResults.isEmpty())
+                        setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalid date is set if experiment having two container with different last seen date
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
-            throw new Exception("Exception occurred while fetching metrics from the datasource: " + e.getMessage());
+            throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
         }
     }
 }
