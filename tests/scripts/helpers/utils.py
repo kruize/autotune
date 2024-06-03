@@ -21,6 +21,7 @@ import subprocess
 import time
 import math
 from datetime import datetime, timedelta
+from kubernetes import client, config
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
@@ -885,5 +886,46 @@ def validate_list_metadata_parameters(import_metadata_json, list_metadata_json, 
                     # Extract namespaces from the current cluster
                     namespaces = clusters[cluster_name].get('namespaces', {})
 
-                    for namespaces_key, namespaces_value in namespaces.items():
-                        assert namespace == namespaces_value.get('namespace'), f"Invalid namespace: {namespace}"
+                    assert namespace in [ns.get('namespace') for ns in namespaces.values()], f"Invalid namespace: {namespace}"
+
+
+def create_namespace(namespace_name):
+    # Load kube config
+    config.load_kube_config()
+
+    # Create a V1Namespace object
+    namespace = client.V1Namespace(
+        metadata=client.V1ObjectMeta(name=namespace_name)
+    )
+
+    # Create a Kubernetes API client
+    api_instance = client.CoreV1Api()
+
+    # Create the namespace
+    try:
+        api_instance.create_namespace(namespace)
+
+        print(f"Namespace '{namespace_name}' created successfully.")
+    except client.exceptions.ApiException as e:
+        if e.status == 409:
+            print(f"Namespace '{namespace_name}' already exists.")
+        else:
+            print(f"Error creating namespace: {e}")
+
+
+def delete_namespace(namespace_name):
+    # Load kube config
+    config.load_kube_config()
+
+    # Create a Kubernetes API client
+    api_instance = client.CoreV1Api()
+
+    # Delete the namespace
+    try:
+        api_instance.delete_namespace(name=namespace_name)
+        print(f"Namespace '{namespace_name}' deleted successfully.")
+    except client.exceptions.ApiException as e:
+        if e.status == 404:
+            print(f"Namespace '{namespace_name}' not found.")
+        else:
+            print(f"Exception deleting namespace: {e}")

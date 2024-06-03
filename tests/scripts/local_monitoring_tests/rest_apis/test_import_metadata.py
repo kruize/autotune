@@ -161,15 +161,8 @@ def test_repeated_metadata_import(cluster_type):
     response = delete_metadata(input_json_file)
     print("delete metadata = ", response.status_code)
 
-    # Import metadata using the specified json
-    response = import_metadata(input_json_file)
-    metadata_json = response.json()
-
-    assert response.status_code == SUCCESS_STATUS_CODE
-
-    # Validate the json against the json schema
-    errorMsg = validate_import_metadata_json(metadata_json, import_metadata_json_schema)
-    assert errorMsg == ""
+    create_namespace("testing")
+    time.sleep(30)
 
     # Import metadata using the specified json
     response = import_metadata(input_json_file)
@@ -180,6 +173,57 @@ def test_repeated_metadata_import(cluster_type):
     # Validate the json against the json schema
     errorMsg = validate_import_metadata_json(metadata_json, import_metadata_json_schema)
     assert errorMsg == ""
+
+    json_data = json.load(open(input_json_file))
+    datasource = json_data['datasource_name']
+    # Currently only default cluster_name is supported by kruize
+    cluster_name = "default"
+    response = list_metadata(datasource=datasource, cluster_name=cluster_name)
+
+    list_metadata_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json values
+    import_metadata_json = read_json_data_from_file(input_json_file)
+    validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=cluster_name, namespace="testing")
 
     response = delete_metadata(input_json_file)
     print("delete metadata = ", response.status_code)
+
+    delete_namespace("testing")
+    time.sleep(15)
+
+    create_namespace("repeated-metadata-import")
+    create_namespace("local-monitoring-test")
+    time.sleep(30)
+
+    # Import metadata using the specified json
+    response = import_metadata(input_json_file)
+    metadata_json = response.json()
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Validate the json against the json schema
+    errorMsg = validate_import_metadata_json(metadata_json, import_metadata_json_schema)
+    assert errorMsg == ""
+
+    json_data = json.load(open(input_json_file))
+    datasource = json_data['datasource_name']
+    # Currently only default cluster_name is supported by kruize
+    cluster_name = "default"
+    response = list_metadata(datasource=datasource, cluster_name=cluster_name)
+
+    list_metadata_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json values
+    import_metadata_json = read_json_data_from_file(input_json_file)
+    validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=cluster_name, namespace="repeated-metadata-import")
+    validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=cluster_name, namespace="local-monitoring-test")
+
+    #validate namespaces
+    response = delete_metadata(input_json_file)
+    print("delete metadata = ", response.status_code)
+
+    delete_namespace("repeated-metadata-import")
+    delete_namespace("local-monitoring-test")
