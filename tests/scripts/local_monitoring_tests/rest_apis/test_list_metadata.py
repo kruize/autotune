@@ -475,3 +475,4 @@ def test_list_metadata_after_deleting_metadata(cluster_type):
     list_metadata_json = response.json()
     assert response.status_code == ERROR_STATUS_CODE
     assert list_metadata_json['message'] == LIST_METADATA_DATASOURCE_NAME_ERROR_MSG % datasource
+
