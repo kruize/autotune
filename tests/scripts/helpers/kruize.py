@@ -364,4 +364,3 @@ def list_metadata(datasource=None, cluster_name=None, namespace=None, verbose=No
         print(response.text)
         print("\n************************************************************")
     return response
-
