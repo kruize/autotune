@@ -366,10 +366,22 @@ public class DSMetadataService extends HttpServlet {
                         new DataSourceManager().deleteMetadataFromDataSource(datasource);
                         dataSourceMetadataMap.remove(dataSourceName);
                     } else {
-                        throw new Exception("Datasource metadata not deleted due to : " + validationOutputData.getMessage());
+                        sendErrorResponse(
+                                inputData,
+                                response,
+                                new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_EXCPTN),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                validationOutputData.getMessage()
+                        );
                     }
                 } else {
-                    throw new Exception("Datasource metadata not found!");
+                    sendErrorResponse(
+                            inputData,
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName)
+                    );
                 }
                 sendSuccessResponse(response, "Datasource metadata deleted successfully.");
             } catch (Exception e) {
