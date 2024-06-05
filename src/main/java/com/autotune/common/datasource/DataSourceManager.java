@@ -33,10 +33,6 @@ public class DataSourceManager {
             if (null == dataSourceInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            String dataSourceName = dataSourceInfo.getName();
-            if(checkIfDataSourceMetadataExists(dataSourceName)) {
-                return;
-            }
             dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo);
             // save the metadata to DB
             saveMetadataFromDataSourceToDB(dataSourceInfo);
