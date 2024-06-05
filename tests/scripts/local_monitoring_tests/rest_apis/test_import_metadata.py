@@ -187,9 +187,6 @@ def test_repeated_metadata_import(cluster_type):
     import_metadata_json = read_json_data_from_file(input_json_file)
     validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=cluster_name, namespace="testing")
 
-    response = delete_metadata(input_json_file)
-    print("delete metadata = ", response.status_code)
-
     delete_namespace("testing")
     time.sleep(15)
 
