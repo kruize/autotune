@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.performanceProfiles;
 
+import com.autotune.analyzer.kruizeObject.PerformanceProfileMetadata;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.google.gson.annotations.SerializedName;
@@ -29,7 +30,12 @@ import java.util.Map;
 
 public class PerformanceProfile {
 
-    private String name;
+    private String apiVersion;
+
+    private String kind;
+
+    @SerializedName("metadata")
+    private PerformanceProfileMetadata metadata;
 
     private double profile_version;
 
@@ -41,8 +47,28 @@ public class PerformanceProfile {
 
     private Map<String, Terms> terms;
 
-    public void setName(String name) {
-        this.name = name;
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
+    }
+
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
+
+    public void setPerformanceProfileMetadata(PerformanceProfileMetadata metadata) {
+        this.metadata = metadata;
+    }
+
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public String getKind() {
+        return kind;
+    }
+
+    public PerformanceProfileMetadata getMetadata() {
+        return metadata;
     }
 
     public void setProfile_version(double profile_version) {
@@ -61,16 +87,16 @@ public class PerformanceProfile {
         this.sloInfo = sloInfo;
     }
 
-    public PerformanceProfile(String name, double profile_version, String k8s_type, SloInfo sloInfo) {
-        this.name = name;
+    public PerformanceProfile(String apiVersion, String kind, PerformanceProfileMetadata metadata,
+                              double profile_version, String k8s_type, SloInfo sloInfo) {
+        this.apiVersion = apiVersion;
+        this.kind = kind;
+        this.metadata = metadata;
         this.profile_version = profile_version;
         this.k8s_type = k8s_type;
         this.sloInfo = sloInfo;
     }
 
-    public String getName() {
-        return name;
-    }
 
     public double getProfile_version() {
         return profile_version;
@@ -95,7 +121,9 @@ public class PerformanceProfile {
     @Override
     public String toString() {
         return "PerformanceProfile{" +
-                "name='" + name + '\'' +
+                "apiVersion='" + apiVersion + '\'' +
+                ", kind='" + kind + '\'' +
+                ", metadata=" + metadata +
                 ", profile_version=" + profile_version +
                 ", k8s_type='" + k8s_type + '\'' +
                 ", sloInfo=" + sloInfo +
