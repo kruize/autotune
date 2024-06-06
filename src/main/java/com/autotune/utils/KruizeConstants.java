@@ -44,6 +44,7 @@ public class KruizeConstants {
         public static final String UPDATE_RECOMMENDATIONS_FAILURE = "UpdateRecommendations API failure response, experiment_name: %s and intervalEndTimeStr : %s";
         public static final String UPDATE_RECOMMENDATIONS_VALIDATION_FAILURE = "Validation failed: %s for experiment_name: %s and interval_end_time: %s";
         public static final String UPDATE_RECOMMENDATIONS_RESPONSE = "Update Recommendation API response: %s";
+        public static final String UPDATE_RECOMMENDATIONS_FAILURE_MSG = "UpdateRecommendations API failed for experiment_name: %s and intervalEndTimeStr : %s due to %s";
     }
 
 
