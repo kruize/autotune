@@ -25,6 +25,7 @@ import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
@@ -218,65 +219,54 @@ public class DSMetadataService extends HttpServlet {
 
                 if (isValidBooleanValue(internalVerbose)) {
                     try {
-                        if (null != dataSourceName) {
-                            try {
-                                DataSourceMetadataInfo dataSourceMetadata = null;
-                                if (null == clusterName) {
-                                    dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, internalVerbose);
-
-                                    if (null == dataSourceMetadata) {
-                                        error = true;
-                                        sendErrorResponse(
-                                                response,
-                                                new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
-                                                HttpServletResponse.SC_BAD_REQUEST,
-                                                String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG, dataSourceName)
-                                        );
-                                    }
-                                } else if (null != clusterName){
-                                    if (null == namespace) {
-                                        dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByClusterName(dataSourceName, clusterName, internalVerbose);
-
-                                        if (null == dataSourceMetadata) {
-                                            error = true;
-                                            sendErrorResponse(
-                                                    response,
-                                                    new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_CLUSTER_NAME_METADATA_EXCPTN),
-                                                    HttpServletResponse.SC_BAD_REQUEST,
-                                                    String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_CLUSTER_NAME_METADATA_MSG, dataSourceName, clusterName)
-                                            );
-                                        }
-                                    } else {
-                                        internalVerbose = "true";
-                                        dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByNamespace(dataSourceName, clusterName, namespace);
-
-                                        if (null == dataSourceMetadata) {
-                                            error = true;
-                                            sendErrorResponse(
-                                                    response,
-                                                    new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
-                                                    HttpServletResponse.SC_BAD_REQUEST,
-                                                    String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_MSG, dataSourceName, clusterName, namespace)
-                                            );
-                                        }
-                                    }
-                                }
-
-                                if (null != dataSourceMetadata) {
-                                    dataSourceMetadataMap.put(dataSourceName, dataSourceMetadata);
-                                }
-                            } catch (Exception e) {
-                                LOGGER.error("Loading saved Datasource metadata {} failed: {} ", dataSourceName, e.getMessage());
-                            }
-                        } else {
+                        if (null == dataSourceName || dataSourceName.isEmpty()) {
                             error = true;
                             sendErrorResponse(
                                     response,
                                     new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
                                     HttpServletResponse.SC_BAD_REQUEST,
-                                    String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG
-                                            , dataSourceName)
+                                    String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_NAME_MANDATORY)
                             );
+                        } else {
+                            try {
+                                DataSourceMetadataInfo dataSourceMetadata = null;
+                                if (null == clusterName) {
+                                    dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, internalVerbose);
+                                } else if (null != clusterName && null == namespace) {
+                                    dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByClusterName(dataSourceName, clusterName, internalVerbose);
+                                } else if (null != clusterName && null != namespace) {
+                                    internalVerbose = "true";
+                                    dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByNamespace(dataSourceName, clusterName, namespace);
+                                }
+
+                                if (null == dataSourceMetadata) {
+                                    error = true;
+                                    String errorMessage;
+                                    Exception exception;
+
+                                    if (null == clusterName) {
+                                        exception = new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN);
+                                        errorMessage = String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_MSG, dataSourceName);
+                                    } else if (null == namespace) {
+                                        exception = new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_CLUSTER_NAME_METADATA_EXCPTN);
+                                        errorMessage = String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_CLUSTER_NAME_METADATA_MSG, dataSourceName, clusterName);
+                                    } else {
+                                        exception = new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN);
+                                        errorMessage = String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_MSG, dataSourceName, clusterName, namespace);
+                                    }
+
+                                    sendErrorResponse(
+                                            response,
+                                            exception,
+                                            HttpServletResponse.SC_BAD_REQUEST,
+                                            errorMessage
+                                    );
+                                }
+
+                                dataSourceMetadataMap.put(dataSourceName, dataSourceMetadata);
+                            } catch (Exception e) {
+                                LOGGER.error("Loading saved Datasource metadata {} failed: {} ", dataSourceName, e.getMessage());
+                            }
                         }
 
                         if (!error) {
@@ -295,15 +285,15 @@ public class DSMetadataService extends HttpServlet {
                 } else {
                     sendErrorResponse(
                             response,
-                            new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM_VALUE),
+                            new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM_EXCPTN),
                             HttpServletResponse.SC_BAD_REQUEST,
-                            String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM_VALUE)
+                            String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM_VALUE, AnalyzerConstants.ServiceConstants.VERBOSE)
                     );
                 }
             } else {
                 sendErrorResponse(
                         response,
-                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM),
+                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM_EXCPTN),
                         HttpServletResponse.SC_BAD_REQUEST,
                         String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_QUERY_PARAM, invalidParams)
                 );
