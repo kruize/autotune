@@ -234,7 +234,9 @@ echo "exp_count / results_count / reco_count = ${exp_count} / ${results_count} /
 
 db_size=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT pg_database_size('kruizeDB') AS database_size_bytes;" | tail -3 | head -1 | tr -d '[:space:]')
 
-echo "Postgres DB size in bytes = ${db_size}"
+db_size_mb=$((db_size / (1024 * 1024) + 1))
+
+echo "Postgres DB size in MB = ${db_size_mb}"
 
 echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${expected_results_count}""
 python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${expected_results_count}"
