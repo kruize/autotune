@@ -15,10 +15,10 @@
  *******************************************************************************/
 package com.autotune.analyzer.performanceProfiles;
 
-import com.autotune.analyzer.kruizeObject.PerformanceProfileMetadata;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.google.gson.annotations.SerializedName;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 import java.util.Map;
 
@@ -26,6 +26,9 @@ import java.util.Map;
  * Container class for the PerformanceProfile kubernetes kind, which is used to define
  * a profile
  *
+ * This class provides a direct representation of PerformanceProfile CRD in JSON format,
+ * corresponding to the structure of PerformanceProfile YAML file. It includes mandatory fields
+ * for API version, kind, metadata and additional custom fields - profile_version, k8s_type and sloInfo
  */
 
 public class PerformanceProfile {
@@ -34,8 +37,7 @@ public class PerformanceProfile {
 
     private String kind;
 
-    @SerializedName("metadata")
-    private PerformanceProfileMetadata metadata;
+    private ObjectMeta metadata;
 
     private double profile_version;
 
@@ -55,7 +57,7 @@ public class PerformanceProfile {
         this.kind = kind;
     }
 
-    public void setPerformanceProfileMetadata(PerformanceProfileMetadata metadata) {
+    public void setMetadata(ObjectMeta metadata) {
         this.metadata = metadata;
     }
 
@@ -67,7 +69,7 @@ public class PerformanceProfile {
         return kind;
     }
 
-    public PerformanceProfileMetadata getMetadata() {
+    public ObjectMeta getMetadata() {
         return metadata;
     }
 
@@ -87,7 +89,7 @@ public class PerformanceProfile {
         this.sloInfo = sloInfo;
     }
 
-    public PerformanceProfile(String apiVersion, String kind, PerformanceProfileMetadata metadata,
+    public PerformanceProfile(String apiVersion, String kind, ObjectMeta metadata,
                               double profile_version, String k8s_type, SloInfo sloInfo) {
         this.apiVersion = apiVersion;
         this.kind = kind;
