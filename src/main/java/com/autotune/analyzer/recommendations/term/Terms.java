@@ -146,7 +146,6 @@ public class Terms {
         }
         double durationSummationInHours = durationSummation / KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
         durationSummationInHours = Double.parseDouble(String.format("%.2f", durationSummationInHours));
-        LOGGER.debug("durationSummationInHours = {}", durationSummationInHours);
         mappedRecommendationForTerm.setDurationInHrs(durationSummationInHours);
     }
 
