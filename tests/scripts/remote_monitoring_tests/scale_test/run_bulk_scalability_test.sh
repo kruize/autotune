@@ -181,10 +181,10 @@ echo "				All threads completed!                          "
 echo "###########################################################################"
 
 exec_time_log="${RESULTS_DIR}/exec_time.log"
-cd $SCALE_LOG_DIR
-
 echo "Capturing execution time in ${exec_time_log}..."
-execution_time ${exec_time_log} ${SCALE_LOG_DIR}
+pushd $SCALE_LOG_DIR > /dev/null
+        execution_time ${exec_time_log} ${SCALE_LOG_DIR}
+popd > /dev/null
 sleep 5
 echo ""
 echo "Capturing execution time in ${exec_time_log}...done"
@@ -219,6 +219,31 @@ if [ ${expected_results_count} != ${actual_results_count} ]; then
 	echo "Expected results count not found in kruize_results db table"
 fi
 echo "###########################################################################"
+
 echo ""
+echo ""
+echo "###########################################################################"
+echo "Summary of the test run"
+exp_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_experiments ;" | tail -3 | head -1 | tr -d '[:space:]')
+
+results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
+
+reco_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_recommendations ;" | tail -3 | head -1 | tr -d '[:space:]')
+
+echo "exp_count / results_count / reco_count = ${exp_count} / ${results_count} / ${reco_count}"
+
+db_size=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT pg_database_size('kruizeDB') AS database_size_bytes;" | tail -3 | head -1 | tr -d '[:space:]')
+
+db_size_mb=$((db_size / (1024 * 1024) + 1))
+
+echo "Postgres DB size in MB = ${db_size_mb}"
+
+echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${expected_results_count}""
+python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${expected_results_count}"
+
+echo "###########################################################################"
+echo ""
+echo ""
+
 kill $MYSELF 
 wait
