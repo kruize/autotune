@@ -534,6 +534,11 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
                         #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
+                        # Validate the precision of the valid duration
+                        duration = terms_obj[term]["duration_in_hours"]
+                        assert validate_duration_in_hours_decimal_precision(duration), f"The value '{duration}' for " \
+                                                                                       f"'{term}' has more than two decimal places"
+
                         monitoring_start_time = term_based_start_time(interval_end_time, term)
                         assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
                             f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
@@ -857,3 +862,13 @@ def validate_recommendation_for_cpu_mem_optimised(recommendations: dict, current
     assert recommendations["recommendation_engines"][profile]["config"]["limits"]["cpu"]["amount"] == current["limits"]["cpu"]["amount"]
     assert recommendations["recommendation_engines"][profile]["config"]["requests"]["memory"]["amount"] == current["requests"]["memory"]["amount"]
     assert recommendations["recommendation_engines"][profile]["config"]["limits"]["memory"]["amount"] == current["limits"]["memory"]["amount"]
+
+
+# validate duration_in_hours decimal precision
+def validate_duration_in_hours_decimal_precision(duration_in_hours):
+    """
+        Validate that the given value has at most two decimal places.
+        :param duration_in_hours: The value to be validated.
+        :return: True if the value has at most two decimal places, False otherwise.
+    """
+    return re.match(r'^\d+\.\d{3,}$', str(duration_in_hours)) is None
