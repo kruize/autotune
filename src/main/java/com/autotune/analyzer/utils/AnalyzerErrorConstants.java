@@ -164,6 +164,29 @@ public class AnalyzerErrorConstants {
             public static final String DATA_NOT_FOUND = "Data not found!";
             public static final String TIME_COMPARE = "The Start time should precede the End time!";
             public static final String TIME_GAP_LIMIT = String.format("The gap between the interval_start_time and interval_end_time must be within a maximum of %s days!", KruizeDeploymentInfo.generate_recommendations_date_range_limit_in_days);
+            public static final String UPDATE_RECOMMENDATIONS_COUNT = "UpdateRecommendations API request count: %s ";
+
+            public static final String UPDATE_RECOMMENDATIONS_FAILED_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "failed";
+            public static final String UPDATE_RECOMMENDATIONS_SUCCESS_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "success";
+            public static final String UPDATE_RECOMMENDATIONS_COMPLETED_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "completed";
+            public static final String RECOMMENDATION_ERROR = "Failed to create recommendation for experiment: %s and interval_start_time: %s and interval_end_time: %s";
+            public static final String RECOMMENDATION_EXCEPTION = "Exception occurred while generating recommendations for experiment: %s and interval_end_time: %s : %s ";
+            public static final String METRIC_EXCEPTION = "Exception occurred while fetching metrics from the datasource: ";
+            public static final String FETCHING_RESULTS_FAILED = "Failed to fetch the results from the DB: %s";
+            public static final String INTERNAL_MAP_EMPTY = "Internal map sent to populate method cannot be null or empty";
+            public static final String NULL_NOTIFICATIONS = "Notifications cannot be null";
+            public static final String NULL_RECOMMENDATIONS = "Recommendation cannot be null";
+            public static final String INVALID_RECOMMENDATION_TERM = "Invalid Recommendation Term : %s";
+            public static final String NULL_RECOMMENDATION_TERM = "Recommendation term cannot be null";
+            public static final String INVALID_MEMORY_THRESHOLD = "Given Memory Threshold is invalid, setting Default Memory Threshold : %s";
+            public static final String INVALID_CPU_THRESHOLD = "Given CPU Threshold is invalid, setting Default CPU Threshold :  %s";
+            public static final String NULL_RECOMMENDATION_SETTINGS = "Recommendation Settings are null, setting Default CPU Threshold : %s and Memory Threshold : %s";
+            public static final String INVALID_THRESHOLD = "Given Threshold is invalid, setting Default CPU Threshold : %s and Memory Threshold : %s";
+            public static final String THRESHOLD_NOT_SET = "Threshold is not set, setting Default CPU Threshold : %s and Memory Threshold : %s";
+            public static final String BOX_PLOTS_FAILURE = "Box plots Failed due to : %s";
+            public static final String LOAD_EXPERIMENT_FAILURE = "Failed to load experiment from DB: %s";
+            public static final String GENERATE_RECOMMENDATION_FAILURE = "Not able to generate recommendation for expName : %s due to %s";
+
 
             private UpdateRecommendationsAPI() {
             }
