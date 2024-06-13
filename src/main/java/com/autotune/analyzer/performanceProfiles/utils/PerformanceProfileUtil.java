@@ -158,7 +158,7 @@ public class PerformanceProfileUtil {
     }
 
     public static void addPerformanceProfile(Map<String, PerformanceProfile> performanceProfileMap, PerformanceProfile performanceProfile) {
-        performanceProfileMap.put(String.valueOf(performanceProfile.getMetadata().get("name")), performanceProfile);
+        performanceProfileMap.put(performanceProfile.getMetadata().get("name").asText(), performanceProfile);
         LOGGER.debug("Added PerformanceProfile: {} ",performanceProfile.getMetadata().get("name"));
     }
 

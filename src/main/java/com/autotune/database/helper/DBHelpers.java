@@ -625,7 +625,7 @@ public class DBHelpers {
                     } catch (JsonProcessingException e) {
                         throw new Exception("Error while creating metadata due to : " + e.getMessage());
                     }
-                    kruizePerformanceProfileEntry.setName(String.valueOf(performanceProfile.getMetadata().get("name")));
+                    kruizePerformanceProfileEntry.setName(performanceProfile.getMetadata().get("name").asText());
 
                     try {
                         kruizePerformanceProfileEntry.setSlo(
