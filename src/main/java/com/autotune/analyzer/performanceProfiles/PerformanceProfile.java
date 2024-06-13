@@ -17,8 +17,8 @@ package com.autotune.analyzer.performanceProfiles;
 
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.recommendations.term.Terms;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.annotations.SerializedName;
-import io.fabric8.kubernetes.api.model.ObjectMeta;
 
 import java.util.Map;
 
@@ -37,7 +37,7 @@ public class PerformanceProfile {
 
     private String kind;
 
-    private ObjectMeta metadata;
+    private JsonNode metadata;
 
     private double profile_version;
 
@@ -57,7 +57,7 @@ public class PerformanceProfile {
         this.kind = kind;
     }
 
-    public void setMetadata(ObjectMeta metadata) {
+    public void setMetadata(JsonNode metadata) {
         this.metadata = metadata;
     }
 
@@ -69,7 +69,7 @@ public class PerformanceProfile {
         return kind;
     }
 
-    public ObjectMeta getMetadata() {
+    public JsonNode getMetadata() {
         return metadata;
     }
 
@@ -89,7 +89,7 @@ public class PerformanceProfile {
         this.sloInfo = sloInfo;
     }
 
-    public PerformanceProfile(String apiVersion, String kind, ObjectMeta metadata,
+    public PerformanceProfile(String apiVersion, String kind, JsonNode metadata,
                               double profile_version, String k8s_type, SloInfo sloInfo) {
         this.apiVersion = apiVersion;
         this.kind = kind;
