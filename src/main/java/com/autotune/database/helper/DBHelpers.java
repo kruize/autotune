@@ -613,11 +613,20 @@ public class DBHelpers {
                 KruizePerformanceProfileEntry kruizePerformanceProfileEntry = null;
                 try {
                     kruizePerformanceProfileEntry = new KruizePerformanceProfileEntry();
-                    kruizePerformanceProfileEntry.setName(performanceProfile.getName());
+                    kruizePerformanceProfileEntry.setApi_version(performanceProfile.getApiVersion());
+                    kruizePerformanceProfileEntry.setKind(performanceProfile.getKind());
                     kruizePerformanceProfileEntry.setProfile_version(performanceProfile.getProfile_version());
                     kruizePerformanceProfileEntry.setK8s_type(performanceProfile.getK8S_TYPE());
 
                     ObjectMapper objectMapper = new ObjectMapper();
+                    try {
+                        JsonNode metadataNode = objectMapper.readTree(performanceProfile.getMetadata().toString());
+                        kruizePerformanceProfileEntry.setMetadata(metadataNode);
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating metadata due to : " + e.getMessage());
+                    }
+                    kruizePerformanceProfileEntry.setName(String.valueOf(performanceProfile.getMetadata().get("name")));
+
                     try {
                         kruizePerformanceProfileEntry.setSlo(
                                 objectMapper.readTree(new Gson().toJson(performanceProfile.getSloInfo())));
@@ -637,11 +646,12 @@ public class DBHelpers {
                 int failureCount = 0;
                 for (KruizePerformanceProfileEntry entry : entries) {
                     try {
+                        JsonNode metadata = entry.getMetadata();
                         JsonNode sloData = entry.getSlo();
                         String slo_rawJson = sloData.toString();
                         SloInfo sloInfo = new Gson().fromJson(slo_rawJson, SloInfo.class);
                         PerformanceProfile performanceProfile = new PerformanceProfile(
-                                entry.getName(), entry.getProfile_version(), entry.getK8s_type(), sloInfo);
+                                entry.getApi_version(), entry.getKind(), metadata, entry.getProfile_version(), entry.getK8s_type(), sloInfo);
                         performanceProfiles.add(performanceProfile);
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while reading from Performance Profile DB object due to : {}", e.getMessage());
