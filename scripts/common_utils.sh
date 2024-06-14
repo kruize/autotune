@@ -33,10 +33,10 @@ function check_running() {
 		pod_list=$(${kubectl_cmd} get pods | grep ${check_pod} | grep -v "${ignore_ui_pod}" | grep -v "${ignore_db_pod}")
 		pod_stat=$(echo "${pod_list}" | awk '{ print $3 }')
 		if [[ -z "${pod_list}" ]]; then
-      echo "Error: No pods found matching ${check_pod}"
-      err=-1
-      break
-    fi
+		  echo "Error: No pods found matching ${check_pod}"
+		  err=-1
+		  break
+		fi
 
 		case "${pod_stat}" in
 		"Running")
