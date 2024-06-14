@@ -61,6 +61,7 @@ public class KruizeDeploymentInfo {
     public static String k8s_type;       // ABC
     public static String auth_type;
     public static Boolean plots = true;
+    public static String log_recommendation_metrics_level = "error|critical";
     public static String auth_token;
     public static String database_admin_username;
     public static String database_admin_password;
