@@ -33,11 +33,11 @@ volumeBindingMode: Immediate
 kind: PersistentVolume
 apiVersion: v1
 metadata:
-  name: postgres-pv-volume  # Sets PV's name
+  name: kruize-db-pv-volume  # Sets PV's name
   namespace: openshift-tuning
   labels:
     type: local  # Sets PV's type to local
-    app: postgres
+    app: kruize-db
 spec:
   storageClassName: manual
   capacity:
@@ -50,10 +50,10 @@ spec:
 kind: PersistentVolumeClaim
 apiVersion: v1
 metadata:
-  name: postgres-pv-claim  # Sets name of PVC
+  name: kruize-db-pv-claim  # Sets name of PVC
   namespace: openshift-tuning
   labels:
-    app: postgres
+    app: kruize-db
 spec:
   storageClassName: manual
   accessModes:
@@ -132,20 +132,20 @@ metadata:
   name: kruize-db-deployment
   namespace: openshift-tuning
   labels:
-    app: postgres
+    app: kruize-db
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app: kruize-db
   template:
     metadata:
       labels:
-        app: postgres
+        app: kruize-db
     spec:
       serviceAccountName: kruize-sa
       containers:
-        - name: postgres
+        - name: kruize-db
           image: quay.io/kruizehub/postgres:15.2
           imagePullPolicy: IfNotPresent
           env:
@@ -167,12 +167,12 @@ spec:
           ports:
             - containerPort: 5432
           volumeMounts:
-            - name: postgres-storage
+            - name: kruize-db-storage
               mountPath: /var/lib/pgsql/data
       volumes:
-        - name: postgres-storage
+        - name: kruize-db-storage
           persistentVolumeClaim:
-            claimName: postgres-pv-claim
+            claimName: kruize-db-pv-claim
 ---
 apiVersion: v1
 kind: Service
@@ -180,15 +180,15 @@ metadata:
   name: kruize-db-service
   namespace: openshift-tuning
   labels:
-    app: postgres
+    app: kruize-db
 spec:
   type: ClusterIP
   ports:
-    - name: postgres-port
+    - name: kruize-db-port
       port: 5432
       targetPort: 5432
   selector:
-    app: postgres
+    app: kruize-db
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -210,7 +210,7 @@ spec:
     spec:
       serviceAccountName: kruize-sa
       initContainers:
-        - name: wait-for-postgres
+        - name: wait-for-kruize-db
           image: quay.io/kruizehub/postgres:15.2 # Use the same Postgres version as the Postgres deployment
           imagePullPolicy: IfNotPresent
           command:

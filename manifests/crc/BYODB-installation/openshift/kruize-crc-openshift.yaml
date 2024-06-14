@@ -77,7 +77,7 @@ spec:
         name: kruize
     spec:
       initContainers:
-        - name: wait-for-postgres
+        - name: wait-for-kruize-db
           image: quay.io/kruizehub/postgres:15.2 # Use the same Postgres version as the Postgres deployment
           imagePullPolicy: IfNotPresent
           command:

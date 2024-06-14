@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: postgres-pv
+  name: kruize-db-pv
   namespace: monitoring
 spec:
   capacity:
@@ -15,7 +15,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-pvc
+  name: kruize-db-pvc
   namespace: monitoring
 spec:
   accessModes:
@@ -30,22 +30,22 @@ metadata:
   name: kruize-db-deployment
   namespace: monitoring
   labels:
-    app: postgres
+    app: kruize-db
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app: kruize-db
   template:
     metadata:
       labels:
-        app: postgres
+        app: kruize-db
     spec:
       #securityContext:      #todo
       #  runAsNonRoot: true
       #  runAsUser: 1000
       containers:
-        - name: postgres
+        - name: kruize-db
           image: quay.io/kruizehub/postgres:15.2
           imagePullPolicy: IfNotPresent
           env:
@@ -58,12 +58,12 @@ spec:
           ports:
             - containerPort: 5432
           volumeMounts:
-            - name: postgres-storage
+            - name: kruize-db-storage
               mountPath: /var/lib/postgresql/data
       volumes:
-        - name: postgres-storage
+        - name: kruize-db-storage
           persistentVolumeClaim:
-            claimName: postgres-pvc
+            claimName: kruize-db-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -71,15 +71,15 @@ metadata:
   name: kruize-db-service
   namespace: monitoring
   labels:
-    app: postgres
+    app: kruize-db
 spec:
   type: ClusterIP
   ports:
-    - name: postgres-port
+    - name: kruize-db-port
       port: 5432
       targetPort: 5432
   selector:
-    app: postgres
+    app: kruize-db
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -164,7 +164,7 @@ spec:
         name: kruize
     spec:
       initContainers:
-        - name: wait-for-postgres
+        - name: wait-for-kruize-db
           image: quay.io/kruizehub/postgres:15.2 # Use the same Postgres version as the Postgres deployment
           imagePullPolicy: IfNotPresent
           command:
@@ -177,7 +177,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.22_rm
+          image: quay.io/kruize/autotune_operator:0.0.22_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -341,7 +341,7 @@ metadata:
 spec:
   containers:
     - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.3
+      image: quay.io/kruize/kruize-ui:0.0.4
       imagePullPolicy: Always
       env:
         - name: KRUIZE_UI_ENV
