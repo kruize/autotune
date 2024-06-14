@@ -112,8 +112,6 @@ public class UpdateRecommendations extends HttpServlet {
                     sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject.getValidation_data().getMessage(), experiment_name, intervalEndTimeStr);
                 }
             } else {
-                LOGGER.error(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_VALIDATION_FAILURE, validationMessage,
-                        experiment_name, intervalEndTimeStr));
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage, experiment_name, intervalEndTimeStr);
             }
 
