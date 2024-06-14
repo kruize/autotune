@@ -16,7 +16,7 @@
 ##########################################################
 #            Build Docker Image
 ##########################################################
-FROM registry.access.redhat.com/ubi8/ubi-minimal:8.9 as mvnbuild-jdk17
+FROM registry.access.redhat.com/ubi8/ubi-minimal:8.10 as mvnbuild-jdk17
 ARG USER=autotune
 ARG AUTOTUNE_HOME=/home/$USER
 
