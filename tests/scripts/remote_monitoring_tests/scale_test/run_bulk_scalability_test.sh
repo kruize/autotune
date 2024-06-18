@@ -24,12 +24,13 @@ minutes_jump=15
 initial_start_date="2023-08-01T00:00:00.000Z"
 interval_hours=6
 query_db_interval=5
+total_results_count=0
 
 function usage() {
 	echo
 	echo "Usage: ./run_scalability_test.sh -c cluster_type[minikube|openshift (default - openshift)] [-a IP] [-p PORT] [-u No. of experiments per client (default - 250)]"
 	echo "	     [-d No. of days of results (default - 2)] [-n No. of clients] [-m results duration interval in mins (default - 15)] [-i interval hours (default - 6)]"
-        echo "       [-s Initial start date] [-q query db interval in mins (default - 5)] [-r <resultsdir path>]"
+        echo "       [-s Initial start date] [-q query db interval in mins (default - 5)] [-r <resultsdir path>] [-e total results count already in the DB]"
 	exit -1
 }
 
@@ -91,7 +92,7 @@ function execution_time() {
 }
 
 
-while getopts c:a:p:r:u:n:d:m:i:s:q:h gopts
+while getopts c:a:p:r:u:n:d:m:i:e:s:q:h gopts
 do
 	case ${gopts} in
 	c)
@@ -120,6 +121,9 @@ do
 		;;
 	i)
 		interval_hours="${OPTARG}"		
+		;;
+	e)
+		total_results_count="${OPTARG}"
 		;;
 	q)
 		query_db_interval="${OPTARG}"
@@ -193,14 +197,16 @@ echo "Capturing execution time in ${exec_time_log}...done"
 actual_results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
 
 expected_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
+total_results_count=$((${expected_results_count} + ${total_results_count}))
 
 j=0
-while [[ ${expected_results_count} != ${actual_results_count} ]]; do
+while [[ ${total_results_count} != ${actual_results_count} ]]; do
 	echo ""
 	echo "expected results count = $expected_results_count actual_results_count = $actual_results_count"
 	actual_results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
 
 	expected_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
+	total_results_count=$((${expected_results_count} + ${total_results_count}))
 	if [ ${j} == 2 ]; then
 		break
 	else
@@ -215,7 +221,8 @@ echo ""
 echo "###########################################################################"
 echo "Scale test completed!"
 echo "exps_count = $exps_count results_count = $actual_results_count"
-if [ ${expected_results_count} != ${actual_results_count} ]; then
+if [ ${total_results_count} != ${actual_results_count} ]; then
+	echo "Total expected results count = ${total_results_count} Actual results count = ${actual_results_count}"
 	echo "Expected results count not found in kruize_results db table"
 fi
 echo "###########################################################################"
