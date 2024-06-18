@@ -109,21 +109,16 @@ public class UpdateRecommendations extends HttpServlet {
                     statusValue = KruizeConstants.APIMessages.SUCCESS;
                 } else {
                     LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
-                    LOGGER.error(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_FAILURE, experiment_name, intervalEndTimeStr));
-                    sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject.getValidation_data().getMessage());
+                    sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject.getValidation_data().getMessage(), experiment_name, intervalEndTimeStr);
                 }
             } else {
-                LOGGER.error(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_VALIDATION_FAILURE, validationMessage,
-                        experiment_name, intervalEndTimeStr));
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage);
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage, experiment_name, intervalEndTimeStr);
             }
 
         } catch (Exception e) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
-            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_EXCEPTION,
-                    experiment_name, intervalEndTimeStr, e.getMessage()));
             e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), experiment_name, intervalEndTimeStr);
         } finally {
             LOGGER.debug(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_COMPLETED_COUNT, calCount));
             if (null != timerBUpdateRecommendations) {
@@ -180,13 +175,14 @@ public class UpdateRecommendations extends HttpServlet {
         response.getWriter().close();
     }
 
-    public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
-            IOException {
+    public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg,
+                                  String experiment_name, String intervalEndTimeStr) throws IOException {
         if (null != e) {
             e.printStackTrace();
             LOGGER.error(e.toString());
             if (null == errorMsg) errorMsg = e.getMessage();
         }
+        LOGGER.error(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_FAILURE_MSG, experiment_name, intervalEndTimeStr, errorMsg));
         response.sendError(httpStatusCode, errorMsg);
     }
 }
