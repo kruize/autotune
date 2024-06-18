@@ -25,8 +25,10 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
+import com.autotune.common.datasource.DataSourceMetadataValidation;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.Gson;
@@ -56,6 +58,36 @@ public class DSMetadataService extends HttpServlet {
         super.init(config);
     }
 
+    /**
+     * Handles the POST request for importing metadata - POST /dsmetadata
+     * @param request  the HttpServletRequest containing the client request
+     * @param response the HttpServletResponse containing the response to be sent to the client
+     *
+     * The input request body should be a JSON object with the following structure:
+     * Example:
+     * {
+     *     "version": "v1.0",
+     *     "datasource_name": "exampleDataSourceName"
+     * }
+     * where:
+     * The `version` field is the version of the API, and the `datasource_name` field is the datasource name
+     *
+     * Example API response:
+     * {
+     *     "datasources": {
+     *         "exampleDataSourceName": {
+     *             "datasource_name": "exampleDataSourceName",
+     *             "clusters": {
+     *                 "exampleClusterName": {
+     *                     "cluster_name": "exampleClusterName"
+     *                 }
+     *             }
+     *         }
+     *     }
+     * }
+     * API response displays cluster-level metadata
+     * NOTE - POST /dsmetadata API also supports multiple import metadata actions
+     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String statusValue = "failure";
@@ -63,6 +95,7 @@ public class DSMetadataService extends HttpServlet {
         //Key = dataSourceName
         HashMap<String, DataSourceMetadataInfo> dataSourceMetadataMap = new HashMap<>();
         String inputData = "";
+        DataSourceManager dataSourceManager = new DataSourceManager();
 
         try {
             // Set the character encoding of the request to UTF-8
@@ -87,31 +120,76 @@ public class DSMetadataService extends HttpServlet {
                         null,
                         HttpServletResponse.SC_BAD_REQUEST,
                         AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_NAME_MANDATORY);
+                return;
             }
 
-            DataSourceInfo datasource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
-            if(null != datasource) {
-                DataSourceMetadataInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "false");
-                if (null != dataSourceMetadata) {
-                    ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeDSMetadataEntryByName(dataSourceName);
-
-                    if (validationOutputData.isSuccess()) {
-                        new DataSourceManager().deleteMetadataFromDataSource(datasource);
-                    } else {
-                        String errorMessage = validationOutputData.getMessage();
-                        sendErrorResponse(
-                                response,
-                                new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
-                                HttpServletResponse.SC_BAD_REQUEST,
-                                errorMessage
-                        );
-                    }
-                }
-
-                new DataSourceManager().importMetadataFromDataSource(datasource);
-                dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "false");
-                dataSourceMetadataMap.put(dataSourceName,dataSourceMetadata);
+            DataSourceInfo datasource;
+            try {
+                datasource = dataSourceManager.fetchDataSourceFromDBByName(dataSourceName);
+            } catch (Exception e) {
+                sendErrorResponse(
+                        inputData,
+                        response,
+                        e,
+                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        String.format(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.LOAD_DATASOURCE_FROM_DB_ERROR, dataSourceName, e.getMessage())
+                );
+                return;
             }
+
+            if (datasource == null) {
+                sendErrorResponse(
+                        inputData,
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_IMPORT_ERROR_MSG, dataSourceName)
+                );
+                return;
+            }
+
+            DataSourceMetadataInfo metadataInfo;
+            try {
+                dataSourceManager.importMetadataFromDataSource(datasource);
+                metadataInfo = dataSourceManager.getMetadataFromDataSource(datasource);
+            } catch (Exception e) {
+                sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                return;
+            }
+
+            // Validate imported metadataInfo object
+            DataSourceMetadataValidation validationObject = new DataSourceMetadataValidation();
+            validationObject.validate(metadataInfo);
+
+            if (!validationObject.isSuccess()) {
+                sendErrorResponse(
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_VALIDATION_FAILURE_EXCPTN),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        validationObject.getErrorMessage()
+                );
+                return;
+            }
+
+            try {
+                // fetch and delete metadata from database
+                dataSourceManager.deleteMetadataFromDBByDataSource(datasource);
+                // fetch metadata from cluster of specified datasource and add to database
+                dataSourceManager.saveMetadataFromDataSourceToDB(datasource);
+            } catch (Exception e) {
+                sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                return;
+            }
+
+            DataSourceMetadataInfo dataSourceMetadata;
+            try {
+                dataSourceMetadata = dataSourceManager.fetchDataSourceMetadataFromDBByName(dataSourceName, "false");
+            } catch (Exception e) {
+                sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                return;
+            }
+
+            dataSourceMetadataMap.put(dataSourceName, dataSourceMetadata);
 
             if (dataSourceMetadataMap.isEmpty() || !dataSourceMetadataMap.containsKey(dataSourceName)) {
                 sendErrorResponse(
@@ -121,9 +199,11 @@ public class DSMetadataService extends HttpServlet {
                         HttpServletResponse.SC_BAD_REQUEST,
                         String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_IMPORT_ERROR_MSG, dataSourceName)
                 );
-            } else {
-                sendSuccessResponse(response, dataSourceMetadataMap.get(dataSourceName));
+                return;
             }
+
+            sendSuccessResponse(response, dataSourceMetadataMap.get(dataSourceName));
+
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught: " + e.getMessage());

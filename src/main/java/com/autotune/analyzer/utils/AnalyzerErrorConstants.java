@@ -190,6 +190,7 @@ public class AnalyzerErrorConstants {
             public static final String DATASOURCE_METADATA_DELETE_ERROR_MSG = "Metadata cannot be deleted for datasource - \" %s \" , either does not exist or is not valid";
             public static final String INVALID_QUERY_PARAM = "The query param(s) - \" %s \" is/are invalid";
             public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
+            public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_EXCPTN = "Invalid DataSourceMetadata object";
         }
     }
 

@@ -1,8 +1,10 @@
 package com.autotune.common.datasource;
 
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.exceptions.datasource.DataSourceDoesNotExist;
 import com.autotune.common.data.dataSourceMetadata.*;
+import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
@@ -34,8 +36,6 @@ public class DataSourceManager {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
             dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo);
-            // save the metadata to DB
-            saveMetadataFromDataSourceToDB(dataSourceInfo);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
@@ -54,7 +54,7 @@ public class DataSourceManager {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
             String dataSourceName = dataSource.getName();
-            DataSourceMetadataInfo dataSourceMetadataInfo = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "true");
+            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSource);
             if (null == dataSourceMetadataInfo) {
                 LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceName);
                 return null;
@@ -155,5 +155,82 @@ public class DataSourceManager {
             LOGGER.error("Failed to load metadata for the datasource: {}: {} ", dataSourceName, e.getMessage());
         }
         return isPresent;
+    }
+
+    /**
+     * Fetches and deletes DataSourceMetadata of the specified datasource from Database
+     * @param dataSourceInfo DataSourceInfo object
+     */
+    public void deleteMetadataFromDBByDataSource(DataSourceInfo dataSourceInfo) {
+        try {
+            String dataSourceName = dataSourceInfo.getName();
+            DataSourceMetadataInfo dataSourceMetadataInfo = fetchDataSourceMetadataFromDBByName(dataSourceName, "false");
+            if (null == dataSourceMetadataInfo) {
+                LOGGER.debug(String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName));
+                return;
+            }
+            // delete metadata from DB
+            deleteMetadataFromDB(dataSourceName);
+
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    /**
+     * Deletes DataSourceMetadata entry from Database
+     * @param dataSourceName datasource name
+     */
+    public void deleteMetadataFromDB(String dataSourceName) {
+        ValidationOutputData deletedFromDB = null;
+        try {
+            // add the data source to DB
+            deletedFromDB = new ExperimentDAOImpl().deleteKruizeDSMetadataEntryByName(dataSourceName);
+            if (deletedFromDB.isSuccess()) {
+                LOGGER.debug("Metadata deleted successfully from the DB.");
+            } else {
+                LOGGER.error("Failed to delete metadata from DB: {}", deletedFromDB.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while deleting metadata : {} ", e.getMessage());
+        }
+
+    }
+
+    /**
+     * Fetches Datasource details from Database by name
+     * @param dataSourceName Name of the datasource to be fetched
+     * @return DataSourceInfo object of the specified datasource name
+     */
+    public DataSourceInfo fetchDataSourceFromDBByName(String dataSourceName) {
+        try {
+            if(null == dataSourceName || dataSourceName.isEmpty()) {
+                throw new Exception(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_NAME);
+            }
+            DataSourceInfo datasource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
+            return datasource;
+        } catch (Exception e) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.LOAD_DATASOURCE_FROM_DB_ERROR, dataSourceName, e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Fetches Datasource metadata details from Database by name
+     * @param dataSourceName    Name of the datasource to be fetched
+     * @param verbose           Flag indicating granularity of metadata to be fetched
+     * @return DataSourceMetadataInfo object of the specified datasource name
+     */
+    public DataSourceMetadataInfo fetchDataSourceMetadataFromDBByName(String dataSourceName, String verbose) {
+        try {
+            if(null == dataSourceName || dataSourceName.isEmpty()) {
+                throw new Exception(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_NAME);
+            }
+            DataSourceMetadataInfo metadataInfo = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, verbose);
+            return metadataInfo;
+        } catch (Exception e) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.LOAD_DATASOURCE_METADATA_FROM_DB_ERROR, dataSourceName, e.getMessage());
+        }
+        return null;
     }
 }
