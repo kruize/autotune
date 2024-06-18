@@ -29,6 +29,23 @@ public class KruizeConstants {
     private KruizeConstants() {
     }
 
+    public static class APIMessages {
+        public static final String MAX_DAY = "maxDay : %s";
+        public static final String SUCCESS = "success";
+        public static final String FAILURE = "failure";
+        public static final String GET = "get";
+        public static final String SET = "set";
+        public static final String CONTAINER_USAGE_INFO = "Determine the date of the last activity for the container based on its usage. ";
+        public static final String RECOMMENDATION_TERM = "recommendationTerm : %s";
+        public static final String MONITORING_START_TIME = "monitoringStartTime : %s";
+        public static final String EXPERIMENT_DATASOURCE = "Experiment: %s,  Datasource: %s";
+        public static final String UPDATE_RECOMMENDATIONS_INPUT_PARAMS = "experiment_name : %s and interval_start_time : %s and interval_end_time : %s ";
+        public static final String UPDATE_RECOMMENDATIONS_SUCCESS = "Update Recommendation API success response, experiment_name: %s and interval_end_time : %s";
+        public static final String UPDATE_RECOMMENDATIONS_FAILURE = "UpdateRecommendations API failure response, experiment_name: %s and intervalEndTimeStr : %s";
+        public static final String UPDATE_RECOMMENDATIONS_RESPONSE = "Update Recommendation API response: %s";
+        public static final String UPDATE_RECOMMENDATIONS_FAILURE_MSG = "UpdateRecommendations API failed for experiment_name: %s and intervalEndTimeStr : %s due to %s";
+    }
+
 
     public static enum KRUIZE_RECOMMENDATION_API_VERSION {
         V1_0("1.0"),
