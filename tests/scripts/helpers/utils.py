@@ -21,6 +21,7 @@ import subprocess
 import time
 import math
 from datetime import datetime, timedelta
+from kubernetes import client, config
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
@@ -49,7 +50,11 @@ RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available"
 COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available"
 PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available"
 CONTAINER_AND_EXPERIMENT_NAME = " for container : %s for experiment: %s.]"
-LIST_DATASOURCES_ERROR_MSG = "Given datasource name - \" %s \" either does not exist or is not valid"
+LIST_DATASOURCES_ERROR_MSG = "Given datasource name - %s either does not exist or is not valid"
+LIST_METADATA_DATASOURCE_NAME_ERROR_MSG = "Metadata for a given datasource name - %s either does not exist or is not valid"
+LIST_METADATA_ERROR_MSG = ("Metadata for a given datasource - %s, cluster name - %s, namespace - %s "
+                           "either does not exist or is not valid")
+LIST_METADATA_DATASOURCE_NAME_CLUSTER_NAME_ERROR_MSG = "Metadata for a given datasource name - %s, cluster_name - %s either does not exist or is not valid"
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
@@ -863,6 +868,72 @@ def validate_recommendation_for_cpu_mem_optimised(recommendations: dict, current
     assert recommendations["recommendation_engines"][profile]["config"]["requests"]["memory"]["amount"] == current["requests"]["memory"]["amount"]
     assert recommendations["recommendation_engines"][profile]["config"]["limits"]["memory"]["amount"] == current["limits"]["memory"]["amount"]
 
+
+def validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=None, namespace=None):
+    datasources = list_metadata_json.get('datasources', {})
+
+    if len(datasources) != 1:
+        return False
+
+    # Loop through the datasources dictionary
+    for key, value in datasources.items():
+        assert import_metadata_json['datasource_name'] == value.get('datasource_name')
+
+        if cluster_name is not None:
+            # Extract clusters from the current datasource
+            clusters = value.get('clusters', {})
+
+            for clusters_key, clusters_value in clusters.items():
+                assert cluster_name == clusters_value.get('cluster_name'), f"Invalid cluster name: {cluster_name}"
+
+                # If namespace is provided, perform namespace validation
+                if namespace is not None:
+                    # Extract namespaces from the current cluster
+                    namespaces = clusters[cluster_name].get('namespaces', {})
+
+                    assert namespace in [ns.get('namespace') for ns in namespaces.values()], f"Invalid namespace: {namespace}"
+
+
+def create_namespace(namespace_name):
+    # Load kube config
+    config.load_kube_config()
+
+    # Create a V1Namespace object
+    namespace = client.V1Namespace(
+        metadata=client.V1ObjectMeta(name=namespace_name)
+    )
+
+    # Create a Kubernetes API client
+    api_instance = client.CoreV1Api()
+
+    # Create the namespace
+    try:
+        api_instance.create_namespace(namespace)
+
+        print(f"Namespace '{namespace_name}' created successfully.")
+    except client.exceptions.ApiException as e:
+        if e.status == 409:
+            print(f"Namespace '{namespace_name}' already exists.")
+        else:
+            print(f"Error creating namespace: {e}")
+
+
+def delete_namespace(namespace_name):
+    # Load kube config
+    config.load_kube_config()
+
+    # Create a Kubernetes API client
+    api_instance = client.CoreV1Api()
+
+    # Delete the namespace
+    try:
+        api_instance.delete_namespace(name=namespace_name)
+        print(f"Namespace '{namespace_name}' deleted successfully.")
+    except client.exceptions.ApiException as e:
+        if e.status == 404:
+            print(f"Namespace '{namespace_name}' not found.")
+        else:
+            print(f"Exception deleting namespace: {e}")
 
 # validate duration_in_hours decimal precision
 def validate_duration_in_hours_decimal_precision(duration_in_hours):
