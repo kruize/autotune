@@ -210,7 +210,7 @@ public class DataSourceManager {
             DataSourceInfo datasource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
             return datasource;
         } catch (Exception e) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.LOAD_DATASOURCE_FROM_DB_ERROR, dataSourceName, e.getMessage());
+            LOGGER.error(String.format(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.LOAD_DATASOURCE_FROM_DB_ERROR, dataSourceName, e.getMessage()));
         }
         return null;
     }
@@ -229,7 +229,7 @@ public class DataSourceManager {
             DataSourceMetadataInfo metadataInfo = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, verbose);
             return metadataInfo;
         } catch (Exception e) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.LOAD_DATASOURCE_METADATA_FROM_DB_ERROR, dataSourceName, e.getMessage());
+            LOGGER.error(String.format(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.LOAD_DATASOURCE_METADATA_FROM_DB_ERROR, dataSourceName, e.getMessage()));
         }
         return null;
     }

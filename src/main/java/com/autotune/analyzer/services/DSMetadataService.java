@@ -21,12 +21,10 @@ import com.autotune.analyzer.serviceObjects.DSMetadataAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.common.datasource.DataSourceMetadataValidation;
-import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
@@ -104,7 +102,7 @@ public class DSMetadataService extends HttpServlet {
             inputData = request.getReader().lines().collect(Collectors.joining());
 
             if (null == inputData || inputData.isEmpty()) {
-                throw new Exception("Request input data cannot be null or empty");
+                throw new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_MISSING_REQUEST_INPUT_EXCPTN);
             }
 
             DSMetadataAPIObject metadataAPIObject = new Gson().fromJson(inputData, DSMetadataAPIObject.class);
@@ -248,6 +246,24 @@ public class DSMetadataService extends HttpServlet {
         response.sendError(httpStatusCode, errorMsg);
     }
 
+    /**
+     * Handles the GET request for listing metadata - GET /dsmetadata
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     *
+     * Supported Query Parameters -
+     * datasource	name of the datasource(required)
+     * cluster_name	name of the cluster(optional)
+     * namespace	The namespace(optional)
+     * verbose	    Flag to retrieve container-level metadata(optional)
+     *
+     * When the verbose parameter is set to true, the API response includes granular container-level details in the metadata,
+     * offering a more comprehensive view of the clusters, namespaces, workloads and containers associated with the
+     * specified datasource. When the verbose parameter is not provided or set to false, the API response provides basic
+     * information like list of clusters, namespaces associated with the specified datasource
+     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException{
         String statusValue = "failure";
@@ -384,9 +400,20 @@ public class DSMetadataService extends HttpServlet {
 
     /**
      * TODO temp solution to delete metadata, Need to evaluate use cases
+     * Handles the DELETE request for deleting metadata - DELETE /dsmetadata
      *
-     * @param request
-     * @param response
+     * The input request body should be a JSON object with the following structure:
+     * {
+     *     "version": "exampleVersion",
+     *     "datasource_name": "exampleDataSourceName"
+     * }
+     *
+     * The `version` field is the version of the API, and the `datasource_name` field is the data source name.
+     *
+     * The expected output is a response indicating the success or failure of the datasource metadata deletion.
+     *
+     * @param request   the HttpServletRequest containing the client request
+     * @param response  the HttpServletResponse containing the response to be sent to the client
      * @throws ServletException
      * @throws IOException
      */
@@ -394,13 +421,14 @@ public class DSMetadataService extends HttpServlet {
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         HashMap<String, DataSourceMetadataInfo> dataSourceMetadataMap = new HashMap<>();
         String inputData = "";
+        DataSourceManager dataSourceManager = new DataSourceManager();
         try {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
 
             inputData = request.getReader().lines().collect(Collectors.joining());
             if (null == inputData || inputData.isEmpty()) {
-                throw new Exception("Request input data cannot be null or empty");
+                throw new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_MISSING_REQUEST_INPUT_EXCPTN);
             }
             DSMetadataAPIObject metadataAPIObject = new Gson().fromJson(inputData, DSMetadataAPIObject.class);
             metadataAPIObject.validateInputFields();
@@ -415,7 +443,7 @@ public class DSMetadataService extends HttpServlet {
                         AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_NAME_MANDATORY);
             }
 
-            DataSourceInfo datasource = new ExperimentDBService().loadDataSourceFromDBByName(dataSourceName);
+            DataSourceInfo datasource = dataSourceManager.fetchDataSourceFromDBByName(dataSourceName);
 
             if (null == datasource) {
                 sendErrorResponse(
@@ -427,46 +455,44 @@ public class DSMetadataService extends HttpServlet {
                 );
             }
 
-            try {
-                DataSourceMetadataInfo dataSourceMetadata = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "false");
-                if (null == dataSourceMetadata) {
-                    sendErrorResponse(
-                            inputData,
-                            response,
-                            new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
-                            HttpServletResponse.SC_BAD_REQUEST,
-                            String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName)
-                    );
-                }
-                dataSourceMetadataMap.put(dataSourceName, dataSourceMetadata);
-
-                if (!dataSourceMetadataMap.isEmpty() && dataSourceMetadataMap.containsKey(dataSourceName)) {
-                    ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeDSMetadataEntryByName(dataSourceName);
-                    if (validationOutputData.isSuccess()) {
-                        new DataSourceManager().deleteMetadataFromDataSource(datasource);
-                        dataSourceMetadataMap.remove(dataSourceName);
-                    } else {
-                        sendErrorResponse(
-                                inputData,
-                                response,
-                                new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_EXCPTN),
-                                HttpServletResponse.SC_BAD_REQUEST,
-                                validationOutputData.getMessage()
-                        );
-                    }
-                } else {
-                    sendErrorResponse(
-                            inputData,
-                            response,
-                            new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_EXCPTN),
-                            HttpServletResponse.SC_BAD_REQUEST,
-                            String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName)
-                    );
-                }
-                sendSuccessResponse(response, "Datasource metadata deleted successfully.");
-            } catch (Exception e) {
-                LOGGER.error("Loading saved metadata for datasource {} failed: {} ", dataSourceName, e.getMessage());
+            DataSourceMetadataInfo dataSourceMetadata = dataSourceManager.fetchDataSourceMetadataFromDBByName(dataSourceName, "false");
+            if (null == dataSourceMetadata) {
+                sendErrorResponse(
+                        inputData,
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.MISSING_DATASOURCE_METADATA_EXCPTN),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName)
+                );
             }
+            dataSourceMetadataMap.put(dataSourceName, dataSourceMetadata);
+
+            if (!dataSourceMetadataMap.isEmpty() && dataSourceMetadataMap.containsKey(dataSourceName)) {
+                try {
+                    // fetch and delete metadata from database
+                    dataSourceManager.deleteMetadataFromDBByDataSource(datasource);
+
+                    //deletes in-memory metadata object fetched from the cluster of the specified datasource
+                    dataSourceManager.deleteMetadataFromDataSource(datasource);
+                    dataSourceMetadataMap.remove(dataSourceName);
+                } catch (Exception e) {
+                    sendErrorResponse(
+                            inputData,
+                            response,
+                            e,
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            e.getMessage());
+                }
+            } else {
+                sendErrorResponse(
+                        inputData,
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_EXCPTN),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_DELETE_ERROR_MSG, dataSourceName)
+                );
+            }
+            sendSuccessResponse(response, KruizeConstants.DataSourceConstants.DataSourceMetadataInfoSuccessMsgs.DATASOURCE_METADATA_DELETED);
 
         } catch (Exception e) {
             sendErrorResponse(inputData, response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());

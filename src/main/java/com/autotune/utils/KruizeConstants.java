@@ -498,6 +498,12 @@ public class KruizeConstants {
             public static final String CONTAINER_NAME = "container_name";
             public static final String CONTAINER_IMAGE_NAME = "container_image_name";
         }
+
+        public static class DataSourceMetadataInfoSuccessMsgs {
+            public static final String DATASOURCE_METADATA_DELETED = "Datasource metadata deleted successfully.";
+            private DataSourceMetadataInfoSuccessMsgs() {
+            }
+        }
     }
 
     public static class ErrorMsgs {
