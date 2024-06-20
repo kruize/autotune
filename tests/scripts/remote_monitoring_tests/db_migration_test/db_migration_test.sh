@@ -125,8 +125,8 @@ total_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
 echo ""
 echo "Backing up DB..."
 db_backup_file="${LOG_DIR}/test_logs_50_15days/db_backup.sql"
-echo "kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}"
-kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}
+echo "kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}"
+kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}
 echo "Backing up DB...Done"
 echo ""
 

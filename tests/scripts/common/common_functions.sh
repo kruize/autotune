@@ -312,7 +312,7 @@ function restore_db() {
 
 	echo ""
 	echo "Restoring DB..."
-	postgres_pod=$(kubectl get pods -o=name -n ${NAMESPACE} | grep postgres | cut -d '/' -f2)
+	postgres_pod=$(kubectl get pods -o=name -n ${NAMESPACE} | grep kruize-db | cut -d '/' -f2)
 	db_file=$(basename ${db_backup_file})
 
 	echo "oc cp ${db_backup_file} ${NAMESPACE}/${postgres_pod}:/"
