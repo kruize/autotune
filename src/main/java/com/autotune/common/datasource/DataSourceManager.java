@@ -110,6 +110,10 @@ public class DataSourceManager {
      */
     public void saveMetadataFromDataSourceToDB(DataSourceInfo dataSourceInfo) {
         try {
+            if (null == dataSourceInfo) {
+                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            }
+
             DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSourceInfo);
             if (null == dataSourceMetadataInfo) {
                 LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceInfo.getName());
@@ -163,6 +167,9 @@ public class DataSourceManager {
      */
     public void deleteMetadataFromDBByDataSource(DataSourceInfo dataSourceInfo) {
         try {
+            if (null == dataSourceInfo) {
+                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            }
             String dataSourceName = dataSourceInfo.getName();
             DataSourceMetadataInfo dataSourceMetadataInfo = fetchDataSourceMetadataFromDBByName(dataSourceName, "false");
             if (null == dataSourceMetadataInfo) {
