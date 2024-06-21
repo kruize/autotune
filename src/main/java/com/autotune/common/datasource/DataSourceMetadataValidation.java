@@ -1,5 +1,6 @@
 package com.autotune.common.datasource;
 
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.dataSourceMetadata.DataSourceCluster;
 import com.autotune.common.data.dataSourceMetadata.DataSource;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
@@ -39,12 +40,6 @@ public class DataSourceMetadataValidation {
         setErrorMessage(message);
     }
 
-    private List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
-            KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCES,
-            KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS,
-            KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTER_NAME
-    ));
-
     /**
      * Validates the given DataSourceMetadataInfo object for mandatory fields like "datasources" and "datasource_name".
      *
@@ -53,26 +48,28 @@ public class DataSourceMetadataValidation {
     public void validate(DataSourceMetadataInfo dataSourceMetadataInfo) {
         List<String> missingMandatoryFields = new ArrayList<>();
         try {
-            if (dataSourceMetadataInfo == null || dataSourceMetadataInfo.getDataSourceHashMap() == null) {
-                missingMandatoryFields.add(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCES);
+            if (null == dataSourceMetadataInfo || null == dataSourceMetadataInfo.getDataSourceHashMap()) {
+                String errorMsg = AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_CONNECTION_FAILED;
+                markFailed(errorMsg);
                 return;
             }
 
             for (Map.Entry<String, DataSource> entry : dataSourceMetadataInfo.getDataSourceHashMap().entrySet()) {
                 DataSource dataSource = entry.getValue();
-                if (dataSource.getDataSourceName() == null) {
+                if (null == dataSource.getDataSourceName()) {
                     missingMandatoryFields.add(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCE_NAME);
+                    String errorMsg = String.format(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_VALIDATION_FAILURE_MSG, missingMandatoryFields);
+                    markFailed(errorMsg);
                     return;
                 }
                 validateDataSourceCluster(dataSource, missingMandatoryFields);
+                if (!missingMandatoryFields.isEmpty()) {
+                    String errorMsg = String.format(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_VALIDATION_FAILURE_MSG, missingMandatoryFields);
+                    markFailed(errorMsg);
+                }
             }
 
-            if (!missingMandatoryFields.isEmpty()) {
-                String errorMsg = String.format(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_VALIDATION_FAILURE_MSG, missingMandatoryFields);
-                markFailed(errorMsg);
-            } else {
-                setSuccess(true);
-            }
+            setSuccess(true);
         } catch (Exception e) {
             LOGGER.error("Validation error: " + e.getMessage());
             e.printStackTrace();
@@ -87,12 +84,12 @@ public class DataSourceMetadataValidation {
      * @param missingMandatoryFields the list to which any missing fields will be added.
      */
     private void validateDataSourceCluster(DataSource dataSource, List<String> missingMandatoryFields) {
-        if (dataSource.getDataSourceClusterHashMap() == null) {
+        if (null == dataSource.getDataSourceClusterHashMap()) {
             missingMandatoryFields.add(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS);
         } else {
             for (Map.Entry<String, DataSourceCluster> entry : dataSource.getDataSourceClusterHashMap().entrySet()) {
                 DataSourceCluster dataSourceCluster = entry.getValue();
-                if (dataSourceCluster.getDataSourceClusterName() == null) {
+                if (null == dataSourceCluster.getDataSourceClusterName()) {
                     missingMandatoryFields.add(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTER_NAME);
                 }
             }

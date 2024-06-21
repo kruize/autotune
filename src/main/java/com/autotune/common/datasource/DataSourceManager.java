@@ -30,15 +30,21 @@ public class DataSourceManager {
     /**
      * Imports Metadata for a specific data source using associated DataSourceInfo.
      */
-    public void importMetadataFromDataSource(DataSourceInfo dataSourceInfo) {
+    public DataSourceMetadataInfo importMetadataFromDataSource(DataSourceInfo dataSourceInfo) {
         try {
             if (null == dataSourceInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo);
+            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo);
+            if (null == dataSourceMetadataInfo) {
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceInfo.getName());
+                return null;
+            }
+            return dataSourceMetadataInfo;
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
+        return null;
     }
 
     /**

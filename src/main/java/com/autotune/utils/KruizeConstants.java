@@ -480,6 +480,7 @@ public class KruizeConstants {
             public static final String LOAD_DATASOURCE_FROM_DB_ERROR = "Error loading datasource - %s from DB: %s";
             public static final String LOAD_DATASOURCE_METADATA_FROM_DB_ERROR = "Error loading datasource - %s from DB: %s";
             public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_MSG = "Validation of imported metadata failed, mandatory fields missing: %s";
+            public static final String NAMESPACE_QUERY_VALIDATION_FAILED = "Validation failed for namespace data query.";
         }
 
         public static class DataSourceMetadataInfoJSONKeys {

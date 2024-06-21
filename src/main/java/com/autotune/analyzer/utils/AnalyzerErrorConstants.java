@@ -192,6 +192,7 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
             public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_EXCPTN = "Invalid DataSourceMetadata object";
             public static final String DATASOURCE_METADATA_MISSING_REQUEST_INPUT_EXCPTN = "Request input data cannot be null or empty";
+            public static final String DATASOURCE_METADATA_CONNECTION_FAILED = "Metadata cannot be imported, datasource connection refused or timed out";
         }
     }
 

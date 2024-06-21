@@ -33,7 +33,7 @@ public class DataSourceMetadataOperator {
      * @param dataSourceInfo The DataSourceInfo object containing information about the data source.
      * TODO - support multiple data sources
      */
-    public void createDataSourceMetadata(DataSourceInfo dataSourceInfo) {
+    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo) {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
         /**
          * Get DataSourceOperatorImpl instance on runtime based on dataSource provider
@@ -42,7 +42,7 @@ public class DataSourceMetadataOperator {
 
         if (null == op) {
             LOGGER.error("Failed to retrieve data source operator for provider: {}", dataSourceInfo.getProvider());
-            return;
+            return null;
         }
 
         /**
@@ -56,8 +56,7 @@ public class DataSourceMetadataOperator {
             JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(datasourceUrl, PromQLDataSourceQueries.NAMESPACE_QUERY);
             if (false == op.validateResultArray(namespacesDataResultArray)){
                 dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(datasourceName, null);
-                LOGGER.error("Validation failed for namespace data query.");
-                return;
+                throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
             }
 
             /**
@@ -98,9 +97,12 @@ public class DataSourceMetadataOperator {
                 datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
             }
             dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(datasourceName, dataSourceMetadataInfo, datasourceWorkloads, datasourceContainers);
+
+            return getDataSourceMetadataInfo(dataSourceInfo);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
+        return null;
     }
 
     /**

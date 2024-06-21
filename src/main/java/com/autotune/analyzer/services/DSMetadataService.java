@@ -148,8 +148,7 @@ public class DSMetadataService extends HttpServlet {
 
             DataSourceMetadataInfo metadataInfo;
             try {
-                dataSourceManager.importMetadataFromDataSource(datasource);
-                metadataInfo = dataSourceManager.getMetadataFromDataSource(datasource);
+                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource);
             } catch (Exception e) {
                 sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
