@@ -20,7 +20,7 @@
 # This test does the following:
 # Deploys the previous release of kruize that is specified and uploads results for 50 exps / 15 days
 # Invokes updateRecommendations for all the 50 exps
-# Backups DB and deploys the current release of kruize specified along with a new instance of postgres. 
+# Backups DB and deploys the current release of kruize specified along with a new instance of kruize DB. 
 # The backed up DB is restored and new usage metrics or results for 1 day for 50 exps is posted
 # Invokes updateRecommendations for all the 50 exps
 
@@ -31,7 +31,7 @@ SCALE_TEST="${CURRENT_DIR}/../scale_test"
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
 
-RESULTS_DIR=kruize_db_migration_test_without_postgres_restart_results
+RESULTS_DIR=kruize_db_migration_test_without_kruize_db_restart_results
 APP_NAME=kruize
 CLUSTER_TYPE=openshift
 DEPLOYMENT_NAME=kruize
@@ -102,10 +102,10 @@ do
 done
 
 start_time=$(get_date)
-LOG_DIR="${RESULTS_DIR}/db-migration-test-without-postgres-restart-$(date +%Y%m%d%H%M)"
+LOG_DIR="${RESULTS_DIR}/db-migration-test-without-kruize-db-restart-$(date +%Y%m%d%H%M)"
 mkdir -p ${LOG_DIR}
 
-LOG="${LOG_DIR}/db-migration-test-without-postgres-restart.log"
+LOG="${LOG_DIR}/db-migration-test-without-kruize-db-restart.log"
 
 # Run scalability test to load 50 exps / 15 days data and update Recommendations with previous release
 pushd ${SCALE_TEST} > /dev/null
@@ -189,10 +189,10 @@ echo ""
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
 
 if [ ${failed} == 0 ]; then
-	echo "DB Migration test without postgres restart - Passed!"
+	echo "DB Migration test without kruize DB restart - Passed!"
 	exit 0
 else
-	echo "DB Migration test without postgres restart - Failed! Check logs for details"
+	echo "DB Migration test without kruize DB restart - Failed! Check logs for details"
 	exit 1
 fi
 

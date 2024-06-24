@@ -10,19 +10,19 @@ Kruize Remote monitoring DB migration test validates the backward compatibility 
    - Exposes kruize service
    - Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md) 
    - Creates around 10 client threads that run in parallel, creating multiple experiments and uploading the metrics results for 15 days
-   - Backups up the postgres database
-   - Deploys kruize using the specified current release image and restarts the postgres container
-   - Restores the data from the backed up postgres file
+   - Backups up the kruize database
+   - Deploys kruize using the specified current release image and restarts the kruize DB container
+   - Restores the data from the backed up kruize DB file
    - Creates around 10 client threads that run in parallel and uploading the metrics results for 1 day for the same experiments
    - It then invokes update recommendations to check if recommendations are generated using the metrics from last 15 days
   
-   DB migration test without postgres restart does the following:
+   DB migration test without kruize DB restart does the following:
    - Deploys the specified previous release of kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
    - Scales kruize replicas to 10
    - Exposes kruize service
    - Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md) 
    - Creates around 10 client threads that run in parallel, creating multiple experiments and uploading the metrics results for 15 days
-   - Restarts only kruize using the specified current release image and doesn't restart postgres container
+   - Restarts only kruize using the specified current release image and doesn't restart kruize DB container
    - Creates around 10 client threads that run in parallel and uploading the metrics results for 1 day for the same experiments
    - It then invokes update recommendations to check if recommendations are generated using the metrics from last 15 days
   

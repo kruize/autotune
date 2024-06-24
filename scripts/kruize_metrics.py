@@ -126,7 +126,7 @@ queries_map_total = {
         "kruize_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"kruize-[^-]*-[^-]*$"'",container=\"kruize\"}[6h])))",
         }
 
-def get_postgresql_metrics(namespace):
+def get_kruize_db_metrics(namespace):
     try:
         pod_name = subprocess.check_output(["kubectl", "get", "pods", "-n", namespace, "--selector=app=kruize-db", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True)
         pod_name = pod_name.strip("'")
@@ -182,7 +182,7 @@ def run_queries(map_type,server,prometheus_url=None):
                 # Uncomment else part to debug which query is not working.
                 #else:
                 #    print(f"Failed to run query '{query}' with status code {response.status_code}")
-        kruize_results, db_size = get_postgresql_metrics(namespace)
+        kruize_results, db_size = get_kruize_db_metrics(namespace)
         results_map["kruize_results"] = kruize_results
         results_map["db_size"] = db_size
         if "updateResults_sum_success" in results_map and "updateResults_count_success" in results_map:

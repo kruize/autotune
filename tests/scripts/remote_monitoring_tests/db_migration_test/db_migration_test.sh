@@ -20,7 +20,7 @@
 # This test does the following:
 # Deploys the previous release of kruize that is specified and uploads results for 50 exps / 15 days
 # Invokes updateRecommendations for all the 50 exps
-# Backups DB and deploys the current release of kruize specified along with a new instance of postgres. 
+# Backups DB and deploys the current release of kruize specified along with a new instance of kruize DB. 
 # The backed up DB is restored and new usage metrics or results for 1 day for 50 exps is posted
 # Invokes updateRecommendations for all the 50 exps
 
