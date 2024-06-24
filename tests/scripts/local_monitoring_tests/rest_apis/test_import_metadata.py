@@ -262,14 +262,20 @@ def test_repeated_metadata_import_without_datasource_connection(cluster_type):
     list_metadata_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
 
+    if cluster_type == "minikube":
+        namespace = "monitoring"
+    elif cluster_type == "openshift":
+        namespace = "openshift-monitoring"
+
     # Validate the json values
     import_metadata_json = read_json_data_from_file(input_json_file)
-    validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=cluster_name, namespace="monitoring")
+    validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=cluster_name, namespace=namespace)
+
 
     # Scaling down prometheus deployment and statefulset to zero replicas to bring down prometheus datasource connection
-    scale_deployment("monitoring", "prometheus-operator", 0)
-    scale_deployment("monitoring", "prometheus-adapter", 0)
-    scale_statefulset("monitoring", "prometheus-k8s", 0)
+    scale_deployment(namespace, "prometheus-operator", 0)
+    scale_deployment(namespace, "prometheus-adapter", 0)
+    scale_statefulset(namespace, "prometheus-k8s", 0)
     time.sleep(10)
 
     # Repeated Import metadata using the specified json
@@ -290,12 +296,13 @@ def test_repeated_metadata_import_without_datasource_connection(cluster_type):
 
     # Validate the json values
     import_metadata_json = read_json_data_from_file(input_json_file)
-    validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=cluster_name, namespace="monitoring")
+    validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=cluster_name, namespace=namespace)
 
     #validate namespaces
     response = delete_metadata(input_json_file)
     print("delete metadata = ", response.status_code)
 
-    scale_deployment("monitoring", "prometheus-operator", 1)
-    scale_deployment("monitoring", "prometheus-adapter", 1)
-    scale_statefulset("monitoring", "prometheus-k8s", 1)
+    scale_deployment(namespace, "prometheus-operator", 1)
+    scale_deployment(namespace, "prometheus-adapter", 2)
+    scale_statefulset(namespace, "prometheus-k8s", 2)
+    time.sleep(30)
