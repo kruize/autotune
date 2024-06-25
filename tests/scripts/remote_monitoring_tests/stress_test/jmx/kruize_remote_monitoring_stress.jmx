@@ -79,7 +79,7 @@
               <elementProp name="" elementType="HTTPArgument">
                 <boolProp name="HTTPArgument.always_encode">false</boolProp>
                 <stringProp name="Argument.value">[{&#xd;
-  &quot;version&quot;: &quot;1.0&quot;,&#xd;
+  &quot;version&quot;: &quot;v2.0&quot;,&#xd;
   &quot;experiment_name&quot;: &quot;quarkus-resteasy-kruize-min-http-response-time-db-${__threadNum}&quot;,&#xd;
   &quot;cluster_name&quot;: &quot;cluster-one-division-bell&quot;,&#xd;
   &quot;performance_profile&quot;: &quot;resource-optimization-openshift&quot;,&#xd;

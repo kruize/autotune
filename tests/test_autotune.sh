@@ -214,7 +214,7 @@ if [ ! -z "${testcase}" ]; then
 fi
 
 # check for benchmarks directory path
-if [ ! "${testsuite}" == "remote_monitoring_tests" ]; then
+if [[ "${testsuite}" != "remote_monitoring_tests" && "${testsuite}" != "local_monitoring_tests" ]]; then
 	if [ -z "${APP_REPO}" ]; then
 		echo "Error: Do specify the benchmarks directory path"
 		usage
@@ -256,7 +256,8 @@ if [ "${setup}" -ne "0" ]; then
 		exit 0
 	fi
 else
-	if [ ${testsuite} == "remote_monitoring_tests" ]; then
+  #TODO: the target for local monitoring is temporarily set to "crc" for the demo
+	if [ ${testsuite} == "remote_monitoring_tests" ] || [ ${testsuite} == "local_monitoring_tests" ] ; then
 		target="crc"
 	else
 		target="autotune"

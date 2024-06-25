@@ -18,7 +18,7 @@ package com.autotune.operator;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.common.datasource.DataSourceFactory;
+import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -28,8 +28,6 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Field;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Locale;
 
 /**
@@ -59,7 +57,7 @@ public class InitializeDeployment {
                 throw new MonitoringAgentNotFoundException();
             } else {
                 // Fetch endpoint from service cluster IP
-                monitoring_agent_endpoint = DataSourceFactory.getDataSource(monitoring_agent).getDataSourceURL();
+                monitoring_agent_endpoint = DataSourceOperatorImpl.getMonitoringAgent(monitoring_agent).getUrl().toString();
             }
         }
         KruizeDeploymentInfo.setMonitoring_agent_endpoint(monitoring_agent_endpoint);
@@ -95,21 +93,21 @@ public class InitializeDeployment {
                 LOGGER.warn("Failed to set config using file {} due to {}. checking if corresponding environment variable is set.", configFile, exception.getMessage());
             }
         }
-        List<String> systemENVList = new ArrayList<>();
         Field[] fields = envClass.getFields();
         for (Field field : fields) {
             try {
                 Field deploymentInfoField = KruizeDeploymentInfo.class.getDeclaredField(field.getName().toLowerCase(Locale.ROOT));
                 String deploymentInfoFieldValue = getKruizeConfigValue((String) field.get(null), configObject);
-                if (deploymentInfoField.getType() == String.class)
-                    deploymentInfoField.set(null, deploymentInfoFieldValue);
-                else if (deploymentInfoField.getType() == Boolean.class)
-                    deploymentInfoField.set(null, Boolean.parseBoolean(deploymentInfoFieldValue));
-                else if (deploymentInfoField.getType() == Integer.class) {
-                    assert deploymentInfoFieldValue != null;
-                    deploymentInfoField.set(null, Integer.parseInt(deploymentInfoFieldValue));
-                } else
-                    throw new IllegalAccessException("Failed to set " + deploymentInfoField + "due to its type " + deploymentInfoField.getType());
+                if (null != deploymentInfoFieldValue) {
+                    if (deploymentInfoField.getType() == String.class)
+                        deploymentInfoField.set(null, deploymentInfoFieldValue);
+                    else if (deploymentInfoField.getType() == Boolean.class)
+                        deploymentInfoField.set(null, Boolean.parseBoolean(deploymentInfoFieldValue));
+                    else if (deploymentInfoField.getType() == Integer.class)
+                        deploymentInfoField.set(null, Integer.parseInt(deploymentInfoFieldValue));
+                    else
+                        throw new IllegalAccessException("Failed to set " + deploymentInfoField + "due to its type " + deploymentInfoField.getType());
+                }
             } catch (Exception e) {
                 LOGGER.warn("Error while setting config variables : {} : {}", e.getClass(), e.getMessage());
             }

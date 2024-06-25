@@ -23,10 +23,9 @@ import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.MetricsConfig;
-import com.google.gson.Gson;
+import com.google.gson.*;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +38,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -74,9 +74,23 @@ public class UpdateResults extends HttpServlet {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
             inputData = request.getReader().lines().collect(Collectors.joining());
+            List<UpdateResultsAPIObject> updateResultsAPIObjects;
+            Gson gson = new GsonBuilder()
+                    .registerTypeAdapter(Double.class, new CustomNumberDeserializer())
+                    .registerTypeAdapter(Integer.class, new CustomNumberDeserializer())
+                    .create();
             LOGGER.debug("updateResults API request payload for requestID {} is {}", calCount, inputData);
-            List<ExperimentResultData> experimentResultDataList = new ArrayList<>();
-            List<UpdateResultsAPIObject> updateResultsAPIObjects = Arrays.asList(new Gson().fromJson(inputData, UpdateResultsAPIObject[].class));
+            try {
+                updateResultsAPIObjects = Arrays.asList(gson.fromJson(inputData, UpdateResultsAPIObject[].class));
+            } catch (JsonParseException e) {
+                LOGGER.error("{} : {}", AnalyzerErrorConstants.AutotuneObjectErrors.JSON_PARSING_ERROR, e.getMessage());
+                sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.JSON_PARSING_ERROR);
+                return;
+            } catch (NumberFormatException e) {
+                LOGGER.error("{}", e.getMessage());
+                sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+                return;
+            }
             LOGGER.debug("updateResults API request payload for requestID {} bulk count is {}", calCount, updateResultsAPIObjects.size());
             // check for bulk entries and respond accordingly
             if (updateResultsAPIObjects.size() > KruizeDeploymentInfo.bulk_update_results_limit) {
@@ -88,7 +102,7 @@ public class UpdateResults extends HttpServlet {
             experimentInitiator.validateAndAddExperimentResults(updateResultsAPIObjects);
             List<UpdateResultsAPIObject> failureAPIObjs = experimentInitiator.getFailedUpdateResultsAPIObjects();
             List<FailedUpdateResultsAPIObject> jsonObjectList = new ArrayList<>();
-            if (failureAPIObjs.size() > 0) {
+            if (!failureAPIObjs.isEmpty()) {
                 failureAPIObjs.forEach(
                         (failObj) -> {
                             FailedUpdateResultsAPIObject failJSONObj = new FailedUpdateResultsAPIObject(
@@ -105,16 +119,17 @@ public class UpdateResults extends HttpServlet {
                 );
                 request.setAttribute("data", jsonObjectList);
                 String errorMessage = String.format("Out of a total of %s records, %s failed to save", updateResultsAPIObjects.size(), failureAPIObjs.size());
-                LOGGER.debug("updateResults API request payload for requestID {} failed", calCount);
+                LOGGER.error("updateResults API request payload for requestID {} failed", calCount);
                 sendErrorResponse(inputData, request, response, null, HttpServletResponse.SC_BAD_REQUEST, errorMessage);
             } else {
-                LOGGER.debug("updateResults API request payload for requestID {} success", calCount);
+                if (KruizeDeploymentInfo.log_http_req_resp)
+                    LOGGER.info("updateResults API request payload for requestID {} success is {}", calCount, new Gson().toJson(JsonParser.parseString(inputData)));
                 sendSuccessResponse(response, AnalyzerConstants.ServiceConstants.RESULT_SAVED);
                 statusValue = "success";
             }
         } catch (Exception e) {
-            LOGGER.debug("updateResults API request payload for requestID {} failed", calCount);
-            LOGGER.error("Exception: " + e.getMessage());
+            LOGGER.error("updateResults API request payload for requestID {} failed", calCount);
+            LOGGER.error("Exception: {}", e.getMessage());
             e.printStackTrace();
             sendErrorResponse(inputData, request, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } finally {
@@ -134,7 +149,7 @@ public class UpdateResults extends HttpServlet {
         String successOutput = new Gson().toJson(
                 new KruizeResponse(message, HttpServletResponse.SC_CREATED, "", "SUCCESS")
         );
-        LOGGER.debug(successOutput);
+        LOGGER.debug("Update Results API response: {}", successOutput);
         out.append(
                 successOutput
         );
@@ -148,7 +163,22 @@ public class UpdateResults extends HttpServlet {
             e.printStackTrace();
             if (null == errorMsg) errorMsg = e.getMessage();
         }
-        LOGGER.debug("UpdateRequestsAPI  input pay load {} ", inputPayload);
+        if (KruizeDeploymentInfo.log_http_req_resp)
+            LOGGER.info("UpdateRequestsAPI  input pay load {} ", new Gson().toJson(JsonParser.parseString(inputPayload)));
         response.sendError(httpStatusCode, errorMsg);
     }
+
+    public static class CustomNumberDeserializer implements JsonDeserializer<Number> {
+
+        @Override
+        public Number deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws NumberFormatException {
+            String value = json.getAsString().trim();
+            if (value.isEmpty()) {
+                throw new NumberFormatException(AnalyzerErrorConstants.AutotuneObjectErrors.AGGREGATION_INFO_INVALID_VALUE);
+            } else {
+                return Double.parseDouble(value);
+            }
+        }
+    }
+
 }

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE;
@@ -63,12 +64,12 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
             }
 
             // validate the results value present in the updateResultsAPIObject
-            String errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, updateResultsAPIObject);
-            if (null == errorMsg || errorMsg.isEmpty()) {
+            List<String> errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, updateResultsAPIObject);
+            if (errorMsg.isEmpty()) {
                 success = true;
             } else {
                 context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate(errorMsg)
+                context.buildConstraintViolationWithTemplate(errorMsg.toString())
                         .addPropertyNode("Performance profile")
                         .addConstraintViolation();
             }

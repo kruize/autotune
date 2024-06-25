@@ -35,6 +35,8 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import javax.net.ssl.SSLContext;
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -62,6 +64,20 @@ public class GenericRestApiClient {
      * @param baseURL
      */
     public GenericRestApiClient(String baseURL) {
+        String tokenFilePath = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+        String token = null;
+        try {
+            // Read the token from the file
+            BufferedReader reader = new BufferedReader(new FileReader(tokenFilePath));
+            token = reader.readLine();
+            reader.close();
+            this.bearerAccessToken = new BearerAccessToken(token);
+            this.setAuthHeaderString(this.bearerAccessToken.getAuthHeader());
+            // Print the service account token
+        } catch (Exception e) {
+            LOGGER.error("Error reading service account token: " + e.getMessage());
+        }
+
         this.baseURL = baseURL;
     }
 

@@ -53,7 +53,7 @@ AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
 
 # Kruize UI repo
 KRUIZE_UI_REPO="quay.io/kruize/kruize-ui"
-KRUIZE_UI_VERSION="$(curl -s https://raw.githubusercontent.com/kruize/kruize-ui/mvp_demo/package.json | grep -m1 '\"version\"' | tr -d ' ' | cut -d: -f2 | tr -d \" | sed 's/,$//')"
+KRUIZE_UI_VERSION="$(curl -s https://raw.githubusercontent.com/kruize/kruize-ui/mvp_demo/package.json | grep -m1 '"version"' | tr -d ' ' | cut -d: -f2 | tr -d \" | sed 's/,$//')"
 KRUIZE_UI_DOCKER_IMAGE=${KRUIZE_UI_REPO}:${KRUIZE_UI_VERSION}
 
 HPO_DOCKER_REPO="docker.io/kruize/hpo"
@@ -123,7 +123,7 @@ function check_cluster_type() {
 }
 
 # Iterate through the commandline options
-while getopts ac:d:i:k:m:n:o:p:stub-: gopts; do
+while getopts ac:d:i:k:m:n:o:p:u:stb-: gopts; do
 	case ${gopts} in
 	-)
 		case "${OPTARG}" in

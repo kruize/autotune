@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
-import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
+import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 
 import java.util.List;
 
@@ -25,7 +25,7 @@ public class KruizeResponse {
     private String documentationLink;
     private String status;
 
-    private List<UpdateResultsAPIObject> data;
+    private List<FailedUpdateResultsAPIObject> data;
 
 
     public KruizeResponse(String message, int httpcode, String documentationLink, String status) {
@@ -35,7 +35,7 @@ public class KruizeResponse {
         this.status = status;
     }
 
-    public KruizeResponse(String message, int httpcode, String documentationLink, String status, List<UpdateResultsAPIObject> data) {
+    public KruizeResponse(String message, int httpcode, String documentationLink, String status, List<FailedUpdateResultsAPIObject> data) {
         this.message = message;
         this.httpcode = httpcode;
         this.documentationLink = documentationLink;

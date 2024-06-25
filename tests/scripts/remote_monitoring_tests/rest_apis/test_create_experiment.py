@@ -1,4 +1,22 @@
+"""
+Copyright (c) 2022, 2024 Red Hat, IBM Corporation and others.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 import pytest
+import sys
+sys.path.append("../../")
+
 from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
@@ -33,7 +51,7 @@ csvfile = "/tmp/create_exp_test_data.csv"
 @pytest.mark.negative
 @pytest.mark.parametrize(
     "test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace, container_image_name, container_name, measurement_duration, threshold",
-    generate_test_data(csvfile, create_exp_test_data))
+    generate_test_data(csvfile, create_exp_test_data, "create_exp"))
 def test_create_exp_invalid_tests(test_name, expected_status_code, version, experiment_name, cluster_name,
                                   performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace,
                                   container_image_name, container_name, measurement_duration, threshold, cluster_type):
@@ -87,9 +105,12 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, version, expe
     data = response.json()
     print(data['message'])
 
+    # temporarily moved this up to avoid failures in the subsequent tests, this will be reverted once the create
+    # experiment validation PR goes in
+    response_delete_exp = delete_experiment(tmp_json_file)
+    print("delete exp = ", response_delete_exp.status_code)
+
     assert response.status_code == int(expected_status_code)
-    response = delete_experiment(tmp_json_file)
-    print("delete exp = ", response.status_code)
 
 
 @pytest.mark.sanity
@@ -322,7 +343,7 @@ def test_create_exp_with_both_performance_profile_slo(cluster_type):
     print("delete exp = ", response.status_code)
 
 
-@pytest.mark.sanity
+@pytest.mark.negative
 def test_create_exp_with_both_deployment_name_selector(cluster_type):
     """
     Test Description: This test validates the creation of an experiment by specifying both deployment name & selector
@@ -347,7 +368,7 @@ def test_create_exp_with_both_deployment_name_selector(cluster_type):
     print("delete exp = ", response.status_code)
 
 
-@pytest.mark.sanity
+@pytest.mark.negative
 def test_create_exp_with_invalid_header(cluster_type):
     """
     Test Description: This test validates the creation of an experiment by specifying invalid content type in the header

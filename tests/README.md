@@ -143,8 +143,20 @@ To run the stress test refer the Stress test [README](/tests/scripts/remote_moni
 
 To run the fault tolerant test refer the [README](/tests/scripts/remote_monitoring_tests/fault_tolerant_tests.md)
 
+### Local monitoring tests
+
+Here we test Kruize [Local monitoring APIs](/design/KruizeLocalAPI.md).
+
+#### API tests
+
+  The tests does the following:
+  - Deploys kruize in non-CRD mode using the deploy script from the autotune repo
+  - Validates the behaviour of list datasources, import metadata and list metadata APIs in various scenarios covering both positive and negative usecases.
+
+  For details refer this [doc](/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md)
+
 ## Supported Clusters
-- Minikube
+- Minikube, Openshift
 
 ## Prerequisites for running the tests:
 
@@ -202,6 +214,12 @@ To run remote monitoring tests,
 
 ```
 <AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -i kruize/autotune_operator:0.0.11_mvp --testsuite=remote_monitoring_tests --resultsdir=/home/results
+```
+
+To run local monitoring tests,
+
+```
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -i kruize/autotune_operator:0.0.21_mvp --testsuite=local_monitoring_tests --resultsdir=/home/results
 ```
 
 ## How to test a specific autotune module?

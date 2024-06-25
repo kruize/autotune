@@ -1,11 +1,29 @@
+"""
+Copyright (c) 2022, 2024 Red Hat, IBM Corporation and others.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
 import copy
 import json
 
 import pytest
+import sys
+sys.path.append("../../")
+
 from helpers.fixtures import *
 from helpers.generate_rm_jsons import *
 from helpers.kruize import *
-from helpers.list_reco_json_schema import *
+from helpers.short_term_list_reco_json_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.utils import *
 
@@ -84,7 +102,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
             file_path = '/tmp/result_%s_to_%s.json' % (current_index, batch_size)
             with open(file_path, 'w') as json_file:
                 json.dump(batch, json_file)
-            response = update_results(file_path)
+            response = update_results(file_path, False)
             data = response.json()
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data['status'] == SUCCESS_STATUS
@@ -104,6 +122,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
             assert data[0]['experiment_name'] == experiment_name
             assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                        'message'] == RECOMMENDATIONS_AVAILABLE
+
             response = list_recommendations(experiment_name)
             if response.status_code == SUCCESS_200_STATUS_CODE:
                 recommendation_json = response.json()

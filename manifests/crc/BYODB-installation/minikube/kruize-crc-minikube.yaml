@@ -14,7 +14,7 @@ data:
       "database": {
         "adminPassword": "admin",
         "adminUsername": "admin",
-        "hostname": "postgres-service",
+        "hostname": "kruize-db-service",
         "name": "kruizeDB",
         "password": "admin",
         "port": 5432,
@@ -32,6 +32,9 @@ data:
       "monitoringendpoint": "prometheus-k8s",
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
+      "plots": "true",
+      "local": "false",
+      "logAllHttpReqAndResp": "true",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -42,6 +45,16 @@ data:
         "hbm2ddlauto": "update",
         "showsql": "false",
         "timezone": "UTC"
+      },
+      "logging" : {
+        "cloudwatch": {
+          "accessKeyId": "",
+          "logGroup": "kruize-logs",
+          "logStream": "kruize-stream",
+          "region": "",
+          "secretAccessKey": "",
+          "logLevel": "INFO"
+        }
       }
     }
 ---
@@ -63,9 +76,21 @@ spec:
         app: kruize
         name: kruize
     spec:
+      initContainers:
+        - name: wait-for-kruize-db
+          image: quay.io/kruizehub/postgres:15.2 # Use the same Postgres version as the Postgres deployment
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h kruize-db-service -p 5432 -U admin; do
+                echo "Waiting for kruize-db-service to be ready..."
+                sleep 2
+              done
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.20_rm
+          image: kruize/autotune_operator:0.0.22_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume

@@ -1,6 +1,6 @@
 #!/bin/bash
 #
-# Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+# Copyright (c) 2020, 2024 Red Hat, IBM Corporation and others.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -45,7 +45,8 @@ TEST_SUITE_ARRAY=("app_autotune_yaml_tests"
 "autotune_id_tests"
 "kruize_layer_id_tests"
 "em_standalone_tests"
-"remote_monitoring_tests")
+"remote_monitoring_tests"
+"local_monitoring_tests")
 
 modify_kruize_layer_tests=("add_new_tunable"
 "apply_null_tunable"
@@ -108,6 +109,24 @@ function check_prereq() {
 # get date in format
 function get_date() {
 	date "+%Y-%m-%d %H:%M:%S"
+}
+
+function increment_timestamp_by_days() {
+        initial_start_date=$1
+        days_to_add=$2
+
+        # Extract the date, time, and timezone parts from the initial date string
+        date_part=$(echo "$initial_start_date" | cut -d'T' -f1)
+        time_part=$(echo "$initial_start_date" | cut -d'T' -f2 | cut -d'.' -f1)
+        timezone_part=$(echo "$initial_start_date" | awk -F'T' '{print $2}' | cut -d'.' -f2)
+
+        # Remove trailing zeros from timezone part (e.g., 000000000Z to 000Z)
+        trimmed_timezone=$(echo "$timezone_part" | sed 's/0*$//')
+
+        # Use date command to increment the date by the specified days
+        incremented_date=$(date -u -d "$date_part + $days_to_add days" +%Y-%m-%dT$time_part.${trimmed_timezone})
+
+        echo "$incremented_date"
 }
 
 function time_diff() {
@@ -284,6 +303,25 @@ function autotune_cleanup() {
 	fi
 	popd > /dev/null
 	echo "done"
+}
+
+# Restore DB from the file passed as input
+function restore_db() {
+	db_backup_file=$1
+    	db_restore_log=$2
+
+	echo ""
+	echo "Restoring DB..."
+	postgres_pod=$(kubectl get pods -o=name -n ${NAMESPACE} | grep postgres | cut -d '/' -f2)
+	db_file=$(basename ${db_backup_file})
+
+	echo "oc cp ${db_backup_file} ${NAMESPACE}/${postgres_pod}:/"
+	oc cp ${db_backup_file} ${NAMESPACE}/${postgres_pod}:/
+
+	echo "kubectl exec -it ${postgres_pod} -n ${NAMESPACE} -- psql -U admin -d kruizeDB -f ${db_file} > ${db_restore_log}"
+	kubectl exec -it ${postgres_pod} -n ${NAMESPACE} -- psql -U admin -d kruizeDB -f ${db_file} > ${db_restore_log}
+	echo "Restoring DB...done"
+	echo ""
 }
 
 # list of test cases supported
@@ -1821,4 +1859,20 @@ function create_performance_profile() {
                 echo "Failed! Create performance profile failed. Status - ${perf_profile_status}"
                 exit 1
         fi
+}
+
+#
+# "local" flag is turned off by default for now. This needs to be set to true.
+#
+function kruize_local_patch() {
+	CRC_DIR="./manifests/crc/default-db-included-installation"
+	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
+
+
+  if [ ${cluster_type} == "minikube" ]; then
+    sed -i 's/"local": "false"/"local": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+  elif [ ${cluster_type} == "openshift" ]; then
+    sed -i 's/"local": "false"/"local": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+  fi
 }

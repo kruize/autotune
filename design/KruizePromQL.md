@@ -1,6 +1,7 @@
 # Custom Prometheus Queries for Kruize
 
-These are the custom Prometheus queries that you can use while running Kruize. These queries provide valuable insights into the performance of Kruize APIs and KruizeDB methods.
+These are the custom Prometheus queries that you can use while running Kruize. These queries provide valuable insights
+into the performance of Kruize APIs and KruizeDB methods.
 
 ## KruizeAPI Metrics
 
@@ -16,24 +17,34 @@ The following are the available Kruize APIs that you can monitor:
 
 To monitor the performance of these APIs, you can use the following metrics:
 
-- `kruizeAPI_count`: This metric provides the count of invocations for a specific API. It measures how many times the API has been called.
-- `kruizeAPI_sum`: This metric provides the sum of the time taken by a specific API. It measures the total time consumed by the API across all invocations.
-- `kruizeAPI_max`: This metric provides the maximum time taken by a specific API. It measures the highest execution time observed for the API.
+- `kruizeAPI_count`: This metric provides the count of invocations for a specific API. It measures how many times the
+  API has been called.
+- `kruizeAPI_sum`: This metric provides the sum of the time taken by a specific API. It measures the total time consumed
+  by the API across all invocations.
+- `kruizeAPI_max`: This metric provides the maximum time taken by a specific API. It measures the highest execution time
+  observed for the API.
 
 Here are some sample metrics for the mentioned APIs which can run in Prometheus:
 
-- `kruizeAPI_count{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the count of successful invocations for the `createExperiment` API.
-- `kruizeAPI_count{api="createExperiment", application="Kruize", method="POST", status="failure"}`: Returns the count of failed invocations for the `createExperiment` API.
-- `kruizeAPI_sum{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the sum of the time taken by the successful invocations of `createExperiment` API.
-- `kruizeAPI_max{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the maximum time taken by the successful invocation of `createExperiment` API.
+- `kruizeAPI_count{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the count of
+  successful invocations for the `createExperiment` API.
+- `kruizeAPI_count{api="createExperiment", application="Kruize", method="POST", status="failure"}`: Returns the count of
+  failed invocations for the `createExperiment` API.
+- `kruizeAPI_sum{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the sum of the
+  time taken by the successful invocations of `createExperiment` API.
+- `kruizeAPI_max{api="createExperiment", application="Kruize", method="POST", status="success"}`: Returns the maximum
+  time taken by the successful invocation of `createExperiment` API.
 
-By changing the value of the `api` and `method` label, you can gather metrics for other Kruize APIs such as `listRecommendations`, `listExperiments`, and `updateResults`.
+By changing the value of the `api` and `method` label, you can gather metrics for other Kruize APIs such
+as `listRecommendations`, `listExperiments`, and `updateResults`.
 
 Here is a sample command to collect the metric through `curl`
-- `curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=kruizeAPI_sum{api="listRecommendations", application="Kruize", method="GET", status="success"}' ${PROMETHEUS_URL} | jq` : 
-Returns the sum of the time taken by `listRecommendations` API.
-  
+
+- `curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=kruizeAPI_sum{api="listRecommendations", application="Kruize", method="GET", status="success"}' ${PROMETHEUS_URL} | jq` :
+  Returns the sum of the time taken by `listRecommendations` API.
+
 Sample Output:
+
 ```
 {
   "status": "success",
@@ -72,7 +83,8 @@ The following are the available Kruize DB methods that you can monitor:
 
 - `addExperimentToDB`: Method for adding an experiment to the database.
 - `addResultToDB`: Method for adding experiment results to the database.
-- `addBulkResultsToDBAndFetchFailedResults`: Method for adding bulk experiment results to the database and fetch the failed results.
+- `addBulkResultsToDBAndFetchFailedResults`: Method for adding bulk experiment results to the database and fetch the
+  failed results.
 - `addRecommendationToDB`: Method for adding a recommendation to the database.
 - `loadExperimentByName`: Method for loading an experiment by name.
 - `loadResultsByExperimentName`: Method for loading experiment results by experiment name.
@@ -82,28 +94,51 @@ The following are the available Kruize DB methods that you can monitor:
 - `loadPerformanceProfileByName`: Method to load a specific performance profile.
 - `loadAllPerformanceProfiles`: Method to load all performance profiles.
 
+## KruizeMethod Metrics
+
+The following are the available Kruize methods that you can monitor:
+
+- `generatePlots`: Method to generate box plot metrics for all terms.
+
+Sample Output:
+
+```
+KruizeMethod_max{application="Kruize",method="generatePlots",status="success",} 0.036112854
+KruizeMethod_count{application="Kruize",method="generatePlots",status="success",} 2.0
+KruizeMethod_sum{application="Kruize",method="generatePlots",status="success",} 0.050705769
+```
+
 ## Time taken for KruizeDB metrics
 
 To monitor the performance of these methods, you can use the following metrics:
 
-- `kruizeDB_count`: This metric provides the count of calls made to the specific DB method. It measures how many times the DB method has been called.
-- `kruizeDB_sum`: This metric provides the sum of the time taken by a specific DB method. It measures the total time consumed by the DB method across all invocations.
-- `kruizeDB_max`: This metric provides the maximum time taken by a specific DB method. It measures the highest execution time observed for the DB method.
+- `kruizeDB_count`: This metric provides the count of calls made to the specific DB method. It measures how many times
+  the DB method has been called.
+- `kruizeDB_sum`: This metric provides the sum of the time taken by a specific DB method. It measures the total time
+  consumed by the DB method across all invocations.
+- `kruizeDB_max`: This metric provides the maximum time taken by a specific DB method. It measures the highest execution
+  time observed for the DB method.
 
 Here are some sample metrics for the mentioned DB methods which can run in Prometheus:
 
-- `kruizeDB_count{application="Kruize", method="addExperimentToDB", status="success"}`: Number of successful invocations of `addExperimentToDB` method.
-- `kruizeDB_count{application="Kruize", method="addExperimentToDB", status="failure"}`: Number of failed invocations of `addExperimentToDB` method.
-- `kruizeDB_sum{application="Kruize", method="addExperimentToDB", status="success"}`: Total time taken by the `addExperimentToDB` method which were success.
-- `kruizeDB_max{application="Kruize", method="addExperimentToDB", status="success"}`: Maximum time taken by the `addExperimentToDB` method which were success.
+- `kruizeDB_count{application="Kruize", method="addExperimentToDB", status="success"}`: Number of successful invocations
+  of `addExperimentToDB` method.
+- `kruizeDB_count{application="Kruize", method="addExperimentToDB", status="failure"}`: Number of failed invocations
+  of `addExperimentToDB` method.
+- `kruizeDB_sum{application="Kruize", method="addExperimentToDB", status="success"}`: Total time taken by
+  the `addExperimentToDB` method which were success.
+- `kruizeDB_max{application="Kruize", method="addExperimentToDB", status="success"}`: Maximum time taken by
+  the `addExperimentToDB` method which were success.
 
 By changing the value of the `method` label, you can gather metrics for other KruizeDB metrics.
 
 Here is a sample command to collect the metric through `curl`
+
 - `curl --silent -G -kH "Authorization: Bearer ${TOKEN}" --data-urlencode 'query=kruizeDB_sum{application="Kruize", method="loadRecommendationsByExperimentName", status="success"}' ${PROMETHEUS_URL} | jq` :
   Returns the sum of the time taken by `loadRecommendationsByExperimentName` method.
 
 Sample Output:
+
 ```
 {
   "status": "success",
@@ -139,15 +174,20 @@ Sample Output:
 
 # Kruize Metrics Collection and Analysis
 
-To facilitate the performance analysis of the Kruize application, we provide a comprehensive script, [kruize_metrics.py](../scripts/kruize_metrics.py), which enables the collection of Kruize metrics in CSV format.
-This script generates two distinct output files: increase_kruizemetrics.csv and total_kruizemetrics.csv. Notably, the PostgresDB metrics maintain consistency across both files.
+To facilitate the performance analysis of the Kruize application, we provide a comprehensive
+script, [kruize_metrics.py](../scripts/kruize_metrics.py), which enables the collection of Kruize metrics in CSV format.
+This script generates two distinct output files: increase_kruizemetrics.csv and total_kruizemetrics.csv. Notably, the
+PostgresDB metrics maintain consistency across both files.
 
 ### Output Files and Format
 
-- `increase_kruizemetrics.csv`: This file leverages increase() queries to ascertain the total incremental changes in Kruize metric values over time.
-- `total_kruizemetrics.csv`: This file employs the original queries to compute cumulative metric values since the inception of the Kruize application.
+- `increase_kruizemetrics.csv`: This file leverages increase() queries to ascertain the total incremental changes in
+  Kruize metric values over time.
+- `total_kruizemetrics.csv`: This file employs the original queries to compute cumulative metric values since the
+  inception of the Kruize application.
 
-Each column within the CSV files corresponds to specific API and DB metrics, capturing counts, sums, and maximum values for both successful and failed operations. 
+Each column within the CSV files corresponds to specific API and DB metrics, capturing counts, sums, and maximum values
+for both successful and failed operations.
 
 ### Some key columns for insightful analysis:
 
@@ -175,19 +215,25 @@ Each column within the CSV files corresponds to specific API and DB metrics, cap
 | kruizeDB_size                                       | Current size of the Kruize database. |
 | kruizeDB_results                                    | Total count of results available in the database across all experiments. |
 
-
 # Initial Analysis Insights
 
 Upon analyzing the collected metrics, several crucial insights emerge:
 
-- `Database Growth`: As the number of experiments and associated results increases, there is a proportional growth in the size of the database.
+- `Database Growth`: As the number of experiments and associated results increases, there is a proportional growth in
+  the size of the database.
 
-- `Update Recommendations Time`: Currently, the time required for updating recommendations exhibits an increasing trend with the growth in results. This aspect necessitates closer attention and potential optimization efforts.
+- `Update Recommendations Time`: Currently, the time required for updating recommendations exhibits an increasing trend
+  with the growth in results. This aspect necessitates closer attention and potential optimization efforts.
 
-- `Stable Update Results Time`: The time taken for updating experiment results is expected to remain relatively stable. Any deviations from this expected pattern warrant further investigation for potential performance issues.
+- `Stable Update Results Time`: The time taken for updating experiment results is expected to remain relatively stable.
+  Any deviations from this expected pattern warrant further investigation for potential performance issues.
 
-- `DB Method Aggregation`: While individual DB method metrics provide valuable insights, it is important to understand how they collectively contribute to the overall API metrics. A comprehensive analysis of both individual and aggregated DB metrics is essential for a holistic performance assessment.
+- `DB Method Aggregation`: While individual DB method metrics provide valuable insights, it is important to understand
+  how they collectively contribute to the overall API metrics. A comprehensive analysis of both individual and
+  aggregated DB metrics is essential for a holistic performance assessment.
 
-- `Max Value Analysis`: Evaluating the maximum values allows for the identification of peak performance periods for each method, aiding in the identification of potential performance bottlenecks.
+- `Max Value Analysis`: Evaluating the maximum values allows for the identification of peak performance periods for each
+  method, aiding in the identification of potential performance bottlenecks.
 
-By conducting a thorough analysis based on these initial insights, users can effectively monitor and optimize the performance of the Kruize application, thereby ensuring a seamless and efficient user experience.
+By conducting a thorough analysis based on these initial insights, users can effectively monitor and optimize the
+performance of the Kruize application, thereby ensuring a seamless and efficient user experience.

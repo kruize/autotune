@@ -67,6 +67,6 @@ deployment_info='[KruizeDeploymentInfo.java([0-9]*)]'
 configmap_minikube_expected_log_msgs=([minikube-invalid-cluster-type]=''${deployment_info}'-Cluster type kube8 is not supported'
 [minikube-invalid-k8s-type]=''${deployment_info}'-k8s type docker is not suppported'
 [minikube-invalid-monitoring-agent]=''${deployment_info}'-Monitoring agent promo  is not supported'
-[minikube-invalid-monitoring-service]='[DataSourceFactory([0-9]*)]-Monitoring agent endpoint not found'
+[minikube-invalid-monitoring-service]='[DataSourceOperatorImpl([0-9]*)]-Monitoring agent endpoint not found'
 [minikube-debug-config]='DEBUG'
 [minikube-root-debug-config]='DEBUG')

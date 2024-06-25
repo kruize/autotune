@@ -25,7 +25,7 @@ import threading
 import os
 import argparse
 
-csv_headers = ["timestamp","listRecommendations_count_success","listExperiments_count_success","createExperiment_count_success","updateResults_count_success","updateRecommendations_count_success","loadRecommendationsByExperimentName_count_success","loadRecommendationsByExperimentNameAndDate_count_success","loadResultsByExperimentName_count_success","loadExperimentByName_count_success","addRecommendationToDB_count_success","addResultToDB_count_success","addBulkResultsToDBAndFetchFailedResults_count_success","addExperimentToDB_count_success","addPerformanceProfileToDB_count_success","loadPerformanceProfileByName_count_success","loadAllPerformanceProfiles_count_success","listRecommendations_count_failure","listExperiments_count_failure","createExperiment_count_failure","updateResults_count_failure","updateRecommendations_count_failure","loadRecommendationsByExperimentName_count_failure","loadRecommendationsByExperimentNameAndDate_count_failure","loadResultsByExperimentName_count_failure","loadExperimentByName_count_failure","addRecommendationToDB_count_failure","addResultToDB_count_failure","addBulkResultsToDBAndFetchFailedResults_count_failure","addExperimentToDB_count_failure","addPerformanceProfileToDB_count_failure","loadPerformanceProfileByName_count_failure","loadAllPerformanceProfiles_count_failure","listRecommendations_sum_success","listExperiments_sum_success","createExperiment_sum_success","updateResults_sum_success","updateRecommendations_sum_success","loadRecommendationsByExperimentName_sum_success","loadRecommendationsByExperimentNameAndDate_sum_success","loadResultsByExperimentName_sum_success","loadExperimentByName_sum_success","addRecommendationToDB_sum_success","addResultToDB_sum_success","addBulkResultsToDBAndFetchFailedResults_sum_success","addExperimentToDB_sum_success","addPerformanceProfileToDB_sum_success","loadPerformanceProfileByName_sum_success","loadAllPerformanceProfiles_sum_success","listRecommendations_sum_failure","listExperiments_sum_failure","createExperiment_sum_failure","updateResults_sum_failure","updateRecommendations_sum_failure","loadRecommendationsByExperimentName_sum_failure","loadRecommendationsByExperimentNameAndDate_sum_failure","loadResultsByExperimentName_sum_failure","loadExperimentByName_sum_failure","addRecommendationToDB_sum_failure","addResultToDB_sum_failure","addBulkResultsToDBAndFetchFailedResults_sum_failure","addExperimentToDB_sum_failure","addPerformanceProfileToDB_sum_failure","loadPerformanceProfileByName_sum_failure","loadAllPerformanceProfiles_sum_failure","loadAllRecommendations_sum_failure","loadAllExperiments_sum_failure","loadAllResults_sum_failure","loadAllRecommendations_sum_success","loadAllExperiments_sum_success","loadAllResults_sum_success","listRecommendations_max_success","listExperiments_max_success","createExperiment_max_success","updateResults_max_success","updateRecommendations_max_success","loadRecommendationsByExperimentName_max_success","loadRecommendationsByExperimentNameAndDate_max_success","loadResultsByExperimentName_max_success","loadExperimentByName_max_success","addRecommendationToDB_max_success","addResultToDB_max_success","addBulkResultsToDBAndFetchFailedResults_max_success","addExperimentToDB_max_success","addPerformanceProfileToDB_max_success","loadPerformanceProfileByName_max_success","loadAllPerformanceProfiles_max_success","kruizedb_cpu_max","kruizedb_memory","kruize_cpu_max","kruize_memory","kruize_results","db_size","updateResultsPerCall_success","updateRecommendationsPerCall_success"]
+csv_headers = ["timestamp","listRecommendations_count_success","listExperiments_count_success","createExperiment_count_success","updateResults_count_success","updateRecommendations_count_success","generatePlots_count_success","loadRecommendationsByExperimentName_count_success","loadRecommendationsByExperimentNameAndDate_count_success","loadResultsByExperimentName_count_success","loadExperimentByName_count_success","addRecommendationToDB_count_success","addResultToDB_count_success","addBulkResultsToDBAndFetchFailedResults_count_success","addExperimentToDB_count_success","addPerformanceProfileToDB_count_success","loadPerformanceProfileByName_count_success","loadAllPerformanceProfiles_count_success","listRecommendations_count_failure","listExperiments_count_failure","createExperiment_count_failure","updateResults_count_failure","updateRecommendations_count_failure","generatePlots_count_failure","loadRecommendationsByExperimentName_count_failure","loadRecommendationsByExperimentNameAndDate_count_failure","loadResultsByExperimentName_count_failure","loadExperimentByName_count_failure","addRecommendationToDB_count_failure","addResultToDB_count_failure","addBulkResultsToDBAndFetchFailedResults_count_failure","addExperimentToDB_count_failure","addPerformanceProfileToDB_count_failure","loadPerformanceProfileByName_count_failure","loadAllPerformanceProfiles_count_failure","listRecommendations_sum_success","listExperiments_sum_success","createExperiment_sum_success","updateResults_sum_success","updateRecommendations_sum_success","generatePlots_sum_success","loadRecommendationsByExperimentName_sum_success","loadRecommendationsByExperimentNameAndDate_sum_success","loadResultsByExperimentName_sum_success","loadExperimentByName_sum_success","addRecommendationToDB_sum_success","addResultToDB_sum_success","addBulkResultsToDBAndFetchFailedResults_sum_success","addExperimentToDB_sum_success","addPerformanceProfileToDB_sum_success","loadPerformanceProfileByName_sum_success","loadAllPerformanceProfiles_sum_success","listRecommendations_sum_failure","listExperiments_sum_failure","createExperiment_sum_failure","updateResults_sum_failure","updateRecommendations_sum_failure","generatePlots_sum_failure","loadRecommendationsByExperimentName_sum_failure","loadRecommendationsByExperimentNameAndDate_sum_failure","loadResultsByExperimentName_sum_failure","loadExperimentByName_sum_failure","addRecommendationToDB_sum_failure","addResultToDB_sum_failure","addBulkResultsToDBAndFetchFailedResults_sum_failure","addExperimentToDB_sum_failure","addPerformanceProfileToDB_sum_failure","loadPerformanceProfileByName_sum_failure","loadAllPerformanceProfiles_sum_failure","loadAllRecommendations_sum_failure","loadAllExperiments_sum_failure","loadAllResults_sum_failure","loadAllRecommendations_sum_success","loadAllExperiments_sum_success","loadAllResults_sum_success","listRecommendations_max_success","listExperiments_max_success","createExperiment_max_success","updateResults_max_success","updateRecommendations_max_success","generatePlots_max_success","loadRecommendationsByExperimentName_max_success","loadRecommendationsByExperimentNameAndDate_max_success","loadResultsByExperimentName_max_success","loadExperimentByName_max_success","addRecommendationToDB_max_success","addResultToDB_max_success","addBulkResultsToDBAndFetchFailedResults_max_success","addExperimentToDB_max_success","addPerformanceProfileToDB_max_success","loadPerformanceProfileByName_max_success","loadAllPerformanceProfiles_max_success","kruizedb_cpu_max","kruizedb_memory","kruize_cpu_max","kruize_memory","kruize_results","db_size","updateResultsPerCall_success","updateRecommendationsPerCall_success"]
 
 
 queries_map_total = {
@@ -34,6 +34,7 @@ queries_map_total = {
         "createExperiment_count_success": "sum((kruizeAPI_count{api=\"createExperiment\",application=\"Kruize\",status=\"success\"}))",
         "updateResults_count_success": "sum((kruizeAPI_count{api=\"updateResults\",application=\"Kruize\",status=\"success\"}))",
         "updateRecommendations_count_success": "sum((kruizeAPI_count{api=\"updateRecommendations\",application=\"Kruize\",status=\"success\"}))",
+        "generatePlots_count_success": "sum((KruizeMethod_count{method=\"generatePlots\",application=\"Kruize\",status=\"success\"}))",
         "loadRecommendationsByExperimentName_count_success": "sum((kruizeDB_count{method=\"loadRecommendationsByExperimentName\",application=\"Kruize\",status=\"success\"}))",
         "loadRecommendationsByExperimentNameAndDate_count_success": "sum((kruizeDB_count{method=\"loadRecommendationsByExperimentNameAndDate\",application=\"Kruize\",status=\"success\"}))",
         "loadResultsByExperimentName_count_success": "sum((kruizeDB_count{method=\"loadResultsByExperimentName\",application=\"Kruize\",status=\"success\"}))",
@@ -50,6 +51,7 @@ queries_map_total = {
         "createExperiment_count_failure": "sum((kruizeAPI_count{api=\"createExperiment\",application=\"Kruize\",status=\"failure\"}))",
         "updateResults_count_failure": "sum((kruizeAPI_count{api=\"updateResults\",application=\"Kruize\",status=\"failure\"}))",
         "updateRecommendations_count_failure": "sum((kruizeAPI_count{api=\"updateRecommendations\",application=\"Kruize\",status=\"failure\"}))",
+        "generatePlots_count_failure": "sum((KruizeMethod_count{method=\"generatePlots\",application=\"Kruize\",status=\"failure\"}))",
         "loadRecommendationsByExperimentName_count_failure": "sum((kruizeDB_count{method=\"loadRecommendationsByExperimentName\",application=\"Kruize\",status=\"failure\"}))",
         "loadRecommendationsByExperimentNameAndDate_count_failure": "sum((kruizeDB_count{method=\"loadRecommendationsByExperimentNameAndDate\",application=\"Kruize\",status=\"failure\"}))",
         "loadResultsByExperimentName_count_failure": "sum((kruizeDB_count{method=\"loadResultsByExperimentName\",application=\"Kruize\",status=\"failure\"}))",
@@ -66,6 +68,7 @@ queries_map_total = {
         "createExperiment_sum_success": "sum((kruizeAPI_sum{api=\"createExperiment\",application=\"Kruize\",status=\"success\"}))",
         "updateResults_sum_success": "sum((kruizeAPI_sum{api=\"updateResults\",application=\"Kruize\",status=\"success\"}))",
         "updateRecommendations_sum_success": "sum((kruizeAPI_sum{api=\"updateRecommendations\",application=\"Kruize\",status=\"success\"}))",
+        "generatePlots_sum_success": "sum((KruizeMethod_sum{method=\"generatePlots\",application=\"Kruize\",status=\"success\"}))",
         "loadRecommendationsByExperimentName_sum_success": "sum((kruizeDB_sum{method=\"loadRecommendationsByExperimentName\",application=\"Kruize\",status=\"success\"}))",
         "loadRecommendationsByExperimentNameAndDate_sum_success": "sum((kruizeDB_sum{method=\"loadRecommendationsByExperimentNameAndDate\",application=\"Kruize\",status=\"success\"}))",
         "loadResultsByExperimentName_sum_success": "sum((kruizeDB_sum{method=\"loadResultsByExperimentName\",application=\"Kruize\",status=\"success\"}))",
@@ -82,6 +85,7 @@ queries_map_total = {
         "createExperiment_sum_failure": "sum((kruizeAPI_sum{api=\"createExperiment\",application=\"Kruize\",status=\"failure\"}))",
         "updateResults_sum_failure": "sum((kruizeAPI_sum{api=\"updateResults\",application=\"Kruize\",status=\"failure\"}))",
         "updateRecommendations_sum_failure": "sum((kruizeAPI_sum{api=\"updateRecommendations\",application=\"Kruize\",status=\"failure\"}))",
+        "generatePlots_sum_failure": "sum((KruizeMethod_sum{method=\"generatePlots\",application=\"Kruize\",status=\"failure\"}))",
         "loadRecommendationsByExperimentName_sum_failure": "sum((kruizeDB_sum{method=\"loadRecommendationsByExperimentName\",application=\"Kruize\",status=\"failure\"}))",
         "loadRecommendationsByExperimentNameAndDate_sum_failure": "sum((kruizeDB_sum{method=\"loadRecommendationsByExperimentNameAndDate\",application=\"Kruize\",status=\"failure\"}))",
         "loadResultsByExperimentName_sum_failure": "sum((kruizeDB_sum{method=\"loadResultsByExperimentName\",application=\"Kruize\",status=\"failure\"}))",
@@ -104,6 +108,7 @@ queries_map_total = {
         "createExperiment_max_success": "max(max_over_time(kruizeAPI_max{{api=\"createExperiment\",application=\"Kruize\",status=\"success\"}}[6h]))",
         "updateResults_max_success": "max(max_over_time(kruizeAPI_max{{api=\"updateResults\",application=\"Kruize\",status=\"success\"}}[6h]))",
         "updateRecommendations_max_success": "max(max_over_time(kruizeAPI_max{{api=\"updateRecommendations\",application=\"Kruize\",status=\"success\"}}[6h]))",
+        "generatePlots_max_success": "max(max_over_time(KruizeMethod_max{{method=\"generatePlots\",application=\"Kruize\",status=\"success\"}}[6h]))",
         "loadRecommendationsByExperimentName_max_success": "max(max_over_time(kruizeDB_max{{method=\"loadRecommendationsByExperimentName\",application=\"Kruize\",status=\"success\"}}[6h]))",
         "loadRecommendationsByExperimentNameAndDate_max_success": "max(max_over_time(kruizeDB_max{{method=\"loadRecommendationsByExperimentNameAndDate\",application=\"Kruize\",status=\"success\"}}[6h]))",
         "loadResultsByExperimentName_max_success": "max(max_over_time(kruizeDB_max{{method=\"loadResultsByExperimentName\",application=\"Kruize\",status=\"success\"}}[6h]))",
@@ -231,7 +236,6 @@ def job(queries_type,outputdir,server,prometheus_url=None):
         writer.writerow(results_map)
 
 def schedule_job(queries_type,server,prometheus_url):
-    outputdir = "results"
     if not os.path.exists(outputdir):
         os.mkdir(outputdir)
     numeric_time = int(time_duration[:-1])
@@ -268,8 +272,9 @@ def main(argv):
     global resultsfile
     global namespace
     global prometheus_url
+    global outputdir
 
-    parser = argparse.ArgumentParser(description='kruize_metrics.py -c <cluster_type> -s <cluster_name> -p <prometheus_url> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours> -q <query_type:increase/total.Default:increase> -o <single data point:Default:true>')
+    parser = argparse.ArgumentParser(description='kruize_metrics.py -c <cluster_type> -s <cluster_name> -p <prometheus_url> -t <time duration for a query in mins:Default:60m> -d <duration the script runs in hours> -q <query_type:increase/total.Default:increase> -o <single data point:Default:true> -e <results dir:Default:results')
     parser.add_argument('-c', '--cluster_type', help='Cluster type. Supported types:openshift/minikube')
     parser.add_argument('-s', '--cluster_name', help='Name/IP to access the openshift/minikube cluster. Example:kruize-rm.p1.openshiftapps.com/localhost. Prometheus URL is generated using this name if prometheus_url is None')
     parser.add_argument('-p', '--prometheus_url', help='Prometheus URL',default=None)
@@ -278,6 +283,7 @@ def main(argv):
     parser.add_argument('-q', '--queries_type', help='Query type: increase/total', default='increase')
     parser.add_argument('-o', '--get_one_data_point', help='Single data point', default='true')
     parser.add_argument('-r', '--resultsfile', help='Results file',default='kruizemetrics.csv')
+    parser.add_argument('-e', '--outputdir', help='directory to store the results', default='results')
     #args = parser.parse_args()
     args, unknown = parser.parse_known_args()
 
@@ -300,6 +306,7 @@ def main(argv):
     getOneDataPoint = args.get_one_data_point
     resultsfile = args.resultsfile
     prometheus_url = args.prometheus_url
+    outputdir = args.outputdir
 
     if cluster_type == "openshift":
         namespace = "openshift-tuning"
@@ -312,6 +319,7 @@ def main(argv):
             "createExperiment_count_success": f"sum(increase(kruizeAPI_count{{api=\"createExperiment\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "updateResults_count_success": f"sum(increase(kruizeAPI_count{{api=\"updateResults\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "updateRecommendations_count_success": f"sum(increase(kruizeAPI_count{{api=\"updateRecommendations\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
+            "generatePlots_count_success": f"sum(increase(KruizeMethod_count{{method=\"generatePlots\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadRecommendationsByExperimentName_count_success": f"sum(increase(kruizeDB_count{{method=\"loadRecommendationsByExperimentName\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadRecommendationsByExperimentNameAndDate_count_success": f"sum(increase(kruizeDB_count{{method=\"loadRecommendationsByExperimentNameAndDate\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadResultsByExperimentName_count_success": f"sum(increase(kruizeDB_count{{method=\"loadResultsByExperimentName\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
@@ -328,6 +336,7 @@ def main(argv):
             "createExperiment_count_failure": f"sum(increase(kruizeAPI_count{{api=\"createExperiment\",application=\"Kruize\",status=\"failure\"}}[{time_duration}]))",
             "updateResults_count_failure": f"sum(increase(kruizeAPI_count{{api=\"updateResults\",application=\"Kruize\",status=\"failure\"}}[{time_duration}]))",
             "updateRecommendations_count_failure": f"sum(increase(kruizeAPI_count{{api=\"updateRecommendations\",application=\"Kruize\",status=\"failure\"}}[{time_duration}]))",
+            "generatePlots_count_failure": f"sum(increase(KruizeMethod_count{{method=\"generatePlots\",application=\"Kruize\",status=\"failure\"}}[{time_duration}]))",
             "loadRecommendationsByExperimentName_count_failure": f"sum(increase(kruizeDB_count{{method=\"loadRecommendationsByExperimentName\",application=\"Kruize\",status=\"failure\"}}[{time_duration}]))",
             "loadRecommendationsByExperimentNameAndDate_count_failure": f"sum(increase(kruizeDB_count{{method=\"loadRecommendationsByExperimentNameAndDate\",application=\"Kruize\",status=\"failure\"}}[{time_duration}]))",
             "loadResultsByExperimentName_count_failure": f"sum(increase(kruizeDB_count{{method=\"loadResultsByExperimentName\",application=\"Kruize\",status=\"failure\"}}[{time_duration}]))",
@@ -344,6 +353,7 @@ def main(argv):
             "createExperiment_sum_success": f"sum(increase(kruizeAPI_sum{{api=\"createExperiment\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "updateResults_sum_success": f"sum(increase(kruizeAPI_sum{{api=\"updateResults\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "updateRecommendations_sum_success": f"sum(increase(kruizeAPI_sum{{api=\"updateRecommendations\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
+            "generatePlots_sum_success": f"sum(increase(KruizeMethod_sum{{method=\"generatePlots\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadRecommendationsByExperimentName_sum_success": f"sum(increase(kruizeDB_sum{{method=\"loadRecommendationsByExperimentName\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadRecommendationsByExperimentNameAndDate_sum_success": f"sum(increase(kruizeDB_sum{{method=\"loadRecommendationsByExperimentNameAndDate\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadResultsByExperimentName_sum_success": f"sum(increase(kruizeDB_sum{{method=\"loadResultsByExperimentName\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
@@ -360,6 +370,7 @@ def main(argv):
             "createExperiment_max_success": f"max(max_over_time(kruizeAPI_max{{api=\"createExperiment\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "updateResults_max_success": f"max(max_over_time(kruizeAPI_max{{api=\"updateResults\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "updateRecommendations_max_success": f"max(max_over_time(kruizeAPI_max{{api=\"updateRecommendations\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
+            "generatePlots_max_success": f"max(max_over_time(KruizeMethod_max{{method=\"generatePlots\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadRecommendationsByExperimentName_max_success": f"max(max_over_time(kruizeDB_max{{method=\"loadRecommendationsByExperimentName\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadRecommendationsByExperimentNameAndDate_max_success": f"max(max_over_time(kruizeDB_max{{method=\"loadRecommendationsByExperimentNameAndDate\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadResultsByExperimentName_max_success": f"max(max_over_time(kruizeDB_max{{method=\"loadResultsByExperimentName\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
