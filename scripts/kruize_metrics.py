@@ -120,15 +120,15 @@ queries_map_total = {
         "addPerformanceProfileToDB_max_success": "max(max_over_time(kruizeDB_max{{method=\"addPerformanceProfileToDB\",application=\"Kruize\",status=\"success\"}}[6h]))",
         "loadPerformanceProfileByName_max_success": "max(max_over_time(kruizeDB_max{{method=\"loadPerformanceProfileByName\",application=\"Kruize\",status=\"success\"}}[6h]))",
         "loadAllPerformanceProfiles_max_success": "max(max_over_time(kruizeDB_max{{method=\"loadAllPerformanceProfiles\",application=\"Kruize\",status=\"success\"}}[6h]))",
-        "kruizedb_memory": "(sum(container_memory_working_set_bytes{pod=~"'"postgres-deployment-[^-]*-[^-]*$"'",container=\"postgres\"}))",
-        "kruizedb_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"postgres-deployment-[^-]*-[^-]*$"'",container=\"postgres\"}[6h])))",
+        "kruizedb_memory": "(sum(container_memory_working_set_bytes{pod=~"'"kruize-db-deployment-[^-]*-[^-]*$"'",container=\"kruize-db\"}))",
+        "kruizedb_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"kruize-db-deployment-[^-]*-[^-]*$"'",container=\"kruize-db\"}[6h])))",
         "kruize_memory": "(sum(container_memory_working_set_bytes{pod=~"'"kruize-[^-]*-[^-]*$"'",container=\"kruize\"}))",
         "kruize_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"kruize-[^-]*-[^-]*$"'",container=\"kruize\"}[6h])))",
         }
 
-def get_postgresql_metrics(namespace):
+def get_kruize_db_metrics(namespace):
     try:
-        pod_name = subprocess.check_output(["kubectl", "get", "pods", "-n", namespace, "--selector=app=postgres", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True)
+        pod_name = subprocess.check_output(["kubectl", "get", "pods", "-n", namespace, "--selector=app=kruize-db", "-o", "jsonpath='{.items[0].metadata.name}'"], universal_newlines=True)
         pod_name = pod_name.strip("'")
     except subprocess.CalledProcessError as e:
         return f"Error getting pod name: {e}"
@@ -182,7 +182,7 @@ def run_queries(map_type,server,prometheus_url=None):
                 # Uncomment else part to debug which query is not working.
                 #else:
                 #    print(f"Failed to run query '{query}' with status code {response.status_code}")
-        kruize_results, db_size = get_postgresql_metrics(namespace)
+        kruize_results, db_size = get_kruize_db_metrics(namespace)
         results_map["kruize_results"] = kruize_results
         results_map["db_size"] = db_size
         if "updateResults_sum_success" in results_map and "updateResults_count_success" in results_map:
@@ -382,8 +382,8 @@ def main(argv):
             "addPerformanceProfileToDB_max_success": f"max(max_over_time(kruizeDB_max{{method=\"addPerformanceProfileToDB\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadPerformanceProfileByName_max_success": f"max(max_over_time(kruizeDB_max{{method=\"loadPerformanceProfileByName\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
             "loadAllPerformanceProfiles_max_success": f"max(max_over_time(kruizeDB_max{{method=\"loadAllPerformanceProfiles\",application=\"Kruize\",status=\"success\"}}[{time_duration}]))",
-            "kruizedb_memory": "(sum(container_memory_working_set_bytes{pod=~"'"postgres-deployment-[^-]*-[^-]*$"'",container=\"postgres\"}))",
-            "kruizedb_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"postgres-deployment-[^-]*-[^-]*$"'",container=\"postgres\"}"f"[{time_duration}])))",
+            "kruizedb_memory": "(sum(container_memory_working_set_bytes{pod=~"'"kruize-db-deployment-[^-]*-[^-]*$"'",container=\"kruize-db\"}))",
+            "kruizedb_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"kruize-db-deployment-[^-]*-[^-]*$"'",container=\"kruize-db\"}"f"[{time_duration}])))",
             "kruize_memory": "(sum(container_memory_working_set_bytes{pod=~"'"kruize-[^-]*-[^-]*$"'",container=\"kruize\"}))",
             "kruize_cpu_max": "max(sum(rate(container_cpu_usage_seconds_total{pod=~"'"kruize-[^-]*-[^-]*$"'",container=\"kruize\"}"f"[{time_duration}])))",
         }

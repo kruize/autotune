@@ -20,7 +20,7 @@
 # This test does the following:
 # Deploys the previous release of kruize that is specified and uploads results for 50 exps / 15 days
 # Invokes updateRecommendations for all the 50 exps
-# Backups DB and deploys the current release of kruize specified along with a new instance of postgres. 
+# Backups DB and deploys the current release of kruize specified along with a new instance of kruize DB. 
 # The backed up DB is restored and new usage metrics or results for 1 day for 50 exps is posted
 # Invokes updateRecommendations for all the 50 exps
 
@@ -125,8 +125,8 @@ total_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
 echo ""
 echo "Backing up DB..."
 db_backup_file="${LOG_DIR}/test_logs_50_15days/db_backup.sql"
-echo "kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}"
-kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep postgres` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}
+echo "kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}"
+kubectl -n openshift-tuning exec -it `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -- pg_dump -U admin -d kruizeDB > ${db_backup_file}
 echo "Backing up DB...Done"
 echo ""
 

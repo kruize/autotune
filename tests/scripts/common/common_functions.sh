@@ -312,14 +312,14 @@ function restore_db() {
 
 	echo ""
 	echo "Restoring DB..."
-	postgres_pod=$(kubectl get pods -o=name -n ${NAMESPACE} | grep postgres | cut -d '/' -f2)
+	kruize_db_pod=$(kubectl get pods -o=name -n ${NAMESPACE} | grep kruize-db | cut -d '/' -f2)
 	db_file=$(basename ${db_backup_file})
 
-	echo "oc cp ${db_backup_file} ${NAMESPACE}/${postgres_pod}:/"
-	oc cp ${db_backup_file} ${NAMESPACE}/${postgres_pod}:/
+	echo "oc cp ${db_backup_file} ${NAMESPACE}/${kruize_db_pod}:/"
+	oc cp ${db_backup_file} ${NAMESPACE}/${kruize_db_pod}:/
 
-	echo "kubectl exec -it ${postgres_pod} -n ${NAMESPACE} -- psql -U admin -d kruizeDB -f ${db_file} > ${db_restore_log}"
-	kubectl exec -it ${postgres_pod} -n ${NAMESPACE} -- psql -U admin -d kruizeDB -f ${db_file} > ${db_restore_log}
+	echo "kubectl exec -it ${kruize_db_pod} -n ${NAMESPACE} -- psql -U admin -d kruizeDB -f ${db_file} > ${db_restore_log}"
+	kubectl exec -it ${kruize_db_pod} -n ${NAMESPACE} -- psql -U admin -d kruizeDB -f ${db_file} > ${db_restore_log}
 	echo "Restoring DB...done"
 	echo ""
 }
