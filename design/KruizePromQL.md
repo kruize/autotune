@@ -110,7 +110,7 @@ KruizeMethod_sum{application="Kruize",method="generatePlots",status="success",} 
 
 ## Kruize Notifications Metrics
 
-The following are the avalable kruize notifcations that gets generated after updateRecommendations API call 
+The following are the avalable kruize notifcations that gets generated after updateRecommendations API call.
 
 Sample Output:
 
