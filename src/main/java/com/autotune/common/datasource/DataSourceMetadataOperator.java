@@ -175,9 +175,11 @@ public class DataSourceMetadataOperator {
     }
 
     /**
-     * Fetches and processes metadata related to workloads, and containers of a given datasource
-     * @param dataSourceInfo
-     * @param dataSourceMetadataInfo
+     * Fetches and processes metadata related to workloads, and containers of a given datasource and populates the
+     * DataSourceMetadataInfo object
+     *
+     * @param dataSourceInfo            The DataSourceInfo object containing information about the data source
+     * @param dataSourceMetadataInfo    The DataSourceMetadataInfo object to be populated with workload and container metadata
      */
     public void updateWorkloadAndContainerMetadataInfo(DataSourceInfo dataSourceInfo, DataSourceMetadataInfo dataSourceMetadataInfo) {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
