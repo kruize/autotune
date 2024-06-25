@@ -91,7 +91,7 @@ public class DataSourceManager {
             if (null == dataSourceMetadataInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
             }
-            dataSourceMetadataOperator.updateDataSourceMetadata(dataSource, dataSourceMetadataInfo);
+            dataSourceMetadataOperator.updateDataSourceMetadata(dataSource);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }

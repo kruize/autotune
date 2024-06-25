@@ -34,45 +34,7 @@ public class DataSourceMetadataOperator {
      * TODO - support multiple data sources
      */
     public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo) {
-        DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
-        /**
-         * Get DataSourceOperatorImpl instance on runtime based on dataSource provider
-         */
-        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
-
-        if (null == op) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_OPERATOR_RETRIEVAL_FAILURE, dataSourceInfo.getProvider());
-            return null;
-        }
-
-        /**
-         * For the "prometheus" data source, fetches and processes data related to namespaces, workloads, and containers,
-         * creating a comprehensive DataSourceMetadataInfo object that is then added to a list.
-         * TODO - Process cluster metadata using a custom query
-         */
-        try {
-            String datasourceName = dataSourceInfo.getName();
-            String datasourceUrl = dataSourceInfo.getUrl().toString();
-            JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(datasourceUrl, PromQLDataSourceQueries.NAMESPACE_QUERY);
-            if (false == op.validateResultArray(namespacesDataResultArray)){
-                dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(datasourceName, null);
-                throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
-            }
-
-            /**
-             * Key: Name of namespace
-             * Value: DataSourceNamespace object corresponding to a namespace
-             */
-            HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
-            dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(datasourceName, datasourceNamespaces);
-
-            updateWorkloadAndContainerMetadataInfo(dataSourceInfo, dataSourceMetadataInfo);
-
-            return getDataSourceMetadataInfo(dataSourceInfo);
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-        }
-        return null;
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo);
     }
 
     /**
@@ -109,45 +71,12 @@ public class DataSourceMetadataOperator {
      *
      * @param dataSourceInfo      The DataSourceInfo object containing information about the
      *                            data source to be updated.
-     * @param existingMetadataInfo The existing DataSourceMetadataInfo object containing the current
-     *                            metadata information of the data source.
+     *
+     *  TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
+     *         need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
-    public void updateDataSourceMetadata(DataSourceInfo dataSourceInfo, DataSourceMetadataInfo existingMetadataInfo) {
-        if (null == dataSourceInfo) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
-            return;
-        }
-        if (null == existingMetadataInfo) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
-            return;
-        }
-        String dataSourceName = dataSourceInfo.getName();
-        String dataSourceProvider = dataSourceInfo.getProvider();
-        String dataSourceUrl = dataSourceInfo.getUrl().toString();
-
-        DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
-        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceProvider);
-
-        if (null == op) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_OPERATOR_RETRIEVAL_FAILURE, dataSourceProvider);
-            return;
-        }
-
-        // Update fields as needed - namespaces, workloads, and containers
-        try {
-            JsonArray namespacesDataResultArray = op.getResultArrayForQuery(dataSourceUrl,
-                    PromQLDataSourceQueries.NAMESPACE_QUERY);
-            if (!op.validateResultArray(namespacesDataResultArray)) {
-                LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
-                return;
-            }
-            HashMap<String, DataSourceNamespace> newNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
-            dataSourceDetailsHelper.updateNamespaceDataSourceMetadataInfoObject(dataSourceName, existingMetadataInfo, newNamespaces);
-
-            updateWorkloadAndContainerMetadataInfo(dataSourceInfo, existingMetadataInfo);
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-        }
+    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo) {
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo);
     }
 
     /**
@@ -175,30 +104,45 @@ public class DataSourceMetadataOperator {
     }
 
     /**
-     * Fetches and processes metadata related to workloads, and containers of a given datasource and populates the
+     * Fetches and processes metadata related to namespaces, workloads, and containers of a given datasource and populates the
      * DataSourceMetadataInfo object
      *
      * @param dataSourceInfo            The DataSourceInfo object containing information about the data source
-     * @param dataSourceMetadataInfo    The DataSourceMetadataInfo object to be populated with workload and container metadata
+     * @return DataSourceMetadataInfo object with populated metadata fields
      */
-    public void updateWorkloadAndContainerMetadataInfo(DataSourceInfo dataSourceInfo, DataSourceMetadataInfo dataSourceMetadataInfo) {
+    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo) {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
-
-        String dataSourceProvider = dataSourceInfo.getProvider();
         /**
          * Get DataSourceOperatorImpl instance on runtime based on dataSource provider
          */
-        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceProvider);
+        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
 
         if (null == op) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_OPERATOR_RETRIEVAL_FAILURE, dataSourceProvider);
-            return;
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_OPERATOR_RETRIEVAL_FAILURE, dataSourceInfo.getProvider());
+            return null;
         }
 
-        String dataSourceName = dataSourceInfo.getName();
-        String dataSourceUrl = dataSourceInfo.getUrl().toString();
-
+        /**
+         * For the "prometheus" data source, fetches and processes data related to namespaces, workloads, and containers,
+         * creating a comprehensive DataSourceMetadataInfo object that is then added to a list.
+         * TODO - Process cluster metadata using a custom query
+         */
         try {
+            String dataSourceName = dataSourceInfo.getName();
+            String dataSourceUrl = dataSourceInfo.getUrl().toString();
+            JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceUrl, PromQLDataSourceQueries.NAMESPACE_QUERY);
+            if (false == op.validateResultArray(namespacesDataResultArray)){
+                dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
+                throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
+            }
+
+            /**
+             * Key: Name of namespace
+             * Value: DataSourceNamespace object corresponding to a namespace
+             */
+            HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
+            dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, datasourceNamespaces);
+
             /**
              * Outer map:
              * Key: Name of namespace
@@ -236,8 +180,11 @@ public class DataSourceMetadataOperator {
             }
             dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
                     datasourceWorkloads, datasourceContainers);
-        } catch (Exception e){
+
+            return getDataSourceMetadataInfo(dataSourceInfo);
+        } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
+        return null;
     }
 }
