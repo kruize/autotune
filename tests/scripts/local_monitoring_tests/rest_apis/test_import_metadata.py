@@ -305,4 +305,4 @@ def test_repeated_metadata_import_without_datasource_connection(cluster_type):
     scale_deployment(namespace, "prometheus-operator", 1)
     scale_deployment(namespace, "prometheus-adapter", 2)
     scale_statefulset(namespace, "prometheus-k8s", 2)
-    time.sleep(30)
+    time.sleep(90)
