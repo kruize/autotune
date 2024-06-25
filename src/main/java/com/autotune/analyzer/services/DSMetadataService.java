@@ -171,22 +171,16 @@ public class DSMetadataService extends HttpServlet {
             try {
                 // fetch and delete metadata from database
                 dataSourceManager.deleteMetadataFromDBByDataSource(datasource);
-                // fetch metadata from cluster of specified datasource and add to database
-                dataSourceManager.saveMetadataFromDataSourceToDB(datasource);
+                // add imported metadata to database
+                dataSourceManager.addMetadataToDB(metadataInfo);
             } catch (Exception e) {
                 sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 return;
             }
 
-            DataSourceMetadataInfo dataSourceMetadata;
-            try {
-                dataSourceMetadata = dataSourceManager.fetchDataSourceMetadataFromDBByName(dataSourceName, "false");
-            } catch (Exception e) {
-                sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-                return;
-            }
+            dataSourceMetadataMap.put(dataSourceName, metadataInfo);
 
-            dataSourceMetadataMap.put(dataSourceName, dataSourceMetadata);
+            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceManager.DataSourceMetadataClusterView(dataSourceName, metadataInfo);
 
             if (dataSourceMetadataMap.isEmpty() || !dataSourceMetadataMap.containsKey(dataSourceName)) {
                 sendErrorResponse(
@@ -199,8 +193,7 @@ public class DSMetadataService extends HttpServlet {
                 return;
             }
 
-            sendSuccessResponse(response, dataSourceMetadataMap.get(dataSourceName));
-
+            sendSuccessResponse(response, dataSourceMetadataInfo);
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught: " + e.getMessage());
@@ -469,7 +462,7 @@ public class DSMetadataService extends HttpServlet {
             if (!dataSourceMetadataMap.isEmpty() && dataSourceMetadataMap.containsKey(dataSourceName)) {
                 try {
                     // fetch and delete metadata from database
-                    dataSourceManager.deleteMetadataFromDBByDataSource(datasource);
+                    dataSourceManager.deleteMetadataFromDB(dataSourceName);
 
                     //deletes in-memory metadata object fetched from the cluster of the specified datasource
                     dataSourceManager.deleteMetadataFromDataSource(datasource);

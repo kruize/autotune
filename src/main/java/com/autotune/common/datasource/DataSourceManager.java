@@ -10,6 +10,9 @@ import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * DataSourceManager is an interface to manage (create and update) metadata
  * of data sources
@@ -111,31 +114,9 @@ public class DataSourceManager {
     }
 
     /**
-     * retrieves and adds Metadata object from the specified data source
-     * @param dataSourceInfo DataSourceInfo object
-     */
-    public void saveMetadataFromDataSourceToDB(DataSourceInfo dataSourceInfo) {
-        try {
-            if (null == dataSourceInfo) {
-                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
-            }
-
-            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSourceInfo);
-            if (null == dataSourceMetadataInfo) {
-                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceInfo.getName());
-                return;
-            }
-            // add the metadata to DB
-            addMetadataToDB(dataSourceMetadataInfo);
-
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-        }
-    }
-
-    /**
      * Adds Metadata object to DB
      * @param dataSourceMetadataInfo DataSourceMetadataInfo object
+     * Note - It's assumed that metadata will be added to database after validating dataSourceMetadataInfo object
      */
     public void addMetadataToDB(DataSourceMetadataInfo dataSourceMetadataInfo) {
         ValidationOutputData addedToDB = null;
@@ -245,5 +226,44 @@ public class DataSourceManager {
             LOGGER.error(String.format(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.LOAD_DATASOURCE_METADATA_FROM_DB_ERROR, dataSourceName, e.getMessage()));
         }
         return null;
+    }
+
+    /**
+     * Filters the given metadata object to retain only the cluster details.
+     * This method processes the provided metadata includes only the datasource
+     * names and their associated cluster names, pruning all other details.
+     *
+     * @param dataSourceName            Datasource name
+     * @param dataSourceMetadataInfo    DataSourceMetadataInfo object containing granular metadata
+     * @return A new DataSourceMetadataInfo object containing only the cluster details.
+     *
+     * Note - It's assumed that Cluster view will be requested after validating dataSourceMetadataInfo object
+     */
+    public DataSourceMetadataInfo DataSourceMetadataClusterView(String dataSourceName, DataSourceMetadataInfo dataSourceMetadataInfo){
+        try {
+            HashMap<String, DataSource> filteredDataSourceHashMap = new HashMap<>();
+
+            DataSource dataSource = dataSourceMetadataInfo.getDataSourceHashMap().get(dataSourceName);
+
+            HashMap<String, DataSourceCluster> filteredClusterHashMap = new HashMap<>();
+
+            for (Map.Entry<String, DataSourceCluster> clusterEntry : dataSource.getDataSourceClusterHashMap().entrySet()) {
+                String clusterName = clusterEntry.getKey();
+                DataSourceCluster cluster = clusterEntry.getValue();
+
+                // Create a new DataSourceCluster object with only the cluster name
+                DataSourceCluster filteredCluster = new DataSourceCluster(cluster.getDataSourceClusterName(), null);
+                filteredClusterHashMap.put(clusterName, filteredCluster);
+            }
+
+            // Create a new DataSource object with filtered clusters
+            DataSource filteredDataSource = new DataSource(dataSource.getDataSourceName(), filteredClusterHashMap);
+            filteredDataSourceHashMap.put(dataSourceName, filteredDataSource);
+
+            return new DataSourceMetadataInfo(filteredDataSourceHashMap);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            return null;
+        }
     }
 }
