@@ -41,7 +41,7 @@ public class DataSourceMetadataOperator {
         DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
 
         if (null == op) {
-            LOGGER.error("Failed to retrieve data source operator for provider: {}", dataSourceInfo.getProvider());
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_OPERATOR_RETRIEVAL_FAILURE, dataSourceInfo.getProvider());
             return null;
         }
 
@@ -66,37 +66,7 @@ public class DataSourceMetadataOperator {
             HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
             dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(datasourceName, datasourceNamespaces);
 
-            /**
-             * Outer map:
-             * Key: Name of namespace
-             * <p>
-             * Inner map:
-             * Key: Name of workload
-             * Value: DataSourceWorkload object matching the name
-             * TODO -  get workload metadata for a given namespace
-             */
-            HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
-            JsonArray workloadDataResultArray = op.getResultArrayForQuery(datasourceUrl, PromQLDataSourceQueries.WORKLOAD_QUERY);
-            if (true == op.validateResultArray(workloadDataResultArray)) {
-                datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
-            }
-            dataSourceDetailsHelper.updateWorkloadDataSourceMetadataInfoObject(datasourceName, dataSourceMetadataInfo, datasourceWorkloads);
-
-            /**
-             * Outer map:
-             * Key: Name of workload
-             * <p>
-             * Inner map:
-             * Key: Name of container
-             * Value: DataSourceContainer object matching the name
-             * TODO - get container metadata for a given workload
-             */
-            HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
-            JsonArray containerDataResultArray = op.getResultArrayForQuery(datasourceUrl, PromQLDataSourceQueries.CONTAINER_QUERY);
-            if (true == op.validateResultArray(containerDataResultArray)) {
-                datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
-            }
-            dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(datasourceName, dataSourceMetadataInfo, datasourceWorkloads, datasourceContainers);
+            updateWorkloadAndContainerMetadataInfo(dataSourceInfo, dataSourceMetadataInfo);
 
             return getDataSourceMetadataInfo(dataSourceInfo);
         } catch (Exception e) {
@@ -152,61 +122,29 @@ public class DataSourceMetadataOperator {
             return;
         }
         String dataSourceName = dataSourceInfo.getName();
+        String dataSourceProvider = dataSourceInfo.getProvider();
+        String dataSourceUrl = dataSourceInfo.getUrl().toString();
 
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
-        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
+        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceProvider);
 
         if (null == op) {
-            LOGGER.error("Failed to retrieve data source operator for provider: {}", dataSourceInfo.getProvider());
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_OPERATOR_RETRIEVAL_FAILURE, dataSourceProvider);
             return;
         }
 
         // Update fields as needed - namespaces, workloads, and containers
         try {
-            JsonArray namespacesDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(),
+            JsonArray namespacesDataResultArray = op.getResultArrayForQuery(dataSourceUrl,
                     PromQLDataSourceQueries.NAMESPACE_QUERY);
             if (!op.validateResultArray(namespacesDataResultArray)) {
-                LOGGER.debug("Validation failed for namespace data query.");
+                LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
                 return;
             }
             HashMap<String, DataSourceNamespace> newNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
             dataSourceDetailsHelper.updateNamespaceDataSourceMetadataInfoObject(dataSourceName, existingMetadataInfo, newNamespaces);
 
-            /**
-             * Outer map:
-             * Key: Name of namespace
-             * <p>
-             * Inner map:
-             * Key: Name of workload
-             * Value: DataSourceWorkload object matching the name
-             * TODO -  get workload metadata for a given namespace
-             */
-            HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
-            JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(),
-                    PromQLDataSourceQueries.WORKLOAD_QUERY);
-            if (op.validateResultArray(workloadDataResultArray)) {
-                datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
-            }
-            dataSourceDetailsHelper.updateWorkloadDataSourceMetadataInfoObject(dataSourceName, existingMetadataInfo,
-                    datasourceWorkloads);
-
-            /**
-             * Outer map:
-             * Key: Name of workload
-             * <p>
-             * Inner map:
-             * Key: Name of container
-             * Value: DataSourceContainer object matching the name
-             * TODO - get container metadata for a given workload
-             */
-            HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
-            JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo.getUrl().toString(),
-                    PromQLDataSourceQueries.CONTAINER_QUERY);
-            if (op.validateResultArray(containerDataResultArray)) {
-                datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
-            }
-            dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, existingMetadataInfo,
-                    datasourceWorkloads, datasourceContainers);
+            updateWorkloadAndContainerMetadataInfo(dataSourceInfo, existingMetadataInfo);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
@@ -232,6 +170,71 @@ public class DataSourceMetadataOperator {
 
             dataSourceHashMap.remove(dataSourceName);
         } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+    }
+
+    /**
+     * Fetches and processes metadata related to workloads, and containers of a given datasource
+     * @param dataSourceInfo
+     * @param dataSourceMetadataInfo
+     */
+    public void updateWorkloadAndContainerMetadataInfo(DataSourceInfo dataSourceInfo, DataSourceMetadataInfo dataSourceMetadataInfo) {
+        DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
+
+        String dataSourceProvider = dataSourceInfo.getProvider();
+        /**
+         * Get DataSourceOperatorImpl instance on runtime based on dataSource provider
+         */
+        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceProvider);
+
+        if (null == op) {
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_OPERATOR_RETRIEVAL_FAILURE, dataSourceProvider);
+            return;
+        }
+
+        String dataSourceName = dataSourceInfo.getName();
+        String dataSourceUrl = dataSourceInfo.getUrl().toString();
+
+        try {
+            /**
+             * Outer map:
+             * Key: Name of namespace
+             * <p>
+             * Inner map:
+             * Key: Name of workload
+             * Value: DataSourceWorkload object matching the name
+             * TODO -  get workload metadata for a given namespace
+             */
+            HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
+            JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceUrl,
+                    PromQLDataSourceQueries.WORKLOAD_QUERY);
+
+            if (op.validateResultArray(workloadDataResultArray)) {
+                datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
+            }
+            dataSourceDetailsHelper.updateWorkloadDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
+                    datasourceWorkloads);
+
+            /**
+             * Outer map:
+             * Key: Name of workload
+             * <p>
+             * Inner map:
+             * Key: Name of container
+             * Value: DataSourceContainer object matching the name
+             * TODO - get container metadata for a given workload
+             */
+            HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
+            JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceUrl,
+                    PromQLDataSourceQueries.CONTAINER_QUERY);
+
+            if (op.validateResultArray(containerDataResultArray)) {
+                datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
+            }
+            dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
+                    datasourceWorkloads, datasourceContainers);
+        } catch (Exception e){
             LOGGER.error(e.getMessage());
         }
     }
