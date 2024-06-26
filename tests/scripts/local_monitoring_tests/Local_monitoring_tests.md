@@ -20,6 +20,8 @@ Here are the test scenarios:
 - Post the same datasource again
 - Test with invalid values such as blank, null or an invalid value for various keys in the dsmetadata input request json
 - Validate error messages when the mandatory fields are missing
+- Repeated metadata imports for the same datasource by dynamically creating and deleting namespaces between two metadata import actions
+- Repeated metadata imports without datasource connection by dynamically scaling down prometheus resources to zero replicas
 
 ### **List Metadata API tests**
 
