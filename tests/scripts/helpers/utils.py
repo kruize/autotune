@@ -55,6 +55,7 @@ LIST_METADATA_DATASOURCE_NAME_ERROR_MSG = "Metadata for a given datasource name 
 LIST_METADATA_ERROR_MSG = ("Metadata for a given datasource - %s, cluster name - %s, namespace - %s "
                            "either does not exist or is not valid")
 LIST_METADATA_DATASOURCE_NAME_CLUSTER_NAME_ERROR_MSG = "Metadata for a given datasource name - %s, cluster_name - %s either does not exist or is not valid"
+IMPORT_METADATA_DATASOURCE_CONNECTION_FAILURE_MSG = "Metadata cannot be imported, datasource connection refused or timed out"
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
@@ -934,6 +935,89 @@ def delete_namespace(namespace_name):
             print(f"Namespace '{namespace_name}' not found.")
         else:
             print(f"Exception deleting namespace: {e}")
+
+
+def scale_deployment(namespace, deployment_name, replicas):
+    """
+    Scale a Kubernetes Deployment to the desired number of replicas.
+
+    This function scales a specified Deployment in a given namespace to a specified number
+    of replicas using the Kubernetes Python client library. It achieves this by creating
+    a Scale object and using the AppsV1Api to update the Deployment's scale.
+
+    Args:
+    - namespace (str): The namespace of the Deployment.
+    - deployment_name (str): The name of the Deployment.
+    - replicas (int): The desired number of replicas.
+
+    Returns:
+    None
+    """
+    config.load_kube_config()  # Load kube config from default location
+
+    # Create an API client
+    apps_v1 = client.AppsV1Api()
+
+    # Define the scale object
+    scale = client.V1Scale(
+        api_version='autoscaling/v1',
+        kind='Scale',
+        metadata=client.V1ObjectMeta(name=deployment_name, namespace=namespace),
+        spec=client.V1ScaleSpec(replicas=replicas)
+    )
+
+    # Scale the deployment
+    try:
+        response = apps_v1.replace_namespaced_deployment_scale(
+            name=deployment_name,
+            namespace=namespace,
+            body=scale
+        )
+        print(f"Deployment {deployment_name} scaled to {replicas} replicas successfully.")
+    except client.exceptions.ApiException as e:
+        print(f"Error scaling deployment {deployment_name}: {e}")
+
+
+def scale_statefulset(namespace, statefulset_name, replicas):
+    """
+    Scale a Kubernetes Statefulset to the desired number of replicas.
+
+    This function scales a specified Statefulset in a given namespace to a specified number
+    of replicas using the Kubernetes Python client library. It achieves this by creating
+    a Scale object and using the AppsV1Api to update the Statefulset's scale.
+
+    Args:
+    - namespace (str): The namespace of the Deployment.
+    - statefulset_name (str): The name of the Statefulset.
+    - replicas (int): The desired number of replicas.
+
+    Returns:
+    None
+    """
+    config.load_kube_config()  # Load kube config from default location
+
+    # Create an API client
+    apps_v1 = client.AppsV1Api()
+
+    # Define the scale object
+    scale = client.V1Scale(
+        api_version='autoscaling/v1',
+        kind='Scale',
+        metadata=client.V1ObjectMeta(name=statefulset_name, namespace=namespace),
+        spec=client.V1ScaleSpec(replicas=replicas)
+    )
+
+    # Scale the statefulset
+    try:
+        response = apps_v1.replace_namespaced_stateful_set_scale(
+            name=statefulset_name,
+            namespace=namespace,
+            body=scale
+        )
+        print(f"StatefulSet {statefulset_name} scaled to {replicas} replicas successfully.")
+    except client.exceptions.ApiException as e:
+        print(f"Error scaling statefulset {statefulset_name}: {e}")
+
 
 # validate duration_in_hours decimal precision
 def validate_duration_in_hours_decimal_precision(duration_in_hours):
