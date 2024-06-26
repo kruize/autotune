@@ -20,8 +20,12 @@ Here are the test scenarios:
 - Post the same datasource again
 - Test with invalid values such as blank, null or an invalid value for various keys in the dsmetadata input request json
 - Validate error messages when the mandatory fields are missing
-- Repeated metadata imports for the same datasource by dynamically creating and deleting namespaces between two metadata import actions
+- Repeated metadata imports for the same datasource by dynamically creating and deleting namespaces between two metadata
+  import actions by validating the newly created namespaces by verifying listing metadata output after the second import
+  metadata invocation
 - Repeated metadata imports without datasource connection by dynamically scaling down prometheus resources to zero replicas
+  and validating the behaviour of import metadata resulting in an error when datasource cannot be connected. Additionally,
+  to verify the output of list metadata returns the metadata from the DB after the second import metadata invocation.
 
 ### **List Metadata API tests**
 
