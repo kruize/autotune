@@ -317,7 +317,6 @@ public class AnalyzerConstants {
         public static final String VERBOSE = "verbose";
         public static final String FALSE = "false";
 
-
         private ServiceConstants() {
         }
     }
