@@ -20,6 +20,7 @@ import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -75,8 +76,8 @@ public class UpdateRecommendations extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         int calCount = ++requestCount;
-        LOGGER.debug("UpdateRecommendations API request count: {}", calCount);
-        String statusValue = "failure";
+        LOGGER.debug(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_COUNT, calCount));
+        String statusValue = KruizeConstants.APIMessages.FAILURE;
         Timer.Sample timerBUpdateRecommendations = Timer.start(MetricsConfig.meterRegistry());
         // Set the character encoding of the request to UTF-8
         request.setCharacterEncoding(CHARACTER_ENCODING);
@@ -88,7 +89,7 @@ public class UpdateRecommendations extends HttpServlet {
         Timestamp interval_end_time;
         Timestamp interval_start_time = null;
         if (KruizeDeploymentInfo.log_http_req_resp)
-            LOGGER.info("experiment_name : {} and interval_start_time : {} and interval_end_time : {} ", experiment_name, intervalStartTimeStr, intervalEndTimeStr);
+            LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_INPUT_PARAMS, experiment_name, intervalStartTimeStr, intervalEndTimeStr));
         try {
             // create recommendation engine object
             RecommendationEngine recommendationEngine = new RecommendationEngine(experiment_name, intervalEndTimeStr, intervalStartTimeStr);
@@ -97,37 +98,31 @@ public class UpdateRecommendations extends HttpServlet {
             if (validationMessage.isEmpty()) {
                 KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount);
                 if (kruizeObject.getValidation_data().isSuccess()) {
-                    LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
+                    LOGGER.debug(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_SUCCESS_COUNT, calCount));
                     interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
                             intervalEndTimeStr);
                     SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
                     sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
-                    LOGGER.info("Update Recommendation API success response, experiment_name: {} and interval_end_time : {}",
-                            experiment_name, sdf.format(interval_end_time));
+                    LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_SUCCESS, experiment_name,
+                            sdf.format(interval_end_time)));
                     sendSuccessResponse(response, kruizeObject, interval_end_time);
-                    statusValue = "success";
+                    statusValue = KruizeConstants.APIMessages.SUCCESS;
                 } else {
-                    LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
-                    LOGGER.error("UpdateRecommendations API failure response, experiment_name: {} and intervalEndTimeStr : {}",
-                            experiment_name, intervalEndTimeStr);
-                    sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject.getValidation_data().getMessage());
+                    LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
+                    sendErrorResponse(response, null, kruizeObject.getValidation_data().getErrorCode(), kruizeObject.getValidation_data().getMessage(), experiment_name, intervalEndTimeStr);
                 }
             } else {
-                LOGGER.error("Validation failed: {} for experiment_name: {} and interval_end_time: {}", validationMessage,
-                        experiment_name, intervalEndTimeStr);
-                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage);
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage, experiment_name, intervalEndTimeStr);
             }
 
         } catch (Exception e) {
-            LOGGER.error("UpdateRecommendations API request count: {} failed", calCount);
-            LOGGER.error("UpdateRecommendations API, experiment_name: {},  intervalEndTimeStr: {}", experiment_name, intervalEndTimeStr);
-            LOGGER.error("Exception: {}", e.getMessage());
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
             e.printStackTrace();
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), experiment_name, intervalEndTimeStr);
         } finally {
-            LOGGER.debug("UpdateRecommendations API request count: {} completed", calCount);
+            LOGGER.debug(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_COMPLETED_COUNT, calCount));
             if (null != timerBUpdateRecommendations) {
-                MetricsConfig.timerUpdateRecomendations = MetricsConfig.timerBUpdateRecommendations.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                MetricsConfig.timerUpdateRecomendations = MetricsConfig.timerBUpdateRecommendations.tag(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS, statusValue).register(MetricsConfig.meterRegistry());
                 timerBUpdateRecommendations.stop(MetricsConfig.timerUpdateRecomendations);
             }
         }
@@ -148,13 +143,14 @@ public class UpdateRecommendations extends HttpServlet {
                             interval_end_time);
             recommendationList.add(listRecommendationsAPIObject);
         } catch (Exception e) {
-            LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.GENERATE_RECOMMENDATION_FAILURE,
+                    ko.getExperimentName(), e.getMessage()));
         }
         ExclusionStrategy strategy = new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes field) {
-                return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results"))
-                        || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
+                return field.getDeclaringClass() == ContainerData.class && (field.getName().equals(KruizeConstants.JSONKeys.RESULTS))
+                        || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals(KruizeConstants.JSONKeys.METRICS)));
             }
 
             @Override
@@ -174,18 +170,19 @@ public class UpdateRecommendations extends HttpServlet {
             gsonStr = gsonObj.toJson(recommendationList);
         }
         if (KruizeDeploymentInfo.log_http_req_resp)
-            LOGGER.info("Update Recommendation API response: {}", new Gson().toJson(JsonParser.parseString(gsonStr)));
+            LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_RESPONSE, new Gson().toJson(JsonParser.parseString(gsonStr))));
         response.getWriter().println(gsonStr);
         response.getWriter().close();
     }
 
-    public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
-            IOException {
+    public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg,
+                                  String experiment_name, String intervalEndTimeStr) throws IOException {
         if (null != e) {
             e.printStackTrace();
             LOGGER.error(e.toString());
             if (null == errorMsg) errorMsg = e.getMessage();
         }
+        LOGGER.error(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_FAILURE_MSG, experiment_name, intervalEndTimeStr, errorMsg));
         response.sendError(httpStatusCode, errorMsg);
     }
 }

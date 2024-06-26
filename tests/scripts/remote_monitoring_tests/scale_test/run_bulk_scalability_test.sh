@@ -24,12 +24,13 @@ minutes_jump=15
 initial_start_date="2023-08-01T00:00:00.000Z"
 interval_hours=6
 query_db_interval=5
+total_results_count=0
 
 function usage() {
 	echo
 	echo "Usage: ./run_scalability_test.sh -c cluster_type[minikube|openshift (default - openshift)] [-a IP] [-p PORT] [-u No. of experiments per client (default - 250)]"
 	echo "	     [-d No. of days of results (default - 2)] [-n No. of clients] [-m results duration interval in mins (default - 15)] [-i interval hours (default - 6)]"
-        echo "       [-s Initial start date] [-q query db interval in mins (default - 5)] [-r <resultsdir path>]"
+        echo "       [-s Initial start date] [-q query db interval in mins (default - 5)] [-r <resultsdir path>] [-e total results count already in the DB]"
 	exit -1
 }
 
@@ -37,9 +38,9 @@ function query_db() {
 
 	while(true); do
 		# Obtain the no. of experiments and results from the db
-		exp_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_experiments ;" | tail -3 | head -1 | tr -d '[:space:]')
+		exp_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_experiments ;" | tail -3 | head -1 | tr -d '[:space:]')
 
-		results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
+		results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
 
 		# Print the scalability test progress
 		echo "Exps = $exp_count Results = $results_count"
@@ -91,7 +92,7 @@ function execution_time() {
 }
 
 
-while getopts c:a:p:r:u:n:d:m:i:s:q:h gopts
+while getopts c:a:p:r:u:n:d:m:i:e:s:q:h gopts
 do
 	case ${gopts} in
 	c)
@@ -120,6 +121,9 @@ do
 		;;
 	i)
 		interval_hours="${OPTARG}"		
+		;;
+	e)
+		total_results_count="${OPTARG}"
 		;;
 	q)
 		query_db_interval="${OPTARG}"
@@ -181,26 +185,28 @@ echo "				All threads completed!                          "
 echo "###########################################################################"
 
 exec_time_log="${RESULTS_DIR}/exec_time.log"
-cd $SCALE_LOG_DIR
-
 echo "Capturing execution time in ${exec_time_log}..."
-execution_time ${exec_time_log} ${SCALE_LOG_DIR}
+pushd $SCALE_LOG_DIR > /dev/null
+        execution_time ${exec_time_log} ${SCALE_LOG_DIR}
+popd > /dev/null
 sleep 5
 echo ""
 echo "Capturing execution time in ${exec_time_log}...done"
 
 # Compare the expected results count in the db with the actual results count
-actual_results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
+actual_results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
 
 expected_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
+total_results_count=$((${expected_results_count} + ${total_results_count}))
 
 j=0
-while [[ ${expected_results_count} != ${actual_results_count} ]]; do
+while [[ ${total_results_count} != ${actual_results_count} ]]; do
 	echo ""
 	echo "expected results count = $expected_results_count actual_results_count = $actual_results_count"
-	actual_results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
+	actual_results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
 
 	expected_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
+	total_results_count=$((${expected_results_count} + ${total_results_count}))
 	if [ ${j} == 2 ]; then
 		break
 	else
@@ -209,16 +215,42 @@ while [[ ${expected_results_count} != ${actual_results_count} ]]; do
 	j=$((${j} + 1))
 done
 
-exps_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep postgres` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_experiments ;" | tail -3 | head -1 | tr -d '[:space:]')
+exps_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_experiments ;" | tail -3 | head -1 | tr -d '[:space:]')
 
 echo ""
 echo "###########################################################################"
 echo "Scale test completed!"
 echo "exps_count = $exps_count results_count = $actual_results_count"
-if [ ${expected_results_count} != ${actual_results_count} ]; then
+if [ ${total_results_count} != ${actual_results_count} ]; then
+	echo "Total expected results count = ${total_results_count} Actual results count = ${actual_results_count}"
 	echo "Expected results count not found in kruize_results db table"
 fi
 echo "###########################################################################"
+
 echo ""
+echo ""
+echo "###########################################################################"
+echo "Summary of the test run"
+exp_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_experiments ;" | tail -3 | head -1 | tr -d '[:space:]')
+
+results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
+
+reco_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_recommendations ;" | tail -3 | head -1 | tr -d '[:space:]')
+
+echo "exp_count / results_count / reco_count = ${exp_count} / ${results_count} / ${reco_count}"
+
+db_size=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT pg_database_size('kruizeDB') AS database_size_bytes;" | tail -3 | head -1 | tr -d '[:space:]')
+
+db_size_mb=$((db_size / (1024 * 1024) + 1))
+
+echo "Postgres DB size in MB = ${db_size_mb}"
+
+echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${expected_results_count}""
+python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${expected_results_count}"
+
+echo "###########################################################################"
+echo ""
+echo ""
+
 kill $MYSELF 
 wait

@@ -26,7 +26,7 @@ list_datasources_json_schema = {
                         "format": "uri"
                     }
                 },
-                "required": ["name", "provider", "serviceName", "namespace", "url"]
+                "required": ["name", "provider", "url"]
             }
         }
     },

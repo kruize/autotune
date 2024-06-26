@@ -29,6 +29,23 @@ public class KruizeConstants {
     private KruizeConstants() {
     }
 
+    public static class APIMessages {
+        public static final String MAX_DAY = "maxDay : %s";
+        public static final String SUCCESS = "success";
+        public static final String FAILURE = "failure";
+        public static final String GET = "get";
+        public static final String SET = "set";
+        public static final String CONTAINER_USAGE_INFO = "Determine the date of the last activity for the container based on its usage. ";
+        public static final String RECOMMENDATION_TERM = "recommendationTerm : %s";
+        public static final String MONITORING_START_TIME = "monitoringStartTime : %s";
+        public static final String EXPERIMENT_DATASOURCE = "Experiment: %s,  Datasource: %s";
+        public static final String UPDATE_RECOMMENDATIONS_INPUT_PARAMS = "experiment_name : %s and interval_start_time : %s and interval_end_time : %s ";
+        public static final String UPDATE_RECOMMENDATIONS_SUCCESS = "Update Recommendation API success response, experiment_name: %s and interval_end_time : %s";
+        public static final String UPDATE_RECOMMENDATIONS_FAILURE = "UpdateRecommendations API failure response, experiment_name: %s and intervalEndTimeStr : %s";
+        public static final String UPDATE_RECOMMENDATIONS_RESPONSE = "Update Recommendation API response: %s";
+        public static final String UPDATE_RECOMMENDATIONS_FAILURE_MSG = "UpdateRecommendations API failed for experiment_name: %s and intervalEndTimeStr : %s due to %s";
+    }
+
 
     public static enum KRUIZE_RECOMMENDATION_API_VERSION {
         V1_0("1.0"),
@@ -477,6 +494,11 @@ public class KruizeConstants {
             public static final String SET_WORKLOAD_MAP_ERROR = "workloadHashMap is null, no workloads provided for namespace: ";
             public static final String SET_CONTAINER_MAP_ERROR = "containerHashMap is null, no containers provided for workload: ";
             public static final String SET_NAMESPACE_MAP_ERROR = "namespaceHashMap is null, no namespaces provided for cluster: ";
+            public static final String LOAD_DATASOURCE_FROM_DB_ERROR = "Error loading datasource - %s from DB: %s";
+            public static final String LOAD_DATASOURCE_METADATA_FROM_DB_ERROR = "Error loading datasource - %s from DB: %s";
+            public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_MSG = "Validation of imported metadata failed, mandatory fields missing: %s";
+            public static final String NAMESPACE_QUERY_VALIDATION_FAILED = "Validation failed for namespace data query.";
+            public static final String DATASOURCE_OPERATOR_RETRIEVAL_FAILURE = "Failed to retrieve data source operator for provider: %s";
         }
 
         public static class DataSourceMetadataInfoJSONKeys {
@@ -494,6 +516,12 @@ public class KruizeConstants {
             public static final String CONTAINERS = "containers";
             public static final String CONTAINER_NAME = "container_name";
             public static final String CONTAINER_IMAGE_NAME = "container_image_name";
+        }
+
+        public static class DataSourceMetadataInfoSuccessMsgs {
+            public static final String DATASOURCE_METADATA_DELETED = "Datasource metadata deleted successfully.";
+            private DataSourceMetadataInfoSuccessMsgs() {
+            }
         }
     }
 

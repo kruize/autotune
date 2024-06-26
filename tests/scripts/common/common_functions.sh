@@ -111,6 +111,24 @@ function get_date() {
 	date "+%Y-%m-%d %H:%M:%S"
 }
 
+function increment_timestamp_by_days() {
+        initial_start_date=$1
+        days_to_add=$2
+
+        # Extract the date, time, and timezone parts from the initial date string
+        date_part=$(echo "$initial_start_date" | cut -d'T' -f1)
+        time_part=$(echo "$initial_start_date" | cut -d'T' -f2 | cut -d'.' -f1)
+        timezone_part=$(echo "$initial_start_date" | awk -F'T' '{print $2}' | cut -d'.' -f2)
+
+        # Remove trailing zeros from timezone part (e.g., 000000000Z to 000Z)
+        trimmed_timezone=$(echo "$timezone_part" | sed 's/0*$//')
+
+        # Use date command to increment the date by the specified days
+        incremented_date=$(date -u -d "$date_part + $days_to_add days" +%Y-%m-%dT$time_part.${trimmed_timezone})
+
+        echo "$incremented_date"
+}
+
 function time_diff() {
 	ssec=`date --utc --date "$1" +%s`
 	esec=`date --utc --date "$2" +%s`
@@ -285,6 +303,25 @@ function autotune_cleanup() {
 	fi
 	popd > /dev/null
 	echo "done"
+}
+
+# Restore DB from the file passed as input
+function restore_db() {
+	db_backup_file=$1
+    	db_restore_log=$2
+
+	echo ""
+	echo "Restoring DB..."
+	kruize_db_pod=$(kubectl get pods -o=name -n ${NAMESPACE} | grep kruize-db | cut -d '/' -f2)
+	db_file=$(basename ${db_backup_file})
+
+	echo "oc cp ${db_backup_file} ${NAMESPACE}/${kruize_db_pod}:/"
+	oc cp ${db_backup_file} ${NAMESPACE}/${kruize_db_pod}:/
+
+	echo "kubectl exec -it ${kruize_db_pod} -n ${NAMESPACE} -- psql -U admin -d kruizeDB -f ${db_file} > ${db_restore_log}"
+	kubectl exec -it ${kruize_db_pod} -n ${NAMESPACE} -- psql -U admin -d kruizeDB -f ${db_file} > ${db_restore_log}
+	echo "Restoring DB...done"
+	echo ""
 }
 
 # list of test cases supported
