@@ -148,7 +148,8 @@ def test_import_metadata_mandatory_fields(cluster_type, field, expected_status_c
 def test_repeated_metadata_import(cluster_type):
     """
     Test Description: This test validates the response status code of /dsmetadata API by specifying the
-    same datasource name
+    same datasource name by creating and deleting namespaces between two import metadata calls and validating the newly
+    created namespaces by verifying listing metadata output after the second import metadata invocation
     """
     input_json_file = "../json_files/import_metadata.json"
     json_data = json.load(open(input_json_file))
@@ -230,7 +231,9 @@ def test_repeated_metadata_import(cluster_type):
 def test_repeated_metadata_import_without_datasource_connection(cluster_type):
     """
     Test Description: This test validates the response status code of POST /dsmetadata API by specifying the
-    same datasource name with repeated metadata imports by bringing down prometheus server instance
+    same datasource name with repeated metadata imports by bringing down prometheus server instance to validate the behaviour
+    of import metadata when datasource cannot be connected resulting in an error and additionally verifying list metadata
+    output returns the metadata from the DB after the second import metadata invocation.
     """
     input_json_file = "../json_files/import_metadata.json"
     json_data = json.load(open(input_json_file))
