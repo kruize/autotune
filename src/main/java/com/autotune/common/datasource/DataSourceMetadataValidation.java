@@ -66,6 +66,7 @@ public class DataSourceMetadataValidation {
                 if (!missingMandatoryFields.isEmpty()) {
                     String errorMsg = String.format(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_VALIDATION_FAILURE_MSG, missingMandatoryFields);
                     markFailed(errorMsg);
+                    return;
                 }
             }
 
@@ -93,10 +94,6 @@ public class DataSourceMetadataValidation {
                     missingMandatoryFields.add(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTER_NAME);
                 }
             }
-        }
-        if (!missingMandatoryFields.isEmpty()) {
-            String errorMsg = String.format(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_VALIDATION_FAILURE_MSG, missingMandatoryFields);
-            markFailed(errorMsg);
         }
     }
 }

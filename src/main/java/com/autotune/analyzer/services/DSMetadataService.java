@@ -121,19 +121,7 @@ public class DSMetadataService extends HttpServlet {
                 return;
             }
 
-            DataSourceInfo datasource;
-            try {
-                datasource = dataSourceManager.fetchDataSourceFromDBByName(dataSourceName);
-            } catch (Exception e) {
-                sendErrorResponse(
-                        inputData,
-                        response,
-                        e,
-                        HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        String.format(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.LOAD_DATASOURCE_FROM_DB_ERROR, dataSourceName, e.getMessage())
-                );
-                return;
-            }
+            DataSourceInfo datasource = dataSourceManager.fetchDataSourceFromDBByName(dataSourceName);
 
             if (datasource == null) {
                 sendErrorResponse(
@@ -146,13 +134,7 @@ public class DSMetadataService extends HttpServlet {
                 return;
             }
 
-            DataSourceMetadataInfo metadataInfo;
-            try {
-                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource);
-            } catch (Exception e) {
-                sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
-                return;
-            }
+            DataSourceMetadataInfo metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource);
 
             // Validate imported metadataInfo object
             DataSourceMetadataValidation validationObject = new DataSourceMetadataValidation();
