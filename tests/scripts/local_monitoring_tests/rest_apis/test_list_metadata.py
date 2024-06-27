@@ -89,8 +89,7 @@ def test_list_metadata_without_parameters(cluster_type):
 
     list_metadata_json = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    datasource = "null"
-    assert list_metadata_json['message'] == LIST_METADATA_DATASOURCE_NAME_ERROR_MSG % datasource
+    assert list_metadata_json['message'] == LIST_METADATA_MISSING_DATASOURCE
 
 
     response = delete_metadata(input_json_file)
@@ -132,7 +131,10 @@ def test_list_metadata_invalid_datasource(test_name, expected_status_code, datas
 
     list_metadata_json = response.json()
     assert response.status_code == ERROR_STATUS_CODE
-    assert list_metadata_json['message'] == LIST_METADATA_DATASOURCE_NAME_ERROR_MSG % datasource
+    if test_name == "blank_datasource":
+        assert list_metadata_json['message'] == LIST_METADATA_MISSING_DATASOURCE
+    else:
+        assert list_metadata_json['message'] == LIST_METADATA_DATASOURCE_NAME_ERROR_MSG % datasource
 
 
     response = delete_metadata(input_json_file)

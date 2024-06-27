@@ -55,6 +55,7 @@ LIST_METADATA_DATASOURCE_NAME_ERROR_MSG = "Metadata for a given datasource name 
 LIST_METADATA_ERROR_MSG = ("Metadata for a given datasource - %s, cluster name - %s, namespace - %s "
                            "either does not exist or is not valid")
 LIST_METADATA_DATASOURCE_NAME_CLUSTER_NAME_ERROR_MSG = "Metadata for a given datasource name - %s, cluster_name - %s either does not exist or is not valid"
+LIST_METADATA_MISSING_DATASOURCE = "datasource is mandatory"
 IMPORT_METADATA_DATASOURCE_CONNECTION_FAILURE_MSG = "Metadata cannot be imported, datasource connection refused or timed out"
 
 # Kruize Recommendations Notification codes
