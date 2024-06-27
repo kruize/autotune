@@ -47,7 +47,7 @@ function aks_first() {
 	${kubectl_cmd} apply -f ${AUTOTUNE_RB_MANIFEST}
 	check_err "Error: Failed to create role binding"
 
-	sed -e "s|{{ AUTOTUNE_NAMESPACE }}|${autotune_ns}|" -e "s|{{ CLUSTER_TYPE }}|minikube|"  ${AUTOTUNE_QUERY_VARIABLES_MANIFEST_TEMPLATE} > ${AUTOTUNE_QUERY_VARIABLES_MANIFEST}
+	sed -e "s|{{ AUTOTUNE_NAMESPACE }}|${autotune_ns}|" -e "s|{{ CLUSTER_TYPE }}|aks|"  ${AUTOTUNE_QUERY_VARIABLES_MANIFEST_TEMPLATE} > ${AUTOTUNE_QUERY_VARIABLES_MANIFEST}
 	${kubectl_cmd} apply -f ${AUTOTUNE_QUERY_VARIABLES_MANIFEST}
 	check_err "Error: Failed to create query variables"
 
@@ -58,7 +58,7 @@ function aks_first() {
 # You can deploy using kubectl
 function aks_deploy() {
 	echo
-	echo "Creating environment variable in minikube cluster using configMap"
+	echo "Creating environment variable in AKS cluster using configMap"
 	${kubectl_cmd} apply -f ${AUTOTUNE_CONFIGMAPS}/${cluster_type}-config.yaml
 
 	echo
@@ -69,7 +69,7 @@ function aks_deploy() {
 	echo "Deploying Performance Profile objects"
 	${kubectl_cmd} apply -f ${AUTOTUNE_PERF_PROFILE_ROS}
 
-	echo "Info: Deploying autotune yaml to minikube cluster"
+	echo "Info: Deploying autotune yaml to AKS cluster"
 
 	# Replace autotune docker image in deployment yaml
 	sed -e "s|{{ AUTOTUNE_IMAGE }}|${AUTOTUNE_DOCKER_IMAGE}|" ${AUTOTUNE_DEPLOY_MANIFEST_TEMPLATE} > ${AUTOTUNE_DEPLOY_MANIFEST}
@@ -84,7 +84,7 @@ function aks_deploy() {
 		exit 1
 	fi
 
-	# Get the Autotune application port in minikube
+	# Get the Autotune application port in AKS
 	MINIKUBE_IP=$(minikube ip)
 	AUTOTUNE_PORT=$(${kubectl_cmd} get svc autotune --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
 	echo "Info: Access Autotune at http://${MINIKUBE_IP}:${AUTOTUNE_PORT}/listKruizeTunables"
@@ -93,7 +93,7 @@ function aks_deploy() {
 
 function aks_start() {
 	echo
-	echo "###   Installing autotune for minikube"
+	echo "###   Installing autotune for AKS"
 	echo
 
 	# If autotune_ns was not set by the user
@@ -187,13 +187,13 @@ function aks_terminate() {
 # Deploy kruize in remote monitoring mode
 function aks_crc_start() {
 	echo
-	echo "###   Installing kruize for minikube"
+	echo "###   Installing kruize for AKS"
 	echo
 	# If autotune_ns was not set by the user
 	if [ -z "$autotune_ns" ]; then
 		autotune_ns="monitoring"
 	fi
-	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_AKS}
 
 	kruize_crc_start
 }
@@ -204,9 +204,9 @@ function aks_crc_terminate() {
 		autotune_ns="monitoring"
 	fi
 	kubectl_cmd="kubectl -n ${autotune_ns}"
-	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_AKS}
 
-	echo -n "###   Removing Kruize for minikube"
+	echo -n "###   Removing Kruize for AKS"
 	echo
 	${kubectl_cmd} delete -f ${CRC_MANIFEST_FILE} 2>/dev/null
 }
