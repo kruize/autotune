@@ -1,7 +1,7 @@
 import sys, getopt
 import datetime
 import json
-sys.path.append("..")
+sys.path.append("../..")
 
 from helpers.fixtures import *
 from helpers.generate_rm_jsons import *
