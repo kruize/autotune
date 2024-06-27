@@ -253,7 +253,7 @@ function deploy_autotune() {
 		echo "Namespace = $namespace"
 		if [ ${target} == "crc" ]; then
 			service="kruize"
-			autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | grep -v kruize-ui | cut -d " " -f1)
+			autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
 			echo "autotune_pod = $autotune_pod"
 			echo "kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &"
 			kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &
@@ -1798,7 +1798,7 @@ function get_autotune_pod_log() {
 
 	echo "target = $target"
 	if [ ${target} == "crc" ]; then
-		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | cut -d " " -f1)
+		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
 		pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
 	else
 		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
