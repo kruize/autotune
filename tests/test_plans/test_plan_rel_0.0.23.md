@@ -59,12 +59,12 @@ Kruize Local:
 
 | #   | ISSUE (NEW FEATURE)                                                   | TEST DESCRIPTION | TEST DELIVERABLES | RESULTS | COMMENTS |
 | --- |-----------------------------------------------------------------------| ---------------- | ----------------- |  -----  | --- |
-| 1   | [Add metrics logging for Kruize recommendation notifications] (https://github.com/kruize/autotune/pull/1206) | Updated scalability test to capture the notifications metrics |  | PASSED | |
-| 2   | [Support multiple invocations of import metadata] (https://github.com/kruize/autotune/pull/1178) | [Included new tests](https://github.com/kruize/autotune/blob/master/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md) | Tests added - [1211](https://github.com/kruize/autotune/pull/1211) | PASSED | |
-| 3   | [Test list datasource metadata] (https://github.com/kruize/autotune/issues/)  | [Included new tests](https://github.com/kruize/autotune/blob/master/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md) | Tests added - [1199](https://github.com/kruize/autotune/pull/1199) | PASSED | |
-| 4   | [Update the kruize-demos to include different workload conditions] | Different load conditions idle/over utilized/under utilized were simulated | [79](https://github.com/kruize/kruize-demos/pull/79) | PASSED | |
-| 5   | [Support for ‘kind’ instead of minikube to run kruize local demo] | local monitoring demo has been updated to use kind | [81](https://github.com/kruize/kruize-demos/pull/81) | CPU recommendations are not generated | |
-| 6   | [Update the scalability test to print the metrics summary] | Existing Scale test has been updated to print the summary | [81](https://github.com/kruize/autotune/pull/81) | PASSED | |
+| 1   | [Add metrics logging for Kruize recommendation notifications](https://github.com/kruize/autotune/pull/1206) | Updated scalability test to capture the notifications metrics |  | PASSED | |
+| 2   | [Support multiple invocations of import metadata](https://github.com/kruize/autotune/pull/1178) | [Included new tests](https://github.com/kruize/autotune/blob/master/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md) | Tests added - [1211](https://github.com/kruize/autotune/pull/1211) | PASSED | |
+| 3   | Tests for list datasource metadata | [Included new tests](https://github.com/kruize/autotune/blob/master/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md) | Tests added - [1199](https://github.com/kruize/autotune/pull/1199) | PASSED | |
+| 4   | [Update the kruize-demos to include different workload conditions](https://github.com/kruize/kruize-demos/pull/79) | Different load conditions idle/over utilized/under utilized were simulated | | PASSED | |
+| 5   | [Support for ‘kind’ instead of minikube to run kruize local demo](https://github.com/kruize/kruize-demos/pull/81) | local monitoring demo has been updated to use kind | | CPU recommendations are not generated, being investigated | |
+| 6   | Update the scalability test to print the metrics summary | Existing Scale test has been updated to print the summary | [81](https://github.com/kruize/autotune/pull/81) | PASSED | |
 
 ### Regression Testing
 
@@ -85,11 +85,11 @@ Short Scalability run
 - Kruize replicas - 10
 - OCP - Scalelab cluster
 
-Kruize Release | Exps / Results / Recos | Execution time | Latency (Max/ Avg) in seconds | | | | Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB)
--- |------------------|------------------|--------------|--------------|-------------|-----------|----------------| --  |  
- |     |                   | UpdateRecommendations | UpdateResults                 | LoadResultsByExpName | GeneratePlots|  |   |  
-0.0.22_mvp | 5K / 72L / 3L | 3h 51 mins | 0.62 / 0.39 | 0.24 / 0.17 | 0.34 / 0.25  | 0.0008 / 0.0007 | 21756.32 | 7.12 | 33.64
-0.0.23_mvp | 5K / 72L / 3L | 3h 51 mins | 0.63 / 0.39 | 0.24 / 0.17 | 0.35 / 0.25 |  0.0 / 0.0  | 21760 | 4.52 | 32.59
+Kruize Release | Exps / Results / Recos | Execution time        | Latency (Max/ Avg) in seconds |                      |              | Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB)
+-- |------------------------|-----------------------|-------------------------------|----------------------|--------------|----------------------|----------------| --
+  |   |     |                   | UpdateRecommendations | UpdateResults                 | LoadResultsByExpName |              |                      |  
+0.0.22_mvp | 5K / 72L / 3L | 3h 51 mins            | 0.62 / 0.39      | 0.24 / 0.17  | 0.34 / 0.25  | 21756.32     | 7.12           | 33.64
+0.0.23_mvp | 5K / 72L / 3L | 3h 51 mins | 0.63 / 0.39 | 0.24 / 0.17 | 0.35 / 0.25 |  21760 | 4.52 | 32.59
 
 ----
 ## RELEASE TESTING
