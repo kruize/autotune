@@ -788,7 +788,11 @@ HTTP_METHOD: POST
 curl --location --request POST 'http://127.0.0.1:8080/createPerformanceProfile' \
 --header 'Content-Type: application/json' \
 --data-raw '{
-  "name": "resource-optimization-openshift",
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizePerformanceProfile",
+  "metadata": {
+    "name": "resource-optimization-openshift"
+  }
   "profile_version": 1,
   "slo": {
     "direction": "minimize",

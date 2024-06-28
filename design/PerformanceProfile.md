@@ -5,8 +5,14 @@ tuned.
 
 # Attributes
 
-- **name** \
-  A unique string name for identifying each performance profile.
+- **apiVersion** \
+  A string representing version of the Kubernetes API to create performance profile
+- **kind** \
+  A string representing type of kubernetes object
+- **metadata** \
+  A JSON object containing Data that helps to uniquely identify the performance profile, including a name string
+  - **name** \
+    A unique string name for identifying each performance profile.
 - **profile_version** \
   a double value specifying the current version of the profile.
 - **slo** \
