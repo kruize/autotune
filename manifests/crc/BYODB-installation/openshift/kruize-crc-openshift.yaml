@@ -90,7 +90,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.22_rm
+          image: kruize/autotune_operator:0.0.23_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -220,7 +220,7 @@ metadata:
 spec:
   containers:
     - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.3
+      image: quay.io/kruize/kruize-ui:0.0.4
       imagePullPolicy: Always
       env:
         - name: KRUIZE_UI_ENV
