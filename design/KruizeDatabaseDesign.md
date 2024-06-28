@@ -730,6 +730,30 @@ EXISTS (
    </td>
   </tr>
   <tr>
+   <td>apiVersion
+   </td>
+   <td>string
+   </td>
+   <td>Version of Kubernetes API
+   </td>
+  </tr>
+  <tr>
+   <td>kind
+   </td>
+   <td>string
+   </td>
+   <td>Type of kubernetes object
+   </td>
+  </tr>
+  <tr>
+   <td>metadata
+   </td>
+   <td>json
+   </td>
+   <td>Data to uniquely identify the performance profile, including name
+   </td>
+  </tr>
+  <tr>
    <td>name
    </td>
    <td>string
@@ -748,7 +772,7 @@ EXISTS (
   <tr>
    <td>SLO
    </td>
-   <td>string
+   <td>json
    </td>
    <td>Objectives, function and function variables
    </td>
@@ -792,7 +816,7 @@ curl --location --request POST 'http://127.0.0.1:8080/createPerformanceProfile' 
   "kind": "KruizePerformanceProfile",
   "metadata": {
     "name": "resource-optimization-openshift"
-  }
+  },
   "profile_version": 1,
   "slo": {
     "direction": "minimize",

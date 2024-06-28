@@ -19,7 +19,7 @@ see [Create Performance Profile](/design/PerformanceProfile.md)
   "kind": "KruizePerformanceProfile",
   "metadata": {
     "name": "resource-optimization-openshift"
-  }
+  },
   "profile_version": 1,
   "slo": {
     "direction": "minimize",
@@ -75,7 +75,7 @@ List performance profiles output JSON as follows.
         "kind": "KruizePerformanceProfile",
         "metadata": {
             "name": "resource-optimization-openshift"
-        }
+        },
         "profile_version": 1.0,
         "k8s_type": "openshift",
         "slo": {
