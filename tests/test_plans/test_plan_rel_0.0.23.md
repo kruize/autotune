@@ -23,7 +23,6 @@ This document describes the test plan for Kruize remote monitoring release 0.0.2
 
 ## FEATURES TO BE TESTED
 
-* Support for ‘kind’ instead of minikube to run kruize local demo
 * Add metrics logging for Kruize recommendation notifications 
 * Update the scalability test to print the metrics summary
 
@@ -99,10 +98,11 @@ As part of the release testing, following tests will be executed:
 - [Fault tolerant test](/tests/scripts/remote_monitoring_tests/fault_tolerant_tests.md)
 - [Stress test](/tests/scripts/remote_monitoring_tests/README.md)
 - [DB Migration test](/tests/scripts/remote_monitoring_tests/db_migration_test.md)
-- [Stress test](/tests/scripts/remote_monitoring_tests/README.md)
+- [Recommendation and box plot values validation test](https://github.com/kruize/kruize-demos/blob/main/monitoring/remote_monitoring_demo/recommendations_infra_demo/README.md)
 - [Scalability test (On openshift)](/tests/scripts/remote_monitoring_tests/scalability_test.md) - scalability test with 5000 exps / 15 days usage data
 - [Kruize remote monitoring demo (On minikube)](https://github.com/kruize/kruize-demos/blob/main/monitoring/remote_monitoring_demo/README.md)
 - [Kruize local monitoring demo (On openshift)](https://github.com/kruize/kruize-demos/blob/main/monitoring/local_monitoring_demo)
+- [Kruize local monitoring Functional tests](/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md)
 
 
 | #   | TEST SUITE | EXPECTED RESULTS | ACTUAL RESULTS | COMMENTS |
