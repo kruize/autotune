@@ -137,7 +137,6 @@ public class Terms {
             mappedRecommendationForTerm, String recommendationTerm) {
 
         double durationSummation = getDurationSummation(containerDataKruizeObject);
-        durationSummation = Double.parseDouble(String.format("%.1f", durationSummation));
         // Get the maximum duration allowed for the term
         double maxDurationInHours = getMaxDuration(recommendationTerm);
         double maxDurationInMinutes = maxDurationInHours * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
@@ -146,6 +145,7 @@ public class Terms {
             durationSummation = maxDurationInMinutes;
         }
         double durationSummationInHours = durationSummation / KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
+        durationSummationInHours = Double.parseDouble(String.format("%.2f", durationSummationInHours));
         mappedRecommendationForTerm.setDurationInHrs(durationSummationInHours);
     }
 

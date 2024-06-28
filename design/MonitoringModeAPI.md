@@ -584,6 +584,11 @@ specific attribute causing the failures.
 
 </details>
 
+**Note:**
+- In the above API for CPU usage, representation units can be in either cores or milli-cores. The acceptable formats include `cores` and `m`.
+- Memory usage can be expressed in bytes. The API also supports fixed-point suffixes like E, P, T, G, M, K and their power-of-two equivalents (Ei, Pi, Ti, Gi, Mi, Ki). 
+The acceptable formats are `Bytes, bytes, KiB, MiB, GiB, TiB, PiB, EiB, Ki, Mi, Gi, Ti, Pi, Ei, kB, KB, MB, GB, TB, PB, EB, K, k, M, G, T, P, E`.
+
 <a name="list-experiments-api"></a>
 
 ## List Experiments API

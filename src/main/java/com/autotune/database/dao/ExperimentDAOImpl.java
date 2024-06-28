@@ -500,6 +500,44 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+    /**
+     * Delete metadata with the name dataSourceName
+     * This deletes the metadata from the KruizeDSMetadataEntry table
+     * @param dataSourceName
+     * @return
+     */
+    @Override
+    public ValidationOutputData deleteKruizeDSMetadataEntryByName(String dataSourceName) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(DELETE_FROM_METADATA_BY_DATASOURCE_NAME, null);
+                query.setParameter("dataSourceName", dataSourceName);
+                int deletedCount = query.executeUpdate();
+
+                if (deletedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage("KruizeDSMetadataEntry not found with datasource name: " + dataSourceName);
+                } else {
+                    validationOutputData.setSuccess(true);
+                }
+                tx.commit();
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to delete metadata for datasource {} due to {}", dataSourceName, e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to delete metadata for datasource {} due to {}", dataSourceName, e.getMessage());
+        }
+        return validationOutputData;
+    }
+
     @Override
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
@@ -871,18 +909,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             kruizeMetadataList = kruizeMetadataQuery.list();
         } catch (Exception e) {
             LOGGER.error("Unable to load metadata with dataSourceName: {}, clusterName : {} and namespace : {} : {}", dataSourceName, clusterName, namespace, e.getMessage());
-            throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
-        }
-        return kruizeMetadataList;
-    }
-
-    @Override
-    public List<KruizeDSMetadataEntry> loadMetadata() throws Exception {
-        List<KruizeDSMetadataEntry> kruizeMetadataList;
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            kruizeMetadataList = session.createQuery(SELECT_FROM_METADATA, KruizeDSMetadataEntry.class).list();
-        } catch (Exception e) {
-            LOGGER.error("Unable to load metadata : {}", e.getMessage());
             throw new Exception("Error while loading existing metadata object from database : " + e.getMessage());
         }
         return kruizeMetadataList;

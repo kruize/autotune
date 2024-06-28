@@ -21,7 +21,8 @@ function check_running() {
 
 	check_pod=$1
 	check_pod_ns=$2
-	ignore_pod=$3
+	ignore_ui_pod=$3
+	ignore_db_pod=$4
 	kubectl_cmd="kubectl -n ${check_pod_ns}"
 
 	echo "Info: Waiting for ${check_pod} to come up....."
@@ -29,13 +30,12 @@ function check_running() {
 	counter=0
 	while true; do
 		sleep 2
-		#		Check if ignore pod is sent
-		if [[ ! -z "${ignore_pod}" ]]; then
-			${kubectl_cmd} get pods | grep ${check_pod} | grep -v ${ignore_pod}
-			pod_stat=$(${kubectl_cmd} get pods | grep ${check_pod} | grep -v ${ignore_pod} | awk '{ print $3 }')
-		else
-			${kubectl_cmd} get pods | grep ${check_pod}
-			pod_stat=$(${kubectl_cmd} get pods | grep ${check_pod} | awk '{ print $3 }')
+		pod_list=$(${kubectl_cmd} get pods | grep ${check_pod} | grep -v "${ignore_ui_pod}" | grep -v "${ignore_db_pod}")
+		pod_stat=$(echo "${pod_list}" | awk '{ print $3 }')
+		if [[ -z "${pod_list}" ]]; then
+		  echo "Error: No pods found matching ${check_pod}"
+		  err=-1
+		  break
 		fi
 
 		case "${pod_stat}" in
@@ -57,7 +57,7 @@ function check_running() {
 			sleep 2
 			if [ $counter == 200 ]; then
 				${kubectl_cmd} describe pod ${check_pod}
-				echo "ERROR: Prometheus Pods failed to come up!"
+				echo "ERROR: ${check_pod} Pods failed to come up!"
 				exit -1
 			fi
 			((counter++))
@@ -109,7 +109,7 @@ kruize_crc_start() {
 	fi
 
 	${kubectl_cmd} apply -f ${CRC_MANIFEST_FILE}
-	check_running kruize ${autotune_ns} kruize-ui
+	check_running kruize ${autotune_ns} kruize-ui kruize-db
 	if [ "${err}" != "0" ]; then
 		# Indicate deploy failed on error
 		exit 1
