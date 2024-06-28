@@ -28,6 +28,7 @@ import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.metrics.KruizeNotificationCollectionRegistry;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
@@ -329,6 +330,10 @@ public class RecommendationEngine {
                 // generate recommendations based on each container
                 generateRecommendationsBasedOnContainer(containerData, kruizeObject);
                 // TODO: generate recommendations based on namespace, kubernetes_object name and type
+                // todo The process of data validation and notification generation is currently tightly coupled and needs to be separated. By doing so, we can avoid additional iterations at kruizeNotificationCollectionRegistry.logNotification. This should be included as part of the code refactor.
+                KruizeNotificationCollectionRegistry kruizeNotificationCollectionRegistry = new KruizeNotificationCollectionRegistry(kruizeObject.getExperimentName(), getInterval_end_time(), containerData.getContainer_name());
+                kruizeNotificationCollectionRegistry.logNotification(containerData);
+
             }
         }
     }
@@ -390,6 +395,8 @@ public class RecommendationEngine {
         containerRecommendations.setNotificationMap(recommendationLevelNM);
         // set the data object to map
         containerRecommendations.setData(timestampBasedRecommendationMap);
+
+
         // set the container recommendations in container object
         containerData.setContainerRecommendations(containerRecommendations);
     }
@@ -1430,7 +1437,7 @@ public class RecommendationEngine {
      * @param interval_start_time The start time of the interval for fetching metrics.
      * @param dataSourceInfo      The datasource object to fetch metrics from.
      * @throws Exception if an error occurs during the fetching process.
-     *                                                                                                                                                                                                                                           TODO: Need to add right abstractions for this
+     *                                                                                                                                                                                                                                                                               TODO: Need to add right abstractions for this
      */
     public void fetchMetricsBasedOnDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception {
         try {
