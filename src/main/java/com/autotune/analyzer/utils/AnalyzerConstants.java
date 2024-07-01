@@ -161,7 +161,15 @@ public class AnalyzerConstants {
         memoryRequest,
         memoryLimit,
         memoryUsage,
-        memoryRSS
+        memoryRSS,
+        namespaceCpuRequest,
+        namespaceCpuLimit,
+        namespaceCpuUsage,
+        namespaceCpuThrottle,
+        namespaceMemoryRequest,
+        namespaceMemoryLimit,
+        namespaceMemoryUsage,
+        namespaceMemoryRSS,
     }
 
     public enum K8S_OBJECT_TYPES {
