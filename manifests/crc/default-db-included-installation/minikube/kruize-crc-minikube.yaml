@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: PersistentVolume
 metadata:
-  name: postgres-pv
+  name: kruize-db-pv
   namespace: monitoring
 spec:
   capacity:
@@ -15,7 +15,7 @@ spec:
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: postgres-pvc
+  name: kruize-db-pvc
   namespace: monitoring
 spec:
   accessModes:
@@ -27,25 +27,25 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: postgres-deployment
+  name: kruize-db-deployment
   namespace: monitoring
   labels:
-    app: postgres
+    app: kruize-db
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: postgres
+      app: kruize-db
   template:
     metadata:
       labels:
-        app: postgres
+        app: kruize-db
     spec:
       #securityContext:      #todo
       #  runAsNonRoot: true
       #  runAsUser: 1000
       containers:
-        - name: postgres
+        - name: kruize-db
           image: quay.io/kruizehub/postgres:15.2
           imagePullPolicy: IfNotPresent
           env:
@@ -58,28 +58,28 @@ spec:
           ports:
             - containerPort: 5432
           volumeMounts:
-            - name: postgres-storage
+            - name: kruize-db-storage
               mountPath: /var/lib/postgresql/data
       volumes:
-        - name: postgres-storage
+        - name: kruize-db-storage
           persistentVolumeClaim:
-            claimName: postgres-pvc
+            claimName: kruize-db-pvc
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: postgres-service
+  name: kruize-db-service
   namespace: monitoring
   labels:
-    app: postgres
+    app: kruize-db
 spec:
   type: ClusterIP
   ports:
-    - name: postgres-port
+    - name: kruize-db-port
       port: 5432
       targetPort: 5432
   selector:
-    app: postgres
+    app: kruize-db
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -92,7 +92,7 @@ data:
       "database": {
         "adminPassword": "admin",
         "adminUsername": "admin",
-        "hostname": "postgres-service",
+        "hostname": "kruize-db-service",
         "name": "kruizeDB",
         "password": "admin",
         "port": 5432,
@@ -163,9 +163,21 @@ spec:
         app: kruize
         name: kruize
     spec:
+      initContainers:
+        - name: wait-for-kruize-db
+          image: quay.io/kruizehub/postgres:15.2 # Use the same Postgres version as the Postgres deployment
+          imagePullPolicy: IfNotPresent
+          command:
+            - sh
+            - -c
+            - |
+              until pg_isready -h kruize-db-service -p 5432 -U admin; do
+                echo "Waiting for kruize-db-service to be ready..."
+                sleep 2
+              done
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.22_rm
+          image: quay.io/kruize/autotune_operator:0.0.23_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -230,7 +242,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: kruize/autotune_operator:0.0.22_rm
+              image: kruize/autotune_operator:0.0.23_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -329,7 +341,7 @@ metadata:
 spec:
   containers:
     - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.3
+      image: quay.io/kruize/kruize-ui:0.0.4
       imagePullPolicy: Always
       env:
         - name: KRUIZE_UI_ENV
@@ -356,7 +368,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: kruize/autotune_operator:0.0.22_rm
+              image: kruize/autotune_operator:0.0.23_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume

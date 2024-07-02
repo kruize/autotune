@@ -164,6 +164,29 @@ public class AnalyzerErrorConstants {
             public static final String DATA_NOT_FOUND = "Data not found!";
             public static final String TIME_COMPARE = "The Start time should precede the End time!";
             public static final String TIME_GAP_LIMIT = String.format("The gap between the interval_start_time and interval_end_time must be within a maximum of %s days!", KruizeDeploymentInfo.generate_recommendations_date_range_limit_in_days);
+            public static final String UPDATE_RECOMMENDATIONS_COUNT = "UpdateRecommendations API request count: %s ";
+
+            public static final String UPDATE_RECOMMENDATIONS_FAILED_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "failed";
+            public static final String UPDATE_RECOMMENDATIONS_SUCCESS_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "success";
+            public static final String UPDATE_RECOMMENDATIONS_COMPLETED_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "completed";
+            public static final String RECOMMENDATION_ERROR = "Failed to create recommendation for experiment: %s and interval_start_time: %s and interval_end_time: %s";
+            public static final String RECOMMENDATION_EXCEPTION = "Exception occurred while generating recommendations for experiment: %s and interval_end_time: %s : %s ";
+            public static final String METRIC_EXCEPTION = "Exception occurred while fetching metrics from the datasource: ";
+            public static final String FETCHING_RESULTS_FAILED = "Failed to fetch the results from the DB: %s";
+            public static final String INTERNAL_MAP_EMPTY = "Internal map sent to populate method cannot be null or empty";
+            public static final String NULL_NOTIFICATIONS = "Notifications cannot be null";
+            public static final String NULL_RECOMMENDATIONS = "Recommendation cannot be null";
+            public static final String INVALID_RECOMMENDATION_TERM = "Invalid Recommendation Term : %s";
+            public static final String NULL_RECOMMENDATION_TERM = "Recommendation term cannot be null";
+            public static final String INVALID_MEMORY_THRESHOLD = "Given Memory Threshold is invalid, setting Default Memory Threshold : %s";
+            public static final String INVALID_CPU_THRESHOLD = "Given CPU Threshold is invalid, setting Default CPU Threshold :  %s";
+            public static final String NULL_RECOMMENDATION_SETTINGS = "Recommendation Settings are null, setting Default CPU Threshold : %s and Memory Threshold : %s";
+            public static final String INVALID_THRESHOLD = "Given Threshold is invalid, setting Default CPU Threshold : %s and Memory Threshold : %s";
+            public static final String THRESHOLD_NOT_SET = "Threshold is not set, setting Default CPU Threshold : %s and Memory Threshold : %s";
+            public static final String BOX_PLOTS_FAILURE = "Box plots Failed due to : %s";
+            public static final String LOAD_EXPERIMENT_FAILURE = "Failed to load experiment from DB: %s";
+            public static final String GENERATE_RECOMMENDATION_FAILURE = "Not able to generate recommendation for expName : %s due to %s";
+
 
             private UpdateRecommendationsAPI() {
             }
@@ -173,7 +196,7 @@ public class AnalyzerErrorConstants {
 
             }
             public static final String INVALID_DATASOURCE_NAME_EXCPTN = "Invalid Datasource Name";
-            public static final String INVALID_DATASOURCE_NAME_MSG = "Given datasource name - \" %s \" either does not exist or is not valid";
+            public static final String INVALID_DATASOURCE_NAME_MSG = "Given datasource name - %s either does not exist or is not valid";
         }
 
         public static final class DSMetadataAPI {
@@ -181,13 +204,22 @@ public class AnalyzerErrorConstants {
             }
             public static final String DATASOURCE_NAME_MANDATORY = KruizeConstants.JSONKeys.DATASOURCE + " is mandatory";
             public static final String INVALID_DATASOURCE_NAME_METADATA_EXCPTN = "Invalid DataSource Name";
-            public static final String INVALID_DATASOURCE_NAME_METADATA_MSG = "Metadata for a given datasource name - \" %s \" either does not exist or is not valid";
-            public static final String MISSING_DATASOURCE_METADATA_EXCPTN = "Invalid DataSource metadata";
-            public static final String MISSING_DATASOURCE_METADATA_MSG = "Metadata for a given datasource - \" %s \", cluster name - \" %s \", namespace - \"%s \" " +
+            public static final String INVALID_DATASOURCE_NAME_METADATA_MSG = "Metadata for a given datasource name - %s either does not exist or is not valid";
+            public static final String MISSING_DATASOURCE_METADATA_EXCPTN = "Missing DataSource metadata";
+            public static final String MISSING_DATASOURCE_METADATA_MSG = "Metadata for a given datasource - %s, cluster name - %s, namespace - %s " +
                     "either does not exist or is not valid";
-            public static final String DATASOURCE_METADATA_IMPORT_ERROR_MSG = "Metadata cannot be imported for datasource - \" %s \" , either does not exist or is not valid";
-            public static final String INVALID_QUERY_PARAM = "The query param(s) - \" %s \" is/are invalid";
-            public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
+            public static final String DATASOURCE_METADATA_IMPORT_ERROR_MSG = "Metadata cannot be imported for datasource - %s, either does not exist or is not valid";
+            public static final String INVALID_QUERY_PARAM_EXCPTN  = "Invalid input query parameter(s)";
+            public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+            public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) - %s is/are invalid";
+            public static final String INVALID_DATASOURCE_NAME_CLUSTER_NAME_METADATA_EXCPTN = "Invalid Datasource name and Cluster name";
+            public static final String INVALID_DATASOURCE_NAME_CLUSTER_NAME_METADATA_MSG = "Metadata for a given datasource name - %s, cluster_name - %s either does not exist or is not valid";
+            public static final String MISSING_QUERY_PARAM_EXCPTN = "Missing mandatory input param value(s)";
+            public static final String DATASOURCE_METADATA_DELETE_EXCPTN = "Datasource metadata not found";
+            public static final String DATASOURCE_METADATA_DELETE_ERROR_MSG = "Metadata cannot be deleted for datasource - %s, either does not exist or is not valid";
+            public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_EXCPTN = "Invalid DataSourceMetadata object";
+            public static final String DATASOURCE_METADATA_MISSING_REQUEST_INPUT_EXCPTN = "Request input data cannot be null or empty";
+            public static final String DATASOURCE_METADATA_CONNECTION_FAILED = "Metadata cannot be imported, datasource connection refused or timed out";
         }
     }
 

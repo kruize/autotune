@@ -14,7 +14,12 @@
  * limitations under the License.
  *******************************************************************************/
 
+
 package com.autotune.utils;
+
+import java.text.SimpleDateFormat;
+import java.util.Locale;
+import java.util.TimeZone;
 
 /**
  * Constants for Autotune module
@@ -28,7 +33,6 @@ public class KruizeConstants {
 
     private KruizeConstants() {
     }
-
 
     public static enum KRUIZE_RECOMMENDATION_API_VERSION {
         V1_0("1.0"),
@@ -45,6 +49,22 @@ public class KruizeConstants {
 
     }
 
+    public static class APIMessages {
+        public static final String MAX_DAY = "maxDay : %s";
+        public static final String SUCCESS = "success";
+        public static final String FAILURE = "failure";
+        public static final String GET = "get";
+        public static final String SET = "set";
+        public static final String CONTAINER_USAGE_INFO = "Determine the date of the last activity for the container based on its usage. ";
+        public static final String RECOMMENDATION_TERM = "recommendationTerm : %s";
+        public static final String MONITORING_START_TIME = "monitoringStartTime : %s";
+        public static final String EXPERIMENT_DATASOURCE = "Experiment: %s,  Datasource: %s";
+        public static final String UPDATE_RECOMMENDATIONS_INPUT_PARAMS = "experiment_name : %s and interval_start_time : %s and interval_end_time : %s ";
+        public static final String UPDATE_RECOMMENDATIONS_SUCCESS = "Update Recommendation API success response, experiment_name: %s and interval_end_time : %s";
+        public static final String UPDATE_RECOMMENDATIONS_FAILURE = "UpdateRecommendations API failure response, experiment_name: %s and intervalEndTimeStr : %s";
+        public static final String UPDATE_RECOMMENDATIONS_RESPONSE = "Update Recommendation API response: %s";
+        public static final String UPDATE_RECOMMENDATIONS_FAILURE_MSG = "UpdateRecommendations API failed for experiment_name: %s and intervalEndTimeStr : %s due to %s";
+    }
 
     /**
      * Holds the constants of env vars and values to start Autotune in different Modes
@@ -258,11 +278,11 @@ public class KruizeConstants {
         public static final String HOUR_SINGLE_LC = "h";
         public static final String HOUR_SINGLE_UC = HOUR_SINGLE_LC.toUpperCase();
 
-        public static final class TimeZones {
-            public static final String UTC = "UTC";
+        private TimeUnitsExt() {
         }
 
-        private TimeUnitsExt() {
+        public static final class TimeZones {
+            public static final String UTC = "UTC";
         }
     }
 
@@ -357,22 +377,25 @@ public class KruizeConstants {
         public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";
         public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
         public static final String DATASOURCE_ENDPOINT_WITH_QUERY = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
-	    public static final String DATE_ENDPOINT_WITH_QUERY = "%s/api/v1/query?query=%s";
+        public static final String DATE_ENDPOINT_WITH_QUERY = "%s/api/v1/query?query=%s";
+
+        private DataSourceConstants() {
+        }
 
         public static class DataSourceDetailsInfoConstants {
-            private DataSourceDetailsInfoConstants() {
-            }
-
             public static final String version = "v1.0";
             public static final String CLUSTER_NAME = "default";
+            private DataSourceDetailsInfoConstants() {
+            }
         }
 
         public static class DataSourceInfoMsgs {
             public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: ";
             public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: ";
             public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
-            public static final String CHECKING_AVAILABLE_DATASOURCE_FROM_DB  = "Checking available datasources from database:";
-            public static final String NO_DATASOURCE_FOUND_IN_DB  = "No datasource found in database.";
+            public static final String CHECKING_AVAILABLE_DATASOURCE_FROM_DB = "Checking available datasources from database:";
+            public static final String NO_DATASOURCE_FOUND_IN_DB = "No datasource found in database.";
+
             private DataSourceInfoMsgs() {
             }
         }
@@ -381,14 +404,12 @@ public class KruizeConstants {
             public static final String DATASOURCE_ADDED = "Datasource added to the collection successfully.";
             public static final String DATASOURCE_FOUND = "Datasource found: ";
             public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
+
             private DataSourceSuccessMsgs() {
             }
         }
 
         public static class DataSourceErrorMsgs {
-            private DataSourceErrorMsgs() {
-            }
-
             public static final String MISSING_DATASOURCE_NAME = "Datasource name cannot be empty.";
             public static final String MISSING_DATASOURCE_PROVIDER = "Datasource provider cannot be empty.";
             public static final String MISSING_DATASOURCE_NAMESPACE = "Datasource namespace cannot be empty.";
@@ -404,53 +425,47 @@ public class KruizeConstants {
             public static final String SERVICE_NOT_FOUND = "Can not find service with specified name.";
             public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
             public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
+            private DataSourceErrorMsgs() {
+            }
         }
 
         public static class DataSourceQueryJSONKeys {
-            private DataSourceQueryJSONKeys() {
-            }
-
             public static final String STATUS = "status";
             public static final String DATA = "data";
             public static final String RESULT = "result";
             public static final String METRIC = "metric";
             public static final String VALUE = "value";
             public static final String VALUES = "values";
+            private DataSourceQueryJSONKeys() {
+            }
 
         }
 
         public static class DataSourceQueryStatus {
-            private DataSourceQueryStatus() {
-            }
-
             public static final String SUCCESS = "success";
             public static final String ERROR = "error";
-        }
-        private DataSourceConstants() {
+            private DataSourceQueryStatus() {
+            }
         }
 
         public static class DataSourceQueryMetricKeys {
-            private DataSourceQueryMetricKeys() {
-            }
-
             public static final String NAMESPACE = "namespace";
             public static final String WORKLOAD = "workload";
             public static final String WORKLOAD_TYPE = "workload_type";
             public static final String CONTAINER_NAME = "container";
             public static final String CONTAINER_IMAGE_NAME = "image";
+            private DataSourceQueryMetricKeys() {
+            }
         }
 
         public static class DataSourceMetadataInfoConstants {
-            private DataSourceMetadataInfoConstants() {
-            }
-
             public static final String version = "v1.0";
             public static final String CLUSTER_NAME = "default";
+            private DataSourceMetadataInfoConstants() {
+            }
         }
 
         public static class DataSourceMetadataErrorMsgs {
-            private DataSourceMetadataErrorMsgs() {
-            }
             public static final String MISSING_DATASOURCE_METADATA_DATASOURCE_NAME = "DataSourceMetadata Datasource name cannot be empty";
             public static final String MISSING_DATASOURCE_METADATA_WORKLOAD_MAP = "DataSourceMetadata Workload data cannot be empty or null";
             public static final String MISSING_DATASOURCE_METADATA_CONTAINER_MAP = "DataSourceMetadata Container data cannot be empty or null";
@@ -477,11 +492,16 @@ public class KruizeConstants {
             public static final String SET_WORKLOAD_MAP_ERROR = "workloadHashMap is null, no workloads provided for namespace: ";
             public static final String SET_CONTAINER_MAP_ERROR = "containerHashMap is null, no containers provided for workload: ";
             public static final String SET_NAMESPACE_MAP_ERROR = "namespaceHashMap is null, no namespaces provided for cluster: ";
+            public static final String LOAD_DATASOURCE_FROM_DB_ERROR = "Error loading datasource - %s from DB: %s";
+            public static final String LOAD_DATASOURCE_METADATA_FROM_DB_ERROR = "Error loading datasource - %s from DB: %s";
+            public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_MSG = "Validation of imported metadata failed, mandatory fields missing: %s";
+            public static final String NAMESPACE_QUERY_VALIDATION_FAILED = "Validation failed for namespace data query.";
+            public static final String DATASOURCE_OPERATOR_RETRIEVAL_FAILURE = "Failed to retrieve data source operator for provider: %s";
+            private DataSourceMetadataErrorMsgs() {
+            }
         }
 
         public static class DataSourceMetadataInfoJSONKeys {
-            private DataSourceMetadataInfoJSONKeys() {
-            }
             public static final String DATASOURCES = "datasources";
             public static final String DATASOURCE_NAME = "datasource_name";
             public static final String CLUSTERS = "clusters";
@@ -494,6 +514,15 @@ public class KruizeConstants {
             public static final String CONTAINERS = "containers";
             public static final String CONTAINER_NAME = "container_name";
             public static final String CONTAINER_IMAGE_NAME = "container_image_name";
+            private DataSourceMetadataInfoJSONKeys() {
+            }
+        }
+
+        public static class DataSourceMetadataInfoSuccessMsgs {
+            public static final String DATASOURCE_METADATA_DELETED = "Datasource metadata deleted successfully.";
+
+            private DataSourceMetadataInfoSuccessMsgs() {
+            }
         }
     }
 
@@ -546,9 +575,10 @@ public class KruizeConstants {
         public static final String DB_EXTRACTION_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
         public static final long MILLI_SECONDS_FOR_DAY = 24 * 60 * 60 * 1000;
         public static final long MINUTES_FOR_DAY = 24 * 60;
+        public static SimpleDateFormat simpleDateFormatForUTC = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
 
         private DateFormats() {
-
+            simpleDateFormatForUTC.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
         }
     }
 
@@ -599,6 +629,7 @@ public class KruizeConstants {
         public static final String SETTINGS_HIBERNATE_SHOW_SQL = "hibernate_showsql";
         public static final String SETTINGS_HIBERNATE_TIME_ZONE = "hibernate_timezone";
         public static final String PLOTS = "plots";
+        public static final String log_recommendation_metrics_level = "log_recommendation_metrics_level";
         public static final String CLOUDWATCH_LOGS_ACCESS_KEY_ID = "logging_cloudwatch_accessKeyId";
         public static final String CLOUDWATCH_LOGS_SECRET_ACCESS_KEY = "logging_cloudwatch_secretAccessKey";
         public static final String CLOUDWATCH_LOGS_LOG_GROUP = "logging_cloudwatch_logGroup";
@@ -662,5 +693,12 @@ public class KruizeConstants {
 
     public static final class KRUIZE_CONFIG_DEFAULT_VALUE {
         public static final int DELETE_PARTITION_THRESHOLD_IN_DAYS = 16;
+    }
+
+    public static final class KRUIZE_RECOMMENDATION_METRICS {
+        public static final String METRIC_NAME = "KruizeRecommendationsNotification";
+        public static final String TAG_NAME = "experiment_details";
+        public static final String notification_format = "%s|%s|%s|%s|%s|%s|%s|%s|%s"; //experiment_name,container_name,endtime,level,termname,modelname,code,type,message
+
     }
 }

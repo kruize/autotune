@@ -108,6 +108,29 @@ KruizeMethod_count{application="Kruize",method="generatePlots",status="success",
 KruizeMethod_sum{application="Kruize",method="generatePlots",status="success",} 0.050705769
 ```
 
+## Kruize Notifications Metrics
+
+The following are the avalable kruize notifcations that gets generated after updateRecommendations API call.
+
+Sample Output:
+
+```
+KruizeNotifications_total{api="updateRecommendations",application="Kruize",experiment_details="quarkus-resteasy-kruize-min-http-response-time-db_1_2|tfb-server-0|2023-01-02T05:30:00.000Z|timestamp|null|null|223002|error|Invalid Amount in CPU Section",} 1.0
+
+KruizeNotifications_total{api="updateRecommendations",application="Kruize",experiment_details="quarkus-resteasy-kruize-min-http-response-time-db_1_2|tfb-server-0|2023-01-02T05:30:00.000Z|model|short_term|performance|221001|error|Number of pods cannot be zero",} 1.0
+
+KruizeNotifications_total{api="updateRecommendations",application="Kruize",experiment_details="quarkus-resteasy-kruize-min-http-response-time-db_1_2|tfb-server-0|2023-01-02T05:30:00.000Z|model|short_term|cost|221001|error|Number of pods cannot be zero",} 1.0
+```
+Creates a counter with tags for the given level, term, model, and list of recommendation notifications.
+
+level                          The level of the notification (e.g., container, timestamp, term, model).
+
+term                           The term associated with the notification.
+
+model                          The cost or performance model associated with the notification.
+
+recommendationNotificationList The list of recommendation notifications to create counters for.  code , type and message
+
 ## Time taken for KruizeDB metrics
 
 To monitor the performance of these methods, you can use the following metrics:

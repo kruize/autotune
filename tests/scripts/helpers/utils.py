@@ -21,6 +21,7 @@ import subprocess
 import time
 import math
 from datetime import datetime, timedelta
+from kubernetes import client, config
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
@@ -49,7 +50,13 @@ RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available"
 COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available"
 PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available"
 CONTAINER_AND_EXPERIMENT_NAME = " for container : %s for experiment: %s.]"
-LIST_DATASOURCES_ERROR_MSG = "Given datasource name - \" %s \" either does not exist or is not valid"
+LIST_DATASOURCES_ERROR_MSG = "Given datasource name - %s either does not exist or is not valid"
+LIST_METADATA_DATASOURCE_NAME_ERROR_MSG = "Metadata for a given datasource name - %s either does not exist or is not valid"
+LIST_METADATA_ERROR_MSG = ("Metadata for a given datasource - %s, cluster name - %s, namespace - %s "
+                           "either does not exist or is not valid")
+LIST_METADATA_DATASOURCE_NAME_CLUSTER_NAME_ERROR_MSG = "Metadata for a given datasource name - %s, cluster_name - %s either does not exist or is not valid"
+LIST_METADATA_MISSING_DATASOURCE = "datasource is mandatory"
+IMPORT_METADATA_DATASOURCE_CONNECTION_FAILURE_MSG = "Metadata cannot be imported, datasource connection refused or timed out"
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
@@ -534,6 +541,11 @@ def validate_container(update_results_container, update_results_json, list_reco_
                         # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
                         #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
+                        # Validate the precision of the valid duration
+                        duration = terms_obj[term]["duration_in_hours"]
+                        assert validate_duration_in_hours_decimal_precision(duration), f"The value '{duration}' for " \
+                                                                                       f"'{term}' has more than two decimal places"
+
                         monitoring_start_time = term_based_start_time(interval_end_time, term)
                         assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
                             f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
@@ -697,7 +709,7 @@ def compare_json_files(json_file1, json_file2):
 
 
 def get_kruize_pod(namespace):
-    command = f"kubectl get pod -n {namespace} | grep kruize | grep -v kruize-ui | cut -d ' ' -f1"
+    command = f"kubectl get pod -n {namespace} | grep kruize | grep -v kruize-ui | grep -v kruize-db | cut -d ' ' -f1"
     # Execute the command and capture the output
     output = subprocess.check_output(command, shell=True)
 
@@ -857,3 +869,162 @@ def validate_recommendation_for_cpu_mem_optimised(recommendations: dict, current
     assert recommendations["recommendation_engines"][profile]["config"]["limits"]["cpu"]["amount"] == current["limits"]["cpu"]["amount"]
     assert recommendations["recommendation_engines"][profile]["config"]["requests"]["memory"]["amount"] == current["requests"]["memory"]["amount"]
     assert recommendations["recommendation_engines"][profile]["config"]["limits"]["memory"]["amount"] == current["limits"]["memory"]["amount"]
+
+
+def validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=None, namespace=None):
+    datasources = list_metadata_json.get('datasources', {})
+
+    if len(datasources) != 1:
+        return False
+
+    # Loop through the datasources dictionary
+    for key, value in datasources.items():
+        assert import_metadata_json['datasource_name'] == value.get('datasource_name')
+
+        if cluster_name is not None:
+            # Extract clusters from the current datasource
+            clusters = value.get('clusters', {})
+
+            for clusters_key, clusters_value in clusters.items():
+                assert cluster_name == clusters_value.get('cluster_name'), f"Invalid cluster name: {cluster_name}"
+
+                # If namespace is provided, perform namespace validation
+                if namespace is not None:
+                    # Extract namespaces from the current cluster
+                    namespaces = clusters[cluster_name].get('namespaces', {})
+
+                    assert namespace in [ns.get('namespace') for ns in namespaces.values()], f"Invalid namespace: {namespace}"
+
+
+def create_namespace(namespace_name):
+    # Load kube config
+    config.load_kube_config()
+
+    # Create a V1Namespace object
+    namespace = client.V1Namespace(
+        metadata=client.V1ObjectMeta(name=namespace_name)
+    )
+
+    # Create a Kubernetes API client
+    api_instance = client.CoreV1Api()
+
+    # Create the namespace
+    try:
+        api_instance.create_namespace(namespace)
+
+        print(f"Namespace '{namespace_name}' created successfully.")
+    except client.exceptions.ApiException as e:
+        if e.status == 409:
+            print(f"Namespace '{namespace_name}' already exists.")
+        else:
+            print(f"Error creating namespace: {e}")
+
+
+def delete_namespace(namespace_name):
+    # Load kube config
+    config.load_kube_config()
+
+    # Create a Kubernetes API client
+    api_instance = client.CoreV1Api()
+
+    # Delete the namespace
+    try:
+        api_instance.delete_namespace(name=namespace_name)
+        print(f"Namespace '{namespace_name}' deleted successfully.")
+    except client.exceptions.ApiException as e:
+        if e.status == 404:
+            print(f"Namespace '{namespace_name}' not found.")
+        else:
+            print(f"Exception deleting namespace: {e}")
+
+
+def scale_deployment(namespace, deployment_name, replicas):
+    """
+    Scale a Kubernetes Deployment to the desired number of replicas.
+
+    This function scales a specified Deployment in a given namespace to a specified number
+    of replicas using the Kubernetes Python client library. It achieves this by creating
+    a Scale object and using the AppsV1Api to update the Deployment's scale.
+
+    Args:
+    - namespace (str): The namespace of the Deployment.
+    - deployment_name (str): The name of the Deployment.
+    - replicas (int): The desired number of replicas.
+
+    Returns:
+    None
+    """
+    config.load_kube_config()  # Load kube config from default location
+
+    # Create an API client
+    apps_v1 = client.AppsV1Api()
+
+    # Define the scale object
+    scale = client.V1Scale(
+        api_version='autoscaling/v1',
+        kind='Scale',
+        metadata=client.V1ObjectMeta(name=deployment_name, namespace=namespace),
+        spec=client.V1ScaleSpec(replicas=replicas)
+    )
+
+    # Scale the deployment
+    try:
+        response = apps_v1.replace_namespaced_deployment_scale(
+            name=deployment_name,
+            namespace=namespace,
+            body=scale
+        )
+        print(f"Deployment {deployment_name} scaled to {replicas} replicas successfully.")
+    except client.exceptions.ApiException as e:
+        print(f"Error scaling deployment {deployment_name}: {e}")
+
+
+def scale_statefulset(namespace, statefulset_name, replicas):
+    """
+    Scale a Kubernetes Statefulset to the desired number of replicas.
+
+    This function scales a specified Statefulset in a given namespace to a specified number
+    of replicas using the Kubernetes Python client library. It achieves this by creating
+    a Scale object and using the AppsV1Api to update the Statefulset's scale.
+
+    Args:
+    - namespace (str): The namespace of the Deployment.
+    - statefulset_name (str): The name of the Statefulset.
+    - replicas (int): The desired number of replicas.
+
+    Returns:
+    None
+    """
+    config.load_kube_config()  # Load kube config from default location
+
+    # Create an API client
+    apps_v1 = client.AppsV1Api()
+
+    # Define the scale object
+    scale = client.V1Scale(
+        api_version='autoscaling/v1',
+        kind='Scale',
+        metadata=client.V1ObjectMeta(name=statefulset_name, namespace=namespace),
+        spec=client.V1ScaleSpec(replicas=replicas)
+    )
+
+    # Scale the statefulset
+    try:
+        response = apps_v1.replace_namespaced_stateful_set_scale(
+            name=statefulset_name,
+            namespace=namespace,
+            body=scale
+        )
+        print(f"StatefulSet {statefulset_name} scaled to {replicas} replicas successfully.")
+    except client.exceptions.ApiException as e:
+        print(f"Error scaling statefulset {statefulset_name}: {e}")
+
+
+# validate duration_in_hours decimal precision
+def validate_duration_in_hours_decimal_precision(duration_in_hours):
+    """
+        Validate that the given value has at most two decimal places.
+        :param duration_in_hours: The value to be validated.
+        :return: True if the value has at most two decimal places, False otherwise.
+    """
+    return re.match(r'^\d+\.\d{3,}$', str(duration_in_hours)) is None
