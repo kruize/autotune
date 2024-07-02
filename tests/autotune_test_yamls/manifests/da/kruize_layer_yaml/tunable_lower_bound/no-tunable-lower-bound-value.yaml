@@ -1,7 +1,7 @@
 apiVersion: "recommender.com/v1"
 kind: "KruizeLayer"
 metadata:
-  name: "no-tunable-lower-bound-val"
+  name: "no-tunable-lower-bound-value"
 layer_name: container
 layer_level: 0
 details: generic container tunables
