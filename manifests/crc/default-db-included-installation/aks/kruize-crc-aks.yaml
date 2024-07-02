@@ -28,9 +28,6 @@ spec:
       labels:
         app: postgres
     spec:
-      #securityContext:      #todo
-      #  runAsNonRoot: true
-      #  runAsUser: 1000
       containers:
         - name: postgres
           image: quay.io/kruizehub/postgres:15.2
@@ -42,11 +39,13 @@ spec:
               value: admin
             - name: POSTGRES_DB
               value: kruizeDB
+            - name: PGDATA
+              value: /var/lib/postgresql/backup
           ports:
             - containerPort: 5432
           volumeMounts:
             - name: postgres-storage
-              mountPath: /var/lib/postgresql/data
+              mountPath: /var/lib/postgresql
       volumes:
         - name: postgres-storage
           persistentVolumeClaim:
