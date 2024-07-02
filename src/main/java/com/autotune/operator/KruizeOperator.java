@@ -40,6 +40,8 @@ import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl
 import com.autotune.common.variables.Variables;
 import com.autotune.utils.EventLogger;
 import com.autotune.utils.KubeEventLogger;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -427,16 +429,25 @@ public class KruizeOperator {
     public static String setDefaultPerformanceProfile(SloInfo sloInfo, String mode, String targetCluster) {
         PerformanceProfile performanceProfile = null;
         try {
+            String apiVersion = AnalyzerConstants.PerformanceProfileConstants.DEFAULT_API_VERSION;
+            String kind = AnalyzerConstants.PerformanceProfileConstants.DEFAULT_KIND;
             String name = AnalyzerConstants.PerformanceProfileConstants.DEFAULT_PROFILE;
+
+            // Create an ObjectMapper instance
+            ObjectMapper objectMapper = new ObjectMapper();
+            // Create an empty ObjectNode (a subclass of JsonNode)
+            ObjectNode metadata = objectMapper.createObjectNode();
+            metadata.put("name", name);
+
             double profile_version = AnalyzerConstants.DEFAULT_PROFILE_VERSION;
             String k8s_type = AnalyzerConstants.DEFAULT_K8S_TYPE;
-            performanceProfile = new PerformanceProfile(name, profile_version, k8s_type, sloInfo);
+            performanceProfile = new PerformanceProfile(apiVersion, kind, metadata, profile_version, k8s_type, sloInfo);
 
             if (null != performanceProfile) {
                 ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(PerformanceProfilesDeployment.performanceProfilesMap, performanceProfile);
                 if (validationOutputData.isSuccess()) {
                     LOGGER.info("Added Performance Profile : {} into the map with version: {}",
-                            performanceProfile.getName(), performanceProfile.getProfile_version());
+                            performanceProfile.getMetadata().get("name"), performanceProfile.getProfile_version());
                 } else {
                     new KubeEventLogger(Clock.systemUTC()).log("Failed", validationOutputData.getMessage(), EventLogger.Type.Warning, null, null, null, null);
                 }
@@ -448,7 +459,8 @@ public class KruizeOperator {
             new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null, null, null);
             return null;
         }
-        return performanceProfile.getName();
+        String performanceProfileName = String.valueOf(performanceProfile.getMetadata().get("name"));
+        return performanceProfileName;
     }
 
     /**

@@ -17,6 +17,7 @@ package com.autotune.analyzer.performanceProfiles;
 
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.recommendations.term.Terms;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.Map;
@@ -25,11 +26,18 @@ import java.util.Map;
  * Container class for the PerformanceProfile kubernetes kind, which is used to define
  * a profile
  *
+ * This class provides a direct representation of PerformanceProfile CRD in JSON format,
+ * corresponding to the structure of PerformanceProfile YAML file. It includes mandatory fields
+ * for API version, kind, metadata and additional custom fields - profile_version, k8s_type and sloInfo
  */
 
 public class PerformanceProfile {
 
-    private String name;
+    private String apiVersion;
+
+    private String kind;
+
+    private JsonNode metadata;
 
     private double profile_version;
 
@@ -41,8 +49,28 @@ public class PerformanceProfile {
 
     private Map<String, Terms> terms;
 
-    public void setName(String name) {
-        this.name = name;
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
+    }
+
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
+
+    public void setMetadata(JsonNode metadata) {
+        this.metadata = metadata;
+    }
+
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public String getKind() {
+        return kind;
+    }
+
+    public JsonNode getMetadata() {
+        return metadata;
     }
 
     public void setProfile_version(double profile_version) {
@@ -61,16 +89,16 @@ public class PerformanceProfile {
         this.sloInfo = sloInfo;
     }
 
-    public PerformanceProfile(String name, double profile_version, String k8s_type, SloInfo sloInfo) {
-        this.name = name;
+    public PerformanceProfile(String apiVersion, String kind, JsonNode metadata,
+                              double profile_version, String k8s_type, SloInfo sloInfo) {
+        this.apiVersion = apiVersion;
+        this.kind = kind;
+        this.metadata = metadata;
         this.profile_version = profile_version;
         this.k8s_type = k8s_type;
         this.sloInfo = sloInfo;
     }
 
-    public String getName() {
-        return name;
-    }
 
     public double getProfile_version() {
         return profile_version;
@@ -95,7 +123,9 @@ public class PerformanceProfile {
     @Override
     public String toString() {
         return "PerformanceProfile{" +
-                "name='" + name + '\'' +
+                "apiVersion='" + apiVersion + '\'' +
+                ", kind='" + kind + '\'' +
+                ", metadata=" + metadata +
                 ", profile_version=" + profile_version +
                 ", k8s_type='" + k8s_type + '\'' +
                 ", sloInfo=" + sloInfo +

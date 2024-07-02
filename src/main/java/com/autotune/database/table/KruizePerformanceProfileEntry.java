@@ -27,6 +27,9 @@ import org.hibernate.type.SqlTypes;
  * The class has the following fields:
  * <p>
  * id: A unique identifier for each performance profile detail.
+ * apiVersion: A string representing version of the Kubernetes API to create this object
+ * kind: A string representing type of kubernetes object
+ * metadata: A JSON object containing the metadata of the CRD, including name field
  * name: A string representing the name of the performance profile.
  * profile_version: A string representing the version of the performance profile.
  * k8s_type: A string representing kubernetes type.
@@ -35,6 +38,10 @@ import org.hibernate.type.SqlTypes;
 @Entity
 @Table(name = "kruize_performance_profiles")
 public class KruizePerformanceProfileEntry {
+    private String api_version;
+    private String kind;
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode metadata;
     @Id
     private String name;
     private double profile_version;
@@ -42,6 +49,29 @@ public class KruizePerformanceProfileEntry {
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode slo;
 
+    public String getApi_version() {
+        return api_version;
+    }
+
+    public void setApi_version(String api_version) {
+        this.api_version = api_version;
+    }
+
+    public String getKind() {
+        return kind;
+    }
+
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
+
+    public JsonNode getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(JsonNode metadata) {
+        this.metadata = metadata;
+    }
 
     public String getName() {
         return name;

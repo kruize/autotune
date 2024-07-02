@@ -26,6 +26,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -48,7 +49,9 @@ public class PerformanceProfileValidation {
 
     //Mandatory fields
     private final List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
-            AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME,
+            AnalyzerConstants.API_VERSION,
+            AnalyzerConstants.KIND,
+            AnalyzerConstants.AutotuneObjectConstants.METADATA,
             AnalyzerConstants.SLO
     ));
 
@@ -97,9 +100,15 @@ public class PerformanceProfileValidation {
                 LOGGER.error("Loading saved performance profiles failed: {} ", e.getMessage());
             }
             StringBuilder errorString = new StringBuilder();
+
+            // Check if metadata exists
+            JsonNode metadata = performanceProfile.getMetadata();
+            if (null == metadata) {
+                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE_METADATA);
+            }
             // check if the performance profile already exists
-            if (performanceProfilesMap.get(performanceProfile.getName()) != null) {
-                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE).append(performanceProfile.getName());
+            if (performanceProfilesMap.get(performanceProfile.getMetadata().get("name")) != null) {
+                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE).append(performanceProfile.getMetadata().get("name"));
                 return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
             }
             // Check if k8s type is supported
@@ -244,48 +253,70 @@ public class PerformanceProfileValidation {
         );
         if (missingMandatoryFields.size() == 0) {
             try {
-                mandatorySLOPerf.forEach(
-                        mField -> {
-                            String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
-                            try {
-                                LOGGER.debug("MethodName = {}",methodName);
-                                Method getNameMethod = perfObj.getSloInfo().getClass().getMethod(methodName);
-                                if (getNameMethod.invoke(perfObj.getSloInfo()) == null)
-                                    missingMandatoryFields.add(mField);
-                            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                                LOGGER.error("Method name {} doesn't exist!", mField);
-                            }
+                String mandatoryMetadataPerf = AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME;
+                try {
+                    JsonNode metadata = perfObj.getMetadata();
+                    JsonNode fieldNode = metadata.get(mandatoryMetadataPerf);
+                    if (fieldNode == null || fieldNode.isNull()) {
+                        missingMandatoryFields.add(mandatoryMetadataPerf);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Method name doesn't exist for: {}!", mandatoryMetadataPerf);
+                }
 
-                        });
                 if (missingMandatoryFields.size() == 0) {
-                    mandatoryFuncVariables.forEach(
+                    mandatorySLOPerf.forEach(
                             mField -> {
                                 String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                                 try {
-                                    LOGGER.debug("MethodName = {}",methodName);
-                                    Method getNameMethod = perfObj.getSloInfo().getFunctionVariables().get(0)
-                                            .getClass().getMethod(methodName);
-                                    if (getNameMethod.invoke(perfObj.getSloInfo().getFunctionVariables().get(0)) == null)
+                                    LOGGER.debug("MethodName = {}", methodName);
+                                    Method getNameMethod = perfObj.getSloInfo().getClass().getMethod(methodName);
+                                    if (getNameMethod.invoke(perfObj.getSloInfo()) == null)
                                         missingMandatoryFields.add(mField);
                                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                                     LOGGER.error("Method name {} doesn't exist!", mField);
                                 }
 
                             });
-                    String mandatoryObjFuncData = AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE;
-                    String methodName = "get" + mandatoryObjFuncData.substring(0, 1).toUpperCase() +
-                    mandatoryObjFuncData.substring(1);
-                    try {
-                        LOGGER.debug("MethodName = {}",methodName);
-                        Method getNameMethod = perfObj.getSloInfo().getObjectiveFunction()
-                                .getClass().getMethod(methodName);
-                        if (getNameMethod.invoke(perfObj.getSloInfo().getObjectiveFunction()) == null)
-                            missingMandatoryFields.add(mandatoryObjFuncData);
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        LOGGER.error("Method name {} doesn't exist!", mandatoryObjFuncData);
+                    if (missingMandatoryFields.size() == 0) {
+                        mandatoryFuncVariables.forEach(
+                                mField -> {
+                                    String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
+                                    try {
+                                        LOGGER.debug("MethodName = {}", methodName);
+                                        Method getNameMethod = perfObj.getSloInfo().getFunctionVariables().get(0)
+                                                .getClass().getMethod(methodName);
+                                        if (getNameMethod.invoke(perfObj.getSloInfo().getFunctionVariables().get(0)) == null)
+                                            missingMandatoryFields.add(mField);
+                                    } catch (NoSuchMethodException | IllegalAccessException |
+                                             InvocationTargetException e) {
+                                        LOGGER.error("Method name {} doesn't exist!", mField);
+                                    }
+
+                                });
+                        String mandatoryObjFuncData = AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE;
+                        String methodName = "get" + mandatoryObjFuncData.substring(0, 1).toUpperCase() +
+                                mandatoryObjFuncData.substring(1);
+                        try {
+                            LOGGER.debug("MethodName = {}", methodName);
+                            Method getNameMethod = perfObj.getSloInfo().getObjectiveFunction()
+                                    .getClass().getMethod(methodName);
+                            if (getNameMethod.invoke(perfObj.getSloInfo().getObjectiveFunction()) == null)
+                                missingMandatoryFields.add(mandatoryObjFuncData);
+                        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                            LOGGER.error("Method name {} doesn't exist!", mandatoryObjFuncData);
+                        }
+                        validationOutputData.setSuccess(true);
                     }
                 }
-                validationOutputData.setSuccess(true);
+
+                if (!missingMandatoryFields.isEmpty()) {
+                    errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s ", missingMandatoryFields));
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(errorMsg);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                    LOGGER.error("Validation error message :{}", errorMsg);
+                }
             } catch (Exception e) {
                 validationOutputData.setSuccess(false);
                 errorMsg = errorMsg.concat(e.getMessage());

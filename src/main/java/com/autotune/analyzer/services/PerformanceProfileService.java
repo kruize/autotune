@@ -27,10 +27,9 @@ import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.database.service.ExperimentDBService;
-import com.google.gson.ExclusionStrategy;
-import com.google.gson.FieldAttributes;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.google.gson.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +42,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serial;
+import java.lang.reflect.Type;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Map;
@@ -86,11 +86,11 @@ public class PerformanceProfileService extends HttpServlet {
             if (validationOutputData.isSuccess()) {
                 ValidationOutputData addedToDB = new ExperimentDBService().addPerformanceProfileToDB(performanceProfile);
                 if (addedToDB.isSuccess()) {
-                    performanceProfilesMap.put(performanceProfile.getName(), performanceProfile);
+                    performanceProfilesMap.put(String.valueOf(performanceProfile.getMetadata().get("name")), performanceProfile);
                     getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
                     LOGGER.debug("Added Performance Profile : {} into the DB with version: {}",
-                            performanceProfile.getName(), performanceProfile.getProfile_version());
-                    sendSuccessResponse(response, "Performance Profile : " + performanceProfile.getName() + " created successfully.");
+                            performanceProfile.getMetadata().get("name"), performanceProfile.getProfile_version());
+                    sendSuccessResponse(response, "Performance Profile : " + performanceProfile.getMetadata().get("name") + " created successfully.");
                 } else {
                     sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
                 }
@@ -130,6 +130,24 @@ public class PerformanceProfileService extends HttpServlet {
                     .setPrettyPrinting()
                     .enableComplexMapKeySerialization()
                     .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                    // a custom serializer for the JsonNode type.
+                    .registerTypeAdapter(JsonNode.class, new JsonSerializer<JsonNode>() {
+                        @Override
+                        public JsonElement serialize(JsonNode jsonNode, Type typeOfSrc, JsonSerializationContext context) {
+                            if (jsonNode instanceof ObjectNode) {
+                                ObjectNode objectNode = (ObjectNode) jsonNode;
+                                JsonObject metadataJson = new JsonObject();
+
+                                // Extract the "name" field directly if it exists
+                                if (objectNode.has("name")) {
+                                    metadataJson.addProperty("name", objectNode.get("name").asText());
+                                }
+
+                                return metadataJson;
+                            }
+                            return context.serialize(jsonNode);
+                        }
+                    })
                     .setExclusionStrategies(new ExclusionStrategy() {
                         @Override
                         public boolean shouldSkipField(FieldAttributes f) {

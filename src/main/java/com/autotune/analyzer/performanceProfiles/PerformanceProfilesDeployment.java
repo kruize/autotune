@@ -48,7 +48,7 @@ public class PerformanceProfilesDeployment {
                         performanceProfile = getPerformanceProfile(resource);
                         if (performanceProfile != null) {
                             // Check if any of the values have changed from the existing object in the map
-                            if (!performanceProfilesMap.get(performanceProfile.getName())
+                            if (!performanceProfilesMap.get(performanceProfile.getMetadata().get("name"))
                                     .equals(performanceProfile)) {
                                 if (validatePerformanceProfile(performanceProfile)) {
                                     deleteExistingPerformanceProfile(resource);
