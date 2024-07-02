@@ -1,6 +1,7 @@
 [
   {
     "experiment_name": "Compare performance objective of A/B software releases",
+    "cluster_name": "local-cluster",
     "resource": {
       "namespace": "default",
       "deployment_name": "tfb-qrh-sample-0"
