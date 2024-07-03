@@ -18,7 +18,10 @@ public class DataSourceQueries {
         MEMORY_RSS("%s by(container, namespace) (%s_over_time(container_memory_rss{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*',namespace=\"%s\",container=\"%s\"}[%sm]))"),
         MEMORY_LIMIT("%s by(container,namespace) (kube_pod_container_resource_limits{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='memory', unit='byte', namespace=\"%s\",container=\"%s\" } * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase='Running'}))"),
         MEMORY_REQUEST("%s by(container,namespace) (kube_pod_container_resource_requests{container!='', container!='POD', pod!='', namespace!='', namespace!~'kube-.*|openshift|openshift-.*', resource='memory', unit='byte',namespace=\"%s\",container=\"%s\"} * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase='Running'}))"),
-        MAX_DATE("max(container_cpu_usage_seconds_total{container=\"%s\",namespace=\"%s\"} > 0)");
+        MAX_DATE("max(container_cpu_usage_seconds_total{container=\"%s\",namespace=\"%s\"} > 0)"),
+        GPU_CORE_USAGE("%s by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (%s_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace=\"%s\",exported_container=\"%s\"}[%sm]))"),
+        GPU_MEMORY_USAGE("%s by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (%s_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace=\"%s\",exported_container=\"%s\"}[%sm]))");
+//        GPU_CONTAINER_MAPPING("%s by (Hostname, device, modelName, UUID, exported_container, exported_namespace) (%s_over_time(DCGM_FI_DEV_GPU_UTIL{exported_container=\"%s\",exported_namespace=\"%s\"}[%sm]))");
         private final String query;
 
         PromQLQuery(String query) {

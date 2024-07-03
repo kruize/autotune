@@ -17,4 +17,7 @@ public class PromQLDataSourceQueries {
     public static final String MEMORY_LIMIT = DataSourceQueries.PromQLQuery.MEMORY_LIMIT.getQuery();
     public static final String MEMORY_REQUEST = DataSourceQueries.PromQLQuery.MEMORY_REQUEST.getQuery();
     public static final String MAX_DATE = DataSourceQueries.PromQLQuery.MAX_DATE.getQuery();
+    public static final String GPU_CORE_USAGE = DataSourceQueries.PromQLQuery.GPU_CORE_USAGE.getQuery();
+    public static final String GPU_MEMORY_USAGE = DataSourceQueries.PromQLQuery.GPU_MEMORY_USAGE.getQuery();
+//    public static final String GPU_CONTAINER_MAPPING = DataSourceQueries.PromQLQuery.GPU_CONTAINER_MAPPING.getQuery();
 }

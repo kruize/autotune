@@ -158,8 +158,12 @@ public class AnalyzerConstants {
         memoryRequest,
         memoryLimit,
         memoryUsage,
-        memoryRSS
+        memoryRSS,
+        gpuCoreUsage,
+        gpuMemoryUsage,
+//        gpuContainerMapping
     }
+
 
     public enum K8S_OBJECT_TYPES {
         DEPLOYMENT,
@@ -174,6 +178,13 @@ public class AnalyzerConstants {
         SUCCESS,
         ALREADY_EXISTS,
         INVALID
+    }
+
+    public enum DeviceType {
+        CPU,
+        MEMORY,
+        NETWORK,
+        GPU
     }
 
     /**
@@ -549,5 +560,10 @@ public class AnalyzerConstants {
 
             }
         }
+    }
+
+    public static final class SupportedGPUs {
+        public static final String A100 = "A100";
+        public static final String H100 = "H100";
     }
 }

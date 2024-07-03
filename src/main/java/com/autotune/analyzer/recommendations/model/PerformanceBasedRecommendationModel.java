@@ -5,8 +5,11 @@ import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.services.UpdateRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.gpuMetaData.GpuMetaDataService;
+import com.autotune.common.data.gpuMetaData.GpuProfile;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.data.result.GpuMetricResult;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
@@ -224,5 +227,49 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
     @Override
     public void validate() {
 
+    }
+
+    @Override
+    public RecommendationConfigItem getGpuRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        double totalCoreMax = 0.0;
+        double totalMemoryMax = 0.0;
+
+
+        for (Map.Entry<Timestamp, IntervalResults> entry : filteredResultsMap.entrySet()) {
+            IntervalResults intervalResults = entry.getValue();
+
+            if (intervalResults.getGpuMetricResultHashMap() != null) {
+                for (Map.Entry<AnalyzerConstants.MetricName, GpuMetricResult> gpuEntry : intervalResults.getGpuMetricResultHashMap().entrySet()) {
+
+                    GpuMetricResult gpuMetricResult = gpuEntry.getValue();
+
+                    MetricResults metricResults = gpuMetricResult.getMetricResults();
+
+                    if (metricResults != null && metricResults.getAggregationInfoResult() != null) {
+                        MetricAggregationInfoResults aggregationInfo = metricResults.getAggregationInfoResult();
+
+                        if (aggregationInfo.getMax() != null) {
+                            if (gpuEntry.getKey() == AnalyzerConstants.MetricName.gpuCoreUsage) {
+                                if (aggregationInfo.getMax() > totalCoreMax) {
+                                    totalCoreMax = aggregationInfo.getMax();
+                                }
+                            }
+                            if (gpuEntry.getKey() == AnalyzerConstants.MetricName.gpuMemoryUsage) {
+                                if (aggregationInfo.getMax() > totalMemoryMax) {
+                                    totalMemoryMax = aggregationInfo.getMax();
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
+        double coreFraction = totalCoreMax / 100;
+        double memoryFraction = totalMemoryMax / 100;
+        GpuMetaDataService gpuMetaDataService = GpuMetaDataService.getInstance();
+        GpuProfile gpuProfile = gpuMetaDataService.getGpuProfile("A100", coreFraction, memoryFraction);
+        System.out.println(gpuProfile.getProfileName());
+        return null;
     }
 }

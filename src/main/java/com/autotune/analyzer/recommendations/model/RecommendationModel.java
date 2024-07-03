@@ -16,4 +16,5 @@ public interface RecommendationModel {
     public String getModelName();
     void validate();
 
+    RecommendationConfigItem getGpuRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications);
 }

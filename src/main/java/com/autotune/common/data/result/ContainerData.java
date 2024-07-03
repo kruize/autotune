@@ -29,6 +29,8 @@ public class ContainerData {
     private String container_name;
     //key is intervalEndTime
     private HashMap<Timestamp, IntervalResults> results;
+    private ContainerDeviceList containerDeviceList;
+
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private ContainerRecommendations containerRecommendations;
     private HashMap<AnalyzerConstants.MetricName, Metric> metrics;
@@ -84,6 +86,14 @@ public class ContainerData {
 
     public void setMetrics(HashMap<AnalyzerConstants.MetricName, Metric> metrics) {
         this.metrics = metrics;
+    }
+
+    public ContainerDeviceList getContainerDeviceList() {
+        return containerDeviceList;
+    }
+
+    public void setContainerDeviceList(ContainerDeviceList containerDeviceList) {
+        this.containerDeviceList = containerDeviceList;
     }
     @Override
     public String toString() {
