@@ -90,6 +90,8 @@ public class Utils {
 
         if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.DAEMONSET))
             return AnalyzerConstants.K8S_OBJECT_TYPES.DAEMONSET;
+        if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.JOB))
+                    return AnalyzerConstants.K8S_OBJECT_TYPES.JOB;
 
         return null;
     }

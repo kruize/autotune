@@ -52,7 +52,9 @@ public class RecommendationConstants {
                 .LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
                 KruizeConstants.RecommendationEngineConstants
                         .DurationBasedEngine.RecommendationDurationRanges
-                        .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS);
+                        .LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS),
+        FIXED_TERM(KruizeConstants.JSONKeys.FIXED_TERM, FIXED_TERM_HOURS, FIXED_TERM_TOTAL_DURATION_UPPER_BOUND_MINS,
+                        FIXED_TERM_TOTAL_DURATION_LOWER_BOUND_MINS);
 
         private String value;
         private double durationInHrs;
@@ -93,6 +95,7 @@ public class RecommendationConstants {
                 case SHORT_TERM -> SHORT_TERM_HOURS;
                 case MEDIUM_TERM -> MEDIUM_TERM_HOURS;
                 case LONG_TERM -> LONG_TERM_HOURS;
+                case FIXED_TERM -> FIXED_TERM_HOURS;
             };
         }
     }
@@ -116,6 +119,11 @@ public class RecommendationConstants {
         INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE(
                 RecommendationConstants.NotificationCodes.INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationMsgConstant.LONG_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
+        INFO_FIXED_TERM_RECOMMENDATIONS_AVAILABLE(
+                NotificationCodes.INFO_FIXED_TERM_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationMsgConstant.FIXED_TERM_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationTypes.INFO
         ),
         INFO_COST_RECOMMENDATIONS_AVAILABLE(
@@ -316,6 +324,7 @@ public class RecommendationConstants {
         public static final int INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE = 111101; // TODO: need to discuss the code
         public static final int INFO_MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = 111102; // TODO: need to discuss the code
         public static final int INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE = 111103; // TODO: need to discuss the code;
+        public static final int INFO_FIXED_TERM_RECOMMENDATIONS_AVAILABLE = 111104; // TODO: need to discuss the code;
         public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
         public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
         public static final int COST_ENGINE_END = 112199;
@@ -645,6 +654,7 @@ public class RecommendationConstants {
         public static final String SHORT_TERM_RECOMMENDATIONS_AVAILABLE = "Short Term Recommendations Available";
         public static final String MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "Medium Term Recommendations Available";
         public static final String LONG_TERM_RECOMMENDATIONS_AVAILABLE = "Long Term Recommendations Available";
+        public static final String FIXED_TERM_RECOMMENDATIONS_AVAILABLE = "Fixed Term Recommendations Available";
         public static final String CPU_RECORDS_ARE_IDLE = "CPU Usage is less than a millicore, No CPU Recommendations can be generated";
         public static final String CPU_RECORDS_ARE_ZERO = "CPU usage is zero, No CPU Recommendations can be generated";
         public static final String MEMORY_RECORDS_ARE_ZERO = "Memory Usage is zero, No Memory Recommendations can be generated";
