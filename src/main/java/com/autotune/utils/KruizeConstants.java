@@ -228,6 +228,7 @@ public class KruizeConstants {
         public static final String SHORT_TERM = "short_term";
         public static final String MEDIUM_TERM = "medium_term";
         public static final String LONG_TERM = "long_term";
+        public static final String FIXED_TERM = "fixed_term";
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String VARIATION = "variation";
         public static final String NOTIFICATIONS = "notifications";
@@ -657,6 +658,8 @@ public class KruizeConstants {
                 public static final int MEDIUM_TERM_DURATION_DAYS_THRESHOLD = 2;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
                 public static final int LONG_TERM_DURATION_DAYS_THRESHOLD = 8;
+                public static final int FIXED_TERM_DURATION_DAYS = 0;       // TODO: temporarily set as zero, need to update this after the POC
+                public static final int FIXED_TERM_DURATION_DAYS_THRESHOLD = 0; // TODO: temporarily set as zero, need to update this after the POC
 
                 private DurationAmount() {
 
