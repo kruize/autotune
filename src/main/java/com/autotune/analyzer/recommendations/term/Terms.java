@@ -154,6 +154,7 @@ public class Terms {
             case SHORT_TERM -> SHORT_TERM_HOURS;
             case MEDIUM_TERM -> MEDIUM_TERM_HOURS;
             case LONG_TERM -> LONG_TERM_HOURS;
+            case FIXED_TERM -> FIXED_TERM_HOURS;
             default -> throw new IllegalStateException("Unexpected value: " + termValue);
         };
     }
@@ -189,5 +190,14 @@ public class Terms {
 
     public void setPlots_datapoints_delta_in_days(double plots_datapoints_delta_in_days) {
         this.plots_datapoints_delta_in_days = plots_datapoints_delta_in_days;
+    }
+
+    @Override
+    public String toString() {
+        return "Terms{" +
+                "days=" + days +
+                ", threshold_in_days=" + threshold_in_days +
+                ", name='" + name + '\'' +
+                '}';
     }
 }
