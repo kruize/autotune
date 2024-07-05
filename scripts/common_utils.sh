@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 #
 # Copyright (c) 2020, 2020 Red Hat, IBM Corporation and others.
 #
