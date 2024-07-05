@@ -221,7 +221,7 @@ metadata:
   labels:
     app: kruize
 spec:
-  type: LoadBalancer
+  type: NodePort
   selector:
     app: kruize
   ports:
@@ -323,7 +323,7 @@ metadata:
   name: kruize-ui-nginx-service
   namespace: monitoring
 spec:
-  type: LoadBalancer
+  type: NodePort
   ports:
     - name: http
       port: 8080
