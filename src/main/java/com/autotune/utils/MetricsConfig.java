@@ -17,12 +17,14 @@ public class MetricsConfig {
     public static Timer timerLoadAllRec, timerLoadAllExp, timerLoadAllResults;
     public static Timer timerAddRecDB, timerAddResultsDB, timerAddExpDB, timerAddBulkResultsDB;
     public static Timer timerAddPerfProfileDB, timerLoadPerfProfileName, timerLoadAllPerfProfiles;
+    public static Timer timerAddMetricProfileDB, timerLoadMetricProfileName, timerLoadAllMetricProfiles;
     public static Counter timerKruizeNotifications;
     public static Timer.Builder timerBListRec, timerBListExp, timerBCreateExp, timerBUpdateResults, timerBUpdateRecommendations;
     public static Timer.Builder timerBLoadRecExpName, timerBLoadResultsExpName, timerBLoadExpName, timerBLoadRecExpNameDate, timerBBoxPlots;
     public static Timer.Builder timerBLoadAllRec, timerBLoadAllExp, timerBLoadAllResults;
     public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB;
     public static Timer.Builder timerBAddPerfProfileDB, timerBLoadPerfProfileName, timerBLoadAllPerfProfiles;
+    public static Timer.Builder timerBAddMetricProfileDB, timerBLoadMetricProfileName, timerBLoadAllMetricProfiles;
     public static Counter.Builder timerBKruizeNotifications;
     public static PrometheusMeterRegistry meterRegistry;
     public static Timer timerListDS, timerImportDSMetadata, timerListDSMetadata;
@@ -56,6 +58,9 @@ public class MetricsConfig {
         timerBAddPerfProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addPerformanceProfileToDB");
         timerBLoadPerfProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadPerformanceProfileByName");
         timerBLoadAllPerfProfiles = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllPerformanceProfiles");
+        timerBAddMetricProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addMetricProfileToDB");
+        timerBLoadMetricProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadMetricProfileByName");
+        timerBLoadAllMetricProfiles = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllMetricProfiles");
         timerBBoxPlots = Timer.builder("KruizeMethod").description(METHOD_METRIC_DESC).tag("method", "generatePlots");
 
         timerBListDS = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "datasources").tag("method", "GET");

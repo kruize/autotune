@@ -25,6 +25,7 @@ import com.autotune.experimentManager.data.ExperimentDetailsMap;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMConstants.ParallelEngineConfigs;
 import com.autotune.experimentManager.workerimpl.IterationManager;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -156,6 +157,19 @@ public class InitiateListener implements ServletContextListener {
             LOGGER.error("Failed to load performance profile: {} ", e.getMessage());
         }
         sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
+
+        if(KruizeDeploymentInfo.local == true) {
+            /*
+            Kruize Metric Profile configuration
+            */
+            ConcurrentHashMap<String, PerformanceProfile> metricProfilesMap = new ConcurrentHashMap<>();
+            try {
+                new ExperimentDBService().loadAllMetricProfiles(metricProfilesMap);
+            } catch (Exception e) {
+                LOGGER.error("Failed to load metric profile: {} ", e.getMessage());
+            }
+            sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.METRIC_PROFILE_MAP, metricProfilesMap);
+        }
     }
 
     @Override

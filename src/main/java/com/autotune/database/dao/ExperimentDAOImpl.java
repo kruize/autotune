@@ -385,6 +385,43 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
+     * Adds MetricProfile to database
+     * @param kruizeMetricProfileEntry Metric Profile Database object to be added
+     * @return validationOutputData contains the status of the DB insert operation
+     */
+    public ValidationOutputData addMetricProfileToDB(KruizeMetricProfileEntry kruizeMetricProfileEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerAddMetricProfileDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeMetricProfileEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+                statusValue = "success";
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save metric profile due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save metric profile due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerAddMetricProfileDB) {
+                MetricsConfig.timerAddMetricProfileDB = MetricsConfig.timerBAddMetricProfileDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerAddMetricProfileDB.stop(MetricsConfig.timerAddMetricProfileDB);
+            }
+        }
+        return validationOutputData;
+    }
+
+    /**
      * @param kruizeDataSourceEntry
      * @return validationOutputData contains the status of the DB insert operation
      */
@@ -622,6 +659,30 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
+    /**
+     * Fetches all the Metric Profile records from KruizeMetricProfileEntry database table
+     * @return List of all KruizeMetricProfileEntry database objects
+     * @throws Exception
+     */
+    @Override
+    public List<KruizeMetricProfileEntry> loadAllMetricProfiles() throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadAllMetricProfiles = Timer.start(MetricsConfig.meterRegistry());
+        List<KruizeMetricProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_METRIC_PROFILE, KruizeMetricProfileEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Metric Profile  due to {}", e.getMessage());
+            throw new Exception("Error while loading existing Metric Profile from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadAllMetricProfiles) {
+                MetricsConfig.timerLoadAllMetricProfiles = MetricsConfig.timerBLoadAllMetricProfiles.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadAllMetricProfiles.stop(MetricsConfig.timerLoadAllMetricProfiles);
+            }
+        }
+        return entries;
+    }
+
     @Override
     public List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
@@ -793,6 +854,31 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             if (null != timerLoadPerfProfileName) {
                 MetricsConfig.timerLoadPerfProfileName = MetricsConfig.timerBLoadPerfProfileName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                 timerLoadPerfProfileName.stop(MetricsConfig.timerLoadPerfProfileName);
+            }
+        }
+        return entries;
+    }
+
+    /**
+     * Fetched Metric Profile by name from KruizeMetricProfileEntry database table
+     * @param metricProfileName Metric profile name
+     * @return List of KruizeMetricProfileEntry objects
+     * @throws Exception
+     */
+    public List<KruizeMetricProfileEntry> loadMetricProfileByName(String metricProfileName) throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadMetricProfileName = Timer.start(MetricsConfig.meterRegistry());
+        List<KruizeMetricProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_METRIC_PROFILE_BY_NAME, KruizeMetricProfileEntry.class)
+                    .setParameter("name", metricProfileName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Metric Profile {} due to {}", metricProfileName, e.getMessage());
+            throw new Exception("Error while loading existing metric profile from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadMetricProfileName) {
+                MetricsConfig.timerLoadMetricProfileName = MetricsConfig.timerBLoadMetricProfileName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadMetricProfileName.stop(MetricsConfig.timerLoadMetricProfileName);
             }
         }
         return entries;

@@ -26,6 +26,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -46,9 +47,17 @@ public class PerformanceProfileValidation {
     private String errorMessage;
     private final Map<String, PerformanceProfile> performanceProfilesMap;
 
-    //Mandatory fields
+    //Mandatory fields for PerformanceProfile
     private final List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME,
+            AnalyzerConstants.SLO
+    ));
+
+    //Mandatory fields for MetricProfile
+    private final List<String> mandatoryMetricFields = new ArrayList<>(Arrays.asList(
+            AnalyzerConstants.API_VERSION,
+            AnalyzerConstants.KIND,
+            AnalyzerConstants.AutotuneObjectConstants.METADATA,
             AnalyzerConstants.SLO
     ));
 
@@ -78,6 +87,17 @@ public class PerformanceProfileValidation {
     public ValidationOutputData validate(PerformanceProfile performanceProfile) {
 
         return validatePerformanceProfileData(performanceProfile);
+    }
+
+    /**
+     * Validates function variables
+     *
+     * @param metricProfile Metric Profile Object to be validated
+     * @return Returns the ValidationOutputData containing the response based on the validation
+     */
+    public ValidationOutputData validateMetricProfile(PerformanceProfile metricProfile) {
+
+        return validateMetricProfileData(metricProfile);
     }
 
     /**
@@ -302,6 +322,258 @@ public class PerformanceProfileValidation {
 
         return validationOutputData;
     }
+
+    /**
+     * Validates the data present in the metric profile object before adding it to the map
+     * @param metricProfile
+     * @return
+     */
+    private ValidationOutputData validateMetricProfileData(PerformanceProfile metricProfile) {
+        // validate the mandatory values first
+        ValidationOutputData validationOutputData = validateMandatoryMetricProfileFieldsAndData(metricProfile);
+
+        // If the mandatory values are present,proceed for further validation else return the validation object directly
+        if (validationOutputData.isSuccess()) {
+            try {
+                new ExperimentDBService().loadAllMetricProfiles(performanceProfilesMap);
+            } catch (Exception e) {
+                LOGGER.error("Loading saved metric profiles failed: {} ", e.getMessage());
+            }
+            StringBuilder errorString = new StringBuilder();
+
+            // Check if metadata exists
+            JsonNode metadata = metricProfile.getMetadata();
+            if (null == metadata) {
+                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRIC_PROFILE_METADATA);
+            }
+            // check if the performance profile already exists
+            if (null != performanceProfilesMap.get(metricProfile.getMetadata().get("name").asText())) {
+                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METRIC_PROFILE).append(metricProfile.getMetadata().get("name"));
+                return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
+            }
+            // Check if k8s type is supported
+            String k8sType = metricProfile.getK8S_TYPE();
+            if (!KruizeSupportedTypes.K8S_TYPES_SUPPORTED.contains(k8sType)) {
+                errorString.append(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE).append(k8sType)
+                        .append(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED);
+            }
+
+            SloInfo sloInfo = metricProfile.getSloInfo();
+            // Check if direction is supported
+            if (!KruizeSupportedTypes.DIRECTIONS_SUPPORTED.contains(sloInfo.getDirection()))
+                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DIRECTION_NOT_SUPPORTED);
+            // if slo_class is present, do further validations
+            if (sloInfo.getSloClass() != null) {
+                // Check if slo_class is supported
+                if (!KruizeSupportedTypes.SLO_CLASSES_SUPPORTED.contains(sloInfo.getSloClass()))
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.SLO_CLASS_NOT_SUPPORTED);
+
+                //check if slo_class is 'response_time' and direction is 'minimize'
+                if (sloInfo.getSloClass().equalsIgnoreCase(EMConstants.StandardDefaults.RESPONSE_TIME) && !sloInfo.getDirection()
+                        .equalsIgnoreCase(AnalyzerConstants.AutotuneObjectConstants.MINIMIZE)) {
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_DIRECTION_FOR_SLO_CLASS);
+                }
+
+                //check if slo_class is 'throughput' and direction is 'maximize'
+                if (sloInfo.getSloClass().equalsIgnoreCase(EMConstants.StandardDefaults.THROUGHPUT) && !sloInfo.getDirection()
+                        .equalsIgnoreCase(AnalyzerConstants.AutotuneObjectConstants.MAXIMIZE)) {
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_DIRECTION_FOR_SLO_CLASS);
+                }
+            }
+            // Check if function_variables is empty
+            if (sloInfo.getFunctionVariables().isEmpty())
+                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLES_EMPTY);
+
+            // Check if objective_function and it's type exists
+            if (sloInfo.getObjectiveFunction() == null)
+                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.OBJECTIVE_FUNCTION_MISSING);
+
+            // Get the objective_function type
+            String objFunctionType = sloInfo.getObjectiveFunction().getFunction_type();
+            String expression = null;
+            for (Metric functionVariable : sloInfo.getFunctionVariables()) {
+                // Check if datasource is supported
+                if (!KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase())) {
+                    errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE)
+                            .append(functionVariable.getName())
+                            .append(AnalyzerErrorConstants.AutotuneObjectErrors.DATASOURCE_NOT_SUPPORTED);
+                }
+
+                // Check if value_type is supported
+                if (!KruizeSupportedTypes.VALUE_TYPES_SUPPORTED.contains(functionVariable.getValueType().toLowerCase())) {
+                    errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE)
+                            .append(functionVariable.getName())
+                            .append(AnalyzerErrorConstants.AutotuneObjectErrors.VALUE_TYPE_NOT_SUPPORTED);
+                }
+
+                // Check if kubernetes_object type is supported, set default to 'container' if it's absent.
+                String kubernetes_object = functionVariable.getKubernetesObject();
+                if (null == kubernetes_object)
+                    functionVariable.setKubernetesObject(KruizeConstants.JSONKeys.CONTAINER);
+                else {
+                    if (!KruizeSupportedTypes.KUBERNETES_OBJECTS_SUPPORTED.contains(kubernetes_object.toLowerCase()))
+                        errorString.append(AnalyzerConstants.KUBERNETES_OBJECTS).append(kubernetes_object)
+                                .append(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED);
+                }
+
+                // Validate Objective Function
+                try {
+                    if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
+
+                        expression = sloInfo.getObjectiveFunction().getExpression();
+                        if (null == expression || expression.equals(AnalyzerConstants.NULL)) {
+                            throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPRESSION);
+                        }
+
+                    } else if (objFunctionType.equals(AnalyzerConstants.PerformanceProfileConstants.SOURCE)) {
+                        if (null != sloInfo.getObjectiveFunction().getExpression()) {
+                            errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISPLACED_EXPRESSION);
+                            throw new InvalidValueException(errorString.toString());
+                        }
+                    } else {
+                        errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_TYPE);
+                        throw new InvalidValueException(errorString.toString());
+                    }
+                } catch (NullPointerException | InvalidValueException npe) {
+                    errorString.append(npe.getMessage());
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(errorString.toString());
+                }
+
+                // Check if function_variable is part of objective_function
+                if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
+                    if (!expression.contains(functionVariable.getName())) {
+                        errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE)
+                                .append(functionVariable.getName()).append(" ")
+                                .append(AnalyzerErrorConstants.AutotuneObjectErrors.FUNCTION_VARIABLE_ERROR);
+                    }
+                }
+            }
+
+            // Check if objective_function is correctly formatted
+            if (objFunctionType.equals(AnalyzerConstants.AutotuneObjectConstants.EXPRESSION)) {
+                if (expression.equals(AnalyzerConstants.NULL) || !new EvalExParser().validate(sloInfo.getObjectiveFunction().getExpression(), sloInfo.getFunctionVariables())) {
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_OBJECTIVE_FUNCTION);
+                }
+            }
+
+            if (!errorString.toString().isEmpty()) {
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(errorString.toString());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+            } else
+                validationOutputData.setSuccess(true);
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Check if all mandatory values are present.
+     *
+     * @param metricObj Mandatory fields of this Metric Profile Object will be validated
+     * @return ValidationOutputData object containing status of the validations
+     */
+    public ValidationOutputData validateMandatoryMetricProfileFieldsAndData(PerformanceProfile metricObj) {
+        List<String> missingMandatoryFields = new ArrayList<>();
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String errorMsg;
+        errorMsg = "";
+        mandatoryMetricFields.forEach(
+                mField -> {
+                    String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
+                    try {
+                        LOGGER.debug("MethodName = {}",methodName);
+                        Method getNameMethod = metricObj.getClass().getMethod(methodName);
+                        if (getNameMethod.invoke(metricObj) == null)
+                            missingMandatoryFields.add(mField);
+                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                        LOGGER.error("Method name {} doesn't exist!", mField);
+                    }
+                }
+        );
+        if (missingMandatoryFields.size() == 0) {
+            try {
+                String mandatoryMetadataPerf = AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME;
+                try {
+                    JsonNode metadata = metricObj.getMetadata();
+                    JsonNode fieldNode = metadata.get(mandatoryMetadataPerf);
+                    if (fieldNode == null || fieldNode.isNull()) {
+                        missingMandatoryFields.add(mandatoryMetadataPerf);
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Method name doesn't exist for: {}!", mandatoryMetadataPerf);
+                }
+
+                if (missingMandatoryFields.size() == 0) {
+                    mandatorySLOPerf.forEach(
+                            mField -> {
+                                String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
+                                try {
+                                    LOGGER.debug("MethodName = {}", methodName);
+                                    Method getNameMethod = metricObj.getSloInfo().getClass().getMethod(methodName);
+                                    if (getNameMethod.invoke(metricObj.getSloInfo()) == null)
+                                        missingMandatoryFields.add(mField);
+                                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                                    LOGGER.error("Method name {} doesn't exist!", mField);
+                                }
+
+                            });
+                    if (missingMandatoryFields.size() == 0) {
+                        mandatoryFuncVariables.forEach(
+                                mField -> {
+                                    String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
+                                    try {
+                                        LOGGER.debug("MethodName = {}", methodName);
+                                        Method getNameMethod = metricObj.getSloInfo().getFunctionVariables().get(0)
+                                                .getClass().getMethod(methodName);
+                                        if (getNameMethod.invoke(metricObj.getSloInfo().getFunctionVariables().get(0)) == null)
+                                            missingMandatoryFields.add(mField);
+                                    } catch (NoSuchMethodException | IllegalAccessException |
+                                             InvocationTargetException e) {
+                                        LOGGER.error("Method name {} doesn't exist!", mField);
+                                    }
+
+                                });
+                        String mandatoryObjFuncData = AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE;
+                        String methodName = "get" + mandatoryObjFuncData.substring(0, 1).toUpperCase() +
+                                mandatoryObjFuncData.substring(1);
+                        try {
+                            LOGGER.debug("MethodName = {}", methodName);
+                            Method getNameMethod = metricObj.getSloInfo().getObjectiveFunction()
+                                    .getClass().getMethod(methodName);
+                            if (getNameMethod.invoke(metricObj.getSloInfo().getObjectiveFunction()) == null)
+                                missingMandatoryFields.add(mandatoryObjFuncData);
+                        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                            LOGGER.error("Method name {} doesn't exist!", mandatoryObjFuncData);
+                        }
+                        validationOutputData.setSuccess(true);
+                    }
+                }
+
+                if (!missingMandatoryFields.isEmpty()) {
+                    errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s ", missingMandatoryFields));
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(errorMsg);
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                    LOGGER.error("Validation error message :{}", errorMsg);
+                }
+            } catch (Exception e) {
+                validationOutputData.setSuccess(false);
+                errorMsg = errorMsg.concat(e.getMessage());
+                validationOutputData.setMessage(errorMsg);
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s ", missingMandatoryFields));
+            validationOutputData.setSuccess(false);
+            validationOutputData.setMessage(errorMsg);
+            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+            LOGGER.error("Validation error message :{}", errorMsg);
+        }
+
+        return validationOutputData;
+    }
+
     public boolean isSuccess() {
         return success;
     }
