@@ -34,7 +34,7 @@ Autotune can be deployed to a supported Kubernetes cluster. We currently support
 Minikube setup with 8 CPUs and 16 GB Memory is recommended for autotune deployment. After setting up minikube, install prometheus from autotune repo with the following command
 
 ```
-$ ./scripts/prometheus_on_minikube.sh -as 
+$ ./scripts/prometheus_on_minikube.sh -as
 
 Info: installing prometheus...
 
@@ -69,7 +69,7 @@ $ ./build.sh -i autotune:test
 Note - You can use the 'dev friendly mode' option to quickly build the autotune docker image using the cached layers.
 
 
-# Deploy Autotune
+# Deploy Autotune on minikube
 
 Let us now deploy autotune using the docker image onto the minikube cluster
 
@@ -123,6 +123,40 @@ Info: autotune deploy succeeded: Running
 autotune-58cf47df84-rhqhx              1/1     Running   0          54s
 
 Info: Access Autotune at http://192.168.39.12:30113/listKruizeTunables
+```
+
+### Install Prometheus on AKS
+
+This step assumes you have AKS installed and running,. After setting up AKS, install prometheus from autotune repo with the following command
+
+```
+$ ./scripts/prometheus_on_aks.sh -as
+
+Info: Installing Prometheus on AKS
+...
+
+Info: Prometheus Setup on AKS
+No resources found in monitoring namespace.
+Info: Cloning Prometheus Operator & few AKS Customisations git
+
+```
+# Deploy Autotune on AKS
+
+Let us now deploy autotune container image onto the Azure Kubernetes cluster
+```
+$ ./deploy.sh -c aks
+
+  Usage: ./deploy.sh [-c [docker|minikube|openshift]] [-i autotune docker image] [-o hpo docker image] [-n namespace] [-d configmaps-dir ] [-s start] [-t terminate]
+        -s: Deploy autotune [Default]
+        -t: Terminate autotune deployment
+        -c: kubernetes cluster type. At present we support only minikube [Default - minikube]
+        -i: deploy with specific autotune operator docker image name [Default - kruize/autotune_operator:<version from pom.xml>]
+        -o: deploy with specific hpo docker image name [Default - kruize/hpo:<current hpo version>]
+        -n: Namespace to which autotune is deployed [Default - monitoring for cluster type minikube]
+        -d: Config maps directory [Default - manifests/configmaps]
+
+  For example,
+  ./deploy.sh -c aks -i <docker hub user>/autotune_operator:test -o <docker hub user>/hpo:test
 ```
 
 # Demo

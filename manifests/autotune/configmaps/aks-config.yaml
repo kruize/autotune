@@ -1,0 +1,28 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: autotune-config
+data:
+  cluster_type: "kubernetes"
+  k8s_type: "aks"
+  auth_type: ""
+  auth_token: ""
+  monitoring_agent: "prometheus"
+  monitoring_service: "prometheus-k8s"
+  monitoring_agent_endpoint: ""
+  root_logging_level: "error"
+  logging_level: "info"
+  kruizeconfigjson: |
+    {
+      "datasource": [
+        {
+          "name": "prometheus-1",
+          "provider": "prometheus",
+          "serviceName": "prometheus-k8s",
+          "namespace": "monitoring",
+          "url": ""
+        }
+      ]
+    }
+
+
