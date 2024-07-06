@@ -18,9 +18,12 @@ package com.autotune.common.datasource.prometheus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.utils.CommonUtils;
-import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
-import com.google.gson.*;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import org.apache.http.conn.HttpHostConnectException;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -33,19 +36,22 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
 /**
- *  PrometheusDataOperatorImpl extends DataSourceOperatorImpl class
- *  This class provides Prometheus specific implementation for DataSourceOperator functions
+ * PrometheusDataOperatorImpl extends DataSourceOperatorImpl class
+ * This class provides Prometheus specific implementation for DataSourceOperator functions
  */
 public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(PrometheusDataOperatorImpl.class);
 
-    private static PrometheusDataOperatorImpl prometheusDataOperator = null;;
+    private static PrometheusDataOperatorImpl prometheusDataOperator = null;
+    ;
+
     private PrometheusDataOperatorImpl() {
         super();
     }
 
     /**
      * Returns the instance of PrometheusDataOperatorImpl class
+     *
      * @return PrometheusDataOperatorImpl instance
      */
     public static PrometheusDataOperatorImpl getInstance() {
@@ -57,6 +63,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * Returns the default service port for prometheus
+     *
      * @return String containing the port number
      */
     @Override
@@ -67,6 +74,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
     /**
      * Check if a datasource is reachable, implementation of this function
      * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
+     *
      * @param dataSourceURL String containing the url for the datasource
      * @return DatasourceReachabilityStatus
      */
@@ -80,13 +88,13 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
         queryResult = this.getValueForQuery(dataSourceURL, query);
 
-        if (queryResult != null){
+        if (queryResult != null) {
             dataSourceStatus = queryResult.toString();
         } else {
             dataSourceStatus = "0";
         }
 
-        if (dataSourceStatus.equalsIgnoreCase("1")){
+        if (dataSourceStatus.equalsIgnoreCase("1")) {
             reachabilityStatus = CommonUtils.DatasourceReachabilityStatus.REACHABLE;
         } else {
             reachabilityStatus = CommonUtils.DatasourceReachabilityStatus.NOT_REACHABLE;
@@ -96,7 +104,8 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * executes specified query on datasource and returns the result value
-     * @param url String containing the url for the datasource
+     *
+     * @param url   String containing the url for the datasource
      * @param query String containing the query to be executed
      * @return Object containing the result value for the specified query
      */
@@ -110,13 +119,18 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             }
 
             JSONArray result = jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-            for (Object result_obj : result) {
-                JSONObject result_json = (JSONObject) result_obj;
-                if (result_json.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE)
-                        && !result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).isEmpty()) {
-                    return result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).getString(1);
+            if (result.isEmpty()) {
+                return "1";     // todo temp fix for thanos setup If Jsonobject is not null then it is reachable but results [] is empty
+            } else {
+                for (Object result_obj : result) {
+                    JSONObject result_json = (JSONObject) result_obj;
+                    if (result_json.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE)
+                            && !result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).isEmpty()) {
+                        return result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).getString(1);
+                    }
                 }
             }
+
         } catch (JSONException e) {
             LOGGER.error(e.getMessage());
         } catch (NullPointerException e) {
@@ -127,7 +141,8 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * executes specified query on datasource and returns the JSON Object
-     * @param url String containing the url for the datasource
+     *
+     * @param url   String containing the url for the datasource
      * @param query String containing the query to be executed
      * @return JSONObject for the specified query
      */
@@ -157,7 +172,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             if (!jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT))
                 return null;
             if (jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isEmpty())
-                return  null;
+                return null;
 
             return jsonObject;
 
@@ -177,6 +192,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * returns query endpoint for prometheus datasource
+     *
      * @return String containing query endpoint
      */
     @Override
@@ -186,18 +202,19 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * executes specified query on datasource and returns the result array
-     * @param url String containing the url for the datasource
+     *
+     * @param url   String containing the url for the datasource
      * @param query String containing the query to be executed
      * @return JsonArray containing the result array for the specified query
-     *
+     * <p>
      * Example output JsonArray -
      * [
-     *   {
-     *     "metric": {
-     *       "__name__": "exampleMetric"
-     *     },
-     *     "value": [1642612628.987, "1"]
-     *   }
+     * {
+     * "metric": {
+     * "__name__": "exampleMetric"
+     * },
+     * "value": [1642612628.987, "1"]
+     * }
      * ]
      */
 
