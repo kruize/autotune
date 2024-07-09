@@ -66,6 +66,13 @@ public class KruizeConstants {
         public static final String UPDATE_RECOMMENDATIONS_FAILURE_MSG = "UpdateRecommendations API failed for experiment_name: %s and intervalEndTimeStr : %s due to %s";
     }
 
+    public static class MetricProfileAPIMessages {
+        public static final String CREATE_METRIC_PROFILE_SUCCESS_MSG = "Metric Profile : %s created successfully.";
+        public static final String VIEW_METRIC_PROFILES_MSG = " View Metric Profiles at /listMetricProfiles";
+        public static final String LOAD_METRIC_PROFILE_FAILURE = "Failed to load saved metric profile data: {}";
+        public static final String ADD_METRIC_PROFILE_TO_DB_WITH_VERSION = "Added Metric Profile : {} into the DB with version: {}";
+    }
+
     /**
      * Holds the constants of env vars and values to start Autotune in different Modes
      */

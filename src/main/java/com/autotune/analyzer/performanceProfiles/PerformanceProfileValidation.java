@@ -348,7 +348,7 @@ public class PerformanceProfileValidation {
             }
             // check if the performance profile already exists
             if (null != performanceProfilesMap.get(metricProfile.getMetadata().get("name").asText())) {
-                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METRIC_PROFILE).append(metricProfile.getMetadata().get("name"));
+                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METRIC_PROFILE).append(metricProfile.getMetadata().get("name").asText());
                 return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
             }
             // Check if k8s type is supported

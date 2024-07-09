@@ -27,6 +27,7 @@ import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.*;
@@ -86,11 +87,11 @@ public class MetricProfileService extends HttpServlet {
             if (validationOutputData.isSuccess()) {
                 ValidationOutputData addedToDB = new ExperimentDBService().addMetricProfileToDB(metricProfile);
                 if (addedToDB.isSuccess()) {
-                    metricProfilesMap.put(String.valueOf(metricProfile.getMetadata().get("name")), metricProfile);
+                    metricProfilesMap.put(String.valueOf(metricProfile.getMetadata().get("name").asText()), metricProfile);
                     getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.METRIC_PROFILE_MAP, metricProfilesMap);
-                    LOGGER.debug("Added Metric Profile : {} into the DB with version: {}",
-                            metricProfile.getMetadata().get("name"), metricProfile.getProfile_version());
-                    sendSuccessResponse(response, "Metric Profile : " + metricProfile.getMetadata().get("name") + " created successfully.");
+                    LOGGER.debug(KruizeConstants.MetricProfileAPIMessages.ADD_METRIC_PROFILE_TO_DB_WITH_VERSION,
+                            metricProfile.getMetadata().get("name").asText(), metricProfile.getProfile_version());
+                    sendSuccessResponse(response, String.format(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_SUCCESS_MSG, metricProfile.getMetadata().get("name").asText()));
                 } else {
                     sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
                 }
@@ -121,7 +122,7 @@ public class MetricProfileService extends HttpServlet {
         try {
             new ExperimentDBService().loadAllMetricProfiles(metricProfilesMap);
         } catch (Exception e) {
-            LOGGER.error("Failed to load saved metric profile data: {} ", e.getMessage());
+            LOGGER.error(KruizeConstants.MetricProfileAPIMessages.LOAD_METRIC_PROFILE_FAILURE, e.getMessage());
         }
         if (metricProfilesMap.size() > 0) {
             Collection<PerformanceProfile> values = metricProfilesMap.values();
@@ -214,7 +215,7 @@ public class MetricProfileService extends HttpServlet {
         out.append(
                 new Gson().toJson(
                         new PerformanceProfileResponse(message +
-                                " View Metric Profiles at /listMetricProfiles",
+                                KruizeConstants.MetricProfileAPIMessages.VIEW_METRIC_PROFILES_MSG,
                                 HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
