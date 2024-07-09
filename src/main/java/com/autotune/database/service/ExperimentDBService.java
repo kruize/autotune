@@ -140,15 +140,13 @@ public class ExperimentDBService {
         }
     }
 
-    public void loadAllMetricProfiles(Map<String, PerformanceProfile> performanceProfileMap) throws Exception {
-        if (performanceProfileMap.isEmpty()) {
-            List<KruizeMetricProfileEntry> entries = experimentDAO.loadAllMetricProfiles();
-            if (null != entries && !entries.isEmpty()) {
-                List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertMetricProfileEntryToMetricProfileObject(entries);
-                if (!performanceProfiles.isEmpty()) {
-                    performanceProfiles.forEach(performanceProfile ->
-                            PerformanceProfileUtil.addMetricProfile(performanceProfileMap, performanceProfile));
-                }
+    public void loadAllMetricProfiles(Map<String, PerformanceProfile> metricProfileMap) throws Exception {
+        List<KruizeMetricProfileEntry> entries = experimentDAO.loadAllMetricProfiles();
+        if (null != entries && !entries.isEmpty()) {
+            List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertMetricProfileEntryToMetricProfileObject(entries);
+            if (!performanceProfiles.isEmpty()) {
+                performanceProfiles.forEach(performanceProfile ->
+                        PerformanceProfileUtil.addMetricProfile(metricProfileMap, performanceProfile));
             }
         }
     }
