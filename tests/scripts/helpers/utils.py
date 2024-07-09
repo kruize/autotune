@@ -57,6 +57,8 @@ LIST_METADATA_ERROR_MSG = ("Metadata for a given datasource - %s, cluster name -
 LIST_METADATA_DATASOURCE_NAME_CLUSTER_NAME_ERROR_MSG = "Metadata for a given datasource name - %s, cluster_name - %s either does not exist or is not valid"
 LIST_METADATA_MISSING_DATASOURCE = "datasource is mandatory"
 IMPORT_METADATA_DATASOURCE_CONNECTION_FAILURE_MSG = "Metadata cannot be imported, datasource connection refused or timed out"
+CREATE_METRIC_PROFILE_SUCCESS_MSG = "Metric Profile : \"%s\" created successfully. View Metric Profiles at /listMetricProfiles"
+METRIC_PROFILE_EXISTS_MSG = "Validation failed: Metric Profile already exists: \"%s\""
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
