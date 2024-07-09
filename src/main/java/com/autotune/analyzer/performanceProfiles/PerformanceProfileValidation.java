@@ -484,7 +484,7 @@ public class PerformanceProfileValidation {
                     try {
                         LOGGER.debug("MethodName = {}",methodName);
                         Method getNameMethod = metricObj.getClass().getMethod(methodName);
-                        if (getNameMethod.invoke(metricObj) == null)
+                        if (null == getNameMethod.invoke(metricObj) || getNameMethod.invoke(metricObj).toString().isEmpty())
                             missingMandatoryFields.add(mField);
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                         LOGGER.error("Method name {} doesn't exist!", mField);
@@ -496,8 +496,8 @@ public class PerformanceProfileValidation {
                 String mandatoryMetadataPerf = AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME;
                 try {
                     JsonNode metadata = metricObj.getMetadata();
-                    JsonNode fieldNode = metadata.get(mandatoryMetadataPerf);
-                    if (fieldNode == null || fieldNode.isNull()) {
+                    String metricProfileName = metadata.get(mandatoryMetadataPerf).asText();
+                    if (null == metricProfileName || metricProfileName.isEmpty() || metricProfileName.equals("null")) {
                         missingMandatoryFields.add(mandatoryMetadataPerf);
                     }
                 } catch (Exception e) {
