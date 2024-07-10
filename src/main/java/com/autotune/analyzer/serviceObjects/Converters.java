@@ -318,16 +318,16 @@ public class Converters {
                     String kubeObject = functionVarObj.has(AnalyzerConstants.KUBERNETES_OBJECT) ? functionVarObj.getString(AnalyzerConstants.KUBERNETES_OBJECT) : null;
                     Metric metric = new Metric(name, query, datasource, valueType, kubeObject);
                     JSONArray aggrFunctionArray = functionVarObj.has(AnalyzerConstants.AGGREGATION_FUNCTIONS) ? functionVarObj.getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS) : null;
+                    HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
                     for (Object innerObject : aggrFunctionArray) {
                         JSONObject aggrFuncJsonObject = (JSONObject) innerObject;
-                        HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
                         String function = aggrFuncJsonObject.getString(AnalyzerConstants.FUNCTION);
                         String aggrFuncQuery = aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.QUERY);
                         String version = aggrFuncJsonObject.has(KruizeConstants.JSONKeys.VERSION) ? aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.VERSION) : null;
                         AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version);
                         aggregationFunctionsMap.put(function, aggregationFunctions);
-                        metric.setAggregationFunctionsMap(aggregationFunctionsMap);
                     }
+                    metric.setAggregationFunctionsMap(aggregationFunctionsMap);
                     functionVariablesList.add(metric);
                 }
                 String sloClass = sloJsonObject.has(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS) ? sloJsonObject.get(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS).toString() : null;
