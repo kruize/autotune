@@ -23,7 +23,6 @@ public class MetricsConfig {
     public static Timer.Builder timerBLoadAllRec, timerBLoadAllExp, timerBLoadAllResults;
     public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB;
     public static Timer.Builder timerBAddPerfProfileDB, timerBLoadPerfProfileName, timerBLoadAllPerfProfiles;
-    public static Timer.Builder timerBAddMetricProfileDB, timerBLoadMetricProfileName, timerBLoadAllMetricProfiles;
     public static Counter.Builder timerBKruizeNotifications;
     public static PrometheusMeterRegistry meterRegistry;
     public static Timer timerListDS, timerImportDSMetadata, timerListDSMetadata;
