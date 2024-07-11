@@ -412,11 +412,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to save metric profile due to {}", e.getMessage());
             validationOutputData.setMessage(e.getMessage());
-        } finally {
-            if (null != timerAddMetricProfileDB) {
-                MetricsConfig.timerAddMetricProfileDB = MetricsConfig.timerBAddMetricProfileDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
-                timerAddMetricProfileDB.stop(MetricsConfig.timerAddMetricProfileDB);
-            }
         }
         return validationOutputData;
     }
@@ -674,11 +669,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to load Metric Profile  due to {}", e.getMessage());
             throw new Exception("Error while loading existing Metric Profile from database due to : " + e.getMessage());
-        } finally {
-            if (null != timerLoadAllMetricProfiles) {
-                MetricsConfig.timerLoadAllMetricProfiles = MetricsConfig.timerBLoadAllMetricProfiles.tag("status", statusValue).register(MetricsConfig.meterRegistry());
-                timerLoadAllMetricProfiles.stop(MetricsConfig.timerLoadAllMetricProfiles);
-            }
         }
         return entries;
     }
@@ -875,11 +865,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to load Metric Profile {} due to {}", metricProfileName, e.getMessage());
             throw new Exception("Error while loading existing metric profile from database due to : " + e.getMessage());
-        } finally {
-            if (null != timerLoadMetricProfileName) {
-                MetricsConfig.timerLoadMetricProfileName = MetricsConfig.timerBLoadMetricProfileName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
-                timerLoadMetricProfileName.stop(MetricsConfig.timerLoadMetricProfileName);
-            }
         }
         return entries;
     }
