@@ -1,12 +1,62 @@
 # Metric Profile
 
-This article describes how to add Metric Profiles with REST APIs using curl command.
+The metric profile contains a list of queries used to retrieve metrics such as CPU usage, throttling, memory
+usage, and more. Users can create metric profiles based on their cluster or datasource provider, such as Prometheus or
+Thanos. These profiles can be tagged to create experiment APIs, which will then fetch metrics according to the metric
+profile to generate recommendations.
+
+This article describes how to add and list Metric Profiles with REST APIs using curl command.
 Documentation still in progress stay tuned.
+
+# Attributes
+
+- **apiVersion** \
+  A string representing version of the Kubernetes API to create metric profile
+- **kind** \
+  A string representing type of kubernetes object
+- **metadata** \
+  A JSON object containing Data that helps to uniquely identify the metric profile, including a name string
+    - **name** \
+      A unique string name for identifying each metric profile.
+- **profile_version** \
+  a double value specifying the current version of the profile.
+- **slo** \
+  Service Level Objective containing the _direction_, _objective_function_ and _function_variables_
+    - **slo_class** \
+      a standard slo "bucket" defined by Kruize. Can be "_resource_usage_", "_throughput_" or "_response_time_"
+    - **direction** \
+      based on the slo_class, it can be '_maximize_' or '_minimize_'
+    - **objective_function** \
+      Define the performance objective here.
+        - **function_type** \
+          can be specified as '_source_' (a java file) or as an '_expression_'(algebraic). If it's an expression, it needs to defined below.
+        - **expression** \
+          an algebraic expression that details the calculation using function variables. Only valid if the "_function_type_" is "expression"
+    - **function_variables** \
+      Define the variables used in the _objective_function_
+        - **name** \
+          name of the variable
+        - **datasource** \
+          datasource of the query
+        - **value_type** \
+          can be double or integer
+        - **query** \
+          one of the query or _aggregation_functions_ is mandatory. Both can be present.
+        - **kubernetes_object** \
+          k8s object that this query is tied to: "_deployment_", "_pod_" or "_container_"
+        - **aggregation_functions** \
+          aggregate functions associated with this variable
+            - **function** \
+              can be '_avg_', '_sum_', '_min_', '_max_'
+            - **query** \
+              corresponding query
+            - **versions** \
+              Any specific versions that this query is tied to
+
 
 ## CreateMetricProfile
 
-This is quick guide instructions to create metric profile using input JSON as follows. For a more detailed guide,
-see [Create Metric Profile](/design/MetricProfile.md)
+This is quick guide instructions to create metric profile using input JSON as follows.
 
 **Request**
 `POST /createMetricProfile`
@@ -244,6 +294,7 @@ see [Create Metric Profile](/design/MetricProfile.md)
 
 **Response**
 
+* Success
 ```
 {
     "message": "Metric Profile : <name> created successfully. View all metric profiles at /listMetricProfiles",
@@ -252,6 +303,35 @@ see [Create Metric Profile](/design/MetricProfile.md)
     "status": "SUCCESS"
 }
 ```
+
+* Failure
+    * Duplicate Metric Profile name.
+  ```
+  {
+      "message": "Metric Profile already exists",
+      "httpcode": 409,
+      "documentationLink": "",
+      "status": "ERROR"
+  }
+  ```
+    * Mandatory parameters are missing.
+  ```
+  {
+      "message": "Missing mandatory parameters",
+      "httpcode": 400,
+      "documentationLink": "",
+      "status": "ERROR"
+  }
+  ```
+    * Any unknown exception on server side
+  ```
+  {
+      "message": "Internal Server Error",
+      "httpcode": 500,
+      "documentationLink": "",
+      "status": "ERROR"
+  }
+  ```
 #### Note: One of query or aggregation_functions is mandatory. Both can be present together.
 
 ## List Metric Profiles
