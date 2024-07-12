@@ -30,6 +30,16 @@ Documentation still in progress stay tuned.
   - Example Request and Response
   - Invalid Scenarios
 
+- [Create Metric Profile API](#create-metric-profile-api)
+  - Introduction
+  - Example Request and Response
+  - Invalid Scenarios
+
+- [List Metric Profiles API](#list-metric-profiles-api)
+  - Introduction
+  - Example Request and Response
+  - Invalid Scenarios
+
 - [Create Experiment API](#create-experiment-api)
     - Introduction
     - Example Request and Response
@@ -1017,6 +1027,480 @@ This is quick guide instructions to delete metadata using input JSON as follows.
   "documentationLink": "",
   "status": "SUCCESS"
 }
+```
+
+</details>
+
+<br>
+
+<a name="create-metric-profile-api"></a>
+
+### Create Metric Profile API
+
+This is quick guide instructions to create metric profiles using input JSON as follows. For a more detailed guide,
+see [Create MetricProfile](/design/MetricProfileAPI.md)
+
+**Request**
+`POST /createMetricProfile`
+
+`curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/createMetricProfile`
+
+<details>
+
+<summary><b>Example Request for profile name - `resource-optimization-local-monitoring`</b></summary>
+
+### Example Request
+
+```json
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizePerformanceProfile",
+  "metadata": {
+    "name": "resource-optimization-local-monitoring"
+  },
+  "profile_version": 1,
+  "k8s_type": "openshift",
+  "slo": {
+    "sloClass": "resource_usage",
+    "objective_function": {
+      "function_type": "source"
+    },
+    "direction": "minimize",
+    "hpoAlgoImpl": "optuna_tpe",
+    "function_variables": [
+      {
+        "name": "cpuRequest",
+        "query": "",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})",
+            "version": ""
+          },
+          {
+            "function": "sum",
+            "query": "sum(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})",
+            "version": ""
+          }
+        ]
+      },
+      {
+        "name": "cpuLimit",
+        "query": "",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})",
+            "version": ""
+          },
+          {
+            "function": "sum",
+            "query": "sum(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\", resource=\"cpu\", unit=\"core\"})",
+            "version": ""
+          }
+        ]
+      },
+      {
+        "name": "cpuUsage",
+        "query": "",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+            "version": "<=4.8"
+          },
+          {
+            "function": "avg",
+            "query": "avg(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+            "version": ">4.9"
+          },
+          {
+            "function": "min",
+            "query": "min(min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+            "version": "<=4.8"
+          },
+          {
+            "function": "min",
+            "query": "min(min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+            "version": ">4.9"
+          },
+          {
+            "function": "max",
+            "query": "max(max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+            "version": "<=4.8"
+          },
+          {
+            "function": "max",
+            "query": "max(max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+            "version": ">4.9"
+          },
+          {
+            "function": "sum",
+            "query": "sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+            "version": "<=4.8"
+          },
+          {
+            "function": "sum",
+            "query": "sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+            "version": ">4.9"
+          }
+        ]
+      },
+      {
+        "name": "cpuThrottle",
+        "query": "",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+            "version": ""
+          },
+          {
+            "function": "max",
+            "query": "max(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+            "version": ""
+          },
+          {
+            "function": "sum",
+            "query": "sum(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+            "version": ""
+          }
+        ]
+      },
+      {
+        "name": "memoryRequest",
+        "query": "",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})",
+            "version": ""
+          },
+          {
+            "function": "sum",
+            "query": "sum(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})",
+            "version": ""
+          }
+        ]
+      },
+      {
+        "name": "memoryLimit",
+        "query": "",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"memory\", unit=\"byte\"})",
+            "version": ""
+          },
+          {
+            "function": "sum",
+            "query": "sum(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})",
+            "version": ""
+          }
+        ]
+      },
+      {
+        "name": "memoryUsage",
+        "query": "",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg(avg_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))",
+            "version": ""
+          },
+          {
+            "function": "min",
+            "query": "min(min_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+            "version": ""
+          },
+          {
+            "function": "max",
+            "query": "max(max_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+            "version": ""
+          },
+          {
+            "function": "sum",
+            "query": "sum(avg_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+            "version": ""
+          }
+        ]
+      },
+      {
+        "name": "memoryRSS",
+        "query": "",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg(avg_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))",
+            "version": ""
+          },
+          {
+            "function": "min",
+            "query": "min(min_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+            "version": ""
+          },
+          {
+            "function": "max",
+            "query": "max(max_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+            "version": ""
+          },
+          {
+            "function": "sum",
+            "query": "sum(avg_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))",
+            "version": ""
+          }
+        ]
+      }
+    ]
+  }
+}
+```
+
+</details>
+
+
+**Response**
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+{
+  "message": "Metric Profile : resource-optimization-local-monitoring created successfully. View all metric profiles at /listMetricProfiles",
+  "httpcode": 201,
+  "documentationLink": "",
+  "status": "SUCCESS"
+}
+```
+
+</details>
+
+<br>
+
+<a name="list-metric-profiles-api"></a>
+
+### List Metric Profiles API
+
+**Request**
+
+`GET /listMetricProfiles`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listMetricProfiles`
+
+Returns list of all the metric profiles created
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+[
+  {
+    "apiVersion": "recommender.com/v1",
+    "kind": "KruizePerformanceProfile",
+    "metadata": {
+      "name": "resource-optimization-local-monitoring"
+    },
+    "profile_version": 1.0,
+    "k8s_type": "openshift",
+    "slo": {
+      "sloClass": "resource_usage",
+      "objective_function": {
+        "function_type": "source"
+      },
+      "direction": "minimize",
+      "function_variables": [
+        {
+          "name": "cpuRequest",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "kubernetes_object": "container",
+          "aggregation_functions": {
+            "avg": {
+              "function": "avg",
+              "query": "avg(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})"
+            },
+            "sum": {
+              "function": "sum",
+              "query": "sum(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})"
+            }
+          }
+        },
+        {
+          "name": "cpuLimit",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "kubernetes_object": "container",
+          "aggregation_functions": {
+            "avg": {
+              "function": "avg",
+              "query": "avg(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})"
+            },
+            "sum": {
+              "function": "sum",
+              "query": "sum(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\", resource=\"cpu\", unit=\"core\"})"
+            }
+          }
+        },
+        {
+          "name": "cpuUsage",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "kubernetes_object": "container",
+          "aggregation_functions": {
+            "avg": {
+              "function": "avg",
+              "query": "avg(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+              "version": ">4.9"
+            },
+            "min": {
+              "function": "min",
+              "query": "min(min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+              "version": ">4.9"
+            },
+            "max": {
+              "function": "max",
+              "query": "max(max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+              "version": ">4.9"
+            },
+            "sum": {
+              "function": "sum",
+              "query": "sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+              "version": ">4.9"
+            }
+          }
+        },
+        {
+          "name": "cpuThrottle",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "kubernetes_object": "container",
+          "aggregation_functions": {
+            "avg": {
+              "function": "avg",
+              "query": "avg(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))"
+            },
+            "max": {
+              "function": "max",
+              "query": "max(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))"
+            },
+            "sum": {
+              "function": "sum",
+              "query": "sum(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))"
+            }
+          }
+        },
+        {
+          "name": "memoryRequest",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "kubernetes_object": "container",
+          "aggregation_functions": {
+            "avg": {
+              "function": "avg",
+              "query": "avg(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})"
+            },
+            "sum": {
+              "function": "sum",
+              "query": "sum(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})"
+            }
+          }
+        },
+        {
+          "name": "memoryLimit",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "kubernetes_object": "container",
+          "aggregation_functions": {
+            "avg": {
+              "function": "avg",
+              "query": "avg(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"memory\", unit=\"byte\"})"
+            },
+            "sum": {
+              "function": "sum",
+              "query": "sum(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})"
+            }
+          }
+        },
+        {
+          "name": "memoryUsage",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "kubernetes_object": "container",
+          "aggregation_functions": {
+            "avg": {
+              "function": "avg",
+              "query": "avg(avg_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))"
+            },
+            "min": {
+              "function": "min",
+              "query": "min(min_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))"
+            },
+            "max": {
+              "function": "max",
+              "query": "max(max_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))"
+            },
+            "sum": {
+              "function": "sum",
+              "query": "sum(avg_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))"
+            }
+          }
+        },
+        {
+          "name": "memoryRSS",
+          "datasource": "prometheus",
+          "value_type": "double",
+          "kubernetes_object": "container",
+          "aggregation_functions": {
+            "avg": {
+              "function": "avg",
+              "query": "avg(avg_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))"
+            },
+            "min": {
+              "function": "min",
+              "query": "min(min_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))"
+            },
+            "max": {
+              "function": "max",
+              "query": "max(max_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))"
+            },
+            "sum": {
+              "function": "sum",
+              "query": "sum(avg_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))"
+            }
+          }
+        }
+      ]
+    }
+  }
+]
 ```
 
 </details>
