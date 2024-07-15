@@ -114,8 +114,27 @@ public class AnalyzerConstants {
     }
 
     public enum RecommendationItem {
-        cpu,
-        memory
+        CPU("cpu"),
+        MEMORY("memory"),
+        NVIDIA_GPU("nvidia.com/gpu"),
+        NVIDIA_GPU_PARTITION_1_CORE_5GB("nvidia.com/mig-1g.5gb"),
+        NVIDIA_GPU_PARTITION_1_CORE_10GB("nvidia.com/mig-1g.10gb"),
+        NVIDIA_GPU_PARTITION_1_CORE_20GB("nvidia.com/mig-1g.20gb"),
+        NVIDIA_GPU_PARTITION_2_CORES_20GB("nvidia.com/mig-2g.20gb"),
+        NVIDIA_GPU_PARTITION_3_CORES_40GB("nvidia.com/mig-3g.40gb"),
+        NVIDIA_GPU_PARTITION_4_CORES_40GB("nvidia.com/mig-4g.40gb"),
+        NVIDIA_GPU_PARTITION_7_CORES_80GB("nvidia.com/mig-7g.80gb");
+
+        private final String value;
+
+        RecommendationItem(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
     }
 
     public enum CapacityMax {
