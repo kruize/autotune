@@ -20,7 +20,6 @@ import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
-import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -115,8 +114,6 @@ public class Autotune {
                 setUpDataSources();
                 // checking available DataSources
                 checkAvailableDataSources();
-                // load available metric profiles from db
-                loadMetricProfilesFromDB();
 
             }
             // close the existing session factory before recreating
@@ -197,15 +194,6 @@ public class Autotune {
             LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
         }
     }
-
-    /**
-     * loads metric profiles from database
-     */
-    private static void loadMetricProfilesFromDB() {
-        MetricProfileCollection metricProfileCollection = MetricProfileCollection.getInstance();
-        metricProfileCollection.loadMetricProfilesFromDB();
-    }
-
 
     private static void addAutotuneServlets(ServletContextHandler context) {
         context.addServlet(HealthService.class, HEALTH_SERVICE);
