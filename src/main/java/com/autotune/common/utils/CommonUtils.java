@@ -16,12 +16,11 @@
 
 package com.autotune.common.utils;
 
+import com.autotune.common.data.result.IntervalResults;
 import com.autotune.utils.KruizeConstants;
 
 import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -293,5 +292,25 @@ public class CommonUtils {
         return ((newer - older)/older) * 100;
     }
 
+    public static Timestamp getNearestTimestamp(HashMap<Timestamp, IntervalResults> containerDataResults, Timestamp targetTime, int minutesRange) {
+        long rangeInMillis = (long) minutesRange * 60 * 1000;
+        long targetTimeMillis = targetTime.getTime();
+
+        Timestamp nearestTimestamp = null;
+        long nearestDistance = Long.MAX_VALUE;
+
+        for (Map.Entry<Timestamp, IntervalResults> entry : containerDataResults.entrySet()) {
+            Timestamp currentTimestamp = entry.getKey();
+            long currentTimeMillis = currentTimestamp.getTime();
+            long distance = Math.abs(targetTimeMillis - currentTimeMillis);
+
+            if (distance <= rangeInMillis && distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestTimestamp = currentTimestamp;
+            }
+        }
+
+        return nearestTimestamp;
+    }
 
 }

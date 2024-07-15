@@ -1544,7 +1544,7 @@ public class RecommendationEngine {
                                 try {
                                     podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
 //                                            dataSourceInfo.getUrl(),
-                                            "http://promik-service.promik..svc.cluster.local:9091",
+                                            "http://promik-service.promik.svc.cluster.local:9091",
                                             URLEncoder.encode(promQL, CHARACTER_ENCODING),
                                             interval_start_time_epoc,
                                             interval_end_time_epoc,
@@ -1580,12 +1580,19 @@ public class RecommendationEngine {
                                                     double value = valueArray.get(1).getAsDouble();
                                                     String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
                                                     Date date = sdf.parse(timestamp);
-                                                    Timestamp eTime = new Timestamp(date.getTime());
+                                                    Timestamp tempTime = new Timestamp(date.getTime());
+                                                    Timestamp eTime = CommonUtils.getNearestTimestamp(containerDataResults, tempTime, 5);
+
+                                                    // containerDataResults are empty so will use the prometheus timestamp
+                                                    if (null == eTime)
+                                                        eTime = tempTime;
 
                                                     // Prepare interval results
                                                     if (containerDataResults.containsKey(eTime)) {
                                                         intervalResults = containerDataResults.get(eTime);
                                                         gpuMetricResultMap = intervalResults.getGpuMetricResultHashMap();
+                                                        if (null == gpuMetricResultMap)
+                                                            gpuMetricResultMap = new HashMap<>();
                                                     } else {
                                                         intervalResults = new IntervalResults();
                                                         gpuMetricResultMap = new HashMap<>();
