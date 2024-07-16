@@ -2,6 +2,7 @@ package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.plots.PlotManager;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
@@ -19,6 +20,8 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
+import com.autotune.common.data.metrics.AggregationFunctions;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
@@ -740,13 +743,13 @@ public class RecommendationEngine {
      * DO NOT EDIT THIS METHOD UNLESS THERE ARE ANY CHANGES TO BE ADDED IN VALIDATION OR POPULATION MECHANISM
      * EDITING THIS METHOD MIGHT LEAD TO UNEXPECTED OUTCOMES IN RECOMMENDATIONS, PLEASE PROCEED WITH CAUTION
      *
-     * @param termEntry The entry containing a term key and its associated {@link Terms} object.
-     * @param recommendationModel The model used to map recommendations.
-     * @param notifications A list to which recommendation notifications will be added.
+     * @param termEntry             The entry containing a term key and its associated {@link Terms} object.
+     * @param recommendationModel   The model used to map recommendations.
+     * @param notifications         A list to which recommendation notifications will be added.
      * @param internalMapToPopulate The internal map to populate with recommendation configuration items.
-     * @param numPods The number of pods to consider for the recommendation.
-     * @param cpuThreshold The CPU usage threshold for the recommendation.
-     * @param memoryThreshold The memory usage threshold for the recommendation.
+     * @param numPods               The number of pods to consider for the recommendation.
+     * @param cpuThreshold          The CPU usage threshold for the recommendation.
+     * @param memoryThreshold       The memory usage threshold for the recommendation.
      * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
     private boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
@@ -1437,13 +1440,16 @@ public class RecommendationEngine {
      * @param interval_start_time The start time of the interval for fetching metrics.
      * @param dataSourceInfo      The datasource object to fetch metrics from.
      * @throws Exception if an error occurs during the fetching process.
-     *                                                                                                                                                                                                                                                                               TODO: Need to add right abstractions for this
+     *                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 TODO: Need to add right abstractions for this
      */
     public void fetchMetricsBasedOnDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception {
         try {
             long interval_end_time_epoc = 0;
             long interval_start_time_epoc = 0;
             SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
+            Map<String, PerformanceProfile> tempMap = new HashMap<>();
+            new ExperimentDBService().loadPerformanceProfileFromDBByName(tempMap, kruizeObject.getPerformanceProfile());
+            PerformanceProfile performanceProfile = tempMap.get(kruizeObject.getPerformanceProfile());
 
             // Get MetricsProfile name and list of promQL to fetch
             Map<AnalyzerConstants.MetricName, String> promQls = new HashMap<>();
@@ -1461,6 +1467,7 @@ public class RecommendationEngine {
                 for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
                     ContainerData containerData = entry.getValue();
                     String containerName = containerData.getContainer_name();
+                    String workloadName = k8sObject.getName();
                     if (null == interval_end_time) {
                         LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
                         String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
@@ -1499,8 +1506,101 @@ public class RecommendationEngine {
                     HashMap<AnalyzerConstants.MetricName, MetricResults> resMap;
                     MetricResults metricResults;
                     MetricAggregationInfoResults metricAggregationInfoResults;
+
+                    for (Metric metric : performanceProfile.getSloInfo().getMetrics()) {
+                        HashMap<String, AggregationFunctions> aggregationFunctionsMap = metric.getAggregationFunctionsMap();
+                        LOGGER.info("aggregationFunctionsMap {}", aggregationFunctionsMap.keySet());
+                        for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctionsMap.entrySet()) {
+                            String promQL = aggregationFunctionsEntry.getValue().getQuery();
+                            String format = null;
+                            String methodName = aggregationFunctionsEntry.getKey();
+                            // Determine format based on metric type todo move this metric profile
+                            List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
+                            List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString());
+                            if (cpuFunction.contains(metric.getName())) {
+                                format = KruizeConstants.JSONKeys.CORES;
+                            } else if (memFunction.contains(metric.getName())) {
+                                format = KruizeConstants.JSONKeys.BYTES;
+                            }
+                            LOGGER.info("{} - {} - {} - {}", metric.getName(), aggregationFunctionsEntry.getKey(), promQL, format);
+                            promQL = promQL
+                                    .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                                    .replace(AnalyzerConstants.WORKLOAD_NAME_VARIABLE, workloadName)
+                                    .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()));
+                            LOGGER.info(promQL);
+                            String podMetricsUrl;
+                            try {
+                                podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
+                                        dataSourceInfo.getUrl(),
+                                        URLEncoder.encode(promQL, CHARACTER_ENCODING),
+                                        interval_start_time_epoc,
+                                        interval_end_time_epoc,
+                                        measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                                LOGGER.info(podMetricsUrl);
+                                JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                                JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+                                JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+                                // Process fetched metrics
+                                if (null != resultArray && !resultArray.isEmpty()) {
+                                    resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
+                                                    KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
+                                            .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
+                                                    .DataSourceQueryJSONKeys.VALUES);
+                                    sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+
+                                    // Iterate over fetched metrics
+                                    Timestamp sTime = new Timestamp(interval_start_time_epoc);
+                                    for (JsonElement element : resultArray) {
+                                        JsonArray valueArray = element.getAsJsonArray();
+                                        long epochTime = valueArray.get(0).getAsLong();
+                                        double value = valueArray.get(1).getAsDouble();
+                                        String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                                        Date date = sdf.parse(timestamp);
+                                        Timestamp eTime = new Timestamp(date.getTime());
+
+                                        // Prepare interval results
+                                        if (containerDataResults.containsKey(eTime)) {
+                                            intervalResults = containerDataResults.get(eTime);
+                                            resMap = intervalResults.getMetricResultsMap();
+                                        } else {
+                                            intervalResults = new IntervalResults();
+                                            resMap = new HashMap<>();
+                                        }
+                                        if (resMap.containsKey(AnalyzerConstants.MetricName.valueOf(metric.getName()))) {
+                                            metricResults = resMap.get(AnalyzerConstants.MetricName.valueOf(metric.getName()));
+                                            metricAggregationInfoResults = metricResults.getAggregationInfoResult();
+                                        } else {
+                                            metricResults = new MetricResults();
+                                            metricAggregationInfoResults = new MetricAggregationInfoResults();
+                                        }
+                                        Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + methodName.substring(0, 1).toUpperCase() + methodName.substring(1), Double.class);
+                                        method.invoke(metricAggregationInfoResults, value);
+                                        metricAggregationInfoResults.setFormat(format);
+                                        metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+                                        metricResults.setName(String.valueOf(metric.getName()));
+                                        metricResults.setFormat(format);
+                                        resMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                                        intervalResults.setMetricResultsMap(resMap);
+                                        intervalResults.setIntervalStartTime(sTime);  //Todo this will change
+                                        intervalResults.setIntervalEndTime(eTime);
+                                        intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
+                                                / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
+                                                * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
+                                        containerDataResults.put(eTime, intervalResults);
+                                        sTime = eTime;
+                                    }
+                                }
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
+
+                        }
+                    }
+
+
                     // Iterate over metrics and aggregation methods
-                    for (Map.Entry<AnalyzerConstants.MetricName, String> metricEntry : promQls.entrySet()) {
+                    /*for (Map.Entry<AnalyzerConstants.MetricName, String> metricEntry : promQls.entrySet()) {
                         for (String methodName : aggregationMethods) {
                             String promQL = null;
                             String format = null;
@@ -1597,7 +1697,7 @@ public class RecommendationEngine {
                                 }
                             }
                         }
-                    }
+                    }*/
                     containerData.setResults(containerDataResults);
                     if (!containerDataResults.isEmpty())
                         setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalid date is set if experiment having two container with different last seen date

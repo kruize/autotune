@@ -63,6 +63,9 @@ public class AnalyzerConstants {
     public static final String NONE = "none";
     public static final String POD_VARIABLE = "$POD$";
     public static final String NAMESPACE_VARIABLE = "$NAMESPACE$";
+    public static final String WORKLOAD_NAME_VARIABLE = "$WORKLOAD_NAME$";
+    public static final String CONTAINER_VARIABLE = "$CONTAINER_NAME$";
+    public static final String MEASUREMENT_DURATION_IN_MIN_VARAIBLE = "$MEASUREMENT_DURATION_IN_MIN$";
     public static final String API_VERSION = "apiVersion";
     public static final String KIND = "kind";
     public static final String RESOURCE_VERSION = "resourceVersion";

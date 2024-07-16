@@ -82,6 +82,10 @@ public final class SloInfo {
         return new ArrayList<>(metrics);
     }
 
+    public ArrayList<Metric> getMetrics() {
+        return metrics;
+    }
+
     @Override
     public String toString() {
         return "SloInfo{" +
