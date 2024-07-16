@@ -695,7 +695,7 @@ public class RecommendationEngine {
             // Get the Recommendation Items
             RecommendationConfigItem recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
             RecommendationConfigItem recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
-            RecommendationConfigItem recommendationGpuRequest = model.getGpuRequestRecommendation(filteredResultsMap, notifications);
+            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationGpuRequest = model.getGpuRequestRecommendation(filteredResultsMap, notifications);
 
             // Get the Recommendation Items
             // Calling requests on limits as we are maintaining limits and requests as same
@@ -726,7 +726,8 @@ public class RecommendationEngine {
                     internalMapToPopulate,
                     numPods,
                     cpuThreshold,
-                    memoryThreshold
+                    memoryThreshold,
+                    recommendationGpuRequest
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -755,7 +756,8 @@ public class RecommendationEngine {
                                            MappedRecommendationForModel recommendationModel,
                                            ArrayList<RecommendationNotification> notifications,
                                            HashMap<String, RecommendationConfigItem> internalMapToPopulate,
-                                           int numPods, double cpuThreshold, double memoryThreshold) {
+                                           int numPods, double cpuThreshold, double memoryThreshold,
+                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> gpuMap) {
         // Check for cpu & memory Thresholds (Duplicate check if the caller is generateRecommendations)
         String recommendationTerm = termEntry.getKey();
         double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
@@ -1339,6 +1341,13 @@ public class RecommendationEngine {
             config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
         }
 
+        // check if gpu map is not empty and add to limits map
+        if (null != gpuMap) {
+            if (!gpuMap.isEmpty()) {
+                limitsMap.putAll(gpuMap);
+            }
+        }
+
         // Set Limits Map
         if (!limitsMap.isEmpty()) {
             config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
@@ -1543,8 +1552,7 @@ public class RecommendationEngine {
                                 String podMetricsUrl;
                                 try {
                                     podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
-//                                            dataSourceInfo.getUrl(),
-                                            "http://promik-service.promik.svc.cluster.local:9091",
+                                            dataSourceInfo.getUrl(),
                                             URLEncoder.encode(promQL, CHARACTER_ENCODING),
                                             interval_start_time_epoc,
                                             interval_end_time_epoc,

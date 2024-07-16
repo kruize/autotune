@@ -230,15 +230,20 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
     }
 
     @Override
-    public RecommendationConfigItem getGpuRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+    public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getGpuRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         double totalCoreMax = 0.0;
         double totalMemoryMax = 0.0;
+
+        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> returnMap = new HashMap<>();
+
+        boolean isGpuWorkload = false;
 
 
         for (Map.Entry<Timestamp, IntervalResults> entry : filteredResultsMap.entrySet()) {
             IntervalResults intervalResults = entry.getValue();
 
             if (intervalResults.getGpuMetricResultHashMap() != null) {
+                isGpuWorkload = true;
                 for (Map.Entry<AnalyzerConstants.MetricName, GpuMetricResult> gpuEntry : intervalResults.getGpuMetricResultHashMap().entrySet()) {
 
                     GpuMetricResult gpuMetricResult = gpuEntry.getValue();
@@ -265,11 +270,29 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
             }
         }
 
+        if (!isGpuWorkload) {
+            return null;
+        }
+
         double coreFraction = totalCoreMax / 100;
         double memoryFraction = totalMemoryMax / 100;
         GpuMetaDataService gpuMetaDataService = GpuMetaDataService.getInstance();
         GpuProfile gpuProfile = gpuMetaDataService.getGpuProfile("A100", coreFraction, memoryFraction);
+        RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(1.0, "cores");
+        if (gpuProfile.getProfileName().equalsIgnoreCase("1g.10gb")) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_1_CORE_10GB, recommendationConfigItem);
+        } else if (gpuProfile.getProfileName().equalsIgnoreCase("1g.20gb")) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_1_CORE_20GB, recommendationConfigItem);
+        } else if (gpuProfile.getProfileName().equalsIgnoreCase("2g.20gb")) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_2_CORES_20GB, recommendationConfigItem);
+        } else if (gpuProfile.getProfileName().equalsIgnoreCase("3g.40gb")) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_3_CORES_40GB, recommendationConfigItem);
+        } else if (gpuProfile.getProfileName().equalsIgnoreCase("4g.40gb")) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_4_CORES_40GB, recommendationConfigItem);
+        } else if (gpuProfile.getProfileName().equalsIgnoreCase("7g.80gb")) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_7_CORES_80GB, recommendationConfigItem);
+        }
         System.out.println(gpuProfile.getProfileName());
-        return null;
+        return returnMap;
     }
 }
