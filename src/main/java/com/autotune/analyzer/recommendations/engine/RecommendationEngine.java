@@ -1692,26 +1692,24 @@ public class RecommendationEngine {
                     for (Metric metricEntry : metricList) {
                         HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
                         for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry: aggregationFunctions.entrySet()) {
-                            String promQL = null;
-                            String format = null;
-                            // Determine promQL and format based on metric type
                             String metricQuery = aggregationFunctionsEntry.getValue().getQuery();
-                            if (Objects.equals(metricEntry.getName(), AnalyzerConstants.MetricName.cpuUsage.toString())) {
-                                promQL = String.format(metricQuery, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                            String promQL = metricQuery;
+                            String format = null;
+
+                            // Determine format based on metric type - Todo move this metric profile
+                            List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
+                            List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString());
+                            if (cpuFunction.contains(metricEntry.getName())) {
                                 format = KruizeConstants.JSONKeys.CORES;
-                            } else if (Objects.equals(metricEntry.getName(), AnalyzerConstants.MetricName.cpuThrottle.toString())) {
-                                promQL = String.format(metricQuery, namespace, containerName, measurementDurationMinutesInDouble.intValue());
-                                format = KruizeConstants.JSONKeys.CORES;
-                            } else if (Objects.equals(metricEntry.getName(), AnalyzerConstants.MetricName.cpuLimit.toString()) || Objects.equals(metricEntry.getName(), AnalyzerConstants.MetricName.cpuRequest.toString())) {
-                                promQL = String.format(metricQuery, namespace, containerName);
-                                format = KruizeConstants.JSONKeys.CORES;
-                            } else if (Objects.equals(metricEntry.getName(), AnalyzerConstants.MetricName.memoryUsage.toString()) || Objects.equals(metricEntry.getName(), AnalyzerConstants.MetricName.memoryRSS.toString())) {
-                                promQL = String.format(metricQuery, namespace, containerName, measurementDurationMinutesInDouble.intValue());
-                                format = KruizeConstants.JSONKeys.BYTES;
-                            } else if (Objects.equals(metricEntry.getName(), AnalyzerConstants.MetricName.memoryLimit.toString()) || Objects.equals(metricEntry.getName(), AnalyzerConstants.MetricName.memoryRequest.toString())) {
-                                promQL = String.format(metricQuery, namespace, containerName);
+                            } else if (memFunction.contains(metricEntry.getName())) {
                                 format = KruizeConstants.JSONKeys.BYTES;
                             }
+
+                            promQL = promQL
+                                    .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                                    .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()));
+
                             // If promQL is determined, fetch metrics from the datasource
                             if (promQL != null) {
                                 LOGGER.info(promQL);
