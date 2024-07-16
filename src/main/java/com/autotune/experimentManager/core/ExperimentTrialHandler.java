@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.experimentManager.core;
 
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.common.trials.TrialDetails;
@@ -98,6 +100,7 @@ public class ExperimentTrialHandler {
                     new JSONObject(
                             new GsonBuilder()
                                     .setExclusionStrategies(new KruizeJSONExclusionStrategy())
+                                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                                     .create()
                                     .toJson(experimentTrial.getTrialInfo())
                     )

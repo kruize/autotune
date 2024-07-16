@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.serviceObjects.ListSupportedK8sObjectsSO;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -57,6 +58,7 @@ public class ListSupportedK8sObjects extends HttpServlet {
                 .setPrettyPrinting()
                 .enableComplexMapKeySerialization()
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                 .create();
         // Convert the Service object to JSON
         responseGSONString = gsonObj.toJson(listSupportedK8sObjectsSO);

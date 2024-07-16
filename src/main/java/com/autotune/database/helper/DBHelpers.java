@@ -16,6 +16,7 @@
 
 package com.autotune.database.helper;
 
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
@@ -302,6 +303,7 @@ public class DBHelpers {
                         .enableComplexMapKeySerialization()
                         .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                         .create();
                 try {
                     kruizeResultsEntry = new KruizeResultsEntry();
@@ -409,6 +411,7 @@ public class DBHelpers {
                         .enableComplexMapKeySerialization()
                         .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                         .create();
                 try {
                     ListRecommendationsAPIObject listRecommendationsAPIObject = getListRecommendationAPIObjectForDB(
@@ -486,6 +489,7 @@ public class DBHelpers {
                         .enableComplexMapKeySerialization()
                         .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                         .create();
                 List<UpdateResultsAPIObject> updateResultsAPIObjects = new ArrayList<>();
                 for (KruizeResultsEntry kruizeResultsEntry : kruizeResultsEntries) {
@@ -555,6 +559,7 @@ public class DBHelpers {
                         .enableComplexMapKeySerialization()
                         .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                         .create();
                 List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList = new ArrayList<>();
                 for (KruizeRecommendationEntry kruizeRecommendationEntry : kruizeRecommendationEntryList) {
