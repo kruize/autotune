@@ -364,6 +364,7 @@ public class RecommendationEngine {
 
     private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
         Timestamp monitoringEndTime = namespaceData.getResults().keySet().stream().max(Timestamp::compareTo).get();
+        LOGGER.info("Monitoring End Time: {}", monitoringEndTime);
         NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
         if (null == namespaceRecommendations) {
             namespaceRecommendations = new NamespaceRecommendations();
@@ -418,7 +419,7 @@ public class RecommendationEngine {
 
         for (AnalyzerConstants.ResourceSetting resourceSetting : AnalyzerConstants.ResourceSetting.values()) {
             for (AnalyzerConstants.RecommendationItem recommendationItem : AnalyzerConstants.RecommendationItem.values()) {
-                RecommendationConfigItem configItem = RecommendationUtils.getCurrentValue(namespaceData.getResults(), monitoringEndTime, resourceSetting, recommendationItem, notifications);
+                RecommendationConfigItem configItem = RecommendationUtils.getCurrentValueForNamespace(namespaceData.getResults(), monitoringEndTime, resourceSetting, recommendationItem, notifications);
 
                 if (null == configItem) {
                     continue;
