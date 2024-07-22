@@ -16,12 +16,22 @@ limitations under the License.
 import pytest
 import json
 import sys
+import copy
 
 sys.path.append("../../")
 
 from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
+
+mandatory_fields = [
+    ("apiVersion", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("kind", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("metadata", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("slo", ERROR_500_STATUS_CODE, ERROR_STATUS)
+]
+
 
 @pytest.mark.sanity
 def test_create_metric_profile(cluster_type):
@@ -91,4 +101,104 @@ def test_create_duplicate_metric_profile(cluster_type):
     assert data['message'] == METRIC_PROFILE_EXISTS_MSG % metric_profile_name
 
     response = delete_metric_profile(input_json_file)
+    print("delete metric profile = ", response.status_code)
+
+
+@pytest.mark.sanity
+def test_create_multiple_metric_profiles(cluster_type):
+    """
+    Test Description: This test validates the creation of multiple metric profiles using different json files
+    """
+
+    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    output_json_file = "/tmp/create_metric_profile.json"
+    temp_json_file = "/tmp/temp_profile.json"
+
+    input_json_data = json.load(open(input_json_file, 'r'))
+
+    form_kruize_url(cluster_type)
+
+    metric_profiles = []
+
+    input_metric_profile_name = input_json_data['metadata']['name']
+
+    # Create metric profile using the specified json
+    num_exps = 100
+    for i in range(num_exps):
+        json_data = copy.deepcopy(input_json_data)
+        # Modify the name for each profile
+        metric_profile_name = f"{input_metric_profile_name}_{i}"
+        json_data['metadata']['name'] = metric_profile_name
+
+        # Write the modified profile to a temporary file
+        with open(temp_json_file, 'w') as file:
+            json.dump(json_data, file, indent=4)
+
+        response = delete_metric_profile(temp_json_file)
+        print("delete metric profile = ", response.status_code)
+
+        response = create_metric_profile(temp_json_file)
+
+        data = response.json()
+        print(data['message'])
+
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
+
+        metric_profiles.append(copy.deepcopy(json_data))
+
+        response = delete_metric_profile(temp_json_file)
+        print("delete metric profile = ", response.status_code)
+
+    # Write the profiles to the output file
+    with open(output_json_file, 'w') as file:
+        json.dump(metric_profiles, file, indent=4)
+
+
+@pytest.mark.extended
+@pytest.mark.parametrize("field, expected_status_code, expected_status", mandatory_fields)
+def test_create_metric_profiles_mandatory_fields(cluster_type, field, expected_status_code, expected_status):
+    """
+    Test Description: This test validates the creation of metric profile by missing the mandatory fields and validating
+    the error message and status code
+    """
+
+    form_kruize_url(cluster_type)
+
+    # Create metric profile using the specified json
+    json_file = "/tmp/create_metric_profile.json"
+    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    json_data = json.load(open(input_json_file))
+
+    if field == "apiVersion":
+        json_data.pop("apiVersion", None)
+    elif field == "kind":
+        json_data.pop("kind", None)
+    elif field == "metadata":
+        json_data.pop("metadata", None)
+    elif field == "name":
+        json_data['metadata'].pop("name", None)
+    elif field == "slo":
+        json_data.pop("slo", None)
+
+    print("\n*****************************************")
+    print(json_data)
+    print("*****************************************\n")
+    data = json.dumps(json_data)
+    with open(json_file, 'w') as file:
+        file.write(data)
+
+    response = delete_metric_profile(json_file)
+    print("delete metric profile = ", response.status_code)
+    response = create_metric_profile(json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == expected_status_code, \
+        f"Mandatory field check failed for {field} actual - {response.status_code} expected - {expected_status_code}"
+    assert data['status'] == expected_status
+
+    response = delete_metric_profile(json_file)
     print("delete metric profile = ", response.status_code)
