@@ -33,6 +33,15 @@ public class RecommendationConfigItem {
 
     }
 
+    @Override
+    public String toString() {
+        return "RecommendationConfigItem{" +
+                "amount=" + amount +
+                ", format='" + format + '\'' +
+                ", errorMsg='" + errorMsg + '\'' +
+                '}';
+    }
+
     public String getErrorMsg() {
         return errorMsg;
     }

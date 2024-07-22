@@ -97,6 +97,26 @@ public class RecommendationEngine {
         return (int) Math.ceil(max_pods_cpu);
     }
 
+    private static int getNumPodsForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        LOGGER.info("SIZE OF FILTER MAP: " +  filteredResultsMap.size());
+        Double max_pods_cpu = filteredResultsMap.values()
+                .stream()
+                .map(e -> {
+                    Optional<MetricResults> cpuUsageResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceCpuUsage));
+                    double cpuUsageMax = cpuUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+                    double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    double numPods = 0;
+
+                    if (0 != cpuUsageAvg) {
+                        numPods = (int) Math.ceil(cpuUsageMax / cpuUsageAvg);
+                    }
+                    return numPods;
+                })
+                .max(Double::compareTo).get();
+
+        return (int) Math.ceil(max_pods_cpu);
+    }
+
     /**
      * Populates the given map with Prometheus Query Language (PromQL) queries for various metrics.
      *
@@ -344,6 +364,7 @@ public class RecommendationEngine {
             NamespaceData namespaceData = k8sObject.getNamespaceData();
             LOGGER.info("Generating recommendations for namespace: {}", namespaceName);
             generateRecommendationsBasedOnNamespace(namespaceData, kruizeObject);
+            LOGGER.info("NAMESPACE LEVEL RECOMMENDATIONS: " + namespaceData.getNamespaceRecommendations().toString());
             if (!k8sObject.getContainerDataMap().isEmpty()) {
                 for (String containerName : k8sObject.getContainerDataMap().keySet()) {
                     ContainerData containerData = k8sObject.getContainerDataMap().get(containerName);
@@ -364,7 +385,6 @@ public class RecommendationEngine {
 
     private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
         Timestamp monitoringEndTime = namespaceData.getResults().keySet().stream().max(Timestamp::compareTo).get();
-        LOGGER.info("Monitoring End Time: {}", monitoringEndTime);
         NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
         if (null == namespaceRecommendations) {
             namespaceRecommendations = new NamespaceRecommendations();
@@ -405,7 +425,6 @@ public class RecommendationEngine {
         namespaceRecommendations.setNotificationMap(recommendationLevelNM);
         namespaceRecommendations.setData(timestampBasedRecommendationMap);
         namespaceData.setNamespaceRecommendations(namespaceRecommendations);
-//        LOGGER.info(namespaceData.toString());
     }
 
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentNamespaceConfigData(NamespaceData namespaceData, Timestamp monitoringEndTime, MappedRecommendationForTimestamp timestampRecommendation) {
@@ -486,22 +505,20 @@ public class RecommendationEngine {
     }
 
     private boolean generateNamespaceRecommendationsBasedOnTerms(NamespaceData namespaceData, KruizeObject kruizeObject, Timestamp monitoringEndTime, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig, MappedRecommendationForTimestamp timestampRecommendation) {
-
         boolean recommendationAvailable = false;
         double measurementDuration = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
         for (Map.Entry<String, Terms> termsEntry : kruizeObject.getTerms().entrySet()) {
             String recommendationTerm = termsEntry.getKey();
             Terms terms = termsEntry.getValue();
-            LOGGER.debug("Namespace RecommendationTerm = {}", recommendationTerm);
+            LOGGER.info("Namespace RecommendationTerm = {}", recommendationTerm);
             int duration = termsEntry.getValue().getDays();
             Timestamp monitoringStartTime = Terms.getMonitoringStartTime(monitoringEndTime, duration);
-            LOGGER.debug("Namespace monitoringStartTime = {}", monitoringStartTime);
+            LOGGER.info("Namespace monitoringStartTime = {}", monitoringStartTime);
 
             TermRecommendations mappedRecommendationForTerm = new TermRecommendations();
             // Check if there is min data available for the term
             if (!Terms.checkIfMinDataAvailableForTermNamespace(namespaceData, terms, monitoringEndTime, measurementDuration)) {
-                RecommendationNotification recommendationNotification = new RecommendationNotification(
-                        RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
                 mappedRecommendationForTerm.addNotification(recommendationNotification);
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
@@ -568,24 +585,7 @@ public class RecommendationEngine {
                     mappedRecommendationForTerm.addNotification(recommendationNotification);
                 }
                 mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
-                // generate plots when minimum data is available for the term
-                if (KruizeDeploymentInfo.plots) {
-                    if (null != monitoringStartTime) {
-                        Timer.Sample timerBoxPlots = null;
-                        String status = "success";   // TODO avoid this constant at multiple place
-                        try {
-                            timerBoxPlots = Timer.start(MetricsConfig.meterRegistry());
-                            mappedRecommendationForTerm.setPlots(new PlotManager(namespaceData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots());
-                        } catch (Exception e) {
-                            status = String.format("Box plots Failed due to - %s", e.getMessage());
-                        } finally {
-                            if (timerBoxPlots != null) {
-                                MetricsConfig.timerBoxPlots = MetricsConfig.timerBBoxPlots.tag("status", status).register(MetricsConfig.meterRegistry());
-                                timerBoxPlots.stop(MetricsConfig.timerBoxPlots);
-                            }
-                        }
-                    }
-                }
+
             }
             Terms.setDurationBasedOnTermNamespace(namespaceData, mappedRecommendationForTerm, recommendationTerm);
             timestampRecommendation.setRecommendationForTermHashMap(recommendationTerm, mappedRecommendationForTerm);
@@ -596,7 +596,6 @@ public class RecommendationEngine {
     }
 
     private MappedRecommendationForModel generateNamespaceRecommendationBasedOnModel(Timestamp monitoringStartTime, RecommendationModel model, NamespaceData namespaceData, Timestamp monitoringEndTime, RecommendationSettings recommendationSettings, HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfigMap, Map.Entry<String, Terms> termEntry) {
-
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
         // Set CPU threshold to default
         double cpuThreshold = DEFAULT_CPU_THRESHOLD;
@@ -630,6 +629,7 @@ public class RecommendationEngine {
                 currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
             }
         }
+        LOGGER.info("CURRENT REQ CPU " + currentCPURequest + "MEM: " + currentMemRequest);
         if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
             if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
@@ -647,7 +647,7 @@ public class RecommendationEngine {
                     .collect((Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)));
 
             // Set number of pods
-            int numPods = getNumPods(filteredResultsMap);
+            int numPods = getNumPodsForNamespace(filteredResultsMap);
 
             mappedRecommendationForModel.setPodsCount(numPods);
 
@@ -655,8 +655,8 @@ public class RecommendationEngine {
             ArrayList<RecommendationNotification> notifications = new ArrayList<>();
 
             // Get the Recommendation Items
-            RecommendationConfigItem recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
-            RecommendationConfigItem recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
+            RecommendationConfigItem recommendationCpuRequest = model.getCPURequestRecommendationForNamespace(filteredResultsMap, notifications);
+            RecommendationConfigItem recommendationMemRequest = model.getMemoryRequestRecommendationForNamespace(filteredResultsMap, notifications);
 
             // Get the Recommendation Items
             // Calling requests on limits as we are maintaining limits and requests as same
@@ -677,8 +677,6 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, recommendationCpuLimits);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
-
-
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
                     termEntry,

@@ -136,7 +136,6 @@ public class GenerateRecommendations extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_CREATED);
         List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();              //TODO: Executing two identical SQL SELECT queries against the database instead of just one is causing a performance issue. set 'showSQL' flag is set to true to debug.
         try {
-            //LOGGER.debug(ko.getKubernetes_objects().toString());
             ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
                     convertKruizeObjectToListRecommendationSO(
                             ko,

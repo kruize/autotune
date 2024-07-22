@@ -7,13 +7,16 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
 import com.autotune.utils.KruizeConstants;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.*;
 
 public class RecommendationUtils {
+    private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(RecommendationUtils.class);
     public static RecommendationConfigItem getCurrentValueForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap,
                                                            Timestamp timestampToExtract,
                                                            AnalyzerConstants.ResourceSetting resourceSetting,
@@ -42,7 +45,7 @@ public class RecommendationUtils {
             if (null != metricName) {
                 if (intervalResults.getMetricResultsMap().containsKey(metricName)) {
                     Optional<MetricResults> metricResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(metricName));
-                    currentValue = metricResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(null);
+                    currentValue = metricResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(null);
                     format = metricResults.map(m -> m.getAggregationInfoResult().getFormat()).orElse(null);
                 }
                 if (null == currentValue) {
