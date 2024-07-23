@@ -21,12 +21,12 @@ public class DataSourceQueries {
         MAX_DATE("last_over_time(container_cpu_usage_seconds_total{container=\"%s\",namespace=\"%s\"}[15d:]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!='',workload=\"%s\",workload_type=\"%s\"}[15d])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=''}[15d]))"),
         NAMESPACE_CPU_USAGE("%s_over_time(sum by(namespace) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace=\"%s\", container!='', container!='POD', pod!=''})[%sm:])"),
         NAMESPACE_CPU_THROTTLE("%s_over_time(sum by(namespace) (rate(container_cpu_cfs_throttled_seconds_total{namespace=\"%s\", container!='', container!='POD', pod!=''}[5m]))[%sm:])"),
-        NAMESPACE_CPU_LIMIT("%s by(namespace) (kube_pod_container_resource_limits{namespace=\"%s\", container!='', container!='POD', pod!='', resource='cpu', unit='core'})"),
-        NAMESPACE_CPU_REQUEST("%s by (namespace) (kube_pod_container_resource_requests{namespace=\"%s\", container!='', container!='POD', pod!='', resource='cpu', unit='core'})"),
+        NAMESPACE_CPU_LIMIT("%s by (namespace) (kube_resourcequota{namespace=\"%s\", resource=\"limits.cpu\"})"),
+        NAMESPACE_CPU_REQUEST("%s by (namespace) (kube_resourcequota{namespace=\"%s\", resource=\"requests.cpu\"})"),
         NAMESPACE_MEMORY_USAGE("%s_over_time(sum by(namespace) (container_memory_working_set_bytes{namespace=\"%s\", container!='', container!='POD', pod!=''})[%sm:])"),
         NAMESPACE_MEMORY_RSS("%s_over_time(sum by(namespace) (container_memory_rss{namespace=\"%s\", container!='', container!='POD', pod!=''})[%sm:])"),
-        NAMESPACE_MEMORY_LIMIT("%s by(namespace) (kube_pod_container_resource_limits{namespace=\"%s\", container!='', container!='POD', pod!='', resource='memory', unit='byte'})"),
-        NAMESPACE_MEMORY_REQUEST("%s by (namespace) (kube_pod_container_resource_requests{namespace=\"%s\", container!='', container!='POD', pod!='', resource='memory', unit='byte'})"),
+        NAMESPACE_MEMORY_LIMIT("%s by(namespace) (kube_resourcequota{namespace=\"%s\", resource=\"limits.memory\"})"),
+        NAMESPACE_MEMORY_REQUEST("%s by (namespace) (kube_resourcequota{namespace=\"%s\", resource=\"requests.memory\"})"),
         NAMESPACE_MAX_DATE("max(container_cpu_usage_seconds_total{namespace=\"%s\"} > 0)");
         private final String query;
 
