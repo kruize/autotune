@@ -87,4 +87,8 @@ public class KruizeSupportedTypes
 	public static final Set<String> QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
 			"experiment_name", "results", "recommendations", "latest"
 	));
+
+	public static final Set<String> LIST_METRIC_PROFILES_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
+			"name", "verbose"
+	));
 }
