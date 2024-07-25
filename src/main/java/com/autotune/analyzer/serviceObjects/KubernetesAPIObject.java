@@ -28,6 +28,7 @@ public class KubernetesAPIObject {
     private String type;
     private String name;
     private String namespace;
+    @SerializedName(KruizeConstants.JSONKeys.NAMESPACES)
     private NamespaceAPIObject namespaceAPIObject;
     @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
     private List<ContainerAPIObject> containerAPIObjects;

@@ -2,6 +2,8 @@ package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
@@ -10,6 +12,7 @@ import java.util.List;
  */
 public class NamespaceAPIObject {
     private String namespace_name;
+    @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private NamespaceRecommendations namespaceRecommendations;
     private List<Metric> metrics;
 
@@ -37,8 +40,8 @@ public class NamespaceAPIObject {
 
     @Override
     public String toString() {
-        return "namespace-recommendations{" +
-                ", namespace_name='" + namespace_name + '\'' +
+        return "NamespaceAPIObject{" +
+                "namespace_name='" + namespace_name + '\'' +
                 ", namespaceRecommendations=" + namespaceRecommendations +
                 ", metrics=" + metrics +
                 '}';
