@@ -408,3 +408,32 @@ def delete_metric_profile(input_json_file, invalid_header=False):
     print(response)
     print("Response status code = ", response.status_code)
     return response
+
+
+# Description: This function lists the metric profile from Kruize Autotune using GET listMetricProfiles API
+# Input Parameters: metric profile name and verbose - flag indicating granularity of data to be listed
+def list_metric_profiles(name=None, verbose=None, logging=True):
+    print("\nListing the metric profiles...")
+
+    query_params = {}
+
+    if name is not None:
+        query_params['name'] = name
+    if verbose is not None:
+        query_params['verbose'] = verbose
+
+    query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
+
+    url = URL + "/listMetricProfiles"
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
+    print("PARAMS = ", query_params)
+    response = requests.get(url)
+
+    print("Response status code = ", response.status_code)
+    if logging:
+        print("\n************************************************************")
+        print(response.text)
+        print("\n************************************************************")
+    return response

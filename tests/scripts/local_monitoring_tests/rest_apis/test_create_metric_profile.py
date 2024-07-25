@@ -23,6 +23,7 @@ sys.path.append("../../")
 from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
+from helpers.list_metric_profiles_validate import *
 
 mandatory_fields = [
     ("apiVersion", ERROR_500_STATUS_CODE, ERROR_STATUS),
@@ -58,6 +59,15 @@ def test_create_metric_profile(cluster_type):
     input_json = json.loads(json_file.read())
     metric_profile_name = input_json['metadata']['name']
     assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
+
+    response = list_metric_profiles(name=metric_profile_name)
+    metric_profile_json = response.json()
+
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    errorMsg = validate_list_metric_profiles_json(metric_profile_json, list_metric_profiles_schema)
+    assert errorMsg == ""
 
     response = delete_metric_profile(input_json_file)
     print("delete metric profile = ", response.status_code)
