@@ -60,6 +60,9 @@ LIST_METADATA_MISSING_DATASOURCE = "datasource is mandatory"
 IMPORT_METADATA_DATASOURCE_CONNECTION_FAILURE_MSG = "Metadata cannot be imported, datasource connection refused or timed out"
 CREATE_METRIC_PROFILE_SUCCESS_MSG = "Metric Profile : %s created successfully. View Metric Profiles at /listMetricProfiles"
 METRIC_PROFILE_EXISTS_MSG = "Validation failed: Metric Profile already exists: %s"
+METRIC_PROFILE_NOT_FOUND_MSG = "No metric profiles found!"
+INVALID_LIST_METRIC_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are invalid"
+LIST_METRIC_PROFILES_INVALID_NAME = "Given metric profile name - %s is not valid"
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
