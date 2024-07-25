@@ -164,6 +164,14 @@ public class MetricProfileService extends HttpServlet {
                                 HttpServletResponse.SC_BAD_REQUEST,
                                 String.format(AnalyzerErrorConstants.APIErrors.ListMetricProfileAPI.INVALID_METRIC_PROFILE_NAME_MSG, metricProfileName)
                         );
+                    } else if (null == metricProfileName && metricProfilesMap.isEmpty()) {
+                        error = true;
+                        sendErrorResponse(
+                                response,
+                                new Exception(AnalyzerErrorConstants.APIErrors.ListMetricProfileAPI.NO_METRIC_PROFILES_EXCPTN),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                AnalyzerErrorConstants.APIErrors.ListMetricProfileAPI.NO_METRIC_PROFILES
+                        );
                     }
 
                     if (!error) {
