@@ -60,7 +60,7 @@ list_metric_profiles_schema = {
                                     "type": "string"
                                 },
                                 "aggregation_functions": {
-                                    "type": "array",
+                                    "type": "object",
                                     "items": {
                                         "type": "object",
                                         "patternProperties": {
@@ -84,9 +84,9 @@ list_metric_profiles_schema = {
                         },
                         "required": ["name", "datasource", "value_type", "kubernetes_object", "aggregation_functions"]
                     }
-                }
-            },
-            "required": ["sloClass", "objective_function", "direction", "function_variables"]
+                },
+                "required": ["sloClass", "objective_function", "direction", "function_variables"]
+            }
         }
     },
     "required": ["apiVersion", "kind", "metadata", "profile_version", "k8s_type", "slo"]

@@ -156,6 +156,15 @@ def test_create_multiple_metric_profiles(cluster_type):
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
 
+        response = list_metric_profiles(name=metric_profile_name)
+        metric_profile_json = response.json()
+
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+
+        # Validate the json against the json schema
+        errorMsg = validate_list_metric_profiles_json(metric_profile_json, list_metric_profiles_schema)
+        assert errorMsg == ""
+
         metric_profiles.append(copy.deepcopy(json_data))
 
         response = delete_metric_profile(temp_json_file)
