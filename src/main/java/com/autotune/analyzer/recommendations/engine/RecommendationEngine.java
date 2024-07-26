@@ -1466,6 +1466,8 @@ public class RecommendationEngine {
             // Iterate over Kubernetes objects
             for (K8sObject k8sObject : kubernetes_objects) {
                 String namespace = k8sObject.getNamespace();
+                String workloadType = k8sObject.getType();
+                String workload = k8sObject.getName();
                 HashMap<String, ContainerData> containerDataMap = k8sObject.getContainerDataMap();
                 // Iterate over containers
                 for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
@@ -1475,7 +1477,7 @@ public class RecommendationEngine {
                         LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
                         String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
                                 dataSourceInfo.getUrl(),
-                                URLEncoder.encode(String.format(PromQLDataSourceQueries.MAX_DATE, containerName, namespace), CHARACTER_ENCODING)
+                                URLEncoder.encode(String.format(PromQLDataSourceQueries.MAX_DATE, containerName, namespace, workload, workloadType), CHARACTER_ENCODING)
                         );
                         LOGGER.info(dateMetricsUrl);
                         JSONObject genericJsonObject = new GenericRestApiClient(dateMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
@@ -1519,27 +1521,27 @@ public class RecommendationEngine {
                                 String secondMethodName = methodName;
                                 if (secondMethodName.equals(KruizeConstants.JSONKeys.SUM))
                                     secondMethodName = KruizeConstants.JSONKeys.AVG;
-                                promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, workload, workloadType, measurementDurationMinutesInDouble.intValue());
                                 format = KruizeConstants.JSONKeys.CORES;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuThrottle) {
-                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, workload, workloadType, measurementDurationMinutesInDouble.intValue());
                                 format = KruizeConstants.JSONKeys.CORES;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.cpuRequest) {
-                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
+                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, workload, workloadType);
                                 format = KruizeConstants.JSONKeys.CORES;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryUsage || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRSS) {
                                 String secondMethodName = methodName;
                                 if (secondMethodName.equals(KruizeConstants.JSONKeys.SUM))
                                     secondMethodName = KruizeConstants.JSONKeys.AVG;
-                                promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, workload, workloadType, measurementDurationMinutesInDouble.intValue());
                                 format = KruizeConstants.JSONKeys.BYTES;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRequest) {
-                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
+                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, workload, workloadType);
                                 format = KruizeConstants.JSONKeys.BYTES;
                             }
                             // If promQL is determined, fetch metrics from the datasource
                             if (promQL != null) {
-                                LOGGER.info(promQL);
+                                LOGGER.info("{}\n", promQL);
                                 String podMetricsUrl;
                                 try {
                                     podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
@@ -1550,6 +1552,7 @@ public class RecommendationEngine {
                                             measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                                     LOGGER.info(podMetricsUrl);
                                     JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                                    LOGGER.debug("genericJsonObject : {}", genericJsonObject);
                                     JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                                     JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
                                     // Process fetched metrics
@@ -1561,7 +1564,7 @@ public class RecommendationEngine {
                                         sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
 
                                         // Iterate over fetched metrics
-                                        Timestamp sTime = new Timestamp(interval_start_time_epoc);
+                                        Timestamp sTime = new Timestamp(interval_start_time_epoc * 1000);
                                         for (JsonElement element : resultArray) {
                                             JsonArray valueArray = element.getAsJsonArray();
                                             long epochTime = valueArray.get(0).getAsLong();
@@ -1603,6 +1606,7 @@ public class RecommendationEngine {
                                         }
                                     }
                                 } catch (Exception e) {
+                                    LOGGER.error("Exception occurred while fetching data from datasource: {}", e.getMessage());
                                     throw new RuntimeException(e);
                                 }
                             }

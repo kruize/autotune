@@ -50,7 +50,7 @@ public class KruizeConstants {
     }
 
     public static class APIMessages {
-        public static final String MAX_DAY = "maxDay : %s";
+        public static final String MAX_DAY = "maxDay : {}";
         public static final String SUCCESS = "success";
         public static final String FAILURE = "failure";
         public static final String GET = "get";
@@ -658,7 +658,7 @@ public class KruizeConstants {
                 public static final int MEDIUM_TERM_DURATION_DAYS_THRESHOLD = 2;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
                 public static final int LONG_TERM_DURATION_DAYS_THRESHOLD = 8;
-                public static final int FIXED_TERM_DURATION_DAYS = 1;       // TODO: temporarily set as 1 day, need to update this after the POC
+                public static final int FIXED_TERM_DURATION_DAYS = 15;       // TODO: temporarily set as 15 days, need to update this after the POC
                 public static final double FIXED_TERM_DURATION_DAYS_THRESHOLD = ((double) 1 / (24 * 60)); // TODO: temporarily set as 1 min, need to update this after the POC
 
                 private DurationAmount() {

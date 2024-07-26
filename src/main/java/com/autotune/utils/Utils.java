@@ -241,6 +241,7 @@ public class Utils {
                 return convertedDate;
 
             } catch (Exception e) {
+                LOGGER.error("Exception occurred while parsing date: {} : {}", date, e.getMessage());
                 return null;
             }
         }
