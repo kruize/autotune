@@ -388,6 +388,21 @@ public class ExperimentDBService {
         }
     }
 
+    public void loadMetricProfileFromDBByName(Map<String, PerformanceProfile> metricProfileMap, String metricProfileName) throws Exception {
+       List<KruizeMetricProfileEntry> entries = experimentDAO.loadMetricProfileByName(metricProfileName);
+        if (null != entries && !entries.isEmpty()) {
+                List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters
+                                .convertMetricProfileEntryToMetricProfileObject(entries);
+                if (!performanceProfiles.isEmpty()) {
+                        for (PerformanceProfile performanceProfile : performanceProfiles) {
+                               if (null != performanceProfile) {
+                                       PerformanceProfileUtil.addMetricProfile(metricProfileMap, performanceProfile);
+                               }
+                       }
+               }
+       }
+    }
+
     public void loadAllExperimentsAndRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
 
         loadAllExperiments(mainKruizeExperimentMap);

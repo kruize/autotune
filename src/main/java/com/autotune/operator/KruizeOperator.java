@@ -40,6 +40,8 @@ import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl
 import com.autotune.common.variables.Variables;
 import com.autotune.utils.EventLogger;
 import com.autotune.utils.KubeEventLogger;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import io.fabric8.kubernetes.api.model.Container;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
@@ -450,6 +452,40 @@ public class KruizeOperator {
         }
         return performanceProfile.getName();
     }
+
+    public static String setDefaultMetricProfile(SloInfo sloInfo, String mode, String targetCluster) {
+        PerformanceProfile metricProfile = null;
+        try {
+            String apiVersion = AnalyzerConstants.PerformanceProfileConstants.DEFAULT_API_VERSION;
+            String kind = AnalyzerConstants.PerformanceProfileConstants.DEFAULT_KIND;
+            String name = AnalyzerConstants.PerformanceProfileConstants.DEFAULT_PROFILE;
+            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectNode metadataNode = objectMapper.createObjectNode();
+            metadataNode.put("name",name);
+
+            double profile_version = AnalyzerConstants.DEFAULT_PROFILE_VERSION;
+            String k8s_type = AnalyzerConstants.DEFAULT_K8S_TYPE;
+            metricProfile = new PerformanceProfile(apiVersion, kind, metadataNode, profile_version, k8s_type, sloInfo);
+
+            if (null != metricProfile) {
+                ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddMetricProfile(PerformanceProfilesDeployment.performanceProfilesMap, metricProfile);
+                if (validationOutputData.isSuccess()) {
+                    LOGGER.info("Added metric Profile : {} into the map with version: {}",
+                            metricProfile.getName(), metricProfile.getProfile_version());
+                } else {
+                    new KubeEventLogger(Clock.systemUTC()).log("Failed", validationOutputData.getMessage(), EventLogger.Type.Warning, null, null, null, null);
+                }
+            } else {
+                new KubeEventLogger(Clock.systemUTC()).log("Failed", "Unable to create metric profile ", EventLogger.Type.Warning, null, null, null, null);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception while adding Metric profile with message: {} ", e.getMessage());
+            new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null, null, null);
+            return null;
+        }
+        return metricProfile.getName();
+    }
+
 
     /**
      * Parse KruizeLayer JSON and create matching KruizeLayer object

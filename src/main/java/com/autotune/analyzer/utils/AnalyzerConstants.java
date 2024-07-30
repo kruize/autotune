@@ -63,6 +63,8 @@ public class AnalyzerConstants {
     public static final String NONE = "none";
     public static final String POD_VARIABLE = "$POD$";
     public static final String NAMESPACE_VARIABLE = "$NAMESPACE$";
+    public static final String CONTAINER_VARIABLE = "$CONTAINER_NAME$";
+    public static final String MEASUREMENT_DURATION_IN_MIN_VARAIBLE = "$MEASUREMENT_DURATION_IN_MIN$";
     public static final String API_VERSION = "apiVersion";
     public static final String KIND = "kind";
     public static final String RESOURCE_VERSION = "resourceVersion";
@@ -461,6 +463,10 @@ public class AnalyzerConstants {
         public static final String SOURCE = "source";
         public static final String PERFORMANCE_PROFILE_PKG = "com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.";
         public static final String DEFAULT_PROFILE = "default";
+
+        //Metric profile constants
+        public static final String DEFAULT_API_VERSION = "recommender.com/v1";
+        public static final String DEFAULT_KIND = "KruizePerformanceProfile";
 
         // Perf profile names
         public static final String RESOURCE_OPT_OPENSHIFT_PROFILE = "resource-optimization-openshift";
