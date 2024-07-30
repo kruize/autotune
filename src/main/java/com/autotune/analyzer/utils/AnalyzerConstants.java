@@ -457,6 +457,7 @@ public class AnalyzerConstants {
         public static final String PERF_PROFILE_MAP = "performanceProfileMap";
         public static final String METRIC_PROFILE_MAP = "metricProfileMap";
         public static final String PERF_PROFILE_NAME = "name";
+        public static final String METRIC_PROFILE_NAME = "name";
         public static final String OBJECTIVE_FUNCTION = "objectiveFunction";
         public static final String FUNCTION_VARIABLES = "functionVariables";
         public static final String VALUE_TYPE = "valueType";
