@@ -258,6 +258,7 @@ public class KruizeConstants {
         public static final String PLOTS_DATAPOINTS = "datapoints";
         public static final String PLOTS_DATA = "plots_data";
         public static final String CONFIDENCE_LEVEL = "confidence_level";
+        public static final String NAMESPACE_RECOMMENDATIONS = "recommendations";
 
         private JSONKeys() {
         }

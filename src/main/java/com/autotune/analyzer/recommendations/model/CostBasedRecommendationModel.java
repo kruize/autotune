@@ -99,6 +99,67 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         return recommendationConfigItem;
     }
 
+    @Override
+    public RecommendationConfigItem getCPURequestRecommendationForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        boolean setNotification = true;
+        if (null == notifications) {
+            LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
+            setNotification = false;
+        }
+        RecommendationConfigItem recommendationConfigItem = null;
+        String format = "";
+        JSONArray cpuUsageList = getCPUUsageListForNamespace(filteredResultsMap);
+        // Extract 'max' values from cpuUsageList
+        List<Double> cpuMaxValues = new ArrayList<>();
+        for (int i = 0; i < cpuUsageList.length(); i++) {
+            JSONObject jsonObject = cpuUsageList.getJSONObject(i);
+            double maxValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
+            cpuMaxValues.add(maxValue);
+        }
+
+        Double cpuRequest;
+        Double cpuRequestMax = Collections.max(cpuMaxValues);
+        if (null != cpuRequestMax && CPU_ONE_CORE > cpuRequestMax) {
+            cpuRequest = cpuRequestMax;
+        } else {
+            cpuRequest = CommonUtils.percentile(COST_CPU_PERCENTILE, cpuMaxValues);
+        }
+
+        // TODO: This code below should be optimised with idle detection (0 cpu usage in recorded data) in recommendation ALGO
+        // Make sure that the recommendation cannot be null
+        // Check if the cpu request is null
+        if (null == cpuRequest) {
+            cpuRequest = CPU_ZERO;
+        }
+
+        // Set notifications only if notification object is available
+        if (setNotification) {
+            // Check for Zero CPU
+            if (CPU_ZERO.equals(cpuRequest)) {
+                // Add notification for CPU_RECORDS_ARE_ZERO
+                notifications.add(new RecommendationNotification(
+                        RecommendationConstants.RecommendationNotification.NOTICE_CPU_RECORDS_ARE_ZERO
+                ));
+                // Returning null will make sure that the map is not populated with values
+                return null;
+            }
+            // Check for IDLE CPU
+            else if (CPU_ONE_MILLICORE >= cpuRequest) {
+                // Add notification for CPU_RECORDS_ARE_IDLE
+                notifications.add(new RecommendationNotification(
+                        RecommendationConstants.RecommendationNotification.NOTICE_CPU_RECORDS_ARE_IDLE
+                ));
+                // Returning null will make sure that the map is not populated with values
+                return null;
+            }
+        }
+
+        format = getFormatValue(filteredResultsMap, AnalyzerConstants.MetricName.namespaceCpuUsage);
+
+        recommendationConfigItem = new RecommendationConfigItem(cpuRequest, format);
+        return recommendationConfigItem;
+    }
+
     public static JSONArray getCPUUsageList(Map<Timestamp, IntervalResults> filteredResultsMap) {
         JSONArray cpuRequestIntervalArray = new JSONArray();
         for (IntervalResults intervalResults : filteredResultsMap.values()) {
@@ -151,6 +212,58 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         }
         return cpuRequestIntervalArray;
     }
+
+    public static JSONArray getCPUUsageListForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        JSONArray cpuRequestIntervalArray = new JSONArray();
+        for (IntervalResults intervalResults : filteredResultsMap.values()) {
+            JSONObject cpuRequestInterval = new JSONObject();
+            Optional<MetricResults> cpuUsageResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceCpuUsage));
+            Optional<MetricResults> cpuThrottleResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceCpuThrottle));
+            double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+            double cpuUsageMax = cpuUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+            double cpuUsageMin = cpuUsageResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
+            double cpuThrottleAvg = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+            double cpuThrottleMax = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+            double cpuThrottleMin = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
+
+            double cpuRequestIntervalMax;
+            double cpuRequestIntervalMin;
+            double cpuUsagePod = 0;
+            int numPods;
+
+            // Use the Max value when available, if not use the Avg
+            double cpuUsage = (cpuUsageMax > 0) ? cpuUsageMax : cpuUsageAvg;
+            double cpuThrottle = (cpuThrottleMax > 0) ? cpuThrottleMax : cpuThrottleAvg;
+            double cpuUsageTotal = cpuUsage + cpuThrottle;
+
+            // Usage is less than 1 core, set it to the observed value.
+            if (CPU_ONE_CORE > cpuUsageTotal) {
+                cpuRequestIntervalMax = cpuUsageTotal;
+            } else {
+                // Sum/Avg should give us the number of pods
+                if (0 != cpuUsageAvg) {
+                    numPods = (int) Math.ceil(cpuUsageMax / cpuUsageAvg);
+                    if (0 < numPods) {
+                        cpuUsagePod = (cpuUsageMax + cpuThrottleMax) / numPods;
+                    }
+                }
+                cpuRequestIntervalMax = Math.max(cpuUsagePod, cpuUsageTotal);
+            }
+            double cpuMinTotal = cpuUsageMin + cpuThrottleMin;
+            // traverse over a stream of positive values and find the minimum value
+            cpuRequestIntervalMin = Stream.of(cpuUsagePod, cpuUsageTotal, cpuMinTotal)
+                    .filter(value -> value > 0.0)
+                    .min(Double::compare)
+                    .orElse(0.0);
+
+            cpuRequestInterval.put(KruizeConstants.JSONKeys.MIN, cpuRequestIntervalMin);
+            cpuRequestInterval.put(KruizeConstants.JSONKeys.MAX, cpuRequestIntervalMax);
+            LOGGER.debug("cpuRequestInterval : {}", cpuRequestInterval);
+            cpuRequestIntervalArray.put(cpuRequestInterval);
+        }
+        return cpuRequestIntervalArray;
+    }
+
     @Override
     public RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap,
                                                                    ArrayList<RecommendationNotification> notifications) {
@@ -195,6 +308,53 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         recommendationConfigItem = new RecommendationConfigItem(memRec, format);
         return recommendationConfigItem;
     }
+
+
+    public RecommendationConfigItem getMemoryRequestRecommendationForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap,
+                                                                   ArrayList<RecommendationNotification> notifications) {
+        boolean setNotification = true;
+        if (null == notifications) {
+            LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
+            setNotification = false;
+        }
+        RecommendationConfigItem recommendationConfigItem = null;
+        String format = "";
+        CostBasedRecommendationModel costBasedRecommendationModel  = new CostBasedRecommendationModel();
+        List<Double> memUsageList = new ArrayList<>();
+        for (IntervalResults intervalResults: filteredResultsMap.values()) {
+            JSONObject jsonObject = costBasedRecommendationModel.calculateMemoryUsageForNamespace(intervalResults);
+            Double memUsage = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
+            memUsageList.add(memUsage);
+        }
+
+        List<Double> spikeList = filteredResultsMap.values()
+                .stream()
+                .map(CostBasedRecommendationModel::calculateIntervalSpikeForNamespace)
+                .collect(Collectors.toList());
+
+        Double memRecUsage = calculatePercentile(memUsageList, COST_MEMORY_PERCENTILE);
+        Double memRecUsageBuf = memRecUsage + (memRecUsage * MEM_USAGE_BUFFER_DECIMAL);
+
+        Double memRecSpike = calculatePercentile(spikeList, COST_MEMORY_PERCENTILE);
+        memRecSpike += (memRecSpike * MEM_SPIKE_BUFFER_DECIMAL);
+        Double memRecSpikeBuf = memRecUsage + memRecSpike;
+
+        Double memRec = Math.min(memRecUsageBuf, memRecSpikeBuf);
+
+        if (setNotification && 0.0 == memRec) {
+            notifications.add(new RecommendationNotification(
+                    RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_RECORDS_ARE_ZERO
+            ));
+            return null;
+        }
+
+        format = getFormatValue(filteredResultsMap, AnalyzerConstants.MetricName.namespaceMemoryUsage);
+
+        recommendationConfigItem = new RecommendationConfigItem(memRec, format);
+        return recommendationConfigItem;
+    }
+
+
 
     public static String getFormatValue(Map<Timestamp, IntervalResults> filteredResultsMap, AnalyzerConstants.MetricName metricName) {
         String format = "";
@@ -260,9 +420,57 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         return jsonObject;
     }
 
+    public static JSONObject calculateMemoryUsageForNamespace(IntervalResults intervalResults) {
+        // create a JSON object which should be returned here having two values, Math.max and Collections.Min
+        JSONObject jsonObject = new JSONObject();
+        Optional<MetricResults> cpuUsageResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceCpuUsage));
+        double cpuUsageAvg = cpuUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+        double cpuUsageMax = cpuUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+        Optional<MetricResults> memoryUsageResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceMemoryUsage));
+        double memUsageAvg = memoryUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+        double memUsageMax = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+        double memUsageMin = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
+        double memUsage = 0;
+        int numPods = 0;
+
+        if (0 != cpuUsageAvg) {
+            numPods = (int) Math.ceil(cpuUsageMax / cpuUsageAvg);
+        }
+        if (0 == numPods && 0 != memUsageAvg) {
+            numPods = (int) Math.ceil(memUsageMax / memUsageAvg);
+        }
+        if (0 < numPods) {
+            memUsage = (memUsageMax / numPods);
+        }
+        memUsageMax = Math.max(memUsage, memUsageMax);
+        // traverse over a stream of positive values and find the minimum value
+        memUsageMin = Stream.of(memUsage, memUsageMax, memUsageMin)
+                .filter(value -> value > 0.0)
+                .min(Double::compare)
+                .orElse(0.0);
+
+        jsonObject.put(KruizeConstants.JSONKeys.MIN, memUsageMin);
+        jsonObject.put(KruizeConstants.JSONKeys.MAX, memUsageMax);
+
+        LOGGER.debug("memRequestInterval : {}", jsonObject);
+        return jsonObject;
+    }
+
+
     private static double calculateIntervalSpike(IntervalResults intervalResults) {
         Optional<MetricResults> memoryUsageResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
         Optional<MetricResults> memoryRSSResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryRSS));
+        double memUsageMax = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+        double memUsageMin = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
+        double memRSSMax = memoryRSSResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+        double memRSSMin = memoryRSSResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
+
+        return Math.max(Math.ceil(memUsageMax - memUsageMin), Math.ceil(memRSSMax - memRSSMin));
+    }
+
+    private static double calculateIntervalSpikeForNamespace(IntervalResults intervalResults) {
+        Optional<MetricResults> memoryUsageResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceMemoryUsage));
+        Optional<MetricResults> memoryRSSResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceMemoryRSS));
         double memUsageMax = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
         double memUsageMin = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
         double memRSSMax = memoryRSSResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);

@@ -22,6 +22,16 @@ public class MappedRecommendationForTimestamp {
     @SerializedName(KruizeConstants.JSONKeys.MONITORING_END_TIME)
     private Timestamp monitoringEndTime;
 
+    @Override
+    public String toString() {
+        return "MappedRecommendationForTimestamp{" +
+                "higherLevelNotificationMap=" + higherLevelNotificationMap +
+                ", monitoringEndTime=" + monitoringEndTime +
+                ", currentConfig=" + currentConfig +
+                ", recommendationForTermHashMap=" + recommendationForTermHashMap +
+                '}';
+    }
+
     @SerializedName(KruizeConstants.JSONKeys.CURRENT)
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig;
 

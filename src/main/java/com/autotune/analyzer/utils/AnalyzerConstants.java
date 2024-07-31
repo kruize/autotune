@@ -164,6 +164,14 @@ public class AnalyzerConstants {
         memoryLimit,
         memoryUsage,
         memoryRSS,
+        namespaceCpuRequest,
+        namespaceCpuLimit,
+        namespaceCpuUsage,
+        namespaceCpuThrottle,
+        namespaceMemoryRequest,
+        namespaceMemoryLimit,
+        namespaceMemoryUsage,
+        namespaceMemoryRSS,
         maxDate
     }
 
