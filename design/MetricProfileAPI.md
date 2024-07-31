@@ -89,12 +89,12 @@ This is quick guide instructions to create metric profile using input JSON as fo
                 "aggregation_functions": [
                     {
                         "function": "avg",
-                        "query": "avg(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})",
+                        "query": "avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"cpu\", unit=\"core\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                         "version": ""
                     },
                     {
                         "function": "sum",
-                        "query": "sum(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})",
+                        "query": "sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"cpu\", unit=\"core\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                         "version": ""
                     }
                 ]
@@ -108,12 +108,13 @@ This is quick guide instructions to create metric profile using input JSON as fo
                 "aggregation_functions": [
                     {
                         "function": "avg",
-                        "query": "avg(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})",
+                  
+                        "query": "avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"cpu\", unit=\"core\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                         "version": ""
                     },
                     {
                         "function": "sum",
-                        "query": "sum(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\", resource=\"cpu\", unit=\"core\"})",
+                        "query": "avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"cpu\", unit=\"core\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                         "version": ""
                     }
                 ]
@@ -127,42 +128,43 @@ This is quick guide instructions to create metric profile using input JSON as fo
                 "aggregation_functions": [
                     {
                         "function": "avg",
-                        "query": "avg(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+                  
+                        "query": "avg by(namespace,container,workload,workload_type,owner_kind) (avg_over_time(((irate(container_cpu_usage_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[5m])) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\", workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": "<=4.8"
                     },
                     {
                         "function": "avg",
-                        "query": "avg(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+                        "query": "avg by(namespace,container,workload,workload_type,owner_kind) (avg_over_time(((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ">4.9"
                     },
                     {
                         "function": "min",
-                        "query": "min(min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+                        "query": "min by(namespace,container,workload,workload_type,owner_kind) (min_over_time(((irate(container_cpu_usage_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[5m])) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\", workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": "<=4.8"
                     },
                     {
                         "function": "min",
-                        "query": "min(min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+                        "query": "min by(namespace,container,workload,workload_type,owner_kind) (min_over_time(((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ">4.9"
                     },
                     {
                         "function": "max",
-                        "query": "max(max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+                        "query": "max by(namespace,container,workload,workload_type,owner_kind) (max_over_time(((irate(container_cpu_usage_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[5m])) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\", workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": "<=4.8"
                     },
                     {
                         "function": "max",
-                        "query": "max(max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+                        "query": "max by(namespace,container,workload,workload_type,owner_kind) (max_over_time(((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ">4.9"
                     },
                     {
                         "function": "sum",
-                        "query": "sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+                        "query": "sum by(namespace,container,workload,workload_type,owner_kind) (avg_over_time(((irate(container_cpu_usage_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[5m])) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\", workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": "<=4.8"
                     },
                     {
                         "function": "sum",
-                        "query": "sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+                        "query": "sum by(namespace,container,workload,workload_type,owner_kind) (avg_over_time(((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ">4.9"
                     }
                 ]
@@ -176,17 +178,21 @@ This is quick guide instructions to create metric profile using input JSON as fo
                 "aggregation_functions": [
                     {
                         "function": "avg",
-                        "query": "avg(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+                        "query": "avg by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((rate(container_cpu_cfs_throttled_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[15m]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ""
                     },
                     {
                         "function": "max",
-                        "query": "max(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+                        "query": "max by(namespace,container,workload,workload_type,owner_kind) (max_over_time((rate(container_cpu_cfs_throttled_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[15m]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ""
                     },
                     {
+                      "function": "min",
+                      "query": "min by(namespace,container,workload,workload_type,owner_kind) (min_over_time((rate(container_cpu_cfs_throttled_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[15m]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))"
+                    },
+                    {
                         "function": "sum",
-                        "query": "sum(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+                        "query": "sum by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((rate(container_cpu_cfs_throttled_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[15m]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ""
                     }
                 ]
@@ -200,12 +206,12 @@ This is quick guide instructions to create metric profile using input JSON as fo
                 "aggregation_functions": [
                     {
                         "function": "avg",
-                        "query": "avg(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})",
+                        "query": "avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"memory\", unit=\"byte\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                         "version": ""
                     },
                     {
                         "function": "sum",
-                        "query": "sum(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})",
+                        "query": "sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"memory\", unit=\"byte\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                         "version": ""
                     }
                 ]
@@ -219,12 +225,12 @@ This is quick guide instructions to create metric profile using input JSON as fo
                 "aggregation_functions": [
                     {
                         "function": "avg",
-                        "query": "avg(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"memory\", unit=\"byte\"})",
+                        "query": "avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"memory\", unit=\"byte\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                         "version": ""
                     },
                     {
                         "function": "sum",
-                        "query": "sum(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})",
+                        "query": "sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"memory\", unit=\"byte\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                         "version": ""
                     }
                 ]
@@ -238,22 +244,22 @@ This is quick guide instructions to create metric profile using input JSON as fo
                 "aggregation_functions": [
                     {
                         "function": "avg",
-                        "query": "avg(avg_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))",
+                        "query": "avg by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((container_memory_working_set_bytes{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ""
                     },
                     {
                         "function": "min",
-                        "query": "min(min_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+                        "query": "min by(namespace,container,workload,workload_type,owner_kind) (min_over_time((container_memory_working_set_bytes{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ""
                     },
                     {
                         "function": "max",
-                        "query": "max(max_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+                        "query": "max by(namespace,container,workload,workload_type,owner_kind) (max_over_time((container_memory_working_set_bytes{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ""
                     },
                     {
                         "function": "sum",
-                        "query": "sum(avg_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+                        "query": "sum by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((container_memory_working_set_bytes{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ""
                     }
                 ]
@@ -267,25 +273,37 @@ This is quick guide instructions to create metric profile using input JSON as fo
                 "aggregation_functions": [
                     {
                         "function": "avg",
-                        "query": "avg(avg_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))",
+                        "query": "avg by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((container_memory_rss{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ""
                     },
                     {
                         "function": "min",
-                        "query": "min(min_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+                        "query": "min by(namespace,container,workload,workload_type,owner_kind) (min_over_time((container_memory_rss{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ""
                     },
                     {
                         "function": "max",
-                        "query": "max(max_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+                        "query": "max by(namespace,container,workload,workload_type,owner_kind) (max_over_time((container_memory_rss{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ""
                     },
                     {
                         "function": "sum",
-                        "query": "sum(avg_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))",
+                        "query": "sum by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((container_memory_rss{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                         "version": ""
                     }
                 ]
+            },
+            {
+              "name" : "maxDate",
+              "datasource": "prometheus",
+              "value_type": "double",
+              "kubernetes_object": "container",
+              "aggregation_functions": [
+                 {
+                   "function": "max",
+                   "query": "last_over_time(container_cpu_usage_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[15d:]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15d])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15d]))"
+                 }
+              ]
             }
         ]
     }
@@ -344,6 +362,21 @@ List metric profiles output JSON as follows.
 `curl -H 'Accept: application/json' http://<URL>:<PORT>/listMetricProfiles`
 
 **Response**
+```
+[
+    {
+        "name": "resource-optimization-openshift"
+    }
+]
+```
+
+**Request**
+`GET /listMetricProfiles`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listMetricProfiles?name=resource-optimization-openshift`
+
+
+**Response**
 
 ```
 [
@@ -356,12 +389,10 @@ List metric profiles output JSON as follows.
         "profile_version": 1.0,
         "k8s_type": "openshift",
         "slo": {
-            "sloClass": "resource_usage",
             "objective_function": {
                 "function_type": "source"
             },
             "direction": "minimize",
-            "hpoAlgoImpl": "optuna_tpe",
             "function_variables": [
                 {
                     "name": "cpuRequest",
@@ -369,18 +400,16 @@ List metric profiles output JSON as follows.
                     "datasource": "prometheus",
                     "value_type": "double",
                     "kubernetes_object": "container",
-                    "aggregation_functions": [
-                        {
+                    "aggregation_functions": {
+                        "avg": {
                             "function": "avg",
-                            "query": "avg(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})",
-                            "version": ""
+                            "query": "avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"cpu\", unit=\"core\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))"
                         },
-                        {
+                        "sum": {
                             "function": "sum",
-                            "query": "sum(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})",
-                            "version": ""
+                            "query": "sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"cpu\", unit=\"core\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))"
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "cpuLimit",
@@ -388,18 +417,18 @@ List metric profiles output JSON as follows.
                     "datasource": "prometheus",
                     "value_type": "double",
                     "kubernetes_object": "container",
-                    "aggregation_functions": [
-                        {
+                    "aggregation_functions": {
+                        "avg": {
                             "function": "avg",
-                            "query": "avg(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"cpu\", unit=\"core\"})",
+                            "query": "avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"cpu\", unit=\"core\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                             "version": ""
                         },
-                        {
+                        "sum": {
                             "function": "sum",
-                            "query": "sum(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\", resource=\"cpu\", unit=\"core\"})",
+                            "query": "avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"cpu\", unit=\"core\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                             "version": ""
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "cpuUsage",
@@ -407,48 +436,28 @@ List metric profiles output JSON as follows.
                     "datasource": "prometheus",
                     "value_type": "double",
                     "kubernetes_object": "container",
-                    "aggregation_functions": [
-                        {
+                    "aggregation_functions": {
+                        "avg": {
                             "function": "avg",
-                            "query": "avg(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
-                            "version": "<=4.8"
-                        },
-                        {
-                            "function": "avg",
-                            "query": "avg(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+                            "query": "avg by(namespace,container,workload,workload_type,owner_kind) (avg_over_time(((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ">4.9"
                         },
-                        {
+                        "min": {
                             "function": "min",
-                            "query": "min(min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
-                            "version": "<=4.8"
-                        },
-                        {
-                            "function": "min",
-                            "query": "min(min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+                            "query": "min by(namespace,container,workload,workload_type,owner_kind) (min_over_time(((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ">4.9"
                         },
-                        {
+                        "max": {
                             "function": "max",
-                            "query": "max(max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
-                            "version": "<=4.8"
-                        },
-                        {
-                            "function": "max",
-                            "query": "max(max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+                            "query": "max by(namespace,container,workload,workload_type,owner_kind) (max_over_time(((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ">4.9"
                         },
-                        {
+                        "sum": {
                             "function": "sum",
-                            "query": "sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
-                            "version": "<=4.8"
-                        },
-                        {
-                            "function": "sum",
-                            "query": "sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[15m]))",
+                            "query": "sum by(namespace,container,workload,workload_type,owner_kind) (avg_over_time(((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ">4.9"
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "cpuThrottle",
@@ -456,23 +465,27 @@ List metric profiles output JSON as follows.
                     "datasource": "prometheus",
                     "value_type": "double",
                     "kubernetes_object": "container",
-                    "aggregation_functions": [
-                        {
+                    "aggregation_functions": {
+                        "avg": {
                             "function": "avg",
-                            "query": "avg(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+                            "query": "avg by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((rate(container_cpu_cfs_throttled_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[15m]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ""
                         },
-                        {
+                        "min": {
+                            "function": "min",
+                            "query": "min by(namespace,container,workload,workload_type,owner_kind) (min_over_time((rate(container_cpu_cfs_throttled_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[15m]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))"
+                        },
+                        "max": {
                             "function": "max",
-                            "query": "max(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+                            "query": "max by(namespace,container,workload,workload_type,owner_kind) (max_over_time((rate(container_cpu_cfs_throttled_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[15m]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ""
                         },
-                        {
+                        "sum": {
                             "function": "sum",
-                            "query": "sum(rate(container_cpu_cfs_throttled_seconds_total{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=\"$NAMESPACE$\", container=”$CONTAINER_NAME$”}[15m]))",
+                            "query": "sum by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((rate(container_cpu_cfs_throttled_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\",container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[15m]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ""
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "memoryRequest",
@@ -480,18 +493,18 @@ List metric profiles output JSON as follows.
                     "datasource": "prometheus",
                     "value_type": "double",
                     "kubernetes_object": "container",
-                    "aggregation_functions": [
-                        {
+                    "aggregation_functions": {
+                        "avg": {
                             "function": "avg",
-                            "query": "avg(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})",
+                            "query": "avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"memory\", unit=\"byte\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                             "version": ""
                         },
-                        {
+                        "sum": {
                             "function": "sum",
-                            "query": "sum(kube_pod_container_resource_requests{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})",
+                            "query": "sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"memory\", unit=\"byte\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                             "version": ""
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "memoryLimit",
@@ -499,18 +512,18 @@ List metric profiles output JSON as follows.
                     "datasource": "prometheus",
                     "value_type": "double",
                     "kubernetes_object": "container",
-                    "aggregation_functions": [
-                        {
+                    "aggregation_functions": {
+                        "avg": {
                             "function": "avg",
-                            "query": "avg(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE\", resource=\"memory\", unit=\"byte\"})",
+                            "query": "avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"memory\", unit=\"byte\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                             "version": ""
                         },
-                        {
+                        "sum": {
                             "function": "sum",
-                            "query": "sum(kube_pod_container_resource_limits{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource=\"memory\", unit=\"byte\"})",
+                            "query": "sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!=\"\", container!=\"POD\", pod!=\"\", resource=\"memory\", unit=\"byte\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase=\"Running\"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m]))))",
                             "version": ""
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "memoryUsage",
@@ -518,28 +531,28 @@ List metric profiles output JSON as follows.
                     "datasource": "prometheus",
                     "value_type": "double",
                     "kubernetes_object": "container",
-                    "aggregation_functions": [
-                        {
+                    "aggregation_functions": {
+                        "avg": {
                             "function": "avg",
-                            "query": "avg(avg_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))",
+                            "query": "avg by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((container_memory_working_set_bytes{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ""
                         },
-                        {
+                        "min": {
                             "function": "min",
-                            "query": "min(min_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+                            "query": "min by(namespace,container,workload,workload_type,owner_kind) (min_over_time((container_memory_working_set_bytes{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ""
                         },
-                        {
+                        "max": {
                             "function": "max",
-                            "query": "max(max_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+                            "query": "max by(namespace,container,workload,workload_type,owner_kind) (max_over_time((container_memory_working_set_bytes{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ""
                         },
-                        {
+                        "sum": {
                             "function": "sum",
-                            "query": "sum(avg_over_time(container_memory_working_set_bytes{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+                            "query": "sum by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((container_memory_working_set_bytes{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ""
                         }
-                    ]
+                    }
                 },
                 {
                     "name": "memoryRSS",
@@ -547,28 +560,40 @@ List metric profiles output JSON as follows.
                     "datasource": "prometheus",
                     "value_type": "double",
                     "kubernetes_object": "container",
-                    "aggregation_functions": [
-                        {
+                    "aggregation_functions": {
+                        "avg": {
                             "function": "avg",
-                            "query": "avg(avg_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))",
+                            "query": "avg by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((container_memory_rss{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ""
                         },
-                        {
+                        "min": {
                             "function": "min",
-                            "query": "min(min_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+                            "query": "min by(namespace,container,workload,workload_type,owner_kind) (min_over_time((container_memory_rss{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ""
                         },
-                        {
+                        "max": {
                             "function": "max",
-                            "query": "max(max_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=\"$CONTAINER_NAME$\"}[15m]))",
+                            "query": "max by(namespace,container,workload,workload_type,owner_kind) (max_over_time((container_memory_rss{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ""
                         },
-                        {
+                        "sum": {
                             "function": "sum",
-                            "query": "sum(avg_over_time(container_memory_rss{pod=~\"$DEPLOYMENT_NAME$-[^-]*-[^-]*$\", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))",
+                            "query": "sum by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((container_memory_rss{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15m])))[15m:]))",
                             "version": ""
                         }
-                    ]
+                    }
+                },
+                {
+                    "name": "maxDate",
+                    "datasource": "prometheus",
+                    "value_type": "double",
+                    "kubernetes_object": "container",
+                    "aggregation_functions": {
+                        "max": {
+                            "function": "max",
+                            "query": "last_over_time(container_cpu_usage_seconds_total{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\"}[15d:]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=\"\",workload=\"$WORKLOAD$\", workload_type=\"$WORKLOAD_TYPE$\"}[15d])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=\"\"}[15d]))"
+                        }
+                    }
                 }
             ]
         }
