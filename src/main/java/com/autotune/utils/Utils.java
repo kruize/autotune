@@ -90,6 +90,8 @@ public class Utils {
 
         if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.DAEMONSET))
             return AnalyzerConstants.K8S_OBJECT_TYPES.DAEMONSET;
+        if (objectType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.JOB))
+                    return AnalyzerConstants.K8S_OBJECT_TYPES.JOB;
 
         return null;
     }
@@ -239,6 +241,7 @@ public class Utils {
                 return convertedDate;
 
             } catch (Exception e) {
+                LOGGER.error("Exception occurred while parsing date: {} : {}", date, e.getMessage());
                 return null;
             }
         }

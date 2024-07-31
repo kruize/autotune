@@ -268,8 +268,17 @@ public class RecommendationEngine {
         // continue to generate recommendation when kruizeObject is successfully created
         try {
             // set the default terms if the terms aren't provided by the user
-            if (kruizeObject.getTerms() == null)
-                KruizeObject.setDefaultTerms(terms, kruizeObject);
+            if (kruizeObject.getTerms() == null) {
+                if (kruizeObject.getKubernetes_objects().get(0).getType().equals(AnalyzerConstants.K8sObjectConstants.Types.JOB)) {
+                    // set fixed term for 'jobs'
+                    terms.put(KruizeConstants.JSONKeys.FIXED_TERM, new Terms(KruizeConstants.JSONKeys.FIXED_TERM, KruizeConstants
+                            .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.FIXED_TERM_DURATION_DAYS, KruizeConstants
+                            .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.FIXED_TERM_DURATION_DAYS_THRESHOLD, 15, 1)); // TODO: plots_datapoints, plots_datapoints_delta_in_days needs to be updated after POC
+                    kruizeObject.setTerms(terms);
+                } else {
+                    KruizeObject.setDefaultTerms(terms, kruizeObject);
+                }
+            }
             // set the performance profile
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
             // get the datasource
@@ -783,7 +792,8 @@ public class RecommendationEngine {
                 (
                         !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM) &&
                                 !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM) &&
-                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)
+                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM) &&
+                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.FIXED_TERM)
                 )
         ) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INVALID_RECOMMENDATION_TERM, recommendationTerm));
@@ -1460,6 +1470,8 @@ public class RecommendationEngine {
             // Iterate over Kubernetes objects
             for (K8sObject k8sObject : kubernetes_objects) {
                 String namespace = k8sObject.getNamespace();
+                String workloadType = k8sObject.getType();
+                String workload = k8sObject.getName();
                 HashMap<String, ContainerData> containerDataMap = k8sObject.getContainerDataMap();
                 // Iterate over containers
                 for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
@@ -1469,7 +1481,7 @@ public class RecommendationEngine {
                         LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
                         String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
                                 dataSourceInfo.getUrl(),
-                                URLEncoder.encode(String.format(PromQLDataSourceQueries.MAX_DATE, containerName, namespace), CHARACTER_ENCODING)
+                                URLEncoder.encode(String.format(PromQLDataSourceQueries.MAX_DATE, containerName, namespace, workload, workloadType), CHARACTER_ENCODING)
                         );
                         LOGGER.info(dateMetricsUrl);
                         JSONObject genericJsonObject = new GenericRestApiClient(dateMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
@@ -1513,27 +1525,27 @@ public class RecommendationEngine {
                                 String secondMethodName = methodName;
                                 if (secondMethodName.equals(KruizeConstants.JSONKeys.SUM))
                                     secondMethodName = KruizeConstants.JSONKeys.AVG;
-                                promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, workload, workloadType, measurementDurationMinutesInDouble.intValue());
                                 format = KruizeConstants.JSONKeys.CORES;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuThrottle) {
-                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, workload, workloadType, measurementDurationMinutesInDouble.intValue());
                                 format = KruizeConstants.JSONKeys.CORES;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.cpuLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.cpuRequest) {
-                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
+                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, workload, workloadType);
                                 format = KruizeConstants.JSONKeys.CORES;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryUsage || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRSS) {
                                 String secondMethodName = methodName;
                                 if (secondMethodName.equals(KruizeConstants.JSONKeys.SUM))
                                     secondMethodName = KruizeConstants.JSONKeys.AVG;
-                                promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, measurementDurationMinutesInDouble.intValue());
+                                promQL = String.format(metricEntry.getValue(), methodName, secondMethodName, namespace, containerName, workload, workloadType, measurementDurationMinutesInDouble.intValue());
                                 format = KruizeConstants.JSONKeys.BYTES;
                             } else if (metricEntry.getKey() == AnalyzerConstants.MetricName.memoryLimit || metricEntry.getKey() == AnalyzerConstants.MetricName.memoryRequest) {
-                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName);
+                                promQL = String.format(metricEntry.getValue(), methodName, namespace, containerName, workload, workloadType);
                                 format = KruizeConstants.JSONKeys.BYTES;
                             }
                             // If promQL is determined, fetch metrics from the datasource
                             if (promQL != null) {
-                                LOGGER.info(promQL);
+                                LOGGER.info("{}\n", promQL);
                                 String podMetricsUrl;
                                 try {
                                     podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
@@ -1544,6 +1556,7 @@ public class RecommendationEngine {
                                             measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
 //                                    LOGGER.info(podMetricsUrl);
                                     JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                                    LOGGER.debug("genericJsonObject : {}", genericJsonObject);
                                     JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                                     JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
                                     // Process fetched metrics
@@ -1555,7 +1568,7 @@ public class RecommendationEngine {
                                         sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
 
                                         // Iterate over fetched metrics
-                                        Timestamp sTime = new Timestamp(interval_start_time_epoc);
+                                        Timestamp sTime = new Timestamp(interval_start_time_epoc * 1000);
                                         for (JsonElement element : resultArray) {
                                             JsonArray valueArray = element.getAsJsonArray();
                                             long epochTime = valueArray.get(0).getAsLong();
@@ -1597,6 +1610,7 @@ public class RecommendationEngine {
                                         }
                                     }
                                 } catch (Exception e) {
+                                    LOGGER.error("Exception occurred while fetching data from datasource: {}", e.getMessage());
                                     throw new RuntimeException(e);
                                 }
                             }

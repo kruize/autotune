@@ -171,6 +171,7 @@ public class AnalyzerConstants {
         REPLICASET,
         REPLICATION_CONTROLLER,
         DAEMONSET,
+        JOB,
     }
 
     public enum RegisterRecommendationModelStatus {
@@ -491,6 +492,7 @@ public class AnalyzerConstants {
             public static final String REPLICASET = "replicaset";
             public static final String REPLICATION_CONTROLLER = "replicationController";
             public static final String DAEMONSET = "daemonset";
+            public static final String JOB = "job";
 
             private Types() {
 
