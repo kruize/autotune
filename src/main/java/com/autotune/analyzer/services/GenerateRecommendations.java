@@ -17,9 +17,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
-import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
-import com.autotune.analyzer.serviceObjects.Converters;
-import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
@@ -136,7 +134,6 @@ public class GenerateRecommendations extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_CREATED);
         List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();              //TODO: Executing two identical SQL SELECT queries against the database instead of just one is causing a performance issue. set 'showSQL' flag is set to true to debug.
         try {
-            //LOGGER.debug(ko.getKubernetes_objects().toString());
             ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
                     convertKruizeObjectToListRecommendationSO(
                             ko,
@@ -147,11 +144,14 @@ public class GenerateRecommendations extends HttpServlet {
         } catch (Exception e) {
             LOGGER.error("Not able to generate recommendation for expName : {} due to {}", ko.getExperimentName(), e.getMessage());
         }
+
         ExclusionStrategy strategy = new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes field) {
                 return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results"))
-                        || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
+                        || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")))
+                            || (field.getDeclaringClass() == NamespaceAPIObject.class && (field.getName().equals("metrics")))
+                                || (field.getDeclaringClass() == KubernetesAPIObject.class && (field.getName().equals("namespace")));
             }
 
             @Override

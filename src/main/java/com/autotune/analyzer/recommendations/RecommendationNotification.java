@@ -47,6 +47,15 @@ public class RecommendationNotification {
         this.message = message;
     }
 
+    @Override
+    public String toString() {
+        return "RecommendationNotification{" +
+                "type='" + type + '\'' +
+                ", message='" + message + '\'' +
+                ", code=" + code +
+                '}';
+    }
+
     public int getCode() {
         return code;
     }
