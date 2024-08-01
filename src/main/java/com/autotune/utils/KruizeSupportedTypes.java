@@ -75,7 +75,7 @@ public class KruizeSupportedTypes
 					"((request_count / (request_sum / request_count)) / request_max) * 100"));
 
 	public static final Set<String> KUBERNETES_OBJECTS_SUPPORTED =
-			new HashSet<>(Arrays.asList("deployment", "pod", "container"));
+			new HashSet<>(Arrays.asList("deployment", "pod", "container", "namespace"));
 
 	public static final Set<String> DSMETADATA_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
 			"datasource", "cluster_name", "namespace", "verbose"

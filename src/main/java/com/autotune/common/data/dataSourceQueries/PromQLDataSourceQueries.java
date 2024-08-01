@@ -26,4 +26,6 @@ public class PromQLDataSourceQueries {
     public static final String NAMESPACE_MEMORY_REQUEST = DataSourceQueries.PromQLQuery.NAMESPACE_MEMORY_REQUEST.getQuery();
     public static final String NAMESPACE_MAX_DATE = DataSourceQueries.PromQLQuery.NAMESPACE_MAX_DATE.getQuery();
     public static final String MAX_DATE = DataSourceQueries.PromQLQuery.MAX_DATE.getQuery();
+    public static final String NAMESPACE_TOTAL_PODS = DataSourceQueries.PromQLQuery.NAMESPACE_TOTAL_PODS.getQuery();
+    public static final String NAMESPACE_TOTAL_RUNNING_PODS = DataSourceQueries.PromQLQuery.NAMESPACE_TOTAL_RUNNING_PODS.getQuery();
 }

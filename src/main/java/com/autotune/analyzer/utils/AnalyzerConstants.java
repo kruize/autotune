@@ -172,6 +172,8 @@ public class AnalyzerConstants {
         namespaceMemoryLimit,
         namespaceMemoryUsage,
         namespaceMemoryRSS,
+        namespaceTotalPods,
+        namespaceRunningPods,
         maxDate
     }
 
