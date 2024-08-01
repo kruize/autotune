@@ -27,7 +27,9 @@ public class DataSourceQueries {
         NAMESPACE_MEMORY_RSS("%s_over_time(sum by(namespace) (container_memory_rss{namespace=\"%s\", container!='', container!='POD', pod!=''})[%sm:])"),
         NAMESPACE_MEMORY_LIMIT("%s by(namespace) (kube_resourcequota{namespace=\"%s\", resource=\"limits.memory\", type=\"hard\"})"),
         NAMESPACE_MEMORY_REQUEST("%s by (namespace) (kube_resourcequota{namespace=\"%s\", resource=\"requests.memory\", type=\"hard\"})"),
-        NAMESPACE_MAX_DATE("max(container_cpu_usage_seconds_total{namespace=\"%s\"} > 0)");
+        NAMESPACE_MAX_DATE("last_over_time(timestamp((sum by (namespace) (container_cpu_usage_seconds_total{namespace=\"%s\"})) > 0 )[15d:])"),
+        NAMESPACE_TOTAL_PODS("count(kube_pod_status_phase{namespace=\"%s\"})"),
+        NAMESPACE_TOTAL_RUNNING_PODS("count(kube_pod_status_phase{namespace=\"%s\", phase=\"Running\"})");
         private final String query;
 
 

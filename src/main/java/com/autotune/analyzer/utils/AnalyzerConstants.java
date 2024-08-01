@@ -170,6 +170,8 @@ public class AnalyzerConstants {
         namespaceMemoryLimit,
         namespaceMemoryUsage,
         namespaceMemoryRSS,
+        namespaceTotalPods,
+        namespaceRunningPods
     }
 
     public enum K8S_OBJECT_TYPES {
