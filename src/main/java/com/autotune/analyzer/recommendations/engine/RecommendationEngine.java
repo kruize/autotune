@@ -1498,6 +1498,7 @@ public class RecommendationEngine {
                             interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                     - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
                         }
+                        // TODO: add else block to handle
                     } else {
                         // Convert timestamps to epoch time
                         interval_end_time_epoc = interval_end_time.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
@@ -1651,6 +1652,8 @@ public class RecommendationEngine {
                                                 if (containerDataResults.containsKey(eTime)) {
                                                     intervalResults = containerDataResults.get(eTime);
                                                     resMap = intervalResults.getMetricResultsMap();
+                                                    if (null == resMap)
+                                                        resMap = new HashMap<>();
                                                 } else {
                                                     intervalResults = new IntervalResults();
                                                     resMap = new HashMap<>();

@@ -123,7 +123,11 @@ public class AnalyzerConstants {
         NVIDIA_GPU_PARTITION_2_CORES_20GB("nvidia.com/mig-2g.20gb"),
         NVIDIA_GPU_PARTITION_3_CORES_40GB("nvidia.com/mig-3g.40gb"),
         NVIDIA_GPU_PARTITION_4_CORES_40GB("nvidia.com/mig-4g.40gb"),
-        NVIDIA_GPU_PARTITION_7_CORES_80GB("nvidia.com/mig-7g.80gb");
+        NVIDIA_GPU_PARTITION_7_CORES_80GB("nvidia.com/mig-7g.80gb"),
+        NVIDIA_GPU_PARTITION_2_CORES_10GB("nvidia.com/mig-2g.10gb"),
+        NVIDIA_GPU_PARTITION_3_CORES_20GB("nvidia.com/mig-3g.20gb"),
+        NVIDIA_GPU_PARTITION_4_CORES_20GB("nvidia.com/mig-4g.20gb"),
+        NVIDIA_GPU_PARTITION_7_CORES_40GB("nvidia.com/mig-7g.40gb");
 
         private final String value;
 
@@ -582,7 +586,8 @@ public class AnalyzerConstants {
     }
 
     public static final class SupportedGPUs {
-        public static final String A100 = "A100";
+        public static final String A100_80_GB = "A100-80GB";
+        public static final String A100_40_GB = "A100-40GB";
         public static final String H100 = "H100";
     }
 }

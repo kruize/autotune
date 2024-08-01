@@ -253,12 +253,16 @@ public class CostBasedRecommendationModel implements RecommendationModel {
 
                         if (aggregationInfo.getAvg() != null) {
                             if (gpuEntry.getKey() == AnalyzerConstants.MetricName.gpuCoreUsage) {
-                                totalCoreAvg += aggregationInfo.getAvg();
-                                coreCount++;
+                                if (aggregationInfo.getAvg().doubleValue() != 0.0) {
+                                    totalCoreAvg += aggregationInfo.getAvg();
+                                    coreCount++;
+                                }
                             }
                             if (gpuEntry.getKey() == AnalyzerConstants.MetricName.gpuMemoryUsage) {
-                                totalMemoryAvg += aggregationInfo.getAvg();
-                                memoryCount++;
+                                if (aggregationInfo.getAvg().doubleValue() != 0.0) {
+                                    totalMemoryAvg += aggregationInfo.getAvg();
+                                    memoryCount++;
+                                }
                             }
                         }
                     }
@@ -276,18 +280,28 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         double coreFraction = coreAverage / 100;
         double memoryFraction = memoryAverage / 100;
         GpuMetaDataService gpuMetaDataService = GpuMetaDataService.getInstance();
-        GpuProfile gpuProfile = gpuMetaDataService.getGpuProfile("A100", coreFraction, memoryFraction);
+        GpuProfile gpuProfile = gpuMetaDataService.getGpuProfile(AnalyzerConstants.SupportedGPUs.A100_40_GB, coreFraction, memoryFraction);
         RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(1.0, "cores");
-        if (gpuProfile.getProfileName().equalsIgnoreCase("1g.10gb")) {
+        if (gpuProfile.getProfileName().equalsIgnoreCase("1g.5gb")) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_1_CORE_5GB, recommendationConfigItem);
+        } else if (gpuProfile.getProfileName().equalsIgnoreCase("1g.10gb")) {
             returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_1_CORE_10GB, recommendationConfigItem);
         } else if (gpuProfile.getProfileName().equalsIgnoreCase("1g.20gb")) {
             returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_1_CORE_20GB, recommendationConfigItem);
+        } else if (gpuProfile.getProfileName().equalsIgnoreCase("2g.10gb")) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_2_CORES_10GB, recommendationConfigItem);
         } else if (gpuProfile.getProfileName().equalsIgnoreCase("2g.20gb")) {
             returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_2_CORES_20GB, recommendationConfigItem);
+        } else if (gpuProfile.getProfileName().equalsIgnoreCase("3g.20gb")) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_3_CORES_20GB, recommendationConfigItem);
         } else if (gpuProfile.getProfileName().equalsIgnoreCase("3g.40gb")) {
             returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_3_CORES_40GB, recommendationConfigItem);
+        } else if (gpuProfile.getProfileName().equalsIgnoreCase("4g.20gb")) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_4_CORES_20GB, recommendationConfigItem);
         } else if (gpuProfile.getProfileName().equalsIgnoreCase("4g.40gb")) {
             returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_4_CORES_40GB, recommendationConfigItem);
+        } else if (gpuProfile.getProfileName().equalsIgnoreCase("7g.40gb")) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_7_CORES_40GB, recommendationConfigItem);
         } else if (gpuProfile.getProfileName().equalsIgnoreCase("7g.80gb")) {
             returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_7_CORES_80GB, recommendationConfigItem);
         }

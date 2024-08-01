@@ -241,6 +241,7 @@ public class Utils {
                 return convertedDate;
 
             } catch (Exception e) {
+                // TODO: add the log for trace
                 return null;
             }
         }
