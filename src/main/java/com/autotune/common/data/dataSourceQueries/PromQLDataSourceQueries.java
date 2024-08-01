@@ -28,4 +28,6 @@ public class PromQLDataSourceQueries {
     public static final String MAX_DATE = DataSourceQueries.PromQLQuery.MAX_DATE.getQuery();
     public static final String NAMESPACE_TOTAL_PODS = DataSourceQueries.PromQLQuery.NAMESPACE_TOTAL_PODS.getQuery();
     public static final String NAMESPACE_TOTAL_RUNNING_PODS = DataSourceQueries.PromQLQuery.NAMESPACE_TOTAL_RUNNING_PODS.getQuery();
+    public static final String GPU_CORE_USAGE = DataSourceQueries.PromQLQuery.GPU_CORE_USAGE.getQuery();
+    public static final String GPU_MEMORY_USAGE = DataSourceQueries.PromQLQuery.GPU_MEMORY_USAGE.getQuery();
 }

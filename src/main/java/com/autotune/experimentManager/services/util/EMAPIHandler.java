@@ -1,5 +1,7 @@
 package com.autotune.experimentManager.services.util;
 
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.experimentManager.core.ExperimentManager;
@@ -263,6 +265,7 @@ public class EMAPIHandler {
                 new JSONObject(
                         new GsonBuilder()
                                 .setExclusionStrategies(new KruizeJSONExclusionStrategy())
+                                .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                                 .create()
                                 .toJson(experimentTrial.getTrialInfo())
                 )

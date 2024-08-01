@@ -40,6 +40,8 @@ public class IntervalResults {
     private Double durationInMinutes;
     private Double duration_in_seconds;
 
+    HashMap<AnalyzerConstants.MetricName, GpuMetricResult> gpuMetricResultHashMap;
+
     public IntervalResults(Timestamp intervalStartTime, Timestamp intervalEndTime) {
         this.intervalStartTime = intervalStartTime;
         this.intervalEndTime = intervalEndTime;
@@ -83,6 +85,14 @@ public class IntervalResults {
 
     public void setDurationInMinutes(Double durationInMinutes) {
         this.durationInMinutes = durationInMinutes;
+    }
+
+    public HashMap<AnalyzerConstants.MetricName, GpuMetricResult> getGpuMetricResultHashMap() {
+        return gpuMetricResultHashMap;
+    }
+
+    public void setGpuMetricResultHashMap(HashMap<AnalyzerConstants.MetricName, GpuMetricResult> gpuMetricResultHashMap) {
+        this.gpuMetricResultHashMap = gpuMetricResultHashMap;
     }
 
     @Override

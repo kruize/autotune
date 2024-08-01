@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
@@ -281,6 +282,7 @@ public class ListExperiments extends HttpServlet {
                 .setPrettyPrinting()
                 .enableComplexMapKeySerialization()
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                 .setExclusionStrategies(new ExclusionStrategy() {
                     @Override
                     public boolean shouldSkipField(FieldAttributes f) {
