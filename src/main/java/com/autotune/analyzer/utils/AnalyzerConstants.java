@@ -65,6 +65,8 @@ public class AnalyzerConstants {
     public static final String NAMESPACE_VARIABLE = "$NAMESPACE$";
     public static final String CONTAINER_VARIABLE = "$CONTAINER_NAME$";
     public static final String MEASUREMENT_DURATION_IN_MIN_VARAIBLE = "$MEASUREMENT_DURATION_IN_MIN$";
+    public static final String WORKLOAD_VARIABLE = "$WORKLOAD$";
+    public static final String WORKLOAD_TYPE_VARIABLE = "$WORKLOAD_TYPE$";
     public static final String API_VERSION = "apiVersion";
     public static final String KIND = "kind";
     public static final String RESOURCE_VERSION = "resourceVersion";
@@ -171,7 +173,8 @@ public class AnalyzerConstants {
         namespaceMemoryUsage,
         namespaceMemoryRSS,
         namespaceTotalPods,
-        namespaceRunningPods
+        namespaceRunningPods,
+        maxDate
     }
 
     public enum K8S_OBJECT_TYPES {

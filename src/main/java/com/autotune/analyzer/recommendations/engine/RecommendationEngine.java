@@ -2134,12 +2134,25 @@ public class RecommendationEngine {
                 return;
             }
 
+            String maxDateQuery = null;
+            List<Metric>metrics = metricProfile.getSloInfo().getFunctionVariables();
+            for (Metric metric: metrics) {
+                String name = metric.getName();
+                if(name.equals("maxDate")){
+                    String query = metric.getAggregationFunctionsMap().get("max").getQuery();
+                    maxDateQuery = query;
+                    break;
+                }
+            }
+
             Double measurementDurationMinutesInDouble = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
             List<K8sObject> kubernetes_objects = kruizeObject.getKubernetes_objects();
 
             // Iterate over Kubernetes objects
             for (K8sObject k8sObject : kubernetes_objects) {
                 String namespace = k8sObject.getNamespace();
+                String workload = k8sObject.getName();
+                String workload_type = k8sObject.getType();
                 HashMap<String, ContainerData> containerDataMap = k8sObject.getContainerDataMap();
                 if (!containerDataMap.isEmpty()) {
                     // Iterate over containers
@@ -2148,9 +2161,20 @@ public class RecommendationEngine {
                         String containerName = containerData.getContainer_name();
                         if (null == interval_end_time) {
                             LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
+                            String queryToEncode;
+                            if (null != maxDateQuery) {
+                                LOGGER.info("maxDateQuery: {}", maxDateQuery);
+                                queryToEncode =  maxDateQuery
+                                        .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                                        .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                                        .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+                                        .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+                            } else {
+                                queryToEncode =  String.format(PromQLDataSourceQueries.MAX_DATE, containerName, namespace);
+                            }
                             String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
                                     dataSourceInfo.getUrl(),
-                                    URLEncoder.encode(String.format(PromQLDataSourceQueries.MAX_DATE, containerName, namespace), CHARACTER_ENCODING)
+                                    URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
                             );
                             LOGGER.info(dateMetricsUrl);
                             JSONObject genericJsonObject = new GenericRestApiClient(dateMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
@@ -2209,7 +2233,9 @@ public class RecommendationEngine {
                                     promQL = promQL
                                             .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
                                             .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
-                                            .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()));
+                                            .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
+                                            .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+                                            .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
 
                                     // If promQL is determined, fetch metrics from the datasource
                                     if (promQL != null) {
