@@ -29,7 +29,9 @@ public class DataSourceQueries {
         NAMESPACE_MEMORY_REQUEST("%s by (namespace) (kube_resourcequota{namespace=\"%s\", resource=\"requests.memory\", type=\"hard\"})"),
         NAMESPACE_MAX_DATE("last_over_time(timestamp((sum by (namespace) (container_cpu_usage_seconds_total{namespace=\"%s\"})) > 0 )[15d:])"),
         NAMESPACE_TOTAL_PODS("count(kube_pod_status_phase{namespace=\"%s\"})"),
-        NAMESPACE_TOTAL_RUNNING_PODS("count(kube_pod_status_phase{namespace=\"%s\", phase=\"Running\"})");
+        NAMESPACE_TOTAL_RUNNING_PODS("count(kube_pod_status_phase{namespace=\"%s\", phase=\"Running\"})"),
+        GPU_CORE_USAGE("%s by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (%s_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace=\"%s\",exported_container=\"%s\"}[%sm]))"),
+        GPU_MEMORY_USAGE("%s by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (%s_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace=\"%s\",exported_container=\"%s\"}[%sm]))");
         private final String query;
 
 

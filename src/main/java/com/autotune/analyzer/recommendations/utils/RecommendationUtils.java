@@ -2,17 +2,12 @@ package com.autotune.analyzer.recommendations.utils;
 
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
-import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.MetricResults;
-import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
-import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
-import com.autotune.utils.KruizeConstants;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
 import java.util.*;
 
 public class RecommendationUtils {
@@ -31,15 +26,15 @@ public class RecommendationUtils {
                 continue;
             IntervalResults intervalResults = filteredResultsMap.get(timestamp);
             if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
                     metricName = AnalyzerConstants.MetricName.namespaceCpuRequest;
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
                     metricName = AnalyzerConstants.MetricName.namespaceMemoryRequest;
             }
             if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
                     metricName = AnalyzerConstants.MetricName.namespaceCpuLimit;
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
                     metricName = AnalyzerConstants.MetricName.namespaceMemoryLimit;
             }
             if (null != metricName) {
@@ -72,15 +67,15 @@ public class RecommendationUtils {
                 continue;
             IntervalResults intervalResults = filteredResultsMap.get(timestamp);
             if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
                     metricName = AnalyzerConstants.MetricName.cpuRequest;
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
                     metricName = AnalyzerConstants.MetricName.memoryRequest;
             }
             if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
                     metricName = AnalyzerConstants.MetricName.cpuLimit;
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
                     metricName = AnalyzerConstants.MetricName.memoryLimit;
             }
             if (null != metricName) {
@@ -106,7 +101,7 @@ public class RecommendationUtils {
         if (null == notifications)
             return;
         // Check if the item is CPU
-        if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu) {
+        if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU) {
             // Check if the setting is REQUESTS
             if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
                 notifications.add(
@@ -121,7 +116,7 @@ public class RecommendationUtils {
             }
         }
         // Check if the item is Memory
-        else if (recommendationItem == AnalyzerConstants.RecommendationItem.memory) {
+        else if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY) {
             // Check if the setting is REQUESTS
             if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
                 notifications.add(

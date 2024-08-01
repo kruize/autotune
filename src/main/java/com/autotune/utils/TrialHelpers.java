@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.utils;
 
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
@@ -25,6 +26,7 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
@@ -69,6 +71,7 @@ public class TrialHelpers {
                 .disableHtmlEscaping()
                 .setPrettyPrinting()
                 .setExclusionStrategies(new KruizeJSONExclusionStrategy())
+                .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                 .create();
         String gsonStr = gsonObj.toJson(experimentTrial);
         return "[" + gsonStr + "]";

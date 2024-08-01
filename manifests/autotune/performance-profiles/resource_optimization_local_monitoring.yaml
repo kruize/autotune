@@ -215,7 +215,6 @@ slo:
         - function: sum
           query: 'sum by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((container_memory_rss{container!="", container!="POD", pod!="", container="$CONTAINER_NAME$", namespace="$NAMESPACE$"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!="",workload="$WORKLOAD$", workload_type="$WORKLOAD_TYPE$"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:]))'
 
-
     ## namespace related queries
     - name: namespaceCpuRequest
       datasource: prometheus
@@ -313,3 +312,39 @@ slo:
         - function: sum
           query: 'sum(count(kube_pod_status_phase{namespace="$NAMESPACE$", phase="Running"}))'
 
+    # GPU Core Usage
+    - name: gpuCoreUsage
+      datasource: prometheus
+      value_type: "double"
+      kubernetes_object: "container"
+
+      aggregation_functions:
+        # Average GPU Core Usage Percentage per container in a deployment
+        - function: avg
+          query: 'avg by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (avg_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
+
+        # Maximum GPU Core Usage Percentage per container in a deployment
+        - function: max
+          query: 'max by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (max_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
+
+        # Minimum of GPU Core Usage Percentage for a container in a deployment
+        - function: min
+          query: 'min by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (min_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
+    # GPU Memory usage
+    - name: gpuMemoryUsage
+      datasource: prometheus
+      value_type: "double"
+      kubernetes_object: "container"
+
+      aggregation_functions:
+        # Average GPU Memory Usage Percentage per container in a deployment
+        - function: avg
+          query: 'avg by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (avg_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
+
+        # Maximum GPU Memory Usage  Percentage per container in a deployment
+        - function: max
+          query: 'max by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (max_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
+
+        # Minimum of GPU Memory Usage  Percentage for a container in a deployment
+        - function: min
+          query: 'min by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (min_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'

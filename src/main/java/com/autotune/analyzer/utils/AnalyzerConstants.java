@@ -119,8 +119,31 @@ public class AnalyzerConstants {
     }
 
     public enum RecommendationItem {
-        cpu,
-        memory
+        CPU("cpu"),
+        MEMORY("memory"),
+        NVIDIA_GPU("nvidia.com/gpu"),
+        NVIDIA_GPU_PARTITION_1_CORE_5GB("nvidia.com/mig-1g.5gb"),
+        NVIDIA_GPU_PARTITION_1_CORE_10GB("nvidia.com/mig-1g.10gb"),
+        NVIDIA_GPU_PARTITION_1_CORE_20GB("nvidia.com/mig-1g.20gb"),
+        NVIDIA_GPU_PARTITION_2_CORES_20GB("nvidia.com/mig-2g.20gb"),
+        NVIDIA_GPU_PARTITION_3_CORES_40GB("nvidia.com/mig-3g.40gb"),
+        NVIDIA_GPU_PARTITION_4_CORES_40GB("nvidia.com/mig-4g.40gb"),
+        NVIDIA_GPU_PARTITION_7_CORES_80GB("nvidia.com/mig-7g.80gb"),
+        NVIDIA_GPU_PARTITION_2_CORES_10GB("nvidia.com/mig-2g.10gb"),
+        NVIDIA_GPU_PARTITION_3_CORES_20GB("nvidia.com/mig-3g.20gb"),
+        NVIDIA_GPU_PARTITION_4_CORES_20GB("nvidia.com/mig-4g.20gb"),
+        NVIDIA_GPU_PARTITION_7_CORES_40GB("nvidia.com/mig-7g.40gb");
+
+        private final String value;
+
+        RecommendationItem(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
     }
 
     public enum CapacityMax {
@@ -174,7 +197,9 @@ public class AnalyzerConstants {
         namespaceMemoryRSS,
         namespaceTotalPods,
         namespaceRunningPods,
-        maxDate
+        maxDate,
+        gpuCoreUsage,
+        gpuMemoryUsage,
     }
 
     public enum K8S_OBJECT_TYPES {
@@ -572,5 +597,18 @@ public class AnalyzerConstants {
 
             }
         }
+    }
+
+    public static final class SupportedGPUs {
+        public static final String A100_80_GB = "A100-80GB";
+        public static final String A100_40_GB = "A100-40GB";
+        public static final String H100 = "H100";
+    }
+
+    public enum DeviceType {
+        CPU,
+        MEMORY,
+        NETWORK,
+        GPU
     }
 }

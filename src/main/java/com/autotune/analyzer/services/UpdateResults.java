@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
@@ -78,6 +79,7 @@ public class UpdateResults extends HttpServlet {
             Gson gson = new GsonBuilder()
                     .registerTypeAdapter(Double.class, new CustomNumberDeserializer())
                     .registerTypeAdapter(Integer.class, new CustomNumberDeserializer())
+                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                     .create();
             LOGGER.debug("updateResults API request payload for requestID {} is {}", calCount, inputData);
             try {

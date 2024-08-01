@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.experimentManager.utils;
 
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
@@ -263,6 +264,7 @@ public class EMUtil {
                     new JSONObject(
                             new GsonBuilder()
                                     .setExclusionStrategies(new KruizeJSONExclusionStrategy())
+                                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                                     .create()
                                     .toJson(experimentTrial.getTrialInfo())
                     )
