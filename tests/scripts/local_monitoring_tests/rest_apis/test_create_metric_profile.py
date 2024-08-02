@@ -24,6 +24,7 @@ from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
 from helpers.list_metric_profiles_validate import *
+from helpers.list_metric_profiles_without_parameters_schema import *
 
 mandatory_fields = [
     ("apiVersion", ERROR_500_STATUS_CODE, ERROR_STATUS),
@@ -133,8 +134,8 @@ def test_create_multiple_metric_profiles(cluster_type):
     input_metric_profile_name = input_json_data['metadata']['name']
 
     # Create metric profile using the specified json
-    num_exps = 100
-    for i in range(num_exps):
+    num_metric_profiles = 100
+    for i in range(num_metric_profiles):
         json_data = copy.deepcopy(input_json_data)
         # Modify the name for each profile
         metric_profile_name = f"{input_metric_profile_name}_{i}"
@@ -169,6 +170,17 @@ def test_create_multiple_metric_profiles(cluster_type):
 
         response = delete_metric_profile(temp_json_file)
         print("delete metric profile = ", response.status_code)
+
+    # list all the metric profile names created
+    response = list_metric_profiles()
+    list_metric_profiles_json = response.json()
+
+    assert len(list_metric_profiles_json) == num_metric_profiles, f"Expected {num_metric_profiles} metric profiles in response, but got {len(list_metric_profiles_json)}"
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    errorMsg = validate_list_metric_profiles_json(list_metric_profiles_json, list_metric_profiles_without_parameters_schema)
+    assert errorMsg == ""
 
     # Write the profiles to the output file
     with open(output_json_file, 'w') as file:
@@ -208,7 +220,7 @@ def test_create_metric_profiles_mandatory_fields(cluster_type, field, expected_s
     with open(json_file, 'w') as file:
         file.write(data)
 
-    response = delete_metric_profile(json_file)
+    response = delete_metric_profile(input_json_file)
     print("delete metric profile = ", response.status_code)
     response = create_metric_profile(json_file)
 
@@ -219,5 +231,5 @@ def test_create_metric_profiles_mandatory_fields(cluster_type, field, expected_s
         f"Mandatory field check failed for {field} actual - {response.status_code} expected - {expected_status_code}"
     assert data['status'] == expected_status
 
-    response = delete_metric_profile(json_file)
+    response = delete_metric_profile(input_json_file)
     print("delete metric profile = ", response.status_code)
