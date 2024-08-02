@@ -30,7 +30,7 @@ DIRECTIONS_NOT_SUPPORTED = "Directions not supported!"
 VALUE_TYPES_SUPPORTED = ("double", "int", "string", "categorical")
 VALUE_TYPE_NOT_SUPPORTED = "Value type not supported!"
 
-KUBERNETES_OBJECTS_TYPE_SUPPORTED = ("deployment", "pod", "container")
+KUBERNETES_OBJECTS_TYPE_SUPPORTED = ("deployment", "pod", "container", "namespace")
 KUBERNETES_OBJECTS_TYPE_NOT_SUPPORTED = "Kubernetes objects type not supported!"
 
 FUNCTION_TYPES_SUPPORTED = ("sum", "avg", "min", "max")
