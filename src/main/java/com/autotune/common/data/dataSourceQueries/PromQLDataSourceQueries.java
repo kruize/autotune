@@ -17,4 +17,5 @@ public class PromQLDataSourceQueries {
     public static final String MEMORY_LIMIT = DataSourceQueries.PromQLQuery.MEMORY_LIMIT.getQuery();
     public static final String MEMORY_REQUEST = DataSourceQueries.PromQLQuery.MEMORY_REQUEST.getQuery();
     public static final String MAX_DATE = DataSourceQueries.PromQLQuery.MAX_DATE.getQuery();
+    public static final String NAMESPACE_MAX_DATE = DataSourceQueries.PromQLQuery.NAMESPACE_MAX_DATE.getQuery();
 }
