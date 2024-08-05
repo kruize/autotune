@@ -215,6 +215,17 @@ slo:
         - function: sum
           query: 'sum by(namespace,container,workload,workload_type,owner_kind) (avg_over_time((container_memory_rss{container!="", container!="POD", pod!="", container="$CONTAINER_NAME$", namespace="$NAMESPACE$"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!="",workload="$WORKLOAD$", workload_type="$WORKLOAD_TYPE$"}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:]))'
 
+    # Container Last Active Timestamp
+    - name: maxDate
+      datasource: prometheus
+      value_type: "double"
+      kubernetes_object: "container"
+
+      aggregation_functions:
+        - function: avg
+          query: 'max by(namespace,container,workload,workload_type,owner_kind) (last_over_time((timestamp(container_cpu_usage_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE$",container="$CONTAINER_NAME$"} > 0))[15d:]) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!='',workload="$WORKLOAD$", workload_type="$WORKLOAD_TYPE$"}[15d])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15d])))'
+
+
     ## namespace related queries
     - name: namespaceCpuRequest
       datasource: prometheus
