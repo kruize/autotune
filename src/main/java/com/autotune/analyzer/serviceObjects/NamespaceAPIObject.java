@@ -3,6 +3,7 @@ package com.autotune.analyzer.serviceObjects;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.List;
  * This NamespaceAPIObject class simulates the NamespaceData class for the create experiment and list experiment API
  */
 public class NamespaceAPIObject {
-    @SerializedName(KruizeConstants.JSONKeys.NAMESPACE_NAME)
+    @SerializedName(KruizeConstants.JSONKeys.NAMESPACE)
     private String namespaceName;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private NamespaceRecommendations namespaceRecommendations;
@@ -30,6 +31,7 @@ public class NamespaceAPIObject {
      * Returns the name of the namespace
      * @return String containing the name of the namespace
      */
+    @JsonProperty(KruizeConstants.JSONKeys.NAMESPACE)
     public String getnamespace_name() {
         return namespaceName;
     }
@@ -38,6 +40,7 @@ public class NamespaceAPIObject {
      * Returns the recommendations object for the namespace
      * @return namespace recommendations object containing the recommendations for a namespace
      */
+    @JsonProperty(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     public NamespaceRecommendations getnamespaceRecommendations() {
         return namespaceRecommendations;
     }
@@ -52,7 +55,7 @@ public class NamespaceAPIObject {
 
     @Override
     public String toString() {
-        return "NamespaceAPIObject{" +
+        return "NamespaceObject{" +
                 "namespaceName='" + namespaceName + '\'' +
                 ", namespaceRecommendations=" + namespaceRecommendations +
                 ", metrics=" + metrics +
