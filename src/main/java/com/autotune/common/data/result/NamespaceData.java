@@ -84,7 +84,7 @@ public class NamespaceData {
 
     /**
      * Returns the recommendations object for the namespace
-     * @return namespace recommendations object containing the recommendatios for a namespace
+     * @return namespace recommendations object containing the recommendations for a namespace
      */
     public NamespaceRecommendations getNamespaceRecommendations() {
         return namespaceRecommendations;
