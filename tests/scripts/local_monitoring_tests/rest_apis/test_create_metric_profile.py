@@ -168,8 +168,8 @@ def test_create_multiple_metric_profiles(cluster_type):
 
         metric_profiles.append(copy.deepcopy(json_data))
 
-        response = delete_metric_profile(temp_json_file)
-        print("delete metric profile = ", response.status_code)
+        # response = delete_metric_profile(temp_json_file)
+        # print("delete metric profile = ", response.status_code)
 
     # list all the metric profile names created
     response = list_metric_profiles()
@@ -185,6 +185,15 @@ def test_create_multiple_metric_profiles(cluster_type):
     # Write the profiles to the output file
     with open(output_json_file, 'w') as file:
         json.dump(metric_profiles, file, indent=4)
+
+    for i in range(num_metric_profiles):
+        metric_profile = metric_profiles[i]
+
+        with open(temp_json_file, 'w') as file:
+            json.dump(metric_profile, file, indent=4)
+
+        response = delete_metric_profile(temp_json_file)
+        print("delete metric profile = ", response.status_code)
 
 
 @pytest.mark.extended

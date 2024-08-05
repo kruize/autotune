@@ -388,22 +388,21 @@ def delete_metric_profile(input_json_file, invalid_header=False):
     input_json = json.loads(json_file.read())
 
     print("\nDeleting the metric profile...")
-    #TODO change the API endpoint based on the implementation
-    url = URL + "/createMetricProfile"
-    print("URL = ", url)
+    url = URL + "/deleteMetricProfile"
 
     metric_profile_name = input_json['metadata']['name']
+    query_string = f"name={metric_profile_name}"
 
-    delete_json = [{
-        "name": metric_profile_name
-    }]
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
 
     headers = {'content-type': 'application/xml'}
     if invalid_header:
         print("Invalid header")
-        response = requests.delete(url, json=delete_json, headers=headers)
+        response = requests.delete(url, headers=headers)
     else:
-        response = requests.delete(url, json=delete_json)
+        response = requests.delete(url)
 
     print(response)
     print("Response status code = ", response.status_code)

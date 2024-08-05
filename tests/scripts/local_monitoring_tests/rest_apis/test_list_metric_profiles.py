@@ -122,7 +122,7 @@ def test_list_metric_profiles_without_creating_profile(cluster_type):
     data = response.json()
 
     assert response.status_code == ERROR_STATUS_CODE
-    assert data['message'] == METRIC_PROFILE_NOT_FOUND_MSG
+    assert data['message'] == LIST_METRIC_PROFILES_INVALID_NAME % metric_profile_name
 
 
     response = delete_metric_profile(input_json_file)
