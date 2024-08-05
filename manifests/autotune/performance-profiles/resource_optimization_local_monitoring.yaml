@@ -387,7 +387,7 @@ slo:
           query: 'max_over_time(sum by(namespace) ((kube_pod_info{namespace="$NAMESPACE$"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
         # average total pods in a namespace
         - function: avg
-          query: 'max_over_time(sum by(namespace) ((kube_pod_info{namespace="$NAMESPACE$"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
+          query: 'avg_over_time(sum by(namespace) ((kube_pod_info{namespace="$NAMESPACE$"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
 
     # Show total running pods in a namespace
@@ -401,9 +401,9 @@ slo:
           query: 'max_over_time(sum by(namespace) ((kube_pod_status_phase{phase="Running"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
         # average total pods in a namespace
         - function: avg
-          query: 'max_over_time(sum by(namespace) ((kube_pod_status_phase{phase="Running"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
+          query: 'avg_over_time(sum by(namespace) ((kube_pod_status_phase{phase="Running"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
-    # Determine last activity of namespace
+    # Show last activity for a namespace
     - name: namespaceMaxDate
       datasource: prometheus
       value_type: "double"
