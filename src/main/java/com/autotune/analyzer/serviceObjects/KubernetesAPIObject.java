@@ -81,8 +81,8 @@ public class KubernetesAPIObject {
                 "type='" + type + '\'' +
                 ", name='" + name + '\'' +
                 ", namespace='" + namespace + '\'' +
-                ", namespace_info=" + namespaceAPIObject.toString() +
-                ", containers=" + containerAPIObjects.toString() +
+                ", namespace_info=" + namespaceAPIObject +
+                ", containers=" + containerAPIObjects +
                 '}';
     }
 }
