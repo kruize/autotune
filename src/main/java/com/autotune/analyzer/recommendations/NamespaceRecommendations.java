@@ -18,6 +18,7 @@ package com.autotune.analyzer.recommendations;
 
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
@@ -47,6 +48,7 @@ public class NamespaceRecommendations {
      * Returns the namespace recommendation data
      * @return hashmap containing the namespace recommendation data and monitoring end time as a key
      */
+    @JsonProperty(KruizeConstants.JSONKeys.DATA)
     public HashMap<Timestamp, MappedRecommendationForTimestamp> getData() {
         return data;
     }
@@ -84,6 +86,7 @@ public class NamespaceRecommendations {
      * Returns the recommendation notifications
      * @return hashmap containing the recommendation notifications
      */
+    @JsonProperty(KruizeConstants.JSONKeys.NOTIFICATIONS)
     public HashMap<Integer, RecommendationNotification> getNotificationMap() {
         return notificationMap;
     }

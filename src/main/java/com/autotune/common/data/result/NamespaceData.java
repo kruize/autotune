@@ -19,6 +19,7 @@ import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
@@ -30,7 +31,7 @@ import java.util.HashMap;
  * data collected from the data source, and recommendations generated for a namespace.
  */
 public class NamespaceData {
-    @SerializedName(KruizeConstants.JSONKeys.NAMESPACE_NAME)
+    @SerializedName(KruizeConstants.JSONKeys.NAMESPACE)
     private String namespaceName;
     // key for the hashmap is intervalEndTime
     private HashMap<Timestamp, IntervalResults> results;
@@ -54,6 +55,7 @@ public class NamespaceData {
      * Returns the name of the namespace
      * @return String containing the name of the namespace
      */
+    @JsonProperty(KruizeConstants.JSONKeys.NAMESPACE)
     public String getNamespace_name() {
         return namespaceName;
     }
@@ -86,6 +88,7 @@ public class NamespaceData {
      * Returns the recommendations object for the namespace
      * @return namespace recommendations object containing the recommendations for a namespace
      */
+    @JsonProperty(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     public NamespaceRecommendations getNamespaceRecommendations() {
         return namespaceRecommendations;
     }
