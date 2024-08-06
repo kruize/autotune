@@ -187,6 +187,7 @@ public class AnalyzerConstants {
         memoryLimit,
         memoryUsage,
         memoryRSS,
+        maxDate,
         namespaceCpuRequest,
         namespaceCpuLimit,
         namespaceCpuUsage,
@@ -197,9 +198,12 @@ public class AnalyzerConstants {
         namespaceMemoryRSS,
         namespaceTotalPods,
         namespaceRunningPods,
-        maxDate,
+        namespaceMaxDate,
         gpuCoreUsage,
         gpuMemoryUsage,
+        metadataNamespaceInfo,
+        metadataWorkloadInfo,
+        metadataContainerInfo
     }
 
     public enum K8S_OBJECT_TYPES {
