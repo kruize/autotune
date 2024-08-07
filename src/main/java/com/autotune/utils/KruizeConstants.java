@@ -400,7 +400,7 @@ public class KruizeConstants {
         public static final String SERVICE_DNS = ".svc.cluster.local";
         public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";
         public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
-        public static final String DATASOURCE_ENDPOINT_WITH_QUERY = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
+        public static final String DATASOURCE_ENDPOINT_WITH_QUERY = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s&timeout=%ss";
         public static final String DATE_ENDPOINT_WITH_QUERY = "%s/api/v1/query?query=%s";
 
         private DataSourceConstants() {
@@ -662,6 +662,7 @@ public class KruizeConstants {
         public static final String CLOUDWATCH_LOGS_LOG_LEVEL = "logging_cloudwatch_logLevel";
         public static final String LOCAL = "local";
         public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
+        public static final String TIMEOUT = "timeout";
     }
 
     public static final class RecommendationEngineConstants {

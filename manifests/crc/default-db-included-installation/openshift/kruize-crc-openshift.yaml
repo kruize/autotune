@@ -93,6 +93,7 @@ data:
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
       "local": "false",
+      "timeout": 300,
       "logAllHttpReqAndResp": "true",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
