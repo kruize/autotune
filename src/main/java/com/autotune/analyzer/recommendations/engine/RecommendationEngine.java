@@ -30,10 +30,7 @@ import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.metrics.KruizeNotificationCollectionRegistry;
 import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.utils.GenericRestApiClient;
-import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.Utils;
+import com.autotune.utils.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -44,13 +41,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
-import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
@@ -2139,6 +2135,7 @@ public class RecommendationEngine {
         try {
             long interval_end_time_epoc = 0;
             long interval_start_time_epoc = 0;
+            int timeout = KruizeDeploymentInfo.timeout;
             SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
 
             String metricProfileName = kruizeObject.getPerformanceProfile();
@@ -2227,180 +2224,73 @@ public class RecommendationEngine {
 
                         List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables();
 
+                        ExecutorService executor = Executors.newFixedThreadPool(ServerContext.KRUIZE_HTTP_THREAD_POOL_COUNT); // TODO: Adjust pool size as needed
+                        // Prepare asynchronous requests
+                        List<CompletableFuture<Void>> futures = new ArrayList<>();
+                        Queue<RetryTask> retryQueue = new ConcurrentLinkedQueue<>();
                         // Iterate over metrics and aggregation functions
                         for (Metric metricEntry : metricList) {
                             if (!metricEntry.getName().startsWith(AnalyzerConstants.NAMESPACE)) {
                                 HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
-                                for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry: aggregationFunctions.entrySet()) {
-                                    String metricQuery = aggregationFunctionsEntry.getValue().getQuery();
-                                    String promQL = metricQuery;
-                                    String format = null;
-                                    boolean isGpuMetric = false;
+                                for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctions.entrySet()) {
+                                    final Metric finalMetricEntry = metricEntry;
+                                    final Map.Entry<String, AggregationFunctions> finalAggregationFunctionsEntry = aggregationFunctionsEntry;
+                                    final String finalNamespace = namespace;
+                                    final String finalContainerName = containerName;
+                                    final String finalWorkload = workload;
+                                    final String finalWorkloadType = workload_type;
+                                    final Double finalMeasurementDurationMinutesInDouble = measurementDurationMinutesInDouble;
+                                    final long finalIntervalStartTimeEpoc = interval_start_time_epoc;
+                                    final long finalIntervalEndTimeEpoc = interval_end_time_epoc;
 
-                                    // Determine format based on metric type - Todo move this metric profile
-                                    List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
-                                    List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString());
-                                    List<String> gpuFunction = Arrays.asList(
-                                            AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
-                                            AnalyzerConstants.MetricName.gpuMemoryUsage.toString()
-                                    );
-                                    if (cpuFunction.contains(metricEntry.getName())) {
-                                        format = KruizeConstants.JSONKeys.CORES;
-                                    } else if (memFunction.contains(metricEntry.getName())) {
-                                        format = KruizeConstants.JSONKeys.BYTES;
-                                    } else if (gpuFunction.contains(metricEntry.getName())) {
-                                        format = KruizeConstants.JSONKeys.CORES;
-                                        isGpuMetric = true;
-                                    }
+                                    CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+                                        executeQuery(finalMetricEntry, finalAggregationFunctionsEntry, finalNamespace,
+                                                finalContainerName, finalWorkload, finalWorkloadType, finalMeasurementDurationMinutesInDouble,
+                                                finalIntervalStartTimeEpoc, finalIntervalEndTimeEpoc, dataSourceInfo,
+                                                containerDataResults, timeout);
+                                    }, executor).exceptionally(ex -> {
+                                        // Add failed task to retry queue
+                                        retryQueue.add(new RetryTask(finalMetricEntry, finalAggregationFunctionsEntry, 1));
+                                        return null;
+                                    });
 
-                                    promQL = promQL
-                                            .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
-                                            .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
-                                            .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
-                                            .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
-                                            .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
-
-                                    // If promQL is determined, fetch metrics from the datasource
-                                    if (promQL != null) {
-                                        LOGGER.info(promQL);
-                                        String podMetricsUrl;
-                                        try {
-                                            podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
-                                                    dataSourceInfo.getUrl(),
-                                                    URLEncoder.encode(promQL, CHARACTER_ENCODING),
-                                                    interval_start_time_epoc,
-                                                    interval_end_time_epoc,
-                                                    measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-                                            JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
-                                            JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
-                                            JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-                                            // Process fetched metrics
-                                            // Here also skip for non gpu-workloads
-                                            if (null != resultArray && !resultArray.isEmpty()) {
-                                                if (isGpuMetric) {
-                                                    for (JsonElement result : resultArray) {
-                                                        JsonObject resultObject = result.getAsJsonObject();
-
-                                                        JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
-                                                        GPUDeviceData gpuDeviceData = new GPUDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
-                                                                metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
-                                                                metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
-                                                                metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
-                                                                true);
-
-                                                        JsonArray valuesArray = resultObject.getAsJsonArray(KruizeConstants.DataSourceConstants
-                                                                .DataSourceQueryJSONKeys.VALUES);
-                                                        sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
-                                                        // Iterate over fetched metrics
-                                                        Timestamp sTime = new Timestamp(interval_start_time_epoc);
-                                                        for (JsonElement element : valuesArray) {
-                                                            JsonArray valueArray = element.getAsJsonArray();
-                                                            long epochTime = valueArray.get(0).getAsLong();
-                                                            double value = valueArray.get(1).getAsDouble();
-                                                            String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
-                                                            Date date = sdf.parse(timestamp);
-                                                            Timestamp tempTime = new Timestamp(date.getTime());
-                                                            Timestamp eTime = CommonUtils.getNearestTimestamp(containerDataResults, tempTime, 5);
-
-                                                            // containerDataResults are empty so will use the prometheus timestamp
-                                                            if (null == eTime)
-                                                                eTime = tempTime;
-
-                                                            // Prepare interval results
-
-                                                            if (containerDataResults.containsKey(eTime)) {
-                                                                intervalResults = containerDataResults.get(eTime);
-                                                                gpuMetricResultMap = intervalResults.getGpuMetricResultHashMap();
-                                                                if (null == gpuMetricResultMap)
-                                                                    gpuMetricResultMap = new HashMap<>();
-                                                            } else {
-                                                                intervalResults = new IntervalResults();
-                                                                gpuMetricResultMap = new HashMap<>();
-                                                            }
-                                                            AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
-                                                            if (gpuMetricResultMap.containsKey(metricName)) {
-                                                                metricResults = gpuMetricResultMap.get(metricName).getMetricResults();
-                                                                metricAggregationInfoResults = metricResults.getAggregationInfoResult();
-                                                            } else {
-                                                                metricResults = new MetricResults();
-                                                                metricAggregationInfoResults = new MetricAggregationInfoResults();
-                                                            }
-                                                            Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
-                                                            method.invoke(metricAggregationInfoResults, value);
-                                                            metricAggregationInfoResults.setFormat(format);
-                                                            metricResults.setAggregationInfoResult(metricAggregationInfoResults);
-                                                            metricResults.setName(String.valueOf(metricName));
-                                                            metricResults.setFormat(format);
-                                                            GpuMetricResult gpuMetricResult = new GpuMetricResult(gpuDeviceData, metricResults);
-                                                            gpuMetricResultMap.put(metricName, gpuMetricResult);
-                                                            intervalResults.setGpuMetricResultHashMap(gpuMetricResultMap);
-                                                            intervalResults.setIntervalStartTime(sTime);  //Todo this will change
-                                                            intervalResults.setIntervalEndTime(eTime);
-                                                            intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
-                                                                    / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
-                                                                    * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
-                                                            containerDataResults.put(eTime, intervalResults);
-                                                            sTime = eTime;
-                                                        }
-                                                    }
-                                                } else {
-                                                    resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
-                                                                    KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
-                                                            .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
-                                                                    .DataSourceQueryJSONKeys.VALUES);
-                                                    sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
-
-                                                    // Iterate over fetched metrics
-                                                    Timestamp sTime = new Timestamp(interval_start_time_epoc);
-                                                    for (JsonElement element : resultArray) {
-                                                        JsonArray valueArray = element.getAsJsonArray();
-                                                        long epochTime = valueArray.get(0).getAsLong();
-                                                        double value = valueArray.get(1).getAsDouble();
-                                                        String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
-                                                        Date date = sdf.parse(timestamp);
-                                                        Timestamp eTime = new Timestamp(date.getTime());
-
-                                                        // Prepare interval results
-                                                        if (containerDataResults.containsKey(eTime)) {
-                                                            intervalResults = containerDataResults.get(eTime);
-                                                            resMap = intervalResults.getMetricResultsMap();
-                                                        } else {
-                                                            intervalResults = new IntervalResults();
-                                                            resMap = new HashMap<>();
-                                                        }
-                                                        AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
-                                                        if (resMap.containsKey(metricName)) {
-                                                            metricResults = resMap.get(metricName);
-                                                            metricAggregationInfoResults = metricResults.getAggregationInfoResult();
-                                                        } else {
-                                                            metricResults = new MetricResults();
-                                                            metricAggregationInfoResults = new MetricAggregationInfoResults();
-                                                        }
-
-                                                        Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
-                                                        method.invoke(metricAggregationInfoResults, value);
-                                                        metricAggregationInfoResults.setFormat(format);
-                                                        metricResults.setAggregationInfoResult(metricAggregationInfoResults);
-                                                        metricResults.setName(metricEntry.getName());
-                                                        metricResults.setFormat(format);
-                                                        resMap.put(metricName, metricResults);
-                                                        intervalResults.setMetricResultsMap(resMap);
-                                                        intervalResults.setIntervalStartTime(sTime);  //Todo this will change
-                                                        intervalResults.setIntervalEndTime(eTime);
-                                                        intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
-                                                                / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
-                                                                * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
-                                                        containerDataResults.put(eTime, intervalResults);
-                                                        sTime = eTime;
-                                                    }
-                                                }
-                                            }
-                                        } catch (Exception e) {
-                                            throw new RuntimeException(e);
-                                        }
-                                    }
+                                    futures.add(future);
                                 }
                             }
+                        }
+
+                        // Wait for all futures to complete
+                        CompletableFuture<Void> allOf = CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]));
+                        try {
+                            allOf.get();
+                            LOGGER.info("All initial tasks completed. Retrying failed tasks...");
+                            // Retry failed tasks
+                            while (!retryQueue.isEmpty()) {
+                                RetryTask task = retryQueue.poll();
+                                if (task.getRetryCount() <= 3) {
+                                    long finalInterval_start_time_epoc = interval_start_time_epoc;
+                                    long finalInterval_end_time_epoc = interval_end_time_epoc;
+                                    CompletableFuture<Void> retryFuture = CompletableFuture.runAsync(() -> {
+                                        executeQuery(task.getMetricEntry(), task.getAggregationFunctionsEntry(), namespace,
+                                                containerName, workload, workload_type, measurementDurationMinutesInDouble,
+                                                finalInterval_start_time_epoc, finalInterval_end_time_epoc, dataSourceInfo, containerDataResults, timeout);
+                                    }, executor).exceptionally(ex -> {
+                                        // Increment retry count and add back to queue if failed
+                                        task.incrementRetryCount();
+                                        retryQueue.add(task);
+                                        return null;
+                                    });
+
+                                    retryFuture.get(); // Ensure sequential execution
+                                } else {
+                                    LOGGER.error("Task failed after 3 retries: {}", task.getMetricEntry().getName());
+                                }
+                            }
+                            LOGGER.info("All tasks completed!");
+                        } catch (InterruptedException | ExecutionException e) {
+                            e.printStackTrace();
+                        } finally {
+                            executor.shutdown();
                         }
 
                         containerData.setResults(containerDataResults);
@@ -2563,6 +2453,221 @@ public class RecommendationEngine {
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
+        }
+    }
+    private static void executeQuery(Metric metricEntry, Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry,
+                                     String namespace, String containerName, String workload, String workloadType,
+                                     Double measurementDurationMinutesInDouble, long intervalStartTimeEpoc, long intervalEndTimeEpoc,
+                                     DataSourceInfo dataSourceInfo, HashMap<Timestamp, IntervalResults> containerDataResults, int timeout) {
+        SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+        IntervalResults intervalResults;
+        HashMap<AnalyzerConstants.MetricName, GpuMetricResult> gpuMetricResultMap;
+        MetricResults metricResults;
+        MetricAggregationInfoResults metricAggregationInfoResults;
+        HashMap<AnalyzerConstants.MetricName, MetricResults> resMap;
+        try {
+            String metricQuery = aggregationFunctionsEntry.getValue().getQuery();
+            String promQL = metricQuery;
+            String format = null;
+            boolean isGpuMetric = false;
+
+            // Determine format based on metric type - Todo move this metric profile
+            List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
+            List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString());
+            List<String> gpuFunction = Arrays.asList(
+                    AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
+                    AnalyzerConstants.MetricName.gpuMemoryUsage.toString()
+            );
+
+            if (cpuFunction.contains(metricEntry.getName())) {
+                format = KruizeConstants.JSONKeys.CORES;
+            } else if (memFunction.contains(metricEntry.getName())) {
+                format = KruizeConstants.JSONKeys.BYTES;
+            } else if (gpuFunction.contains(metricEntry.getName())) {
+                format = KruizeConstants.JSONKeys.CORES;
+                isGpuMetric = true;
+            }
+
+            promQL = promQL
+                    .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                    .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
+                    .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+                    .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workloadType);
+
+            // If promQL is determined, fetch metrics from the datasource
+            if (promQL != null) {
+                LOGGER.info(promQL);
+                String podMetricsUrl;
+                podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
+                        dataSourceInfo.getUrl(),
+                        URLEncoder.encode(promQL, CHARACTER_ENCODING),
+                        intervalStartTimeEpoc,
+                        intervalEndTimeEpoc,
+                        measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE,
+                        timeout);
+                LOGGER.debug("podMetricsUrl: {}", podMetricsUrl);
+                JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+                JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+                // Process fetched metrics
+                // Here also skip for non gpu-workloads
+                if (null != resultArray && !resultArray.isEmpty()) {
+                    if (isGpuMetric) {
+                        for (JsonElement result : resultArray) {
+                            JsonObject resultObject = result.getAsJsonObject();
+
+                            JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
+                            GPUDeviceData gpuDeviceData = new GPUDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
+                                    metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
+                                    metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
+                                    metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
+                                    true);
+
+                            JsonArray valuesArray = resultObject.getAsJsonArray(KruizeConstants.DataSourceConstants
+                                    .DataSourceQueryJSONKeys.VALUES);
+                            sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+                            // Iterate over fetched metrics
+                            Timestamp sTime = new Timestamp(intervalStartTimeEpoc);
+                            for (JsonElement element : valuesArray) {
+                                JsonArray valueArray = element.getAsJsonArray();
+                                long epochTime = valueArray.get(0).getAsLong();
+                                double value = valueArray.get(1).getAsDouble();
+                                String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                                Date date = sdf.parse(timestamp);
+                                Timestamp tempTime = new Timestamp(date.getTime());
+                                Timestamp eTime = CommonUtils.getNearestTimestamp(containerDataResults, tempTime, 5);
+
+                                // containerDataResults are empty so will use the prometheus timestamp
+                                if (null == eTime)
+                                    eTime = tempTime;
+
+                                // Prepare interval results
+
+                                if (containerDataResults.containsKey(eTime)) {
+                                    intervalResults = containerDataResults.get(eTime);
+                                    gpuMetricResultMap = intervalResults.getGpuMetricResultHashMap();
+                                    if (null == gpuMetricResultMap)
+                                        gpuMetricResultMap = new HashMap<>();
+                                } else {
+                                    intervalResults = new IntervalResults();
+                                    gpuMetricResultMap = new HashMap<>();
+                                }
+                                AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
+                                if (gpuMetricResultMap.containsKey(metricName)) {
+                                    metricResults = gpuMetricResultMap.get(metricName).getMetricResults();
+                                    metricAggregationInfoResults = metricResults.getAggregationInfoResult();
+                                } else {
+                                    metricResults = new MetricResults();
+                                    metricAggregationInfoResults = new MetricAggregationInfoResults();
+                                }
+                                Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
+                                method.invoke(metricAggregationInfoResults, value);
+                                metricAggregationInfoResults.setFormat(format);
+                                metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+                                metricResults.setName(String.valueOf(metricName));
+                                metricResults.setFormat(format);
+                                GpuMetricResult gpuMetricResult = new GpuMetricResult(gpuDeviceData, metricResults);
+                                gpuMetricResultMap.put(metricName, gpuMetricResult);
+                                intervalResults.setGpuMetricResultHashMap(gpuMetricResultMap);
+                                intervalResults.setIntervalStartTime(sTime);  //Todo this will change
+                                intervalResults.setIntervalEndTime(eTime);
+                                intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
+                                        / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
+                                        * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
+                                containerDataResults.put(eTime, intervalResults);
+                                sTime = eTime;
+                            }
+                        }
+                    } else {
+                        resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
+                                        KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
+                                .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
+                                        .DataSourceQueryJSONKeys.VALUES);
+                        sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+
+                        // Iterate over fetched metrics
+                        Timestamp sTime = new Timestamp(intervalStartTimeEpoc);
+                        for (JsonElement element : resultArray) {
+                            JsonArray valueArray = element.getAsJsonArray();
+                            long epochTime = valueArray.get(0).getAsLong();
+                            double value = valueArray.get(1).getAsDouble();
+                            String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                            Date date = sdf.parse(timestamp);
+                            Timestamp eTime = new Timestamp(date.getTime());
+
+                            // Prepare interval results
+                            if (containerDataResults.containsKey(eTime)) {
+                                intervalResults = containerDataResults.get(eTime);
+                                resMap = intervalResults.getMetricResultsMap();
+                            } else {
+                                intervalResults = new IntervalResults();
+                                resMap = new HashMap<>();
+                            }
+                            AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
+                            if (resMap.containsKey(metricName)) {
+                                metricResults = resMap.get(metricName);
+                                metricAggregationInfoResults = metricResults.getAggregationInfoResult();
+                            } else {
+                                metricResults = new MetricResults();
+                                metricAggregationInfoResults = new MetricAggregationInfoResults();
+                            }
+
+                            Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
+                            method.invoke(metricAggregationInfoResults, value);
+                            metricAggregationInfoResults.setFormat(format);
+                            metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+                            metricResults.setName(metricEntry.getName());
+                            metricResults.setFormat(format);
+                            resMap.put(metricName, metricResults);
+                            intervalResults.setMetricResultsMap(resMap);
+                            intervalResults.setIntervalStartTime(sTime);  //Todo this will change
+                            intervalResults.setIntervalEndTime(eTime);
+                            // in case of job, take the measurement_duration as the duration in mins
+                            if (workloadType.equalsIgnoreCase(String.valueOf(AnalyzerConstants.K8S_OBJECT_TYPES.JOB))) {
+                                intervalResults.setDurationInMinutes(measurementDurationMinutesInDouble);
+                            } else {
+                                intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
+                                        / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
+                                        * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
+                            }
+                            containerDataResults.put(eTime, intervalResults);
+                            sTime = eTime;
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred: {}", e.getMessage());
+            throw new RuntimeException(e);
+        }
+    }
+
+    private static class RetryTask {
+        private final Metric metricEntry;
+        private final Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry;
+        private int retryCount;
+
+        public RetryTask(Metric metricEntry, Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry, int retryCount) {
+            this.metricEntry = metricEntry;
+            this.aggregationFunctionsEntry = aggregationFunctionsEntry;
+            this.retryCount = retryCount;
+        }
+
+        public Metric getMetricEntry() {
+            return metricEntry;
+        }
+
+        public Map.Entry<String, AggregationFunctions> getAggregationFunctionsEntry() {
+            return aggregationFunctionsEntry;
+        }
+
+        public int getRetryCount() {
+            return retryCount;
+        }
+
+        public void incrementRetryCount() {
+            this.retryCount++;
         }
     }
 }

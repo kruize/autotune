@@ -332,15 +332,15 @@ slo:
       aggregation_functions:
         # Average GPU Core Usage Percentage per container in a deployment
         - function: avg
-          query: 'avg by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (avg_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
+          query: 'avg by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (avg_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m]))'
 
         # Maximum GPU Core Usage Percentage per container in a deployment
         - function: max
-          query: 'max by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (max_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
+          query: 'max by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (max_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m]))'
 
         # Minimum of GPU Core Usage Percentage for a container in a deployment
         - function: min
-          query: 'min by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (min_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
+          query: 'min by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (min_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m]))'
     # GPU Memory usage
     - name: gpuMemoryUsage
       datasource: prometheus
@@ -350,12 +350,12 @@ slo:
       aggregation_functions:
         # Average GPU Memory Usage Percentage per container in a deployment
         - function: avg
-          query: 'avg by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (avg_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
+          query: 'avg by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (avg_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m]))'
 
         # Maximum GPU Memory Usage  Percentage per container in a deployment
         - function: max
-          query: 'max by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (max_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
+          query: 'max by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (max_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m]))'
 
         # Minimum of GPU Memory Usage  Percentage for a container in a deployment
         - function: min
-          query: 'min by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (min_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
+          query: 'min by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (min_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m]))'
