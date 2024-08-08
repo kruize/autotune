@@ -31,7 +31,17 @@ mandatory_fields = [
     ("kind", ERROR_500_STATUS_CODE, ERROR_STATUS),
     ("metadata", ERROR_500_STATUS_CODE, ERROR_STATUS),
     ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("slo", ERROR_500_STATUS_CODE, ERROR_STATUS)
+    ("slo", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("direction", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("objective_function", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("function_type", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("function_variables", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("datasource", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("value_type", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("aggregation_functions", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("function", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("query", ERROR_500_STATUS_CODE, ERROR_STATUS)
 ]
 
 
@@ -157,7 +167,7 @@ def test_create_multiple_metric_profiles(cluster_type):
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
 
-        response = list_metric_profiles(name=metric_profile_name)
+        response = list_metric_profiles(name=metric_profile_name, logging=False)
         metric_profile_json = response.json()
 
         assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -221,6 +231,26 @@ def test_create_metric_profiles_mandatory_fields(cluster_type, field, expected_s
         json_data['metadata'].pop("name", None)
     elif field == "slo":
         json_data.pop("slo", None)
+    elif field == "direction":
+        json_data['slo'].pop("direction", None)
+    elif field == "objective_function":
+        json_data['slo'].pop("objective_function", None)
+    elif field == "function_type":
+        json_data['slo']['objective_function'].pop("function_type", None)
+    elif field == "function_variables":
+        json_data['slo'].pop("function_variables", None)
+    elif field == "name":
+        json_data['slo']['function_variables'].pop("name", None)
+    elif field == "datasource":
+        json_data['slo']['function_variables'][0].pop("datasource", None)
+    elif field == "value_type":
+        json_data['slo']['function_variables'][0].pop("value_type", None)
+    elif field == "aggregation_functions":
+        json_data['slo']['function_variables'][0].pop("aggregation_functions", None)
+    elif field == "function":
+        json_data['slo']['function_variables'][0]['aggregation_functions'][0].pop("function", None)
+    elif field == "query":
+        json_data['slo']['function_variables'][0]['aggregation_functions'][0].pop("query", None)
 
     print("\n*****************************************")
     print(json_data)
@@ -239,6 +269,11 @@ def test_create_metric_profiles_mandatory_fields(cluster_type, field, expected_s
     assert response.status_code == expected_status_code, \
         f"Mandatory field check failed for {field} actual - {response.status_code} expected - {expected_status_code}"
     assert data['status'] == expected_status
+
+    if response.status_code == ERROR_500_STATUS_CODE:
+        assert data['message'] == MISSING_MANDATORY_FIELD_MSG % field
+    else:
+        assert data['message'] == MISSING_MANDATORY_PARAMETERS_MSG % field
 
     response = delete_metric_profile(input_json_file)
     print("delete metric profile = ", response.status_code)
