@@ -55,6 +55,7 @@ public class Analyzer {
         context.addServlet(PerformanceProfileService.class, ServerContext.LIST_PERF_PROFILES);
         context.addServlet(MetricProfileService.class, ServerContext.CREATE_METRIC_PROFILE);
         context.addServlet(MetricProfileService.class, ServerContext.LIST_METRIC_PROFILES);
+        context.addServlet(MetricProfileService.class, ServerContext.DELETE_METRIC_PROFILE);
         context.addServlet(ListDatasources.class, ServerContext.LIST_DATASOURCES);
         context.addServlet(DSMetadataService.class, ServerContext.DATASOURCE_METADATA);
 
