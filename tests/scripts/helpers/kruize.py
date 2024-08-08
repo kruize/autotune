@@ -364,3 +364,75 @@ def list_metadata(datasource=None, cluster_name=None, namespace=None, verbose=No
         print(response.text)
         print("\n************************************************************")
     return response
+
+
+# Description: This function creates a metric profile using the Kruize createMetricProfile API
+# Input Parameters: metric profile json
+def create_metric_profile(metric_profile_json_file):
+    json_file = open(metric_profile_json_file, "r")
+    metric_profile_json = json.loads(json_file.read())
+
+    print("\nCreating metric profile...")
+    url = URL + "/createMetricProfile"
+    print("URL = ", url)
+
+    response = requests.post(url, json=metric_profile_json)
+    print("Response status code = ", response.status_code)
+    print(response.text)
+    return response
+
+# Description: This function deletes the metric profile
+# Input Parameters: metric profile input json
+def delete_metric_profile(input_json_file, invalid_header=False):
+    json_file = open(input_json_file, "r")
+    input_json = json.loads(json_file.read())
+
+    print("\nDeleting the metric profile...")
+    url = URL + "/deleteMetricProfile"
+
+    metric_profile_name = input_json['metadata']['name']
+    query_string = f"name={metric_profile_name}"
+
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
+
+    headers = {'content-type': 'application/xml'}
+    if invalid_header:
+        print("Invalid header")
+        response = requests.delete(url, headers=headers)
+    else:
+        response = requests.delete(url)
+
+    print(response)
+    print("Response status code = ", response.status_code)
+    return response
+
+
+# Description: This function lists the metric profile from Kruize Autotune using GET listMetricProfiles API
+# Input Parameters: metric profile name and verbose - flag indicating granularity of data to be listed
+def list_metric_profiles(name=None, verbose=None, logging=True):
+    print("\nListing the metric profiles...")
+
+    query_params = {}
+
+    if name is not None:
+        query_params['name'] = name
+    if verbose is not None:
+        query_params['verbose'] = verbose
+
+    query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
+
+    url = URL + "/listMetricProfiles"
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
+    print("PARAMS = ", query_params)
+    response = requests.get(url)
+
+    print("Response status code = ", response.status_code)
+    if logging:
+        print("\n************************************************************")
+        print(response.text)
+        print("\n************************************************************")
+    return response
