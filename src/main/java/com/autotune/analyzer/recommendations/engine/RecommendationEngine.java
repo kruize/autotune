@@ -2294,6 +2294,7 @@ public class RecommendationEngine {
                                                         // Iterate over fetched metrics
                                                         Timestamp sTime = new Timestamp(interval_start_time_epoc);
                                                         for (JsonElement element : valuesArray) {
+
                                                             JsonArray valueArray = element.getAsJsonArray();
                                                             long epochTime = valueArray.get(0).getAsLong();
                                                             double value = valueArray.get(1).getAsDouble();
@@ -2303,9 +2304,13 @@ public class RecommendationEngine {
                                                             Timestamp eTime = CommonUtils.getNearestTimestamp(containerDataResults, tempTime, 5);
 
                                                             // containerDataResults are empty so will use the prometheus timestamp
-                                                            if (null == eTime)
-                                                                eTime = tempTime;
-
+                                                            if (null == eTime) {
+                                                                // eTime = tempTime;
+                                                                // Skipping entry, as inconsistency with CPU & memory records may provide null pointer while accessing metric results
+                                                                // TODO: Need to seperate the data records of CPU and memory based on exporter
+                                                                // TODO: Perform recommendation generation by stitching the outcome
+                                                                continue;
+                                                            }
                                                             // Prepare interval results
 
                                                             if (containerDataResults.containsKey(eTime)) {
