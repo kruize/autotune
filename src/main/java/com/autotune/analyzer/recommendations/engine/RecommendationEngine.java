@@ -103,7 +103,7 @@ public class RecommendationEngine {
                 .stream()
                 .map(e -> {
                     Optional<MetricResults> numPodsResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceTotalPods));
-                    double numPods = numPodsResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
+                    double numPods = numPodsResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
                     return numPods;
                 })
                 .max(Double::compareTo).get();
