@@ -271,9 +271,9 @@ def test_create_metric_profiles_mandatory_fields(cluster_type, field, expected_s
     assert data['status'] == expected_status
 
     if response.status_code == ERROR_500_STATUS_CODE:
-        assert data['message'] == MISSING_MANDATORY_FIELD_MSG % field
+        assert data['message'] == CREATE_METRIC_PROFILE_MISSING_MANDATORY_FIELD_MSG % field
     else:
-        assert data['message'] == MISSING_MANDATORY_PARAMETERS_MSG % field
+        assert data['message'] == CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG % field
 
     response = delete_metric_profile(input_json_file)
     print("delete metric profile = ", response.status_code)
