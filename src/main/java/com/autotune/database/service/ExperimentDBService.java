@@ -19,8 +19,8 @@ import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryEx
 import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
+import com.autotune.analyzer.metricProfiles.MetricProfile;
+import com.autotune.analyzer.metricProfiles.utils.MetricProfileUtil;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -127,14 +127,14 @@ public class ExperimentDBService {
         }
     }
 
-    public void loadAllPerformanceProfiles(Map<String, PerformanceProfile> performanceProfileMap) throws Exception {
+    public void loadAllPerformanceProfiles(Map<String, MetricProfile> performanceProfileMap) throws Exception {
         if (performanceProfileMap.isEmpty()) {
             List<KruizePerformanceProfileEntry> entries = experimentDAO.loadAllPerformanceProfiles();
             if (null != entries && !entries.isEmpty()) {
-                List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertPerformanceProfileEntryToPerformanceProfileObject(entries);
+                List<MetricProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertPerformanceProfileEntryToPerformanceProfileObject(entries);
                 if (!performanceProfiles.isEmpty()) {
                     performanceProfiles.forEach(performanceProfile ->
-                            PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile));
+                            MetricProfileUtil.addMetricProfile(performanceProfileMap, performanceProfile));
                 }
             }
         }
@@ -260,7 +260,7 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
-    public ValidationOutputData addPerformanceProfileToDB(PerformanceProfile performanceProfile) {
+    public ValidationOutputData addPerformanceProfileToDB(MetricProfile performanceProfile) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
             KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
@@ -346,15 +346,15 @@ public class ExperimentDBService {
         loadRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName);
     }
 
-    public void loadPerformanceProfileFromDBByName(Map<String, PerformanceProfile> performanceProfileMap, String performanceProfileName) throws Exception {
+    public void loadPerformanceProfileFromDBByName(Map<String, MetricProfile> performanceProfileMap, String performanceProfileName) throws Exception {
         List<KruizePerformanceProfileEntry> entries = experimentDAO.loadPerformanceProfileByName(performanceProfileName);
         if (null != entries && !entries.isEmpty()) {
-            List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters
+            List<MetricProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters
                     .convertPerformanceProfileEntryToPerformanceProfileObject(entries);
             if (!performanceProfiles.isEmpty()) {
-                for (PerformanceProfile performanceProfile : performanceProfiles) {
+                for (MetricProfile performanceProfile : performanceProfiles) {
                     if (null != performanceProfile) {
-                        PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile);
+                        MetricProfileUtil.addMetricProfile(performanceProfileMap, performanceProfile);
                     }
                 }
             }

@@ -19,7 +19,7 @@ package com.autotune.database.helper;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.metricProfiles.MetricProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.serviceObjects.*;
@@ -609,7 +609,7 @@ public class DBHelpers {
                 return listRecommendationsAPIObjectList;
             }
 
-            public static KruizePerformanceProfileEntry convertPerfProfileObjToPerfProfileDBObj(PerformanceProfile performanceProfile) {
+            public static KruizePerformanceProfileEntry convertPerfProfileObjToPerfProfileDBObj(MetricProfile performanceProfile) {
                 KruizePerformanceProfileEntry kruizePerformanceProfileEntry = null;
                 try {
                     kruizePerformanceProfileEntry = new KruizePerformanceProfileEntry();
@@ -631,8 +631,8 @@ public class DBHelpers {
                 return kruizePerformanceProfileEntry;
             }
 
-            public static List<PerformanceProfile> convertPerformanceProfileEntryToPerformanceProfileObject(List<KruizePerformanceProfileEntry> entries) throws Exception {
-                List<PerformanceProfile> performanceProfiles = new ArrayList<>();
+            public static List<MetricProfile> convertPerformanceProfileEntryToPerformanceProfileObject(List<KruizePerformanceProfileEntry> entries) throws Exception {
+                List<MetricProfile> performanceProfiles = new ArrayList<>();
                 int failureThreshHold = entries.size();
                 int failureCount = 0;
                 for (KruizePerformanceProfileEntry entry : entries) {
@@ -640,7 +640,7 @@ public class DBHelpers {
                         JsonNode sloData = entry.getSlo();
                         String slo_rawJson = sloData.toString();
                         SloInfo sloInfo = new Gson().fromJson(slo_rawJson, SloInfo.class);
-                        PerformanceProfile performanceProfile = new PerformanceProfile(
+                        MetricProfile performanceProfile = new MetricProfile(
                                 entry.getName(), entry.getProfile_version(), entry.getK8s_type(), sloInfo);
                         performanceProfiles.add(performanceProfile);
                     } catch (Exception e) {

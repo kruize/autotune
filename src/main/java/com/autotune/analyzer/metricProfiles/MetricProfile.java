@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2022 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2020, 2024 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.performanceProfiles;
+package com.autotune.analyzer.metricProfiles;
 
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.recommendations.term.Terms;
@@ -22,12 +22,12 @@ import com.google.gson.annotations.SerializedName;
 import java.util.Map;
 
 /**
- * Container class for the PerformanceProfile kubernetes kind, which is used to define
+ * Container class for the MetricProfile kubernetes kind, which is used to define
  * a profile
  *
  */
 
-public class PerformanceProfile {
+public class MetricProfile {
 
     private String name;
 
@@ -61,7 +61,7 @@ public class PerformanceProfile {
         this.sloInfo = sloInfo;
     }
 
-    public PerformanceProfile(String name, double profile_version, String k8s_type, SloInfo sloInfo) {
+    public MetricProfile(String name, double profile_version, String k8s_type, SloInfo sloInfo) {
         this.name = name;
         this.profile_version = profile_version;
         this.k8s_type = k8s_type;
@@ -94,7 +94,7 @@ public class PerformanceProfile {
 
     @Override
     public String toString() {
-        return "PerformanceProfile{" +
+        return "MetricProfile{" +
                 "name='" + name + '\'' +
                 ", profile_version=" + profile_version +
                 ", k8s_type='" + k8s_type + '\'' +

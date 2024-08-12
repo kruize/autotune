@@ -6,8 +6,8 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.common.trials.ExperimentSummary;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.common.trials.TrialDetails;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.analyzer.metricProfiles.MetricProfile;
+import com.autotune.analyzer.metricProfiles.MetricProfilesDeployment;
 
 import java.util.TreeMap;
 
@@ -140,9 +140,9 @@ public class KruizeExperiment {
             ExperimentTrial bestExperimentTrial = getExperimentTrials().get(bestTrial);
             TrialDetails bestTrialDetails = bestExperimentTrial.getTrialDetails().get(TRAINING);
             double bestResult = Double.parseDouble(bestTrialDetails.getResult());
-            PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap
-                    .get(kruizeObject.getPerformanceProfile());
-            String direction = performanceProfile.getSloInfo().getDirection();
+            MetricProfile metricProfile = MetricProfilesDeployment.metricProfilesMap
+                    .get(kruizeObject.getMetricProfile());
+            String direction = metricProfile.getSloInfo().getDirection();
             if ((direction.equals(MINIMIZE) && currentResult < bestResult) ||
                     (direction.equals(MAXIMIZE) && currentResult > bestResult)) {
                 experimentSummary.setBestTrial(currentTrial);

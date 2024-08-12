@@ -21,8 +21,8 @@ import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.analyzer.metricProfiles.MetricProfile;
+import com.autotune.analyzer.metricProfiles.MetricProfilesDeployment;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -52,12 +52,12 @@ public class ServiceHelpers {
      * @param kruizeObject
      */
     public static void addExperimentDetails(JSONObject experimentJson, KruizeObject kruizeObject) {
-        PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap
-                .get(kruizeObject.getPerformanceProfile());
+        MetricProfile metricProfile = MetricProfilesDeployment.metricProfilesMap
+                .get(kruizeObject.getMetricProfile());
         experimentJson.put(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME, kruizeObject.getExperimentName());
-        experimentJson.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, performanceProfile.getSloInfo().getDirection());
-        experimentJson.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, performanceProfile.getSloInfo().getObjectiveFunction());
-        experimentJson.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, performanceProfile.getSloInfo().getSloClass());
+        experimentJson.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, metricProfile.getSloInfo().getDirection());
+        experimentJson.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, metricProfile.getSloInfo().getObjectiveFunction());
+        experimentJson.put(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS, metricProfile.getSloInfo().getSloClass());
         experimentJson.put(AnalyzerConstants.AutotuneObjectConstants.EXPERIMENT_ID, kruizeObject.getExperiment_id());
         experimentJson.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, kruizeObject.getHpoAlgoImpl());
         experimentJson.put(AnalyzerConstants.AutotuneObjectConstants.NAMESPACE, kruizeObject.getNamespace());
@@ -163,9 +163,9 @@ public class ServiceHelpers {
     public static void addFunctionVariablesDetails(JSONObject funcVarJson, KruizeObject kruizeObject) {
         // Add function_variables info
         JSONArray functionVariablesArray = new JSONArray();
-        PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap
-                .get(kruizeObject.getPerformanceProfile());
-        for (Metric functionVariable : performanceProfile.getSloInfo().getFunctionVariables()) {
+        MetricProfile metricProfile = MetricProfilesDeployment.metricProfilesMap
+                .get(kruizeObject.getMetricProfile());
+        for (Metric functionVariable : metricProfile.getSloInfo().getFunctionVariables()) {
             JSONObject functionVariableJson = new JSONObject();
             functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.NAME, functionVariable.getName());
             functionVariableJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, functionVariable.getValueType());

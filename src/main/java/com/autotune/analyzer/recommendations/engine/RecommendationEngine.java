@@ -61,7 +61,7 @@ public class RecommendationEngine {
     private final String intervalEndTimeStr;
     private final String intervalStartTimeStr; // TODO: to be used in future
     List<RecommendationModel> recommendationModels;
-    private String performanceProfile;
+    private String metricProfile;
     private String experimentName;
     private Map<String, Terms> terms;
     private KruizeObject kruizeObject;
@@ -139,12 +139,12 @@ public class RecommendationEngine {
         return this.recommendationModels;
     }
 
-    public String getPerformanceProfile() {
-        return performanceProfile;
+    public String getMetricProfile() {
+        return metricProfile;
     }
 
-    public void setPerformanceProfile(String performanceProfile) {
-        this.performanceProfile = performanceProfile;
+    public void setMetricProfile(String metricProfile) {
+        this.metricProfile = metricProfile;
     }
 
     public String getExperimentName() {
@@ -266,8 +266,8 @@ public class RecommendationEngine {
             // set the default terms if the terms aren't provided by the user
             if (kruizeObject.getTerms() == null)
                 KruizeObject.setDefaultTerms(terms, kruizeObject);
-            // set the performance profile
-            setPerformanceProfile(kruizeObject.getPerformanceProfile());
+            // set the metric profile
+            setMetricProfile(kruizeObject.getMetricProfile());
             // get the datasource
             // TODO: If no data source given use KruizeDeploymentInfo.monitoring_agent / default datasource
             String dataSource = kruizeObject.getDataSource();
