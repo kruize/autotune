@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.service;
 
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.metricProfiles.MetricProfile;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.parallelengine.executor.KruizeExecutor;
 import com.autotune.common.parallelengine.queue.KruizeQueue;
@@ -149,7 +149,7 @@ public class InitiateListener implements ServletContextListener {
         /*
           Kruize Performance Profile configuration
          */
-        ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
+        ConcurrentHashMap<String, MetricProfile> performanceProfilesMap = new ConcurrentHashMap<>();
         try {
             new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
         } catch (Exception e) {

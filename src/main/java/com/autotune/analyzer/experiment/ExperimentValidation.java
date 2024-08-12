@@ -16,8 +16,7 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.analyzer.metricProfiles.MetricProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -47,7 +46,7 @@ public class ExperimentValidation {
     private boolean success;
     private String errorMessage;
     private Map<String, KruizeObject> mainKruizeExperimentMAP;
-    private Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
+    private Map<String, MetricProfile> metricProfilesMap = new HashMap<>();
     //Mandatory fields
     private List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.NAME,
@@ -99,20 +98,20 @@ public class ExperimentValidation {
                 boolean proceed = false;
                 String errorMsg = "";
                 if (null == this.mainKruizeExperimentMAP.get(expName)) {
-                    // check for slo and performance profile
-                    if (null != kruizeObject.getPerformanceProfile()) {
+                    // check for slo and metric profile
+                    if (null != kruizeObject.getMetricProfile()) {
                         if (null != kruizeObject.getSloInfo()) {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                         } else {
                             // fetch the Performance Profile from the DB
                             try {
-                                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
+                                new ExperimentDBService().loadPerformanceProfileFromDBByName(metricProfilesMap, kruizeObject.getMetricProfile());
                             } catch (Exception e) {
                                 LOGGER.error("Loading saved Performance Profile {} failed: {} ", expName, e.getMessage());
                             }
-                            if (null == performanceProfilesMap.get(kruizeObject.getPerformanceProfile())) {
-                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getPerformanceProfile();
+                            if (null == metricProfilesMap.get(kruizeObject.getMetricProfile())) {
+                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getMetricProfile();
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             } else
                                 proceed = true;
@@ -122,8 +121,8 @@ public class ExperimentValidation {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                         } else {
-                            String perfProfileName = KruizeOperator.setDefaultPerformanceProfile(kruizeObject.getSloInfo(), mode, target_cluster);
-                            kruizeObject.setPerformanceProfile(perfProfileName);
+                            String metricProfileName = KruizeOperator.setDefaultPerformanceProfile(kruizeObject.getSloInfo(), mode, target_cluster);
+                            kruizeObject.setMetricProfile(metricProfileName);
                             proceed = true;
                         }
                     }
@@ -144,11 +143,11 @@ public class ExperimentValidation {
                 markFailed(validationOutputData.getMessage());
                 break;
             }
-            // set Performance Profile metrics in the Kruize Object
-            PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            // set Metric Profile metrics in the Kruize Object
+            MetricProfile metricProfile = metricProfilesMap.get(kruizeObject.getMetricProfile());
             try {
                 HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
-                for (Metric metric : performanceProfile.getSloInfo().getFunctionVariables()) {
+                for (Metric metric : metricProfile.getSloInfo().getFunctionVariables()) {
                     if (metric.getKubernetesObject().equals(KruizeConstants.JSONKeys.CONTAINER))
                         metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
                 }
@@ -164,7 +163,7 @@ public class ExperimentValidation {
                 }
                 kruizeObject.setKubernetes_objects(k8sObjectList);
             } catch (Exception e) {
-                LOGGER.error("Failed to set Performance Profile Metrics to the Kruize Object: {}", e.getMessage());
+                LOGGER.error("Failed to set Metric Profile Metrics to the Kruize Object: {}", e.getMessage());
             }
         }
     }

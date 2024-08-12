@@ -58,8 +58,8 @@ public final class KruizeObject {
     private SelectorInfo selectorInfo;
     private ObjectReference objectReference;
     private AnalyzerConstants.ExperimentStatus status;
-    @SerializedName("performance_profile")
-    private String performanceProfile;
+    @SerializedName("metric_profile")
+    private String metricProfile;
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
     private ExperimentUseCaseType experiment_usecase_type;
@@ -75,7 +75,7 @@ public final class KruizeObject {
                         String targetCluster,
                         String hpoAlgoImpl,
                         SelectorInfo selectorInfo,
-                        String performanceProfile,
+                        String metricProfile,
                         String datasource,
                         ObjectReference objectReference
     ) throws InvalidValueException {
@@ -102,7 +102,7 @@ public final class KruizeObject {
         } else {
             throw new InvalidValueException(error.toString());
         }
-        this.performanceProfile = performanceProfile;
+        this.metricProfile = metricProfile;
         if (KruizeSupportedTypes.HPO_ALGOS_SUPPORTED.contains(hpoAlgoImpl))
             this.hpoAlgoImpl = hpoAlgoImpl;
         else
@@ -205,12 +205,12 @@ public final class KruizeObject {
         this.status = status;
     }
 
-    public String getPerformanceProfile() {
-        return performanceProfile;
+    public String getMetricProfile() {
+        return metricProfile;
     }
 
-    public void setPerformanceProfile(String performanceProfile) {
-        this.performanceProfile = performanceProfile;
+    public void setMetricProfile(String metricProfile) {
+        this.metricProfile = metricProfile;
     }
 
     public TrialSettings getTrial_settings() {
@@ -315,7 +315,7 @@ public final class KruizeObject {
                 ", selectorInfo=" + selectorInfo +
                 ", objectReference=" + objectReference +
                 ", status=" + status +
-                ", performanceProfile='" + performanceProfile + '\'' +
+                ", metricProfile='" + metricProfile + '\'' +
                 ", trial_settings=" + trial_settings +
                 ", recommendation_settings=" + recommendation_settings +
                 ", experimentUseCaseType=" + experiment_usecase_type +

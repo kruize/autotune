@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.performanceProfiles;
+package com.autotune.analyzer.metricProfiles;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.EvalExParser;
@@ -40,11 +40,11 @@ import java.util.Map;
 /**
  * create Experiment input validation
  */
-public class PerformanceProfileValidation {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileValidation.class);
+public class MetricProfileValidation {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetricProfileValidation.class);
     private boolean success;
     private String errorMessage;
-    private final Map<String, PerformanceProfile> performanceProfilesMap;
+    private final Map<String, MetricProfile> metricProfilesMap;
 
     //Mandatory fields
     private final List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
@@ -64,52 +64,52 @@ public class PerformanceProfileValidation {
             AnalyzerConstants.PerformanceProfileConstants.VALUE_TYPE
     ));
 
-    public PerformanceProfileValidation(Map<String, PerformanceProfile> performanceProfilesMap) {
-        this.performanceProfilesMap = performanceProfilesMap;
+    public MetricProfileValidation(Map<String, MetricProfile> metricProfilesMap) {
+        this.metricProfilesMap = metricProfilesMap;
     }
 
 
     /**
      * Validates function variables
      *
-     * @param performanceProfile Performance Profile Object to be validated
+     * @param metricProfile Metric Profile Object to be validated
      * @return Returns the ValidationOutputData containing the response based on the validation
      */
-    public ValidationOutputData validate(PerformanceProfile performanceProfile) {
+    public ValidationOutputData validate(MetricProfile metricProfile) {
 
-        return validatePerformanceProfileData(performanceProfile);
+        return validateMetricProfileData(metricProfile);
     }
 
     /**
-     * Validates the data present in the performance profile object before adding it to the map
-     * @param performanceProfile
+     * Validates the data present in the metric profile object before adding it to the map
+     * @param metricProfile
      * @return
      */
-    private ValidationOutputData validatePerformanceProfileData(PerformanceProfile performanceProfile) {
+    private ValidationOutputData validateMetricProfileData(MetricProfile metricProfile) {
         // validate the mandatory values first
-        ValidationOutputData validationOutputData = validateMandatoryFieldsAndData(performanceProfile);
+        ValidationOutputData validationOutputData = validateMandatoryFieldsAndData(metricProfile);
 
         // If the mandatory values are present,proceed for further validation else return the validation object directly
         if (validationOutputData.isSuccess()) {
             try {
-                new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
+                new ExperimentDBService().loadAllPerformanceProfiles(metricProfilesMap);
             } catch (Exception e) {
-                LOGGER.error("Loading saved performance profiles failed: {} ", e.getMessage());
+                LOGGER.error("Loading saved metric profiles failed: {} ", e.getMessage());
             }
             StringBuilder errorString = new StringBuilder();
-            // check if the performance profile already exists
-            if (performanceProfilesMap.get(performanceProfile.getName()) != null) {
-                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE).append(performanceProfile.getName());
+            // check if the metric profile already exists
+            if (metricProfilesMap.get(metricProfile.getName()) != null) {
+                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE).append(metricProfile.getName());
                 return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
             }
             // Check if k8s type is supported
-            String k8sType = performanceProfile.getK8S_TYPE();
+            String k8sType = metricProfile.getK8S_TYPE();
             if (!KruizeSupportedTypes.K8S_TYPES_SUPPORTED.contains(k8sType)) {
                 errorString.append(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE).append(k8sType)
                         .append(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED);
             }
 
-            SloInfo sloInfo = performanceProfile.getSloInfo();
+            SloInfo sloInfo = metricProfile.getSloInfo();
             // Check if direction is supported
             if (!KruizeSupportedTypes.DIRECTIONS_SUPPORTED.contains(sloInfo.getDirection()))
                 errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DIRECTION_NOT_SUPPORTED);
@@ -221,10 +221,10 @@ public class PerformanceProfileValidation {
     /**
      * Check if all mandatory values are present.
      *
-     * @param perfObj Mandatory fields of this Performance Profile Object will be validated
+     * @param metricObj Mandatory fields of this Metric Profile Object will be validated
      * @return ValidationOutputData object containing status of the validations
      */
-    public ValidationOutputData validateMandatoryFieldsAndData(PerformanceProfile perfObj) {
+    public ValidationOutputData validateMandatoryFieldsAndData(MetricProfile metricObj) {
         List<String> missingMandatoryFields = new ArrayList<>();
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         String errorMsg;
@@ -234,8 +234,8 @@ public class PerformanceProfileValidation {
                     String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                     try {
                         LOGGER.debug("MethodName = {}",methodName);
-                        Method getNameMethod = perfObj.getClass().getMethod(methodName);
-                        if (getNameMethod.invoke(perfObj) == null)
+                        Method getNameMethod = metricObj.getClass().getMethod(methodName);
+                        if (getNameMethod.invoke(metricObj) == null)
                             missingMandatoryFields.add(mField);
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                         LOGGER.error("Method name {} doesn't exist!", mField);
@@ -249,8 +249,8 @@ public class PerformanceProfileValidation {
                             String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                             try {
                                 LOGGER.debug("MethodName = {}",methodName);
-                                Method getNameMethod = perfObj.getSloInfo().getClass().getMethod(methodName);
-                                if (getNameMethod.invoke(perfObj.getSloInfo()) == null)
+                                Method getNameMethod = metricObj.getSloInfo().getClass().getMethod(methodName);
+                                if (getNameMethod.invoke(metricObj.getSloInfo()) == null)
                                     missingMandatoryFields.add(mField);
                             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                                 LOGGER.error("Method name {} doesn't exist!", mField);
@@ -263,9 +263,9 @@ public class PerformanceProfileValidation {
                                 String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                                 try {
                                     LOGGER.debug("MethodName = {}",methodName);
-                                    Method getNameMethod = perfObj.getSloInfo().getFunctionVariables().get(0)
+                                    Method getNameMethod = metricObj.getSloInfo().getFunctionVariables().get(0)
                                             .getClass().getMethod(methodName);
-                                    if (getNameMethod.invoke(perfObj.getSloInfo().getFunctionVariables().get(0)) == null)
+                                    if (getNameMethod.invoke(metricObj.getSloInfo().getFunctionVariables().get(0)) == null)
                                         missingMandatoryFields.add(mField);
                                 } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                                     LOGGER.error("Method name {} doesn't exist!", mField);
@@ -277,9 +277,9 @@ public class PerformanceProfileValidation {
                     mandatoryObjFuncData.substring(1);
                     try {
                         LOGGER.debug("MethodName = {}",methodName);
-                        Method getNameMethod = perfObj.getSloInfo().getObjectiveFunction()
+                        Method getNameMethod = metricObj.getSloInfo().getObjectiveFunction()
                                 .getClass().getMethod(methodName);
-                        if (getNameMethod.invoke(perfObj.getSloInfo().getObjectiveFunction()) == null)
+                        if (getNameMethod.invoke(metricObj.getSloInfo().getObjectiveFunction()) == null)
                             missingMandatoryFields.add(mandatoryObjFuncData);
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                         LOGGER.error("Method name {} doesn't exist!", mandatoryObjFuncData);
@@ -311,7 +311,7 @@ public class PerformanceProfileValidation {
     }
     @Override
     public String toString() {
-        return "PerformanceProfileValidation{" +
+        return "MetricProfileValidation{" +
                 "success=" + success +
                 ", errorMessage='" + errorMessage + '\'' +
                 '}';

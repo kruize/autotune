@@ -23,8 +23,8 @@ import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.kruizeLayer.layers.Layer;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.analyzer.metricProfiles.MetricProfile;
+import com.autotune.analyzer.metricProfiles.MetricProfilesDeployment;
 import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
@@ -186,8 +186,8 @@ public class TrialHelpers {
         ContainerConfigData configData = new ContainerConfigData();
         HashMap<String, Metric> podMetricsHashMap = new HashMap<>();
         HashMap<String, HashMap<String, Metric>> containerMetricsHashMap = new HashMap<>();
-        PerformanceProfile performanceProfile = PerformanceProfilesDeployment.performanceProfilesMap
-                .get(kruizeObject.getPerformanceProfile());
+        MetricProfile performanceProfile = MetricProfilesDeployment.metricProfilesMap
+                .get(kruizeObject.getMetricProfile());
         SloInfo sloInfo = performanceProfile.getSloInfo();
         for (Metric metric : sloInfo.getFunctionVariables()) {
             podMetricsHashMap.put(metric.getName(), metric);

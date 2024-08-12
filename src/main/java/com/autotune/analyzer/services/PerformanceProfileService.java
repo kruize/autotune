@@ -18,8 +18,8 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
+import com.autotune.analyzer.metricProfiles.MetricProfile;
+import com.autotune.analyzer.metricProfiles.utils.MetricProfileUtil;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -60,12 +60,12 @@ public class PerformanceProfileService extends HttpServlet {
     @Serial
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileService.class);
-    private ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap;
+    private ConcurrentHashMap<String, MetricProfile> performanceProfilesMap;
 
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        performanceProfilesMap = (ConcurrentHashMap<String, PerformanceProfile>) getServletContext()
+        performanceProfilesMap = (ConcurrentHashMap<String, MetricProfile>) getServletContext()
                 .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
     }
 
@@ -79,10 +79,10 @@ public class PerformanceProfileService extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
-            Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
+            Map<String, MetricProfile> performanceProfilesMap = new ConcurrentHashMap<>();
             String inputData = request.getReader().lines().collect(Collectors.joining());
-            PerformanceProfile performanceProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
-            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, performanceProfile);
+            MetricProfile performanceProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
+            ValidationOutputData validationOutputData = MetricProfileUtil.validateAndAddProfile(performanceProfilesMap, performanceProfile);
             if (validationOutputData.isSuccess()) {
                 ValidationOutputData addedToDB = new ExperimentDBService().addPerformanceProfileToDB(performanceProfile);
                 if (addedToDB.isSuccess()) {
@@ -124,7 +124,7 @@ public class PerformanceProfileService extends HttpServlet {
             LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
         }
         if (performanceProfilesMap.size() > 0) {
-            Collection<PerformanceProfile> values = performanceProfilesMap.values();
+            Collection<MetricProfile> values = performanceProfilesMap.values();
             Gson gsonObj = new GsonBuilder()
                     .disableHtmlEscaping()
                     .setPrettyPrinting()

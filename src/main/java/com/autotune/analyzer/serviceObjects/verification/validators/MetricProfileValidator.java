@@ -16,10 +16,10 @@
 package com.autotune.analyzer.serviceObjects.verification.validators;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
+import com.autotune.analyzer.metricProfiles.MetricProfile;
+import com.autotune.analyzer.metricProfiles.utils.MetricProfileUtil;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
-import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
+import com.autotune.analyzer.serviceObjects.verification.annotators.MetricProfileCheck;
 import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.database.service.ExperimentDBService;
 import jakarta.validation.ConstraintValidator;
@@ -34,11 +34,11 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE;
 
-public class PerformanceProfileValidator implements ConstraintValidator<PerformanceProfileCheck, UpdateResultsAPIObject> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileValidator.class);
+public class MetricProfileValidator implements ConstraintValidator<MetricProfileCheck, UpdateResultsAPIObject> {
+    private static final Logger LOGGER = LoggerFactory.getLogger(MetricProfileValidator.class);
 
     @Override
-    public void initialize(PerformanceProfileCheck constraintAnnotation) {
+    public void initialize(MetricProfileCheck constraintAnnotation) {
     }
 
     @Override
@@ -46,31 +46,31 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
         LOGGER.debug("PerformanceProfileValidator expName - {} - {} - {}", updateResultsAPIObject.getExperimentName(), updateResultsAPIObject.getStartTimestamp(), updateResultsAPIObject.getEndTimestamp());
         boolean success = false;
         /*
-         Fetch the performance profile from the Map corresponding to the name in the kruize object,
-         and then validate the Performance Profile data
+         Fetch the metric profile from the Map corresponding to the name in the kruize object,
+         and then validate the Metric Profile data
         */
         try {
             KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
-            if (UpdateResults.performanceProfilesMap.isEmpty() || !UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
-                ConcurrentHashMap<String, PerformanceProfile> tempPerformanceProfilesMap = new ConcurrentHashMap<>();
-                new ExperimentDBService().loadAllPerformanceProfiles(tempPerformanceProfilesMap);
-                UpdateResults.performanceProfilesMap.putAll(tempPerformanceProfilesMap);
+            if (UpdateResults.metricProfilesMap.isEmpty() || !UpdateResults.metricProfilesMap.containsKey(kruizeObject.getMetricProfile())) {
+                ConcurrentHashMap<String, MetricProfile> tempMetricProfilesMap = new ConcurrentHashMap<>();
+                new ExperimentDBService().loadAllPerformanceProfiles(tempMetricProfilesMap);
+                UpdateResults.metricProfilesMap.putAll(tempMetricProfilesMap);
             }
-            PerformanceProfile performanceProfile = null;
-            if (UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
-                performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            MetricProfile metricProfile = null;
+            if (UpdateResults.metricProfilesMap.containsKey(kruizeObject.getMetricProfile())) {
+                metricProfile = UpdateResults.metricProfilesMap.get(kruizeObject.getMetricProfile());
             } else {
-                throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, kruizeObject.getPerformanceProfile()));
+                throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, kruizeObject.getMetricProfile()));
             }
 
             // validate the results value present in the updateResultsAPIObject
-            List<String> errorMsg = PerformanceProfileUtil.validateResults(performanceProfile, updateResultsAPIObject);
+            List<String> errorMsg = MetricProfileUtil.validateResults(metricProfile, updateResultsAPIObject);
             if (errorMsg.isEmpty()) {
                 success = true;
             } else {
                 context.disableDefaultConstraintViolation();
                 context.buildConstraintViolationWithTemplate(errorMsg.toString())
-                        .addPropertyNode("Performance profile")
+                        .addPropertyNode("Metric profile")
                         .addConstraintViolation();
             }
 

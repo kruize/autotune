@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects.verification.annotators;
 
-import com.autotune.analyzer.serviceObjects.verification.validators.PerformanceProfileValidator;
+import com.autotune.analyzer.serviceObjects.verification.validators.MetricProfileValidator;
 import jakarta.validation.Constraint;
 import jakarta.validation.Payload;
 
@@ -23,9 +23,9 @@ import java.lang.annotation.*;
 
 @Target({ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
-@Constraint(validatedBy = PerformanceProfileValidator.class)
+@Constraint(validatedBy = MetricProfileValidator.class)
 @Documented
-public @interface PerformanceProfileCheck {
+public @interface MetricProfileCheck {
     String message() default "";
 
     Class<?>[] groups() default {};

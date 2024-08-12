@@ -19,7 +19,7 @@ import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.CompareDate;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
-import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
+import com.autotune.analyzer.serviceObjects.verification.annotators.MetricProfileCheck;
 import com.autotune.analyzer.serviceObjects.verification.annotators.TimeDifferenceCheck;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.utils.KruizeConstants;
@@ -33,7 +33,7 @@ import java.util.List;
 
 @CompareDate(groups = BaseSO.InitialValidation.class, message = AnalyzerErrorConstants.AutotuneObjectErrors.WRONG_TIMESTAMP)
 @TimeDifferenceCheck(groups = UpdateResultsAPIObject.EvaluateRemainingConstraints.class, message = AnalyzerErrorConstants.AutotuneObjectErrors.MEASUREMENT_DURATION_ERROR)
-@PerformanceProfileCheck(groups = UpdateResultsAPIObject.EvaluatePerformanceProfileConstraints.class)
+@MetricProfileCheck(groups = UpdateResultsAPIObject.EvaluatePerformanceProfileConstraints.class)
 @KubernetesElementsCheck(groups = UpdateResultsAPIObject.EvaluateRemainingConstraints.class)
 public class UpdateResultsAPIObject extends BaseSO {
 

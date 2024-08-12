@@ -25,9 +25,9 @@ import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SelectorInfo;
 import com.autotune.analyzer.kruizeObject.SloInfo;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
-import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
+import com.autotune.analyzer.metricProfiles.MetricProfile;
+import com.autotune.analyzer.metricProfiles.MetricProfilesDeployment;
+import com.autotune.analyzer.metricProfiles.utils.MetricProfileUtil;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -364,7 +364,7 @@ public class KruizeOperator {
                         throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR);
                     } else {
                         // check if the Performance profile with the given name exist
-                        if (null == PerformanceProfilesDeployment.performanceProfilesMap.get(perfProfileName)) {
+                        if (null == MetricProfilesDeployment.metricProfilesMap.get(perfProfileName)) {
                             throw new SloClassNotSupportedException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + perfProfileName);
                         }
                     }
@@ -425,15 +425,15 @@ public class KruizeOperator {
     }
 
     public static String setDefaultPerformanceProfile(SloInfo sloInfo, String mode, String targetCluster) {
-        PerformanceProfile performanceProfile = null;
+        MetricProfile performanceProfile = null;
         try {
             String name = AnalyzerConstants.PerformanceProfileConstants.DEFAULT_PROFILE;
             double profile_version = AnalyzerConstants.DEFAULT_PROFILE_VERSION;
             String k8s_type = AnalyzerConstants.DEFAULT_K8S_TYPE;
-            performanceProfile = new PerformanceProfile(name, profile_version, k8s_type, sloInfo);
+            performanceProfile = new MetricProfile(name, profile_version, k8s_type, sloInfo);
 
             if (null != performanceProfile) {
-                ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(PerformanceProfilesDeployment.performanceProfilesMap, performanceProfile);
+                ValidationOutputData validationOutputData = MetricProfileUtil.validateAndAddProfile(MetricProfilesDeployment.metricProfilesMap, performanceProfile);
                 if (validationOutputData.isSuccess()) {
                     LOGGER.info("Added Performance Profile : {} into the map with version: {}",
                             performanceProfile.getName(), performanceProfile.getProfile_version());

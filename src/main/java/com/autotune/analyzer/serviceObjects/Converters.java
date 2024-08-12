@@ -5,7 +5,7 @@ import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
+import com.autotune.analyzer.metricProfiles.MetricProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -27,7 +27,6 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
@@ -72,7 +71,7 @@ public class Converters {
                 kruizeObject.setTarget_cluster(createExperimentAPIObject.getTargetCluster());
                 kruizeObject.setClusterName(createExperimentAPIObject.getClusterName());
                 kruizeObject.setMode(createExperimentAPIObject.getMode());
-                kruizeObject.setPerformanceProfile(createExperimentAPIObject.getPerformanceProfile());
+                kruizeObject.setMetricProfile(createExperimentAPIObject.getPerformanceProfile());
                 kruizeObject.setDataSource(createExperimentAPIObject.getDatasource());
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
                 kruizeObject.setTrial_settings(createExperimentAPIObject.getTrialSettings());
@@ -250,11 +249,11 @@ public class Converters {
             return experimentResultData;
         }
 
-        public static PerformanceProfile convertInputJSONToCreatePerfProfile(String inputData) throws InvalidValueException {
-            PerformanceProfile performanceProfile = null;
+        public static MetricProfile convertInputJSONToCreatePerfProfile(String inputData) throws InvalidValueException {
+            MetricProfile metricProfile = null;
             if (inputData != null) {
                 JSONObject jsonObject = new JSONObject(inputData);
-                String perfProfileName = jsonObject.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
+                String metricProfileName = jsonObject.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
                 Double profileVersion = jsonObject.has(AnalyzerConstants.PROFILE_VERSION) ? jsonObject.getDouble(AnalyzerConstants.PROFILE_VERSION) : null;
                 String k8sType = jsonObject.has(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE) ? jsonObject.getString(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE) : null;
                 JSONObject sloJsonObject = jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
@@ -285,9 +284,9 @@ public class Converters {
                 String direction = sloJsonObject.has(AnalyzerConstants.AutotuneObjectConstants.DIRECTION) ? sloJsonObject.get(AnalyzerConstants.AutotuneObjectConstants.DIRECTION).toString() : null;
                 ObjectiveFunction objectiveFunction = new Gson().fromJson(sloJsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION).toString(), ObjectiveFunction.class);
                 SloInfo sloInfo = new SloInfo(sloClass, objectiveFunction, direction, functionVariablesList);
-                performanceProfile = new PerformanceProfile(perfProfileName, profileVersion, k8sType, sloInfo);
+                metricProfile = new MetricProfile(metricProfileName, profileVersion, k8sType, sloInfo);
             }
-            return performanceProfile;
+            return metricProfile;
         }
 
         public static ConcurrentHashMap<String, KruizeObject> ConvertUpdateResultDataToAPIResponse(ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap) {
