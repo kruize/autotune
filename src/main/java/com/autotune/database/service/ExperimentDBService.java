@@ -388,6 +388,27 @@ public class ExperimentDBService {
         }
     }
 
+    /**
+     * Fetches Metric Profile by name from kruizeMetricProfileEntry
+     * @param metricProfileMap Map to store metric profile loaded from the database
+     * @param metricProfileName Metric profile name to be fetched
+     * @return ValidationOutputData object
+     */
+    public void loadMetricProfileFromDBByName(Map<String, PerformanceProfile> metricProfileMap, String metricProfileName) throws Exception {
+        List<KruizeMetricProfileEntry> entries = experimentDAO.loadMetricProfileByName(metricProfileName);
+        if (null != entries && !entries.isEmpty()) {
+            List<PerformanceProfile> metricProfiles = DBHelpers.Converters.KruizeObjectConverters
+                    .convertMetricProfileEntryToMetricProfileObject(entries);
+            if (!metricProfiles.isEmpty()) {
+                for (PerformanceProfile performanceProfile : metricProfiles) {
+                    if (null != performanceProfile) {
+                        PerformanceProfileUtil.addMetricProfile(metricProfileMap, performanceProfile);
+                    }
+                }
+            }
+        }
+    }
+
     public void loadAllExperimentsAndRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
 
         loadAllExperiments(mainKruizeExperimentMap);

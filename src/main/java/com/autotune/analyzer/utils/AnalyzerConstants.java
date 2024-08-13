@@ -463,6 +463,10 @@ public class AnalyzerConstants {
         public static final String PERFORMANCE_PROFILE_PKG = "com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.";
         public static final String DEFAULT_PROFILE = "default";
 
+        //Metric profile constants
+        public static final String DEFAULT_API_VERSION = "recommender.com/v1";
+        public static final String DEFAULT_KIND = "KruizePerformanceProfile";
+
         // Perf profile names
         public static final String RESOURCE_OPT_OPENSHIFT_PROFILE = "resource-optimization-openshift";
         public static final String RESOURCE_OPT_LOCAL_MON_PROFILE = "resource-optimization-local-monitoring";
