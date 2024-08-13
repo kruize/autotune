@@ -2960,6 +2960,361 @@ Returns the recommendation at a particular timestamp if it exists
 
 </details>
 
+**Response for GPU workloads**
+
+`GET /listRecommendations`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listRecommendations?experiment_name=job-01`
+
+<details>
+<summary><b>Example Response with GPU Recommendations</b></summary>
+
+```json
+[
+  {
+    "cluster_name": "default",
+    "kubernetes_objects": [
+      {
+        "type": "job",
+        "name": "kruize-demo-job",
+        "namespace": "openshift-tuning",
+        "namespaces": {},
+        "containers": [
+          {
+            "container_image_name": "kruize/job-support",
+            "container_name": "kruize-demo-job-test",
+            "recommendations": {
+              "version": "1.0",
+              "notifications": {
+                "111000": {
+                  "type": "info",
+                  "message": "Recommendations Are Available",
+                  "code": 111000
+                }
+              },
+              "data": {
+                "2024-08-09T10:07:09.000Z": {
+                  "notifications": {
+                    "111104": {
+                      "type": "info",
+                      "message": "Fixed Term Recommendations Available",
+                      "code": 111104
+                    }
+                  },
+                  "monitoring_end_time": "2024-08-09T10:07:09.000Z",
+                  "current": {},
+                  "recommendation_terms": {
+                    "fixed_term": {
+                      "duration_in_hours": 360.0,
+                      "notifications": {
+                        "112101": {
+                          "type": "info",
+                          "message": "Cost Recommendations Available",
+                          "code": 112101
+                        },
+                        "112102": {
+                          "type": "info",
+                          "message": "Performance Recommendations Available",
+                          "code": 112102
+                        }
+                      },
+                      "monitoring_start_time": "2024-07-25T10:07:09.000Z",
+                      "recommendation_engines": {
+                        "cost": {
+                          "pods_count": 1,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "limits": {
+                              "memory": {
+                                "amount": 1.1090952192E9,
+                                "format": "bytes"
+                              },
+                              "nvidia.com/mig-1g.5gb": {
+                                "amount": 1.0,
+                                "format": "cores"
+                              }
+                            },
+                            "requests": {
+                              "memory": {
+                                "amount": 1.1090952192E9,
+                                "format": "bytes"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "limits": {
+                              "memory": {
+                                "amount": 1.1090952192E9,
+                                "format": "bytes"
+                              }
+                            },
+                            "requests": {
+                              "memory": {
+                                "amount": 1.1090952192E9,
+                                "format": "bytes"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "323002": {
+                              "type": "notice",
+                              "message": "CPU usage is zero, No CPU Recommendations can be generated",
+                              "code": 323002
+                            }
+                          }
+                        },
+                        "performance": {
+                          "pods_count": 1,
+                          "confidence_level": 0.0,
+                          "config": {
+                            "limits": {
+                              "memory": {
+                                "amount": 1.1090952192E9,
+                                "format": "bytes"
+                              },
+                              "nvidia.com/mig-4g.20gb": {
+                                "amount": 1.0,
+                                "format": "cores"
+                              }
+                            },
+                            "requests": {
+                              "memory": {
+                                "amount": 1.1090952192E9,
+                                "format": "bytes"
+                              }
+                            }
+                          },
+                          "variation": {
+                            "limits": {
+                              "memory": {
+                                "amount": 1.1090952192E9,
+                                "format": "bytes"
+                              }
+                            },
+                            "requests": {
+                              "memory": {
+                                "amount": 1.1090952192E9,
+                                "format": "bytes"
+                              }
+                            }
+                          },
+                          "notifications": {
+                            "323002": {
+                              "type": "notice",
+                              "message": "CPU usage is zero, No CPU Recommendations can be generated",
+                              "code": 323002
+                            }
+                          }
+                        }
+                      },
+                      "plots": {
+                        "datapoints": 15,
+                        "plots_data": {
+                          "2024-07-26T10:07:09.000Z": {},
+                          "2024-07-27T10:07:09.000Z": {},
+                          "2024-07-28T10:07:09.000Z": {},
+                          "2024-07-29T10:07:09.000Z": {},
+                          "2024-07-30T10:07:09.000Z": {},
+                          "2024-07-31T10:07:09.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 1.1810099826666658,
+                              "max": 1.2382265636666658,
+                              "format": "cores"
+                            },
+                            "memoryUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 9.23123712E8,
+                              "max": 9.24246016E8,
+                              "format": "bytes"
+                            }
+                          },
+                          "2024-08-01T10:07:09.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            },
+                            "memoryUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 3.058688E8,
+                              "format": "bytes"
+                            }
+                          },
+                          "2024-08-02T10:07:09.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            },
+                            "memoryUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            }
+                          },
+                          "2024-08-03T10:07:09.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            },
+                            "memoryUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            }
+                          },
+                          "2024-08-04T10:07:09.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            },
+                            "memoryUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            }
+                          },
+                          "2024-08-05T10:07:09.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            },
+                            "memoryUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            }
+                          },
+                          "2024-08-06T10:07:09.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            },
+                            "memoryUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            }
+                          },
+                          "2024-08-07T10:07:09.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            },
+                            "memoryUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            }
+                          },
+                          "2024-08-08T10:07:09.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            },
+                            "memoryUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            }
+                          },
+                          "2024-08-09T10:07:09.000Z": {
+                            "cpuUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            },
+                            "memoryUsage": {
+                              "min": 0.0,
+                              "q1": 0.0,
+                              "median": 0.0,
+                              "q3": 0.0,
+                              "max": 0.0,
+                              "format": ""
+                            }
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "job-01"
+  }
+]
+```
+
+</details>
+
+
 ### Invalid Scenarios:
 
 <details>
