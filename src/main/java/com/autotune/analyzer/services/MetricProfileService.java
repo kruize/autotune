@@ -27,8 +27,10 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.result.ContainerData;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.KruizeSupportedTypes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.*;
@@ -45,9 +47,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serial;
 import java.lang.reflect.Type;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -112,69 +112,102 @@ public class MetricProfileService extends HttpServlet {
     /**
      * Get List of Metric Profiles
      *
-     * @param req
+     * @param request
      * @param response
      * @throws ServletException
      * @throws IOException
      */
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse response) throws ServletException, IOException {
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
         String gsonStr = "[]";
-        // Fetch all metric profiles from the DB
+
+        ConcurrentHashMap<String, PerformanceProfile> metricProfilesMap = new ConcurrentHashMap<>();
+        String metricProfileName = request.getParameter(AnalyzerConstants.PerformanceProfileConstants.METRIC_PROFILE_NAME);
+        String verbose = request.getParameter(AnalyzerConstants.ServiceConstants.VERBOSE);
+        String internalVerbose = "false";
+        boolean error = false;
+
+        // validate Query params
+        Set<String> invalidParams = new HashSet<>();
+        for (String param : request.getParameterMap().keySet()) {
+            if (!KruizeSupportedTypes.LIST_METRIC_PROFILES_QUERY_PARAMS_SUPPORTED.contains(param)) {
+                invalidParams.add(param);
+            }
+        }
+
+        // Fetch metric profiles based on the query parameters using the in-memory storage collection
         try {
-            new ExperimentDBService().loadAllMetricProfiles(metricProfilesMap);
+            if (invalidParams.isEmpty()) {
+                if (null != verbose) {
+                    internalVerbose = verbose;
+                }
+
+                try {
+                    if (null != metricProfileName && !metricProfileName.isEmpty()) {
+                        internalVerbose = "true";
+                        loadMetricProfilesFromCollection(metricProfilesMap, metricProfileName);
+                    } else {
+                        loadAllMetricProfilesFromCollection(metricProfilesMap);
+                    }
+
+                    // Check if metric profile exists
+                    if (metricProfileName != null && !metricProfilesMap.containsKey(metricProfileName)) {
+                        error = true;
+                        sendErrorResponse(
+                                response,
+                                new Exception(AnalyzerErrorConstants.APIErrors.ListMetricProfileAPI.INVALID_METRIC_PROFILE_NAME_EXCPTN),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                String.format(AnalyzerErrorConstants.APIErrors.ListMetricProfileAPI.INVALID_METRIC_PROFILE_NAME_MSG, metricProfileName)
+                        );
+                    } else if (null == metricProfileName && metricProfilesMap.isEmpty()) {
+                        error = true;
+                        sendErrorResponse(
+                                response,
+                                new Exception(AnalyzerErrorConstants.APIErrors.ListMetricProfileAPI.NO_METRIC_PROFILES_EXCPTN),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                AnalyzerErrorConstants.APIErrors.ListMetricProfileAPI.NO_METRIC_PROFILES
+                        );
+                    }
+
+                    if (!error) {
+                        Collection<PerformanceProfile> values = metricProfilesMap.values();
+                        // create Gson Object
+                        Gson gsonObj = createGsonObject();
+
+                        if (internalVerbose.equals("false")) {
+                            Collection<JsonObject> filteredValues = new ArrayList<>();
+                            for(PerformanceProfile performanceProfile: values) {
+                                JsonObject jsonObject = new JsonObject();
+                                jsonObject.addProperty("name", performanceProfile.getMetadata().get("name").asText());
+                                filteredValues.add(jsonObject);
+                            }
+                            gsonStr = gsonObj.toJson(filteredValues);
+                        } else {
+                            gsonStr = gsonObj.toJson(values);
+                        }
+                        response.getWriter().println(gsonStr);
+                        response.getWriter().close();
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Exception: {}", e.getMessage());
+                    e.printStackTrace();
+                    sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                }
+            } else {
+                sendErrorResponse(
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.ListMetricProfileAPI.INVALID_QUERY_PARAM),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.ListMetricProfileAPI.INVALID_QUERY_PARAM, invalidParams)
+                );
+            }
         } catch (Exception e) {
             LOGGER.error(KruizeConstants.MetricProfileAPIMessages.LOAD_METRIC_PROFILE_FAILURE, e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
-        if (metricProfilesMap.size() > 0) {
-            Collection<PerformanceProfile> values = metricProfilesMap.values();
-            Gson gsonObj = new GsonBuilder()
-                    .disableHtmlEscaping()
-                    .setPrettyPrinting()
-                    .enableComplexMapKeySerialization()
-                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                    // a custom serializer for serializing metadata of JsonNode type.
-                    .registerTypeAdapter(JsonNode.class, new JsonSerializer<JsonNode>() {
-                        @Override
-                        public JsonElement serialize(JsonNode jsonNode, Type typeOfSrc, JsonSerializationContext context) {
-                            if (jsonNode instanceof ObjectNode) {
-                                ObjectNode objectNode = (ObjectNode) jsonNode;
-                                JsonObject metadataJson = new JsonObject();
-
-                                // Extract the "name" field directly if it exists
-                                if (objectNode.has("name")) {
-                                    metadataJson.addProperty("name", objectNode.get("name").asText());
-                                }
-
-                                return metadataJson;
-                            }
-                            return context.serialize(jsonNode);
-                        }
-                    })
-                    .setExclusionStrategies(new ExclusionStrategy() {
-                        @Override
-                        public boolean shouldSkipField(FieldAttributes f) {
-                            return f.getDeclaringClass() == Metric.class && (
-                                    f.getName().equals("trialSummaryResult")
-                                            || f.getName().equals("cycleDataMap")
-                            );
-                        }
-
-                        @Override
-                        public boolean shouldSkipClass(Class<?> aClass) {
-                            return false;
-                        }
-                    })
-                    .create();
-            gsonStr = gsonObj.toJson(values);
-        } else {
-            LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.NO_PERF_PROFILE);
-        }
-        response.getWriter().println(gsonStr);
-        response.getWriter().close();
     }
 
     /**
@@ -244,5 +277,70 @@ public class MetricProfileService extends HttpServlet {
                 errorMsg = e.getMessage();
         }
         response.sendError(httpStatusCode, errorMsg);
+    }
+
+    private void loadMetricProfilesFromCollection(Map<String, PerformanceProfile> metricProfilesMap, String metricProfileName) {
+        try {
+            MetricProfileCollection metricProfileCollection = MetricProfileCollection.getInstance();
+            if (null != metricProfileName && !metricProfileName.isEmpty()) {
+                PerformanceProfile metricProfile = metricProfileCollection.getMetricProfileCollection().get(metricProfileName);
+                metricProfilesMap.put(metricProfileName, metricProfile);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to load saved metric profile data: {} ", e.getMessage());
+        }
+    }
+
+    private void loadAllMetricProfilesFromCollection(Map<String, PerformanceProfile> metricProfilesMap) {
+        try {
+            MetricProfileCollection metricProfileCollection = MetricProfileCollection.getInstance();
+            metricProfilesMap.putAll(metricProfileCollection.getMetricProfileCollection());
+        } catch (Exception e) {
+            LOGGER.error("Failed to load all the metric profiles data: {} ", e.getMessage());
+        }
+    }
+
+    private Gson createGsonObject() {
+        return new GsonBuilder()
+                .disableHtmlEscaping()
+                .setPrettyPrinting()
+                .enableComplexMapKeySerialization()
+                .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                // a custom serializer for serializing metadata of JsonNode type.
+                .registerTypeAdapter(JsonNode.class, new JsonSerializer<JsonNode>() {
+                    @Override
+                    public JsonElement serialize(JsonNode jsonNode, Type typeOfSrc, JsonSerializationContext context) {
+                        if (jsonNode instanceof ObjectNode) {
+                            ObjectNode objectNode = (ObjectNode) jsonNode;
+                            JsonObject metadataJson = new JsonObject();
+
+                            // Extract the "name" field directly if it exists
+                            if (objectNode.has("name")) {
+                                metadataJson.addProperty("name", objectNode.get("name").asText());
+                            }
+
+                            return metadataJson;
+                        }
+                        return context.serialize(jsonNode);
+                    }
+                })
+                .setExclusionStrategies(new ExclusionStrategy() {
+                    @Override
+                    public boolean shouldSkipField(FieldAttributes f) {
+                        return f.getDeclaringClass() == Metric.class && (
+                                f.getName().equals("trialSummaryResult")
+                                        || f.getName().equals("cycleDataMap")
+                        ) ||
+                                f.getDeclaringClass() == ContainerData.class && (
+                                        f.getName().equalsIgnoreCase("metrics")
+                                );
+                    }
+
+                    @Override
+                    public boolean shouldSkipClass(Class<?> aClass) {
+                        return false;
+                    }
+                })
+                .create();
     }
 }
