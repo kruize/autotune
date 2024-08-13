@@ -140,6 +140,17 @@ public class ExperimentDBService {
         }
     }
 
+    public void loadAllMetricProfiles(Map<String, PerformanceProfile> metricProfileMap) throws Exception {
+        List<KruizeMetricProfileEntry> entries = experimentDAO.loadAllMetricProfiles();
+        if (null != entries && !entries.isEmpty()) {
+            List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertMetricProfileEntryToMetricProfileObject(entries);
+            if (!performanceProfiles.isEmpty()) {
+                performanceProfiles.forEach(performanceProfile ->
+                        PerformanceProfileUtil.addMetricProfile(metricProfileMap, performanceProfile));
+            }
+        }
+    }
+
     public boolean loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         KruizeObject kruizeObject = mainKruizeExperimentMap.get(experimentName);
@@ -267,6 +278,22 @@ public class ExperimentDBService {
             validationOutputData = this.experimentDAO.addPerformanceProfileToDB(kruizePerformanceProfileEntry);
         } catch (Exception e) {
             LOGGER.error("Not able to save Performance Profile due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Adds Metric Profile to kruizeMetricProfileEntry
+     * @param metricProfile Metric profile object to be added
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData addMetricProfileToDB(PerformanceProfile metricProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeMetricProfileEntry kruizeMetricProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetricProfileObjToMetricProfileDBObj(metricProfile);
+            validationOutputData = this.experimentDAO.addMetricProfileToDB(kruizeMetricProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save Metric Profile due to {}", e.getMessage());
         }
         return validationOutputData;
     }

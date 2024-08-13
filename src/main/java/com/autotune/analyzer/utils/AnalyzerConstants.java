@@ -453,6 +453,7 @@ public class AnalyzerConstants {
         public static final String K8S_TYPE = "k8s_type";
         public static final String PERF_PROFILE = "performanceProfile";
         public static final String PERF_PROFILE_MAP = "performanceProfileMap";
+        public static final String METRIC_PROFILE_MAP = "metricProfileMap";
         public static final String PERF_PROFILE_NAME = "name";
         public static final String OBJECTIVE_FUNCTION = "objectiveFunction";
         public static final String FUNCTION_VARIABLES = "functionVariables";
