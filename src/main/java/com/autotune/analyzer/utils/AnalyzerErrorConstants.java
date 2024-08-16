@@ -18,6 +18,7 @@ package com.autotune.analyzer.utils;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import software.amazon.awssdk.services.cloudwatchlogs.endpoints.internal.Value;
 
 import java.util.Arrays;
 
@@ -244,6 +245,8 @@ public class AnalyzerErrorConstants {
             public static final String MISSING_METRIC_PROFILE_NAME_MSG = "Missing metric profile 'name' parameter";
             public static final String DELETE_METRIC_PROFILE_FROM_DB_FAILURE_MSG = "Failed to delete metric profile from DB: %s";
             public static final String DELETE_METRIC_PROFILE_FAILURE_MSG = "Failed to delete the specified metric profile data: %s";
+            public static final String DELETE_METRIC_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeMetricProfileEntry not found with metric profile name: ";
+            public static final String DELETE_METRIC_PROFILE_ENTRY_ERROR_MSG = "Not able to delete metric profile for metric profile {} due to {}";
         }
     }
 

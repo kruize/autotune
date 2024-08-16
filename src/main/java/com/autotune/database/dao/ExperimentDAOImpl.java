@@ -589,13 +589,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
                 if (deletedCount == 0) {
                     validationOutputData.setSuccess(false);
-                    validationOutputData.setMessage("KruizeMetricProfileEntry not found with metric profile name: " + metricProfileName);
+                    validationOutputData.setMessage(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_ENTRY_NOT_FOUND_WITH_NAME + metricProfileName);
                 } else {
                     validationOutputData.setSuccess(true);
                 }
                 tx.commit();
             } catch (HibernateException e) {
-                LOGGER.error("Not able to delete metric profile for metric profile {} due to {}", metricProfileName, e.getMessage());
+                LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_ENTRY_ERROR_MSG, metricProfileName, e.getMessage());
                 if (tx != null) tx.rollback();
                 e.printStackTrace();
                 validationOutputData.setSuccess(false);
@@ -603,7 +603,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 //todo save error to API_ERROR_LOG
             }
         } catch (Exception e) {
-            LOGGER.error("Not able to delete metric profile for metric profile {} due to {}", metricProfileName, e.getMessage());
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_ENTRY_ERROR_MSG, metricProfileName, e.getMessage());
         }
         return validationOutputData;
     }
