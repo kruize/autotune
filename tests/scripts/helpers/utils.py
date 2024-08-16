@@ -1036,3 +1036,62 @@ def validate_duration_in_hours_decimal_precision(duration_in_hours):
         :return: True if the value has at most two decimal places, False otherwise.
     """
     return re.match(r'^\d+\.\d{3,}$', str(duration_in_hours)) is None
+
+# clone GitHub repository
+def clone_repo(repo_url, target_dir=None):
+    """
+    Clone a Git repository without exiting the program.
+
+    Parameters:
+    - repo_url: The URL of the Git repository to clone.
+    - target_dir: Optional target directory to clone the repository into. If not specified, defaults to the repo name.
+
+    Returns:
+    - True if the repository was successfully cloned, False otherwise.
+    """
+    # Construct the git clone command
+    clone_command = ["git", "clone", repo_url]
+
+    # If target_dir is specified, add it to the command
+    if target_dir:
+        clone_command.append(target_dir)
+
+    try:
+        # Run the git clone command
+        print(f"Cloning repository from {repo_url}...")
+        subprocess.run(clone_command, check=True)
+        print("Repository cloned successfully.")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to clone the repository: {e}")
+        return False
+
+
+#  Install Benchmarks
+def benchmarks_install(namespace="default", manifests="default_manifests"):
+
+    # Change to the benchmarks directory
+    try:
+        os.chdir("benchmarks")
+    except Exception as e:
+        print(f"ERROR: Could not change to 'benchmarks' directory: {e}")
+
+    print("Installing TechEmpower (Quarkus REST EASY) benchmark into cluster")
+
+    # Change to the techempower directory
+    try:
+        os.chdir("techempower")
+    except Exception as e:
+        print(f"ERROR: Could not change to 'techempower' directory: {e}")
+
+
+    # Apply the Kubernetes manifests
+    kubectl_command = f"kubectl apply -f manifests/{manifests} -n {namespace}"
+    result = subprocess.run(kubectl_command, shell=True)
+
+    # Check for errors
+    if subprocess.call("kubectl get pods | grep -iE 'error|fail|crash'", shell=True) == 0:
+        print("ERROR: TechEmpower app failed to start, exiting")
+
+    # Navigate back to the original directory
+    os.chdir("../..")

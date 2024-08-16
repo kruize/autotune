@@ -436,3 +436,21 @@ def list_metric_profiles(name=None, verbose=None, logging=True):
         print(response.text)
         print("\n************************************************************")
     return response
+
+
+# Description: This function generates recommendation for the given experiment_name
+def generate_recommendations(experiment_name):
+    print("\n************************************************************")
+    print("\nGenerating the recommendation \n for %s..." % (
+        experiment_name))
+    queryString = "?"
+    if experiment_name:
+        queryString = queryString + "experiment_name=%s" % (experiment_name)
+
+    url = URL + "/generateRecommendations%s" % (queryString)
+    print("URL = ", url)
+    response = requests.post(url, )
+    print("Response status code = ", response.status_code)
+    print(response.text)
+    print("\n************************************************************")
+    return response
