@@ -71,6 +71,8 @@ public class KruizeConstants {
         public static final String VIEW_METRIC_PROFILES_MSG = " View Metric Profiles at /listMetricProfiles";
         public static final String LOAD_METRIC_PROFILE_FAILURE = "Failed to load saved metric profile data: {}";
         public static final String ADD_METRIC_PROFILE_TO_DB_WITH_VERSION = "Added Metric Profile : {} into the DB with version: {}";
+        public static final String DELETE_METRIC_PROFILE_SUCCESS_MSG = "Metric profile: %s deleted successfully.";
+        public static final String DELETE_METRIC_PROFILE_FROM_DB_SUCCESS_MSG = "Metric profile deleted successfully from the DB.";
     }
 
     public static class MetricProfileConstants {

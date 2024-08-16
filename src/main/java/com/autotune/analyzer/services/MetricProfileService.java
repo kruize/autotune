@@ -28,6 +28,7 @@ import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
@@ -225,17 +226,70 @@ public class MetricProfileService extends HttpServlet {
     }
 
     /**
-     * TODO: Need to implement
      * Delete Metric profile
+     * Handles the DELETE request for deleting metric profile - DELETE /deleteMetricProfile
      *
-     * @param req
-     * @param resp
+     * Supported Query Parameters -
+     * name	- metric profile name to be deleted(required)
+     *
+     * @param request
+     * @param response
      * @throws ServletException
      * @throws IOException
      */
     @Override
-    protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doDelete(req, resp);
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
+        response.setStatus(HttpServletResponse.SC_OK);
+
+        ConcurrentHashMap<String, PerformanceProfile> metricProfilesMap = new ConcurrentHashMap<>();
+        String metricProfileName = request.getParameter(AnalyzerConstants.PerformanceProfileConstants.METRIC_PROFILE_NAME);
+
+        if (null == metricProfileName || metricProfileName.isEmpty()) {
+            sendErrorResponse(
+                    response,
+                    new Exception(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.MISSING_METRIC_PROFILE_NAME_EXCPTN),
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    String.format(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.MISSING_METRIC_PROFILE_NAME_MSG)
+            );
+            return;
+        }
+
+        try {
+            // load specified metric profile
+            loadMetricProfilesFromCollection(metricProfilesMap, metricProfileName);
+
+            // Check if metric profile exists
+            if (!metricProfilesMap.isEmpty() && metricProfilesMap.containsKey(metricProfileName)) {
+                try {
+                    // Deletes database and in-memory metric profile object stored
+                    deleteMetricProfile(metricProfileName);
+                    metricProfilesMap.remove(metricProfileName);
+                } catch (Exception e) {
+                    sendErrorResponse(
+                            response,
+                            e,
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            e.getMessage());
+                    return;
+                }
+            } else {
+                sendErrorResponse(
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.INVALID_METRIC_PROFILE_NAME_EXCPTN),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.INVALID_METRIC_PROFILE_NAME_MSG, metricProfileName)
+                );
+                return;
+            }
+
+            sendSuccessResponse(response, String.format(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_SUCCESS_MSG, metricProfileName));
+
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 
     /**
@@ -297,6 +351,24 @@ public class MetricProfileService extends HttpServlet {
             metricProfilesMap.putAll(metricProfileCollection.getMetricProfileCollection());
         } catch (Exception e) {
             LOGGER.error("Failed to load all the metric profiles data: {} ", e.getMessage());
+        }
+    }
+
+    private void deleteMetricProfile(String metricProfileName) {
+        ValidationOutputData deletedMetricProfileFromDB = null;
+        try {
+            // delete the metric profile from DB
+            deletedMetricProfileFromDB = new ExperimentDAOImpl().deleteKruizeMetricProfileEntryByName(metricProfileName);
+            if (deletedMetricProfileFromDB.isSuccess()) {
+                // remove in-memory metric profile
+                MetricProfileCollection.getInstance().getMetricProfileCollection().remove(metricProfileName);
+                LOGGER.debug(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_FROM_DB_SUCCESS_MSG);
+            } else {
+                LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_FROM_DB_FAILURE_MSG, deletedMetricProfileFromDB.getMessage());
+            }
+
+        }  catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_FAILURE_MSG, e.getMessage());
         }
     }
 

@@ -234,6 +234,17 @@ public class AnalyzerErrorConstants {
             public static final String NO_METRIC_PROFILES_EXCPTN = "No metric profile";
             public static final String NO_METRIC_PROFILES = "No metric profiles found!";
         }
+
+        public static final class DeleteMetricProfileAPI {
+            public DeleteMetricProfileAPI() {
+            }
+            public static final String INVALID_METRIC_PROFILE_NAME_EXCPTN = "Invalid Metric Profile Name";
+            public static final String INVALID_METRIC_PROFILE_NAME_MSG = "Given metric profile name - %s either does not exist or is not valid";
+            public static final String MISSING_METRIC_PROFILE_NAME_EXCPTN = "Missing Metric Profile Name";
+            public static final String MISSING_METRIC_PROFILE_NAME_MSG = "Missing metric profile 'name' parameter";
+            public static final String DELETE_METRIC_PROFILE_FROM_DB_FAILURE_MSG = "Failed to delete metric profile from DB: %s";
+            public static final String DELETE_METRIC_PROFILE_FAILURE_MSG = "Failed to delete the specified metric profile data: %s";
+        }
     }
 
     public static final class ConversionErrors {
