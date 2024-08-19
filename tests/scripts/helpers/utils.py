@@ -20,6 +20,7 @@ import re
 import subprocess
 import time
 import math
+import docker
 from datetime import datetime, timedelta
 from kubernetes import client, config
 
@@ -62,7 +63,7 @@ CREATE_METRIC_PROFILE_SUCCESS_MSG = "Metric Profile : %s created successfully. V
 METRIC_PROFILE_EXISTS_MSG = "Validation failed: Metric Profile already exists: %s"
 METRIC_PROFILE_NOT_FOUND_MSG = "No metric profiles found!"
 INVALID_LIST_METRIC_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are invalid"
-LIST_METRIC_PROFILES_INVALID_NAME = "Given metric profile name - %s is not valid"
+LIST_METRIC_PROFILES_INVALID_NAME = "Given metric profile name - %s either does not exist or is not valid"
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
 
@@ -1095,3 +1096,63 @@ def benchmarks_install(namespace="default", manifests="default_manifests"):
 
     # Navigate back to the original directory
     os.chdir("../..")
+
+
+def get_urls(namespace, cluster_type):
+    kubectl_cmd = f"kubectl -n {namespace}"
+
+    # Get the Techempower port using kubectl
+    techempower_port_cmd = f"{kubectl_cmd} get svc tfb-qrh-service --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort"
+    techempower_port = subprocess.check_output(techempower_port_cmd, shell=True).decode('utf-8').strip()
+
+    # Get the Techempower IP using kubectl
+    techempower_ip_cmd = f"{kubectl_cmd} get pods -l=app=tfb-qrh-deployment -o wide -o=custom-columns=NODE:.spec.nodeName --no-headers"
+    techempower_ip = subprocess.check_output(techempower_ip_cmd, shell=True).decode('utf-8').strip()
+
+
+    if cluster_type == "minikube":
+        # Get the minikube IP using the `minikube ip` command
+        minikube_ip = subprocess.check_output("minikube ip", shell=True).decode('utf-8').strip()
+        techempower_url = f"http://{minikube_ip}:{techempower_port}"
+    elif cluster_type == "openshift":
+        os.environ["TECHEMPOWER_URL"] = f"{techempower_ip}:{techempower_port}"
+        techempower_url = f"http://{techempower_ip}:{techempower_port}"
+    else:
+        raise ValueError("Unsupported CLUSTER_TYPE. Expected 'minikube' or 'openshift'.")
+
+    return techempower_url
+
+
+
+def apply_tfb_load(app_namespace, cluster_type):
+
+    print("\n###################################################################")
+    print(" Starting 20 min background load against the techempower benchmark ")
+    print("###################################################################\n")
+
+    techempower_load_image = "quay.io/kruizehub/tfb_hyperfoil_load:0.25.2"
+    load_duration = 1200  # 20 minutes in seconds
+
+    techempower_url = get_urls(app_namespace, cluster_type)
+
+    if cluster_type == "minikube":
+        techempower_route = techempower_url
+    elif cluster_type == "openshift":
+        # Run the `oc status` command and parse the output to get the route
+        status_cmd = ["oc", "status", "-n", app_namespace]
+        status_output = subprocess.check_output(status_cmd).decode("utf-8")
+        for line in status_output.splitlines():
+            if "tfb" in line and "port" in line:
+                techempower_route = line.split(" ")[0].split("/")[2]
+                break
+
+
+    # Run the docker command with subprocess
+    docker_cmd = [
+        "docker", "run", "-d", "--rm", "--network=host",
+        techempower_load_image,
+        "/opt/run_hyperfoil_load.sh", techempower_route,
+        "queries?queries=20", str(load_duration), "1024", "8096"
+    ]
+
+    subprocess.run(docker_cmd)

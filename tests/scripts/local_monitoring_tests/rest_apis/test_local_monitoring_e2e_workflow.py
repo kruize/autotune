@@ -30,6 +30,7 @@ from helpers.list_datasources_json_validate import *
 from helpers.utils import *
 from helpers.utils import benchmarks_install
 from helpers.utils import clone_repo
+from helpers.utils import apply_tfb_load
 from helpers.list_metadata_json_validate import *
 from helpers.list_metadata_json_schema import *
 from helpers.list_metadata_json_verbose_true_schema import *
@@ -48,6 +49,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     """
     clone_repo("https://github.com/kruize/benchmarks")
     benchmarks_install()
+    apply_tfb_load("default", cluster_type)
 
     # list all datasources
     form_kruize_url(cluster_type)
