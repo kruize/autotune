@@ -1654,14 +1654,18 @@ public class RecommendationEngine {
                     if (null == interval_end_time) {
                         LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
                         String queryToEncode = null;
-                        if (null != maxDateQuery) {
+                        if (null == maxDateQuery || maxDateQuery.isEmpty()) {
+                            throw new NullPointerException("maxDate query cannot be empty or null");
+                        }
+
+
                             LOGGER.info("maxDateQuery: {}", maxDateQuery);
                             queryToEncode =  maxDateQuery
                                     .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
                                     .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
                                     .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
                                     .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
-                        }
+
                         String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
                                 dataSourceInfo.getUrl(),
                                 URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
