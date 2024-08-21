@@ -361,6 +361,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
     public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getGpuRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         double totalCoreAvg = 0.0;
         double totalMemoryAvg = 0.0;
+        double maxMemory = 0.0;
         int coreCount = 0;
         int memoryCount = 0;
 
@@ -393,6 +394,11 @@ public class CostBasedRecommendationModel implements RecommendationModel {
                                 if (aggregationInfo.getAvg().doubleValue() != 0.0) {
                                     totalMemoryAvg += aggregationInfo.getAvg();
                                     memoryCount++;
+
+                                    // Saving Max of Avg memory recorded, avoiding max of max as the spikes may cross 50%
+                                    if (maxMemory < aggregationInfo.getAvg()) {
+                                        maxMemory = aggregationInfo.getAvg();
+                                    }
                                 }
                             }
                         }
@@ -410,6 +416,10 @@ public class CostBasedRecommendationModel implements RecommendationModel {
 
         double coreFraction = coreAverage / 100;
         double memoryFraction = memoryAverage / 100;
+
+        // Changing memoryFraction to use maxMemory
+        memoryFraction = maxMemory / 100;
+
         GpuMetaDataService gpuMetaDataService = GpuMetaDataService.getInstance();
         GpuProfile gpuProfile = gpuMetaDataService.getGpuProfile(AnalyzerConstants.SupportedGPUs.A100_40_GB, coreFraction, memoryFraction);
         RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(1.0, "cores");
