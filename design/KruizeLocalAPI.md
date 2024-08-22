@@ -40,6 +40,11 @@ Documentation still in progress stay tuned.
   - Example Request and Response
   - Invalid Scenarios
 
+- [Delete Metric Profile API](#delete-metric-profile-api)
+  - Introduction
+  - Example Request and Response
+  - Invalid Scenarios
+
 - [Create Experiment API](#create-experiment-api)
     - Introduction
     - Example Request and Response
@@ -2047,6 +2052,46 @@ Returns list of all the metric profile created with all the metric queries
     }
   }
 ]
+```
+
+</details>
+
+<br>
+
+<a name="delete-metric-profile-api"></a>
+
+
+### Delete Metric Profile API
+
+This is quick guide instructions to delete metric profile created as follows.
+
+**Request Parameters**
+
+| Parameter | Type   | Required | Description                             |
+|-----------|--------|----------|-----------------------------------------|
+| name      | string | required | The name of the metric profile          |
+
+
+**Request with name query parameter**
+
+`DELETE /deleteMetricProfile`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/deleteMetricProfile?name=resource-optimization-local-monitoring`
+
+Deletes the specified metric profile name, provided metric profile already is created
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+{
+  "message": "Metric profile: resource-optimization-local-monitoring deleted successfully. View Metric Profiles at /listMetricProfiles",
+  "httpcode": 201,
+  "documentationLink": "",
+  "status": "SUCCESS"
+}
 ```
 
 </details>
