@@ -26,6 +26,7 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
@@ -105,9 +106,13 @@ public class ExperimentValidation {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                         } else {
-                            // fetch the Performance Profile from the DB
+                            // fetch the Performance / Metric Profile from the DB
                             try {
-                                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
+                                if (!KruizeDeploymentInfo.local) {
+                                    new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
+                                } else {
+                                    new ExperimentDBService().loadMetricProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
+                                }
                             } catch (Exception e) {
                                 LOGGER.error("Loading saved Performance Profile {} failed: {} ", expName, e.getMessage());
                             }
@@ -122,7 +127,12 @@ public class ExperimentValidation {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_SLO_DATA;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                         } else {
-                            String perfProfileName = KruizeOperator.setDefaultPerformanceProfile(kruizeObject.getSloInfo(), mode, target_cluster);
+                            String perfProfileName;
+                            if (!KruizeDeploymentInfo.local) {
+                                perfProfileName = KruizeOperator.setDefaultPerformanceProfile(kruizeObject.getSloInfo(), mode, target_cluster);
+                            } else {
+                                perfProfileName = KruizeOperator.setDefaultMetricProfile(kruizeObject.getSloInfo(), mode, target_cluster);
+                            }
                             kruizeObject.setPerformanceProfile(perfProfileName);
                             proceed = true;
                         }

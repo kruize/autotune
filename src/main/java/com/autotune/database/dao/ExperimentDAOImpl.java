@@ -798,6 +798,25 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
+    /**
+     * Fetches Metric Profile by name from KruizeMetricProfileEntry database table
+     * @param metricProfileName Metric profile name
+     * @return List of KruizeMetricProfileEntry objects
+     * @throws Exception
+     */
+    public List<KruizeMetricProfileEntry> loadMetricProfileByName(String metricProfileName) throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadMetricProfileName = Timer.start(MetricsConfig.meterRegistry());
+        List<KruizeMetricProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_METRIC_PROFILE_BY_NAME, KruizeMetricProfileEntry.class)
+                    .setParameter("name", metricProfileName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Metric Profile {} due to {}", metricProfileName, e.getMessage());
+            throw new Exception("Error while loading existing metric profile from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
 
     @Override
     public List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
