@@ -656,6 +656,75 @@ public class DBHelpers {
             }
 
             /**
+             * converts MetricProfile object to KruizeMetricProfileEntry table object
+             * @param metricProfile metricProfile object to be converted
+             * @return KruizeMetricProfileEntry table object
+             */
+            public static KruizeMetricProfileEntry convertMetricProfileObjToMetricProfileDBObj(PerformanceProfile metricProfile) {
+                KruizeMetricProfileEntry kruizeMetricProfileEntry = null;
+                try {
+                    kruizeMetricProfileEntry = new KruizeMetricProfileEntry();
+                    kruizeMetricProfileEntry.setApi_version(metricProfile.getApiVersion());
+                    kruizeMetricProfileEntry.setKind(metricProfile.getKind());
+                    kruizeMetricProfileEntry.setProfile_version(metricProfile.getProfile_version());
+                    kruizeMetricProfileEntry.setK8s_type(metricProfile.getK8S_TYPE());
+
+                    ObjectMapper objectMapper = new ObjectMapper();
+
+                    try {
+                        JsonNode metadataNode = objectMapper.readTree(metricProfile.getMetadata().toString());
+                        kruizeMetricProfileEntry.setMetadata(metadataNode);
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating metadata due to : " + e.getMessage());
+                    }
+                    kruizeMetricProfileEntry.setName(metricProfile.getMetadata().get("name").asText());
+
+                    try {
+                        kruizeMetricProfileEntry.setSlo(
+                                objectMapper.readTree(new Gson().toJson(metricProfile.getSloInfo())));
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating SLO data due to : " + e.getMessage());
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error occurred while converting MetricProfile Object to MetricProfile table due to {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeMetricProfileEntry;
+            }
+
+            /**
+             * converts KruizeMetricProfileEntry table objects to MetricProfile objects
+             * @param kruizeMetricProfileEntryList List of KruizeMetricProfileEntry table objects to be converted
+             * @return List containing the MetricProfile objects
+             * @throws Exception
+             */
+            public static List<PerformanceProfile> convertMetricProfileEntryToMetricProfileObject(List<KruizeMetricProfileEntry> kruizeMetricProfileEntryList) throws Exception {
+                List<PerformanceProfile> metricProfiles = new ArrayList<>();
+                int failureThreshHold = kruizeMetricProfileEntryList.size();
+                int failureCount = 0;
+                for (KruizeMetricProfileEntry entry : kruizeMetricProfileEntryList) {
+                    try {
+                        JsonNode metadata = entry.getMetadata();
+                        JsonNode sloData = entry.getSlo();
+                        String slo_rawJson = sloData.toString();
+                        SloInfo sloInfo = new Gson().fromJson(slo_rawJson, SloInfo.class);
+                        PerformanceProfile performanceProfile = new PerformanceProfile(
+                                entry.getApi_version(), entry.getKind(), metadata, entry.getProfile_version(), entry.getK8s_type(), sloInfo);
+                        metricProfiles.add(performanceProfile);
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while reading from MetricProfile DB object due to : {}", e.getMessage());
+                        LOGGER.error(entry.toString());
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the Metric Profiles loaded from DB.");
+
+                return metricProfiles;
+            }
+
+
+            /**
              * converts KruizeDataSourceEntry table objects to DataSourceInfo objects
              * @param kruizeDataSourceList List containing the KruizeDataSourceEntry table objects
              * @return List containing the DataSourceInfo objects
