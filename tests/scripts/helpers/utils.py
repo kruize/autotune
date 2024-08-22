@@ -1127,11 +1127,11 @@ def get_urls(namespace, cluster_type):
 def apply_tfb_load(app_namespace, cluster_type):
 
     print("\n###################################################################")
-    print(" Starting 20 min background load against the techempower benchmark ")
+    print(" Starting 10 min background load against the techempower benchmark ")
     print("###################################################################\n")
 
     techempower_load_image = "quay.io/kruizehub/tfb_hyperfoil_load:0.25.2"
-    load_duration = 1200  # 20 minutes in seconds
+    load_duration = 600  # 10 minutes in seconds
 
     techempower_url = get_urls(app_namespace, cluster_type)
 
@@ -1155,4 +1155,35 @@ def apply_tfb_load(app_namespace, cluster_type):
         "queries?queries=20", str(load_duration), "1024", "8096"
     ]
 
-    subprocess.run(docker_cmd)
+    # Run the Docker command and get the container ID
+    process = subprocess.Popen(docker_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    container_id = process.stdout.read().decode().strip()
+
+    if not container_id:
+        raise RuntimeError(f"Failed to start Docker container. Error: {process.stderr.read().decode().strip()}")
+
+    return container_id
+
+#   Retrieve the status of the Docker container.
+def get_container_status(container_id):
+    result = subprocess.run(
+        ["docker", "inspect", "--format", "{{.State.Status}}", container_id],
+        capture_output=True,
+        text=True
+    )
+    status = result.stdout.strip()
+    return status
+
+#   Wait until the Docker container completes and get its exit code.
+def wait_for_container_to_complete(container_id):
+
+    print("\n########################################################################################################")
+    print(f"Waiting for container {container_id} to complete... before generating recommendations")
+    print("##########################################################################################################\n")
+    result = subprocess.run(
+        ["docker", "wait", container_id],
+        capture_output=True,
+        text=True
+    )
+    exit_code = result.stdout.strip()
+    print(f"Container {container_id} has completed with exit code {exit_code}.")

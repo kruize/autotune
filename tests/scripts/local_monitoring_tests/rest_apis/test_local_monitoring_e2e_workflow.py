@@ -31,6 +31,7 @@ from helpers.utils import *
 from helpers.utils import benchmarks_install
 from helpers.utils import clone_repo
 from helpers.utils import apply_tfb_load
+from helpers.utils import wait_for_container_to_complete
 from helpers.list_metadata_json_validate import *
 from helpers.list_metadata_json_schema import *
 from helpers.list_metadata_json_verbose_true_schema import *
@@ -49,7 +50,8 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     """
     clone_repo("https://github.com/kruize/benchmarks")
     benchmarks_install()
-    apply_tfb_load("default", cluster_type)
+    container_id = apply_tfb_load("default", cluster_type)
+    print(container_id)
 
     # list all datasources
     form_kruize_url(cluster_type)
@@ -168,8 +170,8 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    # Sleep for 3 minutes (180 seconds)
-    time.sleep(180)
+    # Wait for the container to complete
+    wait_for_container_to_complete(container_id)
 
     # generate recommendations
     json_file = open(tfb_exp_json_file, "r")
