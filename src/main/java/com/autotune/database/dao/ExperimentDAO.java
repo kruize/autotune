@@ -72,6 +72,9 @@ public interface ExperimentDAO {
     // Load a single Metric Profile based on name
     List<KruizeMetricProfileEntry> loadMetricProfileByName(String metricProfileName) throws Exception;
 
+    // Delete metric profile for the specified metric profile name
+    public ValidationOutputData deleteKruizeMetricProfileEntryByName(String metricProfileName);
+
     // Load all recommendations of a particular experiment and interval end Time
     KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, String cluster_name, Timestamp interval_end_time) throws Exception;
 

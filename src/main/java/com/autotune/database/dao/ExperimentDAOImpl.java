@@ -570,6 +570,44 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+    /**
+     * Delete metric profile with specified profile name
+     * This deletes the metadata from the KruizeMetricProfileEntry table
+     * @param metricProfileName
+     * @return
+     */
+    @Override
+    public ValidationOutputData deleteKruizeMetricProfileEntryByName(String metricProfileName) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(DELETE_FROM_METRIC_PROFILE_BY_PROFILE_NAME, null);
+                query.setParameter("metricProfileName", metricProfileName);
+                int deletedCount = query.executeUpdate();
+
+                if (deletedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_ENTRY_NOT_FOUND_WITH_NAME + metricProfileName);
+                } else {
+                    validationOutputData.setSuccess(true);
+                }
+                tx.commit();
+            } catch (HibernateException e) {
+                LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_ENTRY_ERROR_MSG, metricProfileName, e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_ENTRY_ERROR_MSG, metricProfileName, e.getMessage());
+        }
+        return validationOutputData;
+    }
+
     @Override
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments

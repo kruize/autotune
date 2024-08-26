@@ -2,6 +2,7 @@ package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.plots.PlotManager;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
