@@ -223,6 +223,17 @@ public class AnalyzerErrorConstants {
             public static final String DATASOURCE_METADATA_MISSING_REQUEST_INPUT_EXCPTN = "Request input data cannot be null or empty";
             public static final String DATASOURCE_METADATA_CONNECTION_FAILED = "Metadata cannot be imported, datasource connection refused or timed out";
         }
+
+        public static final class ListMetricProfileAPI {
+            public ListMetricProfileAPI() {
+            }
+            public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+            public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
+            public static final String INVALID_METRIC_PROFILE_NAME_EXCPTN = "Invalid Metric Profile Name";
+            public static final String INVALID_METRIC_PROFILE_NAME_MSG = "Given metric profile name - %s either does not exist or is not valid";
+            public static final String NO_METRIC_PROFILES_EXCPTN = "No metric profile";
+            public static final String NO_METRIC_PROFILES = "No metric profiles found!";
+        }
     }
 
     public static final class ConversionErrors {
