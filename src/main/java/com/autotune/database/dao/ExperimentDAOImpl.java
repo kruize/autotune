@@ -907,7 +907,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
-
     @Override
     public List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {
         List<KruizeResultsEntry> kruizeResultsEntryList = new ArrayList<>();

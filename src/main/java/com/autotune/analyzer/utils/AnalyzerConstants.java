@@ -176,7 +176,7 @@ public class AnalyzerConstants {
         namespaceTotalPods,
         namespaceRunningPods,
         gpuCoreUsage,
-        gpuMemoryUsage,
+        gpuMemoryUsage
     }
 
     public enum K8S_OBJECT_TYPES {

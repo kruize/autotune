@@ -1616,10 +1616,10 @@ public class RecommendationEngine {
     /**
      * Fetches metrics based on the specified datasource using queries from the metricProfile for the given time interval.
      *
-     * @param kruizeObject
-     * @param interval_end_time
-     * @param interval_start_time
-     * @param dataSourceInfo
+     * @param kruizeObject          KruizeObject
+     * @param interval_end_time     The end time of the interval in the format yyyy-MM-ddTHH:mm:sssZ
+     * @param interval_start_time   The start time of the interval in the format yyyy-MM-ddTHH:mm:sssZ.
+     * @param dataSourceInfo        DataSource object
      * @throws Exception
      */
     public void fetchMetricsBasedOnProfileAndDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception {
