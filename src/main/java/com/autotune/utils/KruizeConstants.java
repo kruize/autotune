@@ -66,6 +66,22 @@ public class KruizeConstants {
         public static final String UPDATE_RECOMMENDATIONS_FAILURE_MSG = "UpdateRecommendations API failed for experiment_name: %s and intervalEndTimeStr : %s due to %s";
     }
 
+    public static class MetricProfileAPIMessages {
+        public static final String CREATE_METRIC_PROFILE_SUCCESS_MSG = "Metric Profile : %s created successfully.";
+        public static final String VIEW_METRIC_PROFILES_MSG = " View Metric Profiles at /listMetricProfiles";
+        public static final String LOAD_METRIC_PROFILE_FAILURE = "Failed to load saved metric profile data: {}";
+        public static final String ADD_METRIC_PROFILE_TO_DB_WITH_VERSION = "Added Metric Profile : {} into the DB with version: {}";
+    }
+
+    public static class MetricProfileConstants {
+        public static final String CHECKING_AVAILABLE_METRIC_PROFILE_FROM_DB = "Checking available metric profiles from database: ";
+        public static final String NO_METRIC_PROFILE_FOUND_IN_DB = "No metric profile found in database.";
+        public static final String METRIC_PROFILE_FOUND = "MetricProfile found: ";
+        public static final String ADDING_METRIC_PROFILE = "Trying to add the metric profile to collection: ";
+        public static final String METRIC_PROFILE_ALREADY_EXISTS = "MetricProfile already exists: ";
+        public static final String METRIC_PROFILE_ADDED = "MetricProfile added to the collection successfully: ";
+    }
+
     /**
      * Holds the constants of env vars and values to start Autotune in different Modes
      */

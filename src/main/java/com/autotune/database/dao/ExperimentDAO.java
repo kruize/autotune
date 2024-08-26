@@ -25,6 +25,9 @@ public interface ExperimentDAO {
     // Add Performance Profile  to DB
     public ValidationOutputData addPerformanceProfileToDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry);
 
+    // Add Metric Profile  to DB
+    public ValidationOutputData addMetricProfileToDB(KruizeMetricProfileEntry kruizeMetricProfileEntry);
+
     // Add DataSource to DB
     ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry);
 
@@ -45,6 +48,9 @@ public interface ExperimentDAO {
 
     // If Kruize restarts load all performance profiles
     List<KruizePerformanceProfileEntry> loadAllPerformanceProfiles() throws Exception;
+
+    // If Kruize restarts load all metric profiles
+    List<KruizeMetricProfileEntry> loadAllMetricProfiles() throws Exception;
 
     // Load a single experiment based on experimentName
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;

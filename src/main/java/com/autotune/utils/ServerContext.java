@@ -43,6 +43,8 @@ public class ServerContext {
     public static final String RECOMMEND_RESULTS = ROOT_CONTEXT + "listRecommendations";
     public static final String CREATE_PERF_PROFILE = ROOT_CONTEXT + "createPerformanceProfile";
     public static final String LIST_PERF_PROFILES = ROOT_CONTEXT + "listPerformanceProfiles";
+    public static final String CREATE_METRIC_PROFILE = ROOT_CONTEXT + "createMetricProfile";
+    public static final String LIST_METRIC_PROFILES = ROOT_CONTEXT + "listMetricProfiles";
 
     public static final String KRUIZE_SERVER_URL = "http://localhost:" + KRUIZE_SERVER_PORT;
     public static final String SEARCH_SPACE_END_POINT = KRUIZE_SERVER_URL + SEARCH_SPACE;
