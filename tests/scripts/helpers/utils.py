@@ -1127,11 +1127,11 @@ def get_urls(namespace, cluster_type):
 def apply_tfb_load(app_namespace, cluster_type):
 
     print("\n###################################################################")
-    print(" Starting 10 min background load against the techempower benchmark ")
+    print(" Starting 20 min background load against the techempower benchmark ")
     print("###################################################################\n")
 
     techempower_load_image = "quay.io/kruizehub/tfb_hyperfoil_load:0.25.2"
-    load_duration = 600  # 10 minutes in seconds
+    load_duration = 1200  # 20 minutes in seconds
 
     techempower_url = get_urls(app_namespace, cluster_type)
 
