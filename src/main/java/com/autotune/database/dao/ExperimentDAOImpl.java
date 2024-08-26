@@ -850,7 +850,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
-     * Fetched Metric Profile by name from KruizeMetricProfileEntry database table
+     * Fetches Metric Profile by name from KruizeMetricProfileEntry database table
      * @param metricProfileName Metric profile name
      * @return List of KruizeMetricProfileEntry objects
      * @throws Exception
@@ -868,7 +868,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return entries;
     }
-
 
     @Override
     public List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception {

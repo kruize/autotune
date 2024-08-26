@@ -467,6 +467,10 @@ public class AnalyzerConstants {
         public static final String RESOURCE_OPT_OPENSHIFT_PROFILE = "resource-optimization-openshift";
         public static final String RESOURCE_OPT_LOCAL_MON_PROFILE = "resource-optimization-local-monitoring";
 
+        //Metric profile constants
+        public static final String DEFAULT_API_VERSION = "recommender.com/v1";
+        public static final String DEFAULT_KIND = "KruizePerformanceProfile";
+
         public static final Map<String, String> PerfProfileNames = Map.of(
                 RESOURCE_OPT_OPENSHIFT_PROFILE, "ResourceOptimizationOpenshiftImpl",
                 RESOURCE_OPT_LOCAL_MON_PROFILE, "ResourceOptimizationOpenshiftImpl"
