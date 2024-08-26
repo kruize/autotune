@@ -20,6 +20,7 @@ import re
 import subprocess
 import time
 import math
+import docker
 from datetime import datetime, timedelta
 from kubernetes import client, config
 
@@ -62,7 +63,7 @@ CREATE_METRIC_PROFILE_SUCCESS_MSG = "Metric Profile : %s created successfully. V
 METRIC_PROFILE_EXISTS_MSG = "Validation failed: Metric Profile already exists: %s"
 METRIC_PROFILE_NOT_FOUND_MSG = "No metric profiles found!"
 INVALID_LIST_METRIC_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are invalid"
-LIST_METRIC_PROFILES_INVALID_NAME = "Given metric profile name - %s is not valid"
+LIST_METRIC_PROFILES_INVALID_NAME = "Given metric profile name - %s either does not exist or is not valid"
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
 
@@ -1036,3 +1037,153 @@ def validate_duration_in_hours_decimal_precision(duration_in_hours):
         :return: True if the value has at most two decimal places, False otherwise.
     """
     return re.match(r'^\d+\.\d{3,}$', str(duration_in_hours)) is None
+
+# clone GitHub repository
+def clone_repo(repo_url, target_dir=None):
+    """
+    Clone a Git repository without exiting the program.
+
+    Parameters:
+    - repo_url: The URL of the Git repository to clone.
+    - target_dir: Optional target directory to clone the repository into. If not specified, defaults to the repo name.
+
+    Returns:
+    - True if the repository was successfully cloned, False otherwise.
+    """
+    # Construct the git clone command
+    clone_command = ["git", "clone", repo_url]
+
+    # If target_dir is specified, add it to the command
+    if target_dir:
+        clone_command.append(target_dir)
+
+    try:
+        # Run the git clone command
+        print(f"Cloning repository from {repo_url}...")
+        subprocess.run(clone_command, check=True)
+        print("Repository cloned successfully.")
+        return True
+    except subprocess.CalledProcessError as e:
+        print(f"Failed to clone the repository: {e}")
+        return False
+
+
+#  Install Benchmarks
+def benchmarks_install(namespace="default", manifests="default_manifests"):
+
+    # Change to the benchmarks directory
+    try:
+        os.chdir("benchmarks")
+    except Exception as e:
+        print(f"ERROR: Could not change to 'benchmarks' directory: {e}")
+
+    print("Installing TechEmpower (Quarkus REST EASY) benchmark into cluster")
+
+    # Change to the techempower directory
+    try:
+        os.chdir("techempower")
+    except Exception as e:
+        print(f"ERROR: Could not change to 'techempower' directory: {e}")
+
+
+    # Apply the Kubernetes manifests
+    kubectl_command = f"kubectl apply -f manifests/{manifests} -n {namespace}"
+    result = subprocess.run(kubectl_command, shell=True)
+
+    # Check for errors
+    if subprocess.call("kubectl get pods | grep -iE 'error|fail|crash'", shell=True) == 0:
+        print("ERROR: TechEmpower app failed to start, exiting")
+
+    # Navigate back to the original directory
+    os.chdir("../..")
+
+
+def get_urls(namespace, cluster_type):
+    kubectl_cmd = f"kubectl -n {namespace}"
+
+    # Get the Techempower port using kubectl
+    techempower_port_cmd = f"{kubectl_cmd} get svc tfb-qrh-service --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort"
+    techempower_port = subprocess.check_output(techempower_port_cmd, shell=True).decode('utf-8').strip()
+
+    # Get the Techempower IP using kubectl
+    techempower_ip_cmd = f"{kubectl_cmd} get pods -l=app=tfb-qrh-deployment -o wide -o=custom-columns=NODE:.spec.nodeName --no-headers"
+    techempower_ip = subprocess.check_output(techempower_ip_cmd, shell=True).decode('utf-8').strip()
+
+
+    if cluster_type == "minikube":
+        # Get the minikube IP using the `minikube ip` command
+        minikube_ip = subprocess.check_output("minikube ip", shell=True).decode('utf-8').strip()
+        techempower_url = f"http://{minikube_ip}:{techempower_port}"
+    elif cluster_type == "openshift":
+        os.environ["TECHEMPOWER_URL"] = f"{techempower_ip}:{techempower_port}"
+        techempower_url = f"http://{techempower_ip}:{techempower_port}"
+    else:
+        raise ValueError("Unsupported CLUSTER_TYPE. Expected 'minikube' or 'openshift'.")
+
+    return techempower_url
+
+
+
+def apply_tfb_load(app_namespace, cluster_type):
+
+    print("\n###################################################################")
+    print(" Starting 20 min background load against the techempower benchmark ")
+    print("###################################################################\n")
+
+    techempower_load_image = "quay.io/kruizehub/tfb_hyperfoil_load:0.25.2"
+    load_duration = 1200  # 20 minutes in seconds
+
+    techempower_url = get_urls(app_namespace, cluster_type)
+
+    if cluster_type == "minikube":
+        techempower_route = techempower_url
+    elif cluster_type == "openshift":
+        # Run the `oc status` command and parse the output to get the route
+        status_cmd = ["oc", "status", "-n", app_namespace]
+        status_output = subprocess.check_output(status_cmd).decode("utf-8")
+        for line in status_output.splitlines():
+            if "tfb" in line and "port" in line:
+                techempower_route = line.split(" ")[0].split("/")[2]
+                break
+
+
+    # Run the docker command with subprocess
+    docker_cmd = [
+        "docker", "run", "-d", "--rm", "--network=host",
+        techempower_load_image,
+        "/opt/run_hyperfoil_load.sh", techempower_route,
+        "queries?queries=20", str(load_duration), "1024", "8096"
+    ]
+
+    # Run the Docker command and get the container ID
+    process = subprocess.Popen(docker_cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    container_id = process.stdout.read().decode().strip()
+
+    if not container_id:
+        raise RuntimeError(f"Failed to start Docker container. Error: {process.stderr.read().decode().strip()}")
+
+    return container_id
+
+#   Retrieve the status of the Docker container.
+def get_container_status(container_id):
+    result = subprocess.run(
+        ["docker", "inspect", "--format", "{{.State.Status}}", container_id],
+        capture_output=True,
+        text=True
+    )
+    status = result.stdout.strip()
+    return status
+
+#   Wait until the Docker container completes and get its exit code.
+def wait_for_container_to_complete(container_id):
+
+    print("\n########################################################################################################")
+    print(f"Waiting for container {container_id} to complete... before generating recommendations")
+    print("##########################################################################################################\n")
+    result = subprocess.run(
+        ["docker", "wait", container_id],
+        capture_output=True,
+        text=True
+    )
+    exit_code = result.stdout.strip()
+    print(f"Container {container_id} has completed with exit code {exit_code}.")
