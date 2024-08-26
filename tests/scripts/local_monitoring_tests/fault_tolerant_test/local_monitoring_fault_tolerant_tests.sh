@@ -29,18 +29,16 @@ RESULTS_DIR=/tmp/kruize_fault_tolerant_test_results
 APP_NAME=kruize
 CLUSTER_TYPE=minikube
 NAMESPACE=monitoring
-num_exps=3
 
 RESOURCE_OPTIMIZATION_JSON="../json_files/resource_optimization_openshift.json"
 
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
-iterations=2
 num_exps=1
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-u No. of experiments (default - 1)] [ -d no. of iterations to test restart (default - 2)] [-r <resultsdir path>]"
+	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-u No. of experiments (default - 1)] [-r <resultsdir path>]"
 	exit -1
 }
 
@@ -55,7 +53,7 @@ function get_kruize_pod_log() {
 	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
-while getopts c:r:i:u:d:t:h gopts
+while getopts c:r:i:u:t:h gopts
 do
 	case ${gopts} in
 	c)
@@ -69,9 +67,6 @@ do
 		;;
 	u)
 		num_exps="${OPTARG}"		
-		;;
-	d)
-		iterations="${OPTARG}"
 		;;
 	h)
 		usage
@@ -163,14 +158,14 @@ TEST_LOG="${LOG_DIR}/kruize_pod_restart_test.log"
 echo ""
 echo "Running fault tolerant test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
-	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${iterations} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
-	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}" | tee -a  ${TEST_LOG}
+	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
+	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -r "${LOG_DIR}" | tee -a  ${TEST_LOG}
 	exit_code=$?
 	echo "exit_code = $exit_code"
 
 else
-	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${iterations} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
-	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -d ${iterations} -r "${LOG_DIR}" | tee -a  ${TEST_LOG}
+	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
+	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -r "${LOG_DIR}" | tee -a  ${TEST_LOG}
 	exit_code=$?
 	echo "exit_code = $exit_code"
 fi

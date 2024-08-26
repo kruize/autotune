@@ -26,18 +26,17 @@ from helpers.generate_rm_jsons import *
 def main(argv):
     cluster_type = "minikube"
     results_dir = "."
-    iterations = 2
     num_exps = 1
     failed = 0
     try:
-        opts, args = getopt.getopt(argv,"h:c:a:u:r:d:")
+        opts, args = getopt.getopt(argv,"h:c:a:u:r:")
     except getopt.GetoptError:
-        print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations to test restart (default - 2> -r <results dir>")
+        print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -r <results dir>")
         print("Note: -a option is required only on openshift when kruize service is exposed")
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -d <no. of iterations to test restart(default - 2> -r <results dir>")
+            print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -r <results dir>")
             sys.exit(0)
         elif opt == '-c':
             cluster_type = arg
@@ -47,8 +46,6 @@ def main(argv):
             num_exps = int(arg)
         elif opt == '-r':
             results_dir = arg
-        elif opt == '-d':
-            iterations = int(arg)
         
 
     print(f"Cluster type = {cluster_type}")
@@ -151,11 +148,10 @@ def main(argv):
             sys.exit(1)
 
         # Fetch the datasource metadata
-        datasource = None
-        cluster_name = None
-        namespace = None
-        verbose = True
-        response = list_metadata(datasource, cluster_name, namespace, verbose)
+        json_data = json.load(open(input_json_file))
+        datasource_name = json_data['datasource_name']
+
+        response = list_metadata(datasource_name)
 
         if response.status_code == SUCCESS_200_STATUS_CODE:
             list_metadata_json_file_before = list_metadata_json_dir + '/list_metadata_json_before_' + str(exp_num) + '.json'
@@ -220,11 +216,7 @@ def main(argv):
             sys.exit(1)
 
         # Fetch the datasource metadata
-        datasource = None
-        cluster_name = None
-        namespace = None
-        verbose = True
-        response = list_metadata(datasource, cluster_name, namespace, verbose)
+        response = list_metadata(datasource_name)
         if response.status_code == SUCCESS_200_STATUS_CODE:
             list_metadata_json_file_after = list_metadata_json_dir + '/list_metadata_json_after_' + str(exp_num) + '.json'
             write_json_data_to_file(list_metadata_json_file_after, response.json())
