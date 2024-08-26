@@ -211,3 +211,18 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     # Validate the json against the json schema
     errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
     assert errorMsg == ""
+
+    # Delete tfb experiment
+    response = delete_experiment(tfb_exp_json_file)
+    print("delete exp = ", response.status_code)
+    assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Delete tfb_db experiment
+    response = delete_experiment(tfb_db_exp_json_file)
+    print("delete exp = ", response.status_code)
+    assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Delete Metric Profile
+    response = delete_metric_profile(metric_profile_json_file)
+    print("delete metric profile = ", response.status_code)
+    assert response.status_code == SUCCESS_STATUS_CODE
