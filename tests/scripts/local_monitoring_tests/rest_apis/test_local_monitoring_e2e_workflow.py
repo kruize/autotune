@@ -185,8 +185,6 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
 
 
     response = generate_recommendations(tfb_exp_name)
-    data = response.json()
-    print(data)
     assert response.status_code == SUCCESS_STATUS_CODE
 
     # Invoke list recommendations for the specified experiment
@@ -200,8 +198,6 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
 
 
     response = generate_recommendations(tfb_db_exp_name)
-    data = response.json()
-    print(data)
     assert response.status_code == SUCCESS_STATUS_CODE
 
     # Invoke list recommendations for the specified experiment
