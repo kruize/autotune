@@ -1115,8 +1115,21 @@ def get_urls(namespace, cluster_type):
         minikube_ip = subprocess.check_output("minikube ip", shell=True).decode('utf-8').strip()
         techempower_url = f"http://{minikube_ip}:{techempower_port}"
     elif cluster_type == "openshift":
-        os.environ["TECHEMPOWER_URL"] = f"{techempower_ip}:{techempower_port}"
-        techempower_url = f"http://{techempower_ip}:{techempower_port}"
+        # expose service kruize
+        subprocess.run(['oc -n openshift-tuning expose service kruize'], shell=True, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE, text=True)
+
+        # annotate kruize route
+        subprocess.run(['oc -n openshift-tuning annotate route kruize --overwrite haproxy.router.openshift.io/timeout=60s'],
+                       shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+
+        # expose service tfb-qrh-service
+        subprocess.run(['oc -n default expose service tfb-qrh-service'], shell=True, stdout=subprocess.PIPE,
+                       stderr=subprocess.PIPE, text=True)
+
+        # get tfb-qrh-service route
+        techempower_url = subprocess.run([f'oc -n {namespace} get route tfb-qrh-service --no-headers -o custom-columns=NODE:.spec.host'],
+                                         shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     else:
         raise ValueError("Unsupported CLUSTER_TYPE. Expected 'minikube' or 'openshift'.")
 
@@ -1138,13 +1151,8 @@ def apply_tfb_load(app_namespace, cluster_type):
     if cluster_type == "minikube":
         techempower_route = techempower_url
     elif cluster_type == "openshift":
-        # Run the `oc status` command and parse the output to get the route
-        status_cmd = ["oc", "status", "-n", app_namespace]
-        status_output = subprocess.check_output(status_cmd).decode("utf-8")
-        for line in status_output.splitlines():
-            if "tfb" in line and "port" in line:
-                techempower_route = line.split(" ")[0].split("/")[2]
-                break
+        techempower_route_cmd = ["oc", "get", "route", "-n", app_namespace, "--template={{range .items}}{{.spec.host}}{{\"\\n\"}}{{end}}"]
+        techempower_route = subprocess.check_output(techempower_route_cmd).decode("utf-8").strip()
 
 
     # Run the docker command with subprocess
