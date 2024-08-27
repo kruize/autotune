@@ -1124,7 +1124,7 @@ def get_urls(namespace, cluster_type):
                        shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
 
         # expose service tfb-qrh-service
-        subprocess.run(['oc -n default expose service tfb-qrh-service'], shell=True, stdout=subprocess.PIPE,
+        subprocess.run([f'oc -n {namespace} expose service tfb-qrh-service'], shell=True, stdout=subprocess.PIPE,
                        stderr=subprocess.PIPE, text=True)
 
         # get tfb-qrh-service route
