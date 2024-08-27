@@ -1190,7 +1190,6 @@ def wait_for_container_to_complete(container_id):
     print("##########################################################################################################\n")
     result = subprocess.run(
         ["docker", "wait", container_id],
-        shell=True,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
     )
