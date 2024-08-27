@@ -1117,19 +1117,19 @@ def get_urls(namespace, cluster_type):
     elif cluster_type == "openshift":
         # expose service kruize
         subprocess.run(['oc -n openshift-tuning expose service kruize'], shell=True, stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE, text=True)
+                       stderr=subprocess.PIPE)
 
         # annotate kruize route
         subprocess.run(['oc -n openshift-tuning annotate route kruize --overwrite haproxy.router.openshift.io/timeout=60s'],
-                       shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                       shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 
         # expose service tfb-qrh-service
         subprocess.run([f'oc -n {namespace} expose service tfb-qrh-service'], shell=True, stdout=subprocess.PIPE,
-                       stderr=subprocess.PIPE, text=True)
+                       stderr=subprocess.PIPE)
 
         # get tfb-qrh-service route
         techempower_url = subprocess.run([f'oc -n {namespace} get route tfb-qrh-service --no-headers -o custom-columns=NODE:.spec.host'],
-                                         shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                                         shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     else:
         raise ValueError("Unsupported CLUSTER_TYPE. Expected 'minikube' or 'openshift'.")
 
@@ -1190,8 +1190,9 @@ def wait_for_container_to_complete(container_id):
     print("##########################################################################################################\n")
     result = subprocess.run(
         ["docker", "wait", container_id],
-        capture_output=True,
-        text=True
+        shell=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
     )
     exit_code = result.stdout.strip()
     print(f"Container {container_id} has completed with exit code {exit_code}.")
