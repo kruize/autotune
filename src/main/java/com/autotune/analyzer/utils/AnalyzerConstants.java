@@ -175,6 +175,7 @@ public class AnalyzerConstants {
         namespaceMemoryRSS,
         namespaceTotalPods,
         namespaceRunningPods,
+        namespaceMaxDate,
         gpuCoreUsage,
         gpuMemoryUsage
     }

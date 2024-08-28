@@ -16,6 +16,7 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
@@ -57,13 +58,21 @@ public class Converters {
                 List<K8sObject> k8sObjectList = new ArrayList<>();
                 List<KubernetesAPIObject> kubernetesAPIObjectsList = createExperimentAPIObject.getKubernetesObjects();
                 for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjectsList) {
-                    K8sObject k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
+                    K8sObject k8sObject;
+                    if (kubernetesAPIObject.getName() != null) {
+                        k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
+                    } else {
+                        k8sObject = new K8sObject();
+                        k8sObject.setNamespace(kubernetesAPIObject.getNamespace());
+                    }
                     List<ContainerAPIObject> containerAPIObjects = kubernetesAPIObject.getContainerAPIObjects();
                     HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
-                    for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
-                        ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(),
-                                containerAPIObject.getContainer_image_name(), new ContainerRecommendations(), null);
-                        containerDataHashMap.put(containerData.getContainer_name(), containerData);
+                    if (containerAPIObjects != null) {
+                        for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
+                            ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(),
+                                    containerAPIObject.getContainer_image_name(), new ContainerRecommendations(), null);
+                            containerDataHashMap.put(containerData.getContainer_name(), containerData);
+                        }
                     }
                     k8sObject.setContainerDataMap(containerDataHashMap);
                     k8sObjectList.add(k8sObject);
@@ -109,6 +118,18 @@ public class Converters {
 
                 for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
                     kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
+
+                    NamespaceAPIObject namespaceAPIObject;
+                    NamespaceData clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceData(), NamespaceData.class);
+
+                    if (null != clonedNamespaceData) {
+                        HashMap<Timestamp, MappedRecommendationForTimestamp> namespaceRecommendations = clonedNamespaceData.getNamespaceRecommendations().getData();
+                        LOGGER.info("Namespace Recommendations: " + namespaceRecommendations.toString());
+                        clonedNamespaceData.getNamespaceRecommendations().setData(namespaceRecommendations);
+                        namespaceAPIObject = new NamespaceAPIObject(clonedNamespaceData.getNamespace_name(), clonedNamespaceData.getNamespaceRecommendations(), null);
+                        kubernetesAPIObject.setNamespaceAPIObject(namespaceAPIObject);
+                    }
+
                     HashMap<String, ContainerData> containerDataMap = new HashMap<>();
                     List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
                     for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
