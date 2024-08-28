@@ -19,6 +19,7 @@ import json
 import pytest
 import sys
 import time
+import shutil
 sys.path.append("../../")
 
 from helpers.fixtures import *
@@ -184,8 +185,6 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
 
 
     response = generate_recommendations(tfb_exp_name)
-    data = response.json()
-    print(data)
     assert response.status_code == SUCCESS_STATUS_CODE
 
     # Invoke list recommendations for the specified experiment
@@ -199,8 +198,6 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
 
 
     response = generate_recommendations(tfb_db_exp_name)
-    data = response.json()
-    print(data)
     assert response.status_code == SUCCESS_STATUS_CODE
 
     # Invoke list recommendations for the specified experiment
@@ -226,3 +223,6 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     response = delete_metric_profile(metric_profile_json_file)
     print("delete metric profile = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Remove benchmarks directory
+    shutil.rmtree("benchmarks")
