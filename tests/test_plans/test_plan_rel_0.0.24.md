@@ -89,17 +89,17 @@ As part of the release testing, following tests will be executed:
 - [Kruize local monitoring Functional tests](/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md)
 
 
-| #   | TEST SUITE | EXPECTED RESULTS | ACTUAL RESULTS | COMMENTS |
-| --- | ---------- |------------------|------------|--------------| 
-| 1   |  Kruize Remote monitoring Functional testsuite | TOTAL - 357, PASSED -  / FAILED -  | TOTAL - 357, PASSED - / FAILED -  | No new regressions seen, existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
-| 2   |  Fault tolerant test |  |  |  |
-| 3   |  Stress test |    |  |  |
-| 4   |  Scalability test (short run)|  |  | Exps - 5000, Results - 72000, execution time - 3 hours 51 mins |
-| 5   |  DB Migration test |    |  | Tested on Openshift |
-| 6   |  Recommendation and box plot values validations |   |  |  |
-| 7   |  Kruize remote monitoring demo |  |  | Tested manually |
-| 8   |  Kruize Local monitoring demo |  |  |  |
-| 9   |  Kruize Local Functional tests |  TOTAL - 35, PASSED -  / FAILED -  | TOTAL - , PASSED -  / FAILED -  | [Issue 1217](https://github.com/kruize/autotune/issues/1217) |
+| #   | TEST SUITE | EXPECTED RESULTS                        | ACTUAL RESULTS                          | COMMENTS                                                                                                                                              |
+| --- | ---------- |-----------------------------------------|-----------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------| 
+| 1   |  Kruize Remote monitoring Functional testsuite | TOTAL - 357, PASSED - 314 / FAILED - 43 | TOTAL - 357, PASSED - 314 / FAILED - 43 | No new regressions seen, existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
+| 2   |  Fault tolerant test | PASSED                                  | PASSED                                  |                                                                                                                                                       |
+| 3   |  Stress test | PASSED                                  | PASSED                                  |                                                                                                                                                       |
+| 4   |  Scalability test (short run)|                                         |                                         | Exps - 5000, Results - 72000, execution time - 3 hours 51 mins                                                                                        |
+| 5   |  DB Migration test | PASSED                                  | PASSED                                  | Tested on Openshift                                                                                                                                   |
+| 6   |  Recommendation and box plot values validations | PASSED                                  | PASSED                                  |                                                                                                                                                       |
+| 7   |  Kruize remote monitoring demo | PASSED                                  | PASSED                                  | Tested manually                                                                                                                                       |
+| 8   |  Kruize Local monitoring demo | PASSED                                  | PASSED                                  |                                                                                                                                                       |
+| 9   |  Kruize Local Functional tests | TOTAL - 64, PASSED - 60 / FAILED - 4    | TOTAL - 64, PASSED - 60 / FAILED - 4 | [Issue 1217](https://github.com/kruize/autotune/issues/1217), [Issue 1273](https://github.com/kruize/autotune/issues/1273)                            |
 
 ---
 
