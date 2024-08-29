@@ -26,30 +26,26 @@ from helpers.generate_rm_jsons import *
 def main(argv):
     cluster_type = "minikube"
     results_dir = "."
-    num_exps = 1
     failed = 0
     try:
         opts, args = getopt.getopt(argv,"h:c:a:u:r:")
     except getopt.GetoptError:
-        print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -r <results dir>")
+        print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -r <results dir>")
         print("Note: -a option is required only on openshift when kruize service is exposed")
         sys.exit(2)
     for opt, arg in opts:
         if opt == '-h':
-            print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -u <no. of experiments> -r <results dir>")
+            print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -r <results dir>")
             sys.exit(0)
         elif opt == '-c':
             cluster_type = arg
         elif opt == '-a':
             server_ip_addr = arg
-        elif opt == '-u':
-            num_exps = int(arg)
         elif opt == '-r':
             results_dir = arg
         
 
     print(f"Cluster type = {cluster_type}")
-    print(f"No. of experiments = {num_exps}")
     print(f"Results dir = {results_dir}")
 
     # Form the kruize url
@@ -90,179 +86,179 @@ def main(argv):
     print(metadata_json)
 
     # Create the experiment 
-    for exp_num in range(num_exps):
-        # create the experiment and post it
-        create_exp_json_file = "../json_files/create_tfb_exp.json"
-        create_experiment(create_exp_json_file)
-                
-        # Obtain the experiment name
-        json_data = json.load(open(create_exp_json_file))
+    create_exp_json_file = "../json_files/create_tfb_exp.json"
+    create_experiment(create_exp_json_file)
 
-        experiment_name = json_data[0]['experiment_name']
-        print(f"experiment_name = {experiment_name}")
+    # Obtain the experiment name
+    json_data = json.load(open(create_exp_json_file))
 
-        # Fetch the recommendations for all the experiments
-        reco = generate_recommendations(experiment_name)
-        filename = reco_json_dir + '/generate_reco_' + str(exp_num) + '.json'
-        write_json_data_to_file(filename, reco.json())
+    experiment_name = json_data[0]['experiment_name']
+    print(f"experiment_name = {experiment_name}")
 
-        # Fetch listExperiments
-        list_exp_json_file_before = list_exp_json_dir + "/list_exp_json_before_" + str(exp_num) + ".json"
-        # assign params to be passed in listExp
-        results = "true"
-        recommendations = "true"
-        latest = "false"
-        experiment_name = None
-        response = list_experiments(results, recommendations, latest, experiment_name)
-        if response.status_code == SUCCESS_200_STATUS_CODE:
-           list_exp_json = response.json()
-        else:
-            print(f"listExperiments failed!")
-            failed = 1
-            sys.exit(1)
+    # Fetch the recommendations for all the experiments
+    reco = generate_recommendations(experiment_name)
+    filename = reco_json_dir + '/generate_reco.json'
+    write_json_data_to_file(filename, reco.json())
 
-        write_json_data_to_file(list_exp_json_file_before, list_exp_json)
+    # Fetch listExperiments
+    list_exp_json_file_before = list_exp_json_dir + "/list_exp_json_before.json"
+    # assign params to be passed in listExp
+    results = "true"
+    recommendations = "true"
+    latest = "false"
+    experiment_name = None
+    response = list_experiments(results, recommendations, latest, experiment_name)
+    if response.status_code == SUCCESS_200_STATUS_CODE:
+       list_exp_json = response.json()
+    else:
+        print(f"listExperiments failed!")
+        failed = 1
+        sys.exit(1)
 
-        # Fetch the recommendations for all the experiments
-        experiment_name = None
-        latest = "false"
-        interval_end_time = None
-        response = list_recommendations(experiment_name, latest, interval_end_time)
-        if response.status_code == SUCCESS_200_STATUS_CODE:
-            list_reco_json_file_before = list_reco_json_dir + '/list_reco_json_before_' + str(exp_num) + '.json'
-            write_json_data_to_file(list_reco_json_file_before, response.json())
-        else:
-            print(f"listRecommendations for experiment name - ${experiment_name} failed!")
-            failed = 1
-            sys.exit(1)
+    write_json_data_to_file(list_exp_json_file_before, list_exp_json)
 
-        # Fetch the datasources
-        name = None
-        response = list_datasources(name)
-        if response.status_code == SUCCESS_200_STATUS_CODE:
-            list_datasources_json_file_before = list_datasources_json_dir + '/list_datasources_json_before_' + str(exp_num) + '.json'
-            write_json_data_to_file(list_datasources_json_file_before, response.json())
-        else:
-            print(f"list Datasources failed!")
-            failed = 1
-            sys.exit(1)
+    # Fetch the recommendations for all the experiments
+    experiment_name = None
+    latest = "false"
+    interval_end_time = None
+    response = list_recommendations(experiment_name, latest, interval_end_time)
+    if response.status_code == SUCCESS_200_STATUS_CODE:
+        list_reco_json_file_before = list_reco_json_dir + '/list_reco_json_before.json'
+        write_json_data_to_file(list_reco_json_file_before, response.json())
+    else:
+        print(f"listRecommendations for experiment name - ${experiment_name} failed!")
+        failed = 1
+        sys.exit(1)
 
-        # Fetch the datasource metadata
-        json_data = json.load(open(input_json_file))
-        datasource_name = json_data['datasource_name']
+    # Fetch the datasources
+    name = None
+    response = list_datasources(name)
+    if response.status_code == SUCCESS_200_STATUS_CODE:
+        list_datasources_json_file_before = list_datasources_json_dir + '/list_datasources_json_before.json'
+        write_json_data_to_file(list_datasources_json_file_before, response.json())
+    else:
+        print(f"list Datasources failed!")
+        failed = 1
+        sys.exit(1)
 
-        response = list_metadata(datasource_name)
+    # Fetch the datasource metadata
+    json_data = json.load(open(input_json_file))
+    datasource_name = json_data['datasource_name']
+    cluster_name = None
+    ns = None
+    verbose = "true"
 
-        if response.status_code == SUCCESS_200_STATUS_CODE:
-            list_metadata_json_file_before = list_metadata_json_dir + '/list_metadata_json_before_' + str(exp_num) + '.json'
-            write_json_data_to_file(list_metadata_json_file_before, response.json())
-        else:
-            print(f"list metadata failed!")
-            failed = 1
-            sys.exit(1)
+    response = list_metadata(datasource_name, cluster_name, ns, verbose)
 
-        # Delete the kruize pod
-        delete_kruize_pod(namespace)
+    if response.status_code == SUCCESS_200_STATUS_CODE:
+        list_metadata_json_file_before = list_metadata_json_dir + '/list_metadata_json_before.json'
+        write_json_data_to_file(list_metadata_json_file_before, response.json())
+    else:
+        print(f"list metadata failed!")
+        failed = 1
+        sys.exit(1)
 
-        # Check if the kruize pod is running
-        pod_name = get_kruize_pod(namespace)
-        result = check_pod_running(namespace, pod_name)
+    # Delete the kruize pod
+    delete_kruize_pod(namespace)
 
-        # Sleep for a while 
-        time.sleep(60)
+    # Check if the kruize pod is running
+    pod_name = get_kruize_pod(namespace)
+    result = check_pod_running(namespace, pod_name)
 
-        if result == False:
-            print("Restarting kruize failed!")
-            failed = 1
-            sys.exit(failed)
+    # Sleep for a while
+    time.sleep(60)
 
-        # Fetch listExperiments
-        list_exp_json_file_after = list_exp_json_dir + "/list_exp_json_after_" + str(exp_num) + ".json"
-        results = "true"
-        recommendations = "true"
-        latest = "false"
-        experiment_name = None
-        response = list_experiments(results, recommendations, latest, experiment_name)
-        if response.status_code == SUCCESS_200_STATUS_CODE:
-            list_exp_json = response.json()
-        else:
-            print(f"listExperiments failed!")
-            failed = 1
-            sys.exit(1)
+    if result == False:
+        print("Restarting kruize failed!")
+        failed = 1
+        sys.exit(failed)
 
-        write_json_data_to_file(list_exp_json_file_after, list_exp_json)
+    # Fetch listExperiments
+    list_exp_json_file_after = list_exp_json_dir + "/list_exp_json_after.json"
+    results = "true"
+    recommendations = "true"
+    latest = "false"
+    experiment_name = None
+    response = list_experiments(results, recommendations, latest, experiment_name)
+    if response.status_code == SUCCESS_200_STATUS_CODE:
+        list_exp_json = response.json()
+    else:
+        print(f"listExperiments failed!")
+        failed = 1
+        sys.exit(1)
 
-        # Fetch the recommendations for all the experiments
-        latest = "false"
-        interval_end_time = None
-        response = list_recommendations(experiment_name, latest, interval_end_time)
-        if response.status_code == SUCCESS_200_STATUS_CODE:
-            list_reco_json_file_after = list_reco_json_dir + '/list_reco_json_after_' + str(exp_num) + '.json'
-            write_json_data_to_file(list_reco_json_file_after, response.json())
-        else:
-            print(f"listRecommendations for experiment name - ${experiment_name} failed")
-            failed = 1
-            sys.exit(1)
+    write_json_data_to_file(list_exp_json_file_after, list_exp_json)
 
-        # Fetch the datasources
-        name = None
-        response = list_datasources(name)
-        if response.status_code == SUCCESS_200_STATUS_CODE:
-            list_datasources_json_file_after = list_datasources_json_dir + '/list_datasources_json_after_' + str(exp_num) + '.json'
-            write_json_data_to_file(list_datasources_json_file_after, response.json())
-        else:
-            print(f"list Datasources failed!")
-            failed = 1
-            sys.exit(1)
+    # Fetch the recommendations for all the experiments
+    latest = "false"
+    interval_end_time = None
+    response = list_recommendations(experiment_name, latest, interval_end_time)
+    if response.status_code == SUCCESS_200_STATUS_CODE:
+        list_reco_json_file_after = list_reco_json_dir + '/list_reco_json_after.json'
+        write_json_data_to_file(list_reco_json_file_after, response.json())
+    else:
+        print(f"listRecommendations for experiment name - ${experiment_name} failed")
+        failed = 1
+        sys.exit(1)
 
-        # Fetch the datasource metadata
-        response = list_metadata(datasource_name)
-        if response.status_code == SUCCESS_200_STATUS_CODE:
-            list_metadata_json_file_after = list_metadata_json_dir + '/list_metadata_json_after_' + str(exp_num) + '.json'
-            write_json_data_to_file(list_metadata_json_file_after, response.json())
-        else:
-            print(f"list metadata failed!")
-            failed = 1
-            sys.exit(1)
+    # Fetch the datasources
+    name = None
+    response = list_datasources(name)
+    if response.status_code == SUCCESS_200_STATUS_CODE:
+        list_datasources_json_file_after = list_datasources_json_dir + '/list_datasources_json_after.json'
+        write_json_data_to_file(list_datasources_json_file_after, response.json())
+    else:
+        print(f"list Datasources failed!")
+        failed = 1
+        sys.exit(1)
 
-        # Compare the listExperiments before and after kruize pod restart
-        result = compare_json_files(list_exp_json_file_before, list_exp_json_file_after)
-        if result == True:
-            print("Passed! listExperiments before and after kruize pod restart are same!")
-        else:
-            failed = 1
-            print("Failed! listExperiments before and after kruize pod restart are not same!")
+    # Fetch the datasource metadata
+    response = list_metadata(datasource_name, cluster_name, ns, verbose)
+    if response.status_code == SUCCESS_200_STATUS_CODE:
+        list_metadata_json_file_after = list_metadata_json_dir + '/list_metadata_json_after.json'
+        write_json_data_to_file(list_metadata_json_file_after, response.json())
+    else:
+        print(f"list metadata failed!")
+        failed = 1
+        sys.exit(1)
 
-        # Compare the listRecommendations before and after kruize pod restart
-        result = compare_json_files(list_reco_json_file_before, list_reco_json_file_after)
-        if result == True:
-            print("Passed! listRecommendations before and after kruize pod restart are same!")
-        else:
-            failed = 1
-            print("Failed! listRecommendations before and after kruize pod restart are not same!")
+    # Compare the listExperiments before and after kruize pod restart
+    result = compare_json_files(list_exp_json_file_before, list_exp_json_file_after)
+    if result == True:
+        print("Passed! listExperiments before and after kruize pod restart are same!")
+    else:
+        failed = 1
+        print("Failed! listExperiments before and after kruize pod restart are not same!")
 
-        # Compare the listDatasource before and after kruize pod restart
-        result = compare_json_files(list_datasources_json_file_before, list_datasources_json_file_after)
-        if result == True:
-            print("Passed! listDatasources before and after kruize pod restart are same!")
-        else:
-            failed = 1
-            print("Failed! listDatasources before and after kruize pod restart are not same!")
+    # Compare the listRecommendations before and after kruize pod restart
+    result = compare_json_files(list_reco_json_file_before, list_reco_json_file_after)
+    if result == True:
+        print("Passed! listRecommendations before and after kruize pod restart are same!")
+    else:
+        failed = 1
+        print("Failed! listRecommendations before and after kruize pod restart are not same!")
 
-        # Compare the list Datasource Metadata before and after kruize pod restart
-        result = compare_json_files(list_metadata_json_file_before, list_metadata_json_file_after)
-        if result == True:
-            print("Passed! list datasource metadata before and after kruize pod restart are same!")
-        else:
-            failed = 1
-            print("Failed! list datasource metadata before and after kruize pod restart are not same!")
+    # Compare the listDatasource before and after kruize pod restart
+    result = compare_json_files(list_datasources_json_file_before, list_datasources_json_file_after)
+    if result == True:
+        print("Passed! listDatasources before and after kruize pod restart are same!")
+    else:
+        failed = 1
+        print("Failed! listDatasources before and after kruize pod restart are not same!")
 
-        # sleep for a while to mimic the availability of next set of results
-        time.sleep(1)
+    # Compare the list Datasource Metadata before and after kruize pod restart
+    result = compare_json_files(list_metadata_json_file_before, list_metadata_json_file_after)
+    if result == True:
+        print("Passed! list datasource metadata before and after kruize pod restart are same!")
+    else:
+        failed = 1
+        print("Failed! list datasource metadata before and after kruize pod restart are not same!")
 
-    for exp_num in range(num_exps):
-        # Delete the experiment
-        delete_experiment(create_exp_json_file)
+    # sleep for a while to mimic the availability of next set of results
+    time.sleep(1)
+
+    # Delete the experiment
+    delete_experiment(create_exp_json_file)
 
     if failed == 1:
         print("Test Failed! Check the logs for test failures")

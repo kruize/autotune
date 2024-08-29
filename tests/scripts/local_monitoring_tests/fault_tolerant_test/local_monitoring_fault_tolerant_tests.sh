@@ -34,11 +34,10 @@ RESOURCE_OPTIMIZATION_JSON="../json_files/resource_optimization_openshift.json"
 
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
-num_exps=1
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-u No. of experiments (default - 1)] [-r <resultsdir path>]"
+	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-r <resultsdir path>]"
 	exit -1
 }
 
@@ -53,7 +52,7 @@ function get_kruize_pod_log() {
 	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
-while getopts c:r:i:u:t:h gopts
+while getopts c:r:i:t:h gopts
 do
 	case ${gopts} in
 	c)
@@ -64,9 +63,6 @@ do
 		;;
 	i)
 		KRUIZE_IMAGE="${OPTARG}"		
-		;;
-	u)
-		num_exps="${OPTARG}"		
 		;;
 	h)
 		usage
@@ -104,6 +100,7 @@ pushd ${KRUIZE_REPO} > /dev/null
 
 	cp ${MANIFESTS_FILE} ${MANIFESTS_FILE_BKUP}
 	sed -i 's/"local": "false"/"local": "true"/g' ${MANIFESTS_FILE}
+	sed -i 's/"logAllHttpReqAndResp": "true"/"logAllHttpReqAndResp": "false"/g' ${MANIFESTS_FILE}
         echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
         ./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG} 2>&1
 
@@ -158,14 +155,14 @@ TEST_LOG="${LOG_DIR}/kruize_pod_restart_test.log"
 echo ""
 echo "Running fault tolerant test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 if [ "${CLUSTER_TYPE}" == "openshift" ]; then
-	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
-	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -u ${num_exps} -r "${LOG_DIR}" | tee -a  ${TEST_LOG}
+	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
+	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -a ${SERVER_IP_ADDR} -r "${LOG_DIR}" | tee -a  ${TEST_LOG}
 	exit_code=$?
 	echo "exit_code = $exit_code"
 
 else
-	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
-	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -u ${num_exps} -r "${LOG_DIR}" | tee -a  ${TEST_LOG}
+	echo "python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -r ${LOG_DIR} | tee -a  ${TEST_LOG}" | tee -a ${LOG}
+	python3 kruize_pod_restart_test.py -c ${CLUSTER_TYPE} -r "${LOG_DIR}" | tee -a  ${TEST_LOG}
 	exit_code=$?
 	echo "exit_code = $exit_code"
 fi
