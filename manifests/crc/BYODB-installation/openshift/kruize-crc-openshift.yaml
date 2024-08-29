@@ -177,7 +177,13 @@ data:
       upstream kruize-api {
         server kruize:8080;
       }
-
+    
+      # Set these timeout settings to a very high value
+      proxy_connect_timeout       86400s;
+      proxy_send_timeout          86400s;
+      proxy_read_timeout          86400s;
+      send_timeout                86400s;
+    
       server {
         listen 8080;
         server_name localhost;
