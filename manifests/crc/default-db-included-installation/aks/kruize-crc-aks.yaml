@@ -1,0 +1,374 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: postgres-pvc
+  namespace: monitoring
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: managed
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: postgres-deployment
+  namespace: monitoring
+  labels:
+    app: postgres
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: postgres
+  template:
+    metadata:
+      labels:
+        app: postgres
+    spec:
+      containers:
+        - name: postgres
+          image: quay.io/kruizehub/postgres:15.2
+          imagePullPolicy: IfNotPresent
+          env:
+            - name: POSTGRES_PASSWORD
+              value: admin
+            - name: POSTGRES_USER
+              value: admin
+            - name: POSTGRES_DB
+              value: kruizeDB
+            - name: PGDATA
+              value: /var/lib/postgresql/backup
+          ports:
+            - containerPort: 5432
+          volumeMounts:
+            - name: postgres-storage
+              mountPath: /var/lib/postgresql
+      volumes:
+        - name: postgres-storage
+          persistentVolumeClaim:
+            claimName: postgres-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres-service
+  namespace: monitoring
+  labels:
+    app: postgres
+spec:
+  type: ClusterIP
+  ports:
+    - name: postgres-port
+      port: 5432
+      targetPort: 5432
+  selector:
+    app: postgres
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kruizeconfig
+  namespace: monitoring
+data:
+  dbconfigjson: |
+    {
+      "database": {
+        "adminPassword": "admin",
+        "adminUsername": "admin",
+        "hostname": "postgres-service",
+        "name": "kruizeDB",
+        "password": "admin",
+        "port": 5432,
+        "sslMode": "require",
+        "username": "admin"
+      }
+    }
+  kruizeconfigjson: |
+    {
+      "clustertype": "kubernetes",
+      "k8stype": "minikube",
+      "authtype": "",
+      "monitoringagent": "prometheus",
+      "monitoringservice": "prometheus-k8s",
+      "monitoringendpoint": "prometheus-k8s",
+      "savetodb": "true",
+      "dbdriver": "jdbc:postgresql://",
+      "plots": "true",
+      "local": "false",
+      "logAllHttpReqAndResp": "true",
+      "hibernate": {
+        "dialect": "org.hibernate.dialect.PostgreSQLDialect",
+        "driver": "org.postgresql.Driver",
+        "c3p0minsize": 2,
+        "c3p0maxsize": 5,
+        "c3p0timeout": 300,
+        "c3p0maxstatements": 50,
+        "hbm2ddlauto": "none",
+        "showsql": "false",
+        "timezone": "UTC"
+      },
+      "logging" : {
+        "cloudwatch": {
+          "accessKeyId": "",
+          "logGroup": "kruize-logs",
+          "logStream": "kruize-stream",
+          "region": "",
+          "secretAccessKey": "",
+          "logLevel": "INFO"
+        }
+      },
+      "datasource": [
+        {
+          "name": "prometheus-1",
+          "provider": "prometheus",
+          "serviceName": "prometheus-k8s",
+          "namespace": "monitoring",
+          "url": ""
+        }
+      ]
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kruize
+  labels:
+    app: kruize
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: kruize
+  template:
+    metadata:
+      labels:
+        app: kruize
+        name: kruize
+    spec:
+      containers:
+        - name: kruize
+          image: quay.io/kruize/autotune_operator:0.0.22_rm
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: config-volume
+              mountPath: /etc/config
+          env:
+            - name: LOGGING_LEVEL
+              value: "info"
+            - name: ROOT_LOGGING_LEVEL
+              value: "error"
+            - name: DB_CONFIG_FILE
+              value: "/etc/config/dbconfigjson"
+            - name: KRUIZE_CONFIG_FILE
+              value: "/etc/config/kruizeconfigjson"
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=80"
+          ports:
+            - name: kruize-port
+              containerPort: 8080
+      #          livenessProbe:
+      #            exec:
+      #              command:
+      #                - sh
+      #                - -c
+      #                - chmod +x /home/autotune/app/target/bin/TestDBConnection && /home/autotune/app/target/bin/TestDBConnection
+      #            initialDelaySeconds: 10
+      #            periodSeconds: 5
+      #            timeoutSeconds: 20
+      volumes:
+        - name: config-volume
+          configMap:
+            name: kruizeconfig
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kruize
+  namespace: monitoring
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/path: '/metrics'
+  labels:
+    app: kruize
+spec:
+  type: LoadBalancer
+  selector:
+    app: kruize
+  ports:
+    - name: kruize-port
+      port: 8080
+      targetPort: 8080
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: create-partition-cronjob
+  namespace: monitoring
+spec:
+  schedule: "0 0 25 * *" # Run on 25th of every month at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: kruizecronjob
+              image: quay.io/kruize/autotune_operator:0.0.22_rm
+              imagePullPolicy: Always
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /etc/config
+              command:
+                - sh
+                - -c
+                - |
+                  /home/autotune/app/target/bin/CreatePartition
+              args: [ "" ]
+              env:
+                - name: START_AUTOTUNE
+                  value: "false"
+                - name: LOGGING_LEVEL
+                  value: "info"
+                - name: ROOT_LOGGING_LEVEL
+                  value: "error"
+                - name: DB_CONFIG_FILE
+                  value: "/etc/config/dbconfigjson"
+                - name: KRUIZE_CONFIG_FILE
+                  value: "/etc/config/kruizeconfigjson"
+          volumes:
+            - name: config-volume
+              configMap:
+                name: kruizeconfig
+          restartPolicy: OnFailure
+---
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: kruize-service-monitor
+  namespace: monitoring
+  labels:
+    app: kruize
+spec:
+  selector:
+    matchLabels:
+      app: kruize
+  endpoints:
+    - port: kruize-port
+      interval: 30s
+      path: /metrics
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  namespace: monitoring
+data:
+  nginx.conf: |
+    events {}
+    http {
+      upstream kruize-api {
+        server kruize:8080;
+      }
+
+      server {
+        listen 8080;
+        server_name localhost;
+
+        root   /usr/share/nginx/html;
+
+        location ^~ /api/ {
+          rewrite ^/api(.*)$ $1 break;
+          proxy_pass http://kruize-api;
+        }
+
+        location / {
+          index index.html;
+          error_page 404 =200 /index.html;
+        }
+      }
+    }
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kruize-ui-nginx-service
+  namespace: monitoring
+spec:
+  type: LoadBalancer
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+  selector:
+    app: kruize-ui-nginx
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kruize-ui-nginx-pod
+  namespace: monitoring
+  labels:
+    app: kruize-ui-nginx
+spec:
+  containers:
+    - name: kruize-ui-nginx-container
+      image: quay.io/kruize/kruize-ui:0.0.3
+      imagePullPolicy: Always
+      env:
+        - name: KRUIZE_UI_ENV
+          value: "production"
+      volumeMounts:
+        - name: nginx-config-volume
+          mountPath: /etc/nginx/nginx.conf
+          subPath: nginx.conf
+  volumes:
+    - name: nginx-config-volume
+      configMap:
+        name: nginx-config
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: kruize-delete-partition-cronjob
+  namespace: monitoring
+spec:
+  schedule: "0 0 25 * *" # Run on 25th of every month at midnight
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+            - name: kruizedeletejob
+              image: quay.io/kruize/autotune_operator:0.0.22_rm
+              imagePullPolicy: Always
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /etc/config
+              command:
+                - sh
+                - -c
+                - |
+                  /home/autotune/app/target/bin/RetentionPartition
+              args: [ "" ]
+              env:
+                - name: START_AUTOTUNE
+                  value: "false"
+                - name: LOGGING_LEVEL
+                  value: "info"
+                - name: ROOT_LOGGING_LEVEL
+                  value: "error"
+                - name: DB_CONFIG_FILE
+                  value: "/etc/config/dbconfigjson"
+                - name: KRUIZE_CONFIG_FILE
+                  value: "/etc/config/kruizeconfigjson"
+                - name: deletepartitionsthreshold
+                  value: "15"
+          volumes:
+            - name: config-volume
+              configMap:
+                name: kruizeconfig
+          restartPolicy: OnFailure
+---
