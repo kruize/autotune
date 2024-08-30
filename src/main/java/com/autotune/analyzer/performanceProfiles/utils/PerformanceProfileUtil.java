@@ -62,6 +62,28 @@ public class PerformanceProfileUtil {
     }
 
     /**
+     * validates the metric profile fields and the data and then adds it to the map
+     * @param metricProfilesMap
+     * @param metricProfile     Metric profile to be validated
+     * @return ValidationOutputData object
+     */
+    public static ValidationOutputData validateAndAddMetricProfile(Map<String, PerformanceProfile> metricProfilesMap, PerformanceProfile metricProfile) {
+        ValidationOutputData validationOutputData;
+        try {
+            validationOutputData = new PerformanceProfileValidation(metricProfilesMap).validateMetricProfile(metricProfile);
+            if (validationOutputData.isSuccess()) {
+                addMetricProfile(metricProfilesMap, metricProfile);
+            } else {
+                validationOutputData.setMessage("Validation failed: " + validationOutputData.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Validate and add metric profile failed: {}", e.getMessage());
+            validationOutputData = new ValidationOutputData(false, "Validation failed: " + e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        return validationOutputData;
+    }
+
+    /**
      * @param performanceProfile
      * @param updateResultsAPIObject
      * @return
@@ -160,6 +182,11 @@ public class PerformanceProfileUtil {
     public static void addPerformanceProfile(Map<String, PerformanceProfile> performanceProfileMap, PerformanceProfile performanceProfile) {
         performanceProfileMap.put(performanceProfile.getName(), performanceProfile);
         LOGGER.debug("Added PerformanceProfile: {} ",performanceProfile.getName());
+    }
+
+    public static void addMetricProfile(Map<String, PerformanceProfile> performanceProfileMap, PerformanceProfile performanceProfile) {
+        performanceProfileMap.put(performanceProfile.getMetadata().get("name").asText(), performanceProfile);
+        LOGGER.debug("Added MetricProfile: {} ",performanceProfile.getMetadata().get("name"));
     }
 
     /**
