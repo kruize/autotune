@@ -260,17 +260,8 @@ public class RecommendationEngine {
         // continue to generate recommendation when kruizeObject is successfully created
         try {
             // set the default terms if the terms aren't provided by the user
-            if (kruizeObject.getTerms() == null) {
-                if (kruizeObject.getKubernetes_objects().get(0).getType().equals(AnalyzerConstants.K8sObjectConstants.Types.JOB)) {
-                    // set fixed term for 'jobs'
-                    terms.put(KruizeConstants.JSONKeys.FIXED_TERM, new Terms(KruizeConstants.JSONKeys.FIXED_TERM, KruizeConstants
-                            .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.FIXED_TERM_DURATION_DAYS, KruizeConstants
-                            .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.FIXED_TERM_DURATION_DAYS_THRESHOLD, 15, 1)); // TODO: plots_datapoints, plots_datapoints_delta_in_days needs to be updated after POC
-                    kruizeObject.setTerms(terms);
-                } else {
-                    KruizeObject.setDefaultTerms(terms, kruizeObject);
-                }
-            }
+            if (kruizeObject.getTerms() == null)
+                KruizeObject.setDefaultTerms(terms, kruizeObject);
             // set the performance profile
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
             // get the datasource
@@ -784,8 +775,7 @@ public class RecommendationEngine {
                 (
                         !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM) &&
                                 !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM) &&
-                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM) &&
-                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.FIXED_TERM)
+                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)
                 )
         ) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INVALID_RECOMMENDATION_TERM, recommendationTerm));

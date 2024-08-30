@@ -246,7 +246,6 @@ public class KruizeConstants {
         public static final String SHORT_TERM = "short_term";
         public static final String MEDIUM_TERM = "medium_term";
         public static final String LONG_TERM = "long_term";
-        public static final String FIXED_TERM = "fixed_term";
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String VARIATION = "variation";
         public static final String NOTIFICATIONS = "notifications";
@@ -676,8 +675,6 @@ public class KruizeConstants {
                 public static final int MEDIUM_TERM_DURATION_DAYS_THRESHOLD = 2;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
                 public static final int LONG_TERM_DURATION_DAYS_THRESHOLD = 8;
-                public static final int FIXED_TERM_DURATION_DAYS = 1;       // TODO: temporarily set as 1 day, need to update this after the POC
-                public static final double FIXED_TERM_DURATION_DAYS_THRESHOLD = ((double) 1 / (24 * 60)); // TODO: temporarily set as 1 min, need to update this after the POC
 
                 private DurationAmount() {
 
@@ -689,7 +686,6 @@ public class KruizeConstants {
                 public static final double SHORT_TERM_MIN_DATA_THRESHOLD_MINS = 30;
                 public static final double MEDIUM_TERM_MIN_DATA_THRESHOLD_MINS = 2 * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR;
                 public static final double LONG_TERM_MIN_DATA_THRESHOLD_MINS = 8 * TimeConv.NO_OF_HOURS_PER_DAY * TimeConv.NO_OF_MINUTES_PER_HOUR;
-                public static final double FIXED_TERM_MIN_DATA_THRESHOLD_MINS = 1;
                 /* LONG TERM */
                 public static final double LONG_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = LONG_TERM_MIN_DATA_THRESHOLD_MINS + MEASUREMENT_DURATION_BUFFER_IN_MINS;
                 public static final double LONG_TERM_TOTAL_DURATION_LOWER_BOUND_MINS =
@@ -700,11 +696,8 @@ public class KruizeConstants {
                 public static final double SHORT_TERM_HOURS = DurationAmount.SHORT_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 public static final double MEDIUM_TERM_HOURS = DurationAmount.MEDIUM_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 public static final double LONG_TERM_HOURS = DurationAmount.LONG_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
-                public static final double FIXED_TERM_HOURS = DurationAmount.FIXED_TERM_DURATION_DAYS * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
                 public static final double SHORT_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS + MEASUREMENT_DURATION_BUFFER_IN_MINS;
                 public static final double SHORT_TERM_TOTAL_DURATION_LOWER_BOUND_MINS = SHORT_TERM_MIN_DATA_THRESHOLD_MINS - MEASUREMENT_DURATION_BUFFER_IN_MINS;
-                public static final double FIXED_TERM_TOTAL_DURATION_UPPER_BOUND_MINS = FIXED_TERM_MIN_DATA_THRESHOLD_MINS - MEASUREMENT_DURATION_BUFFER_IN_MINS;
-                public static final double FIXED_TERM_TOTAL_DURATION_LOWER_BOUND_MINS = FIXED_TERM_MIN_DATA_THRESHOLD_MINS - MEASUREMENT_DURATION_BUFFER_IN_MINS;
 
                 private RecommendationDurationRanges() {
 
