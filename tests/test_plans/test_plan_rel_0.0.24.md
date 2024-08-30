@@ -30,6 +30,7 @@ This document describes the test plan for Kruize remote monitoring release 0.0.2
 
 ## BUG FIXES TO BE TESTED
 
+* Kruize notifications fix for production issue
 
 ---
 
@@ -44,10 +45,12 @@ This document describes the test plan for Kruize remote monitoring release 0.0.2
 
 ### New Test Cases Developed
 
-| # | ISSUE (NEW FEATURE)                                                                       | TEST DESCRIPTION | TEST DELIVERABLES                                                  | RESULTS | COMMENTS |
-|---|-------------------------------------------------------------------------------------------| ---------------- |--------------------------------------------------------------------|---------| --- |
-| 1 | Tests for create, list operations in Metric profile API                                   | [Included new tests](https://github.com/kruize/autotune/blob/master/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md) | Tests added - [1231](https://github.com/kruize/autotune/pull/1231) | PASSED  | |
-| 2 | [Support for ‘kind’ in kruize local demo](https://github.com/kruize/kruize-demos/pull/81) | local monitoring demo has been updated to use kind |                                                                    | PASSED | |
+| # | ISSUE (NEW FEATURE)                                                                            | TEST DESCRIPTION                                                                                                                | TEST DELIVERABLES                                                  | RESULTS | COMMENTS |
+|---|------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------|---------| --- |
+| 1 | Tests for create, list operations in Metric profile API                                        | [Included new tests](https://github.com/kruize/autotune/blob/master/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md) | Tests added - [1231](https://github.com/kruize/autotune/pull/1231) | PASSED  | |
+| 2 | [Support for ‘kind’ in kruize local demo](https://github.com/kruize/kruize-demos/pull/81)      | local monitoring demo has been updated to use kind                                                                              |                                                                    | PASSED | |
+| 3 | [Kruize notifications fix for production issue](https://github.com/kruize/autotune/pull/1276) | Tested manually                                                                                                               |                                                                    | PASSED | |
+
 
 
 ### Regression Testing
@@ -68,11 +71,11 @@ Short Scalability run
 - Kruize replicas - 10
 - OCP - Scalelab cluster
 
-Kruize Release | Exps / Results / Recos | Execution time        | Latency (Max/ Avg) in seconds |                      |              | Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB)
--- |------------------------|-----------------------|-------------------------------|----------------------|--------------|----------------------|----------------| --
-  |   |     |                   | UpdateRecommendations | UpdateResults                 | LoadResultsByExpName |              |                      |  
-0.0.23_mvp | 5K / 72L / 3L | 3h 30 mins | 0.66 / 0.41 | 0.14 / 0.12 | 0.22 / 0.18 |  21767 | 6.96 | 36.35
-0.0.24_mvp | 5K / 72L / 3L |  |  |  |  |   |  | 
+Kruize Release | Exps / Results / Recos | Execution time | Latency (Max/ Avg) in seconds |               |                      | Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB)
+-- |------------------------|----------------|-------------------------------|---------------|----------------------|----------------------|----------------| --
+  |   |     |                | UpdateRecommendations         | UpdateResults | LoadResultsByExpName |                      |                |  
+0.0.23_mvp | 5K / 72L / 3L | 3h 30 mins     | 0.66 / 0.41                   | 0.14 / 0.12   | 0.22 / 0.18          | 21767                | 6.96           | 36.35
+0.0.24_mvp | 5K / 72L / 3L | 4h 03 mins     | 0.8 / 0.47                    | 0.12 / 0.11   | 0.38 / 0.28          | 21756                | 6.61           | 43.21
 
 ----
 ## RELEASE TESTING
