@@ -2934,3 +2934,66 @@ def validate_recommendations_notifications(experiment_name,end_time,code,message
 
     assert short_term_recommendation['recommendation_engines']['cost']['notifications'][code]['message'] == message
     assert short_term_recommendation['recommendation_engines']['performance']['notifications'][code]['message'] == message
+
+@pytest.mark.sanity
+def test_list_recommendations_job_type_exp(cluster_type):
+    """
+    Test Description: This test validates listRecommendations by updating multiple results for a single experiment
+    """
+    input_json_file = "../json_files/create_exp_job_type.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/multiple_results_single_job_type_exp.json"
+    response = update_results(result_json_file, False)
+
+    # Get the experiment name
+    json_data = json.load(open(input_json_file))
+    experiment_name = json_data[0]['experiment_name']
+    end_time = "2023-04-14T23:59:20.982Z"
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    response = update_recommendations(experiment_name, None, end_time)
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data[0]['experiment_name'] == experiment_name
+    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+            NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
+
+    response = list_recommendations(experiment_name)
+
+    list_reco_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
+    assert errorMsg == ""
+
+    # Validate the json values
+    create_exp_json = read_json_data_from_file(input_json_file)
+
+    expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
+
+    update_results_json = []
+    result_json_arr = read_json_data_from_file(result_json_file)
+    update_results_json.append(result_json_arr[len(result_json_arr) - 1])
+    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0], expected_duration_in_hours)
+
+    # Delete the experiment
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)

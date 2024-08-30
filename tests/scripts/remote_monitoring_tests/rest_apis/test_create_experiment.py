@@ -141,7 +141,7 @@ def test_create_exp(cluster_type):
 
 @pytest.mark.sanity
 @pytest.mark.parametrize("k8s_obj_type", ["deployment", "deploymentConfig", "statefulset", "daemonset", "replicaset",
-                                          "replicationController"])
+                                          "replicationController", "job"])
 def test_create_exp_for_supported_k8s_obj_type(k8s_obj_type, cluster_type):
     """
     Test Description: This test validates the response status code of createExperiment API by passing a
