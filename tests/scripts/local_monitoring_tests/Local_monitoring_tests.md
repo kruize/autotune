@@ -48,9 +48,30 @@ Here are the test scenarios:
 - List dsmetadata with datasource and namespace but without cluster_name
 - List the dsmetadata after deleting imported metadata
 
+### **Create Metric Profile API tests**
+
+Here are the test scenarios:
+
+- Create metric profile passing a valid input JSON payload with all the metric queries 
+- Post the same metric profile again - creating it twice and validate the error as metric profile name is a unique field 
+- Create multiple valid metric profiles using different jsons
+- Create Metric profile missing mandatory fields and validate error messages when the mandatory fields are missing
+
+
+### **List Metric Profile API tests**
+
+Here are the test scenarios:
+
+- List metric profiles without specifying any query parameters
+- List metric profiles specifying profile name query parameter
+- List metric profiles specifying verbose query parameter
+- List metric profiles specifying profile name and verbose query parameters
+- Test with invalid values such as blank, null or an invalid value for name query parameter in listMetricProfiles API
+- List metric profiles without creating metric profile
+
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
 - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
-- Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md)
+- Creates a resource optimization metric profile using the [createMetricProfile API](/design/MetricProfileAPI.md)
 - Runs the above tests using pytest
 
 ## Prerequisites for running the tests:

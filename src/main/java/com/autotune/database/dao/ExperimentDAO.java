@@ -25,6 +25,9 @@ public interface ExperimentDAO {
     // Add Performance Profile  to DB
     public ValidationOutputData addPerformanceProfileToDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry);
 
+    // Add Metric Profile  to DB
+    public ValidationOutputData addMetricProfileToDB(KruizeMetricProfileEntry kruizeMetricProfileEntry);
+
     // Add DataSource to DB
     ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry);
 
@@ -46,6 +49,9 @@ public interface ExperimentDAO {
     // If Kruize restarts load all performance profiles
     List<KruizePerformanceProfileEntry> loadAllPerformanceProfiles() throws Exception;
 
+    // If Kruize restarts load all metric profiles
+    List<KruizeMetricProfileEntry> loadAllMetricProfiles() throws Exception;
+
     // Load a single experiment based on experimentName
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
 
@@ -63,6 +69,11 @@ public interface ExperimentDAO {
     // Load a single Performance Profile based on name
     List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception;
 
+    // Load a single Metric Profile based on name
+    List<KruizeMetricProfileEntry> loadMetricProfileByName(String metricProfileName) throws Exception;
+
+    // Delete metric profile for the specified metric profile name
+    public ValidationOutputData deleteKruizeMetricProfileEntryByName(String metricProfileName);
 
     // Load all recommendations of a particular experiment and interval end Time
     KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, String cluster_name, Timestamp interval_end_time) throws Exception;

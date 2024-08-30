@@ -140,6 +140,17 @@ public class ExperimentDBService {
         }
     }
 
+    public void loadAllMetricProfiles(Map<String, PerformanceProfile> metricProfileMap) throws Exception {
+        List<KruizeMetricProfileEntry> entries = experimentDAO.loadAllMetricProfiles();
+        if (null != entries && !entries.isEmpty()) {
+            List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertMetricProfileEntryToMetricProfileObject(entries);
+            if (!performanceProfiles.isEmpty()) {
+                performanceProfiles.forEach(performanceProfile ->
+                        PerformanceProfileUtil.addMetricProfile(metricProfileMap, performanceProfile));
+            }
+        }
+    }
+
     public boolean loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         KruizeObject kruizeObject = mainKruizeExperimentMap.get(experimentName);
@@ -271,6 +282,22 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
+    /**
+     * Adds Metric Profile to kruizeMetricProfileEntry
+     * @param metricProfile Metric profile object to be added
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData addMetricProfileToDB(PerformanceProfile metricProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeMetricProfileEntry kruizeMetricProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetricProfileObjToMetricProfileDBObj(metricProfile);
+            validationOutputData = this.experimentDAO.addMetricProfileToDB(kruizeMetricProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save Metric Profile due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
     /*
      * This is a Java method that loads all experiments from the database using an experimentDAO object.
      * The method then converts the retrieved data into KruizeObject format, adds them to a list,
@@ -355,6 +382,27 @@ public class ExperimentDBService {
                 for (PerformanceProfile performanceProfile : performanceProfiles) {
                     if (null != performanceProfile) {
                         PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Fetches Metric Profile by name from kruizeMetricProfileEntry
+     * @param metricProfileMap Map to store metric profile loaded from the database
+     * @param metricProfileName Metric profile name to be fetched
+     * @return ValidationOutputData object
+     */
+    public void loadMetricProfileFromDBByName(Map<String, PerformanceProfile> metricProfileMap, String metricProfileName) throws Exception {
+        List<KruizeMetricProfileEntry> entries = experimentDAO.loadMetricProfileByName(metricProfileName);
+        if (null != entries && !entries.isEmpty()) {
+            List<PerformanceProfile> metricProfiles = DBHelpers.Converters.KruizeObjectConverters
+                    .convertMetricProfileEntryToMetricProfileObject(entries);
+            if (!metricProfiles.isEmpty()) {
+                for (PerformanceProfile performanceProfile : metricProfiles) {
+                    if (null != performanceProfile) {
+                        PerformanceProfileUtil.addMetricProfile(metricProfileMap, performanceProfile);
                     }
                 }
             }

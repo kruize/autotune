@@ -63,6 +63,10 @@ public class AnalyzerConstants {
     public static final String NONE = "none";
     public static final String POD_VARIABLE = "$POD$";
     public static final String NAMESPACE_VARIABLE = "$NAMESPACE$";
+    public static final String CONTAINER_VARIABLE = "$CONTAINER_NAME$";
+    public static final String MEASUREMENT_DURATION_IN_MIN_VARAIBLE = "$MEASUREMENT_DURATION_IN_MIN$";
+    public static final String WORKLOAD_VARIABLE = "$WORKLOAD$";
+    public static final String WORKLOAD_TYPE_VARIABLE = "$WORKLOAD_TYPE$";
     public static final String API_VERSION = "apiVersion";
     public static final String KIND = "kind";
     public static final String RESOURCE_VERSION = "resourceVersion";
@@ -159,7 +163,20 @@ public class AnalyzerConstants {
         memoryRequest,
         memoryLimit,
         memoryUsage,
-        memoryRSS
+        memoryRSS,
+        maxDate,
+        namespaceCpuRequest,
+        namespaceCpuLimit,
+        namespaceCpuUsage,
+        namespaceCpuThrottle,
+        namespaceMemoryRequest,
+        namespaceMemoryLimit,
+        namespaceMemoryUsage,
+        namespaceMemoryRSS,
+        namespaceTotalPods,
+        namespaceRunningPods,
+        gpuCoreUsage,
+        gpuMemoryUsage
     }
 
     public enum K8S_OBJECT_TYPES {
@@ -453,13 +470,19 @@ public class AnalyzerConstants {
         public static final String K8S_TYPE = "k8s_type";
         public static final String PERF_PROFILE = "performanceProfile";
         public static final String PERF_PROFILE_MAP = "performanceProfileMap";
+        public static final String METRIC_PROFILE_MAP = "metricProfileMap";
         public static final String PERF_PROFILE_NAME = "name";
         public static final String OBJECTIVE_FUNCTION = "objectiveFunction";
         public static final String FUNCTION_VARIABLES = "functionVariables";
+        public static final String METRIC_PROFILE_NAME = "name";
         public static final String VALUE_TYPE = "valueType";
         public static final String SOURCE = "source";
         public static final String PERFORMANCE_PROFILE_PKG = "com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.";
         public static final String DEFAULT_PROFILE = "default";
+
+        //Metric profile constants
+        public static final String DEFAULT_API_VERSION = "recommender.com/v1";
+        public static final String DEFAULT_KIND = "KruizePerformanceProfile";
 
         // Perf profile names
         public static final String RESOURCE_OPT_OPENSHIFT_PROFILE = "resource-optimization-openshift";
