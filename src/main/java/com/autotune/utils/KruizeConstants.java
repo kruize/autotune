@@ -698,7 +698,7 @@ public class KruizeConstants {
     public static final class KRUIZE_RECOMMENDATION_METRICS {
         public static final String METRIC_NAME = "KruizeRecommendationsNotification";
         public static final String TAG_NAME = "recommendations_notifications";
-        public static final String notification_format_for_KIBANA = "%s|%s|%s|%s|%s|%s|%s|%s|%s"; //experiment_name,container_name,endtime,level,termname,modelname,code,type,message
+        public static final String notification_format_for_LOG = "%s|%s|%s|%s|%s|%s|%s|%s|%s"; //experiment_name,container_name,endtime,level,termname,modelname,code,type,message
         public static final String notification_format_for_METRICS = "%s|%s|%s"; //termname,modelname,type
 
     }
