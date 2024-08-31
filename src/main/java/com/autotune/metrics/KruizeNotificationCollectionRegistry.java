@@ -82,9 +82,9 @@ public class KruizeNotificationCollectionRegistry {
         for (RecommendationNotification recommendationNotification : recommendationNotificationList) {
             Tags additionalTags = Tags.empty();
             if (("|" + KruizeDeploymentInfo.log_recommendation_metrics_level + "|").contains("|" + recommendationNotification.getType() + "|") == true) {
-                String kibanaLog =  String.format(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.notification_format_for_KIBANA, this.experiment_name, this.container_name, KruizeConstants.DateFormats.simpleDateFormatForUTC.format(this.interval_end_time), level, term, model, String.valueOf(recommendationNotification.getCode()), recommendationNotification.getType(), recommendationNotification.getMessage());
+                String notificationLog =  String.format(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.notification_format_for_KIBANA, this.experiment_name, this.container_name, KruizeConstants.DateFormats.simpleDateFormatForUTC.format(this.interval_end_time), level, term, model, String.valueOf(recommendationNotification.getCode()), recommendationNotification.getType(), recommendationNotification.getMessage());
                 String metricEntry =  String.format(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.notification_format_for_METRICS,  term, model, recommendationNotification.getType());
-                LOGGER.info(kibanaLog);
+                LOGGER.info(notificationLog);
                 additionalTags = additionalTags.and(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.TAG_NAME,metricEntry); // A metric entry with only three tags, which are unlikely to have many unique values, will therefore help reduce cardinality.
                 Counter counterNotifications = MetricsConfig.meterRegistry().find(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.METRIC_NAME).tags(additionalTags).counter();
                 if (counterNotifications == null) {
