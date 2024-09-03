@@ -19,7 +19,7 @@ from jsonschema import FormatChecker
 from jsonschema.exceptions import ValidationError
 from helpers.list_reco_json_schema import list_reco_json_schema
 
-KUBERNETES_OBJECTS_TYPE_SUPPORTED = ("deployment", "replicaset", "deploymentConfig", "statefulset", "daemonset", "replicationController")
+KUBERNETES_OBJECTS_TYPE_SUPPORTED = ("deployment", "replicaset", "deploymentConfig", "statefulset", "daemonset", "replicationController", "job")
 
 KUBERNETES_OBJECTS_TYPE_NOT_SUPPORTED = "Kubernetes objects type not supported!"
 JSON_NULL_VALUES = ("is not of type 'string'", "is not of type 'integer'", "is not of type 'number'")

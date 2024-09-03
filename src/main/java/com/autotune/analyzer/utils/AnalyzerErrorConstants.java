@@ -18,6 +18,7 @@ package com.autotune.analyzer.utils;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import software.amazon.awssdk.services.cloudwatchlogs.endpoints.internal.Value;
 
 import java.util.Arrays;
 
@@ -79,6 +80,8 @@ public class AnalyzerErrorConstants {
         public static final String SLO_REDUNDANCY_ERROR = "SLO Data and Performance Profile cannot exist simultaneously!";
         public static final String DUPLICATE_PERF_PROFILE = "Performance Profile already exists: ";
         public static final String MISSING_PERF_PROFILE = "Not Found: performance_profile does not exist: ";
+        public static final String MISSING_METRIC_PROFILE_METADATA= "metadata missing\n";
+        public static final String DUPLICATE_METRIC_PROFILE = "Metric Profile already exists: ";
         public static final String MISSING_EXPERIMENT_NAME = "Not Found: experiment_name does not exist: ";
         public static final String NO_METRICS_AVAILABLE = "No metrics available from %s to %s";
         public static final String UNSUPPORTED_EXPERIMENT = String.format("At present, the system does not support bulk entries!");
@@ -220,6 +223,30 @@ public class AnalyzerErrorConstants {
             public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_EXCPTN = "Invalid DataSourceMetadata object";
             public static final String DATASOURCE_METADATA_MISSING_REQUEST_INPUT_EXCPTN = "Request input data cannot be null or empty";
             public static final String DATASOURCE_METADATA_CONNECTION_FAILED = "Metadata cannot be imported, datasource connection refused or timed out";
+        }
+
+        public static final class ListMetricProfileAPI {
+            public ListMetricProfileAPI() {
+            }
+            public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+            public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
+            public static final String INVALID_METRIC_PROFILE_NAME_EXCPTN = "Invalid Metric Profile Name";
+            public static final String INVALID_METRIC_PROFILE_NAME_MSG = "Given metric profile name - %s either does not exist or is not valid";
+            public static final String NO_METRIC_PROFILES_EXCPTN = "No metric profile";
+            public static final String NO_METRIC_PROFILES = "No metric profiles found!";
+        }
+
+        public static final class DeleteMetricProfileAPI {
+            public DeleteMetricProfileAPI() {
+            }
+            public static final String INVALID_METRIC_PROFILE_NAME_EXCPTN = "Invalid Metric Profile Name";
+            public static final String INVALID_METRIC_PROFILE_NAME_MSG = "Given metric profile name - %s either does not exist or is not valid";
+            public static final String MISSING_METRIC_PROFILE_NAME_EXCPTN = "Missing Metric Profile Name";
+            public static final String MISSING_METRIC_PROFILE_NAME_MSG = "Missing metric profile 'name' parameter";
+            public static final String DELETE_METRIC_PROFILE_FROM_DB_FAILURE_MSG = "Failed to delete metric profile from DB: %s";
+            public static final String DELETE_METRIC_PROFILE_FAILURE_MSG = "Failed to delete the specified metric profile data: %s";
+            public static final String DELETE_METRIC_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeMetricProfileEntry not found with metric profile name: ";
+            public static final String DELETE_METRIC_PROFILE_ENTRY_ERROR_MSG = "Not able to delete metric profile for metric profile {} due to {}";
         }
     }
 
