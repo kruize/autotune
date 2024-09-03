@@ -5,7 +5,6 @@ import com.autotune.analyzer.recommendations.objects.MappedRecommendationForMode
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.common.data.result.ContainerData;
-import com.autotune.operator.InitializeDeployment;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
@@ -82,7 +81,7 @@ public class KruizeNotificationCollectionRegistry {
         for (RecommendationNotification recommendationNotification : recommendationNotificationList) {
             Tags additionalTags = Tags.empty();
             if (("|" + KruizeDeploymentInfo.log_recommendation_metrics_level + "|").contains("|" + recommendationNotification.getType() + "|") == true) {
-                String notificationLog =  String.format(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.notification_format_for_KIBANA, this.experiment_name, this.container_name, KruizeConstants.DateFormats.simpleDateFormatForUTC.format(this.interval_end_time), level, term, model, String.valueOf(recommendationNotification.getCode()), recommendationNotification.getType(), recommendationNotification.getMessage());
+                String notificationLog =  String.format(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.notification_format_for_LOG, this.experiment_name, this.container_name, KruizeConstants.DateFormats.simpleDateFormatForUTC.format(this.interval_end_time), level, term, model, String.valueOf(recommendationNotification.getCode()), recommendationNotification.getType(), recommendationNotification.getMessage());
                 String metricEntry =  String.format(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.notification_format_for_METRICS,  term, model, recommendationNotification.getType());
                 LOGGER.info(notificationLog);
                 additionalTags = additionalTags.and(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.TAG_NAME,metricEntry); // A metric entry with only three tags, which are unlikely to have many unique values, will therefore help reduce cardinality.
