@@ -83,7 +83,9 @@ public class DataSourceCollection {
     public void addDataSource(DataSourceInfo datasource) {
         final String name = datasource.getName();
         final String provider = datasource.getProvider();
-        final String url = datasource.getUrl().toString();
+        final String url =  String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY_TEMP,
+                datasource.getUrl()
+        );
         ValidationOutputData addedToDB = null;
 
         LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE + name);

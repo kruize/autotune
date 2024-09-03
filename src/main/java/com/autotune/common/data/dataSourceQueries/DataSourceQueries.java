@@ -7,9 +7,9 @@ package com.autotune.common.data.dataSourceQueries;
  */
 public class DataSourceQueries {
     public enum PromQLQuery {
-        NAMESPACE_QUERY("sum by (namespace) (kube_namespace_status_phase{phase=\"Active\"})"),
-        WORKLOAD_INFO_QUERY("sum by (namespace, workload, workload_type) (namespace_workload_pod:kube_pod_owner:relabel)"),
-        CONTAINER_INFO_QUERY("sum by (container, image, workload) (kube_pod_container_info * on(pod) group_left(workload, workload_type) (namespace_workload_pod:kube_pod_owner:relabel))"),
+        NAMESPACE_QUERY("sum by (namespace) (kube_namespace_status_phase{phase=\"Active\" ADDITIONAL_LABEL })"),
+        WORKLOAD_INFO_QUERY("sum by (namespace, workload, workload_type) (namespace_workload_pod:kube_pod_owner:relabel{ADDITIONAL_LABEL})"),
+        CONTAINER_INFO_QUERY("sum by (container,image,workload)(kube_pod_container_info{ADDITIONAL_LABEL}*on(pod)group_left(workload,workload_type)(namespace_workload_pod:kube_pod_owner:relabel{workload!='cadvisor' , ADDITIONAL_LABEL}))"),
         CPU_USAGE("%s by(container, namespace)(%s_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!='', container!='POD', pod!='',namespace=\"%s\",container=\"%s\" }[%sm]))"),
         CPU_THROTTLE("%s by(container,namespace) (rate(container_cpu_cfs_throttled_seconds_total{container!='', container!='POD', pod!='',namespace=\"%s\",container=\"%s\"}[%sm]))"),
         CPU_LIMIT("%s by(container,namespace) (kube_pod_container_resource_limits{container!='', container!='POD', pod!='', resource='cpu', unit='core',namespace=\"%s\",container=\"%s\"} * on(pod, namespace) group_left max by (container,pod, namespace) (kube_pod_status_phase{phase='Running'}))"),

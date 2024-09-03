@@ -260,6 +260,15 @@ public class CommonUtils {
         }
         return null;
     }
+    public static String getBaseDataSourceUrlWithRange(String url, String datasource) {
+        if (datasource.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
+            return (new StringBuilder())
+                    .append(url)
+                    .append("api/v1/query_range?query=")
+                    .toString();
+        }
+        return null;
+    }
 
     public static int getTimeToSleepMillis(int timeValue, TimeUnit timeUnit) {
         if (null == timeUnit)

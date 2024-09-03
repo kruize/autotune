@@ -58,6 +58,7 @@ public class GenericRestApiClient {
     private APIKeysAuthentication apiKeysAuthentication;
     private OAuth2Config oAuth2Config;  //Yet to implement
     private String authHeaderString;
+    private boolean encoding=false;
 
     /**
      * Initializes a new instance just by passing baseURL which does not need any authentication.
@@ -73,6 +74,26 @@ public class GenericRestApiClient {
             reader.close();
             this.bearerAccessToken = new BearerAccessToken(token);
             this.setAuthHeaderString(this.bearerAccessToken.getAuthHeader());
+            this.encoding=true;
+            // Print the service account token
+        } catch (Exception e) {
+            LOGGER.error("Error reading service account token: " + e.getMessage());
+        }
+
+        this.baseURL = baseURL;
+    }
+
+    public GenericRestApiClient(String baseURL,boolean encoding) {
+        String tokenFilePath = "/var/run/secrets/kubernetes.io/serviceaccount/token";
+        String token = null;
+        try {
+            // Read the token from the file
+            BufferedReader reader = new BufferedReader(new FileReader(tokenFilePath));
+            token = reader.readLine();
+            reader.close();
+            this.bearerAccessToken = new BearerAccessToken(token);
+            this.setAuthHeaderString(this.bearerAccessToken.getAuthHeader());
+            this.encoding = encoding;
             // Print the service account token
         } catch (Exception e) {
             LOGGER.error("Error reading service account token: " + e.getMessage());
@@ -150,9 +171,16 @@ public class GenericRestApiClient {
         try (CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build()) {
             HttpRequestBase httpRequestBase = null;
             if (methodType.equalsIgnoreCase("GET")) {
-                httpRequestBase = new HttpGet(this.baseURL
-                        + URLEncoder.encode(queryString, StandardCharsets.UTF_8)
-                );
+                LOGGER.info("encoding {}",this.encoding);
+                if (this.encoding) {
+                    httpRequestBase = new HttpGet(this.baseURL
+                            + URLEncoder.encode(queryString, StandardCharsets.UTF_8)
+                    );
+                }else{
+                    httpRequestBase = new HttpGet(this.baseURL
+                            + queryString
+                    );
+                }
             }
             // Checks if auth string is null and then checks if it's not empty
             if (null != this.authHeaderString && !this.authHeaderString.isEmpty()) {

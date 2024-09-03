@@ -8,7 +8,11 @@ import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
+
+import static com.autotune.utils.KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY_TEMP;
 
 /**
  * DataSourceMetadataOperator is an abstraction with CRUD operations to manage DataSourceMetadataInfo Object
@@ -32,9 +36,11 @@ public class DataSourceMetadataOperator {
      *
      * @param dataSourceInfo The DataSourceInfo object containing information about the data source.
      * TODO - support multiple data sources
+     *                       TODO -> Rename to fetchClusterMetaData
+     *                       TODO whats the diff b/w createDataSourceMetadata vs updateDataSourceMetadata
      */
-    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo) {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo);
+    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo,String uniqueKey,long startTime,long endTime,int steps) {
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo,uniqueKey,startTime,endTime,steps);
     }
 
     /**
@@ -75,8 +81,8 @@ public class DataSourceMetadataOperator {
      *  TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
      *         need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
-    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo) {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo);
+    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo,String uniqueKey,long startTime,long endTime,int steps) {
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo,uniqueKey,startTime,endTime,steps);
     }
 
     /**
@@ -109,8 +115,9 @@ public class DataSourceMetadataOperator {
      *
      * @param dataSourceInfo            The DataSourceInfo object containing information about the data source
      * @return DataSourceMetadataInfo object with populated metadata fields
+     * todo rename processQueriesAndFetchClusterMetadataInfo
      */
-    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo) {
+    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo,String uniqueKey,long startTime,long endTime,int steps) {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
         /**
          * Get DataSourceOperatorImpl instance on runtime based on dataSource provider
@@ -128,9 +135,21 @@ public class DataSourceMetadataOperator {
          * TODO - Process cluster metadata using a custom query
          */
         try {
+
             String dataSourceName = dataSourceInfo.getName();
-            String dataSourceUrl = dataSourceInfo.getUrl().toString();
-            JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceUrl, PromQLDataSourceQueries.NAMESPACE_QUERY);
+            String dataSourceUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY_TEMP,
+                    dataSourceInfo.getUrl()
+            );
+            LOGGER.info("dataSourceUrl: {}", dataSourceUrl);
+            String namespaceQuery = URLEncoder.encode(PromQLDataSourceQueries.NAMESPACE_QUERY, StandardCharsets.UTF_8) ;
+            LOGGER.info("uniquekey: {}", uniqueKey);
+            namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", uniqueKey);
+            LOGGER.info("namespaceQuery: {}", namespaceQuery);
+            if(startTime>0 ||endTime>0 ||steps>0) {
+                 namespaceQuery = String.format("%s&start=%s&end=%s&step=%s",namespaceQuery,startTime,endTime,steps);
+                 dataSourceUrl = String.format(DATASOURCE_ENDPOINT_WITH_QUERY_TEMP,dataSourceInfo.getUrl());
+            }
+            JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceUrl, namespaceQuery );
             if (false == op.validateResultArray(namespacesDataResultArray)){
                 dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
                 throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
@@ -153,8 +172,14 @@ public class DataSourceMetadataOperator {
              * TODO -  get workload metadata for a given namespace
              */
             HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
+            LOGGER.info("dataSourceUrl: {}", dataSourceUrl);
+            String workloadQuery = URLEncoder.encode(PromQLDataSourceQueries.WORKLOAD_QUERY, StandardCharsets.UTF_8) ;
+            workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", uniqueKey);
+            if(startTime>0 ||endTime>0 ||steps>0) {
+                workloadQuery = String.format("%s&start=%s&end=%s&step=%s",workloadQuery,startTime,endTime,steps);
+            }
             JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceUrl,
-                    PromQLDataSourceQueries.WORKLOAD_QUERY);
+                    workloadQuery);
 
             if (op.validateResultArray(workloadDataResultArray)) {
                 datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
@@ -172,8 +197,16 @@ public class DataSourceMetadataOperator {
              * TODO - get container metadata for a given workload
              */
             HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
+            String containerQuery = URLEncoder.encode(PromQLDataSourceQueries.CONTAINER_QUERY, StandardCharsets.UTF_8) ;
+            containerQuery = containerQuery.replace("ADDITIONAL_LABEL", uniqueKey);
+            if(startTime>0 ||endTime>0 ||steps>0) {
+                containerQuery = String.format("%s&start=%s&end=%s&step=%s",containerQuery,startTime,endTime,steps);
+                dataSourceUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY_TEMP,
+                        dataSourceInfo.getUrl()
+                );
+            }
             JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceUrl,
-                    PromQLDataSourceQueries.CONTAINER_QUERY);
+                    containerQuery);
 
             if (op.validateResultArray(containerDataResultArray)) {
                 datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
