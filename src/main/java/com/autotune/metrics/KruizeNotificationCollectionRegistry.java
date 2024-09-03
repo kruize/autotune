@@ -10,6 +10,8 @@ import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Tags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.Collection;
@@ -24,6 +26,7 @@ public class KruizeNotificationCollectionRegistry {
     private String experiment_name;
     private Timestamp interval_end_time;
     private String container_name;
+    private static final Logger LOGGER = LoggerFactory.getLogger(KruizeNotificationCollectionRegistry.class);
 
     /**
      * Constructor to initialize KruizeNotificationCollectionRegistry with experiment name, interval end time, and container name.
@@ -78,7 +81,10 @@ public class KruizeNotificationCollectionRegistry {
         for (RecommendationNotification recommendationNotification : recommendationNotificationList) {
             Tags additionalTags = Tags.empty();
             if (("|" + KruizeDeploymentInfo.log_recommendation_metrics_level + "|").contains("|" + recommendationNotification.getType() + "|") == true) {
-                additionalTags = additionalTags.and(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.TAG_NAME, String.format(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.notification_format, this.experiment_name, this.container_name, KruizeConstants.DateFormats.simpleDateFormatForUTC.format(this.interval_end_time), level, term, model, String.valueOf(recommendationNotification.getCode()), recommendationNotification.getType(), recommendationNotification.getMessage()));
+                String notificationLog =  String.format(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.notification_format_for_LOG, this.experiment_name, this.container_name, KruizeConstants.DateFormats.simpleDateFormatForUTC.format(this.interval_end_time), level, term, model, String.valueOf(recommendationNotification.getCode()), recommendationNotification.getType(), recommendationNotification.getMessage());
+                String metricEntry =  String.format(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.notification_format_for_METRICS,  term, model, recommendationNotification.getType());
+                LOGGER.info(notificationLog);
+                additionalTags = additionalTags.and(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.TAG_NAME,metricEntry); // A metric entry with only three tags, which are unlikely to have many unique values, will therefore help reduce cardinality.
                 Counter counterNotifications = MetricsConfig.meterRegistry().find(KruizeConstants.KRUIZE_RECOMMENDATION_METRICS.METRIC_NAME).tags(additionalTags).counter();
                 if (counterNotifications == null) {
                     counterNotifications = MetricsConfig.timerBKruizeNotifications.tags(additionalTags).register(MetricsConfig.meterRegistry);
