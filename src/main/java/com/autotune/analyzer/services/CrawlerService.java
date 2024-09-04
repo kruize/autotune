@@ -19,6 +19,7 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
@@ -95,8 +96,8 @@ public class CrawlerService extends HttpServlet {
             JsonNode jsonNode = objectMapper.readTree(jsonInput.toString());
 
             // Extract interval start and end times
-            String intervalEndTimeStr = jsonNode.get(KruizeConstants.JSONKeys.INTERVAL_END_TIME).asText();
-            String intervalStartTimeStr = jsonNode.get(KruizeConstants.JSONKeys.INTERVAL_START_TIME).asText();
+            String intervalEndTimeStr = jsonNode.get("time_range").get("end").asText();
+            String intervalStartTimeStr = jsonNode.get("time_range").get("start").asText();
             // Check the value of the "dummy" field
             boolean dummy = jsonNode.has("dummy") ? jsonNode.get("dummy").asBoolean() : false;
 
@@ -109,7 +110,7 @@ public class CrawlerService extends HttpServlet {
             boolean firstParam = true;
             while (fieldNames.hasNext()) {
                 String fieldName = fieldNames.next();
-                if (!"interval_start_time".equals(fieldName) && !"interval_end_time".equals(fieldName)) {
+                if (!"time_range".equals(fieldName)) {
                     String paramValue = jsonNode.get(fieldName).asText();
                     LOGGER.info(paramValue);
                     // Check if the value is enclosed with double quotes
@@ -129,10 +130,16 @@ public class CrawlerService extends HttpServlet {
             if (dummy) {
                 List<String> experimentNames = new ArrayList<>();
                 experimentNames = List.of("DummyExperiment1", "DummyExperiment2", "DummyExperiment3");
+                // Create a map to hold the JSON structure
+                Map<String, List<String>> jsonResponseMap = new HashMap<>();
+
+                // Populate the map with dummy data
+                jsonResponseMap.put("new", experimentNames);
+                jsonResponseMap.put("recommendations", experimentNames);
                 // Convert the list to JSON and write it to the response
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");
-                String jsonResponse = objectMapper.writeValueAsString(experimentNames);
+                String jsonResponse = objectMapper.writeValueAsString(jsonResponseMap);
                 response.getWriter().write(jsonResponse);
                 return;
             }else {
@@ -199,8 +206,10 @@ public class CrawlerService extends HttpServlet {
                                             createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
 
                                             try {
-                                                new ExperimentDBService().addExperimentToDB(createExperimentAPIObject);
-                                                experimentNames.add(experiment_name);
+                                                ValidationOutputData output = new ExperimentDBService().addExperimentToDB(createExperimentAPIObject);
+                                                if (output.isSuccess()) {
+                                                    experimentNames.add(experiment_name);
+                                                }
                                             }catch (Exception e){
                                                 LOGGER.info(e.getMessage());
                                             }
@@ -212,7 +221,7 @@ public class CrawlerService extends HttpServlet {
                         }
                     }
                 }
-                executorService.submit(() -> {
+           /*     executorService.submit(() -> {
                     try {
                         // Call another servlet using RequestDispatcher
                         asyncContext.getRequest().getRequestDispatcher("/generateRecommendations?experiment_name="+experimentNames.get(0))
@@ -223,7 +232,7 @@ public class CrawlerService extends HttpServlet {
                     }catch (Exception e) {
                         e.printStackTrace();
                     }
-                });
+                });*/
                 //response.sendRedirect("listExperiments");
                 // Complete the async context (optional depending on your use case)
                 asyncContext.complete();
@@ -235,7 +244,16 @@ public class CrawlerService extends HttpServlet {
                 response.getWriter().println("uniqueKey: " + uniqueKeyBuilder.toString());*/
                 response.setContentType("application/json");
                 response.setCharacterEncoding("UTF-8");
-                String jsonResponse = objectMapper.writeValueAsString(experimentNames);
+                // Create a map to hold the JSON structure
+                Map<String, List<String>> jsonResponseMap = new HashMap<>();
+
+                // Populate the map with dummy data
+                jsonResponseMap.put("new", experimentNames);
+                jsonResponseMap.put("recommendations", experimentNames);
+                // Convert the list to JSON and write it to the response
+                response.setContentType("application/json");
+                response.setCharacterEncoding("UTF-8");
+                String jsonResponse = objectMapper.writeValueAsString(jsonResponseMap);
                 response.getWriter().write(jsonResponse);
             }
         } catch (Exception e) {
