@@ -718,7 +718,7 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
                         if engine_entry in terms_obj[term]["recommendation_engines"]:
                             engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
                             validate_config_local_monitoring(engine_obj["config"])
-                            validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
+                            validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj)
                 # validate Plots data
                 validate_plots(terms_obj, duration_terms, term)
             # verify that plots isn't generated in case of no recommendations
@@ -967,11 +967,87 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
         current_cpu_value = 0
         current_memory_value = 0
         if CPU_KEY in recommended_requests:
+            if CPU_KEY in current_requests and AMOUNT_KEY in current_requests[CPU_KEY]:
+                current_cpu_value = current_requests[CPU_KEY][AMOUNT_KEY]
+            assert variation_requests[CPU_KEY][AMOUNT_KEY] == recommended_requests[CPU_KEY][
+                AMOUNT_KEY] - current_cpu_value
+            assert variation_requests[CPU_KEY][FORMAT_KEY] == recommended_requests[CPU_KEY][FORMAT_KEY]
+        if MEMORY_KEY in recommended_requests:
+            if MEMORY_KEY in current_requests and AMOUNT_KEY in current_requests[MEMORY_KEY]:
+                current_memory_value = current_requests[MEMORY_KEY][AMOUNT_KEY]
+            assert variation_requests[MEMORY_KEY][AMOUNT_KEY] == recommended_requests[MEMORY_KEY][
+                AMOUNT_KEY] - current_memory_value
+            assert variation_requests[MEMORY_KEY][FORMAT_KEY] == recommended_requests[MEMORY_KEY][FORMAT_KEY]
+    if recommended_limits is not None:
+        current_cpu_value = 0
+        current_memory_value = 0
+        if CPU_KEY in recommended_limits:
+            if CPU_KEY in current_limits and AMOUNT_KEY in current_limits[CPU_KEY]:
+                current_cpu_value = current_limits[CPU_KEY][AMOUNT_KEY]
+            assert variation_limits[CPU_KEY][AMOUNT_KEY] == recommended_limits[CPU_KEY][AMOUNT_KEY] - current_cpu_value
+            assert variation_limits[CPU_KEY][FORMAT_KEY] == recommended_limits[CPU_KEY][FORMAT_KEY]
+        if MEMORY_KEY in recommended_limits:
+            if MEMORY_KEY in current_limits and AMOUNT_KEY in current_limits[MEMORY_KEY]:
+                current_memory_value = current_limits[MEMORY_KEY][AMOUNT_KEY]
+            assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][
+                AMOUNT_KEY] - current_memory_value
+            assert variation_limits[MEMORY_KEY][FORMAT_KEY] == recommended_limits[MEMORY_KEY][FORMAT_KEY]
+
+
+def validate_variation_local_monitoring(current_config: dict, recommended_config: dict, variation_config: dict, engine_obj):
+    # Check structure
+    assert check_if_dict_has_same_keys(recommended_config, variation_config) == True
+
+    # Create temporary dict if it's none jus to make process easier
+    if current_config == None:
+        current_config = {}
+
+    # Check values
+    REQUESTS_KEY = "requests"
+    LIMITS_KEY = "limits"
+    CPU_KEY = "cpu"
+    MEMORY_KEY = "memory"
+    AMOUNT_KEY = "amount"
+    FORMAT_KEY = "format"
+
+    # Initialise requests holders
+    current_requests: dict = None
+    recommended_requests: dict = None
+    variation_requests: dict = None
+
+    # Initialise limits holders
+    current_limits: dict = None
+    recommended_limits: dict = None
+    variation_limits: dict = None
+
+    if REQUESTS_KEY in current_config:
+        current_requests = current_config[REQUESTS_KEY]
+    if LIMITS_KEY in current_config:
+        current_limits = current_config[LIMITS_KEY]
+
+    if REQUESTS_KEY in recommended_config:
+        recommended_requests = recommended_config[REQUESTS_KEY]
+    if LIMITS_KEY in recommended_config:
+        recommended_limits = recommended_config[LIMITS_KEY]
+
+    if REQUESTS_KEY in variation_config:
+        variation_requests = variation_config[REQUESTS_KEY]
+    if LIMITS_KEY in variation_config:
+        variation_limits = variation_config[LIMITS_KEY]
+
+    if recommended_requests is not None:
+        current_cpu_value = 0
+        current_memory_value = 0
+        if CPU_KEY in recommended_requests:
             if current_requests is not None and CPU_KEY in current_requests and AMOUNT_KEY in current_requests[CPU_KEY]:
                 current_cpu_value = current_requests[CPU_KEY][AMOUNT_KEY]
             assert variation_requests[CPU_KEY][AMOUNT_KEY] == recommended_requests[CPU_KEY][
                 AMOUNT_KEY] - current_cpu_value
             assert variation_requests[CPU_KEY][FORMAT_KEY] == recommended_requests[CPU_KEY][FORMAT_KEY]
+        else:
+            assert NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE in engine_obj["notifications"]
+            assert engine_obj["notifications"][NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE]["message"] == NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE
+
         if MEMORY_KEY in recommended_requests:
             if current_requests is not None and MEMORY_KEY in current_requests and AMOUNT_KEY in current_requests[MEMORY_KEY]:
                 current_memory_value = current_requests[MEMORY_KEY][AMOUNT_KEY]
@@ -986,6 +1062,10 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
                 current_cpu_value = current_limits[CPU_KEY][AMOUNT_KEY]
             assert variation_limits[CPU_KEY][AMOUNT_KEY] == recommended_limits[CPU_KEY][AMOUNT_KEY] - current_cpu_value
             assert variation_limits[CPU_KEY][FORMAT_KEY] == recommended_limits[CPU_KEY][FORMAT_KEY]
+        else:
+            assert NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE in engine_obj["notifications"]
+            assert engine_obj["notifications"][NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE]["message"] == NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE
+
         if MEMORY_KEY in recommended_limits:
             if current_limits is not None and MEMORY_KEY in current_limits and AMOUNT_KEY in current_limits[MEMORY_KEY]:
                 current_memory_value = current_limits[MEMORY_KEY][AMOUNT_KEY]
