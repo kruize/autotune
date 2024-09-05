@@ -276,7 +276,7 @@ list_reco_json_local_monitoring_schema = {
                                                                                                                 "required": ["amount", "format"]
                                                                                                             }
                                                                                                         },
-                                                                                                        "required": ["memory", "cpu"]
+                                                                                                        "required": []
                                                                                                     },
                                                                                                     "limits": {
                                                                                                         "type": "object",
@@ -298,7 +298,7 @@ list_reco_json_local_monitoring_schema = {
                                                                                                                 "required": ["amount", "format"]
                                                                                                             }
                                                                                                         },
-                                                                                                        "required": ["memory", "cpu"]
+                                                                                                        "required": []
                                                                                                     }
                                                                                                 },
                                                                                                 "required": ["requests", "limits"]
@@ -326,7 +326,7 @@ list_reco_json_local_monitoring_schema = {
                                                                                                                 "required": ["amount", "format"]
                                                                                                             }
                                                                                                         },
-                                                                                                        "required": ["memory", "cpu"]
+                                                                                                        "required": []
                                                                                                     },
                                                                                                     "limits": {
                                                                                                         "type": "object",
@@ -348,7 +348,7 @@ list_reco_json_local_monitoring_schema = {
                                                                                                                 "required": ["amount", "format"]
                                                                                                             }
                                                                                                         },
-                                                                                                        "required": ["memory", "cpu"]
+                                                                                                        "required": []
                                                                                                     }
                                                                                                 },
                                                                                                 "required": ["requests", "limits"]
