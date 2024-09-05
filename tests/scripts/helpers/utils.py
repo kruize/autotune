@@ -657,76 +657,80 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
     else:
         duration_in_hours = expected_duration_in_hours
 
+    if check_if_recommendations_are_present(list_reco_container["recommendations"]):
         interval_end_time = list(list_reco_container['recommendations']['data'].keys())[0]
-        interval_start_time = list_reco_container['recommendations']['data'][interval_end_time]['recommendation_terms']['short_term']['monitoring_start_time']
-        print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
+        print(f"interval_end_time = {interval_end_time}")
 
-        if check_if_recommendations_are_present(list_reco_container["recommendations"]):
-            terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
-            current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
+        terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
+        current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
 
-            duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
-            for term in duration_terms.keys():
-                if check_if_recommendations_are_present(terms_obj[term]):
-                    print(f"reco present for term {term}")
-                    # Validate timestamps [deprecated as monitoring end time is moved to higher level]
-                    # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
-                    #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
+        duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+        for term in duration_terms.keys():
+            if check_if_recommendations_are_present(terms_obj[term]):
+                print(f"reco present for term {term}")
+                # Validate timestamps [deprecated as monitoring end time is moved to higher level]
+                # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
+                #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
 
-                    # Validate the precision of the valid duration
-                    duration = terms_obj[term]["duration_in_hours"]
-                    assert validate_duration_in_hours_decimal_precision(duration), f"The value '{duration}' for " \
-                                                                                   f"'{term}' has more than two decimal places"
+                interval_start_time = list_reco_container['recommendations']['data'][interval_end_time]['recommendation_terms'][term]['monitoring_start_time']
+                # Validate the precision of the valid duration
+                duration = terms_obj[term]["duration_in_hours"]
+                assert validate_duration_in_hours_decimal_precision(duration), f"The value '{duration}' for " \
+                                                                               f"'{term}' has more than two decimal places"
 
-                    monitoring_start_time = term_based_start_time(interval_end_time, term)
-                    assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
-                        f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
+                monitoring_start_time = term_based_start_time(interval_end_time, term)
+                assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
+                    f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
 
-                    # Validate duration in hrs
-                    if expected_duration_in_hours is None:
-                        duration_in_hours = set_duration_based_on_terms(duration_in_hours, term,
-                                                                        interval_start_time, interval_end_time)
+                # Validate duration in hrs
+                if expected_duration_in_hours is None:
+                    duration_in_hours = set_duration_based_on_terms(duration_in_hours, term,
+                                                                    interval_start_time, interval_end_time)
 
-                    if test_name is not None:
+                if test_name is not None:
 
-                        if MEDIUM_TERM_TEST in test_name and term == MEDIUM_TERM:
-                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
-                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
-                        elif SHORT_TERM_TEST in test_name and term == SHORT_TERM:
-                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
-                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
-                        elif LONG_TERM_TEST in test_name and term == LONG_TERM:
-                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
-                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
-                    else:
-                        print(
-                            f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                    if MEDIUM_TERM_TEST in test_name and term == MEDIUM_TERM:
                         assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
                             f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
-                        duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time,
-                                                                        interval_end_time)
-
-                    # Get engine objects
-                    engines_list = ["cost", "performance"]
-
-                    # Extract recommendation engine objects
-                    recommendation_engines_object = None
-                    if "recommendation_engines" in terms_obj[term]:
-                        recommendation_engines_object = terms_obj[term]["recommendation_engines"]
-                    if recommendation_engines_object is not None:
-                        for engine_entry in engines_list:
-                            if engine_entry in terms_obj[term]["recommendation_engines"]:
-                                engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                                validate_config_local_monitoring(engine_obj["config"])
-                                validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
-                    # validate Plots data
-                    validate_plots(terms_obj, duration_terms, term)
-                # verify that plots isn't generated in case of no recommendations
+                    elif SHORT_TERM_TEST in test_name and term == SHORT_TERM:
+                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                    elif LONG_TERM_TEST in test_name and term == LONG_TERM:
+                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
                 else:
-                    assert PLOTS not in terms_obj[term], f"Expected plots to be absent in case of no recommendations"
-        else:
-            data = list_reco_container["recommendations"]["data"]
-            assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
+                    print(
+                        f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                    assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                        f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                    duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time,
+                                                                    interval_end_time)
+
+                # Get engine objects
+                engines_list = ["cost", "performance"]
+
+                # Extract recommendation engine objects
+                recommendation_engines_object = None
+                if "recommendation_engines" in terms_obj[term]:
+                    recommendation_engines_object = terms_obj[term]["recommendation_engines"]
+                if recommendation_engines_object is not None:
+                    for engine_entry in engines_list:
+                        if engine_entry in terms_obj[term]["recommendation_engines"]:
+                            engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                            validate_config_local_monitoring(engine_obj["config"])
+                            validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
+                # validate Plots data
+                validate_plots(terms_obj, duration_terms, term)
+            # verify that plots isn't generated in case of no recommendations
+            else:
+                assert PLOTS not in terms_obj[term], f"Expected plots to be absent in case of no recommendations"
+    else:
+        notifications = list_reco_container["recommendations"]["notifications"]
+        if NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in notifications:
+            assert notifications[NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA]["message"] == NOT_ENOUGH_DATA_MSG
+
+        data = list_reco_container["recommendations"]["data"]
+        assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
 
 def validate_plots(terms_obj, duration_terms, term):
     plots = terms_obj[term][PLOTS]
@@ -786,14 +790,16 @@ def validate_config_local_monitoring(reco_config):
 
     usage_list = ["requests", "limits"]
     for usage in usage_list:
-        assert reco_config[usage]["cpu"][
-                   "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
-        assert reco_config[usage]["cpu"][
-                   "format"] == cpu_format_type, f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']} instead of {cpu_format_type}"
-        assert reco_config[usage]["memory"][
-                   "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
-        assert reco_config[usage]["memory"][
-                   "format"] == memory_format_type, f"memory format in recommendation config is {reco_config[usage]['memory']['format']} instead of {memory_format_type}"
+        if "cpu" in reco_config[usage]:
+            assert reco_config[usage]["cpu"][
+                       "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
+            assert reco_config[usage]["cpu"][
+                    "format"] == cpu_format_type, f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']} instead of {cpu_format_type}"
+        if "memory" in reco_config[usage]:
+            assert reco_config[usage]["memory"][
+                       "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
+            assert reco_config[usage]["memory"][
+                       "format"] == memory_format_type, f"memory format in recommendation config is {reco_config[usage]['memory']['format']} instead of {memory_format_type}"
 
 def check_if_recommendations_are_present(cost_obj):
     notifications = cost_obj["notifications"]
