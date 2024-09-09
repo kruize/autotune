@@ -437,7 +437,7 @@ metadata:
 spec:
   containers:
     - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.5
+      image: quay.io/kruize/kruize-ui:0.0.6
       imagePullPolicy: Always
       env:
         - name: KRUIZE_UI_ENV
