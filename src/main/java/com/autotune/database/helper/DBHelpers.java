@@ -32,6 +32,7 @@ import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceMetadataOperator;
+import com.autotune.common.datasource.auth.AuthenticationConfig;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.*;
 import com.autotune.utils.KruizeConstants;
@@ -39,6 +40,7 @@ import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.type.CollectionType;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
@@ -735,13 +737,20 @@ public class DBHelpers {
                 int failureCount = 0;
                 for (KruizeDataSourceEntry kruizeDataSource : kruizeDataSourceList) {
                     try {
-                        DataSourceInfo dataSourceInfo = null;
+                        DataSourceInfo dataSourceInfo;
+                        JsonNode authConfigJsonNode = kruizeDataSource.getAuthentication();
+                        // Define the type for the list of AuthenticationConfig
+                        CollectionType listType = new ObjectMapper().getTypeFactory().constructCollectionType(List.class, AuthenticationConfig.class);
+                        // Convert JsonNode to List<AuthenticationConfig>
+                        AuthenticationConfig authConfig = new ObjectMapper().treeToValue(authConfigJsonNode, AuthenticationConfig.class);
                         if (kruizeDataSource.getServiceName().isEmpty() && null != kruizeDataSource.getUrl()) {
-                            dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
-                                    .getProvider(), null, null, new URL(kruizeDataSource.getUrl()));
-                        } else{
-                            dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
-                                    .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace(), null);
+                            dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(),
+                                    kruizeDataSource.getProvider(), null, null,
+                                    new URL(kruizeDataSource.getUrl()), authConfig);
+                        } else {
+                            dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(),
+                                    kruizeDataSource.getProvider(), kruizeDataSource.getServiceName(),
+                                    kruizeDataSource.getNamespace(), null, authConfig);
                         }
                         dataSourceInfoList.add(dataSourceInfo);
                     } catch (Exception e) {
@@ -763,6 +772,13 @@ public class DBHelpers {
              */
             public static KruizeDataSourceEntry convertDataSourceToDataSourceDBObj(DataSourceInfo dataSourceInfo) {
                 KruizeDataSourceEntry kruizeDataSource;
+                Gson gson = new GsonBuilder()
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .enableComplexMapKeySerialization()
+                        .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
+                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .create();
                 try {
                     kruizeDataSource = new KruizeDataSourceEntry();
                     kruizeDataSource.setVersion(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoConstants.version);
@@ -771,6 +787,8 @@ public class DBHelpers {
                     kruizeDataSource.setServiceName(dataSourceInfo.getServiceName());
                     kruizeDataSource.setNamespace(dataSourceInfo.getNamespace());
                     kruizeDataSource.setUrl(dataSourceInfo.getUrl().toString());
+                    String authConfigs = gson.toJson(dataSourceInfo.getAuthenticationConfig());
+                    kruizeDataSource.setAuthentication(new ObjectMapper().readTree(authConfigs));
                 } catch (Exception e) {
                     kruizeDataSource = null;
                     LOGGER.error("Error while converting DataSource Object to KruizeDataSource table due to {}", e.getMessage());

@@ -37,6 +37,7 @@ import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.common.datasource.auth.AuthenticationConfig;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -121,9 +122,10 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             if (null == ado) {
                                 // TODO: Return an error saying unsupported datasource
                             }
+                            AuthenticationConfig noAuthConfig = AuthenticationConfig.noAuth();
                             String queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
                                     .get(podMetric.getDatasource())
-                                    .getUrl().toString(), updatedPodQuery);
+                                    .getUrl().toString(), updatedPodQuery, noAuthConfig);
                             if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                 try {
                                     queryResult = queryResult.trim();
@@ -160,9 +162,10 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                 }
                                 if (null != updatedContainerQuery) {
                                     LOGGER.debug("Updated Query - " + updatedContainerQuery);
+                                    AuthenticationConfig noAuthConfig = AuthenticationConfig.noAuth();
                                     String queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
                                             .get(containerMetric.getDatasource())
-                                            .getUrl().toString(), updatedContainerQuery);
+                                            .getUrl().toString(), updatedContainerQuery, noAuthConfig);
                                     if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                         try {
                                             queryResult = queryResult.trim();

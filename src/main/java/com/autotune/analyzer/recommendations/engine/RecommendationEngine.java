@@ -20,7 +20,6 @@ import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
@@ -28,6 +27,9 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.auth.AuthenticationConfig;
+import com.autotune.common.datasource.auth.AuthenticationStrategy;
+import com.autotune.common.datasource.auth.AuthenticationStrategyFactory;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.utils.CommonUtils;
@@ -1619,6 +1621,11 @@ public class RecommendationEngine {
             long interval_end_time_epoc = 0;
             long interval_start_time_epoc = 0;
             SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
+            AuthenticationConfig authenticationConfig = dataSourceInfo.getAuthenticationConfig();
+            AuthenticationStrategy authenticationStrategy = AuthenticationStrategyFactory.createAuthenticationStrategy(authenticationConfig);
+            // Create the client
+            GenericRestApiClient client = new GenericRestApiClient(authenticationStrategy);
+
 
             String metricProfileName = kruizeObject.getPerformanceProfile();
             PerformanceProfile metricProfile = MetricProfileCollection.getInstance().getMetricProfileCollection().get(metricProfileName);
@@ -1671,7 +1678,8 @@ public class RecommendationEngine {
                                 URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
                         );
                         LOGGER.info(dateMetricsUrl);
-                        JSONObject genericJsonObject = new GenericRestApiClient(dateMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                        client.setBaseURL(dateMetricsUrl);
+                        JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                         JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                         JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
                         // Process fetched metrics
@@ -1744,7 +1752,8 @@ public class RecommendationEngine {
                                             interval_end_time_epoc,
                                             measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                                     LOGGER.info(podMetricsUrl);
-                                    JSONObject genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                                    client.setBaseURL(podMetricsUrl);
+                                    JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                                     JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                                     JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
                                     // Process fetched metrics

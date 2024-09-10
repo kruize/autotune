@@ -396,6 +396,18 @@ public class KruizeConstants {
         public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
         public static final String DATASOURCE_ENDPOINT_WITH_QUERY = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
         public static final String DATE_ENDPOINT_WITH_QUERY = "%s/api/v1/query?query=%s";
+        public static final String DATASOURCE_AUTHENTICATION = "authentication";
+        public static final String AUTHENTICATION_TYPE = "type";
+        public static final String AUTHENTICATION_CREDENTIALS = "credentials";
+        public static final String AUTHENTICATION_USERNAME = "username";
+        public static final String AUTHENTICATION_PASSWORD = "password";
+        public static final String AUTHENTICATION_TOKEN_FILE = "tokenFilePath";
+        public static final String AUTHENTICATION_API_KEY = "apiKey";
+        public static final String AUTHENTICATION_HEADER_NAME = "header";
+        public static final String AUTHENTICATION_TOKEN_ENDPOINT = "tokenEndpoint";
+        public static final String AUTHENTICATION_CLIENT_ID = "clientId";
+        public static final String AUTHENTICATION_CLIENT_SECRET = "clientSecret";
+        public static final String AUTHENTICATION_GRANT_TYPE = "grantType";
 
         private DataSourceConstants() {
         }

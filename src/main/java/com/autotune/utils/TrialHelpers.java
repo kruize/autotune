@@ -29,6 +29,7 @@ import com.autotune.common.annotations.json.KruizeJSONExclusionStrategy;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.auth.AuthenticationConfig;
 import com.autotune.common.trials.*;
 import com.autotune.experimentManager.exceptions.IncompatibleInputJSONException;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -145,7 +146,10 @@ public class TrialHelpers {
                 trialNumber,
                 trialResultUrl.toString());
 
-        DataSourceInfo datasourceInfo = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, KruizeConstants.SupportedDatasources.PROMETHEUS, null, null, new URL(KruizeDeploymentInfo.monitoring_agent_endpoint));
+        AuthenticationConfig authenticationConfig = AuthenticationConfig.noAuth();
+        DataSourceInfo datasourceInfo = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent,
+                KruizeConstants.SupportedDatasources.PROMETHEUS, null, null,
+                new URL(KruizeDeploymentInfo.monitoring_agent_endpoint), authenticationConfig);
         HashMap<String, DataSourceInfo> datasourceInfoHashMap = new HashMap<>();
         datasourceInfoHashMap.put(KruizeDeploymentInfo.monitoring_agent, datasourceInfo);  //Change key value as per YAML input
         DeploymentTracking deploymentTracking = new DeploymentTracking();
