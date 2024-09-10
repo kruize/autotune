@@ -17,6 +17,9 @@ package com.autotune.common.datasource.prometheus;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
+import com.autotune.common.datasource.auth.AuthenticationConfig;
+import com.autotune.common.datasource.auth.AuthenticationStrategy;
+import com.autotune.common.datasource.auth.AuthenticationStrategyFactory;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
@@ -67,18 +70,20 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
     /**
      * Check if a datasource is reachable, implementation of this function
      * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
-     * @param dataSourceURL String containing the url for the datasource
+     *
+     * @param dataSourceURL         String containing the url for the datasource
+     * @param authenticationConfig
      * @return DatasourceReachabilityStatus
      */
     @Override
-    public CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceURL) {
+    public CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceURL, AuthenticationConfig authenticationConfig) {
         String dataSourceStatus;
         Object queryResult;
 
         String query = KruizeConstants.DataSourceConstants.PROMETHEUS_REACHABILITY_QUERY;
         CommonUtils.DatasourceReachabilityStatus reachabilityStatus;
 
-        queryResult = this.getValueForQuery(dataSourceURL, query);
+        queryResult = this.getValueForQuery(dataSourceURL, query, authenticationConfig);
 
         if (queryResult != null){
             dataSourceStatus = queryResult.toString();
@@ -96,14 +101,16 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * executes specified query on datasource and returns the result value
-     * @param url String containing the url for the datasource
-     * @param query String containing the query to be executed
+     *
+     * @param url                   String containing the url for the datasource
+     * @param query                 String containing the query to be executed
+     * @param authenticationConfig
      * @return Object containing the result value for the specified query
      */
     @Override
-    public Object getValueForQuery(String url, String query) {
+    public Object getValueForQuery(String url, String query, AuthenticationConfig authenticationConfig) {
         try {
-            JSONObject jsonObject = getJsonObjectForQuery(url, query);
+            JSONObject jsonObject = getJsonObjectForQuery(url, query, authenticationConfig);
 
             if (null == jsonObject) {
                 return null;
@@ -127,18 +134,21 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * executes specified query on datasource and returns the JSON Object
-     * @param url String containing the url for the datasource
-     * @param query String containing the query to be executed
+     *
+     * @param url                   String containing the url for the datasource
+     * @param query                 String containing the query to be executed
+     * @param authenticationConfig
      * @return JSONObject for the specified query
      */
     @Override
-    public JSONObject getJsonObjectForQuery(String url, String query) {
-        GenericRestApiClient apiClient = new GenericRestApiClient(
-                CommonUtils.getBaseDataSourceUrl(
-                        url,
-                        KruizeConstants.SupportedDatasources.PROMETHEUS
-                )
-        );
+    public JSONObject getJsonObjectForQuery(String url, String query, AuthenticationConfig authenticationConfig) {
+        AuthenticationStrategy authenticationStrategy = AuthenticationStrategyFactory.createAuthenticationStrategy(authenticationConfig);
+        // Create the client
+        GenericRestApiClient apiClient = new GenericRestApiClient(authenticationStrategy);
+        apiClient.setBaseURL(CommonUtils.getBaseDataSourceUrl(
+                url,
+                KruizeConstants.SupportedDatasources.PROMETHEUS
+        ));
 
         if (null == apiClient) {
             return null;
@@ -202,9 +212,9 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      */
 
     @Override
-    public JsonArray getResultArrayForQuery(String url, String query) {
+    public JsonArray getResultArrayForQuery(String url, String query, AuthenticationConfig authenticationConfig) {
         try {
-            JSONObject jsonObject = getJsonObjectForQuery(url, query);
+            JSONObject jsonObject = getJsonObjectForQuery(url, query, authenticationConfig);
 
             if (null == jsonObject) {
                 return null;

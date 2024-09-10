@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.autotune.common.datasource.auth.AuthenticationConfig;
+import com.autotune.common.datasource.auth.Credentials;
 import com.autotune.common.exceptions.datasource.*;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.utils.CommonUtils;
@@ -84,6 +86,7 @@ public class DataSourceCollection {
         final String name = datasource.getName();
         final String provider = datasource.getProvider();
         final String url = datasource.getUrl().toString();
+        AuthenticationConfig authenticationConfig = datasource.getAuthenticationConfig();
         ValidationOutputData addedToDB = null;
 
         LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE + name);
@@ -96,7 +99,7 @@ public class DataSourceCollection {
             if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
                 LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY + name);
                 DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
-                if (op.isServiceable(url) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
+                if (op.isServiceable(url, authenticationConfig) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
                     // add the data source to DB
                     addedToDB = new ExperimentDBService().addDataSourceToDB(datasource);
@@ -153,16 +156,55 @@ public class DataSourceCollection {
                 String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
                 String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
                 String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
-                DataSourceInfo datasource = null;
+                JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.DataSourceConstants.DATASOURCE_AUTHENTICATION);
+
+                DataSourceInfo dataSourceInfo;
+                AuthenticationConfig authConfig = null;
+
+                // Parse and map authentication methods if they exist
+                if (authenticationObj != null) {
+                    String type = authenticationObj.getString(KruizeConstants.DataSourceConstants.AUTHENTICATION_TYPE);
+                    JSONObject credentialsObj = authenticationObj.getJSONObject(KruizeConstants.DataSourceConstants.AUTHENTICATION_CREDENTIALS);
+
+                    Credentials credentials = new Credentials();
+                    switch (type.toLowerCase()) {
+                        case "basic":
+                            credentials.setUsername(credentialsObj.getString(KruizeConstants.DataSourceConstants.AUTHENTICATION_USERNAME));
+                            credentials.setPassword(credentialsObj.getString(KruizeConstants.DataSourceConstants.AUTHENTICATION_PASSWORD));
+                            break;
+                        case "bearer":
+                            credentials.setTokenFilePath(credentialsObj.getString(KruizeConstants.DataSourceConstants.AUTHENTICATION_TOKEN_FILE));
+                            break;
+                        case "apikey":
+                            credentials.setApiKey(credentialsObj.getString(KruizeConstants.DataSourceConstants.AUTHENTICATION_API_KEY));
+                            credentials.setHeaderName(credentialsObj.optString(KruizeConstants.DataSourceConstants.AUTHENTICATION_HEADER_NAME, "X-API-Key"));
+                            break;
+                        case "oauth2":
+                            credentials.setTokenEndpoint(credentialsObj.getString(KruizeConstants.DataSourceConstants.AUTHENTICATION_TOKEN_ENDPOINT));
+                            credentials.setClientId(credentialsObj.getString(KruizeConstants.DataSourceConstants.AUTHENTICATION_CLIENT_ID));
+                            credentials.setClientSecret(credentialsObj.getString(KruizeConstants.DataSourceConstants.AUTHENTICATION_CLIENT_SECRET));
+                            credentials.setGrantType(credentialsObj.getString(KruizeConstants.DataSourceConstants.AUTHENTICATION_GRANT_TYPE));
+                            break;
+                        default:
+                            LOGGER.error("Unsupported authentication type: {}", type);
+                            continue;
+                    }
+
+                    authConfig = new AuthenticationConfig(type, credentials);
+                }
+
+                // Validate input
                 if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) {
                     continue;
                 }
                 if (dataSourceURL.isEmpty()) {
-                    datasource = new DataSourceInfo(name, provider, serviceName, namespace, null);
+                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, null, authConfig);
                 } else {
-                    datasource = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL));
+                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL), authConfig);
                 }
-                addDataSource(datasource);
+
+                // Add the datasource to the system
+                addDataSource(dataSourceInfo);
             }
         } catch (IOException e) {
             LOGGER.error(e.getMessage());

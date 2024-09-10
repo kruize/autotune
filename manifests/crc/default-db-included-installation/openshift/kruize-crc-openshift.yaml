@@ -92,7 +92,7 @@ data:
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
-      "local": "false",
+      "local": "true",
       "logAllHttpReqAndResp": "true",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
@@ -121,7 +121,13 @@ data:
           "provider": "prometheus",
           "serviceName": "",
           "namespace": "",
-          "url": "https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9091"
+          "url": "https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9091",
+          "authentication": {
+            "type": "bearer",
+            "credentials": {
+              "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            }
+          }
         }
       ]
     }

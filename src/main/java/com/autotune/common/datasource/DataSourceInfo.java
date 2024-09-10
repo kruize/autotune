@@ -19,6 +19,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.datasource.auth.AuthenticationConfig;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.LoggerFactory;
@@ -39,10 +40,11 @@ public class DataSourceInfo {
     private final String serviceName;
     private final String namespace;
     private final URL url;
+    private final AuthenticationConfig authenticationConfig;
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataSourceInfo.class);
 
-    public DataSourceInfo(String name, String provider, String serviceName, String namespace, URL url) {
+    public DataSourceInfo(String name, String provider, String serviceName, String namespace, URL url, AuthenticationConfig authenticationConfig) {
         this.name = name;
         this.provider = provider;
         if (null == url) {
@@ -52,6 +54,7 @@ public class DataSourceInfo {
         }
         this.serviceName = serviceName;
         this.namespace = namespace;
+        this.authenticationConfig = authenticationConfig;
     }
 
     /**
@@ -117,6 +120,10 @@ public class DataSourceInfo {
         return dnsUrl;
     }
 
+    public AuthenticationConfig getAuthenticationConfig() {
+        return authenticationConfig;
+    }
+
     @Override
     public String toString() {
         return "DataSourceInfo{" +
@@ -125,6 +132,7 @@ public class DataSourceInfo {
                 ", serviceName='" + serviceName + '\'' +
                 ", namespace='" + namespace + '\'' +
                 ", url=" + url +
+                ", authenticationConfig=" + authenticationConfig +
                 '}';
     }
 }

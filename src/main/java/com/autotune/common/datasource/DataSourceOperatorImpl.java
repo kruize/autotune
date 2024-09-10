@@ -3,6 +3,9 @@ package com.autotune.common.datasource;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.datasource.auth.AuthenticationConfig;
+import com.autotune.common.datasource.auth.AuthenticationStrategy;
+import com.autotune.common.datasource.auth.AuthenticationStrategyFactory;
 import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
 import com.autotune.common.exceptions.datasource.ServiceNotFound;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
@@ -12,7 +15,6 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
-import com.autotune.utils.authModels.BearerAccessToken;
 import io.fabric8.kubernetes.api.model.Service;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -71,22 +73,26 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
     /**
      * Check if a datasource is reachable, implementation of this function
      * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
-     * @param dataSourceUrl String containing the url for the datasource
+     *
+     * @param dataSourceUrl         String containing the url for the datasource
+     * @param authenticationConfig
      * @return DatasourceReachabilityStatus
      */
     @Override
-    public CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceUrl) {
+    public CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceUrl, AuthenticationConfig authenticationConfig) {
         return null;
     }
 
     /**
      * executes specified query on datasource and returns the result value
-     * @param url String containing the url for the datasource
-     * @param query String containing the query to be executed
+     *
+     * @param url                   String containing the url for the datasource
+     * @param query                 String containing the query to be executed
+     * @param authenticationConfig
      * @return Object containing the result value for the specified query
      */
     @Override
-    public Object getValueForQuery(String url, String query) {
+    public Object getValueForQuery(String url, String query, AuthenticationConfig authenticationConfig) {
         return null;
     }
 
@@ -100,12 +106,14 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
     }
     /**
      * executes specified query on datasource and returns the JSON Object
-     * @param url String containing the url for the datasource
-     * @param query String containing the query to be executed
+     *
+     * @param url                   String containing the url for the datasource
+     * @param query                 String containing the query to be executed
+     * @param authenticationConfig
      * @return JSONObject for the specified query
      */
     @Override
-    public JSONObject getJsonObjectForQuery(String url, String query) {
+    public JSONObject getJsonObjectForQuery(String url, String query, AuthenticationConfig authenticationConfig) {
         return null;
     }
 
@@ -116,7 +124,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
      * @return JsonArray containing the result array for the specified query
      */
     @Override
-    public JsonArray getResultArrayForQuery(String url, String query) {
+    public JsonArray getResultArrayForQuery(String url, String query, AuthenticationConfig authenticationConfig) {
         return null;
     }
 
@@ -159,10 +167,11 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
         String queryURL = dataSourceURL + queryEndpoint + query;
         LOGGER.debug("Query URL is: {}", queryURL);
         try {
-            GenericRestApiClient genericRestApiClient = new GenericRestApiClient(
-                    dataSourceURL + queryEndpoint,
-                    new BearerAccessToken(this.getToken())
-            );
+            AuthenticationConfig authenticationConfig = dataSource.getAuthenticationConfig();
+            AuthenticationStrategy authenticationStrategy = AuthenticationStrategyFactory.createAuthenticationStrategy(authenticationConfig);
+            // Create the client
+            GenericRestApiClient genericRestApiClient = new GenericRestApiClient(authenticationStrategy);
+            genericRestApiClient.setBaseURL(dataSourceURL + queryEndpoint);
             JSONObject responseJson = genericRestApiClient.fetchMetricsJson("GET", query);
             int level = 0;
             try {
@@ -193,7 +202,8 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
                 monitoringAgentEndpoint = getServiceEndpoint(KruizeDeploymentInfo.monitoring_service);
             }
             if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE)) {
-                monitoringAgent = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, null, null, new URL(monitoringAgentEndpoint));
+                AuthenticationConfig authenticationConfig = AuthenticationConfig.noAuth();
+                monitoringAgent = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, null, null, new URL(monitoringAgentEndpoint), authenticationConfig);
             }
         }
 

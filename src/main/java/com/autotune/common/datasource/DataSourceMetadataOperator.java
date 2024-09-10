@@ -130,7 +130,7 @@ public class DataSourceMetadataOperator {
         try {
             String dataSourceName = dataSourceInfo.getName();
             String dataSourceUrl = dataSourceInfo.getUrl().toString();
-            JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceUrl, PromQLDataSourceQueries.NAMESPACE_QUERY);
+            JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceUrl, PromQLDataSourceQueries.NAMESPACE_QUERY, dataSourceInfo.getAuthenticationConfig());
             if (false == op.validateResultArray(namespacesDataResultArray)){
                 dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
                 throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
@@ -154,7 +154,7 @@ public class DataSourceMetadataOperator {
              */
             HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
             JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceUrl,
-                    PromQLDataSourceQueries.WORKLOAD_QUERY);
+                    PromQLDataSourceQueries.WORKLOAD_QUERY, dataSourceInfo.getAuthenticationConfig());
 
             if (op.validateResultArray(workloadDataResultArray)) {
                 datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
@@ -173,7 +173,7 @@ public class DataSourceMetadataOperator {
              */
             HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
             JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceUrl,
-                    PromQLDataSourceQueries.CONTAINER_QUERY);
+                    PromQLDataSourceQueries.CONTAINER_QUERY, dataSourceInfo.getAuthenticationConfig());
 
             if (op.validateResultArray(containerDataResultArray)) {
                 datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
