@@ -25,6 +25,7 @@ import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.ServiceHelpers;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.NamespaceData;
@@ -134,10 +135,16 @@ public class CreateExperiment extends HttpServlet {
                         validAPIObj.setValidationData(ko.getValidation_data());
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
                         addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+
+                        // TODO: Move this logic to a worker as it delay's response of create experiment
+                        if (addedToDB.isSuccess()) {
+                            ServiceHelpers.KruizeObjectOperations.checkAndTagGPUWorkloads(ko);
+                        }
                     }
                     if (addedToDB.isSuccess()) {
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
                         statusValue = "success";
+
                     } else {
                         sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
                     }

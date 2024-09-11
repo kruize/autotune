@@ -21,27 +21,46 @@ import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.ContainerDeviceList;
+import com.autotune.common.data.result.GPUDeviceData;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
+import com.google.gson.*;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
-import java.util.Date;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.operator.KruizeOperator.deploymentMap;
 
 /**
  * Helper functions used by the REST APIs to create the output JSON object
  */
 public class ServiceHelpers {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServiceHelpers.class);
     private ServiceHelpers() {
     }
 
@@ -252,6 +271,179 @@ public class ServiceHelpers {
             }
 
             return timestampExists;
+        }
+
+        public static void checkAndTagGPUWorkloads(KruizeObject kruizeObject) throws Exception {
+            SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
+            long interval_end_time_epoc = 0;
+            long interval_start_time_epoc = 0;
+            String metricProfileName = kruizeObject.getPerformanceProfile();
+            PerformanceProfile metricProfile = MetricProfileCollection.getInstance().getMetricProfileCollection().get(metricProfileName);
+            if (null == metricProfile) {
+                LOGGER.error("MetricProfile does not exist or is not valid: {}", metricProfileName);
+                return;
+            }
+
+            String maxDateQuery = null;
+            String gpuDetectionQuery = null;
+            Metric metricEntry = null;
+            List<Metric> metrics = metricProfile.getSloInfo().getFunctionVariables();
+            for (Metric metric: metrics) {
+                String name = metric.getName();
+                if(name.equals("maxDate")){
+                    maxDateQuery = metric.getAggregationFunctionsMap().get("max").getQuery();
+                } else if (name.equals("gpuMemoryUsage")) {
+                    gpuDetectionQuery = metric.getAggregationFunctionsMap().get("max").getQuery();
+                    metricEntry = metric;
+                }
+            }
+
+            if (null == maxDateQuery || maxDateQuery.isEmpty()) {
+                throw new NullPointerException("maxDate query cannot be empty or null");
+            }
+
+            if (null == gpuDetectionQuery || gpuDetectionQuery.isEmpty()) {
+                throw new NullPointerException("gpuMemoryUsage query cannot be empty or null");
+            }
+
+            Double measurementDurationMinutesInDouble = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
+            List<K8sObject> kubernetes_objects = kruizeObject.getKubernetes_objects();
+
+            String dataSource = kruizeObject.getDataSource();
+            DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(dataSource);
+            if (dataSourceInfo == null) {
+                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            }
+
+            for (K8sObject k8sObject : kubernetes_objects) {
+                String namespace = k8sObject.getNamespace();
+                String workload = k8sObject.getName();
+                String workload_type = k8sObject.getType();
+                HashMap<String, ContainerData> containerDataMap = k8sObject.getContainerDataMap();
+                // Iterate over containers
+                for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
+                    ContainerData containerData = entry.getValue();
+                    String containerName = containerData.getContainer_name();
+
+                    String queryToEncode = null;
+
+                    LOGGER.info("maxDateQuery: {}", maxDateQuery);
+                    queryToEncode =  maxDateQuery
+                            .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                            .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                            .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+                            .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+
+                    String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
+                            dataSourceInfo.getUrl(),
+                            URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
+                    );
+
+                    LOGGER.info(dateMetricsUrl);
+                    JSONObject genericJsonObject = new GenericRestApiClient(dateMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                    JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+                    JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+
+                    if (null == resultArray || resultArray.isEmpty()) {
+                        // Need to alert that container max duration is not detected
+                        // Ignoring it here, as we take care of it at generate recommendations
+                        return;
+                    }
+
+                    resultArray = resultArray.get(0)
+                            .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE);
+                    long epochTime = resultArray.get(0).getAsLong();
+                    String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                    Date date = sdf.parse(timestamp);
+                    Timestamp dateTS = new Timestamp(date.getTime());
+                    interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                            - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                    int maxDay = Terms.getMaxDays(kruizeObject.getTerms());
+                    LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
+                    Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
+                    interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                            - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
+
+                    gpuDetectionQuery = gpuDetectionQuery.replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                            .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                            .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
+                            .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+                            .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+
+                    String podMetricsUrl;
+                    try {
+                        podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
+                                dataSourceInfo.getUrl(),
+                                URLEncoder.encode(gpuDetectionQuery, CHARACTER_ENCODING),
+                                interval_start_time_epoc,
+                                interval_end_time_epoc,
+                                measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                        LOGGER.info(podMetricsUrl);
+                        genericJsonObject = new GenericRestApiClient(podMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                        jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+                        resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+
+                        if (null != resultArray && !resultArray.isEmpty()) {
+                            for (JsonElement result : resultArray) {
+                                JsonObject resultObject = result.getAsJsonObject();
+                                JsonArray valuesArray = resultObject.getAsJsonArray(KruizeConstants.DataSourceConstants
+                                        .DataSourceQueryJSONKeys.VALUES);
+
+                                for (JsonElement element : valuesArray) {
+                                    JsonArray valueArray = element.getAsJsonArray();
+                                    double value = valueArray.get(1).getAsDouble();
+                                    // TODO: Check for non-zero values to mark as GPU workload
+                                    break;
+                                }
+
+                                JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
+                                String modelName = metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString();
+                                if (null == modelName)
+                                    continue;
+
+                                boolean isSupportedMig = checkIfModelIsKruizeSupportedMIG(modelName);
+                                if (isSupportedMig) {
+                                    GPUDeviceData gpuDeviceData = new GPUDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
+                                            metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
+                                            metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
+                                            metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
+                                            isSupportedMig);
+
+
+                                    if (null == containerData.getContainerDeviceList()) {
+                                        ContainerDeviceList containerDeviceList = new ContainerDeviceList();
+                                        containerData.setContainerDeviceList(containerDeviceList);
+                                    }
+                                    containerData.getContainerDeviceList().addDevice(AnalyzerConstants.DeviceType.GPU, gpuDeviceData);
+                                    // TODO: Currently we consider only the first mig supported GPU
+                                    return;
+                                }
+                            }
+                        }
+                    } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException |
+                             JsonSyntaxException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+
+        public static boolean checkIfModelIsKruizeSupportedMIG(String modelName) {
+            if (null == modelName || modelName.isEmpty())
+                return false;
+
+            modelName = modelName.toUpperCase();
+
+            boolean A100_CHECK = (modelName.contains("A100") &&
+                    (modelName.contains("40GB") || modelName.contains("80GB")));
+
+            boolean H100_CHECK = false;
+
+            if (!A100_CHECK) {
+                H100_CHECK = (modelName.contains("H100") && modelName.contains("80GB"));
+            }
+
+            return A100_CHECK || H100_CHECK;
         }
     }
 }
