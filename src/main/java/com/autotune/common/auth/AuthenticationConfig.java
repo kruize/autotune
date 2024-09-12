@@ -1,4 +1,4 @@
-package com.autotune.common.datasource.auth;
+package com.autotune.common.auth;
 
 import org.apache.http.client.methods.HttpRequestBase;
 

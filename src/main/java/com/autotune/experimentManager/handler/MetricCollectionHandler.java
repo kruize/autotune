@@ -37,7 +37,7 @@ import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.experimentManager.utils.EMUtil;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
-import com.autotune.common.datasource.auth.AuthenticationConfig;
+import com.autotune.common.auth.AuthenticationConfig;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

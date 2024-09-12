@@ -16,6 +16,8 @@
 package com.autotune.database.init;
 
 
+import com.autotune.common.auth.AuthenticationConfig;
+import com.autotune.common.auth.Credentials;
 import com.autotune.database.table.*;
 import com.autotune.operator.KruizeDeploymentInfo;
 import org.hibernate.Session;
@@ -35,14 +37,23 @@ public class KruizeHibernateUtil {
     public static void buildSessionFactory() {
         SessionFactory sfTemp = null;
         try {
+            // Initialize AuthenticationConfig for the database (for example, with "basic" auth)
+            AuthenticationConfig dbAuthConfig = new AuthenticationConfig(
+                    KruizeDeploymentInfo.database_authentication_type,
+                    new Credentials(KruizeDeploymentInfo.database_authentication_credentials_username, KruizeDeploymentInfo.database_authentication_credentials_password)
+            );
+            // Fetch the credentials from the AuthenticationConfig
+            Credentials credentials = dbAuthConfig.getCredentials();
             Configuration configuration = new Configuration();
+            String dbUsername = credentials.getUsername();
+            String dbPassword = credentials.getPassword();
             String connectionURL = KruizeDeploymentInfo.settings_db_driver +
                     KruizeDeploymentInfo.database_hostname +
                     ":" + Integer.parseInt(KruizeDeploymentInfo.database_port) +
                     "/" + KruizeDeploymentInfo.database_dbname;
             configuration.setProperty("hibernate.connection.url", connectionURL);
-            configuration.setProperty("hibernate.connection.username", KruizeDeploymentInfo.database_username);
-            configuration.setProperty("hibernate.connection.password", KruizeDeploymentInfo.database_password);
+            configuration.setProperty("hibernate.connection.username", dbUsername);
+            configuration.setProperty("hibernate.connection.password", dbPassword);
             configuration.setProperty("hibernate.dialect", KruizeDeploymentInfo.settings_hibernate_dialect);
             configuration.setProperty("hibernate.connection.driver_class", KruizeDeploymentInfo.settings_hibernate_connection_driver_class);
             configuration.setProperty("hibernate.c3p0.min_size", KruizeDeploymentInfo.settings_hibernate_c3p0_min_size);

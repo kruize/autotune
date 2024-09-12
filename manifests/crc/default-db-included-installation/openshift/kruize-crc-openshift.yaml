@@ -75,10 +75,15 @@ data:
         "adminUsername": "admin",
         "hostname": "kruize-db-service",
         "name": "kruizeDB",
-        "password": "admin",
         "port": 5432,
         "sslMode": "require",
-        "username": "admin"
+        "authentication": {
+          "type": "basic",
+          "credentials": {
+            "username": "admin",
+            "password": "admin"
+          }
+        }
       }
     }
   kruizeconfigjson: |
@@ -107,12 +112,17 @@ data:
       },
       "logging" : {
         "cloudwatch": {
-          "accessKeyId": "",
           "logGroup": "kruize-logs",
           "logStream": "kruize-stream",
           "region": "",
-          "secretAccessKey": "",
           "logLevel": "INFO"
+          "authentication": {
+            "type": "apiKey",
+            "credentials": {
+              "accessKeyId": "",
+              "secretAccessKey": ""
+            }
+          }
         }
       },
       "datasource": [

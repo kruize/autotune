@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
-import com.autotune.common.datasource.auth.AuthenticationConfig;
+import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.utils.CommonUtils;
 import com.google.gson.JsonArray;
 import org.json.JSONObject;

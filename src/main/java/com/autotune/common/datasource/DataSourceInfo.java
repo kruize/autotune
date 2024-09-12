@@ -19,7 +19,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.datasource.auth.AuthenticationConfig;
+import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.LoggerFactory;

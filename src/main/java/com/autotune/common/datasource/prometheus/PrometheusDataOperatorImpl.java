@@ -17,9 +17,9 @@ package com.autotune.common.datasource.prometheus;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
-import com.autotune.common.datasource.auth.AuthenticationConfig;
-import com.autotune.common.datasource.auth.AuthenticationStrategy;
-import com.autotune.common.datasource.auth.AuthenticationStrategyFactory;
+import com.autotune.common.auth.AuthenticationConfig;
+import com.autotune.common.auth.AuthenticationStrategy;
+import com.autotune.common.auth.AuthenticationStrategyFactory;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;

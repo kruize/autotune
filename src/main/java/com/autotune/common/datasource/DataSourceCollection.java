@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
-import com.autotune.common.datasource.auth.AuthenticationConfig;
-import com.autotune.common.datasource.auth.Credentials;
+import com.autotune.common.auth.AuthenticationConfig;
+import com.autotune.common.auth.Credentials;
 import com.autotune.common.exceptions.datasource.*;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.utils.CommonUtils;

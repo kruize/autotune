@@ -621,8 +621,8 @@ public class KruizeConstants {
     public static final class DATABASE_ENV_NAME {
         public static final String DATABASE_ADMIN_USERNAME = "database_adminusername";
         public static final String DATABASE_ADMIN_PASSWORD = "database_adminpassword";
-        public static final String DATABASE_USERNAME = "database_username";
-        public static final String DATABASE_PASSWORD = "database_password";
+        public static final String DATABASE_AUTHENTICATION_CREDENTIALS_USERNAME = "database_authentication_credentials_username";
+        public static final String DATABASE_AUTHENTICATION_CREDENTIALS_PASSWORD = "database_authentication_credentials_password";
         public static final String DATABASE_HOSTNAME = "database_hostname";
         public static final String DATABASE_DBNAME = "database_name";
         public static final String DATABASE_PORT = "database_port";

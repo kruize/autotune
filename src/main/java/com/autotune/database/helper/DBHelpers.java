@@ -32,7 +32,7 @@ import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceMetadataOperator;
-import com.autotune.common.datasource.auth.AuthenticationConfig;
+import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.*;
 import com.autotune.utils.KruizeConstants;

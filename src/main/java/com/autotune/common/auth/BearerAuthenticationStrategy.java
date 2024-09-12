@@ -1,4 +1,4 @@
-package com.autotune.common.datasource.auth;
+package com.autotune.common.auth;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

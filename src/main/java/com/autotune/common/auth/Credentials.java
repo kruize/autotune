@@ -1,4 +1,4 @@
-package com.autotune.common.datasource.auth;
+package com.autotune.common.auth;
 
 public class Credentials {
     private String grantType;      // OAuth2
@@ -10,6 +10,14 @@ public class Credentials {
     private String tokenFilePath;  // Bearer token
     private String apiKey;         // API key
     private String headerName;     // API key header name
+
+    public Credentials(String username, String password) {
+        this.username = username;
+        this.password = password;
+    }
+
+    public Credentials() {
+    }
 
     public String getUsername() {
         return username;

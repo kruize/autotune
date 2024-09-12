@@ -38,8 +38,9 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_CONFIG_DEFAULT_VALUE.DEL
  */
 public class KruizeDeploymentInfo {
     private static final Logger LOGGER = LoggerFactory.getLogger(KruizeDeploymentInfo.class);
-    public static String database_username;
-    public static String database_password;
+    public static String database_authentication_type;
+    public static String database_authentication_credentials_username;
+    public static String database_authentication_credentials_password;
     public static String database_hostname;
     public static String database_dbname;
     public static String database_port;
@@ -67,12 +68,13 @@ public class KruizeDeploymentInfo {
     public static String database_admin_password;
     public static String database_ssl_mode;
 
-    public static String cloudwatch_logs_access_key_id;
-    public static String cloudwatch_logs_secret_access_key;
+    public static String cloudwatch_logs_authentication_credentials_access_key_id;
+    public static String cloudwatch_logs_authentication_credentials_secret_access_key;
     public static String cloudwatch_logs_log_group;
     public static String cloudwatch_logs_region;
     public static String cloudwatch_logs_log_level;
     public static String cloudwatch_logs_log_stream;
+    public static String cloudwatch_logs_authentication_type;
 
     public static Boolean settings_save_to_db;
     public static String em_only_mode;

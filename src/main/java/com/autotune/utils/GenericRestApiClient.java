@@ -15,8 +15,7 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import com.autotune.common.datasource.auth.AuthenticationConfig;
-import com.autotune.common.datasource.auth.AuthenticationStrategy;
+import com.autotune.common.auth.AuthenticationStrategy;
 import com.autotune.utils.authModels.APIKeysAuthentication;
 import com.autotune.utils.authModels.BasicAuthentication;
 import com.autotune.utils.authModels.BearerAccessToken;
