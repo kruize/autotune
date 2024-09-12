@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidExperimentType;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
@@ -158,6 +159,8 @@ public class CreateExperiment extends HttpServlet {
             sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
         } catch (InvalidExperimentType e) {
             sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } catch (FetchMetricsError e) {
+            throw new RuntimeException(e);
         } finally {
             if (null != timerCreateExp) {
                 MetricsConfig.timerCreateExp = MetricsConfig.timerBCreateExp.tag("status", statusValue).register(MetricsConfig.meterRegistry());
