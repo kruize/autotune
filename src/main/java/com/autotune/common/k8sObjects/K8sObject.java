@@ -15,7 +15,7 @@ public class K8sObject {
     private String namespace;
     @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
     private HashMap<String, ContainerData> containerDataMap;
-    @SerializedName(KruizeConstants.JSONKeys.NAMESPACE_INFO)
+    @SerializedName(KruizeConstants.JSONKeys.NAMESPACES)
     private NamespaceData namespaceData;
 
     public K8sObject(String name, String type, String namespace) {
@@ -59,7 +59,7 @@ public class K8sObject {
         this.containerDataMap = containerDataMap;
     }
 
-    @JsonProperty(KruizeConstants.JSONKeys.NAMESPACE_INFO)
+    @JsonProperty(KruizeConstants.JSONKeys.NAMESPACES)
     public NamespaceData getNamespaceData() {
         return namespaceData;
     }

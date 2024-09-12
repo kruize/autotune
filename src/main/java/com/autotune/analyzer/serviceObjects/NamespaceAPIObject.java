@@ -12,7 +12,7 @@ import java.util.List;
  * This NamespaceAPIObject class simulates the NamespaceData class for the create experiment and list experiment API
  */
 public class NamespaceAPIObject {
-    @SerializedName(KruizeConstants.JSONKeys.NAMESPACE)
+    @SerializedName(KruizeConstants.JSONKeys.NAMESPACE_NAME)
     private String namespaceName;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private NamespaceRecommendations namespaceRecommendations;
@@ -31,7 +31,7 @@ public class NamespaceAPIObject {
      * Returns the name of the namespace
      * @return String containing the name of the namespace
      */
-    @JsonProperty(KruizeConstants.JSONKeys.NAMESPACE)
+    @JsonProperty(KruizeConstants.JSONKeys.NAMESPACE_NAME)
     public String getnamespace_name() {
         return namespaceName;
     }
