@@ -87,7 +87,7 @@ public class GenericRestApiClient {
             // Apply authentication
             if (authenticationStrategy != null) {
                 String authHeader = authenticationStrategy.applyAuthentication();
-                httpRequestBase.setHeader("Authorization", authHeader);
+                httpRequestBase.setHeader(KruizeConstants.AuthenticationConstants.AUTHORIZATION, authHeader);
             }
             LOGGER.info("Executing request: {}", httpRequestBase.getRequestLine());
             jsonOutputInString = httpclient.execute(httpRequestBase, new StringResponseHandler());

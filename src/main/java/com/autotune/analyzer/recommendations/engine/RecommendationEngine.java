@@ -1621,11 +1621,10 @@ public class RecommendationEngine {
             long interval_end_time_epoc = 0;
             long interval_start_time_epoc = 0;
             SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
-            AuthenticationConfig authenticationConfig = dataSourceInfo.getAuthenticationConfig();
-            AuthenticationStrategy authenticationStrategy = AuthenticationStrategyFactory.createAuthenticationStrategy(authenticationConfig);
+            AuthenticationStrategy authenticationStrategy = AuthenticationStrategyFactory.createAuthenticationStrategy(
+                    dataSourceInfo.getAuthenticationConfig());
             // Create the client
             GenericRestApiClient client = new GenericRestApiClient(authenticationStrategy);
-
 
             String metricProfileName = kruizeObject.getPerformanceProfile();
             PerformanceProfile metricProfile = MetricProfileCollection.getInstance().getMetricProfileCollection().get(metricProfileName);

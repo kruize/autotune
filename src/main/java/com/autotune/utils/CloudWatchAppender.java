@@ -73,7 +73,7 @@ public class CloudWatchAppender extends AbstractAppender {
     }
 
     public static void configureLoggerForCloudWatchLog() {
-        if (cloudwatch_logs_authentication_credentials_access_key_id != null && !cloudwatch_logs_authentication_credentials_access_key_id.isEmpty() && cloudwatch_logs_authentication_credentials_secret_access_key != null && !cloudwatch_logs_authentication_credentials_secret_access_key.isEmpty() && cloudwatch_logs_region != null && !cloudwatch_logs_region.isEmpty()) {
+        if (cloudwatch_logs_access_key_id != null && !cloudwatch_logs_access_key_id.isEmpty() && cloudwatch_logs_secret_access_key != null && !cloudwatch_logs_secret_access_key.isEmpty() && cloudwatch_logs_region != null && !cloudwatch_logs_region.isEmpty()) {
             try {
                 // Define default values for attributes if they are empty or null
                 String cw_logs_log_group = cloudwatch_logs_log_group == null || cloudwatch_logs_log_group.isEmpty() ? "kruize-logs" : cloudwatch_logs_log_group;
@@ -84,7 +84,7 @@ public class CloudWatchAppender extends AbstractAppender {
 
                 CloudWatchLogsClient logsClient = CloudWatchLogsClient.builder()
                         .region(Region.of(cloudwatch_logs_region))
-                        .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(cloudwatch_logs_authentication_credentials_access_key_id, cloudwatch_logs_authentication_credentials_secret_access_key)))
+                        .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(cloudwatch_logs_access_key_id, cloudwatch_logs_secret_access_key)))
                         .build();
 
                 if (!logGroupExists(logsClient, cw_logs_log_group)) {
@@ -101,7 +101,7 @@ public class CloudWatchAppender extends AbstractAppender {
                 Level level = Level.getLevel(cw_logs_log_level_uc);
                 Filter filter = new LogFilter(level);
                 Layout<?> layout = PatternLayout.newBuilder().withPattern(KruizeConstants.Patterns.CLOUDWATCH_LOG_PATTERN).build();
-                CloudWatchAppender appender = new CloudWatchAppender("cloudwatchRootAppender", filter, layout, cw_logs_log_group, cw_logs_log_stream, cloudwatch_logs_region, cloudwatch_logs_authentication_credentials_access_key_id, cloudwatch_logs_authentication_credentials_secret_access_key);
+                CloudWatchAppender appender = new CloudWatchAppender("cloudwatchRootAppender", filter, layout, cw_logs_log_group, cw_logs_log_stream, cloudwatch_logs_region,cloudwatch_logs_access_key_id,cloudwatch_logs_secret_access_key);
 
                 appender.start();
                 config.addAppender(appender);

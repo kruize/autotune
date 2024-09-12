@@ -75,15 +75,10 @@ data:
         "adminUsername": "admin",
         "hostname": "kruize-db-service",
         "name": "kruizeDB",
+        "password": "admin",
         "port": 5432,
         "sslMode": "require",
-        "authentication": {
-          "type": "basic",
-          "credentials": {
-            "username": "admin",
-            "password": "admin"
-          }
-        }
+        "username": "admin"
       }
     }
   kruizeconfigjson: |
@@ -97,7 +92,7 @@ data:
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
-      "local": "true",
+      "local": "false",
       "logAllHttpReqAndResp": "true",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
@@ -112,17 +107,12 @@ data:
       },
       "logging" : {
         "cloudwatch": {
+          "accessKeyId": "",
           "logGroup": "kruize-logs",
           "logStream": "kruize-stream",
           "region": "",
+          "secretAccessKey": "",
           "logLevel": "INFO"
-          "authentication": {
-            "type": "apiKey",
-            "credentials": {
-              "accessKeyId": "",
-              "secretAccessKey": ""
-            }
-          }
         }
       },
       "datasource": [

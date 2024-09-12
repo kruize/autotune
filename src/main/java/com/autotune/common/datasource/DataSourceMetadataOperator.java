@@ -129,8 +129,7 @@ public class DataSourceMetadataOperator {
          */
         try {
             String dataSourceName = dataSourceInfo.getName();
-            String dataSourceUrl = dataSourceInfo.getUrl().toString();
-            JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceUrl, PromQLDataSourceQueries.NAMESPACE_QUERY, dataSourceInfo.getAuthenticationConfig());
+            JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceInfo, PromQLDataSourceQueries.NAMESPACE_QUERY);
             if (false == op.validateResultArray(namespacesDataResultArray)){
                 dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
                 throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
@@ -153,8 +152,8 @@ public class DataSourceMetadataOperator {
              * TODO -  get workload metadata for a given namespace
              */
             HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
-            JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceUrl,
-                    PromQLDataSourceQueries.WORKLOAD_QUERY, dataSourceInfo.getAuthenticationConfig());
+            JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
+                    PromQLDataSourceQueries.WORKLOAD_QUERY);
 
             if (op.validateResultArray(workloadDataResultArray)) {
                 datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
@@ -172,8 +171,8 @@ public class DataSourceMetadataOperator {
              * TODO - get container metadata for a given workload
              */
             HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
-            JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceUrl,
-                    PromQLDataSourceQueries.CONTAINER_QUERY, dataSourceInfo.getAuthenticationConfig());
+            JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
+                    PromQLDataSourceQueries.CONTAINER_QUERY);
 
             if (op.validateResultArray(containerDataResultArray)) {
                 datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);

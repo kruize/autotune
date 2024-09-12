@@ -396,18 +396,6 @@ public class KruizeConstants {
         public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
         public static final String DATASOURCE_ENDPOINT_WITH_QUERY = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
         public static final String DATE_ENDPOINT_WITH_QUERY = "%s/api/v1/query?query=%s";
-        public static final String DATASOURCE_AUTHENTICATION = "authentication";
-        public static final String AUTHENTICATION_TYPE = "type";
-        public static final String AUTHENTICATION_CREDENTIALS = "credentials";
-        public static final String AUTHENTICATION_USERNAME = "username";
-        public static final String AUTHENTICATION_PASSWORD = "password";
-        public static final String AUTHENTICATION_TOKEN_FILE = "tokenFilePath";
-        public static final String AUTHENTICATION_API_KEY = "apiKey";
-        public static final String AUTHENTICATION_HEADER_NAME = "header";
-        public static final String AUTHENTICATION_TOKEN_ENDPOINT = "tokenEndpoint";
-        public static final String AUTHENTICATION_CLIENT_ID = "clientId";
-        public static final String AUTHENTICATION_CLIENT_SECRET = "clientSecret";
-        public static final String AUTHENTICATION_GRANT_TYPE = "grantType";
 
         private DataSourceConstants() {
         }
@@ -621,8 +609,8 @@ public class KruizeConstants {
     public static final class DATABASE_ENV_NAME {
         public static final String DATABASE_ADMIN_USERNAME = "database_adminusername";
         public static final String DATABASE_ADMIN_PASSWORD = "database_adminpassword";
-        public static final String DATABASE_AUTHENTICATION_CREDENTIALS_USERNAME = "database_authentication_credentials_username";
-        public static final String DATABASE_AUTHENTICATION_CREDENTIALS_PASSWORD = "database_authentication_credentials_password";
+        public static final String DATABASE_USERNAME = "database_username";
+        public static final String DATABASE_PASSWORD = "database_password";
         public static final String DATABASE_HOSTNAME = "database_hostname";
         public static final String DATABASE_DBNAME = "database_name";
         public static final String DATABASE_PORT = "database_port";
@@ -730,6 +718,28 @@ public class KruizeConstants {
         public static final String TAG_NAME = "recommendations_notifications";
         public static final String notification_format_for_LOG = "%s|%s|%s|%s|%s|%s|%s|%s|%s"; //experiment_name,container_name,endtime,level,termname,modelname,code,type,message
         public static final String notification_format_for_METRICS = "%s|%s|%s"; //termname,modelname,type
+
+    }
+
+    public static final class AuthenticationConstants {
+        public static final String AUTHENTICATION = "authentication";
+        public static final String AUTHENTICATION_TYPE = "type";
+        public static final String AUTHENTICATION_CREDENTIALS = "credentials";
+        public static final String AUTHENTICATION_USERNAME = "username";
+        public static final String AUTHENTICATION_PASSWORD = "password";
+        public static final String AUTHENTICATION_TOKEN_FILE = "tokenFilePath";
+        public static final String AUTHENTICATION_API_KEY = "apiKey";
+        public static final String AUTHENTICATION_HEADER_NAME = "header";
+        public static final String AUTHENTICATION_TOKEN_ENDPOINT = "tokenEndpoint";
+        public static final String AUTHENTICATION_CLIENT_ID = "clientId";
+        public static final String AUTHENTICATION_CLIENT_SECRET = "clientSecret";
+        public static final String AUTHENTICATION_GRANT_TYPE = "grantType";
+        public static final String BASIC = "basic";
+        public static final String BEARER = "bearer";
+        public static final String API_KEY = "apikey";
+        public static final String OAUTH2 = "oauth2";
+        public static final String UNKNOWN_AUTHENTICATION = "Unknown authentication type: ";
+        public static final String AUTHORIZATION = "Authorization";
 
     }
 }
