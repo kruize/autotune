@@ -319,7 +319,6 @@ public class RecommendationEngine {
                 NamespaceData namespaceData = k8sObject.getNamespaceData();
                 LOGGER.info("Generating recommendations for namespace: {}", namespaceName);
                 generateNamespaceRecommendations(namespaceData, kruizeObject);
-                LOGGER.info("Namespace Recommendations: " + namespaceData.getNamespaceRecommendations().toString());
             } else {
                 for (String containerName : k8sObject.getContainerDataMap().keySet()) {
                     ContainerData containerData = k8sObject.getContainerDataMap().get(containerName);
@@ -739,7 +738,7 @@ public class RecommendationEngine {
 
 
     private static int getNumPodsForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap) {
-        LOGGER.info("SIZE OF FILTER MAP: " +  filteredResultsMap.size());
+        LOGGER.info("Size of Filter Map: " +  filteredResultsMap.size());
         Double max_pods_cpu = filteredResultsMap.values()
                 .stream()
                 .map(e -> {
@@ -754,7 +753,6 @@ public class RecommendationEngine {
 
     private void generateNamespaceRecommendations(NamespaceData namespaceData, KruizeObject kruizeObject) {
         Timestamp monitoringEndTime = namespaceData.getResults().keySet().stream().max(Timestamp::compareTo).get();
-
         NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
         if (null == namespaceRecommendations) {
             namespaceRecommendations = new NamespaceRecommendations();
@@ -892,7 +890,7 @@ public class RecommendationEngine {
         for (Map.Entry<String, Terms> termsEntry : kruizeObject.getTerms().entrySet()) {
             String recommendationTerm = termsEntry.getKey();
             Terms terms = termsEntry.getValue();
-            LOGGER.info("Namespace RecommendationTerm = {}", recommendationTerm);
+            LOGGER.info("Namespace Recommendation Term = {}", recommendationTerm);
             int duration = termsEntry.getValue().getDays();
             Timestamp monitoringStartTime = Terms.getMonitoringStartTime(monitoringEndTime, duration);
 

@@ -63,7 +63,7 @@ public class Converters {
                         k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
                     } else {
                         k8sObject = new K8sObject();
-                        k8sObject.setNamespace(kubernetesAPIObject.getNamespace());
+                        k8sObject.setNamespace(kubernetesAPIObject.getNamespaceAPIObjects().getnamespace_name());
                     }
                     List<ContainerAPIObject> containerAPIObjects = kubernetesAPIObject.getContainerAPIObjects();
                     HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
