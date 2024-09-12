@@ -24,6 +24,7 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.GpuMetricResult;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -435,12 +436,12 @@ public class RecommendationEngine {
                 if (null == configItem)
                     continue;
                 if (null == configItem.getAmount()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -449,12 +450,12 @@ public class RecommendationEngine {
                     continue;
                 }
                 if (null == configItem.getFormat()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -463,12 +464,12 @@ public class RecommendationEngine {
                     continue;
                 }
                 if (configItem.getAmount() <= 0.0) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -477,12 +478,12 @@ public class RecommendationEngine {
                     continue;
                 }
                 if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -668,20 +669,20 @@ public class RecommendationEngine {
 
         if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
-                currentCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
+                currentCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
             }
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
-                currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
+                currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
             }
         }
         if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
-                currentCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
+                currentCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
             }
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
-                currentMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
+                currentMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
             }
         }
         if (null != monitoringStartTime) {
@@ -702,6 +703,7 @@ public class RecommendationEngine {
             // Get the Recommendation Items
             RecommendationConfigItem recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
             RecommendationConfigItem recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
+            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationGpuRequest = model.getGpuRequestRecommendation(filteredResultsMap, notifications);
 
             // Get the Recommendation Items
             // Calling requests on limits as we are maintaining limits and requests as same
@@ -732,7 +734,8 @@ public class RecommendationEngine {
                     internalMapToPopulate,
                     numPods,
                     cpuThreshold,
-                    memoryThreshold
+                    memoryThreshold,
+                    recommendationGpuRequest
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -826,40 +829,40 @@ public class RecommendationEngine {
                     continue;
                 }
                 if (null == configItem.getAmount()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
                     }
                     continue;
                 }
                 if (null == configItem.getFormat()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
                     }
                     continue;
                 }
                 if (configItem.getAmount() <= 0.0) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
                     }
                     continue;
                 }
                 if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
                     }
@@ -1019,20 +1022,20 @@ public class RecommendationEngine {
 
         if (currentNamespaceConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) && null != currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
-                currentNamespaceCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
+                currentNamespaceCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
             }
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
-                currentNamespaceMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
+                currentNamespaceMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
             }
         }
         if (currentNamespaceConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) && null != currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
-                currentNamespaceCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
+                currentNamespaceCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
             }
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
-                currentNamespaceMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
+                currentNamespaceMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
             }
         }
         if (null != monitoringStartTime) {
@@ -1081,7 +1084,8 @@ public class RecommendationEngine {
                     internalMapToPopulate,
                     numPodsInNamespace,
                     namespaceCpuThreshold,
-                    namespaceMemoryThreshold
+                    namespaceMemoryThreshold,
+                    null // TODO: Needs to change when we support the namespace level GPU recommendations
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -1110,7 +1114,8 @@ public class RecommendationEngine {
                                            MappedRecommendationForModel recommendationModel,
                                            ArrayList<RecommendationNotification> notifications,
                                            HashMap<String, RecommendationConfigItem> internalMapToPopulate,
-                                           int numPods, double cpuThreshold, double memoryThreshold) {
+                                           int numPods, double cpuThreshold, double memoryThreshold,
+                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> gpuMap) {
         // Check for cpu & memory Thresholds (Duplicate check if the caller is generateRecommendations)
         String recommendationTerm = termEntry.getKey();
         double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
@@ -1273,7 +1278,7 @@ public class RecommendationEngine {
             generatedCpuRequestFormat = recommendationCpuRequest.getFormat();
             if (null != generatedCpuRequestFormat && !generatedCpuRequestFormat.isEmpty()) {
                 isRecommendedCPURequestAvailable = true;
-                requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationCpuRequest);
+                requestsMap.put(AnalyzerConstants.RecommendationItem.CPU, recommendationCpuRequest);
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
@@ -1289,7 +1294,7 @@ public class RecommendationEngine {
             generatedMemRequestFormat = recommendationMemRequest.getFormat();
             if (null != generatedMemRequestFormat && !generatedMemRequestFormat.isEmpty()) {
                 isRecommendedMemoryRequestAvailable = true;
-                requestsMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationMemRequest);
+                requestsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, recommendationMemRequest);
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
@@ -1325,7 +1330,7 @@ public class RecommendationEngine {
             generatedCpuLimitFormat = recommendationCpuLimits.getFormat();
             if (null != generatedCpuLimitFormat && !generatedCpuLimitFormat.isEmpty()) {
                 isRecommendedCPULimitAvailable = true;
-                limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationCpuLimits);
+                limitsMap.put(AnalyzerConstants.RecommendationItem.CPU, recommendationCpuLimits);
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
@@ -1341,7 +1346,7 @@ public class RecommendationEngine {
             generatedMemLimitFormat = recommendationMemLimits.getFormat();
             if (null != generatedMemLimitFormat && !generatedMemLimitFormat.isEmpty()) {
                 isRecommendedMemoryLimitAvailable = true;
-                limitsMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationMemLimits);
+                limitsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, recommendationMemLimits);
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
@@ -1373,7 +1378,7 @@ public class RecommendationEngine {
                                 experimentName, interval_end_time)));
             } else {
                 isCurrentCPURequestAvailable = true;
-                currentRequestsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuRequest);
+                currentRequestsMap.put(AnalyzerConstants.RecommendationItem.CPU, currentCpuRequest);
             }
         }
 
@@ -1393,7 +1398,7 @@ public class RecommendationEngine {
                                 experimentName, interval_end_time)));
             } else {
                 isCurrentMemoryRequestAvailable = true;
-                currentRequestsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemRequest);
+                currentRequestsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, currentMemRequest);
             }
         }
 
@@ -1416,7 +1421,7 @@ public class RecommendationEngine {
                                 experimentName, interval_end_time)));
             } else {
                 isCurrentCPULimitAvailable = true;
-                currentLimitsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuLimit);
+                currentLimitsMap.put(AnalyzerConstants.RecommendationItem.CPU, currentCpuLimit);
             }
         }
 
@@ -1436,7 +1441,7 @@ public class RecommendationEngine {
                                 experimentName, interval_end_time)));
             } else {
                 isCurrentMemoryLimitAvailable = true;
-                currentLimitsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemLimit);
+                currentLimitsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, currentMemLimit);
             }
         }
 
@@ -1454,7 +1459,7 @@ public class RecommendationEngine {
             // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
             isVariationCPURequestAvailable = true;
             variationCpuRequest = new RecommendationConfigItem(diff, generatedCpuRequestFormat);
-            requestsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, variationCpuRequest);
+            requestsVariationMap.put(AnalyzerConstants.RecommendationItem.CPU, variationCpuRequest);
         }
 
         double currentMemRequestValue = 0.0;
@@ -1466,7 +1471,7 @@ public class RecommendationEngine {
             // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
             isVariationMemoryRequestAvailable = true;
             variationMemRequest = new RecommendationConfigItem(diff, generatedMemRequestFormat);
-            requestsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, variationMemRequest);
+            requestsVariationMap.put(AnalyzerConstants.RecommendationItem.MEMORY, variationMemRequest);
         }
 
         // Create a new map for storing variation in limits
@@ -1483,7 +1488,7 @@ public class RecommendationEngine {
             double diff = generatedCpuLimit - currentCpuLimitValue;
             isVariationCPULimitAvailable = true;
             variationCpuLimit = new RecommendationConfigItem(diff, generatedCpuLimitFormat);
-            limitsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, variationCpuLimit);
+            limitsVariationMap.put(AnalyzerConstants.RecommendationItem.CPU, variationCpuLimit);
         }
 
         double currentMemLimitValue = 0.0;
@@ -1494,7 +1499,7 @@ public class RecommendationEngine {
             double diff = generatedMemLimit - currentMemLimitValue;
             isVariationMemoryLimitAvailable = true;
             variationMemLimit = new RecommendationConfigItem(diff, generatedMemLimitFormat);
-            limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, variationMemLimit);
+            limitsVariationMap.put(AnalyzerConstants.RecommendationItem.MEMORY, variationMemLimit);
         }
 
         // build the engine level notifications here
@@ -1535,23 +1540,23 @@ public class RecommendationEngine {
 
                     // Alternative - CPU REQUEST VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    RecommendationConfigItem tempAccessedRecCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
                     if (null != tempAccessedRecCPURequest) {
                         // Updating it with desired value
                         tempAccessedRecCPURequest.setAmount(currentCpuRequestValue);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPURequest);
+                    requestsMap.put(AnalyzerConstants.RecommendationItem.CPU, tempAccessedRecCPURequest);
 
                     // Alternative - CPU REQUEST VARIATION VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecCPURequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    RecommendationConfigItem tempAccessedRecCPURequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.CPU);
                     if (null != tempAccessedRecCPURequestVariation) {
                         // Updating it with desired value (as we are setting to current variation would be 0)
                         tempAccessedRecCPURequestVariation.setAmount(CPU_ZERO);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPURequestVariation);
+                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.CPU, tempAccessedRecCPURequestVariation);
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_REQUESTS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
@@ -1575,23 +1580,23 @@ public class RecommendationEngine {
 
                     // Alternative - CPU LIMIT VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    RecommendationConfigItem tempAccessedRecCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
                     if (null != tempAccessedRecCPULimit) {
                         // Updating it with desired value
                         tempAccessedRecCPULimit.setAmount(currentCpuLimitValue);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPULimit);
+                    limitsMap.put(AnalyzerConstants.RecommendationItem.CPU, tempAccessedRecCPULimit);
 
                     // Alternative - CPU LIMIT VARIATION VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecCPULimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    RecommendationConfigItem tempAccessedRecCPULimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.CPU);
                     if (null != tempAccessedRecCPULimitVariation) {
                         // Updating it with desired value (as we are setting to current variation would be 0)
                         tempAccessedRecCPULimitVariation.setAmount(CPU_ZERO);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPULimitVariation);
+                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.CPU, tempAccessedRecCPULimitVariation);
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_LIMITS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
@@ -1615,23 +1620,23 @@ public class RecommendationEngine {
 
                     // Alternative - MEMORY REQUEST VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecMemoryRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    RecommendationConfigItem tempAccessedRecMemoryRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
                     if (null != tempAccessedRecMemoryRequest) {
                         // Updating it with desired value
                         tempAccessedRecMemoryRequest.setAmount(currentMemRequestValue);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    requestsMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryRequest);
+                    requestsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, tempAccessedRecMemoryRequest);
 
                     // Alternative - MEMORY REQUEST VARIATION VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecMemoryRequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    RecommendationConfigItem tempAccessedRecMemoryRequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
                     if (null != tempAccessedRecMemoryRequestVariation) {
                         // Updating it with desired value (as we are setting to current variation would be 0)
                         tempAccessedRecMemoryRequestVariation.setAmount(MEM_ZERO);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryRequestVariation);
+                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.MEMORY, tempAccessedRecMemoryRequestVariation);
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_REQUESTS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
@@ -1655,23 +1660,23 @@ public class RecommendationEngine {
 
                     // Alternative - MEMORY LIMIT VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecMemoryLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    RecommendationConfigItem tempAccessedRecMemoryLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
                     if (null != tempAccessedRecMemoryLimit) {
                         // Updating it with desired value
                         tempAccessedRecMemoryLimit.setAmount(currentMemLimitValue);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    limitsMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryLimit);
+                    limitsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, tempAccessedRecMemoryLimit);
 
                     // Alternative - MEMORY LIMIT VARIATION VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecMemoryLimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    RecommendationConfigItem tempAccessedRecMemoryLimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
                     if (null != tempAccessedRecMemoryLimitVariation) {
                         // Updating it with desired value (as we are setting to current variation would be 0)
                         tempAccessedRecMemoryLimitVariation.setAmount(MEM_ZERO);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryLimitVariation);
+                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.MEMORY, tempAccessedRecMemoryLimitVariation);
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_LIMITS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
@@ -1692,6 +1697,13 @@ public class RecommendationEngine {
         // Set Request Map
         if (!requestsMap.isEmpty()) {
             config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+        }
+
+        // check if gpu map is not empty and add to limits map
+        if (null != gpuMap) {
+            if (!gpuMap.isEmpty()) {
+                limitsMap.putAll(gpuMap);
+            }
         }
 
         // Set Limits Map
@@ -1808,9 +1820,11 @@ public class RecommendationEngine {
             }
 
             String maxDateQuery = null;
+            String gpuDetectionQuery = null;
             if (kruizeObject.isContainerExperiment()) {
                 maxDateQuery = getMaxDateQuery(metricProfile, AnalyzerConstants.MetricName.maxDate.name());
-                fetchContainerMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, dataSourceInfo, metricProfile, maxDateQuery);
+                gpuDetectionQuery = getMaxDateQuery(metricProfile, AnalyzerConstants.MetricName.gpuMemoryUsage.name());
+                fetchContainerMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, dataSourceInfo, metricProfile, maxDateQuery, gpuDetectionQuery);
             } else if (kruizeObject.isNamespaceExperiment()) {
                 maxDateQuery = getMaxDateQuery(metricProfile, AnalyzerConstants.MetricName.namespaceMaxDate.name());
                 fetchNamespaceMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, dataSourceInfo, metricProfile, maxDateQuery);
@@ -1978,7 +1992,7 @@ public class RecommendationEngine {
 
 
     /**
-     * Fetches namespace metrics based on the specified datasource using queries from the metricProfile for the given time interval.
+     * Fetches Container metrics based on the specified datasource using queries from the metricProfile for the given time interval.
      *
      * @param kruizeObject          KruizeObject
      * @param interval_end_time     The end time of the interval in the format yyyy-MM-ddTHH:mm:sssZ
@@ -1986,9 +2000,16 @@ public class RecommendationEngine {
      * @param dataSourceInfo        DataSource object
      * @param metricProfile         performance profile to be used
      * @param maxDateQuery          max date query for containers
+     * @param gpuDetectionQuery     Query to detect if a container uses GPU
      * @throws Exception
      */
-    private void fetchContainerMetricsBasedOnDataSourceAndProfile(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo, PerformanceProfile metricProfile, String maxDateQuery) throws Exception, FetchMetricsError {
+    private void fetchContainerMetricsBasedOnDataSourceAndProfile(KruizeObject kruizeObject,
+                                                                  Timestamp interval_end_time,
+                                                                  Timestamp interval_start_time,
+                                                                  DataSourceInfo dataSourceInfo,
+                                                                  PerformanceProfile metricProfile,
+                                                                  String maxDateQuery,
+                                                                  String gpuDetectionQuery) throws Exception, FetchMetricsError {
         try {
             long interval_end_time_epoc = 0;
             long interval_start_time_epoc = 0;
@@ -2007,6 +2028,20 @@ public class RecommendationEngine {
 
                 for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
                     ContainerData containerData = entry.getValue();
+
+                    // Check if the container data has GPU support else check for GPU metrics
+                    if (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isGPUDeviceDetected()) {
+                        CommonUtils.markAcceleratorDeviceStatusToContainer(containerData,
+                                maxDateQuery,
+                                namespace,
+                                workload,
+                                workload_type,
+                                dataSourceInfo,
+                                kruizeObject.getTerms(),
+                                measurementDurationMinutesInDouble,
+                                gpuDetectionQuery);
+                    }
+
                     String containerName = containerData.getContainer_name();
                     if (null == interval_end_time) {
                         LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
@@ -2014,7 +2049,6 @@ public class RecommendationEngine {
                         if (null == maxDateQuery || maxDateQuery.isEmpty()) {
                             throw new NullPointerException("maxDate query cannot be empty or null");
                         }
-
 
                         LOGGER.debug("maxDateQuery: {}", maxDateQuery);
                         queryToEncode =  maxDateQuery
@@ -2059,27 +2093,52 @@ public class RecommendationEngine {
                     IntervalResults intervalResults = null;
                     HashMap<AnalyzerConstants.MetricName, MetricResults> resMap = null;
                     HashMap<String, MetricResults> resultMap = null;
+                    HashMap<AnalyzerConstants.MetricName, GpuMetricResult> gpuMetricResultMap;
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
 
                     List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables();
 
+                    List<String> gpuFunction = Arrays.asList(
+                            AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
+                            AnalyzerConstants.MetricName.gpuMemoryUsage.toString()
+                    );
+
                     // Iterate over metrics and aggregation functions
                     for (Metric metricEntry : metricList) {
+                        boolean isGpuMetric = false;
+                        boolean fetchGPUMetrics = false;
+
+                        if (gpuFunction.contains(metricEntry.getName())) {
+                            isGpuMetric = true;
+                        }
+
+                        if (isGpuMetric
+                                && null != containerData.getContainerDeviceList()
+                                && containerData.getContainerDeviceList().isGPUDeviceDetected()) {
+                            fetchGPUMetrics = true;
+                        }
+
+                        // Skip fetching GPU metrics if the workload doesn't use GPU
+                        if (isGpuMetric && !fetchGPUMetrics)
+                            continue;
+
                         HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
                         for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry: aggregationFunctions.entrySet()) {
                             // Determine promQL query on metric type
                             String promQL = aggregationFunctionsEntry.getValue().getQuery();
                             String format = null;
 
-
                             // Determine format based on metric type - Todo move this metric profile
                             List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
                             List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString());
+
                             if (cpuFunction.contains(metricEntry.getName())) {
                                 format = KruizeConstants.JSONKeys.CORES;
                             } else if (memFunction.contains(metricEntry.getName())) {
                                 format = KruizeConstants.JSONKeys.BYTES;
+                            } else if (isGpuMetric) {
+                                format = KruizeConstants.JSONKeys.CORES;
                             }
 
                             promQL = promQL
@@ -2106,6 +2165,7 @@ public class RecommendationEngine {
                                     JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                                     JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
                                     // Process fetched metrics
+                                    // Here also skip for non gpu-workloads
                                     if (null != resultArray && !resultArray.isEmpty()) {
                                         resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
                                                         KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)

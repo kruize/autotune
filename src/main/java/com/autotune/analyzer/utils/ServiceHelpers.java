@@ -274,7 +274,6 @@ public class ServiceHelpers {
 
             String maxDateQuery = null;
             String gpuDetectionQuery = null;
-            Metric metricEntry = null;
             List<Metric> metrics = metricProfile.getSloInfo().getFunctionVariables();
             for (Metric metric: metrics) {
                 String name = metric.getName();
@@ -282,7 +281,6 @@ public class ServiceHelpers {
                     maxDateQuery = metric.getAggregationFunctionsMap().get("max").getQuery();
                 } else if (name.equals("gpuMemoryUsage")) {
                     gpuDetectionQuery = metric.getAggregationFunctionsMap().get("max").getQuery();
-                    metricEntry = metric;
                 }
             }
 
