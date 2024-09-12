@@ -7,13 +7,16 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class AuthenticationConfig {
-    private final String type; // "basic", "bearer", "apiKey", "oauth2"
-    private final Credentials credentials;
+    private String type; // "basic", "bearer", "apiKey", "oauth2"
+    private Credentials credentials;
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationConfig.class);
 
     public AuthenticationConfig(String type, Credentials credentials) {
         this.type = type;
         this.credentials = credentials;
+    }
+
+    public AuthenticationConfig() {
     }
 
     public String getType() {

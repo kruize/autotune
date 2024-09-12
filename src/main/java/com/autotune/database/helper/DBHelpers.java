@@ -739,9 +739,7 @@ public class DBHelpers {
                     try {
                         DataSourceInfo dataSourceInfo;
                         JsonNode authConfigJsonNode = kruizeDataSource.getAuthentication();
-                        // Define the type for the list of AuthenticationConfig
-                        CollectionType listType = new ObjectMapper().getTypeFactory().constructCollectionType(List.class, AuthenticationConfig.class);
-                        // Convert JsonNode to List<AuthenticationConfig>
+                        // Convert JsonNode to AuthenticationConfig
                         AuthenticationConfig authConfig = new ObjectMapper().treeToValue(authConfigJsonNode, AuthenticationConfig.class);
                         if (kruizeDataSource.getServiceName().isEmpty() && null != kruizeDataSource.getUrl()) {
                             dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(),
@@ -755,7 +753,6 @@ public class DBHelpers {
                         dataSourceInfoList.add(dataSourceInfo);
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while converting to dataSourceInfo from DB object : {}", e.getMessage());
-                        LOGGER.error(e.getMessage());
                         failureCount++;
                     }
                 }
