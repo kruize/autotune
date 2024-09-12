@@ -15,7 +15,6 @@
  *******************************************************************************/
 
 package com.autotune.common.utils;
-
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -315,7 +314,6 @@ public class CommonUtils {
         return ((newer - older)/older) * 100;
     }
 
-
     public static DataSourceInfo getDataSourceInfo(String dataSourceName) throws Exception {
         DataSourceManager dataSourceManager = new DataSourceManager();
         // fetch the datasource from the config file first
@@ -344,7 +342,9 @@ public class CommonUtils {
                                                                DataSourceInfo dataSourceInfo,
                                                                Map<String, Terms> termsMap,
                                                                Double measurementDurationMinutesInDouble,
-                                                               String gpuDetectionQuery) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, ParseException, FetchMetricsError {
+                                                               String gpuDetectionQuery)
+            throws IOException, NoSuchAlgorithmException, KeyStoreException,
+            KeyManagementException, ParseException, FetchMetricsError {
 
         SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
         String containerName = containerData.getContainer_name();
@@ -408,6 +408,7 @@ public class CommonUtils {
             LOGGER.info(podMetricsUrl);
             client.setBaseURL(podMetricsUrl);
             genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+
             jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
             resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
 
