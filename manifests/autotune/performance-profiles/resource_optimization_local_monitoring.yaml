@@ -256,9 +256,9 @@ slo:
       value_type: "double"
       kubernetes_object: "namespace"
       aggregation_functions:
-        # sum of all cpu request quotas for a namespace in cores
-        - function: sum
-          query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="requests.cpu", type="hard"})'
+      # sum of all cpu request quotas for a namespace in cores
+      - function: sum
+        query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="requests.cpu", type="hard"})'
 
     # Namespace quota for CPU limits
     # Show namespace quota for CPU limits in cores for a namespace
@@ -267,9 +267,9 @@ slo:
       value_type: "double"
       kubernetes_object: "namespace"
       aggregation_functions:
-        # sum of all cpu limits quotas for a namespace in cores
-        - function: sum
-          query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="limits.cpu", type="hard"})'
+      # sum of all cpu limits quotas for a namespace in cores
+      - function: sum
+        query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="limits.cpu", type="hard"})'
 
 
     # Namespace quota for memory requests
@@ -279,9 +279,9 @@ slo:
       value_type: "double"
       kubernetes_object: "namespace"
       aggregation_functions:
-        # sum of all memory requests quotas for a namespace in bytes
-        - function: sum
-          query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="requests.memory", type="hard"})'
+      # sum of all memory requests quotas for a namespace in bytes
+      - function: sum
+        query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="requests.memory", type="hard"})'
 
 
     # Namespace quota for memory limits
@@ -291,9 +291,9 @@ slo:
       value_type: "double"
       kubernetes_object: "namespace"
       aggregation_functions:
-        # sum of all memory limits quotas for a namespace in bytes
-        - function: sum
-          query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="limits.memory", type="hard"})'
+      # sum of all memory limits quotas for a namespace in bytes
+      - function: sum
+        query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="limits.memory", type="hard"})'
 
 
     # Namespace CPU usage
@@ -303,17 +303,17 @@ slo:
       value_type: "double"
       kubernetes_object: "namespace"
       aggregation_functions:
-        # average cpu usages in cores for a namespace
-        - function: avg
-          query: 'avg_over_time(sum by(namespace) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # average cpu usages in cores for a namespace
+      - function: avg
+        query: 'avg_over_time(sum by(namespace) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
-        # maximum cpu usages in cores for a namespace
-        - function: max
-          query: 'max_over_time(sum by(namespace) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # maximum cpu usages in cores for a namespace
+      - function: max
+        query: 'max_over_time(sum by(namespace) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
-        # minimum cpu usages in cores for a namespace
-        - function: min
-          query: 'min_over_time(sum by(namespace) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # minimum cpu usages in cores for a namespace
+      - function: min
+        query: 'min_over_time(sum by(namespace) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
 
     # Namespace CPU Throttle
@@ -323,17 +323,17 @@ slo:
       value_type: "double"
       kubernetes_object: "namespace"
       aggregation_functions:
-        # average cpu throttle in cores for a namespace
-        - function: avg
-          query: 'avg_over_time(sum by(namespace) (rate(container_cpu_cfs_throttled_seconds_total{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""}[5m]))[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # average cpu throttle in cores for a namespace
+      - function: avg
+        query: 'avg_over_time(sum by(namespace) (rate(container_cpu_cfs_throttled_seconds_total{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""}[5m]))[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
-        # maximum cpu throttle in cores for a namespace
-        - function: max
-          query: 'max_over_time(sum by(namespace) (rate(container_cpu_cfs_throttled_seconds_total{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""}[5m]))[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # maximum cpu throttle in cores for a namespace
+      - function: max
+        query: 'max_over_time(sum by(namespace) (rate(container_cpu_cfs_throttled_seconds_total{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""}[5m]))[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
-        # minimum cpu throttle in cores for a namespace
-        - function: min
-          query: 'min_over_time(sum by(namespace) (rate(container_cpu_cfs_throttled_seconds_total{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""}[5m]))[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # minimum cpu throttle in cores for a namespace
+      - function: min
+        query: 'min_over_time(sum by(namespace) (rate(container_cpu_cfs_throttled_seconds_total{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""}[5m]))[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
 
     # Namespace memory usage
@@ -343,17 +343,17 @@ slo:
       value_type: "double"
       kubernetes_object: "namespace"
       aggregation_functions:
-        # average memory usage in bytes for a namespace
-        - function: avg
-          query: 'avg_over_time(sum by(namespace) (container_memory_working_set_bytes{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # average memory usage in bytes for a namespace
+      - function: avg
+        query: 'avg_over_time(sum by(namespace) (container_memory_working_set_bytes{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
-        # maximum memory usage in bytes for a namespace
-        - function: max
-          query: 'max_over_time(sum by(namespace) (container_memory_working_set_bytes{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # maximum memory usage in bytes for a namespace
+      - function: max
+        query: 'max_over_time(sum by(namespace) (container_memory_working_set_bytes{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
-        # minimum memory usage in bytes for a namespace
-        - function: min
-          query: 'min_over_time(sum by(namespace) (container_memory_working_set_bytes{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # minimum memory usage in bytes for a namespace
+      - function: min
+        query: 'min_over_time(sum by(namespace) (container_memory_working_set_bytes{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
 
     # Namespace memory rss value
@@ -363,17 +363,17 @@ slo:
       value_type: "double"
       kubernetes_object: "namespace"
       aggregation_functions:
-        # average memory rss in bytes for a namespace
-        - function: avg
-          query: 'avg_over_time(sum by(namespace) (container_memory_rss{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # average memory rss in bytes for a namespace
+      - function: avg
+        query: 'avg_over_time(sum by(namespace) (container_memory_rss{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
-        # maximum memory rss in bytes for a namespace
-        - function: max
-          query: 'max_over_time(sum by(namespace) (container_memory_rss{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # maximum memory rss in bytes for a namespace
+      - function: max
+        query: 'max_over_time(sum by(namespace) (container_memory_rss{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
-        # minimum memory rss in bytes for a namespace
-        - function: min
-          query: 'min_over_time(sum by(namespace) (container_memory_rss{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # minimum memory rss in bytes for a namespace
+      - function: min
+        query: 'min_over_time(sum by(namespace) (container_memory_rss{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
 
     # Show total pods in a namespace
@@ -382,12 +382,12 @@ slo:
       value_type: "double"
       kubernetes_object: "namespace"
       aggregation_functions:
-        # maximum total pods in a namespace
-        - function: max
-          query: 'max_over_time(sum by(namespace) ((kube_pod_info{namespace="$NAMESPACE$"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
-        # average total pods in a namespace
-        - function: avg
-          query: 'avg_over_time(sum by(namespace) ((kube_pod_info{namespace="$NAMESPACE$"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # maximum total pods in a namespace
+      - function: max
+        query: 'max_over_time(sum by(namespace) ((kube_pod_info{namespace="$NAMESPACE$"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # average total pods in a namespace
+      - function: avg
+        query: 'avg_over_time(sum by(namespace) ((kube_pod_info{namespace="$NAMESPACE$"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
 
     # Show total running pods in a namespace
@@ -396,12 +396,12 @@ slo:
       value_type: "double"
       kubernetes_object: "namespace"
       aggregation_functions:
-        # maximum total pods in a namespace
-        - function: max
-          query: 'max_over_time(sum by(namespace) ((kube_pod_status_phase{phase="Running"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
-        # average total pods in a namespace
-        - function: avg
-          query: 'avg_over_time(sum by(namespace) ((kube_pod_status_phase{phase="Running"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # maximum total pods in a namespace
+      - function: max
+        query: 'max_over_time(sum by(namespace) ((kube_pod_status_phase{phase="Running"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
+      # average total pods in a namespace
+      - function: avg
+        query: 'avg_over_time(sum by(namespace) ((kube_pod_status_phase{phase="Running"}))[$MEASUREMENT_DURATION_IN_MIN$m:])'
 
     # Show last activity for a namespace
     - name: namespaceMaxDate
@@ -409,5 +409,5 @@ slo:
       value_type: "double"
       kubernetes_object: "namespace"
       aggregation_functions:
-        - function: max
-          query: 'max(last_over_time(timestamp((sum by (namespace) (container_cpu_usage_seconds_total{namespace="$NAMESPACE$"})) > 0 )[15d:]))'
+      - function: max
+        query: 'max(last_over_time(timestamp((sum by (namespace) (container_cpu_usage_seconds_total{namespace="$NAMESPACE$"})) > 0 )[15d:]))'
