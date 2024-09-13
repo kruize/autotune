@@ -25,6 +25,12 @@ from helpers.kruize import *
 from helpers.utils import *
 from helpers.list_metric_profiles_validate import *
 from helpers.list_metric_profiles_without_parameters_schema import *
+from pathlib import Path
+
+current_directory = Path(__file__).resolve().parent
+# Navigate up 4 levels dynamically using 'parents'
+base_dir = current_directory.parents[3]  # (index 3 because it's zero-based)
+metric_profile_dir = base_dir / 'manifests' / 'autotune' / 'performance-profiles'
 
 mandatory_fields = [
     ("apiVersion", ERROR_500_STATUS_CODE, ERROR_STATUS),
@@ -51,7 +57,7 @@ def test_create_metric_profile(cluster_type):
     Test Description: This test validates the response status code of createMetricProfile API by passing a
     valid input for the json
     """
-    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     form_kruize_url(cluster_type)
 
     response = delete_metric_profile(input_json_file)
@@ -90,7 +96,7 @@ def test_create_duplicate_metric_profile(cluster_type):
     Test Description: This test validates the response status code of createMetricProfile API by specifying the
     same metric profile name
     """
-    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     json_data = json.load(open(input_json_file))
 
     metric_profile_name = json_data['metadata']['name']
@@ -131,7 +137,7 @@ def test_create_multiple_metric_profiles(cluster_type):
     Test Description: This test validates the creation of multiple metric profiles using different json files
     """
 
-    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     output_json_file = "/tmp/create_metric_profile.json"
     temp_json_file = "/tmp/temp_profile.json"
 
@@ -218,7 +224,7 @@ def test_create_metric_profiles_mandatory_fields(cluster_type, field, expected_s
 
     # Create metric profile using the specified json
     json_file = "/tmp/create_metric_profile.json"
-    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     json_data = json.load(open(input_json_file))
 
     if field == "apiVersion":

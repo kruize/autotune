@@ -42,6 +42,12 @@ from helpers.list_metric_profiles_without_parameters_schema import *
 from helpers.short_term_list_reco_json_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.import_metadata_json_validate import *
+from pathlib import Path
+
+current_directory = Path(__file__).resolve().parent
+# Navigate up 4 levels dynamically using 'parents'
+base_dir = current_directory.parents[3]  # (index 3 because it's zero-based)
+metric_profile_dir = base_dir / 'manifests' / 'autotune' / 'performance-profiles'
 
 
 @pytest.mark.test_e2e
@@ -124,7 +130,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     print("delete tfb_db exp = ", response.status_code)
 
     #Install default metric profile
-    metric_profile_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     response = delete_metric_profile(metric_profile_json_file)
     print("delete metric profile = ", response.status_code)
 
