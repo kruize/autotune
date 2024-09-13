@@ -33,12 +33,12 @@ public class DataSourceManager {
     /**
      * Imports Metadata for a specific data source using associated DataSourceInfo.
      */
-    public DataSourceMetadataInfo importMetadataFromDataSource(DataSourceInfo dataSourceInfo) {
+    public DataSourceMetadataInfo importMetadataFromDataSource(DataSourceInfo dataSourceInfo,String uniqueKey,long startTime,long endTime,int steps) {
         try {
             if (null == dataSourceInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo);
+            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo,uniqueKey, startTime, endTime, steps);
             if (null == dataSourceMetadataInfo) {
                 LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceInfo.getName());
                 return null;
@@ -49,6 +49,7 @@ public class DataSourceManager {
         }
         return null;
     }
+
 
     /**
      * Retrieves Metadata from the specified data source information.
@@ -91,7 +92,7 @@ public class DataSourceManager {
             if (null == dataSourceMetadataInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
             }
-            dataSourceMetadataOperator.updateDataSourceMetadata(dataSource);
+            dataSourceMetadataOperator.updateDataSourceMetadata(dataSource,"",0,0,0);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }

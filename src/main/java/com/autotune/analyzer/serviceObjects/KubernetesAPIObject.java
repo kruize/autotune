@@ -60,10 +60,6 @@ public class KubernetesAPIObject {
         return namespace;
     }
 
-    public String getExperimentType() {
-        return experiment_type;
-    }
-
     @JsonProperty(KruizeConstants.JSONKeys.CONTAINERS)
     public List<ContainerAPIObject> getContainerAPIObjects() {
         return containerAPIObjects;
@@ -71,6 +67,16 @@ public class KubernetesAPIObject {
 
     public void setContainerAPIObjects(List<ContainerAPIObject> containerAPIObjects) {
         this.containerAPIObjects = containerAPIObjects;
+    }
+
+
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public void setName(String name) {
+        this.name = name;
     }
 
     @JsonProperty(KruizeConstants.JSONKeys.NAMESPACES)
@@ -96,4 +102,9 @@ public class KubernetesAPIObject {
                 ", containers=" + containerAPIObjects +
                 '}';
     }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
+    }
+
 }

@@ -79,6 +79,7 @@ public class KruizeDeploymentInfo {
     public static Integer bulk_update_results_limit = 100;
     public static Boolean local = false;
     public static Boolean log_http_req_resp = false;
+    public static String recommendations_url = "http://kruize.openshift-tuning.svc.cluster.local:8080/generateRecommendations?experiment_name=%s";
 
     public static int generate_recommendations_date_range_limit_in_days = 15;
     public static Integer delete_partition_threshold_in_days = DELETE_PARTITION_THRESHOLD_IN_DAYS;

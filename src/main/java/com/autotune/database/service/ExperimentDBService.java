@@ -255,7 +255,9 @@ public class ExperimentDBService {
                 ExperimentDAO dao = new ExperimentDAOImpl();
                 int dayOfTheMonth = localDateTime.getDayOfMonth();
                 try {
-                    dao.addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+                    synchronized (new Object()) {
+                        dao.addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+                    }
                 } catch (Exception e) {
                     LOGGER.warn(e.getMessage());
                 }
@@ -285,6 +287,7 @@ public class ExperimentDBService {
 
     /**
      * Adds Metric Profile to kruizeMetricProfileEntry
+     *
      * @param metricProfile Metric profile object to be added
      * @return ValidationOutputData object
      */
@@ -391,7 +394,8 @@ public class ExperimentDBService {
 
     /**
      * Fetches Metric Profile by name from kruizeMetricProfileEntry
-     * @param metricProfileMap Map to store metric profile loaded from the database
+     *
+     * @param metricProfileMap  Map to store metric profile loaded from the database
      * @param metricProfileName Metric profile name to be fetched
      * @return ValidationOutputData object
      */
