@@ -59,6 +59,8 @@ function local_monitoring_tests() {
 
   # check for 'local' flag
   kruize_local_patch
+  # check for 'servicename' and 'datasource_namespace' input variables
+  kruize_local_datasource_manifest_patch
 
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then

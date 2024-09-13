@@ -55,6 +55,12 @@ do
 			testcase=*)
 				testcase=${OPTARG#*=}
 				;;
+		  servicename=*)
+      	servicename=${OPTARG#*=}
+        ;;
+		  datasource_namespace=*)
+		    datasource_namespace=${OPTARG#*=}
+        ;;
 			resultsdir=*)
 				resultsdir=${OPTARG#*=}
 				;;

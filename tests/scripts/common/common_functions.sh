@@ -1876,3 +1876,26 @@ function kruize_local_patch() {
     sed -i 's/"local": "false"/"local": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
   fi
 }
+
+#
+# Modify "serviceName" and "namespace" datasource manifest fields based on input parameters
+#
+function kruize_local_datasource_manifest_patch() {
+  CRC_DIR="./manifests/crc/default-db-included-installation"
+  KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+  KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
+
+  if [ ${cluster_type} == "minikube" ]; then
+    if [[ ! -z "${servicename}" &&  ! -z "${datasource_namespace}" ]]; then
+     sed -i 's/"serviceName": "[^"]*"/"serviceName": "'${servicename}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+     sed -i 's/"namespace": "[^"]*"/"namespace": "'${datasource_namespace}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+     sed -i 's/"url": ".*"/"url": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+    fi
+  elif [ ${cluster_type} == "openshift" ]; then
+    if [[ ! -z "${servicename}" &&  ! -z "${datasource_namespace}" ]]; then
+      sed -i 's/"serviceName": "[^"]*"/"serviceName": "'${servicename}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+      sed -i 's/"namespace": "[^"]*"/"namespace": "'${datasource_namespace}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+      sed -i 's/"url": ".*"/"url": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+    fi
+  fi
+}
