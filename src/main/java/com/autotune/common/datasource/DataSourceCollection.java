@@ -154,23 +154,21 @@ public class DataSourceCollection {
                 String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
                 String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
                 JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
-
-                DataSourceInfo dataSourceInfo;
                 // create the corresponding authentication object
                 AuthenticationConfig authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
-
+                DataSourceInfo datasource = null;
                 // Validate input
                 if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) {
                     continue;
                 }
                 if (dataSourceURL.isEmpty()) {
-                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, null, authConfig);
+                    datasource = new DataSourceInfo(name, provider, serviceName, namespace, null);
                 } else {
-                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL), authConfig);
+                    datasource = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL));
                 }
-
-                // Add the datasource to the system
-                addDataSource(dataSourceInfo);
+                // set the authentication config
+                datasource.setAuthenticationConfig(authConfig);
+                addDataSource(datasource);
             }
         } catch (IOException e) {
             LOGGER.error(e.getMessage());

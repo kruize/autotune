@@ -16,10 +16,7 @@
 
 package com.autotune.database.table;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
-import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.type.SqlTypes;
 
 /**
  * This is a Java class named KruizeDataSourceEntry annotated with JPA annotations.
@@ -45,8 +42,6 @@ public class KruizeDataSourceEntry {
     private String serviceName;
     private String namespace;
     private String url;
-    @JdbcTypeCode(SqlTypes.JSON)
-    private JsonNode authentication;
 
     public String getVersion() {
         return version;
@@ -94,13 +89,5 @@ public class KruizeDataSourceEntry {
 
     public void setUrl(String url) {
         this.url = url;
-    }
-
-    public JsonNode getAuthentication() {
-        return authentication;
-    }
-
-    public void setAuthentication(JsonNode authentication) {
-        this.authentication = authentication;
     }
 }

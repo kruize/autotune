@@ -200,8 +200,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
                 monitoringAgentEndpoint = getServiceEndpoint(KruizeDeploymentInfo.monitoring_service);
             }
             if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE)) {
-                AuthenticationConfig authenticationConfig = AuthenticationConfig.noAuth();
-                monitoringAgent = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, null, null, new URL(monitoringAgentEndpoint), authenticationConfig);
+                monitoringAgent = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, null, null, new URL(monitoringAgentEndpoint));
             }
         }
 

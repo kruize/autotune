@@ -40,11 +40,11 @@ public class DataSourceInfo {
     private final String serviceName;
     private final String namespace;
     private final URL url;
-    private final AuthenticationConfig authenticationConfig;
+    private AuthenticationConfig authenticationConfig;
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataSourceInfo.class);
 
-    public DataSourceInfo(String name, String provider, String serviceName, String namespace, URL url, AuthenticationConfig authenticationConfig) {
+    public DataSourceInfo(String name, String provider, String serviceName, String namespace, URL url) {
         this.name = name;
         this.provider = provider;
         if (null == url) {
@@ -54,7 +54,6 @@ public class DataSourceInfo {
         }
         this.serviceName = serviceName;
         this.namespace = namespace;
-        this.authenticationConfig = authenticationConfig;
     }
 
     /**
@@ -124,6 +123,10 @@ public class DataSourceInfo {
         return authenticationConfig;
     }
 
+    public void setAuthenticationConfig(AuthenticationConfig authenticationConfig) {
+        this.authenticationConfig = authenticationConfig;
+    }
+
     @Override
     public String toString() {
         return "DataSourceInfo{" +
@@ -132,7 +135,6 @@ public class DataSourceInfo {
                 ", serviceName='" + serviceName + '\'' +
                 ", namespace='" + namespace + '\'' +
                 ", url=" + url +
-                ", authenticationConfig=" + authenticationConfig +
                 '}';
     }
 }
