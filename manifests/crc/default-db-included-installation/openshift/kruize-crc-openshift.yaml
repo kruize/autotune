@@ -12,6 +12,19 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  name: kruize-monitoring-view
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+roleRef:
+  kind: ClusterRole
+  name: cluster-monitoring-view
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
   name: autotune-scc-crb
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -450,16 +463,3 @@ spec:
     - name: nginx-config-volume
       configMap:
         name: nginx-config
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: kruize-monitoring-view
-subjects:
-  - kind: ServiceAccount
-    name: kruize-sa
-    namespace: openshift-tuning
-roleRef:
-  kind: ClusterRole
-  name: cluster-monitoring-view
-  apiGroup: rbac.authorization.k8s.io
