@@ -196,6 +196,14 @@ public class AnalyzerConstants {
         INVALID
     }
 
+    public static final class ExperimentTypes {
+        public static final String NAMESPACE_EXPERIMENT = "namespace";
+        public static final String CONTAINER_EXPERIMENT = "container";
+
+        private ExperimentTypes() {
+        }
+    }
+
     /**
      * Used to parse the Autotune kind resource
      */
