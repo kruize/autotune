@@ -1861,6 +1861,31 @@ function create_performance_profile() {
         fi
 }
 
+function create_metric_profile() {
+        metric_profile_json=$1
+
+        echo "Forming the curl command to create the metric profile ..."
+        form_curl_cmd
+
+        curl_cmd="${curl_cmd}/createMetricProfile -d @${metric_profile_json}"
+
+        echo "curl_cmd = ${curl_cmd}"
+
+        status_json=$($curl_cmd)
+        echo "create metric profile status = ${status_json}"
+
+        echo ""
+        echo "Command used to create the metric profile = ${curl_cmd}"
+        echo ""
+
+        metric_profile_status=$(echo ${status_json} | jq '.status')
+        echo "create metric profile status = ${metric_profile_status}"
+        if [ "${metric_profile_status}" != \"SUCCESS\" ]; then
+                echo "Failed! Create metric profile failed. Status - ${metric_profile_status}"
+                exit 1
+        fi
+}
+
 #
 # "local" flag is turned off by default for now. This needs to be set to true.
 #

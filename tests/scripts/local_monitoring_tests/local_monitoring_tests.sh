@@ -21,6 +21,7 @@
 # Get the absolute path of current directory
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 LOCAL_MONITORING_TEST_DIR="${CURRENT_DIR}/local_monitoring_tests"
+METRIC_PROFILE_DIR="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
 . ${LOCAL_MONITORING_TEST_DIR}/../common/common_functions.sh
@@ -40,7 +41,7 @@ function local_monitoring_tests() {
 	err_exit "ERROR: python3 not installed"
 
 	target="crc"
-	perf_profile_json="${LOCAL_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
+	metric_profile_json="${METRIC_PROFILE_DIR}/resource_optimization_local_monitoring.json"
 
 	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e")
 
@@ -72,7 +73,7 @@ function local_monitoring_tests() {
 		sleep 60
 
     # create performance profile
-    create_performance_profile ${perf_profile_json}
+    create_metric_profile ${metric_profile_json}
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi
