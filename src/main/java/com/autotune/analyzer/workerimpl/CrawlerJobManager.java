@@ -69,23 +69,29 @@ public class CrawlerJobManager implements Runnable {
                     System.out.println("Include Labels: " + includeLabelsBuilder.toString());
                 }
             }
-            // Extract interval start and end times
-            String intervalEndTimeStr = this.crawlerInput.getTime_range().getStart();
-            String intervalStartTimeStr = this.crawlerInput.getTime_range().getEnd();
-            String uniqueKey = includeLabelsBuilder.toString();
-            long interval_end_time_epoc = 0;
-            long interval_start_time_epoc = 0;
-            LocalDateTime localDateTime = LocalDateTime.parse(intervalEndTimeStr, DateTimeFormatter.ofPattern(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT));
-            interval_end_time_epoc = localDateTime.toEpochSecond(ZoneOffset.UTC);
-            Timestamp interval_end_time = Timestamp.from(localDateTime.toInstant(ZoneOffset.UTC));
-            localDateTime = LocalDateTime.parse(intervalStartTimeStr, DateTimeFormatter.ofPattern(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT));
-            interval_start_time_epoc = localDateTime.toEpochSecond(ZoneOffset.UTC);
-            Timestamp interval_start_time = Timestamp.from(localDateTime.toInstant(ZoneOffset.UTC));
-
-            int steps = 15 * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+            DataSourceMetadataInfo metadataInfo = null;
             DataSourceManager dataSourceManager = new DataSourceManager();
             DataSourceInfo datasource = dataSourceManager.fetchDataSourceFromDBByName("prometheus-1");
-            DataSourceMetadataInfo metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, interval_start_time_epoc, interval_end_time_epoc, steps);
+            String uniqueKey = includeLabelsBuilder.toString();
+
+            if (null != this.crawlerInput.getTime_range() && this.crawlerInput.getTime_range().getStart() != null && this.crawlerInput.getTime_range().getEnd() != null) {
+                // Extract interval start and end times
+                String intervalEndTimeStr = this.crawlerInput.getTime_range().getStart();
+                String intervalStartTimeStr = this.crawlerInput.getTime_range().getEnd();
+                long interval_end_time_epoc = 0;
+                long interval_start_time_epoc = 0;
+                LocalDateTime localDateTime = LocalDateTime.parse(intervalEndTimeStr, DateTimeFormatter.ofPattern(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT));
+                interval_end_time_epoc = localDateTime.toEpochSecond(ZoneOffset.UTC);
+                Timestamp interval_end_time = Timestamp.from(localDateTime.toInstant(ZoneOffset.UTC));
+                localDateTime = LocalDateTime.parse(intervalStartTimeStr, DateTimeFormatter.ofPattern(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT));
+                interval_start_time_epoc = localDateTime.toEpochSecond(ZoneOffset.UTC);
+                Timestamp interval_start_time = Timestamp.from(localDateTime.toInstant(ZoneOffset.UTC));
+
+                int steps = 15 * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, interval_start_time_epoc, interval_end_time_epoc, steps);
+            } else {
+                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, 0, 0, 0);
+            }
 
             Collection<DataSource> dataSourceCollection = metadataInfo.getDataSourceHashMap().values();
             List<String> recommendationsRequiredExperiments = new CopyOnWriteArrayList<>();
