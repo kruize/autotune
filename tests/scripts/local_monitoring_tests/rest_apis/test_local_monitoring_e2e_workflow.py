@@ -42,12 +42,8 @@ from helpers.list_metric_profiles_without_parameters_schema import *
 from helpers.short_term_list_reco_json_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.import_metadata_json_validate import *
-from pathlib import Path
 
-current_directory = Path(__file__).resolve().parent
-# Navigate up 4 levels dynamically using 'parents'
-base_dir = current_directory.parents[3]  # (index 3 because it's zero-based)
-metric_profile_dir = base_dir / 'manifests' / 'autotune' / 'performance-profiles'
+metric_profile_dir = get_metric_profile_dir()
 
 
 @pytest.mark.test_e2e
