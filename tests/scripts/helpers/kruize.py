@@ -43,7 +43,7 @@ def form_kruize_url(cluster_type, SERVER_IP=None):
 
         subprocess.run(['oc expose svc/kruize -n openshift-tuning'], shell=True, stdout=subprocess.PIPE)
         ip = subprocess.run(
-            ['oc status -n openshift-tuning | grep "kruize" | grep port | cut -d " " -f1 | cut -d "/" -f3'], shell=True,
+            ['oc status -n openshift-tuning | grep "kruize" | grep -v "kruize-ui" "kruize-db" | grep port | cut -d " " -f1 | cut -d "/" -f3'], shell=True,
             stdout=subprocess.PIPE)
         SERVER_IP = ip.stdout.decode('utf-8').strip('\n')
         print("IP = ", SERVER_IP)
@@ -436,7 +436,6 @@ def list_metric_profiles(name=None, verbose=None, logging=True):
         print(response.text)
         print("\n************************************************************")
     return response
-
 
 # Description: This function generates recommendation for the given experiment_name
 def generate_recommendations(experiment_name):

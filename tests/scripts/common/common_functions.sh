@@ -1861,6 +1861,31 @@ function create_performance_profile() {
         fi
 }
 
+function create_metric_profile() {
+        metric_profile_json=$1
+
+        echo "Forming the curl command to create the metric profile ..."
+        form_curl_cmd
+
+        curl_cmd="${curl_cmd}/createMetricProfile -d @${metric_profile_json}"
+
+        echo "curl_cmd = ${curl_cmd}"
+
+        status_json=$($curl_cmd)
+        echo "create metric profile status = ${status_json}"
+
+        echo ""
+        echo "Command used to create the metric profile = ${curl_cmd}"
+        echo ""
+
+        metric_profile_status=$(echo ${status_json} | jq '.status')
+        echo "create metric profile status = ${metric_profile_status}"
+        if [ "${metric_profile_status}" != \"SUCCESS\" ]; then
+                echo "Failed! Create metric profile failed. Status - ${metric_profile_status}"
+                exit 1
+        fi
+}
+
 #
 # "local" flag is turned off by default for now. This needs to be set to true.
 #
@@ -1874,5 +1899,28 @@ function kruize_local_patch() {
     sed -i 's/"local": "false"/"local": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
   elif [ ${cluster_type} == "openshift" ]; then
     sed -i 's/"local": "false"/"local": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+  fi
+}
+
+#
+# Modify "serviceName" and "namespace" datasource manifest fields based on input parameters
+#
+function kruize_local_datasource_manifest_patch() {
+  CRC_DIR="./manifests/crc/default-db-included-installation"
+  KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+  KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
+
+  if [ ${cluster_type} == "minikube" ]; then
+    if [[ ! -z "${servicename}" &&  ! -z "${datasource_namespace}" ]]; then
+     sed -i 's/"serviceName": "[^"]*"/"serviceName": "'${servicename}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+     sed -i 's/"namespace": "[^"]*"/"namespace": "'${datasource_namespace}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+     sed -i 's/"url": ".*"/"url": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+    fi
+  elif [ ${cluster_type} == "openshift" ]; then
+    if [[ ! -z "${servicename}" &&  ! -z "${datasource_namespace}" ]]; then
+      sed -i 's/"serviceName": "[^"]*"/"serviceName": "'${servicename}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+      sed -i 's/"namespace": "[^"]*"/"namespace": "'${datasource_namespace}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+      sed -i 's/"url": ".*"/"url": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+    fi
   fi
 }

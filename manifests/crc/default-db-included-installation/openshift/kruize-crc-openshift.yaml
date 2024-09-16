@@ -12,6 +12,19 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  name: kruize-monitoring-view
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+roleRef:
+  kind: ClusterRole
+  name: cluster-monitoring-view
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
   name: autotune-scc-crb
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -119,8 +132,8 @@ data:
         {
           "name": "prometheus-1",
           "provider": "prometheus",
-          "serviceName": "",
-          "namespace": "",
+          "serviceName": "prometheus-k8s",
+          "namespace": "openshift-monitoring",
           "url": "https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9091",
           "authentication": {
             "type": "bearer",

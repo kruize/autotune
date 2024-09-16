@@ -33,6 +33,7 @@ from helpers.utils import benchmarks_install
 from helpers.utils import clone_repo
 from helpers.utils import apply_tfb_load
 from helpers.utils import wait_for_container_to_complete
+from helpers.utils import validate_local_monitoring_reco_json
 from helpers.list_metadata_json_validate import *
 from helpers.list_metadata_json_schema import *
 from helpers.list_metadata_json_verbose_true_schema import *
@@ -40,8 +41,11 @@ from helpers.list_metadata_json_cluster_name_without_verbose_schema import *
 from helpers.list_metric_profiles_validate import *
 from helpers.list_metric_profiles_without_parameters_schema import *
 from helpers.short_term_list_reco_json_schema import *
+from helpers.list_reco_json_local_monitoring_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.import_metadata_json_validate import *
+
+metric_profile_dir = get_metric_profile_dir()
 
 
 @pytest.mark.test_e2e
@@ -124,7 +128,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     print("delete tfb_db exp = ", response.status_code)
 
     #Install default metric profile
-    metric_profile_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     response = delete_metric_profile(metric_profile_json_file)
     print("delete metric profile = ", response.status_code)
 
@@ -193,9 +197,12 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     list_reco_json = response.json()
 
     # Validate the json against the json schema
-    errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
+    errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_local_monitoring_schema)
     assert errorMsg == ""
 
+    # Validate the json values
+    tfb_exp_json = read_json_data_from_file(tfb_exp_json_file)
+    validate_local_monitoring_reco_json(tfb_exp_json[0], list_reco_json[0])
 
     response = generate_recommendations(tfb_db_exp_name)
     assert response.status_code == SUCCESS_STATUS_CODE
@@ -206,8 +213,12 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     list_reco_json = response.json()
 
     # Validate the json against the json schema
-    errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema)
+    errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_local_monitoring_schema)
     assert errorMsg == ""
+
+    # Validate the json values
+    tfb_db_exp_json = read_json_data_from_file(tfb_db_exp_json_file)
+    validate_local_monitoring_reco_json(tfb_db_exp_json[0], list_reco_json[0])
 
     # Delete tfb experiment
     response = delete_experiment(tfb_exp_json_file)

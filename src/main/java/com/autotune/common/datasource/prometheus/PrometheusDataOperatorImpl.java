@@ -21,6 +21,7 @@ import com.autotune.common.auth.AuthenticationStrategyFactory;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
 import com.google.gson.*;
@@ -64,6 +65,9 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      */
     @Override
     public String getDefaultServicePortForProvider() {
+        if (KruizeDeploymentInfo.k8s_type.equalsIgnoreCase(KruizeConstants.OPENSHIFT)) {
+            return KruizeConstants.DataSourceConstants.OPENSHIFT_MONITORING_PROMETHEUS_DEFAULT_SERVICE_PORT;
+        }
         return KruizeConstants.DataSourceConstants.PROMETHEUS_DEFAULT_SERVICE_PORT;
     }
 
