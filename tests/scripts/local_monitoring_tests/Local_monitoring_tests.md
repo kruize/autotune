@@ -69,6 +69,22 @@ Here are the test scenarios:
 - Test with invalid values such as blank, null or an invalid value for name query parameter in listMetricProfiles API
 - List metric profiles without creating metric profile
 
+
+### **Create Experiment API tests**
+
+Here are the test scenarios:
+
+- Create namespace experiment specifying namespace experiment type
+- Create namespace experiment without specifying experiment type
+- Create container experiment specifying container experiment type
+- Create container experiment without specifying experiment type
+- Create experiment specifying both namespaces and containers without specifying the experiment type
+- Create experiment specifying both namespaces and containers specifying the namespace experiment type
+- Create experiment specifying both namespaces and containers specifying the container experiment type
+- Create namespace experiment specifying containers 
+- Create container experiment specifying namespaces
+
+
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
 - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
 - Creates a resource optimization metric profile using the [createMetricProfile API](/design/MetricProfileAPI.md)

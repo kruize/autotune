@@ -1,0 +1,28 @@
+[{
+  "version": "v2.0",
+  "experiment_name": "tfb-workload-namespace",
+  "cluster_name": "default",
+  "performance_profile": "resource-optimization-openshift",
+  "mode": "monitor",
+  "target_cluster": "local",
+  "datasource": "prometheus-1",
+  "kubernetes_objects": [
+    {
+      "namespaces": {
+        "namespace_name": "default"
+      },
+      "containers": [
+      {
+        "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+        "container_name": "tfb-server"
+      }
+    ]
+    }
+  ],
+  "trial_settings": {
+    "measurement_duration": "15min"
+  },
+  "recommendation_settings": {
+    "threshold": "0.1"
+  }
+}]
