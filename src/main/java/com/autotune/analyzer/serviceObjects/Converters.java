@@ -64,7 +64,7 @@ public class Converters {
                     // Verify the experiment type.
                     // If the experiment type is null, default is container type experiment.
                     // TODO: Update to make this field mandatory and validate if it is a container type.
-                    if (null == kubernetesAPIObject.getExperimentType()) {
+                    if (null == kubernetesAPIObject.getExperimentType() || kubernetesAPIObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT)) {
                         // container recommendations experiment type
                         k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
                         k8sObject.setExperimentType(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
