@@ -314,7 +314,7 @@ public class RecommendationEngine {
     public void generateRecommendations(KruizeObject kruizeObject) {
 
         for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
-            if (k8sObject.getContainerDataMap().isEmpty()) {
+            if (k8sObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
                 String namespaceName = k8sObject.getNamespace();
                 NamespaceData namespaceData = k8sObject.getNamespaceData();
                 LOGGER.info("Generating recommendations for namespace: {}", namespaceName);
