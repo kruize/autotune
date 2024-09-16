@@ -19,7 +19,7 @@
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO="${CURRENT_DIR}/../../../../"
-
+METRIC_PROFILE_DIR="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
@@ -30,7 +30,7 @@ APP_NAME=kruize
 CLUSTER_TYPE=minikube
 NAMESPACE=monitoring
 
-RESOURCE_OPTIMIZATION_JSON="../json_files/resource_optimization_openshift.json"
+RESOURCE_OPTIMIZATION_JSON="${METRIC_PROFILE_DIR}/resource_optimization_local_monitoring.json"
 
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"

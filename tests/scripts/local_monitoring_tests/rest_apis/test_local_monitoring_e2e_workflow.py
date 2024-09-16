@@ -45,6 +45,8 @@ from helpers.list_reco_json_local_monitoring_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.import_metadata_json_validate import *
 
+metric_profile_dir = get_metric_profile_dir()
+
 
 @pytest.mark.test_e2e
 def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_type):
@@ -126,7 +128,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     print("delete tfb_db exp = ", response.status_code)
 
     #Install default metric profile
-    metric_profile_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     response = delete_metric_profile(metric_profile_json_file)
     print("delete metric profile = ", response.status_code)
 

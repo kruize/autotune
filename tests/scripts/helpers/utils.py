@@ -23,6 +23,7 @@ import math
 import docker
 from datetime import datetime, timedelta
 from kubernetes import client, config
+from pathlib import Path
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
@@ -1412,3 +1413,12 @@ def wait_for_container_to_complete(container_id):
     )
     exit_code = result.stdout.strip()
     print(f"Container {container_id} has completed with exit code {exit_code}.")
+
+def get_metric_profile_dir():
+    # Get the current directory
+    current_directory = Path(__file__).resolve().parent
+    # Navigate up 3 levels and build the path to the 'manifests/app/adreess' directory
+    base_dir = current_directory.parents[2]  # (index 2 because it's zero-based)
+    metric_profile_dir = base_dir / 'manifests' / 'autotune' / 'performance-profiles'
+
+    return metric_profile_dir

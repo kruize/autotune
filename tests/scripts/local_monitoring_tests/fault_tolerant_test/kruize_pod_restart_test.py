@@ -57,8 +57,9 @@ def main(argv):
         namespace = "openshift-tuning"
 
     # Create the metric profile
-    perf_profile_json_file = "../json_files/resource_optimization_openshift.json"
-    create_metric_profile(perf_profile_json_file)
+    metric_profile_dir = get_metric_profile_dir()
+    metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
+    create_metric_profile(metric_profile_json_file)
 
     list_reco_json_dir = results_dir + "/list_reco_jsons"
     list_datasources_json_dir = results_dir + "/list_datasources_jsons"
