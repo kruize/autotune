@@ -437,7 +437,6 @@ def list_metric_profiles(name=None, verbose=None, logging=True):
         print("\n************************************************************")
     return response
 
-
 # Description: This function generates recommendation for the given experiment_name
 def generate_recommendations(experiment_name):
     print("\n************************************************************")
