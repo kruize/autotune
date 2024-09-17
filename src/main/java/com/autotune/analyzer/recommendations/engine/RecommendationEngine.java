@@ -2197,7 +2197,8 @@ public class RecommendationEngine {
                                 URLEncoder.encode(namespaceMaxDateQuery, CHARACTER_ENCODING)
                         );
                         LOGGER.info(dateMetricsUrl);
-                        JSONObject genericJsonObject = new GenericRestApiClient(dateMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                        client.setBaseURL(dateMetricsUrl);
+                        JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                         JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                         JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
                         // Process fetched metrics
@@ -2271,7 +2272,8 @@ public class RecommendationEngine {
                                                 interval_start_time_epoc,
                                                 interval_end_time_epoc,
                                                 measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-                                        JSONObject genericJsonObject = new GenericRestApiClient(namespaceMetricsUrl).fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                                        client.setBaseURL(namespaceMetricsUrl);
+                                        JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                                         JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                                         JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
                                         // Process fetched metrics
