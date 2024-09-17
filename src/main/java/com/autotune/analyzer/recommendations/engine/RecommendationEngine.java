@@ -318,7 +318,7 @@ public class RecommendationEngine {
                 String namespaceName = k8sObject.getNamespace();
                 NamespaceData namespaceData = k8sObject.getNamespaceData();
                 LOGGER.info("Generating recommendations for namespace: {}", namespaceName);
-                generateNamespaceRecommendations(namespaceData, kruizeObject);
+                generateRecommendationsBasedOnNamespace(namespaceData, kruizeObject);
             } else {
                 for (String containerName : k8sObject.getContainerDataMap().keySet()) {
                     ContainerData containerData = k8sObject.getContainerDataMap().get(containerName);
@@ -329,7 +329,7 @@ public class RecommendationEngine {
 
                     // generate recommendations based on each container
                     generateRecommendationsBasedOnContainer(containerData, kruizeObject);
-                    // TODO: generate recommendations based on namespace, kubernetes_object name and type
+                    // TODO: generate recommendations based on kubernetes_object name and type
                     // todo The process of data validation and notification generation is currently tightly coupled and needs to be separated. By doing so, we can avoid additional iterations at kruizeNotificationCollectionRegistry.logNotification. This should be included as part of the code refactor.
                     KruizeNotificationCollectionRegistry kruizeNotificationCollectionRegistry = new KruizeNotificationCollectionRegistry(kruizeObject.getExperimentName(), getInterval_end_time(), containerData.getContainer_name());
                     kruizeNotificationCollectionRegistry.logNotification(containerData);
@@ -735,10 +735,13 @@ public class RecommendationEngine {
         return mappedRecommendationForModel;
     }
 
-
-
+    /**
+     * Calculates the number of pods for a namespace based on the provided results map.
+     * @param filteredResultsMap A map containing timestamp as keys and contains metric results for the corresponding timestamp.
+     * @return int maximum number of pods observed across all timestamps in the filtered results map.
+     */
     private static int getNumPodsForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap) {
-        LOGGER.info("Size of Filter Map: " +  filteredResultsMap.size());
+        LOGGER.debug("Size of Filter Map: {}",  filteredResultsMap.size());
         Double max_pods_cpu = filteredResultsMap.values()
                 .stream()
                 .map(e -> {
@@ -751,7 +754,7 @@ public class RecommendationEngine {
         return (int) Math.ceil(max_pods_cpu);
     }
 
-    private void generateNamespaceRecommendations(NamespaceData namespaceData, KruizeObject kruizeObject) {
+    private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
         Timestamp monitoringEndTime = namespaceData.getResults().keySet().stream().max(Timestamp::compareTo).get();
         NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
         if (null == namespaceRecommendations) {
@@ -890,7 +893,7 @@ public class RecommendationEngine {
         for (Map.Entry<String, Terms> termsEntry : kruizeObject.getTerms().entrySet()) {
             String recommendationTerm = termsEntry.getKey();
             Terms terms = termsEntry.getValue();
-            LOGGER.info("Namespace Recommendation Term = {}", recommendationTerm);
+            LOGGER.debug("Namespace Recommendation Term = {}", recommendationTerm);
             int duration = termsEntry.getValue().getDays();
             Timestamp monitoringStartTime = Terms.getMonitoringStartTime(monitoringEndTime, duration);
 
@@ -2012,7 +2015,7 @@ public class RecommendationEngine {
                             }
 
 
-                            LOGGER.info("maxDateQuery: {}", maxDateQuery);
+                            LOGGER.debug("maxDateQuery: {}", maxDateQuery);
                             queryToEncode =  maxDateQuery
                                     .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
                                     .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
@@ -2064,8 +2067,7 @@ public class RecommendationEngine {
                             HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
                             for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry: aggregationFunctions.entrySet()) {
                                 // Determine promQL query on metric type
-                                String metricQuery = aggregationFunctionsEntry.getValue().getQuery();
-                                String promQL = metricQuery;
+                                String promQL = aggregationFunctionsEntry.getValue().getQuery();
                                 String format = null;
 
 
@@ -2234,8 +2236,7 @@ public class RecommendationEngine {
                         if (metricEntry.getName().startsWith(AnalyzerConstants.NAMESPACE) && !metricEntry.getName().equals("namespaceMaxDate")) {
                             HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
                             for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctions.entrySet()) {
-                                String metricQuery = aggregationFunctionsEntry.getValue().getQuery();
-                                String promQL = metricQuery;
+                                String promQL = aggregationFunctionsEntry.getValue().getQuery();
                                 String format = null;
 
                                 // Determine format based on metric type
