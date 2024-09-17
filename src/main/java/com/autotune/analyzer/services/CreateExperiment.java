@@ -180,7 +180,8 @@ public class CreateExperiment extends HttpServlet {
                 sendSuccessResponse(response, "Experiment deleted successfully.");
             }
         } catch (Exception e) {
-            sendErrorResponse(inputData, response, e, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            LOGGER.error("Exception occurred while deleting the experiment: {}", e.getMessage());
+            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         }
     }
 

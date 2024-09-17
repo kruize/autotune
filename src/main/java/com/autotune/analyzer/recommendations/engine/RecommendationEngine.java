@@ -24,6 +24,7 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.auth.AuthenticationStrategy;
@@ -1771,7 +1772,7 @@ public class RecommendationEngine {
             }
         } else if (kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
             // get data from the provided datasource in case of local monitoring
-            DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(dataSource);
+            DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSource);
             if (dataSourceInfo == null) {
                 throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
