@@ -19,6 +19,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,7 @@ public class DataSourceInfo {
     private final String serviceName;
     private final String namespace;
     private final URL url;
+    private AuthenticationConfig authenticationConfig;
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataSourceInfo.class);
 
@@ -115,6 +117,14 @@ public class DataSourceInfo {
             LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DATASOURCE_URL);
         }
         return dnsUrl;
+    }
+
+    public AuthenticationConfig getAuthenticationConfig() {
+        return authenticationConfig;
+    }
+
+    public void setAuthenticationConfig(AuthenticationConfig authenticationConfig) {
+        this.authenticationConfig = authenticationConfig;
     }
 
     @Override

@@ -16,6 +16,7 @@
 
 package com.autotune.common.utils;
 
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.utils.KruizeConstants;
 
 import java.sql.Timestamp;
@@ -247,14 +248,14 @@ public class CommonUtils {
 
     /**
      * Get the base datasource URL for running query
-     * @param url
+     * @param dataSourceInfo
      * @param datasource
      * @return
      */
-    public static String getBaseDataSourceUrl(String url, String datasource) {
+    public static String getBaseDataSourceUrl(DataSourceInfo dataSourceInfo, String datasource) {
         if (datasource.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
             return (new StringBuilder())
-                    .append(url)
+                    .append(dataSourceInfo.getUrl().toString())
                     .append("/api/v1/query?query=")
                     .toString();
         }

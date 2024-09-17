@@ -16,6 +16,9 @@
 package com.autotune.common.datasource.prometheus;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.auth.AuthenticationStrategy;
+import com.autotune.common.auth.AuthenticationStrategyFactory;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -71,18 +74,19 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
     /**
      * Check if a datasource is reachable, implementation of this function
      * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
-     * @param dataSourceURL String containing the url for the datasource
+     *
+     * @param dataSource The DataSourceInfo object containing information about the data source
      * @return DatasourceReachabilityStatus
      */
     @Override
-    public CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceURL) {
+    public CommonUtils.DatasourceReachabilityStatus isServiceable(DataSourceInfo dataSource) {
         String dataSourceStatus;
         Object queryResult;
 
         String query = KruizeConstants.DataSourceConstants.PROMETHEUS_REACHABILITY_QUERY;
         CommonUtils.DatasourceReachabilityStatus reachabilityStatus;
 
-        queryResult = this.getValueForQuery(dataSourceURL, query);
+        queryResult = this.getValueForQuery(dataSource, query);
 
         if (queryResult != null){
             dataSourceStatus = queryResult.toString();
@@ -100,14 +104,15 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * executes specified query on datasource and returns the result value
-     * @param url String containing the url for the datasource
-     * @param query String containing the query to be executed
+     *
+     * @param dataSource The DataSourceInfo object containing information about the data source
+     * @param query      String containing the query to be executed
      * @return Object containing the result value for the specified query
      */
     @Override
-    public Object getValueForQuery(String url, String query) {
+    public Object getValueForQuery(DataSourceInfo dataSource, String query) {
         try {
-            JSONObject jsonObject = getJsonObjectForQuery(url, query);
+            JSONObject jsonObject = getJsonObjectForQuery(dataSource, query);
 
             if (null == jsonObject) {
                 return null;
@@ -131,18 +136,21 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * executes specified query on datasource and returns the JSON Object
-     * @param url String containing the url for the datasource
-     * @param query String containing the query to be executed
+     *
+     * @param dataSource The DataSourceInfo object containing information about the data source
+     * @param query      String containing the query to be executed
      * @return JSONObject for the specified query
      */
     @Override
-    public JSONObject getJsonObjectForQuery(String url, String query) {
-        GenericRestApiClient apiClient = new GenericRestApiClient(
-                CommonUtils.getBaseDataSourceUrl(
-                        url,
-                        KruizeConstants.SupportedDatasources.PROMETHEUS
-                )
-        );
+    public JSONObject getJsonObjectForQuery(DataSourceInfo dataSource, String query) {
+        AuthenticationStrategy authenticationStrategy = AuthenticationStrategyFactory.createAuthenticationStrategy(
+                dataSource.getAuthenticationConfig());
+        // Create the client
+        GenericRestApiClient apiClient = new GenericRestApiClient(authenticationStrategy);
+        apiClient.setBaseURL(CommonUtils.getBaseDataSourceUrl(
+                dataSource,
+                KruizeConstants.SupportedDatasources.PROMETHEUS
+        ));
 
         if (null == apiClient) {
             return null;
@@ -190,8 +198,9 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * executes specified query on datasource and returns the result array
-     * @param url String containing the url for the datasource
-     * @param query String containing the query to be executed
+     *
+     * @param dataSource DatasourceInfo object containing the datasource details
+     * @param query      String containing the query to be executed
      * @return JsonArray containing the result array for the specified query
      *
      * Example output JsonArray -
@@ -206,9 +215,9 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      */
 
     @Override
-    public JsonArray getResultArrayForQuery(String url, String query) {
+    public JsonArray getResultArrayForQuery(DataSourceInfo dataSource, String query) {
         try {
-            JSONObject jsonObject = getJsonObjectForQuery(url, query);
+            JSONObject jsonObject = getJsonObjectForQuery(dataSource, query);
 
             if (null == jsonObject) {
                 return null;

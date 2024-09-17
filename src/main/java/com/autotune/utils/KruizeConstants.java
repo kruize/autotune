@@ -723,4 +723,26 @@ public class KruizeConstants {
         public static final String notification_format_for_METRICS = "%s|%s|%s"; //termname,modelname,type
 
     }
+
+    public static final class AuthenticationConstants {
+        public static final String AUTHENTICATION = "authentication";
+        public static final String AUTHENTICATION_TYPE = "type";
+        public static final String AUTHENTICATION_CREDENTIALS = "credentials";
+        public static final String AUTHENTICATION_USERNAME = "username";
+        public static final String AUTHENTICATION_PASSWORD = "password";
+        public static final String AUTHENTICATION_TOKEN_FILE = "tokenFilePath";
+        public static final String AUTHENTICATION_API_KEY = "apiKey";
+        public static final String AUTHENTICATION_HEADER_NAME = "header";
+        public static final String AUTHENTICATION_TOKEN_ENDPOINT = "tokenEndpoint";
+        public static final String AUTHENTICATION_CLIENT_ID = "clientId";
+        public static final String AUTHENTICATION_CLIENT_SECRET = "clientSecret";
+        public static final String AUTHENTICATION_GRANT_TYPE = "grantType";
+        public static final String BASIC = "basic";
+        public static final String BEARER = "bearer";
+        public static final String API_KEY = "apikey";
+        public static final String OAUTH2 = "oauth2";
+        public static final String UNKNOWN_AUTHENTICATION = "Unknown authentication type: ";
+        public static final String AUTHORIZATION = "Authorization";
+
+    }
 }

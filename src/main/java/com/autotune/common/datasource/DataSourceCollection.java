@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.exceptions.datasource.*;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.utils.CommonUtils;
@@ -83,7 +84,6 @@ public class DataSourceCollection {
     public void addDataSource(DataSourceInfo datasource) {
         final String name = datasource.getName();
         final String provider = datasource.getProvider();
-        final String url = datasource.getUrl().toString();
         ValidationOutputData addedToDB = null;
 
         LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE + name);
@@ -96,7 +96,7 @@ public class DataSourceCollection {
             if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
                 LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY + name);
                 DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
-                if (op.isServiceable(url) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
+                if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
                     // add the data source to DB
                     addedToDB = new ExperimentDBService().addDataSourceToDB(datasource);
@@ -153,7 +153,11 @@ public class DataSourceCollection {
                 String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
                 String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
                 String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
+                JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
+                // create the corresponding authentication object
+                AuthenticationConfig authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
                 DataSourceInfo datasource = null;
+                // Validate input
                 if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) {
                     continue;
                 }
@@ -162,6 +166,8 @@ public class DataSourceCollection {
                 } else {
                     datasource = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL));
                 }
+                // set the authentication config
+                datasource.setAuthenticationConfig(authConfig);
                 addDataSource(datasource);
             }
         } catch (IOException e) {
