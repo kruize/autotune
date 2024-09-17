@@ -44,6 +44,7 @@ from helpers.short_term_list_reco_json_schema import *
 from helpers.list_reco_json_local_monitoring_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.import_metadata_json_validate import *
+from jinja2 import Environment, FileSystemLoader
 
 metric_profile_dir = get_metric_profile_dir()
 
@@ -116,11 +117,39 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     errorMsg = validate_list_metadata_json(list_metadata_json, list_metadata_json_verbose_true_schema)
     assert errorMsg == ""
 
+    # Generate a temporary JSON filename
+    tmp_json_file = "/tmp/create_exp_" + ".json"
+    print("tmp_json_file = ", tmp_json_file)
+
+    # Load the Jinja2 template
+    environment = Environment(loader=FileSystemLoader("../json_files/"))
+    template = environment.get_template("create_exp_template.json")
+
+    # Render the JSON content from the template
+    content = template.render(
+        version="v2.0", experiment_name="test-default-ns", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
+        mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="namespace", kubernetes_obj_type=None, name=None,
+        namespace=None, namespace_name="default", container_image_name=None, container_name=None, measurement_duration="15min", threshold="0.1"
+    )
+
+    # Convert rendered content to a dictionary
+    json_content = json.loads(content)
+    json_content[0]["kubernetes_objects"][0].pop("type")
+    json_content[0]["kubernetes_objects"][0].pop("name")
+    json_content[0]["kubernetes_objects"][0].pop("namespace")
+    json_content[0]["kubernetes_objects"][0].pop("containers")
+
+    # Write the final JSON to the temp file
+    with open(tmp_json_file, mode="w", encoding="utf-8") as message:
+        json.dump(json_content, message, indent=4)
+
+    # namespace exp json file
+    namespace_exp_json_file = tmp_json_file
 
     # delete tfb experiments
     tfb_exp_json_file = "../json_files/create_tfb_exp.json"
     tfb_db_exp_json_file = "../json_files/create_tfb_db_exp.json"
-    namespace_exp_json_file = "../json_files/create_namespace_exp.json"
+
 
     response = delete_experiment(tfb_exp_json_file)
     print("delete tfb exp = ", response.status_code)
