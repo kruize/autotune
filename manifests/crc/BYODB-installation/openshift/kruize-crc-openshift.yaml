@@ -68,7 +68,22 @@ data:
           "secretAccessKey": "",
           "logLevel": "INFO"
         }
-      }
+      },
+      "datasource": [
+        {
+          "name": "prometheus-1",
+          "provider": "prometheus",
+          "serviceName": "prometheus-k8s",
+          "namespace": "openshift-monitoring",
+          "url": "",
+          "authentication": {
+            "type": "bearer",
+            "credentials": {
+              "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            }
+          }
+        }
+      ]
     }
 ---
 apiVersion: apps/v1
