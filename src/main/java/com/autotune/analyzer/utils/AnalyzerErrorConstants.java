@@ -161,6 +161,16 @@ public class AnalyzerErrorConstants {
             }
         }
 
+        public static final class CreateExperimentAPI {
+            public static final String NAMESPACE_AND_CONTAINER_NOT_NULL = "Only one of Namespace or Container information can be specified.";
+            public static final String CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP = "Can not specify container data for namespace experiment";
+            public static final String NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP = "Can not specify namespace data for container experiment";
+
+            private CreateExperimentAPI() {
+
+            }
+        }
+
         public static final class UpdateRecommendationsAPI {
             public static final String EXPERIMENT_NAME_MANDATORY = KruizeConstants.JSONKeys.EXPERIMENT_NAME + " is mandatory";
             public static final String INTERVAL_END_TIME_MANDATORY = KruizeConstants.JSONKeys.INTERVAL_END_TIME + " is mandatory";

@@ -55,6 +55,46 @@ public class RecommendationUtils {
         return null;
     }
 
+    public static RecommendationConfigItem getCurrentValueForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap,
+                                                                       Timestamp timestampToExtract,
+                                                                       AnalyzerConstants.ResourceSetting resourceSetting,
+                                                                       AnalyzerConstants.RecommendationItem recommendationItem,
+                                                                       ArrayList<RecommendationConstants.RecommendationNotification> notifications) {
+        Double currentNamespaceValue = null;
+        String format = null;
+        AnalyzerConstants.MetricName metricName = null;
+        for (Timestamp timestamp : filteredResultsMap.keySet()) {
+            if (!timestamp.equals(timestampToExtract))
+                continue;
+            IntervalResults intervalResults = filteredResultsMap.get(timestamp);
+            if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
+                    metricName = AnalyzerConstants.MetricName.namespaceCpuRequest;
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
+                    metricName = AnalyzerConstants.MetricName.namespaceMemoryRequest;
+            }
+            if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
+                    metricName = AnalyzerConstants.MetricName.namespaceCpuLimit;
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
+                    metricName = AnalyzerConstants.MetricName.namespaceMemoryLimit;
+            }
+            if (null != metricName) {
+                if (intervalResults.getMetricResultsMap().containsKey(metricName)) {
+                    Optional<MetricResults> metricResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(metricName));
+                    currentNamespaceValue = metricResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(null);
+                    format = metricResults.map(m -> m.getAggregationInfoResult().getFormat()).orElse(null);
+                }
+                if (null == currentNamespaceValue) {
+                    setNotificationsFor(resourceSetting, recommendationItem, notifications);
+                }
+                return new RecommendationConfigItem(currentNamespaceValue, format);
+            }
+        }
+        setNotificationsFor(resourceSetting, recommendationItem, notifications);
+        return null;
+    }
+
     private static void setNotificationsFor(AnalyzerConstants.ResourceSetting resourceSetting,
                                             AnalyzerConstants.RecommendationItem recommendationItem,
                                             ArrayList<RecommendationConstants.RecommendationNotification> notifications) {

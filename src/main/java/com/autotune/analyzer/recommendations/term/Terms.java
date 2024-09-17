@@ -3,6 +3,7 @@ package com.autotune.analyzer.recommendations.term;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.data.result.NamespaceData;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,6 +113,80 @@ public class Terms {
             return true;
 
         return false;
+    }
+
+    public static boolean checkIfMinDataAvailableForTermForNamespace(NamespaceData namespaceData,
+                                                                     Terms term,
+                                                                     Timestamp monitoringEndTime,
+                                                                     double measurementDuration) {
+
+        // Check if data is available
+        if (null == namespaceData || null == namespaceData.getResults() || namespaceData.getResults().isEmpty()) {
+            return false;
+        }
+
+        // Initialize sum of durations
+        double sum = 0;
+
+        // Threshold in milliseconds
+        long thresholdInMillis = KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC;
+        LocalDateTime monitoringStartDateTime = monitoringEndTime.toLocalDateTime().minusDays(term.days);
+
+        double durationInSeconds = measurementDuration * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE;
+        try {
+            for (LocalDateTime current = monitoringEndTime.toLocalDateTime(); current.isAfter(monitoringStartDateTime); current = current.minusSeconds((long) durationInSeconds)) {
+                Timestamp currentTimestamp = Timestamp.valueOf(current);
+
+                // Check if the current timestamp exists in the resultsMap or within the tolerance range
+                Double diffInSec = getTimestampWithinTolerance(currentTimestamp, namespaceData.getResults().keySet(), thresholdInMillis);
+                if (namespaceData.getResults().containsKey(currentTimestamp) || diffInSec != null) {
+                    // If there's a change in the timestamp within the threshold value, add the difference in the duration
+                    if (diffInSec != null) {
+                        durationInSeconds += diffInSec;
+                    }
+                    sum += measurementDuration;
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while checking min data : {}", e.getMessage());
+            return false;
+        }
+
+        double minimumDurationInMins = term.getThreshold_in_days() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY *
+                KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
+
+        // Set bounds to check if we get minimum requirement satisfied
+        double lowerBound = minimumDurationInMins - MEASUREMENT_DURATION_BUFFER_IN_MINS;
+        // We don't consider upper bound to check if sum is in-between as we may over shoot and end-up resulting false
+        if (sum >= lowerBound) {
+            return true;
+        }
+        return false;
+    }
+
+    public static double getDurationSummationNamespace(NamespaceData namespaceData) {
+        double sum = 0.0;
+        for (IntervalResults intervalResults : namespaceData.getResults().values()) {
+            sum = sum + intervalResults.getDurationInMinutes();
+        }
+        return sum;
+    }
+
+    public static void setDurationBasedOnTermNamespace(NamespaceData namespaceData,
+                                                       TermRecommendations mappedRecommendationForTerm,
+                                                       String recommendationTerm) {
+
+        double durationSummation = getDurationSummationNamespace(namespaceData);
+        durationSummation = Double.parseDouble(String.format("%.1f", durationSummation));
+        // Get the maximum duration allowed for the term
+        double maxDurationInHours = getMaxDuration(recommendationTerm);
+        double maxDurationInMinutes = maxDurationInHours * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
+        // Set durationSummation to the maximum duration if it exceeds the maximum duration
+        if (durationSummation > maxDurationInMinutes) {
+            durationSummation = maxDurationInMinutes;
+        }
+        double durationSummationInHours = durationSummation / KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
+        mappedRecommendationForTerm.setDurationInHrs(durationSummationInHours);
     }
 
     private static Double getTimestampWithinTolerance(Timestamp currentTimestamp, Set<Timestamp> timestamps, long toleranceInMillis) {

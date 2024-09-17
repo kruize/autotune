@@ -56,6 +56,7 @@ public class KruizeConstants {
         public static final String GET = "get";
         public static final String SET = "set";
         public static final String CONTAINER_USAGE_INFO = "Determine the date of the last activity for the container based on its usage. ";
+        public static final String NAMESPACE_USAGE_INFO = "Determine the date of the last activity for the namespace based on its usage. ";
         public static final String RECOMMENDATION_TERM = "recommendationTerm : %s";
         public static final String MONITORING_START_TIME = "monitoringStartTime : %s";
         public static final String EXPERIMENT_DATASOURCE = "Experiment: %s,  Datasource: %s";
