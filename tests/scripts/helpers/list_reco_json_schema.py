@@ -445,4 +445,3 @@ list_reco_json_schema = {
   }
 }
 
-
