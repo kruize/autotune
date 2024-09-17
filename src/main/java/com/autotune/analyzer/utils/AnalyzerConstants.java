@@ -175,6 +175,7 @@ public class AnalyzerConstants {
         namespaceMemoryRSS,
         namespaceTotalPods,
         namespaceRunningPods,
+        namespaceMaxDate,
         gpuCoreUsage,
         gpuMemoryUsage
     }
@@ -193,6 +194,14 @@ public class AnalyzerConstants {
         SUCCESS,
         ALREADY_EXISTS,
         INVALID
+    }
+
+    public static final class ExperimentTypes {
+        public static final String NAMESPACE_EXPERIMENT = "namespace";
+        public static final String CONTAINER_EXPERIMENT = "container";
+
+        private ExperimentTypes() {
+        }
     }
 
     /**
