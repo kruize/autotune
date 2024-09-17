@@ -120,12 +120,16 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     # delete tfb experiments
     tfb_exp_json_file = "../json_files/create_tfb_exp.json"
     tfb_db_exp_json_file = "../json_files/create_tfb_db_exp.json"
+    namespace_exp_json_file = "../json_files/create_namespace_exp.json"
 
     response = delete_experiment(tfb_exp_json_file)
     print("delete tfb exp = ", response.status_code)
 
     response = delete_experiment(tfb_db_exp_json_file)
     print("delete tfb_db exp = ", response.status_code)
+
+    response = delete_experiment(namespace_exp_json_file)
+    print("delete namespace exp = ", response.status_code)
 
     #Install default metric profile
     metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
@@ -175,6 +179,16 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
+    # create namespace experiment
+    response = create_experiment(namespace_exp_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
     # Wait for the container to complete
     wait_for_container_to_complete(container_id)
 
@@ -186,6 +200,10 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     json_file = open(tfb_db_exp_json_file, "r")
     input_json = json.loads(json_file.read())
     tfb_db_exp_name = input_json[0]['experiment_name']
+
+    json_file = open(namespace_exp_json_file, "r")
+    input_json = json.loads(json_file.read())
+    namespace_exp_name = input_json[0]['experiment_name']
 
 
     response = generate_recommendations(tfb_exp_name)
@@ -220,6 +238,22 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     tfb_db_exp_json = read_json_data_from_file(tfb_db_exp_json_file)
     validate_local_monitoring_reco_json(tfb_db_exp_json[0], list_reco_json[0])
 
+    response = generate_recommendations(namespace_exp_name)
+    assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Invoke list recommendations for the specified experiment
+    response = list_recommendations(namespace_exp_name)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    list_reco_json = response.json()
+
+    # Validate the json against the json schema
+    errorMsg = validate_list_reco_json(list_reco_json, list_reco_namespace_json_local_monitoring_schema)
+    assert errorMsg == ""
+
+    # Validate the json values
+    namespace_exp_json = read_json_data_from_file(namespace_exp_json_file)
+    validate_local_monitoring_reco_json(namespace_exp_json[0], list_reco_json[0])
+
     # Delete tfb experiment
     response = delete_experiment(tfb_exp_json_file)
     print("delete exp = ", response.status_code)
@@ -227,6 +261,11 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
 
     # Delete tfb_db experiment
     response = delete_experiment(tfb_db_exp_json_file)
+    print("delete exp = ", response.status_code)
+    assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Delete namespace experiment
+    response = delete_experiment(namespace_exp_json_file)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
 

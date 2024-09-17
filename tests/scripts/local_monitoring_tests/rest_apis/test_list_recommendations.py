@@ -25,7 +25,7 @@ from helpers.all_terms_list_reco_json_schema import all_terms_list_reco_json_sch
 from helpers.fixtures import *
 from helpers.generate_rm_jsons import *
 from helpers.kruize import *
-from helpers.list_reco_json_schema import *
+from helpers.list_reco_json_local_monitoring_schema import *
 from helpers.medium_and_long_term_list_reco_json_schema import medium_and_long_term_list_reco_json_schema
 from helpers.medium_term_list_reco_json_schema import *
 from helpers.long_term_list_reco_json_schema import *
@@ -73,8 +73,12 @@ def test_list_recommendations_namespace_single_result(cluster_type):
     list_reco_json = response.json()
 
     # Validate the json against the json schema
-    errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_schema_for_namespace_reco)
+    errorMsg = validate_list_reco_json(list_reco_json, list_reco_namespace_json_local_monitoring_schema)
     assert errorMsg == ""
+
+    # Validate the json values
+    namespace_exp_json = read_json_data_from_file(input_json_file)
+    validate_local_monitoring_reco_json(namespace_exp_json[0], list_reco_json[0])
 
     # Delete experiment
     response = delete_experiment(input_json_file)
