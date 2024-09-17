@@ -2,7 +2,7 @@
   "version": "v2.0",
   "experiment_name": "monitor_tfb_benchmark",
   "cluster_name": "default",
-  "performance_profile": "resource-optimization-openshift",
+  "performance_profile": "resource-optimization-local-monitoring",
   "mode": "monitor",
   "target_cluster": "local",
   "datasource": "prometheus-1",

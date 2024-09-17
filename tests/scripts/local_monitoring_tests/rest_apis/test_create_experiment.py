@@ -268,3 +268,27 @@ def test_create_conatiner_exp_with_namespace(cluster_type):
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+
+@pytest.mark.negative
+def test_create_multiple_namespace_exp(cluster_type):
+    """
+    Test Description: This test validates the response status code of createExperiment API
+    if multiple entries are presnet in create experiment json
+    """
+    input_json_file = "../json_files/create_multiple_namespace_exp.json"
+    form_kruize_url(cluster_type)
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)

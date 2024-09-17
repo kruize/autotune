@@ -83,6 +83,13 @@ Here are the test scenarios:
 - Create experiment specifying both namespaces and containers specifying the container experiment type
 - Create namespace experiment specifying containers 
 - Create container experiment specifying namespaces
+- Create multiple experiments with valid namespace
+
+### **List Recommendations API tests**
+
+Here are the test scenarios:
+
+- List recommendations for a valid namespace experiment
 
 
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
