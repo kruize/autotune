@@ -30,6 +30,8 @@ from helpers.medium_and_long_term_list_reco_json_schema import medium_and_long_t
 from helpers.medium_term_list_reco_json_schema import *
 from helpers.long_term_list_reco_json_schema import *
 from helpers.list_reco_json_validate import *
+from helpers.list_metric_profiles_validate import *
+from helpers.list_metric_profiles_without_parameters_schema import *
 from helpers.short_and_long_term_list_reco_json_schema import short_and_long_term_list_reco_json_schema
 from helpers.short_and_medium_term_list_reco_json_schema import short_and_medium_term_list_reco_json_schema
 from helpers.short_term_list_reco_json_schema import short_term_list_reco_json_schema
@@ -37,8 +39,10 @@ from helpers.utils import *
 from jinja2 import Environment, FileSystemLoader
 
 
+metric_profile_dir = get_metric_profile_dir()
 
 @pytest.mark.sanity
+@pytest.mark.namespace_tests
 @pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
     [
         ("list_reco_default_cluster1", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-1", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1"),
@@ -108,6 +112,34 @@ def test_list_recommendations_namespace_single_result(test_name, expected_status
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+
+    #Install default metric profile
+    metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
+    response = delete_metric_profile(metric_profile_json_file)
+    print("delete metric profile = ", response.status_code)
+
+    # Create metric profile using the specified json
+    response = create_metric_profile(metric_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    json_file = open(metric_profile_json_file, "r")
+    input_json = json.loads(json_file.read())
+    metric_profile_name = input_json['metadata']['name']
+    assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
+
+    response = list_metric_profiles(name=metric_profile_name, logging=False)
+    metric_profile_json = response.json()
+
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    errorMsg = validate_list_metric_profiles_json(metric_profile_json, list_metric_profiles_schema)
+    assert errorMsg == ""
 
     # Create namespace experiment using the specified json
     response = create_experiment(input_json_file)

@@ -50,6 +50,7 @@ metric_profile_dir = get_metric_profile_dir()
 
 
 @pytest.mark.test_e2e
+@pytest.mark.namespace_tests
 def test_list_recommendations_namespace_exps(cluster_type):
     """
     Test Description: This test validates list recommendations for multiple experiments posted using different json files
@@ -250,9 +251,9 @@ def test_list_recommendations_namespace_exps(cluster_type):
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
     # Wait for the container to complete
-#     wait_for_container_to_complete(container_id1)
-#     wait_for_container_to_complete(container_id2)
-#     wait_for_container_to_complete(container_id3)
+    wait_for_container_to_complete(container_id1)
+    wait_for_container_to_complete(container_id2)
+    wait_for_container_to_complete(container_id3)
 
 
     # generate recommendations
