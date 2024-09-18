@@ -48,6 +48,7 @@ mandatory_fields = [
 csvfile = "/tmp/create_exp_test_data.csv"
 
 @pytest.mark.sanity
+@pytest.mark.namespace
 @pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
     [
         ("valid_namespace_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1"),
@@ -138,6 +139,7 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
 
 
 @pytest.mark.negative
+@pytest.mark.namespace
 @pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
     [
         ("invalid_namespace_exp_without_exp_type", ERROR_500_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", None, None, None, None, "default", None, None, "15min", "0.1"),
