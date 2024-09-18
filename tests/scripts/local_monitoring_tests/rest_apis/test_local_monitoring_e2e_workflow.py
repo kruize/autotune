@@ -50,7 +50,6 @@ metric_profile_dir = get_metric_profile_dir()
 
 
 @pytest.mark.test_e2e
-@pytest.mark.namespace
 def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_type):
     """
     Test Description: This test validates list recommendations for multiple experiments posted using different json files

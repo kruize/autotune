@@ -39,7 +39,6 @@ from jinja2 import Environment, FileSystemLoader
 
 
 @pytest.mark.sanity
-@pytest.mark.namespace
 @pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
     [
         ("list_reco_default_namespace", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1"),
