@@ -24,9 +24,7 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
-import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.auth.AuthenticationStrategy;
 import com.autotune.common.auth.AuthenticationStrategyFactory;
 import com.autotune.common.exceptions.DataSourceNotExist;
@@ -46,9 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
@@ -1772,15 +1767,11 @@ public class RecommendationEngine {
             }
         } else if (kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
             // get data from the provided datasource in case of local monitoring
-            // fetch the DatasourceInfo object from the DB based on datasource name
-            DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(dataSource);
-            // If the DB result is invalid, check the DataSourceCollection
-            if (CommonUtils.isInvalidDataSource(dataSourceInfo)) {
-                dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSource);
-                // If DataSourceCollection is also invalid, return with error
-                if (CommonUtils.isInvalidDataSource(dataSourceInfo)) {
-                    throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DATASOURCE_INFO);
-                }
+            DataSourceInfo dataSourceInfo;
+            try {
+                dataSourceInfo = CommonUtils.getDataSourceInfo(dataSource);
+            } catch (Exception e) {
+                throw new DataSourceNotExist(e.getMessage());
             }
             // Fetch metrics dynamically from Metric Profile based on the datasource
             fetchMetricsBasedOnProfileAndDatasource(kruizeObject, interval_end_time, intervalStartTime, dataSourceInfo);
