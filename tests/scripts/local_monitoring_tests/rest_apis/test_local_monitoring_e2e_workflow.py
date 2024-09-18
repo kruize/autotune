@@ -219,7 +219,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
     # Wait for the container to complete
-    wait_for_container_to_complete(container_id)
+#     wait_for_container_to_complete(container_id)
 
     # generate recommendations
     json_file = open(tfb_exp_json_file, "r")

@@ -250,9 +250,9 @@ def test_list_recommendations_namespace_exps(cluster_type):
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
     # Wait for the container to complete
-    wait_for_container_to_complete(container_id1)
-    wait_for_container_to_complete(container_id2)
-    wait_for_container_to_complete(container_id3)
+#     wait_for_container_to_complete(container_id1)
+#     wait_for_container_to_complete(container_id2)
+#     wait_for_container_to_complete(container_id3)
 
 
     # generate recommendations
