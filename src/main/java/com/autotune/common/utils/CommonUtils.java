@@ -293,4 +293,10 @@ public class CommonUtils {
 
         return ((newer - older)/older) * 100;
     }
+
+    // Helper method to validate the DataSourceInfo object
+    public static boolean isInvalidDataSource(DataSourceInfo datasource) {
+        return datasource == null || datasource.getAuthenticationConfig() == null ||
+                datasource.getAuthenticationConfig().toString().isEmpty();
+    }
 }

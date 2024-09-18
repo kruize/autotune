@@ -1772,9 +1772,15 @@ public class RecommendationEngine {
             }
         } else if (kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
             // get data from the provided datasource in case of local monitoring
-            DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSource);
-            if (dataSourceInfo == null) {
-                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            // fetch the DatasourceInfo object from the DB based on datasource name
+            DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(dataSource);
+            // If the DB result is invalid, check the DataSourceCollection
+            if (CommonUtils.isInvalidDataSource(dataSourceInfo)) {
+                dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSource);
+                // If DataSourceCollection is also invalid, return with error
+                if (CommonUtils.isInvalidDataSource(dataSourceInfo)) {
+                    throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DATASOURCE_INFO);
+                }
             }
             // Fetch metrics dynamically from Metric Profile based on the datasource
             fetchMetricsBasedOnProfileAndDatasource(kruizeObject, interval_end_time, intervalStartTime, dataSourceInfo);

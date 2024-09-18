@@ -27,6 +27,7 @@ import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.common.datasource.DataSourceMetadataValidation;
+import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
@@ -115,18 +116,22 @@ public class DSMetadataService extends HttpServlet {
             if (validationOutputData.isSuccess()) {
 
                 String dataSourceName = metadataAPIObject.getDataSourceName();
-                // fetch the DatasourceInfo object from the DataSourceCollection based on datasource name
-                DataSourceInfo datasource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
-
-                if (datasource == null) {
-                    sendErrorResponse(
-                            inputData,
-                            response,
-                            new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
-                            HttpServletResponse.SC_BAD_REQUEST,
-                            String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_IMPORT_ERROR_MSG, dataSourceName)
-                    );
-                    return;
+                // fetch the DatasourceInfo object from the DB based on datasource name
+                DataSourceInfo datasource = dataSourceManager.fetchDataSourceFromDBByName(dataSourceName);
+                // If the DB result is invalid, check the DataSourceCollection
+                if (CommonUtils.isInvalidDataSource(datasource)) {
+                    datasource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
+                    // If DataSourceCollection is also invalid, return with error
+                    if (CommonUtils.isInvalidDataSource(datasource)) {
+                        sendErrorResponse(
+                                inputData,
+                                response,
+                                new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_IMPORT_ERROR_MSG, dataSourceName)
+                        );
+                        return;
+                    }
                 }
 
                 DataSourceMetadataInfo metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource);
