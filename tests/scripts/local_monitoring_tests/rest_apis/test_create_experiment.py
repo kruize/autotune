@@ -224,6 +224,7 @@ def test_create_multiple_namespace_exp(cluster_type):
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
+    # validate error message
     assert data['message'] == CREATE_EXP_BULK_ERROR_MSG
 
     response = delete_experiment(input_json_file)
