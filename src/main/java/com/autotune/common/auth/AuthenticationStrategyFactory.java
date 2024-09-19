@@ -7,6 +7,8 @@ public class AuthenticationStrategyFactory {
     public static AuthenticationStrategy createAuthenticationStrategy(AuthenticationConfig authConfig) {
         String type = authConfig.getType();
         switch (type) {
+            case KruizeConstants.AuthenticationConstants.NONE:
+                return new NoAuthStrategy();
             case KruizeConstants.AuthenticationConstants.BASIC:
                 String username = authConfig.getCredentials().getUsername();
                 String password = authConfig.getCredentials().getPassword();

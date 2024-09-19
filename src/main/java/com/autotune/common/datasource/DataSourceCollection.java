@@ -153,10 +153,17 @@ public class DataSourceCollection {
                 String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
                 String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
                 String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
-                JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
-                // create the corresponding authentication object
-                AuthenticationConfig authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
-                DataSourceInfo datasource = null;
+                AuthenticationConfig authConfig;
+                try {
+                    JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
+                    // create the corresponding authentication object
+                    authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
+                } catch (Exception e) {
+                    LOGGER.warn("Auth details are missing for datasource: {}", name);
+                    authConfig = AuthenticationConfig.noAuth();
+                }
+
+                DataSourceInfo datasource;
                 // Validate input
                 if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) {
                     continue;

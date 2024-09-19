@@ -298,11 +298,11 @@ public class CommonUtils {
 
     public static DataSourceInfo getDataSourceInfo(String dataSourceName) throws Exception {
         DataSourceManager dataSourceManager = new DataSourceManager();
-        // fetch the datasource from the DB
-        DataSourceInfo datasource = dataSourceManager.fetchDataSourceFromDBByName(dataSourceName);
+        // fetch the datasource from the config file first
+        DataSourceInfo datasource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
         if (isInvalidDataSource(datasource)) {
-            // fetch the datasource from the config
-            datasource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
+            // fetch the datasource from the DB
+            datasource = dataSourceManager.fetchDataSourceFromDBByName(dataSourceName);
             if (isInvalidDataSource(datasource)) {
                 throw new Exception(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DATASOURCE_INFO);
             }

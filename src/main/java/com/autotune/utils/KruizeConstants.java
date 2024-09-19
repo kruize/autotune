@@ -738,6 +738,7 @@ public class KruizeConstants {
         public static final String AUTHENTICATION_CLIENT_ID = "clientId";
         public static final String AUTHENTICATION_CLIENT_SECRET = "clientSecret";
         public static final String AUTHENTICATION_GRANT_TYPE = "grantType";
+        public static final String NONE = "none";
         public static final String BASIC = "basic";
         public static final String BEARER = "bearer";
         public static final String API_KEY = "apikey";

@@ -165,10 +165,8 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
         String queryURL = dataSourceURL + queryEndpoint + query;
         LOGGER.debug("Query URL is: {}", queryURL);
         try {
-            AuthenticationStrategy authenticationStrategy = AuthenticationStrategyFactory.createAuthenticationStrategy(
-                    dataSource.getAuthenticationConfig());
             // Create the client
-            GenericRestApiClient genericRestApiClient = new GenericRestApiClient(authenticationStrategy);
+            GenericRestApiClient genericRestApiClient = new GenericRestApiClient(dataSource);
             genericRestApiClient.setBaseURL(dataSourceURL + queryEndpoint);
             JSONObject responseJson = genericRestApiClient.fetchMetricsJson("GET", query);
             int level = 0;
