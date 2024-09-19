@@ -43,7 +43,7 @@ function local_monitoring_tests() {
 	target="crc"
 	metric_profile_json="${METRIC_PROFILE_DIR}/resource_optimization_local_monitoring.json"
 
-	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e" )
+	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
