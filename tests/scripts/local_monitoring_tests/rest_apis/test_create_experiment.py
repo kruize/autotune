@@ -22,31 +22,6 @@ from helpers.kruize import *
 from helpers.utils import *
 from jinja2 import Environment, FileSystemLoader
 
-mandatory_fields = [
-    ("version", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("cluster_name", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("experiment_name", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("mode", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("target_cluster", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("kubernetes_objects", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("type", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("kubernetes_objects_name", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("namespace", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("containers", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("container_image_name", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("container_name", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("selector", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
-    ("namespace", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("performance_profile", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("slo", SUCCESS_STATUS_CODE, SUCCESS_STATUS),
-    ("recommendation_settings", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("trial_settings", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("kubernetes_objects_name_selector", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("performance_profile_slo", ERROR_STATUS_CODE, ERROR_STATUS)
-]
-
-csvfile = "/tmp/create_exp_test_data.csv"
-
 @pytest.mark.sanity
 @pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
     [
@@ -249,6 +224,7 @@ def test_create_multiple_namespace_exp(cluster_type):
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
+    assert data['message'] == CREATE_EXP_BULK_ERROR_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)

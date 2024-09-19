@@ -61,15 +61,6 @@ def test_list_recommendations_namespace_single_result(test_name, expected_status
     environment = Environment(loader=FileSystemLoader("../json_files/"))
     template = environment.get_template("create_exp_template.json")
 
-    # In case of test_name with "null", strip the specific fields
-    if "null" in test_name:
-         field = test_name.replace("null_", "")
-         json_file = "../json_files/create_exp_template.json"
-         filename = "/tmp/create_exp_template.json"
-         strip_double_quotes_for_field(json_file, field, filename)
-         environment = Environment(loader=FileSystemLoader("/tmp/"))
-         template = environment.get_template("create_exp_template.json")
-
     # Render the JSON content from the template
     content = template.render(
         version=version,
