@@ -25,7 +25,6 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.auth.AuthenticationStrategy;
 import com.autotune.common.auth.AuthenticationStrategyFactory;
 import com.autotune.common.exceptions.DataSourceNotExist;
@@ -45,9 +44,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
 import java.sql.Timestamp;
@@ -1771,9 +1767,11 @@ public class RecommendationEngine {
             }
         } else if (kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
             // get data from the provided datasource in case of local monitoring
-            DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(dataSource);
-            if (dataSourceInfo == null) {
-                throw new DataSourceNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            DataSourceInfo dataSourceInfo;
+            try {
+                dataSourceInfo = CommonUtils.getDataSourceInfo(dataSource);
+            } catch (Exception e) {
+                throw new DataSourceNotExist(e.getMessage());
             }
             // Fetch metrics dynamically from Metric Profile based on the datasource
             fetchMetricsBasedOnProfileAndDatasource(kruizeObject, interval_end_time, intervalStartTime, dataSourceInfo);
@@ -1975,10 +1973,8 @@ public class RecommendationEngine {
             long interval_end_time_epoc = 0;
             long interval_start_time_epoc = 0;
             SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
-            AuthenticationStrategy authenticationStrategy = AuthenticationStrategyFactory.createAuthenticationStrategy(
-                    dataSourceInfo.getAuthenticationConfig());
             // Create the client
-            GenericRestApiClient client = new GenericRestApiClient(authenticationStrategy);
+            GenericRestApiClient client = new GenericRestApiClient(dataSourceInfo);
 
             String metricProfileName = kruizeObject.getPerformanceProfile();
             PerformanceProfile metricProfile = MetricProfileCollection.getInstance().getMetricProfileCollection().get(metricProfileName);

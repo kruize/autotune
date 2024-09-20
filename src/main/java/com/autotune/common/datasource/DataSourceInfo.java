@@ -135,6 +135,7 @@ public class DataSourceInfo {
                 ", serviceName='" + serviceName + '\'' +
                 ", namespace='" + namespace + '\'' +
                 ", url=" + url +
+                ", authenticationConfig=" + authenticationConfig +
                 '}';
     }
 }

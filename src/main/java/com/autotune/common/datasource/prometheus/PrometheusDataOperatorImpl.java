@@ -143,10 +143,8 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      */
     @Override
     public JSONObject getJsonObjectForQuery(DataSourceInfo dataSource, String query) {
-        AuthenticationStrategy authenticationStrategy = AuthenticationStrategyFactory.createAuthenticationStrategy(
-                dataSource.getAuthenticationConfig());
         // Create the client
-        GenericRestApiClient apiClient = new GenericRestApiClient(authenticationStrategy);
+        GenericRestApiClient apiClient = new GenericRestApiClient(dataSource);
         apiClient.setBaseURL(CommonUtils.getBaseDataSourceUrl(
                 dataSource,
                 KruizeConstants.SupportedDatasources.PROMETHEUS

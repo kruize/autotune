@@ -16,6 +16,8 @@
 package com.autotune.utils;
 
 import com.autotune.common.auth.AuthenticationStrategy;
+import com.autotune.common.auth.AuthenticationStrategyFactory;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.utils.authModels.APIKeysAuthentication;
 import com.autotune.utils.authModels.BasicAuthentication;
 import com.autotune.utils.authModels.BearerAccessToken;
@@ -57,11 +59,13 @@ public class GenericRestApiClient {
     private AuthenticationStrategy authenticationStrategy;
 
     /**
-     * Initializes a new instance just by passing baseURL which does not need any authentication.
-     * @param authenticationStrategy
+     * constructor to set the authentication based on the datasourceInfo object
+     * @param dataSourceInfo object containing the datasource details
      */
-    public GenericRestApiClient(AuthenticationStrategy authenticationStrategy) {
-        this.authenticationStrategy = authenticationStrategy;
+    public GenericRestApiClient(DataSourceInfo dataSourceInfo) {
+        // TODO: add partial URL as well as part of this constructor
+        this.authenticationStrategy = AuthenticationStrategyFactory.createAuthenticationStrategy(
+                dataSourceInfo.getAuthenticationConfig());
     }
 
     /**

@@ -16,7 +16,9 @@
 
 package com.autotune.common.utils;
 
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.utils.KruizeConstants;
 
 import java.sql.Timestamp;
@@ -292,5 +294,25 @@ public class CommonUtils {
             return 0.0;
 
         return ((newer - older)/older) * 100;
+    }
+
+    public static DataSourceInfo getDataSourceInfo(String dataSourceName) throws Exception {
+        DataSourceManager dataSourceManager = new DataSourceManager();
+        // fetch the datasource from the config file first
+        DataSourceInfo datasource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
+        if (isInvalidDataSource(datasource)) {
+            // fetch the datasource from the DB
+            datasource = dataSourceManager.fetchDataSourceFromDBByName(dataSourceName);
+            if (isInvalidDataSource(datasource)) {
+                throw new Exception(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DATASOURCE_INFO);
+            }
+        }
+        return datasource;
+    }
+
+    // Helper method to validate the DataSourceInfo object
+    public static boolean isInvalidDataSource(DataSourceInfo datasource) {
+        return datasource == null || datasource.getAuthenticationConfig() == null ||
+                datasource.getAuthenticationConfig().toString().isEmpty();
     }
 }
