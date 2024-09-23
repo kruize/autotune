@@ -20,6 +20,8 @@ import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.utils.KruizeConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.Calendar;
@@ -33,88 +35,11 @@ import java.util.regex.Pattern;
  * This Class holds the utilities needed by the classes in common package
  */
 public class CommonUtils {
-
-    /**
-     * AutotuneDatasourceTypes is an ENUM which holds different types of
-     * datasources supported by Autotune
-     *
-     * For now only Queryable and File based datasources are supported
-     */
-    public enum AutotuneDatasourceTypes {
-        /**
-         * If the datasource is queryable (datastore, database)
-         */
-        QUERYABLE,
-        /**
-         * If the datasource is file based (Cgroup files)
-         */
-        FILE,
-    }
-
-    /**
-     * AddDataSourceStatus is an ENUM which holds the possible statuses
-     * to return for adding a datasource to a collection in Autotune
-     *
-     * For now Success and Datasource not reachable are two possibilities
-     * Failure status is parked as a placeholder for now to fit for an exact use case which might arise
-     */
-    public enum AddDataSourceStatus {
-        SUCCESS,
-        FAILURE,
-        DATASOURCE_NOT_REACHABLE
-    }
-
-    /**
-     * DatasourceReachabilityStatus is a ENUM which holds the possible statuses
-     * to return for checking if a datasource is reachable
-     *
-     * REACHABLE - states that the datasource is reachable
-     * NOT_REACHABLE - states that the datasource is not reachable
-     */
-    public enum DatasourceReachabilityStatus {
-        REACHABLE,
-        NOT_REACHABLE,
-    }
-
-    /**
-     * DatasourceReliabilityStatus is a ENUM which holds the possible statuses
-     * to return for checking if a datasource is reliable
-     *
-     * RELIABLE - states that the datasource is reliable
-     * NOT_RELIABLE -  states that the datasource is not reliable
-     */
-    public enum DatasourceReliabilityStatus {
-        /**
-         * We set the status as Reliable if the datasource is up and running and it provides information
-         */
-        RELIABLE,
-        /**
-         * We set the status as Not Reliable if the datasource is up and not providing information
-         */
-        NOT_RELIABLE,
-    }
-
-    /**
-     * QueryValidity is an ENUM which holds the possible validity status to be
-     * returned after performing a query validation
-     */
-    public enum QueryValidity {
-        // If the query check is done and the query is found to be valid
-        VALID,
-        // If the query is found to be having invalid parameters
-        INVALID_PARAMS,
-        // If the query is found to be having invalid time ranges
-        INVALID_RANGE,
-        // If the query itself is found to be invalid
-        INVALID_QUERY,
-        // If the query is empty
-        EMPTY_QUERY,
-        // If the query is null
-        NULL_QUERY
-    }
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommonUtils.class);
 
     /**
      * Extracts the time value (digits) from a time string
+     *
      * @param timestr
      * @return
      */
@@ -133,6 +58,7 @@ public class CommonUtils {
     /**
      * Extracts the time units (time measurement units eg: seconds, minutes etc)
      * from a time string
+     *
      * @param timestr
      * @return
      */
@@ -171,6 +97,7 @@ public class CommonUtils {
 
     /**
      * Returns the short string representation of a time unit
+     *
      * @param timeUnit
      * @return
      */
@@ -184,9 +111,9 @@ public class CommonUtils {
         return null;
     }
 
-
     /**
      * Converts the time unit to seconds
+     *
      * @param unit
      * @return
      */
@@ -204,6 +131,7 @@ public class CommonUtils {
 
     /**
      * Checks if the query has a time range
+     *
      * @param query
      * @return
      */
@@ -219,6 +147,7 @@ public class CommonUtils {
 
     /**
      * Extracts the time range from a query
+     *
      * @param query
      * @return
      */
@@ -230,6 +159,7 @@ public class CommonUtils {
 
     /**
      * Checks if two time strings represent same time
+     *
      * @param timeStrOne
      * @param timeStrTwo
      * @return
@@ -250,6 +180,7 @@ public class CommonUtils {
 
     /**
      * Get the base datasource URL for running query
+     *
      * @param dataSourceInfo
      * @param datasource
      * @return
@@ -293,13 +224,14 @@ public class CommonUtils {
         if (older == 0)
             return 0.0;
 
-        return ((newer - older)/older) * 100;
+        return ((newer - older) / older) * 100;
     }
 
     public static DataSourceInfo getDataSourceInfo(String dataSourceName) throws Exception {
         DataSourceManager dataSourceManager = new DataSourceManager();
         // fetch the datasource from the config file first
         DataSourceInfo datasource = DataSourceCollection.getInstance().getDataSourcesCollection().get(dataSourceName);
+        LOGGER.debug("datasource {}", datasource);
         if (isInvalidDataSource(datasource)) {
             // fetch the datasource from the DB
             datasource = dataSourceManager.fetchDataSourceFromDBByName(dataSourceName);
@@ -314,5 +246,84 @@ public class CommonUtils {
     public static boolean isInvalidDataSource(DataSourceInfo datasource) {
         return datasource == null || datasource.getAuthenticationConfig() == null ||
                 datasource.getAuthenticationConfig().toString().isEmpty();
+    }
+
+    /**
+     * AutotuneDatasourceTypes is an ENUM which holds different types of
+     * datasources supported by Autotune
+     * <p>
+     * For now only Queryable and File based datasources are supported
+     */
+    public enum AutotuneDatasourceTypes {
+        /**
+         * If the datasource is queryable (datastore, database)
+         */
+        QUERYABLE,
+        /**
+         * If the datasource is file based (Cgroup files)
+         */
+        FILE,
+    }
+
+    /**
+     * AddDataSourceStatus is an ENUM which holds the possible statuses
+     * to return for adding a datasource to a collection in Autotune
+     * <p>
+     * For now Success and Datasource not reachable are two possibilities
+     * Failure status is parked as a placeholder for now to fit for an exact use case which might arise
+     */
+    public enum AddDataSourceStatus {
+        SUCCESS,
+        FAILURE,
+        DATASOURCE_NOT_REACHABLE
+    }
+
+    /**
+     * DatasourceReachabilityStatus is a ENUM which holds the possible statuses
+     * to return for checking if a datasource is reachable
+     * <p>
+     * REACHABLE - states that the datasource is reachable
+     * NOT_REACHABLE - states that the datasource is not reachable
+     */
+    public enum DatasourceReachabilityStatus {
+        REACHABLE,
+        NOT_REACHABLE,
+    }
+
+    /**
+     * DatasourceReliabilityStatus is a ENUM which holds the possible statuses
+     * to return for checking if a datasource is reliable
+     * <p>
+     * RELIABLE - states that the datasource is reliable
+     * NOT_RELIABLE -  states that the datasource is not reliable
+     */
+    public enum DatasourceReliabilityStatus {
+        /**
+         * We set the status as Reliable if the datasource is up and running and it provides information
+         */
+        RELIABLE,
+        /**
+         * We set the status as Not Reliable if the datasource is up and not providing information
+         */
+        NOT_RELIABLE,
+    }
+
+    /**
+     * QueryValidity is an ENUM which holds the possible validity status to be
+     * returned after performing a query validation
+     */
+    public enum QueryValidity {
+        // If the query check is done and the query is found to be valid
+        VALID,
+        // If the query is found to be having invalid parameters
+        INVALID_PARAMS,
+        // If the query is found to be having invalid time ranges
+        INVALID_RANGE,
+        // If the query itself is found to be invalid
+        INVALID_QUERY,
+        // If the query is empty
+        EMPTY_QUERY,
+        // If the query is null
+        NULL_QUERY
     }
 }

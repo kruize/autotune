@@ -16,8 +16,8 @@
 package com.autotune.common.datasource;
 
 import com.autotune.common.auth.AuthenticationConfig;
-import com.autotune.common.exceptions.datasource.*;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.exceptions.datasource.*;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
@@ -43,13 +43,22 @@ public class DataSourceCollection {
         this.dataSourceCollection = new HashMap<>();
     }
 
+    /**
+     * Returns the instance of dataSourceCollection class
+     *
+     * @return DataSourceCollection instance
+     */
+    public static DataSourceCollection getInstance() {
+        return dataSourceCollectionInstance;
+    }
+
     public void loadDataSourcesFromDB() {
         try {
             LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE_FROM_DB);
             List<DataSourceInfo> availableDataSources = new ExperimentDBService().loadAllDataSources();
             if (null == availableDataSources) {
                 LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.NO_DATASOURCE_FOUND_IN_DB);
-            }else {
+            } else {
                 for (DataSourceInfo dataSourceInfo : availableDataSources) {
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceInfo.getName());
                     dataSourceCollection.put(dataSourceInfo.getName(), dataSourceInfo);
@@ -61,16 +70,10 @@ public class DataSourceCollection {
         }
 
     }
-    /**
-     * Returns the instance of dataSourceCollection class
-     * @return DataSourceCollection instance
-     */
-    public static DataSourceCollection getInstance() {
-        return dataSourceCollectionInstance;
-    }
 
     /**
      * Returns the hashmap of data sources
+     *
      * @return HashMap containing dataSourceInfo objects
      */
     public HashMap<String, DataSourceInfo> getDataSourcesCollection() {
@@ -79,6 +82,7 @@ public class DataSourceCollection {
 
     /**
      * Adds datasource to collection
+     *
      * @param datasource DataSourceInfo object containing details of datasource
      */
     public void addDataSource(DataSourceInfo datasource) {
@@ -90,6 +94,7 @@ public class DataSourceCollection {
 
         try {
             if (dataSourceCollection.containsKey(name)) {
+                dataSourceCollection.put(name, datasource);   // TOdo this line should be removed once AUth details implemented in DB
                 throw new DataSourceAlreadyExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_ALREADY_EXIST);
             }
 
@@ -124,6 +129,7 @@ public class DataSourceCollection {
 
     /**
      * Loads the data sources available at installation time
+     *
      * @param configFileName name of the config file mounted
      */
     public void addDataSourcesFromConfigFile(String configFileName) {
@@ -136,19 +142,9 @@ public class DataSourceCollection {
             configObject = new JSONObject(jsonTxt);
             JSONArray dataSourceArr = configObject.getJSONArray(KruizeConstants.DataSourceConstants.KRUIZE_DATASOURCE);
 
-            for (Object dataSourceObj: dataSourceArr) {
+            for (Object dataSourceObj : dataSourceArr) {
                 JSONObject dataSourceObject = (JSONObject) dataSourceObj;
                 String name = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_NAME);
-                // check the DB if the datasource already exists
-                try {
-                    DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
-                    if (null != dataSourceInfo) {
-                        LOGGER.error("Datasource: {} already exists!", name);
-                        continue;
-                    }
-                } catch (Exception e) {
-                    LOGGER.error("Loading saved datasource {} failed: {} ", name, e.getMessage());
-                }
                 String provider = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_PROVIDER);
                 String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
                 String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
@@ -162,6 +158,20 @@ public class DataSourceCollection {
                     LOGGER.warn("Auth details are missing for datasource: {}", name);
                     authConfig = AuthenticationConfig.noAuth();
                 }
+                LOGGER.debug("authconfig {}", authConfig);
+                // check the DB if the datasource already exists
+                try {
+                    DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
+                    if (null != dataSourceInfo) {
+                        dataSourceInfo.setAuthenticationConfig(authConfig);
+                        addDataSource(dataSourceInfo);
+                        LOGGER.error("Datasource: {} already exists!", name);
+                        continue;
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Loading saved datasource {} failed: {} ", name, e.getMessage());
+                }
+
 
                 DataSourceInfo datasource;
                 // Validate input
@@ -184,11 +194,12 @@ public class DataSourceCollection {
 
     /**
      * validates the input parameters before creating dataSourceInfo objects
-     * @param name String containing name of the datasource
-     * @param provider String containing provider of the datasource
+     *
+     * @param name        String containing name of the datasource
+     * @param provider    String containing provider of the datasource
      * @param servicename String containing service name for the datasource
-     * @param url String containing URL of the data source
-     * @param namespace String containing namespace for the datasource service
+     * @param url         String containing URL of the data source
+     * @param namespace   String containing namespace for the datasource service
      * @return boolean returns true if validation is successful otherwise return false
      */
     public boolean validateInput(String name, String provider, String servicename, String url, String namespace) {
@@ -214,8 +225,9 @@ public class DataSourceCollection {
 
     /**
      * deletes the datasource from the Hashmap
+     *
      * @param name String containing the name of the datasource to be deleted
-     * TODO: add db related operations
+     *                                                                         TODO: add db related operations
      */
     public void deleteDataSource(String name) {
         try {
@@ -236,9 +248,10 @@ public class DataSourceCollection {
 
     /**
      * updates the existing datasource in the Hashmap
-     * @param name String containing the name of the datasource to be updated
+     *
+     * @param name          String containing the name of the datasource to be updated
      * @param newDataSource DataSourceInfo object with updated values
-     * TODO: add db related operations
+     *                                                                                                                               TODO: add db related operations
      */
     public void updateDataSource(String name, DataSourceInfo newDataSource) {
         try {

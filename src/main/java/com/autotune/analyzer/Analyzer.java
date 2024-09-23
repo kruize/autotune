@@ -18,7 +18,6 @@ package com.autotune.analyzer;
 import com.autotune.analyzer.experiment.Experimentator;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.services.*;
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.ServerContext;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -58,6 +57,7 @@ public class Analyzer {
         context.addServlet(MetricProfileService.class, ServerContext.DELETE_METRIC_PROFILE);
         context.addServlet(ListDatasources.class, ServerContext.LIST_DATASOURCES);
         context.addServlet(DSMetadataService.class, ServerContext.DATASOURCE_METADATA);
+        context.addServlet(CrawlerService.class, ServerContext.CRAWLER_SERVICE);
 
         // Adding UI support API's
         context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);

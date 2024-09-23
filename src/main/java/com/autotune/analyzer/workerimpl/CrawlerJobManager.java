@@ -10,6 +10,7 @@ import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.common.k8sObjects.TrialSettings;
+import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
@@ -53,26 +54,29 @@ public class CrawlerJobManager implements Runnable {
     @Override
     public void run() {
         try {
-            // Initialize StringBuilder for uniqueKey
-            StringBuilder includeLabelsBuilder = new StringBuilder();
+
+            String uniqueKey = null;
             // Process labels in the 'include' section
             if (this.crawlerInput.getFilter() != null && this.crawlerInput.getFilter().getInclude() != null) {
+                // Initialize StringBuilder for uniqueKey
+                StringBuilder includeLabelsBuilder = new StringBuilder();
                 Map<String, String> includeLabels = this.crawlerInput.getFilter().getInclude().getLabels();
                 if (includeLabels != null && !includeLabels.isEmpty()) {
                     includeLabels.forEach((key, value) ->
-                            includeLabelsBuilder.append(key).append("=").append(value).append(",")
+                            includeLabelsBuilder.append(key).append("=").append("\"" + value + "\"").append(",")
                     );
                     // Remove trailing comma
                     if (includeLabelsBuilder.length() > 0) {
                         includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
                     }
-                    System.out.println("Include Labels: " + includeLabelsBuilder.toString());
+                    LOGGER.info("Include Labels: " + includeLabelsBuilder.toString());
+                    uniqueKey = includeLabelsBuilder.toString();
                 }
             }
             DataSourceMetadataInfo metadataInfo = null;
             DataSourceManager dataSourceManager = new DataSourceManager();
-            DataSourceInfo datasource = dataSourceManager.fetchDataSourceFromDBByName("prometheus-1");
-            String uniqueKey = includeLabelsBuilder.toString();
+            DataSourceInfo datasource = CommonUtils.getDataSourceInfo("prometheus-1");
+
 
             if (null != this.crawlerInput.getTime_range() && this.crawlerInput.getTime_range().getStart() != null && this.crawlerInput.getTime_range().getEnd() != null) {
                 // Extract interval start and end times
@@ -92,73 +96,77 @@ public class CrawlerJobManager implements Runnable {
             } else {
                 metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, 0, 0, 0);
             }
-
-            Collection<DataSource> dataSourceCollection = metadataInfo.getDataSourceHashMap().values();
             List<String> recommendationsRequiredExperiments = new CopyOnWriteArrayList<>();
-            for (DataSource ds : dataSourceCollection) {
-                HashMap<String, DataSourceCluster> clusterHashMap = ds.getDataSourceClusterHashMap();
-                for (DataSourceCluster dsc : clusterHashMap.values()) {
-                    HashMap<String, DataSourceNamespace> namespaceHashMap = dsc.getDataSourceNamespaceHashMap();
-                    for (DataSourceNamespace namespace : namespaceHashMap.values()) {
-                        HashMap<String, DataSourceWorkload> dataSourceWorkloadHashMap = namespace.getDataSourceWorkloadHashMap();
-                        if (dataSourceWorkloadHashMap != null) {
-                            for (DataSourceWorkload dsw : dataSourceWorkloadHashMap.values()) {
-                                HashMap<String, DataSourceContainer> dataSourceContainerHashMap = dsw.getDataSourceContainerHashMap();
-                                if (dataSourceContainerHashMap != null) {
-                                    for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
-                                        CreateExperimentAPIObject createExperimentAPIObject = new CreateExperimentAPIObject();
-                                        createExperimentAPIObject.setMode("monitor");
-                                        createExperimentAPIObject.setTargetCluster("local");
-                                        createExperimentAPIObject.setApiVersion("v2.0");
-                                        String experiment_name = "prometheus-1" + "-" + dsc.getDataSourceClusterName() + "-" + namespace.getDataSourceNamespaceName()
-                                                + "-" + dsw.getDataSourceWorkloadName() + "(" + dsw.getDataSourceWorkloadType() + ")" + "-" + dc.getDataSourceContainerName();
-                                        createExperimentAPIObject.setExperimentName(experiment_name);
-                                        createExperimentAPIObject.setDatasource("prometheus-1");
-                                        createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
-                                        createExperimentAPIObject.setPerformanceProfile("resource-optimization-openshift");
-                                        List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
-                                        KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
-                                        ContainerAPIObject cao = new ContainerAPIObject(dc.getDataSourceContainerName(),
-                                                dc.getDataSourceContainerImageName(), null, null);
-                                        kubernetesAPIObject.setContainerAPIObjects(Arrays.asList(cao));
-                                        kubernetesAPIObject.setName(dsw.getDataSourceWorkloadName());
-                                        kubernetesAPIObject.setType(dsw.getDataSourceWorkloadType());
-                                        kubernetesAPIObject.setNamespace(namespace.getDataSourceNamespaceName());
-                                        kubernetesAPIObjectList.add(kubernetesAPIObject);
-                                        createExperimentAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
-                                        RecommendationSettings rs = new RecommendationSettings();
-                                        rs.setThreshold(0.1);
-                                        createExperimentAPIObject.setRecommendationSettings(rs);
-                                        TrialSettings trialSettings = new TrialSettings();
-                                        trialSettings.setMeasurement_durationMinutes("15min");
-                                        createExperimentAPIObject.setTrialSettings(trialSettings);
-                                        List<KruizeObject> kruizeExpList = new ArrayList<>();
+            if (null == metadataInfo) {
+                jobStatusMap.get(jobID).setStatus("COMPLETED");
+            } else {
+                Collection<DataSource> dataSourceCollection = metadataInfo.getDataSourceHashMap().values();
+                for (DataSource ds : dataSourceCollection) {
+                    HashMap<String, DataSourceCluster> clusterHashMap = ds.getDataSourceClusterHashMap();
+                    for (DataSourceCluster dsc : clusterHashMap.values()) {
+                        HashMap<String, DataSourceNamespace> namespaceHashMap = dsc.getDataSourceNamespaceHashMap();
+                        for (DataSourceNamespace namespace : namespaceHashMap.values()) {
+                            HashMap<String, DataSourceWorkload> dataSourceWorkloadHashMap = namespace.getDataSourceWorkloadHashMap();
+                            if (dataSourceWorkloadHashMap != null) {
+                                for (DataSourceWorkload dsw : dataSourceWorkloadHashMap.values()) {
+                                    HashMap<String, DataSourceContainer> dataSourceContainerHashMap = dsw.getDataSourceContainerHashMap();
+                                    if (dataSourceContainerHashMap != null) {
+                                        for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
+                                            CreateExperimentAPIObject createExperimentAPIObject = new CreateExperimentAPIObject();
+                                            createExperimentAPIObject.setMode("monitor");
+                                            createExperimentAPIObject.setTargetCluster("local");
+                                            createExperimentAPIObject.setApiVersion("v2.0");
+                                            String experiment_name = "prometheus-1" + "-" + dsc.getDataSourceClusterName() + "-" + namespace.getDataSourceNamespaceName()
+                                                    + "-" + dsw.getDataSourceWorkloadName() + "(" + dsw.getDataSourceWorkloadType() + ")" + "-" + dc.getDataSourceContainerName();
+                                            createExperimentAPIObject.setExperimentName(experiment_name);
+                                            createExperimentAPIObject.setDatasource("prometheus-1");
+                                            createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
+                                            createExperimentAPIObject.setPerformanceProfile("resource-optimization-openshift");
+                                            List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
+                                            KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
+                                            ContainerAPIObject cao = new ContainerAPIObject(dc.getDataSourceContainerName(),
+                                                    dc.getDataSourceContainerImageName(), null, null);
+                                            kubernetesAPIObject.setContainerAPIObjects(Arrays.asList(cao));
+                                            kubernetesAPIObject.setName(dsw.getDataSourceWorkloadName());
+                                            kubernetesAPIObject.setType(dsw.getDataSourceWorkloadType());
+                                            kubernetesAPIObject.setNamespace(namespace.getDataSourceNamespaceName());
+                                            kubernetesAPIObjectList.add(kubernetesAPIObject);
+                                            createExperimentAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+                                            RecommendationSettings rs = new RecommendationSettings();
+                                            rs.setThreshold(0.1);
+                                            createExperimentAPIObject.setRecommendationSettings(rs);
+                                            TrialSettings trialSettings = new TrialSettings();
+                                            trialSettings.setMeasurement_durationMinutes("15min");
+                                            createExperimentAPIObject.setTrialSettings(trialSettings);
+                                            List<KruizeObject> kruizeExpList = new ArrayList<>();
 
-                                        createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
-                                        createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
+                                            createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
+                                            createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
 
-                                        try {
-                                            ValidationOutputData output = new ExperimentDBService().addExperimentToDB(createExperimentAPIObject);
-                                            if (output.isSuccess()) {
-                                                jobStatusMap.get(jobID).getData().getExperiments().setNewExperiments(
-                                                        appendExperiments(jobStatusMap.get(jobID).getData().getExperiments().getNewExperiments(), experiment_name)
-                                                );
+                                            try {
+                                                ValidationOutputData output = new ExperimentDBService().addExperimentToDB(createExperimentAPIObject);
+                                                if (output.isSuccess()) {
+                                                    jobStatusMap.get(jobID).getData().getExperiments().setNewExperiments(
+                                                            appendExperiments(jobStatusMap.get(jobID).getData().getExperiments().getNewExperiments(), experiment_name)
+                                                    );
+                                                }
+                                                recommendationsRequiredExperiments.add(experiment_name);
+                                            } catch (Exception e) {
+                                                LOGGER.info(e.getMessage());
                                             }
-                                            recommendationsRequiredExperiments.add(experiment_name);
-                                        } catch (Exception e) {
-                                            LOGGER.info(e.getMessage());
                                         }
                                     }
-                                }
 
+                                }
                             }
                         }
                     }
                 }
+                jobStatusMap.get(jobID).setStatus("INPROGRESS");
+                jobStatusMap.get(jobID).getData().getRecommendations().getData().setInqueue(recommendationsRequiredExperiments);
+                jobStatusMap.get(jobID).getData().getRecommendations().setTotalCount(recommendationsRequiredExperiments.size());
+
             }
-            jobStatusMap.get(jobID).setStatus("INPROGRESS");
-            jobStatusMap.get(jobID).getData().getRecommendations().getData().setInqueue(recommendationsRequiredExperiments);
-            jobStatusMap.get(jobID).getData().getRecommendations().setTotalCount(recommendationsRequiredExperiments.size());
             ExecutorService executor = Executors.newFixedThreadPool(3);
             for (String name : recommendationsRequiredExperiments) {
                 executor.submit(() -> {
@@ -213,7 +221,7 @@ public class CrawlerJobManager implements Runnable {
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             e.printStackTrace();
-            //jobStatusMap.get(jobID).setStatus("FAILED");
+            jobStatusMap.get(jobID).setStatus("FAILED");
         }
     }
 }

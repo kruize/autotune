@@ -1,23 +1,18 @@
 package com.autotune.common.datasource;
 
-import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
-import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataHelper;
 import com.autotune.common.data.dataSourceMetadata.*;
+import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
-
-import static com.autotune.utils.KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY_TEMP;
 
 /**
  * DataSourceMetadataOperator is an abstraction with CRUD operations to manage DataSourceMetadataInfo Object
  * representing JSON for a given data source
- *
+ * <p>
  *  TODO -
  *  object is currently stored in memory going forward need to store cluster metadata in Kruize DB
  *  Implement methods to support update and delete operations for periodic update of DataSourceMetadataInfo
@@ -26,25 +21,32 @@ public class DataSourceMetadataOperator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceMetadataOperator.class);
     private static final DataSourceMetadataOperator dataSourceMetadataOperatorInstance = new DataSourceMetadataOperator();
     private DataSourceMetadataInfo dataSourceMetadataInfo;
-    private DataSourceMetadataOperator() { this.dataSourceMetadataInfo = null; }
-    public static DataSourceMetadataOperator getInstance() { return dataSourceMetadataOperatorInstance; }
+
+    private DataSourceMetadataOperator() {
+        this.dataSourceMetadataInfo = null;
+    }
+
+    public static DataSourceMetadataOperator getInstance() {
+        return dataSourceMetadataOperatorInstance;
+    }
 
     /**
      * Creates and populates metadata for a data source based on the provided DataSourceInfo object.
-     *
+     * <p>
      * Currently supported DataSourceProvider - Prometheus
      *
      * @param dataSourceInfo The DataSourceInfo object containing information about the data source.
-     * TODO - support multiple data sources
-     *                       TODO -> Rename to fetchClusterMetaData
-     *                       TODO whats the diff b/w createDataSourceMetadata vs updateDataSourceMetadata
+     *                                                                                                                                     TODO - support multiple data sources
+     *                                                                                                                                                           TODO -> Rename to fetchClusterMetaData
+     *                                                                                                                                                           TODO whats the diff b/w createDataSourceMetadata vs updateDataSourceMetadata
      */
-    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo,String uniqueKey,long startTime,long endTime,int steps) {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo,uniqueKey,startTime,endTime,steps);
+    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) {
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
     }
 
     /**
      * Retrieves DataSourceMetadataInfo object.
+     *
      * @return DataSourceMetadataInfo containing metadata about the data source if found, otherwise null.
      */
     public DataSourceMetadataInfo getDataSourceMetadataInfo(DataSourceInfo dataSourceInfo) {
@@ -75,23 +77,24 @@ public class DataSourceMetadataOperator {
      * Updates the metadata information of a data source with the provided DataSourceInfo object,
      * while preserving existing metadata information.
      *
-     * @param dataSourceInfo      The DataSourceInfo object containing information about the
-     *                            data source to be updated.
-     *
-     *  TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
-     *         need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
+     * @param dataSourceInfo The DataSourceInfo object containing information about the
+     *                       data source to be updated.
+     *                       <p>
+     *                                                                                                                                      TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
+     *                                                                                                                                             need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
-    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo,String uniqueKey,long startTime,long endTime,int steps) {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo,uniqueKey,startTime,endTime,steps);
+    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) {
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
     }
 
     /**
      * Deletes the metadata information of a data source with the provided DataSourceInfo object,
-     * @param dataSourceInfo      The DataSourceInfo object containing information about the
-     *                            metadata to be deleted.
+     *
+     * @param dataSourceInfo The DataSourceInfo object containing information about the
+     *                       metadata to be deleted.
      */
     public void deleteDataSourceMetadata(DataSourceInfo dataSourceInfo) {
-        try{
+        try {
             if (null == dataSourceMetadataInfo) {
                 LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
                 return;
@@ -113,11 +116,11 @@ public class DataSourceMetadataOperator {
      * Fetches and processes metadata related to namespaces, workloads, and containers of a given datasource and populates the
      * DataSourceMetadataInfo object
      *
-     * @param dataSourceInfo            The DataSourceInfo object containing information about the data source
+     * @param dataSourceInfo The DataSourceInfo object containing information about the data source
      * @return DataSourceMetadataInfo object with populated metadata fields
      * todo rename processQueriesAndFetchClusterMetadataInfo
      */
-    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo,String uniqueKey,long startTime,long endTime,int steps) {
+    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
         /**
          * Get DataSourceOperatorImpl instance on runtime based on dataSource provider
@@ -136,8 +139,26 @@ public class DataSourceMetadataOperator {
          */
         try {
             String dataSourceName = dataSourceInfo.getName();
-            JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceInfo, PromQLDataSourceQueries.NAMESPACE_QUERY);
-            if (false == op.validateResultArray(namespacesDataResultArray)){
+            //String namespaceQuery = URLEncoder.encode(PromQLDataSourceQueries.NAMESPACE_QUERY, StandardCharsets.UTF_8);
+            String namespaceQuery = PromQLDataSourceQueries.NAMESPACE_QUERY;
+            String workloadQuery = PromQLDataSourceQueries.WORKLOAD_QUERY;
+            String containerQuery = PromQLDataSourceQueries.CONTAINER_QUERY;
+            if (null != uniqueKey) {
+                LOGGER.info("uniquekey: {}", uniqueKey);
+                namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
+                workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
+                containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
+            } else {
+                namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "");
+                workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "");
+                containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "");
+            }
+            LOGGER.info("namespaceQuery: {}", namespaceQuery);
+            LOGGER.info("workloadQuery: {}", workloadQuery);
+            LOGGER.info("containerQuery: {}", containerQuery);
+
+            JsonArray namespacesDataResultArray = op.getResultArrayForQuery(dataSourceInfo, namespaceQuery);
+            if (false == op.validateResultArray(namespacesDataResultArray)) {
                 dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
                 throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
             }
@@ -160,7 +181,7 @@ public class DataSourceMetadataOperator {
              */
             HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
             JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
-                    PromQLDataSourceQueries.WORKLOAD_QUERY);
+                    workloadQuery);
 
             if (op.validateResultArray(workloadDataResultArray)) {
                 datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
@@ -179,7 +200,7 @@ public class DataSourceMetadataOperator {
              */
             HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
             JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
-                    PromQLDataSourceQueries.CONTAINER_QUERY);
+                    containerQuery);
 
             if (op.validateResultArray(containerDataResultArray)) {
                 datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
