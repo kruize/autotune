@@ -165,6 +165,7 @@ public class AnalyzerErrorConstants {
             public static final String NAMESPACE_AND_CONTAINER_NOT_NULL = "Only one of Namespace or Container information can be specified.";
             public static final String CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP = "Can not specify container data for namespace experiment";
             public static final String NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP = "Can not specify namespace data for container experiment";
+            public static final String NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE = "Namespace experiment type is not supported for remote monitoring use case.";
 
             private CreateExperimentAPI() {
 

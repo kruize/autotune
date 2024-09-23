@@ -13,7 +13,6 @@ public class K8sObject {
     private String type; // TODO: Change to ENUM
     private String name;
     private String namespace;
-    private String experiment_type;
     @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
     private HashMap<String, ContainerData> containerDataMap;
     @SerializedName(KruizeConstants.JSONKeys.NAMESPACES)
@@ -31,10 +30,6 @@ public class K8sObject {
         return type;
     }
 
-    public String getExperimentType() {
-        return experiment_type;
-    }
-
     public void setType(String type) {
         this.type = type;
     }
@@ -45,10 +40,6 @@ public class K8sObject {
 
     public void setName(String name) {
         this.name = name;
-    }
-
-    public void setExperimentType(String experiment_type) {
-        this.experiment_type = experiment_type;
     }
 
     public String getNamespace() {

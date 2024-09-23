@@ -159,6 +159,7 @@ public class KruizeConstants {
         // Metadata Section
         public static final String EXPERIMENT_ID = "experiment_id";
         public static final String EXPERIMENT_NAME = "experiment_name";
+        public static final String EXPERIMENT_TYPE = "experiment_type";
         // Deployments Section
         public static final String DEPLOYMENTS = "deployments";
         public static final String NAMESPACE = "namespace";

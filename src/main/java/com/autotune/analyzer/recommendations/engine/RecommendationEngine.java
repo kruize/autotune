@@ -312,12 +312,12 @@ public class RecommendationEngine {
     public void generateRecommendations(KruizeObject kruizeObject) {
 
         for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
-            if (k8sObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
+            if (null != kruizeObject.getExperimentType() && kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
                 String namespaceName = k8sObject.getNamespace();
                 NamespaceData namespaceData = k8sObject.getNamespaceData();
                 LOGGER.info("Generating recommendations for namespace: {}", namespaceName);
                 generateRecommendationsBasedOnNamespace(namespaceData, kruizeObject);
-            } else {
+            } else if (null == kruizeObject.getExperimentType() || kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT)){
                 for (String containerName : k8sObject.getContainerDataMap().keySet()) {
                     ContainerData containerData = k8sObject.getContainerDataMap().get(containerName);
 
@@ -2004,7 +2004,7 @@ public class RecommendationEngine {
                 String workload_type = k8sObject.getType();
                 HashMap<String, ContainerData> containerDataMap = k8sObject.getContainerDataMap();
                 // check if containerDataMap is not empty
-                if (!containerDataMap.isEmpty()) {
+                if (null == kruizeObject.getExperimentType() || kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT)) {
                     // Iterate over containers
                     for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
                         ContainerData containerData = entry.getValue();
@@ -2170,10 +2170,9 @@ public class RecommendationEngine {
                             setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalid date is set if experiment having two container with different last seen date
 
                     }
-                } else {
+                } else if (null != kruizeObject.getExperimentType() && kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)){
                     // fetch namespace related metrics if containerDataMap is empty
                     NamespaceData namespaceData = k8sObject.getNamespaceData();
-
                     // determine the max date query for namespace
                     String namespaceMaxDateQuery = null;
                     for (Metric metric: metrics) {

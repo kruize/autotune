@@ -55,6 +55,7 @@ public class KruizeExperimentEntry {
     private String mode;
     private String target_cluster;
     private String performance_profile;
+    private String experiment_type;
     @Enumerated(EnumType.STRING)
     private AnalyzerConstants.ExperimentStatus status;
     @JdbcTypeCode(SqlTypes.JSON)
@@ -154,4 +155,13 @@ public class KruizeExperimentEntry {
     public void setDatasource(JsonNode datasource) {
         this.datasource = datasource;
     }
+
+    public String getExperimentType() {
+        return experiment_type;
+    }
+
+    public void setExperimentType(String experiment_type) {
+        this.experiment_type = experiment_type;
+    }
+
 }

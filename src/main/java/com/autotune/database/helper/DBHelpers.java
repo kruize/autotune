@@ -300,6 +300,9 @@ public class DBHelpers {
                     kruizeExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
                     kruizeExperimentEntry.setMeta_data(null);
                     kruizeExperimentEntry.setDatasource(null);
+                    if (apiObject.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
+                        kruizeExperimentEntry.setExperimentType(apiObject.getExperimentType());
+                    }
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
                         kruizeExperimentEntry.setExtended_data(
@@ -377,14 +380,13 @@ public class DBHelpers {
                 for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
                     if (null == k8sObject)
                         continue;
-                    if (null == k8sObject.getContainerDataMap() && k8sObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT))
+                    if (null == k8sObject.getContainerDataMap() && (null == kruizeObject.getExperimentType() || kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT)))
                         continue;
-                    if (k8sObject.getContainerDataMap().isEmpty() && k8sObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT))
+                    if (k8sObject.getContainerDataMap().isEmpty() && (null == kruizeObject.getExperimentType() || kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT)))
                         continue;
                     KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
                     boolean matchFound = false;
-                    kubernetesAPIObject.setExperimentType(k8sObject.getExperimentType());
-                    if (k8sObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
+                    if (null != kruizeObject.getExperimentType() && kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
                         // saving namespace recommendations
                         NamespaceData clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceData(), NamespaceData.class);
                         if (null == clonedNamespaceData)
@@ -456,6 +458,7 @@ public class DBHelpers {
                     listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                     listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                     listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+                    listRecommendationsAPIObject.setExperimentType(kruizeObject.getExperimentType());
                 }
                 return listRecommendationsAPIObject;
             }
@@ -482,10 +485,12 @@ public class DBHelpers {
                     kruizeRecommendationEntry.setVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
                     kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
+                    kruizeRecommendationEntry.setExperimentType(listRecommendationsAPIObject.getExperimentType());
+
                     Timestamp endInterval = null;
                     // todo : what happens if two k8 objects or Containers with different timestamp
                     for (KubernetesAPIObject k8sObject : listRecommendationsAPIObject.getKubernetesObjects()) {
-                        if (k8sObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
+                        if (null != listRecommendationsAPIObject.getExperimentType() && listRecommendationsAPIObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
                             endInterval = k8sObject.getNamespaceAPIObjects().getnamespaceRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
                         } else {
                             for (ContainerAPIObject containerAPIObject : k8sObject.getContainerAPIObjects()) {
@@ -528,6 +533,7 @@ public class DBHelpers {
                         CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
                         apiObj.setExperiment_id(entry.getExperiment_id());
                         apiObj.setStatus(entry.getStatus());
+                        apiObj.setExperimentType(entry.getExperimentType());
                         createExperimentAPIObjects.add(apiObj);
                     } catch (Exception e) {
                         LOGGER.error("Error in converting to apiObj from db object due to : {}", e.getMessage());

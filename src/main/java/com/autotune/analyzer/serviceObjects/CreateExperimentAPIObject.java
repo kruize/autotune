@@ -47,6 +47,8 @@ public class CreateExperimentAPIObject extends BaseSO {
     private RecommendationSettings recommendationSettings;
     @SerializedName(KruizeConstants.JSONKeys.DATASOURCE) //TODO: to be used in future
     private String datasource;
+    @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
+    private String experiment_type;
     private AnalyzerConstants.ExperimentStatus status;
     private String experiment_id;   // this id is UUID and getting set at createExperiment API
     private ValidationOutputData validationData;  // This object indicates if this API object is valid or invalid
@@ -147,6 +149,14 @@ public class CreateExperimentAPIObject extends BaseSO {
         this.datasource = datasource;
     }
 
+    public String getExperimentType() {
+        return experiment_type;
+    }
+
+    public void setExperimentType(String experiment_type) {
+        this.experiment_type = experiment_type;
+    }
+
     @Override
     public String toString() {
         return "CreateExperimentAPIObject{" +
@@ -159,6 +169,7 @@ public class CreateExperimentAPIObject extends BaseSO {
                 ", targetCluster='" + targetCluster + '\'' +
                 ", kubernetesAPIObjects=" + kubernetesAPIObjects.toString() +
                 ", trialSettings=" + trialSettings +
+                ", experimentType=" + experiment_type +
                 ", recommendationSettings=" + recommendationSettings +
                 '}';
     }

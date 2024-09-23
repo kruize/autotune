@@ -47,6 +47,8 @@ public final class KruizeObject {
     private String clusterName;
     @SerializedName("datasource")
     private String datasource;
+    @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
+    private String experiment_type;
     private String namespace;               // TODO: Currently adding it at this level with an assumption that there is only one entry in k8s object needs to be changed
     private String mode;                    //Todo convert into Enum
     @SerializedName("target_cluster")
@@ -297,6 +299,15 @@ public final class KruizeObject {
         this.datasource = datasource;
     }
 
+    public String getExperimentType() {
+        return experiment_type;
+    }
+
+    public void setExperimentType(String experiment_type) {
+        this.experiment_type = experiment_type;
+    }
+
+
     @Override
     public String toString() {
         // Creating a temporary cluster name as we allow null for cluster name now
@@ -309,6 +320,7 @@ public final class KruizeObject {
                 ", experimentName='" + experimentName + '\'' +
                 ", clusterName=" + tmpClusterName + '\'' +
                 ", datasource=" + datasource + '\'' +
+                ", experimentType=" + experiment_type + '\'' +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
                 ", hpoAlgoImpl=" + hpoAlgoImpl +

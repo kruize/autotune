@@ -23,6 +23,8 @@ import java.util.List;
 public class ListRecommendationsAPIObject extends BaseSO{
     @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
     private String clusterName;
+    @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE)
+    private String experiment_type;
 
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<KubernetesAPIObject> kubernetesObjects;
@@ -41,5 +43,13 @@ public class ListRecommendationsAPIObject extends BaseSO{
 
     public void setKubernetesObjects(List<KubernetesAPIObject> kubernetesObjects) {
         this.kubernetesObjects = kubernetesObjects;
+    }
+
+    public String getExperimentType() {
+        return experiment_type;
+    }
+
+    public void setExperimentType(String experiment_type) {
+        this.experiment_type = experiment_type;
     }
 }

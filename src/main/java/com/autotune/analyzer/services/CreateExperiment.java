@@ -16,14 +16,19 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.exceptions.InvalidExperimentType;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.NamespaceData;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
@@ -42,10 +47,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -98,6 +100,26 @@ public class CreateExperiment extends HttpServlet {
                 for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
                     createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
                     createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
+                    // updating experiment type to container if not passed
+                    if (null == createExperimentAPIObject.getExperimentType() || createExperimentAPIObject.getExperimentType().isEmpty()) {
+                        createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
+                    }
+                    // validating the kubernetes objects and experiment type
+                    for (KubernetesAPIObject kubernetesAPIObject: createExperimentAPIObject.getKubernetesObjects()) {
+                        if (createExperimentAPIObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT)) {
+                            // check if namespace data is also set for container-type experiments
+                            if (null != kubernetesAPIObject.getNamespaceAPIObjects()) {
+                                throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP);
+                            }
+                        } else if (createExperimentAPIObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
+                            if (null != kubernetesAPIObject.getContainerAPIObjects()) {
+                                throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP);
+                            }
+                            if (createExperimentAPIObject.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
+                                throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE);
+                            }
+                        }
+                    }
                     KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
                     if (null != kruizeObject)
                         kruizeExpList.add(kruizeObject);
@@ -130,6 +152,8 @@ public class CreateExperiment extends HttpServlet {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught: " + e.getMessage());
             sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
+        } catch (InvalidExperimentType e) {
+            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } finally {
             if (null != timerCreateExp) {
                 MetricsConfig.timerCreateExp = MetricsConfig.timerBCreateExp.tag("status", statusValue).register(MetricsConfig.meterRegistry());
