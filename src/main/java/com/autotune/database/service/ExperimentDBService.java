@@ -27,7 +27,6 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.helper.DBConstants;
@@ -39,10 +38,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class ExperimentDBService {
     private static final long serialVersionUID = 1L;
@@ -251,12 +247,15 @@ public class ExperimentDBService {
                 convertKruizeObjectTORecommendation(kruizeObject, interval_end_time);
         if (null != kr) {
             if (KruizeDeploymentInfo.local == true) {   //todo this code will be removed
-                LocalDateTime localDateTime = kr.getInterval_end_time().toLocalDateTime();
+                // Create a Calendar object and set the time with the timestamp
+                Calendar localDateTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+                localDateTime.setTime(kr.getInterval_end_time());
                 ExperimentDAO dao = new ExperimentDAOImpl();
-                int dayOfTheMonth = localDateTime.getDayOfMonth();
+                int dayOfTheMonth = localDateTime.get(Calendar.DAY_OF_MONTH);
+                LOGGER.info("dayOfTheMonth----------------: " + dayOfTheMonth);
                 try {
                     synchronized (new Object()) {
-                        dao.addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.getMonthValue()), String.valueOf(localDateTime.getYear()), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_MONTH);
+                        dao.addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.get(Calendar.MONTH) + 1), String.valueOf(localDateTime.get(Calendar.YEAR)), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_DAY);
                     }
                 } catch (Exception e) {
                     LOGGER.warn(e.getMessage());

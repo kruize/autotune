@@ -22,9 +22,12 @@ import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
-import com.google.gson.*;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import org.apache.http.conn.HttpHostConnectException;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -37,19 +40,22 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
 /**
- *  PrometheusDataOperatorImpl extends DataSourceOperatorImpl class
- *  This class provides Prometheus specific implementation for DataSourceOperator functions
+ * PrometheusDataOperatorImpl extends DataSourceOperatorImpl class
+ * This class provides Prometheus specific implementation for DataSourceOperator functions
  */
 public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(PrometheusDataOperatorImpl.class);
 
-    private static PrometheusDataOperatorImpl prometheusDataOperator = null;;
+    private static PrometheusDataOperatorImpl prometheusDataOperator = null;
+    ;
+
     private PrometheusDataOperatorImpl() {
         super();
     }
 
     /**
      * Returns the instance of PrometheusDataOperatorImpl class
+     *
      * @return PrometheusDataOperatorImpl instance
      */
     public static PrometheusDataOperatorImpl getInstance() {
@@ -61,6 +67,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * Returns the default service port for prometheus
+     *
      * @return String containing the port number
      */
     @Override
@@ -88,13 +95,13 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
         queryResult = this.getValueForQuery(dataSource, query);
 
-        if (queryResult != null){
+        if (queryResult != null) {
             dataSourceStatus = queryResult.toString();
         } else {
             dataSourceStatus = "0";
         }
 
-        if (dataSourceStatus.equalsIgnoreCase("1")){
+        if (dataSourceStatus.equalsIgnoreCase("1")) {
             reachabilityStatus = CommonUtils.DatasourceReachabilityStatus.REACHABLE;
         } else {
             reachabilityStatus = CommonUtils.DatasourceReachabilityStatus.NOT_REACHABLE;
@@ -116,16 +123,18 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
             if (null == jsonObject) {
                 return null;
+            } else {
+                return "1";   //if it returns 200 status then it is up
             }
 
-            JSONArray result = jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+            /*JSONArray result = jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
             for (Object result_obj : result) {
                 JSONObject result_json = (JSONObject) result_obj;
                 if (result_json.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE)
                         && !result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).isEmpty()) {
                     return result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).getString(1);
                 }
-            }
+            }*/
         } catch (JSONException e) {
             LOGGER.error(e.getMessage());
         } catch (NullPointerException e) {
@@ -158,6 +167,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             JSONObject jsonObject = apiClient.fetchMetricsJson(
                     KruizeConstants.HttpConstants.MethodType.GET,
                     query);
+            /*
             if (!jsonObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS))
                 return null;
             if (!jsonObject.getString(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS).equalsIgnoreCase(KruizeConstants.DataSourceConstants.DataSourceQueryStatus.SUCCESS))
@@ -168,6 +178,8 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
                 return null;
             if (jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isEmpty())
                 return  null;
+
+             */
 
             return jsonObject;
 
@@ -187,6 +199,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * returns query endpoint for prometheus datasource
+     *
      * @return String containing query endpoint
      */
     @Override
@@ -200,15 +213,15 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      * @param dataSource DatasourceInfo object containing the datasource details
      * @param query      String containing the query to be executed
      * @return JsonArray containing the result array for the specified query
-     *
+     * <p>
      * Example output JsonArray -
      * [
-     *   {
-     *     "metric": {
-     *       "__name__": "exampleMetric"
-     *     },
-     *     "value": [1642612628.987, "1"]
-     *   }
+     * {
+     * "metric": {
+     * "__name__": "exampleMetric"
+     * },
+     * "value": [1642612628.987, "1"]
+     * }
      * ]
      */
 
@@ -235,6 +248,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
         } catch (JsonParseException e) {
             LOGGER.error(e.getMessage());
         } catch (NullPointerException e) {
+            e.printStackTrace();
             LOGGER.error(e.getMessage());
         }
         return null;

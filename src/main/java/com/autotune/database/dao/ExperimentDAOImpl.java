@@ -27,7 +27,10 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
@@ -149,8 +152,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     session.createNativeQuery(daterange).executeUpdate();
                 });
             } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_DAY)) {
-                String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", 1), tableName,
-                        year, month, String.format("%02d", 1), year, month, String.format("%02d", 1));
+                String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, dayOfTheMonth, tableName,
+                        year, month, dayOfTheMonth, year, month, dayOfTheMonth);
                 session.createNativeQuery(daterange).executeUpdate();
             } else {
                 LOGGER.error(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
@@ -237,7 +240,9 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                             tx.commit();
                             tx = session.beginTransaction();
                             // create partitions based on entry object
-                            createPartitions(entry);
+                            synchronized (new Object()) {
+                                createPartitions(entry);
+                            }
                             session.persist(entry);
                             session.flush();
                         } catch (Exception partitionException) {
@@ -386,6 +391,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     /**
      * Adds MetricProfile to database
+     *
      * @param kruizeMetricProfileEntry Metric Profile Database object to be added
      * @return validationOutputData contains the status of the DB insert operation
      */
@@ -475,7 +481,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
 
-
     @Override
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
         kruizeObject.setStatus(status);
@@ -535,6 +540,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     /**
      * Delete metadata with the name dataSourceName
      * This deletes the metadata from the KruizeDSMetadataEntry table
+     *
      * @param dataSourceName
      * @return
      */
@@ -573,6 +579,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     /**
      * Delete metric profile with specified profile name
      * This deletes the metadata from the KruizeMetricProfileEntry table
+     *
      * @param metricProfileName
      * @return
      */
@@ -694,6 +701,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     /**
      * Fetches all the Metric Profile records from KruizeMetricProfileEntry database table
+     *
      * @return List of all KruizeMetricProfileEntry database objects
      * @throws Exception
      */
@@ -770,7 +778,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return entries;
     }
-
 
 
     @Override
@@ -889,6 +896,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     /**
      * Fetches Metric Profile by name from KruizeMetricProfileEntry database table
+     *
      * @param metricProfileName Metric profile name
      * @return List of KruizeMetricProfileEntry objects
      * @throws Exception
@@ -976,7 +984,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * Retrieves a list of KruizeDSMetadataEntry objects based on the specified datasource name and cluster name.
      *
      * @param dataSourceName The name of the datasource.
-     * @param clusterName The name of the cluster.
+     * @param clusterName    The name of the cluster.
      * @return A list of KruizeDSMetadataEntry objects associated with the provided datasource and cluster name.
      * @throws Exception If there is an error while loading metadata from the database.
      */
@@ -1001,8 +1009,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * datasource name, cluster name and namespace.
      *
      * @param dataSourceName The name of the datasource.
-     * @param clusterName The name of the cluster.
-     * @param namespace namespace
+     * @param clusterName    The name of the cluster.
+     * @param namespace      namespace
      * @return A list of KruizeDSMetadataEntry objects associated with the provided datasource, cluster name and namespaces.
      * @throws Exception If there is an error while loading metadata from the database.
      */
@@ -1012,7 +1020,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             Query<KruizeDSMetadataEntry> kruizeMetadataQuery = session.createQuery(SELECT_FROM_METADATA_BY_DATASOURCE_NAME_CLUSTER_NAME_AND_NAMESPACE, KruizeDSMetadataEntry.class)
                     .setParameter("datasource_name", dataSourceName)
                     .setParameter("cluster_name", clusterName)
-                    .setParameter("namespace",namespace);
+                    .setParameter("namespace", namespace);
 
             kruizeMetadataList = kruizeMetadataQuery.list();
         } catch (Exception e) {

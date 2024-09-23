@@ -52,12 +52,24 @@ public class KubernetesAPIObject {
         return type;
     }
 
+    public void setType(String type) {
+        this.type = type;
+    }
+
     public String getName() {
         return name;
     }
 
+    public void setName(String name) {
+        this.name = name;
+    }
+
     public String getNamespace() {
         return namespace;
+    }
+
+    public void setNamespace(String namespace) {
+        this.namespace = namespace;
     }
 
     @JsonProperty(KruizeConstants.JSONKeys.CONTAINERS)
@@ -69,27 +81,9 @@ public class KubernetesAPIObject {
         this.containerAPIObjects = containerAPIObjects;
     }
 
-
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
     @JsonProperty(KruizeConstants.JSONKeys.NAMESPACES)
     public NamespaceAPIObject getNamespaceAPIObjects() {
         return namespaceAPIObject;
-    }
-
-    public void setNamespaceAPIObject(NamespaceAPIObject namespaceAPIObject) {
-        this.namespaceAPIObject = namespaceAPIObject;
-    }
-
-    public void setExperimentType(String experimentType) {
-        this.experiment_type = experimentType;
     }
 
     @Override
@@ -103,8 +97,21 @@ public class KubernetesAPIObject {
                 '}';
     }
 
-    public void setNamespace(String namespace) {
-        this.namespace = namespace;
+    public String getExperimentType() {
+        return experiment_type;
     }
+
+    public void setExperimentType(String experimentType) {
+        this.experiment_type = experimentType;
+    }
+
+    public NamespaceAPIObject getNamespaceAPIObject() {
+        return namespaceAPIObject;
+    }
+
+    public void setNamespaceAPIObject(NamespaceAPIObject namespaceAPIObject) {
+        this.namespaceAPIObject = namespaceAPIObject;
+    }
+
 
 }
