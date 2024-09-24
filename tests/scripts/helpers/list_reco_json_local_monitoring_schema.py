@@ -4,6 +4,7 @@ list_reco_json_local_monitoring_schema = {
         "type": "object",
         "properties": {
             "cluster_name": { "type": "string" },
+            "experiment_name": { "type": "string" },
             "kubernetes_objects": {
                 "type": "array",
                 "items": {
@@ -1194,9 +1195,6 @@ list_reco_namespace_json_local_monitoring_schema = {
                 }
             },
             "version": {
-                "type": "string"
-            },
-            "experiment_name": {
                 "type": "string"
             }
         },
