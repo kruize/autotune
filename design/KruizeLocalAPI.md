@@ -2162,7 +2162,7 @@ indicate whether the experiment is of type `namespace` or `container`.
 If no experiment type is specified, it will default to `container`.
 
 <details>
-  <summary><b>Example Request with `experiment_type` - `namespace`</b></summary>
+  <summary><b>Example Request with experiment_type - `namespace`</b></summary>
   The `experiment_type` field in the JSON is optional and can be used to 
 indicate whether the experiment is of type `namespace` or `container`. 
 If no experiment type is specified, it will default to `container`.
@@ -2196,7 +2196,7 @@ If no experiment type is specified, it will default to `container`.
 </details>
 
 <details>
-  <summary><b>Example Request with `experiment_type` - `container`</b></summary>
+  <summary><b>Example Request with experiment_type - `container`</b></summary>
 
 ### EXAMPLE REQUEST
 ```json
