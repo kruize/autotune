@@ -18,6 +18,8 @@ package com.autotune.analyzer.kruizeObject;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.ExperimentTypeAware;
+import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.TrialSettings;
@@ -36,7 +38,7 @@ import java.util.Map;
  * <p>
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
-public final class KruizeObject {
+public final class KruizeObject implements ExperimentTypeAware {
 
     @SerializedName("version")
     private String apiVersion;
@@ -299,6 +301,7 @@ public final class KruizeObject {
         this.datasource = datasource;
     }
 
+    @Override
     public String getExperimentType() {
         return experimentType;
     }
@@ -307,6 +310,15 @@ public final class KruizeObject {
         this.experimentType = experimentType;
     }
 
+    @Override
+    public boolean isNamespaceExperiment() {
+        return ExperimentTypeUtil.isNamespaceExperiment(experimentType);
+    }
+
+    @Override
+    public boolean isContainerExperiment() {
+        return ExperimentTypeUtil.isContainerExperiment(experimentType);
+    }
 
     @Override
     public String toString() {

@@ -26,6 +26,7 @@ import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTime
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.data.result.ContainerData;
@@ -376,17 +377,16 @@ public class DBHelpers {
                 if (kruizeObject.getKubernetes_objects().isEmpty())
                     return null;
                 List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
-                String experimentType = kruizeObject.getExperimentType();
                 for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
                     if (null == k8sObject)
                         continue;
-                    if (null == k8sObject.getContainerDataMap() && (null == experimentType || AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT.equalsIgnoreCase(experimentType)))
+                    if (null == k8sObject.getContainerDataMap() && kruizeObject.isContainerExperiment())
                         continue;
-                    if (k8sObject.getContainerDataMap().isEmpty() && (null == experimentType || AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT.equalsIgnoreCase(experimentType)))
+                    if (k8sObject.getContainerDataMap().isEmpty() && kruizeObject.isContainerExperiment())
                         continue;
                     KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
                     boolean matchFound = false;
-                    if (null != experimentType && AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT.equalsIgnoreCase(experimentType)) {
+                    if (kruizeObject.isNamespaceExperiment()) {
                         // saving namespace recommendations
                         NamespaceData clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceData(), NamespaceData.class);
                         if (null == clonedNamespaceData)
@@ -490,7 +490,7 @@ public class DBHelpers {
                     Timestamp endInterval = null;
                     // todo : what happens if two k8 objects or Containers with different timestamp
                     for (KubernetesAPIObject k8sObject : listRecommendationsAPIObject.getKubernetesObjects()) {
-                        if (null != listRecommendationsAPIObject.getExperimentType() && AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT.equalsIgnoreCase(listRecommendationsAPIObject.getExperimentType())) {
+                        if (listRecommendationsAPIObject.isNamespaceExperiment()) {
                             endInterval = k8sObject.getNamespaceAPIObjects().getnamespaceRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
                         } else {
                             for (ContainerAPIObject containerAPIObject : k8sObject.getContainerAPIObjects()) {

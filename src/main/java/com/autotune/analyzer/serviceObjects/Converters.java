@@ -11,6 +11,7 @@ import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
@@ -61,12 +62,11 @@ public class Converters {
                 List<KubernetesAPIObject> kubernetesAPIObjectsList = createExperimentAPIObject.getKubernetesObjects();
                 for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjectsList) {
                     K8sObject k8sObject = null;
-                    String experimentType = createExperimentAPIObject.getExperimentType();
                     // check if exp type is null to support remote monitoring experiments
-                    if (null == experimentType || AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT.equalsIgnoreCase(experimentType)) {
+                    if (createExperimentAPIObject.isContainerExperiment()) {
                         // container recommendations experiment type
                         k8sObject = createContainerExperiment(kubernetesAPIObject);
-                    } else if (null != experimentType && AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT.equalsIgnoreCase(experimentType)) {
+                    } else if (createExperimentAPIObject.isNamespaceExperiment()) {
                         // namespace recommendations experiment type
                         k8sObject = createNamespaceExperiment(kubernetesAPIObject);
                     }
@@ -144,8 +144,7 @@ public class Converters {
                 for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
                     kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
                     // namespace recommendations experiment type
-                    String experimentType = kruizeObject.getExperimentType();
-                    if (null != experimentType && AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT.equalsIgnoreCase(experimentType)) {
+                    if (kruizeObject.isNamespaceExperiment()) {
                         NamespaceAPIObject namespaceAPIObject;
                         NamespaceData clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceData(), NamespaceData.class);
 

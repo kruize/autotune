@@ -2933,7 +2933,7 @@ The response will contain a array of JSON object with the recommendations for th
 [
   {
     "cluster_name": "default",
-    "experiment_type": "namespace",
+    "experiment_type": "container",
     "kubernetes_objects": [
       {
         "type": "deployment",
