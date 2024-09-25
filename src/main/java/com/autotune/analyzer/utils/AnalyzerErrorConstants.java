@@ -146,6 +146,14 @@ public class AnalyzerErrorConstants {
 
         }
 
+        public static final class generateRecommendationsAPI {
+            public static final String ERROR_FETCHING_METRICS = "Error while fetching metrics.";
+
+            private generateRecommendationsAPI() {
+
+            }
+        }
+
         public static final class ListRecommendationsAPI {
             public static final String RECOMMENDATION_DOES_NOT_EXIST_EXCPTN = "Recommendation does not exist";
             public static final String RECOMMENDATION_DOES_NOT_EXIST_MSG = "Recommendation for timestamp - \" %s \" does not exist";

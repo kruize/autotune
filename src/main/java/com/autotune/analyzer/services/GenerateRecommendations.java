@@ -15,12 +15,14 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
@@ -118,6 +120,9 @@ public class GenerateRecommendations extends HttpServlet {
                 LOGGER.error("Validation failed: {}", validationMessage);
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage);
             }
+        } catch (FetchMetricsError e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.generateRecommendationsAPI.ERROR_FETCHING_METRICS);
+            sendErrorResponse(response, new Exception(e), HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             LOGGER.error("Exception occurred while processing request: " + e.getMessage());
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
