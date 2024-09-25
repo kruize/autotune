@@ -312,12 +312,13 @@ public class RecommendationEngine {
     public void generateRecommendations(KruizeObject kruizeObject) {
 
         for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
-            if (null != kruizeObject.getExperimentType() && kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
+            String experimentType = kruizeObject.getExperimentType();
+            if (null != experimentType && AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT.equalsIgnoreCase(experimentType)) {
                 String namespaceName = k8sObject.getNamespace();
                 NamespaceData namespaceData = k8sObject.getNamespaceData();
                 LOGGER.info("Generating recommendations for namespace: {}", namespaceName);
                 generateRecommendationsBasedOnNamespace(namespaceData, kruizeObject);
-            } else if (null == kruizeObject.getExperimentType() || kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT)){
+            } else if (null == experimentType || AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT.equalsIgnoreCase(experimentType)){
                 for (String containerName : k8sObject.getContainerDataMap().keySet()) {
                     ContainerData containerData = k8sObject.getContainerDataMap().get(containerName);
 
@@ -1970,12 +1971,6 @@ public class RecommendationEngine {
      */
     public void fetchMetricsBasedOnProfileAndDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception {
         try {
-            long interval_end_time_epoc = 0;
-            long interval_start_time_epoc = 0;
-            SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
-            // Create the client
-            GenericRestApiClient client = new GenericRestApiClient(dataSourceInfo);
-
             String metricProfileName = kruizeObject.getPerformanceProfile();
             PerformanceProfile metricProfile = MetricProfileCollection.getInstance().getMetricProfileCollection().get(metricProfileName);
             if (null == metricProfile) {
@@ -1984,212 +1979,255 @@ public class RecommendationEngine {
             }
 
             String maxDateQuery = null;
-            List<Metric>metrics = metricProfile.getSloInfo().getFunctionVariables();
-            for (Metric metric: metrics) {
-                String name = metric.getName();
-                if(name.equals("maxDate")){
-                    String query = metric.getAggregationFunctionsMap().get("max").getQuery();
-                    maxDateQuery = query;
-                    break;
-                }
+
+            if (null == kruizeObject.getExperimentType() || kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT)) {
+                maxDateQuery = getMaxDateQueryForContainers(metricProfile);
+                fetchContainerMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, dataSourceInfo, metricProfile, maxDateQuery);
+            } else if (null != kruizeObject.getExperimentType() && kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
+                maxDateQuery = getMaxDateQueryForNamespace(metricProfile);
+                fetchNamespaceMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, dataSourceInfo, metricProfile, maxDateQuery);
             }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
+        }
+    }
+
+    /**
+     * Fetches namespace metrics based on the specified datasource using queries from the metricProfile for the given time interval.
+     *
+     * @param kruizeObject          KruizeObject
+     * @param interval_end_time     The end time of the interval in the format yyyy-MM-ddTHH:mm:sssZ
+     * @param interval_start_time   The start time of the interval in the format yyyy-MM-ddTHH:mm:sssZ.
+     * @param dataSourceInfo        DataSource object
+     * @param metricProfile         performance profile to be used
+     * @param maxDateQuery          max date query for namespace
+     * @throws Exception
+     */
+    private void fetchNamespaceMetricsBasedOnDataSourceAndProfile(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo, PerformanceProfile metricProfile, String maxDateQuery) throws Exception{
+        try {
+            long interval_end_time_epoc = 0;
+            long interval_start_time_epoc = 0;
+            SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
+            // Create the client
+            GenericRestApiClient client = new GenericRestApiClient(dataSourceInfo);
 
             Double measurementDurationMinutesInDouble = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
             List<K8sObject> kubernetes_objects = kruizeObject.getKubernetes_objects();
 
-            // Iterate over Kubernetes objects
+            for (K8sObject k8sObject : kubernetes_objects) {
+                String namespace = k8sObject.getNamespace();
+                // fetch namespace related metrics if containerDataMap is empty
+                NamespaceData namespaceData = k8sObject.getNamespaceData();
+                // determine the max date query for namespace
+                String namespaceMaxDateQuery = maxDateQuery.replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace);
+
+                if (null == interval_end_time) {
+                    LOGGER.info(KruizeConstants.APIMessages.NAMESPACE_USAGE_INFO);
+                    String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
+                            dataSourceInfo.getUrl(),
+                            URLEncoder.encode(namespaceMaxDateQuery, CHARACTER_ENCODING)
+                    );
+                    LOGGER.info(dateMetricsUrl);
+                    client.setBaseURL(dateMetricsUrl);
+                    JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                    JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+                    JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+                    // Process fetched metrics
+                    if (null != resultArray && !resultArray.isEmpty()) {
+                        resultArray = resultArray.get(0)
+                                .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE);
+                        long epochTime = resultArray.get(0).getAsLong();
+                        String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                        Date date = sdf.parse(timestamp);
+                        Timestamp dateTS = new Timestamp(date.getTime());
+                        interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                                - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                        int maxDay = Terms.getMaxDays(kruizeObject.getTerms());
+                        LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
+                        Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
+                        interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                                - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
+                    }
+                } else {
+                    // Convert timestamps to epoch time
+                    interval_end_time_epoc = interval_end_time.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                            - ((long) interval_end_time.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                    interval_start_time_epoc = interval_start_time.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                            - ((long) interval_start_time.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
+                }
+
+                HashMap<Timestamp, IntervalResults> namespaceDataResults = new HashMap<>();
+                IntervalResults namespaceIntervalResults;
+                HashMap<AnalyzerConstants.MetricName, MetricResults> namespaceResMap;
+                HashMap<String, MetricResults> namespaceResultMap;
+                MetricResults namespaceMetricResults;
+                MetricAggregationInfoResults namespaceMetricAggregationInfoResults;
+
+                if (null == namespaceData) {
+                    namespaceData = new NamespaceData();
+                    namespaceData.setNamespace_name(namespace);
+                    k8sObject.setNamespaceData(namespaceData);
+                }
+
+                List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables();
+
+                // Iterate over metrics and aggregation functions
+                for (Metric metricEntry : metricList) {
+                    if (metricEntry.getName().startsWith(AnalyzerConstants.NAMESPACE) && !metricEntry.getName().equals("namespaceMaxDate")) {
+                        HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
+                        for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctions.entrySet()) {
+                            String promQL = aggregationFunctionsEntry.getValue().getQuery();
+                            String format = null;
+
+                            // Determine format based on metric type
+                            List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.namespaceCpuRequest.toString(), AnalyzerConstants.MetricName.namespaceCpuLimit.toString(), AnalyzerConstants.MetricName.namespaceCpuUsage.toString(), AnalyzerConstants.MetricName.namespaceCpuThrottle.toString());
+                            List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.namespaceMemoryRequest.toString(), AnalyzerConstants.MetricName.namespaceMemoryLimit.toString(), AnalyzerConstants.MetricName.namespaceMemoryUsage.toString(), AnalyzerConstants.MetricName.namespaceMemoryRSS.toString());
+                            if (cpuFunction.contains(metricEntry.getName())) {
+                                format = KruizeConstants.JSONKeys.CORES;
+                            } else if (memFunction.contains(metricEntry.getName())) {
+                                format = KruizeConstants.JSONKeys.BYTES;
+                            }
+
+                            promQL = promQL
+                                    .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()));
+
+                            // If promQL is determined, fetch metrics from the datasource
+                            if (promQL != null) {
+                                LOGGER.info(promQL);
+                                String namespaceMetricsUrl;
+                                try {
+                                    namespaceMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
+                                            dataSourceInfo.getUrl(),
+                                            URLEncoder.encode(promQL, CHARACTER_ENCODING),
+                                            interval_start_time_epoc,
+                                            interval_end_time_epoc,
+                                            measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                                    client.setBaseURL(namespaceMetricsUrl);
+                                    JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                                    JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+                                    JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+                                    // Process fetched metrics
+                                    if (null != resultArray && !resultArray.isEmpty()) {
+                                        resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
+                                                        KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
+                                                .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
+                                                        .DataSourceQueryJSONKeys.VALUES);
+                                        sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+
+                                        // Iterate over fetched metrics
+                                        Timestamp sTime = new Timestamp(interval_start_time_epoc);
+                                        for (JsonElement element : resultArray) {
+                                            JsonArray valueArray = element.getAsJsonArray();
+                                            long epochTime = valueArray.get(0).getAsLong();
+                                            double value = valueArray.get(1).getAsDouble();
+                                            String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                                            Date date = sdf.parse(timestamp);
+                                            Timestamp eTime = new Timestamp(date.getTime());
+
+                                            // Prepare interval results
+                                            if (namespaceDataResults.containsKey(eTime)) {
+                                                namespaceIntervalResults = namespaceDataResults.get(eTime);
+                                                namespaceResMap = namespaceIntervalResults.getMetricResultsMap();
+                                            } else {
+                                                namespaceIntervalResults = new IntervalResults();
+                                                namespaceResMap = new HashMap<>();
+                                            }
+                                            AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
+                                            if (namespaceResMap.containsKey(metricName)) {
+                                                namespaceMetricResults = namespaceResMap.get(metricName);
+                                                namespaceMetricAggregationInfoResults = namespaceMetricResults.getAggregationInfoResult();
+                                            } else {
+                                                namespaceMetricResults = new MetricResults();
+                                                namespaceMetricAggregationInfoResults = new MetricAggregationInfoResults();
+                                            }
+
+                                            Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
+                                            method.invoke(namespaceMetricAggregationInfoResults, value);
+                                            namespaceMetricAggregationInfoResults.setFormat(format);
+                                            namespaceMetricResults.setAggregationInfoResult(namespaceMetricAggregationInfoResults);
+                                            namespaceMetricResults.setName(metricEntry.getName());
+                                            namespaceMetricResults.setFormat(format);
+                                            namespaceResMap.put(metricName, namespaceMetricResults);
+                                            namespaceIntervalResults.setMetricResultsMap(namespaceResMap);
+                                            namespaceIntervalResults.setIntervalStartTime(sTime);  //Todo this will change
+                                            namespaceIntervalResults.setIntervalEndTime(eTime);
+                                            namespaceIntervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
+                                                    / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
+                                                    * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
+                                            namespaceDataResults.put(eTime, namespaceIntervalResults);
+                                            sTime = eTime;
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
+                            }
+                        }
+                        namespaceData.setResults(namespaceDataResults);
+                        if (!namespaceDataResults.isEmpty()) {
+                            setInterval_end_time(Collections.max(namespaceDataResults.keySet()));
+                        }
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
+        }
+    }
+
+
+    /**
+     * Fetches namespace metrics based on the specified datasource using queries from the metricProfile for the given time interval.
+     *
+     * @param kruizeObject          KruizeObject
+     * @param interval_end_time     The end time of the interval in the format yyyy-MM-ddTHH:mm:sssZ
+     * @param interval_start_time   The start time of the interval in the format yyyy-MM-ddTHH:mm:sssZ.
+     * @param dataSourceInfo        DataSource object
+     * @param metricProfile         performance profile to be used
+     * @param maxDateQuery          max date query for containers
+     * @throws Exception
+     */
+    private void fetchContainerMetricsBasedOnDataSourceAndProfile(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo, PerformanceProfile metricProfile, String maxDateQuery) throws Exception{
+        try {
+            long interval_end_time_epoc = 0;
+            long interval_start_time_epoc = 0;
+            SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
+            // Create the client
+            GenericRestApiClient client = new GenericRestApiClient(dataSourceInfo);
+
+            Double measurementDurationMinutesInDouble = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
+            List<K8sObject> kubernetes_objects = kruizeObject.getKubernetes_objects();
+
             for (K8sObject k8sObject : kubernetes_objects) {
                 String namespace = k8sObject.getNamespace();
                 String workload = k8sObject.getName();
                 String workload_type = k8sObject.getType();
                 HashMap<String, ContainerData> containerDataMap = k8sObject.getContainerDataMap();
-                // check if containerDataMap is not empty
-                if (null == kruizeObject.getExperimentType() || kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT)) {
-                    // Iterate over containers
-                    for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
-                        ContainerData containerData = entry.getValue();
-                        String containerName = containerData.getContainer_name();
-                        if (null == interval_end_time) {
-                            LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
-                            String queryToEncode = null;
-                            if (null == maxDateQuery || maxDateQuery.isEmpty()) {
-                                throw new NullPointerException("maxDate query cannot be empty or null");
-                            }
 
-
-                            LOGGER.debug("maxDateQuery: {}", maxDateQuery);
-                            queryToEncode =  maxDateQuery
-                                    .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
-                                    .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
-                                    .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
-                                    .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
-
-                            String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
-                                    dataSourceInfo.getUrl(),
-                                    URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
-                            );
-                            LOGGER.info(dateMetricsUrl);
-                            client.setBaseURL(dateMetricsUrl);
-                            JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
-                            JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
-                            JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-                            // Process fetched metrics
-                            if (null != resultArray && !resultArray.isEmpty()) {
-                                resultArray = resultArray.get(0)
-                                        .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE);
-                                long epochTime = resultArray.get(0).getAsLong();
-                                String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
-                                Date date = sdf.parse(timestamp);
-                                Timestamp dateTS = new Timestamp(date.getTime());
-                                interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
-                                        - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-                                int maxDay = Terms.getMaxDays(kruizeObject.getTerms());
-                                LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
-                                Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
-                                interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
-                                        - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
-                            }
-                        } else {
-                            // Convert timestamps to epoch time
-                            interval_end_time_epoc = interval_end_time.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
-                                    - ((long) interval_end_time.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-                            interval_start_time_epoc = interval_start_time.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
-                                    - ((long) interval_start_time.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
-                        }
-                        HashMap<Timestamp, IntervalResults> containerDataResults = new HashMap<>();
-                        IntervalResults intervalResults;
-                        HashMap<AnalyzerConstants.MetricName, MetricResults> resMap;
-                        HashMap<String, MetricResults> resultMap;
-                        MetricResults metricResults;
-                        MetricAggregationInfoResults metricAggregationInfoResults;
-
-                        List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables();
-
-                        // Iterate over metrics and aggregation functions
-                        for (Metric metricEntry : metricList) {
-                            HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
-                            for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry: aggregationFunctions.entrySet()) {
-                                // Determine promQL query on metric type
-                                String promQL = aggregationFunctionsEntry.getValue().getQuery();
-                                String format = null;
-
-
-                                // Determine format based on metric type - Todo move this metric profile
-                                List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
-                                List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString());
-                                if (cpuFunction.contains(metricEntry.getName())) {
-                                    format = KruizeConstants.JSONKeys.CORES;
-                                } else if (memFunction.contains(metricEntry.getName())) {
-                                    format = KruizeConstants.JSONKeys.BYTES;
-                                }
-
-                                promQL = promQL
-                                        .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
-                                        .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
-                                        .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
-                                        .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
-                                        .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
-
-                                // If promQL is determined, fetch metrics from the datasource
-                                if (promQL != null) {
-                                    LOGGER.info(promQL);
-                                    String podMetricsUrl;
-                                    try {
-                                        podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
-                                                dataSourceInfo.getUrl(),
-                                                URLEncoder.encode(promQL, CHARACTER_ENCODING),
-                                                interval_start_time_epoc,
-                                                interval_end_time_epoc,
-                                                measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-                                        LOGGER.info(podMetricsUrl);
-                                        client.setBaseURL(podMetricsUrl);
-                                        JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
-                                        JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
-                                        JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-                                        // Process fetched metrics
-                                        if (null != resultArray && !resultArray.isEmpty()) {
-                                            resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
-                                                            KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
-                                                    .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
-                                                            .DataSourceQueryJSONKeys.VALUES);
-                                            sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
-
-                                            // Iterate over fetched metrics
-                                            Timestamp sTime = new Timestamp(interval_start_time_epoc);
-                                            for (JsonElement element : resultArray) {
-                                                JsonArray valueArray = element.getAsJsonArray();
-                                                long epochTime = valueArray.get(0).getAsLong();
-                                                double value = valueArray.get(1).getAsDouble();
-                                                String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
-                                                Date date = sdf.parse(timestamp);
-                                                Timestamp eTime = new Timestamp(date.getTime());
-
-                                                // Prepare interval results
-                                                if (containerDataResults.containsKey(eTime)) {
-                                                    intervalResults = containerDataResults.get(eTime);
-                                                    resMap = intervalResults.getMetricResultsMap();
-                                                } else {
-                                                    intervalResults = new IntervalResults();
-                                                    resMap = new HashMap<>();
-                                                }
-                                                AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
-                                                if (resMap.containsKey(metricName)) {
-                                                    metricResults = resMap.get(metricName);
-                                                    metricAggregationInfoResults = metricResults.getAggregationInfoResult();
-                                                } else {
-                                                    metricResults = new MetricResults();
-                                                    metricAggregationInfoResults = new MetricAggregationInfoResults();
-                                                }
-
-                                                Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
-                                                method.invoke(metricAggregationInfoResults, value);
-                                                metricAggregationInfoResults.setFormat(format);
-                                                metricResults.setAggregationInfoResult(metricAggregationInfoResults);
-                                                metricResults.setName(metricEntry.getName());
-                                                metricResults.setFormat(format);
-                                                resMap.put(metricName, metricResults);
-                                                intervalResults.setMetricResultsMap(resMap);
-                                                intervalResults.setIntervalStartTime(sTime);  //Todo this will change
-                                                intervalResults.setIntervalEndTime(eTime);
-                                                intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
-                                                        / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
-                                                        * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
-                                                containerDataResults.put(eTime, intervalResults);
-                                                sTime = eTime;
-                                            }
-                                        }
-                                    } catch (Exception e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                }
-                            }
-                        }
-
-                        containerData.setResults(containerDataResults);
-                        if (!containerDataResults.isEmpty())
-                            setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalid date is set if experiment having two container with different last seen date
-
-                    }
-                } else if (null != kruizeObject.getExperimentType() && kruizeObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)){
-                    // fetch namespace related metrics if containerDataMap is empty
-                    NamespaceData namespaceData = k8sObject.getNamespaceData();
-                    // determine the max date query for namespace
-                    String namespaceMaxDateQuery = null;
-                    for (Metric metric: metrics) {
-                        String name = metric.getName();
-                        if(name.equals("namespaceMaxDate")){
-                            namespaceMaxDateQuery = metric.getAggregationFunctionsMap().get("max").getQuery();
-                            break;
-                        }
-                    }
-
-                    namespaceMaxDateQuery = namespaceMaxDateQuery.replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace);
-
+                for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
+                    ContainerData containerData = entry.getValue();
+                    String containerName = containerData.getContainer_name();
                     if (null == interval_end_time) {
-                        LOGGER.info(KruizeConstants.APIMessages.NAMESPACE_USAGE_INFO);
+                        LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
+                        String queryToEncode = null;
+                        if (null == maxDateQuery || maxDateQuery.isEmpty()) {
+                            throw new NullPointerException("maxDate query cannot be empty or null");
+                        }
+
+
+                        LOGGER.debug("maxDateQuery: {}", maxDateQuery);
+                        queryToEncode =  maxDateQuery
+                                .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                                .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                                .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+                                .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+
                         String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
                                 dataSourceInfo.getUrl(),
-                                URLEncoder.encode(namespaceMaxDateQuery, CHARACTER_ENCODING)
+                                URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
                         );
                         LOGGER.info(dateMetricsUrl);
                         client.setBaseURL(dateMetricsUrl);
@@ -2219,126 +2257,158 @@ public class RecommendationEngine {
                         interval_start_time_epoc = interval_start_time.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                 - ((long) interval_start_time.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
                     }
-
-                    HashMap<Timestamp, IntervalResults> namespaceDataResults = new HashMap<>();
-                    IntervalResults namespaceIntervalResults;
-                    HashMap<AnalyzerConstants.MetricName, MetricResults> namespaceResMap;
-                    HashMap<String, MetricResults> namespaceResultMap;
-                    MetricResults namespaceMetricResults;
-                    MetricAggregationInfoResults namespaceMetricAggregationInfoResults;
-
-                    if (null == namespaceData) {
-                        namespaceData = new NamespaceData();
-                        namespaceData.setNamespace_name(namespace);
-                        k8sObject.setNamespaceData(namespaceData);
-                    }
+                    HashMap<Timestamp, IntervalResults> containerDataResults = new HashMap<>();
+                    IntervalResults intervalResults;
+                    HashMap<AnalyzerConstants.MetricName, MetricResults> resMap;
+                    HashMap<String, MetricResults> resultMap;
+                    MetricResults metricResults;
+                    MetricAggregationInfoResults metricAggregationInfoResults;
 
                     List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables();
 
                     // Iterate over metrics and aggregation functions
                     for (Metric metricEntry : metricList) {
-                        if (metricEntry.getName().startsWith(AnalyzerConstants.NAMESPACE) && !metricEntry.getName().equals("namespaceMaxDate")) {
-                            HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
-                            for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctions.entrySet()) {
-                                String promQL = aggregationFunctionsEntry.getValue().getQuery();
-                                String format = null;
+                        HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
+                        for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry: aggregationFunctions.entrySet()) {
+                            // Determine promQL query on metric type
+                            String promQL = aggregationFunctionsEntry.getValue().getQuery();
+                            String format = null;
 
-                                // Determine format based on metric type
-                                List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.namespaceCpuRequest.toString(), AnalyzerConstants.MetricName.namespaceCpuLimit.toString(), AnalyzerConstants.MetricName.namespaceCpuUsage.toString(), AnalyzerConstants.MetricName.namespaceCpuThrottle.toString());
-                                List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.namespaceMemoryRequest.toString(), AnalyzerConstants.MetricName.namespaceMemoryLimit.toString(), AnalyzerConstants.MetricName.namespaceMemoryUsage.toString(), AnalyzerConstants.MetricName.namespaceMemoryRSS.toString());
-                                if (cpuFunction.contains(metricEntry.getName())) {
-                                    format = KruizeConstants.JSONKeys.CORES;
-                                } else if (memFunction.contains(metricEntry.getName())) {
-                                    format = KruizeConstants.JSONKeys.BYTES;
-                                }
 
-                                promQL = promQL
-                                        .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
-                                        .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()));
-
-                                // If promQL is determined, fetch metrics from the datasource
-                                if (promQL != null) {
-                                    LOGGER.info(promQL);
-                                    String namespaceMetricsUrl;
-                                    try {
-                                        namespaceMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
-                                                dataSourceInfo.getUrl(),
-                                                URLEncoder.encode(promQL, CHARACTER_ENCODING),
-                                                interval_start_time_epoc,
-                                                interval_end_time_epoc,
-                                                measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-                                        client.setBaseURL(namespaceMetricsUrl);
-                                        JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
-                                        JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
-                                        JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-                                        // Process fetched metrics
-                                        if (null != resultArray && !resultArray.isEmpty()) {
-                                            resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
-                                                            KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
-                                                    .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
-                                                            .DataSourceQueryJSONKeys.VALUES);
-                                            sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
-
-                                            // Iterate over fetched metrics
-                                            Timestamp sTime = new Timestamp(interval_start_time_epoc);
-                                            for (JsonElement element : resultArray) {
-                                                JsonArray valueArray = element.getAsJsonArray();
-                                                long epochTime = valueArray.get(0).getAsLong();
-                                                double value = valueArray.get(1).getAsDouble();
-                                                String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
-                                                Date date = sdf.parse(timestamp);
-                                                Timestamp eTime = new Timestamp(date.getTime());
-
-                                                // Prepare interval results
-                                                if (namespaceDataResults.containsKey(eTime)) {
-                                                    namespaceIntervalResults = namespaceDataResults.get(eTime);
-                                                    namespaceResMap = namespaceIntervalResults.getMetricResultsMap();
-                                                } else {
-                                                    namespaceIntervalResults = new IntervalResults();
-                                                    namespaceResMap = new HashMap<>();
-                                                }
-                                                AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
-                                                if (namespaceResMap.containsKey(metricName)) {
-                                                    namespaceMetricResults = namespaceResMap.get(metricName);
-                                                    namespaceMetricAggregationInfoResults = namespaceMetricResults.getAggregationInfoResult();
-                                                } else {
-                                                    namespaceMetricResults = new MetricResults();
-                                                    namespaceMetricAggregationInfoResults = new MetricAggregationInfoResults();
-                                                }
-
-                                                Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
-                                                method.invoke(namespaceMetricAggregationInfoResults, value);
-                                                namespaceMetricAggregationInfoResults.setFormat(format);
-                                                namespaceMetricResults.setAggregationInfoResult(namespaceMetricAggregationInfoResults);
-                                                namespaceMetricResults.setName(metricEntry.getName());
-                                                namespaceMetricResults.setFormat(format);
-                                                namespaceResMap.put(metricName, namespaceMetricResults);
-                                                namespaceIntervalResults.setMetricResultsMap(namespaceResMap);
-                                                namespaceIntervalResults.setIntervalStartTime(sTime);  //Todo this will change
-                                                namespaceIntervalResults.setIntervalEndTime(eTime);
-                                                namespaceIntervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
-                                                        / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
-                                                        * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
-                                                namespaceDataResults.put(eTime, namespaceIntervalResults);
-                                                sTime = eTime;
-                                            }
-                                        }
-                                    } catch (Exception e) {
-                                        throw new RuntimeException(e);
-                                    }
-                                }
+                            // Determine format based on metric type - Todo move this metric profile
+                            List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
+                            List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString());
+                            if (cpuFunction.contains(metricEntry.getName())) {
+                                format = KruizeConstants.JSONKeys.CORES;
+                            } else if (memFunction.contains(metricEntry.getName())) {
+                                format = KruizeConstants.JSONKeys.BYTES;
                             }
-                            namespaceData.setResults(namespaceDataResults);
-                            if (!namespaceDataResults.isEmpty()) {
-                                setInterval_end_time(Collections.max(namespaceDataResults.keySet()));
+
+                            promQL = promQL
+                                    .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                                    .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
+                                    .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+                                    .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+
+                            // If promQL is determined, fetch metrics from the datasource
+                            if (promQL != null) {
+                                LOGGER.info(promQL);
+                                String podMetricsUrl;
+                                try {
+                                    podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
+                                            dataSourceInfo.getUrl(),
+                                            URLEncoder.encode(promQL, CHARACTER_ENCODING),
+                                            interval_start_time_epoc,
+                                            interval_end_time_epoc,
+                                            measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                                    LOGGER.info(podMetricsUrl);
+                                    client.setBaseURL(podMetricsUrl);
+                                    JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                                    JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+                                    JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+                                    // Process fetched metrics
+                                    if (null != resultArray && !resultArray.isEmpty()) {
+                                        resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
+                                                        KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
+                                                .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
+                                                        .DataSourceQueryJSONKeys.VALUES);
+                                        sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+
+                                        // Iterate over fetched metrics
+                                        Timestamp sTime = new Timestamp(interval_start_time_epoc);
+                                        for (JsonElement element : resultArray) {
+                                            JsonArray valueArray = element.getAsJsonArray();
+                                            long epochTime = valueArray.get(0).getAsLong();
+                                            double value = valueArray.get(1).getAsDouble();
+                                            String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                                            Date date = sdf.parse(timestamp);
+                                            Timestamp eTime = new Timestamp(date.getTime());
+
+                                            // Prepare interval results
+                                            if (containerDataResults.containsKey(eTime)) {
+                                                intervalResults = containerDataResults.get(eTime);
+                                                resMap = intervalResults.getMetricResultsMap();
+                                            } else {
+                                                intervalResults = new IntervalResults();
+                                                resMap = new HashMap<>();
+                                            }
+                                            AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
+                                            if (resMap.containsKey(metricName)) {
+                                                metricResults = resMap.get(metricName);
+                                                metricAggregationInfoResults = metricResults.getAggregationInfoResult();
+                                            } else {
+                                                metricResults = new MetricResults();
+                                                metricAggregationInfoResults = new MetricAggregationInfoResults();
+                                            }
+
+                                            Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
+                                            method.invoke(metricAggregationInfoResults, value);
+                                            metricAggregationInfoResults.setFormat(format);
+                                            metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+                                            metricResults.setName(metricEntry.getName());
+                                            metricResults.setFormat(format);
+                                            resMap.put(metricName, metricResults);
+                                            intervalResults.setMetricResultsMap(resMap);
+                                            intervalResults.setIntervalStartTime(sTime);  //Todo this will change
+                                            intervalResults.setIntervalEndTime(eTime);
+                                            intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
+                                                    / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
+                                                    * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
+                                            containerDataResults.put(eTime, intervalResults);
+                                            sTime = eTime;
+                                        }
+                                    }
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
                             }
                         }
                     }
+
+                    containerData.setResults(containerDataResults);
+                    if (!containerDataResults.isEmpty())
+                        setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalid date is set if experiment having two container with different last seen date
+
                 }
             }
         } catch (Exception e) {
             e.printStackTrace();
             throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
         }
+    }
+
+    /**
+     * Fetches max date query for containers from performance profile
+     * @param metricProfile         performance profile to be used
+     */
+    private String getMaxDateQueryForContainers (PerformanceProfile metricProfile) {
+        List<Metric> metrics = metricProfile.getSloInfo().getFunctionVariables();
+        String query = null;
+        for (Metric metric: metrics) {
+            String name = metric.getName();
+            if(name.equals("maxDate")){
+                query = metric.getAggregationFunctionsMap().get("max").getQuery();
+                break;
+            }
+        }
+        return query;
+    }
+
+    /**
+     * Fetches max date query for namespace from performance profile
+     * @param metricProfile         performance profile to be used
+     */
+    private String getMaxDateQueryForNamespace (PerformanceProfile metricProfile) {
+        List<Metric> metrics = metricProfile.getSloInfo().getFunctionVariables();
+        String query = null;
+        for (Metric metric: metrics) {
+            String name = metric.getName();
+            if(name.equals("namespaceMaxDate")){
+                query = metric.getAggregationFunctionsMap().get("max").getQuery();
+                break;
+            }
+        }
+        return query;
     }
 }

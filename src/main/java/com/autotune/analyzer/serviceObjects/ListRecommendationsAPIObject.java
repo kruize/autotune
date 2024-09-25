@@ -24,7 +24,7 @@ public class ListRecommendationsAPIObject extends BaseSO{
     @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
     private String clusterName;
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE)
-    private String experiment_type;
+    private String experimentType;
 
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<KubernetesAPIObject> kubernetesObjects;
@@ -46,10 +46,10 @@ public class ListRecommendationsAPIObject extends BaseSO{
     }
 
     public String getExperimentType() {
-        return experiment_type;
+        return experimentType;
     }
 
     public void setExperimentType(String experiment_type) {
-        this.experiment_type = experiment_type;
+        this.experimentType = experiment_type;
     }
 }

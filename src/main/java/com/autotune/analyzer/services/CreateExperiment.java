@@ -98,24 +98,30 @@ public class CreateExperiment extends HttpServlet {
             } else {
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
                 for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    String experimentType = createExperimentAPIObject.getExperimentType();
                     createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
                     createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
+                    boolean isContainerExperiment = true;
+                    boolean isNamespaceExperiment = false;
                     // updating experiment type to container if not passed
-                    if (null == createExperimentAPIObject.getExperimentType() || createExperimentAPIObject.getExperimentType().isEmpty()) {
+                    if (null == experimentType || experimentType.isEmpty()) {
                         createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
+                    } else if (AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT.equalsIgnoreCase(experimentType)) {
+                        isNamespaceExperiment = true;
+                        isContainerExperiment = false;
                     }
                     // validating the kubernetes objects and experiment type
                     for (KubernetesAPIObject kubernetesAPIObject: createExperimentAPIObject.getKubernetesObjects()) {
-                        if (createExperimentAPIObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT)) {
+                        if (isContainerExperiment) {
                             // check if namespace data is also set for container-type experiments
                             if (null != kubernetesAPIObject.getNamespaceAPIObjects()) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP);
                             }
-                        } else if (createExperimentAPIObject.getExperimentType().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
+                        } else if (isNamespaceExperiment) {
                             if (null != kubernetesAPIObject.getContainerAPIObjects()) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP);
                             }
-                            if (createExperimentAPIObject.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
+                            if (AnalyzerConstants.REMOTE.equalsIgnoreCase(createExperimentAPIObject.getTargetCluster())) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE);
                             }
                         }
