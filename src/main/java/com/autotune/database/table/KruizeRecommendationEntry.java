@@ -27,7 +27,7 @@ public class KruizeRecommendationEntry {
     private String cluster_name;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode extended_data;
-    private String experimentType;
+    private String experiment_type;
 
     public String getExperiment_name() {
         return experiment_name;
@@ -70,10 +70,10 @@ public class KruizeRecommendationEntry {
     }
 
     public String getExperimentType() {
-        return experimentType;
+        return experiment_type;
     }
 
     public void setExperimentType(String experimentType) {
-        this.experimentType = experimentType;
+        this.experiment_type = experimentType;
     }
 }
