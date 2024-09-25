@@ -3393,6 +3393,208 @@ When `interval_end_time` is not specified, Kruize will determine the latest time
 
 </details>
 
+**Request for `namespace` experiment**
+
+`POST /generateRecommendations?experiment_name=?`
+
+example
+
+`curl --location --request POST 'http://<URL>:<PORT>/generateRecommendations?experiment_name=temp_1'`
+
+success status code : 201
+
+**Response for `namespace` Experiment**
+
+The response will contain an array of JSON object with the recommendations for the specified experiment.
+
+When `interval_end_time` is not specified, Kruize will determine the latest timestamp from the specified datasource
+(E.g. Prometheus) by checking the latest active container CPU usage.
+
+<details>
+<summary><b>Example Response Body</b></summary>
+
+```json
+[
+  {
+    "cluster_name": "test-multiple-import",
+    "experiment_type": "namespace",
+    "kubernetes_objects": [
+      {
+        "namespace": "default",
+        "containers": [],
+        "namespaces": {
+          "namespace_name": "default",
+          "recommendations": {
+            "version": "1.0",
+            "notifications": {
+              "111000": {
+                "type": "info",
+                "message": "Recommendations Are Available",
+                "code": 111000
+              }
+            },
+            "data": {
+              "2024-09-25T09:46:20.000Z": {
+                "notifications": {
+                  "111101": {
+                    "type": "info",
+                    "message": "Short Term Recommendations Available",
+                    "code": 111101
+                  }
+                },
+                "monitoring_end_time": "2024-09-25T09:46:20.000Z",
+                "current": {},
+                "recommendation_terms": {
+                  "short_term": {
+                    "duration_in_hours": 24.0,
+                    "notifications": {
+                      "112101": {
+                        "type": "info",
+                        "message": "Cost Recommendations Available",
+                        "code": 112101
+                      },
+                      "112102": {
+                        "type": "info",
+                        "message": "Performance Recommendations Available",
+                        "code": 112102
+                      }
+                    },
+                    "monitoring_start_time": "2024-09-24T09:46:20.000Z",
+                    "recommendation_engines": {
+                      "cost": {
+                        "pods_count": 2,
+                        "confidence_level": 0.0,
+                        "config": {
+                          "limits": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          },
+                          "requests": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          }
+                        },
+                        "variation": {
+                          "limits": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          },
+                          "requests": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          }
+                        },
+                        "notifications": {}
+                      },
+                      "performance": {
+                        "pods_count": 2,
+                        "confidence_level": 0.0,
+                        "config": {
+                          "limits": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          },
+                          "requests": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          }
+                        },
+                        "variation": {
+                          "limits": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          },
+                          "requests": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          }
+                        },
+                        "notifications": {}
+                      }
+                    }
+                  },
+                  "medium_term": {
+                    "duration_in_hours": 168.0,
+                    "notifications": {
+                      "120001": {
+                        "type": "info",
+                        "message": "There is not enough data available to generate a recommendation.",
+                        "code": 120001
+                      }
+                    }
+                  },
+                  "long_term": {
+                    "duration_in_hours": 360.0,
+                    "notifications": {
+                      "120001": {
+                        "type": "info",
+                        "message": "There is not enough data available to generate a recommendation.",
+                        "code": 120001
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "namespace-demo"
+  }
+]
+```
+
+</details>
 
 **Error Responses**
 
