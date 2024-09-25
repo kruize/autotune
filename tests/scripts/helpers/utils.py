@@ -42,6 +42,8 @@ UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_
 DUPLICATE_RECORDS_MSG = "An entry for this record already exists!"
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
+CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE = "Can not specify namespace data for container experiment"
+CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER = "Can not specify container data for namespace experiment"
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
 UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE = 'interval_end_time is mandatory'
 UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND = 'Not Found: experiment_name does not exist: '
@@ -458,7 +460,7 @@ def validate_local_monitoring_reco_json(create_exp_json, list_reco_json, expecte
     # Validate kubernetes objects
     create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][0]
     list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
-    experiment_type = create_exp_json["experiment_type"]
+    experiment_type = create_exp_json.get("experiment_type")
     validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj, list_reco_kubernetes_obj, expected_duration_in_hours,
                                              test_name, experiment_type)
 
