@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.datasource.prometheus;
 
+import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.auth.AuthenticationStrategy;
 import com.autotune.common.auth.AuthenticationStrategyFactory;
@@ -180,6 +181,8 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
         } catch (KeyStoreException e) {
             e.printStackTrace();
         } catch (KeyManagementException e) {
+            e.printStackTrace();
+        } catch (FetchMetricsError e) {
             e.printStackTrace();
         }
         return null;

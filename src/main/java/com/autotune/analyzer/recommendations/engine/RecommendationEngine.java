@@ -1880,11 +1880,11 @@ public class RecommendationEngine {
                 }
 
                 HashMap<Timestamp, IntervalResults> namespaceDataResults = new HashMap<>();
-                IntervalResults namespaceIntervalResults;
-                HashMap<AnalyzerConstants.MetricName, MetricResults> namespaceResMap;
-                HashMap<String, MetricResults> namespaceResultMap;
-                MetricResults namespaceMetricResults;
-                MetricAggregationInfoResults namespaceMetricAggregationInfoResults;
+                IntervalResults namespaceIntervalResults = null;
+                HashMap<AnalyzerConstants.MetricName, MetricResults> namespaceResMap = null;
+                HashMap<String, MetricResults> namespaceResultMap = null;
+                MetricResults namespaceMetricResults = null;
+                MetricAggregationInfoResults namespaceMetricAggregationInfoResults = null;
 
                 if (null == namespaceData) {
                     namespaceData = new NamespaceData();
@@ -1950,37 +1950,8 @@ public class RecommendationEngine {
                                         Timestamp eTime = new Timestamp(date.getTime());
 
                                         // Prepare interval results
-                                        if (namespaceDataResults.containsKey(eTime)) {
-                                            namespaceIntervalResults = namespaceDataResults.get(eTime);
-                                            namespaceResMap = namespaceIntervalResults.getMetricResultsMap();
-                                        } else {
-                                            namespaceIntervalResults = new IntervalResults();
-                                            namespaceResMap = new HashMap<>();
-                                        }
-                                        AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
-                                        if (namespaceResMap.containsKey(metricName)) {
-                                            namespaceMetricResults = namespaceResMap.get(metricName);
-                                            namespaceMetricAggregationInfoResults = namespaceMetricResults.getAggregationInfoResult();
-                                        } else {
-                                            namespaceMetricResults = new MetricResults();
-                                            namespaceMetricAggregationInfoResults = new MetricAggregationInfoResults();
-                                        }
-
-                                        Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
-                                        method.invoke(namespaceMetricAggregationInfoResults, value);
-                                        namespaceMetricAggregationInfoResults.setFormat(format);
-                                        namespaceMetricResults.setAggregationInfoResult(namespaceMetricAggregationInfoResults);
-                                        namespaceMetricResults.setName(metricEntry.getName());
-                                        namespaceMetricResults.setFormat(format);
-                                        namespaceResMap.put(metricName, namespaceMetricResults);
-                                        namespaceIntervalResults.setMetricResultsMap(namespaceResMap);
-                                        namespaceIntervalResults.setIntervalStartTime(sTime);  //Todo this will change
-                                        namespaceIntervalResults.setIntervalEndTime(eTime);
-                                        namespaceIntervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
-                                                / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
-                                                * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
-                                        namespaceDataResults.put(eTime, namespaceIntervalResults);
-                                        sTime = eTime;
+                                        prepareIntervalResults(namespaceDataResults, namespaceIntervalResults, namespaceResMap, namespaceMetricResults,
+                                                namespaceMetricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
                                     }
                                 }
                             } catch (Exception e) {
@@ -2080,11 +2051,11 @@ public class RecommendationEngine {
                                 - ((long) interval_start_time.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
                     }
                     HashMap<Timestamp, IntervalResults> containerDataResults = new HashMap<>();
-                    IntervalResults intervalResults;
-                    HashMap<AnalyzerConstants.MetricName, MetricResults> resMap;
-                    HashMap<String, MetricResults> resultMap;
-                    MetricResults metricResults;
-                    MetricAggregationInfoResults metricAggregationInfoResults;
+                    IntervalResults intervalResults = null;
+                    HashMap<AnalyzerConstants.MetricName, MetricResults> resMap = null;
+                    HashMap<String, MetricResults> resultMap = null;
+                    MetricResults metricResults = null;
+                    MetricAggregationInfoResults metricAggregationInfoResults = null;
 
                     List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables();
 
@@ -2148,37 +2119,8 @@ public class RecommendationEngine {
                                             Timestamp eTime = new Timestamp(date.getTime());
 
                                             // Prepare interval results
-                                            if (containerDataResults.containsKey(eTime)) {
-                                                intervalResults = containerDataResults.get(eTime);
-                                                resMap = intervalResults.getMetricResultsMap();
-                                            } else {
-                                                intervalResults = new IntervalResults();
-                                                resMap = new HashMap<>();
-                                            }
-                                            AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
-                                            if (resMap.containsKey(metricName)) {
-                                                metricResults = resMap.get(metricName);
-                                                metricAggregationInfoResults = metricResults.getAggregationInfoResult();
-                                            } else {
-                                                metricResults = new MetricResults();
-                                                metricAggregationInfoResults = new MetricAggregationInfoResults();
-                                            }
-
-                                            Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
-                                            method.invoke(metricAggregationInfoResults, value);
-                                            metricAggregationInfoResults.setFormat(format);
-                                            metricResults.setAggregationInfoResult(metricAggregationInfoResults);
-                                            metricResults.setName(metricEntry.getName());
-                                            metricResults.setFormat(format);
-                                            resMap.put(metricName, metricResults);
-                                            intervalResults.setMetricResultsMap(resMap);
-                                            intervalResults.setIntervalStartTime(sTime);  //Todo this will change
-                                            intervalResults.setIntervalEndTime(eTime);
-                                            intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
-                                                    / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
-                                                    * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
-                                            containerDataResults.put(eTime, intervalResults);
-                                            sTime = eTime;
+                                            prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults,
+                                                    metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
                                         }
                                     }
                                 } catch (Exception e) {
@@ -2213,6 +2155,51 @@ public class RecommendationEngine {
             }
         }
         return null;
+    }
+
+    /**
+     * prepares interval results for namespace and container experiments
+     */
+    private void prepareIntervalResults(Map<Timestamp, IntervalResults> dataResultsMap, IntervalResults intervalResults,
+                                        HashMap<AnalyzerConstants.MetricName, MetricResults> resMap, MetricResults metricResults,
+                                        MetricAggregationInfoResults metricAggregationInfoResults, Timestamp sTime, Timestamp eTime, Metric metricEntry,
+                                        Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry, double value, String format) throws Exception {
+        try {
+            if (dataResultsMap.containsKey(eTime)) {
+                intervalResults = dataResultsMap.get(eTime);
+                resMap = intervalResults.getMetricResultsMap();
+            } else {
+                intervalResults = new IntervalResults();
+                resMap = new HashMap<>();
+            }
+            AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
+            if (resMap.containsKey(metricName)) {
+                metricResults = resMap.get(metricName);
+                metricAggregationInfoResults = metricResults.getAggregationInfoResult();
+            } else {
+                metricResults = new MetricResults();
+                metricAggregationInfoResults = new MetricAggregationInfoResults();
+            }
+
+            Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
+            method.invoke(metricAggregationInfoResults, value);
+            metricAggregationInfoResults.setFormat(format);
+            metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+            metricResults.setName(metricEntry.getName());
+            metricResults.setFormat(format);
+            resMap.put(metricName, metricResults);
+            intervalResults.setMetricResultsMap(resMap);
+            intervalResults.setIntervalStartTime(sTime);  //Todo this will change
+            intervalResults.setIntervalEndTime(eTime);
+            intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
+                    / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
+                    * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
+            dataResultsMap.put(eTime, intervalResults);
+            sTime = eTime;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
+        }
     }
 }
 
