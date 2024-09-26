@@ -28,9 +28,6 @@ public class KubernetesAPIObject {
     private String type;
     private String name;
     private String namespace;
-    // Optional field to determine if the experiment type is 'container' or 'namespace'.
-    // TODO: Update to make this field mandatory in the future.
-    private String experiment_type;
     @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
     private List<ContainerAPIObject> containerAPIObjects;
     @SerializedName(KruizeConstants.JSONKeys.NAMESPACES)
@@ -60,10 +57,6 @@ public class KubernetesAPIObject {
         return namespace;
     }
 
-    public String getExperimentType() {
-        return experiment_type;
-    }
-
     @JsonProperty(KruizeConstants.JSONKeys.CONTAINERS)
     public List<ContainerAPIObject> getContainerAPIObjects() {
         return containerAPIObjects;
@@ -80,10 +73,6 @@ public class KubernetesAPIObject {
 
     public void setNamespaceAPIObject(NamespaceAPIObject namespaceAPIObject) {
         this.namespaceAPIObject = namespaceAPIObject;
-    }
-
-    public void setExperimentType(String experimentType) {
-        this.experiment_type = experimentType;
     }
 
     @Override

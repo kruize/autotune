@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.utils;
 
+import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.common.auth.AuthenticationStrategy;
 import com.autotune.common.auth.AuthenticationStrategyFactory;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -75,7 +76,7 @@ public class GenericRestApiClient {
      * @return Json object which contains API response.
      * @throws IOException
      */
-    public JSONObject fetchMetricsJson(String methodType, String queryString) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+    public JSONObject fetchMetricsJson(String methodType, String queryString) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, FetchMetricsError {
         System.setProperty("https.protocols", "TLSv1.2");
         String jsonOutputInString = "";
         SSLContext sslContext = SSLContexts.custom().loadTrustMaterial((chain, authType) -> true).build();  // Trust all certificates
@@ -96,6 +97,8 @@ public class GenericRestApiClient {
             LOGGER.info("Executing request: {}", httpRequestBase.getRequestLine());
             jsonOutputInString = httpclient.execute(httpRequestBase, new StringResponseHandler());
 
+        } catch (Exception e) {
+            throw new FetchMetricsError(e.getMessage());
         }
         return new JSONObject(jsonOutputInString);
     }

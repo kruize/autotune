@@ -1,5 +1,6 @@
 package com.autotune.common.datasource;
 
+import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -176,7 +177,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
             } catch (TooManyRecursiveCallsException e) {
                 e.printStackTrace();
             }
-        } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+        } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException | FetchMetricsError e) {
             LOGGER.error("Unable to proceed due to invalid connection to URL: "+ queryURL);
         }
         return valuesList;

@@ -18,6 +18,8 @@ package com.autotune.analyzer.kruizeObject;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.ExperimentTypeAware;
+import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.TrialSettings;
@@ -36,7 +38,7 @@ import java.util.Map;
  * <p>
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
-public final class KruizeObject {
+public final class KruizeObject implements ExperimentTypeAware {
 
     @SerializedName("version")
     private String apiVersion;
@@ -47,6 +49,8 @@ public final class KruizeObject {
     private String clusterName;
     @SerializedName("datasource")
     private String datasource;
+    @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
+    private String experimentType;
     private String namespace;               // TODO: Currently adding it at this level with an assumption that there is only one entry in k8s object needs to be changed
     private String mode;                    //Todo convert into Enum
     @SerializedName("target_cluster")
@@ -298,6 +302,25 @@ public final class KruizeObject {
     }
 
     @Override
+    public String getExperimentType() {
+        return experimentType;
+    }
+
+    public void setExperimentType(String experimentType) {
+        this.experimentType = experimentType;
+    }
+
+    @Override
+    public boolean isNamespaceExperiment() {
+        return ExperimentTypeUtil.isNamespaceExperiment(experimentType);
+    }
+
+    @Override
+    public boolean isContainerExperiment() {
+        return ExperimentTypeUtil.isContainerExperiment(experimentType);
+    }
+
+    @Override
     public String toString() {
         // Creating a temporary cluster name as we allow null for cluster name now
         // Please change it to use `clusterName` variable itself if there is a null check already in place for that
@@ -309,6 +332,7 @@ public final class KruizeObject {
                 ", experimentName='" + experimentName + '\'' +
                 ", clusterName=" + tmpClusterName + '\'' +
                 ", datasource=" + datasource + '\'' +
+                ", experimentType=" + experimentType + '\'' +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
                 ", hpoAlgoImpl=" + hpoAlgoImpl +

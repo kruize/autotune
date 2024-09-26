@@ -15,14 +15,18 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.utils.ExperimentTypeAware;
+import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
-public class ListRecommendationsAPIObject extends BaseSO{
+public class ListRecommendationsAPIObject extends BaseSO implements ExperimentTypeAware {
     @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
     private String clusterName;
+    @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE)
+    private String experimentType;
 
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)
     private List<KubernetesAPIObject> kubernetesObjects;
@@ -42,4 +46,25 @@ public class ListRecommendationsAPIObject extends BaseSO{
     public void setKubernetesObjects(List<KubernetesAPIObject> kubernetesObjects) {
         this.kubernetesObjects = kubernetesObjects;
     }
+
+    @Override
+    public String getExperimentType() {
+        return experimentType;
+    }
+
+    public void setExperimentType(String experimentType) {
+        this.experimentType = experimentType;
+    }
+
+    @Override
+    public boolean isNamespaceExperiment() {
+        return ExperimentTypeUtil.isNamespaceExperiment(experimentType);
+    }
+
+    @Override
+    public boolean isContainerExperiment() {
+        return ExperimentTypeUtil.isContainerExperiment(experimentType);
+    }
+
+
 }

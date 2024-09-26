@@ -17,7 +17,9 @@ package com.autotune.database.table;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.database.helper.GenerateExperimentID;
+import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.gson.annotations.SerializedName;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
@@ -55,6 +57,8 @@ public class KruizeExperimentEntry {
     private String mode;
     private String target_cluster;
     private String performance_profile;
+    @Transient
+    private String experiment_type;
     @Enumerated(EnumType.STRING)
     private AnalyzerConstants.ExperimentStatus status;
     @JdbcTypeCode(SqlTypes.JSON)
@@ -154,4 +158,13 @@ public class KruizeExperimentEntry {
     public void setDatasource(JsonNode datasource) {
         this.datasource = datasource;
     }
+
+    public String getExperimentType() {
+        return experiment_type;
+    }
+
+    public void setExperimentType(String experimentType) {
+        this.experiment_type = experimentType;
+    }
+
 }

@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
@@ -115,6 +116,8 @@ public class UpdateRecommendations extends HttpServlet {
                 sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, validationMessage, experiment_name, intervalEndTimeStr);
             }
 
+        } catch (FetchMetricsError e) {
+            sendErrorResponse(response, new Exception(e), HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage(), experiment_name, intervalEndTimeStr);
         } catch (Exception e) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
             e.printStackTrace();

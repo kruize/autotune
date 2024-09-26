@@ -27,6 +27,8 @@ public class KruizeRecommendationEntry {
     private String cluster_name;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode extended_data;
+    @Transient
+    private String experiment_type;
 
     public String getExperiment_name() {
         return experiment_name;
@@ -66,5 +68,13 @@ public class KruizeRecommendationEntry {
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public String getExperimentType() {
+        return experiment_type;
+    }
+
+    public void setExperimentType(String experimentType) {
+        this.experiment_type = experimentType;
     }
 }
