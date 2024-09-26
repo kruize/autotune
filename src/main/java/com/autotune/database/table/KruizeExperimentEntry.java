@@ -57,6 +57,7 @@ public class KruizeExperimentEntry {
     private String mode;
     private String target_cluster;
     private String performance_profile;
+    @Transient
     private String experiment_type;
     @Enumerated(EnumType.STRING)
     private AnalyzerConstants.ExperimentStatus status;
