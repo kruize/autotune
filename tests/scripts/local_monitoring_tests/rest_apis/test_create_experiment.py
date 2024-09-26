@@ -85,8 +85,8 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
         json_content[0]["kubernetes_objects"][0].pop("containers")
     if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace_name"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("namespaces")
-    if json_content[0]["kubernetes_objects"][0]["experiment_type"] == "None":
-        json_content[0]["kubernetes_objects"][0].pop("experiment_type")
+    if json_content[0]["experiment_type"] == "None":
+        json_content[0].pop("experiment_type")
 
     # Write the final JSON to the temp file
     with open(tmp_json_file, mode="w", encoding="utf-8") as message:
@@ -113,17 +113,18 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
 
 
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
+@pytest.mark.parametrize("test_name, expected_status_code, expected_error_msg, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
     [
-        ("invalid_namespace_exp_without_exp_type", ERROR_500_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", None, None, None, None, "default", None, None, "15min", "0.1"),
-        ("invalid_both_container_and_namespace_without_exp_type", ERROR_500_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_both_container_and_namespace_namespace_exp_type", ERROR_500_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_both_container_and_namespace_container_exp_type", ERROR_500_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_namespace_exp_type_with_only_containers", ERROR_500_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_container_exp_type_with_only_namespace", ERROR_500_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "container", None, None, None, "default", None, None, "15min", "0.1")
+        ("invalid_namespace_exp_without_exp_type", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", None, None, None, None, "default", None, None, "15min", "0.1"),
+        ("invalid_both_container_and_namespace_without_exp_type", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
+        ("invalid_both_container_and_namespace_namespace_exp_type", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
+        ("invalid_both_container_and_namespace_container_exp_type", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
+        ("invalid_namespace_exp_type_with_only_containers", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
+        ("invalid_container_exp_type_with_only_namespace", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "container", None, None, None, "default", None, None, "15min", "0.1"),
+        ("invalid_namespace_exp_with_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "remote", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1")
     ]
 )
-def test_create_exp_invalid_tests(test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, cluster_type):
+def test_create_exp_invalid_tests(test_name, expected_status_code, expected_error_msg, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, cluster_type):
     """
     Test Description: This test validates the response status code of createExperiment API
     for namespace experiment by passing a valid input for the json
@@ -178,8 +179,8 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, version, expe
         json_content[0]["kubernetes_objects"][0].pop("containers")
     if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace_name"] == "None":
             json_content[0]["kubernetes_objects"][0].pop("namespaces")
-    if json_content[0]["kubernetes_objects"][0]["experiment_type"] == "None":
-        json_content[0]["kubernetes_objects"][0].pop("experiment_type")
+    if json_content[0]["experiment_type"] == "None":
+        json_content[0].pop("experiment_type")
 
     # Write the final JSON to the temp file
     with open(tmp_json_file, mode="w", encoding="utf-8") as message:
@@ -199,6 +200,7 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, version, expe
 
     assert response.status_code == expected_status_code
     assert data['status'] == ERROR_STATUS
+    assert data['message'] == expected_error_msg
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)

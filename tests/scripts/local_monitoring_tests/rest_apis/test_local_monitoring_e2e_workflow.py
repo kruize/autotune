@@ -161,7 +161,12 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     print("delete namespace exp = ", response.status_code)
 
     #Install default metric profile
-    metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
+    if cluster_type == "minikube":
+        metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring_norecordingrules.json'
+
+    if cluster_type == "openshift":
+        metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
+
     response = delete_metric_profile(metric_profile_json_file)
     print("delete metric profile = ", response.status_code)
 

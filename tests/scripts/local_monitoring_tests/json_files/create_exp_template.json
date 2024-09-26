@@ -6,8 +6,8 @@
 	"mode": "{{mode}}",
 	"target_cluster": "{{target_cluster}}",
 	"datasource": "{{datasource}}",
+	"experiment_type": "{{experiment_type}}",
   	"kubernetes_objects": [{
-		"experiment_type": "{{experiment_type}}",
 		"type": "{{kubernetes_obj_type}}",
 		"name": "{{name}}",
 		"namespace": "{{namespace}}",
