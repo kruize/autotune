@@ -616,7 +616,6 @@ public class DBHelpers {
 
             public static List<ListRecommendationsAPIObject> convertRecommendationEntryToRecommendationAPIObject(
                     List<KruizeRecommendationEntry> kruizeRecommendationEntryList) throws InvalidConversionOfRecommendationEntryException {
-                LOGGER.info("Hello 3: convertRecommendationEntryToRecommendationAPIObject" +  kruizeRecommendationEntryList.size());
                 if (null == kruizeRecommendationEntryList)
                     return null;
                 if (kruizeRecommendationEntryList.size() == 0)

@@ -1070,7 +1070,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 if (isTargetCluserLocal(entry.getTarget_cluster())) {
                     String sql = DBConstants.SQLQUERY.SELECT_EXPERIMENT_EXP_TYPE;
                     Query query = session.createNativeQuery(sql);
-                    query.setParameter("id", entry.getExperiment_id());
+                    query.setParameter("experiment_id", entry.getExperiment_id());
                     List<String> experimentType = query.getResultList();
                     if (null != experimentType && !experimentType.isEmpty()) {
                         entry.setExperimentType(experimentType.get(0));
@@ -1086,11 +1086,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     private void updateExperimentTypeInKruizeExperimentEntry(KruizeExperimentEntry kruizeExperimentEntry) throws Exception {
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             if (isTargetCluserLocal(kruizeExperimentEntry.getTarget_cluster())) {
+                Transaction tx = session.beginTransaction();
                 String sql = DBConstants.SQLQUERY.UPDATE_EXPERIMENT_EXP_TYPE;
                 Query query = session.createNativeQuery(sql);
                 query.setParameter("experiment_type", kruizeExperimentEntry.getExperimentType());
                 query.setParameter("experiment_name", kruizeExperimentEntry.getExperiment_name());
                 query.executeUpdate();
+                tx.commit();
             }
         } catch (Exception e) {
             LOGGER.error("Not able to update experiment type in experiment entry due to {}", e.getMessage());
@@ -1130,12 +1132,14 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         if (null != entries && !entries.isEmpty()) {
             if (isTargetCluserLocal(entries.get(0).getTarget_cluster())) {
                 try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+                    Transaction tx = session.beginTransaction();
                     String sql = DBConstants.SQLQUERY.UPDATE_RECOMMENDATIONS_EXP_TYPE;
                     Query query = session.createNativeQuery(sql);
                     query.setParameter("experiment_type", recommendationEntry.getExperimentType());
                     query.setParameter("experiment_name", recommendationEntry.getExperiment_name());
                     query.setParameter("interval_end_time", recommendationEntry.getInterval_end_time());
                     query.executeUpdate();
+                    tx.commit();
                 } catch (Exception e) {
                     LOGGER.error("Not able to update experiment type in recommendation entry due to {}", e.getMessage());
                     throw new Exception("Error while updating experiment type to recommendation due to : " + e.getMessage());
