@@ -103,6 +103,7 @@ public class CreateExperiment extends HttpServlet {
                     // validating the kubernetes objects and experiment type
                     for (KubernetesAPIObject kubernetesAPIObject: createExperimentAPIObject.getKubernetesObjects()) {
                         if (createExperimentAPIObject.isContainerExperiment()) {
+                            createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
                             // check if namespace data is also set for container-type experiments
                             if (null != kubernetesAPIObject.getNamespaceAPIObjects()) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP);

@@ -77,7 +77,7 @@ public class DBConstants {
                 " AND container->>'container_image_name' = :container_image_name" +
                 " ))";
         public static final String UPDATE_EXPERIMENT_EXP_TYPE = "UPDATE kruize_experiments SET experiment_type = :experiment_type WHERE experiment_name = :experiment_name";
-        public static final String UPDATE_RECOMMENDATIONS_EXP_TYPE = "UPDATE kruize_recommendations SET experiment_type = :experiment_type WHERE experiment_name = :experiment_name and interval_end_time =: interval_end_time";
+        public static final String UPDATE_RECOMMENDATIONS_EXP_TYPE = "UPDATE kruize_recommendations SET experiment_type = :experiment_type WHERE experiment_name = :experiment_name and interval_end_time = :interval_end_time";
         public static final String SELECT_EXPERIMENT_EXP_TYPE = "SELECT experiment_type from kruize_experiments WHERE experiment_id = :experiment_id";
         public static final String SELECT_RECOMMENDATIONS_EXP_TYPE = "SELECT experiment_type from kruize_recommendations WHERE experiment_name = :experiment_name";
 
