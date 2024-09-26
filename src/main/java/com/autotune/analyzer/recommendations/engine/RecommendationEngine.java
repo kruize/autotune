@@ -313,9 +313,14 @@ public class RecommendationEngine {
         return kruizeObject;
     }
 
+    /**
+     * Generates recommendations for the specified KruizeObject
+     * @param kruizeObject The KruizeObject containing experiment data
+     */
     public void generateRecommendations(KruizeObject kruizeObject) {
 
         for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+            // verify if the experiment type is namespace or container
             if (kruizeObject.isNamespaceExperiment()) {
                 String namespaceName = k8sObject.getNamespace();
                 NamespaceData namespaceData = k8sObject.getNamespaceData();
