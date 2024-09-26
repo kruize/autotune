@@ -16,12 +16,12 @@
 ##########################################################
 #            Build Docker Image
 ##########################################################
-FROM registry.access.redhat.com/ubi8/ubi-minimal:9.4 as mvnbuild-jdk21
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.4 as mvnbuild-jdk21
 ARG USER=autotune
 ARG AUTOTUNE_HOME=/home/$USER
 
 RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y java-21-openjdk-devel \
-     && microdnf install tar gzip java-21-openjdk-jmods binutils git vim \
+             tar gzip java-21-openjdk-jmods binutils git vim \
      && microdnf clean all 
 
 RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
@@ -48,7 +48,7 @@ RUN jlink --strip-debug --compress 2 --no-header-files --no-man-pages --module-p
 #            Runtime Docker Image
 ##########################################################
 # Use ubi-minimal as the base image
-FROM registry.access.redhat.com/ubi8/ubi-minimal:9.4
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.4
 
 ARG AUTOTUNE_VERSION
 ARG USER=autotune
@@ -58,8 +58,8 @@ ARG AUTOTUNE_HOME=/home/$USER
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # Install packages needed for Java to function correctly
-RUN microdnf install -y tzdata openssl curl ca-certificates fontconfig \
-                        glibc-langpack-en gzip tar \
+RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y tzdata openssl ca-certificates fontconfig \
+             glibc-langpack-en gzip tar \
     && microdnf update -y \
     && microdnf clean all
 
