@@ -273,7 +273,7 @@
         "aggregation_functions": [
           {
             "function": "avg",
-            "query": "avg_over_time(sum by(namespace) (rate(container_cpu_usage_seconds_total{namespace=\"$NAMESPACE$\", container!='', container!='POD', pod!=''}[5m]))[$MEASUREMENT_DURATION_IN_MIN$m:])",
+            "query": "avg_over_time(sum by(namespace) (rate(container_cpu_usage_seconds_total{namespace=\"$NAMESPACE$\", container!='', container!='POD', pod!=''}[5m]))[$MEASUREMENT_DURATION_IN_MIN$m:])"
 
           },
           {
