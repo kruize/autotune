@@ -286,6 +286,7 @@ def test_list_recommendations_namespace_exps(cluster_type):
     assert errorMsg == ""
 
     # Validate the json values
+    validate_local_monitoring_recommendation_data_present(list_reco_json)
     ns1_exp_json = read_json_data_from_file(ns1_exp_json_file)
     validate_local_monitoring_reco_json(ns1_exp_json[0], list_reco_json[0])
 
@@ -298,10 +299,12 @@ def test_list_recommendations_namespace_exps(cluster_type):
     list_reco_json = response.json()
 
     # Validate the json against the json schema
+    validate_local_monitoring_recommendation_data_present(list_reco_json)
     errorMsg = validate_list_reco_json(list_reco_json, list_reco_namespace_json_local_monitoring_schema)
     assert errorMsg == ""
 
     # Validate the json values
+    validate_local_monitoring_recommendation_data_present(list_reco_json)
     ns2_exp_json = read_json_data_from_file(ns2_exp_json_file)
     validate_local_monitoring_reco_json(ns2_exp_json[0], list_reco_json[0])
 
@@ -314,10 +317,12 @@ def test_list_recommendations_namespace_exps(cluster_type):
     list_reco_json = response.json()
 
     # Validate the json against the json schema
+    assert list_reco_json[0]['kubernetes_objects'][0]['namespaces']['recommendations']['data']
     errorMsg = validate_list_reco_json(list_reco_json, list_reco_namespace_json_local_monitoring_schema)
     assert errorMsg == ""
 
     # Validate the json values
+    validate_local_monitoring_recommendation_data_present(list_reco_json)
     ns3_exp_json = read_json_data_from_file(ns3_exp_json_file)
     validate_local_monitoring_reco_json(ns3_exp_json[0], list_reco_json[0])
 
