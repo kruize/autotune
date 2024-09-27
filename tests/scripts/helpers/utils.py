@@ -1514,3 +1514,15 @@ def get_metric_profile_dir():
     metric_profile_dir = base_dir / 'manifests' / 'autotune' / 'performance-profiles'
 
     return metric_profile_dir
+
+def validate_local_monitoring_recommendation_data_present(recommendations_json):
+    if recommendations_json[0]['experiment_type'] == NAMESPACE_EXPERIMENT_TYPE:
+        assert recommendations_json[0]['kubernetes_objects'][0]['namespaces']['recommendations']['data'], "Recommendations data is expected, but not present."
+        assert recommendations_json[0]['kubernetes_objects'][0]['namespaces']['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE, "Recommendations notification is expected, but not present."
+    if recommendations_json[0]['experiment_type'] == CONTAINER_EXPERIMENT_TYPE:
+        list_reco_containers_length = len(recommendations_json[0]['kubernetes_objects'][0]['containers'])
+
+        # Validate if all the containers are present
+        for i in range(list_reco_containers_length):
+             assert recommendations_json[0]['kubernetes_objects'][0]['containers'][i]['recommendations']['data'], "Recommendations data is expected, but not present."
+             assert recommendations_json[0]['kubernetes_objects'][0]['containers'][i]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE, "Recommendations notification is expected, but not present."

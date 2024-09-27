@@ -253,6 +253,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert errorMsg == ""
 
     # Validate the json values
+    validate_local_monitoring_recommendation_data_present(list_reco_json)
     tfb_exp_json = read_json_data_from_file(tfb_exp_json_file)
     validate_local_monitoring_reco_json(tfb_exp_json[0], list_reco_json[0])
 
@@ -269,6 +270,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert errorMsg == ""
 
     # Validate the json values
+    validate_local_monitoring_recommendation_data_present(list_reco_json)
     tfb_db_exp_json = read_json_data_from_file(tfb_db_exp_json_file)
     validate_local_monitoring_reco_json(tfb_db_exp_json[0], list_reco_json[0])
 
@@ -285,6 +287,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert errorMsg == ""
 
     # Validate the json values
+    validate_local_monitoring_recommendation_data_present(list_reco_json)
     namespace_exp_json = read_json_data_from_file(namespace_exp_json_file)
     validate_local_monitoring_reco_json(namespace_exp_json[0], list_reco_json[0])
 
