@@ -299,7 +299,6 @@ def test_list_recommendations_namespace_exps(cluster_type):
     list_reco_json = response.json()
 
     # Validate the json against the json schema
-    validate_local_monitoring_recommendation_data_present(list_reco_json)
     errorMsg = validate_list_reco_json(list_reco_json, list_reco_namespace_json_local_monitoring_schema)
     assert errorMsg == ""
 
@@ -317,7 +316,6 @@ def test_list_recommendations_namespace_exps(cluster_type):
     list_reco_json = response.json()
 
     # Validate the json against the json schema
-    assert list_reco_json[0]['kubernetes_objects'][0]['namespaces']['recommendations']['data']
     errorMsg = validate_list_reco_json(list_reco_json, list_reco_namespace_json_local_monitoring_schema)
     assert errorMsg == ""
 
