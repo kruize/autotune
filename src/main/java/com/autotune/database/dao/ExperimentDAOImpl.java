@@ -1113,7 +1113,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
                     String sql = DBConstants.SQLQUERY.SELECT_RECOMMENDATIONS_EXP_TYPE;
                     Query query = session.createNativeQuery(sql);
-                    query.setParameter("experiment_type", recomEntry.getExperimentType());
                     query.setParameter("experiment_name", recomEntry.getExperiment_name());
                     List<String> exType = query.getResultList();
                     if (null != exType && !exType.isEmpty()) {
