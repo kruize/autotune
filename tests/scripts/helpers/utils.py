@@ -1523,6 +1523,5 @@ def validate_local_monitoring_recommendation_data_present(recommendations_json):
 
         # Validate if all the containers are present
         for i in range(list_reco_containers_length):
-             assert recommendations_json[0]['kubernetes_objects'][0]['containers'][i]['recommendations']['data']
-
+             assert recommendations_json[0]['kubernetes_objects'][0]['containers'][i]['recommendations']['data'], "Recommendations data is expected, but not present."
 
