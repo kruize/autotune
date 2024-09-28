@@ -12,6 +12,19 @@ metadata:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
+  name: kruize-monitoring-view
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+roleRef:
+  kind: ClusterRole
+  name: cluster-monitoring-view
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
   name: autotune-scc-crb
 roleRef:
   apiGroup: rbac.authorization.k8s.io
@@ -119,9 +132,15 @@ data:
         {
           "name": "prometheus-1",
           "provider": "prometheus",
-          "serviceName": "",
-          "namespace": "",
-          "url": "https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9091"
+          "serviceName": "prometheus-k8s",
+          "namespace": "openshift-monitoring",
+          "url": "",
+          "authentication": {
+            "type": "bearer",
+            "credentials": {
+              "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            }
+          }
         }
       ]
     }
@@ -223,7 +242,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.0.24_rm
+          image: kruize/autotune_operator:0.0.25_rm
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -295,7 +314,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: kruize/autotune_operator:0.0.24_rm
+              image: kruize/autotune_operator:0.0.25_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -336,7 +355,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: kruize/autotune_operator:0.0.24_rm
+              image: kruize/autotune_operator:0.0.25_rm
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -437,7 +456,7 @@ metadata:
 spec:
   containers:
     - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.5
+      image: quay.io/kruize/kruize-ui:0.0.6
       imagePullPolicy: Always
       env:
         - name: KRUIZE_UI_ENV
@@ -450,16 +469,3 @@ spec:
     - name: nginx-config-volume
       configMap:
         name: nginx-config
----
-apiVersion: rbac.authorization.k8s.io/v1
-kind: ClusterRoleBinding
-metadata:
-  name: kruize-monitoring-view
-subjects:
-  - kind: ServiceAccount
-    name: kruize-sa
-    namespace: openshift-tuning
-roleRef:
-  kind: ClusterRole
-  name: cluster-monitoring-view
-  apiGroup: rbac.authorization.k8s.io

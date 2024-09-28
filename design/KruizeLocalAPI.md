@@ -2155,6 +2155,88 @@ see [Create Experiment](/design/CreateExperiment.md)
 
 </details>
 
+**Request with `experiment_type` field**
+
+The `experiment_type` field in the JSON is optional and can be used to
+indicate whether the experiment is of type `namespace` or `container`.
+If no experiment type is specified, it will default to `container`.
+
+<details>
+  <summary><b>Example Request with experiment_type - `namespace`</b></summary>
+  The `experiment_type` field in the JSON is optional and can be used to 
+indicate whether the experiment is of type `namespace` or `container`. 
+If no experiment type is specified, it will default to `container`.
+
+### EXAMPLE REQUEST
+```json
+[{
+  "version": "v2.0",
+  "experiment_name": "default|namespace-demo",
+  "cluster_name": "default",
+  "performance_profile": "resource-optimization-local-monitoring",
+  "mode": "monitor",
+  "target_cluster": "local",
+  "datasource": "prometheus-1",
+  "experiment_type": "namespace",
+  "kubernetes_objects": [
+    {
+        "namespaces": {
+            "namespace_name": "test-multiple-import"
+      }
+    }
+  ],
+  "trial_settings": {
+    "measurement_duration": "15min"
+  },
+  "recommendation_settings": {
+    "threshold": "0.1"
+  }
+}]
+```
+</details>
+
+<details>
+  <summary><b>Example Request with experiment_type - `container`</b></summary>
+
+### EXAMPLE REQUEST
+```json
+[
+  {
+    "version": "v2.0",
+    "experiment_name": "default|default|deployment|tfb-qrh-deployment",
+    "cluster_name": "default",
+    "performance_profile": "resource-optimization-openshift",
+    "mode": "monitor",
+    "target_cluster": "local",
+    "experiment_type": "container",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-db:1.15",
+            "container_name": "tfb-server-0"
+          },
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1"
+          }
+        ]
+      }
+    ],
+    "trial_settings": {
+      "measurement_duration": "15min"
+    },
+    "recommendation_settings": {
+      "threshold": "0.1"
+    },
+    "datasource": "prometheus-1"
+  }
+]
+```
+</details>
 
 **Response**
 
@@ -2171,6 +2253,8 @@ see [Create Experiment](/design/CreateExperiment.md)
   "status": "SUCCESS"
 }
 ```
+
+
 
 </details>
 
@@ -2210,6 +2294,7 @@ Returns the latest recommendations of all the experiments
     "experiment_name": "default|default_0|deployment|tfb-qrh-deployment_0",
     "cluster_name": "default",
     "datasource": "prometheus-1",
+    "experiment_type": "container",
     "mode": "monitor",
     "target_cluster": "local",
     "status": "IN_PROGRESS",
@@ -2380,6 +2465,7 @@ Returns the latest recommendations of all the experiments
     "experiment_name": "default|default_1|deployment|tfb-qrh-deployment_1",
     "cluster_name": "default",
     "datasource": "prometheus-1",
+    "experiment_type": "container",
     "mode": "monitor",
     "target_cluster": "local",
     "status": "IN_PROGRESS",
@@ -2439,7 +2525,7 @@ Returns the latest recommendations of all the experiments
         }
       }
     ]
-  }
+  },
 ]
 ```
 
@@ -2847,6 +2933,7 @@ The response will contain a array of JSON object with the recommendations for th
 [
   {
     "cluster_name": "default",
+    "experiment_type": "container",
     "kubernetes_objects": [
       {
         "type": "deployment",
@@ -3089,6 +3176,7 @@ When `interval_end_time` is not specified, Kruize will determine the latest time
 [
   {
     "cluster_name": "default",
+    "experiment_type": "container",
     "kubernetes_objects": [
       {
         "type": "deployment",
@@ -3307,6 +3395,208 @@ When `interval_end_time` is not specified, Kruize will determine the latest time
 
 </details>
 
+**Request for `namespace` experiment**
+
+`POST /generateRecommendations?experiment_name=?`
+
+example
+
+`curl --location --request POST 'http://<URL>:<PORT>/generateRecommendations?experiment_name=temp_1'`
+
+success status code : 201
+
+**Response for `namespace` Experiment**
+
+The response will contain an array of JSON object with the recommendations for the specified experiment.
+
+When `interval_end_time` is not specified, Kruize will determine the latest timestamp from the specified datasource
+(E.g. Prometheus) by checking the latest active container CPU usage.
+
+<details>
+<summary><b>Example Response Body</b></summary>
+
+```json
+[
+  {
+    "cluster_name": "test-multiple-import",
+    "experiment_type": "namespace",
+    "kubernetes_objects": [
+      {
+        "namespace": "default",
+        "containers": [],
+        "namespaces": {
+          "namespace_name": "default",
+          "recommendations": {
+            "version": "1.0",
+            "notifications": {
+              "111000": {
+                "type": "info",
+                "message": "Recommendations Are Available",
+                "code": 111000
+              }
+            },
+            "data": {
+              "2024-09-25T09:46:20.000Z": {
+                "notifications": {
+                  "111101": {
+                    "type": "info",
+                    "message": "Short Term Recommendations Available",
+                    "code": 111101
+                  }
+                },
+                "monitoring_end_time": "2024-09-25T09:46:20.000Z",
+                "current": {},
+                "recommendation_terms": {
+                  "short_term": {
+                    "duration_in_hours": 24.0,
+                    "notifications": {
+                      "112101": {
+                        "type": "info",
+                        "message": "Cost Recommendations Available",
+                        "code": 112101
+                      },
+                      "112102": {
+                        "type": "info",
+                        "message": "Performance Recommendations Available",
+                        "code": 112102
+                      }
+                    },
+                    "monitoring_start_time": "2024-09-24T09:46:20.000Z",
+                    "recommendation_engines": {
+                      "cost": {
+                        "pods_count": 2,
+                        "confidence_level": 0.0,
+                        "config": {
+                          "limits": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          },
+                          "requests": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          }
+                        },
+                        "variation": {
+                          "limits": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          },
+                          "requests": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          }
+                        },
+                        "notifications": {}
+                      },
+                      "performance": {
+                        "pods_count": 2,
+                        "confidence_level": 0.0,
+                        "config": {
+                          "limits": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          },
+                          "requests": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          }
+                        },
+                        "variation": {
+                          "limits": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          },
+                          "requests": {
+                            "memory": {
+                              "amount": 1.442955264E9,
+                              "format": "bytes"
+                            },
+                            "cpu": {
+                              "amount": 5.834468490017892,
+                              "format": "cores"
+                            }
+                          }
+                        },
+                        "notifications": {}
+                      }
+                    }
+                  },
+                  "medium_term": {
+                    "duration_in_hours": 168.0,
+                    "notifications": {
+                      "120001": {
+                        "type": "info",
+                        "message": "There is not enough data available to generate a recommendation.",
+                        "code": 120001
+                      }
+                    }
+                  },
+                  "long_term": {
+                    "duration_in_hours": 360.0,
+                    "notifications": {
+                      "120001": {
+                        "type": "info",
+                        "message": "There is not enough data available to generate a recommendation.",
+                        "code": 120001
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "namespace-demo"
+  }
+]
+```
+
+</details>
 
 **Error Responses**
 

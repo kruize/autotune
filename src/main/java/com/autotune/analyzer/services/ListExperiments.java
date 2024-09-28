@@ -406,9 +406,13 @@ public class ListExperiments extends HttpServlet {
         if (objectTobeRemoved.equalsIgnoreCase("results")) {
             mKruizeExperimentMap.values().forEach(kruizeObject -> kruizeObject.getKubernetes_objects()
                     .forEach(cont -> cont.getContainerDataMap().values().forEach(containerData -> containerData.setResults(null))));
+            mKruizeExperimentMap.values().forEach(kruizeObject -> kruizeObject.getKubernetes_objects()
+                    .forEach(cont -> cont.getNamespaceData().setResults(null)));
         } else if (objectTobeRemoved.equalsIgnoreCase("recommendations")) {
             mKruizeExperimentMap.values().forEach(kruizeObject -> kruizeObject.getKubernetes_objects()
                     .forEach(cont -> cont.getContainerDataMap().values().forEach(containerData -> containerData.setContainerRecommendations(null))));
+            mKruizeExperimentMap.values().forEach(kruizeObject -> kruizeObject.getKubernetes_objects()
+                    .forEach(cont -> cont.getNamespaceData().setNamespaceRecommendations(null)));
         } else
             LOGGER.error("Unsupported Object passed!");
 

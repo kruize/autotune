@@ -56,6 +56,7 @@ public class KruizeConstants {
         public static final String GET = "get";
         public static final String SET = "set";
         public static final String CONTAINER_USAGE_INFO = "Determine the date of the last activity for the container based on its usage. ";
+        public static final String NAMESPACE_USAGE_INFO = "Determine the date of the last activity for the namespace based on its usage. ";
         public static final String RECOMMENDATION_TERM = "recommendationTerm : %s";
         public static final String MONITORING_START_TIME = "monitoringStartTime : %s";
         public static final String EXPERIMENT_DATASOURCE = "Experiment: %s,  Datasource: %s";
@@ -158,9 +159,11 @@ public class KruizeConstants {
         // Metadata Section
         public static final String EXPERIMENT_ID = "experiment_id";
         public static final String EXPERIMENT_NAME = "experiment_name";
+        public static final String EXPERIMENT_TYPE = "experiment_type";
         // Deployments Section
         public static final String DEPLOYMENTS = "deployments";
         public static final String NAMESPACE = "namespace";
+        public static final String NAMESPACE_NAME = "namespace_name";
         public static final String POD_METRICS = "pod_metrics";
         public static final String CONTAINER_METRICS = "container_metrics";
         public static final String METRICS = "metrics";
@@ -393,6 +396,7 @@ public class KruizeConstants {
         public static final String KRUIZE_DATASOURCE = "datasource";
         public static final String SERVICE_DNS = ".svc.cluster.local";
         public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";
+        public static final String OPENSHIFT_MONITORING_PROMETHEUS_DEFAULT_SERVICE_PORT = "9091";
         public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
         public static final String DATASOURCE_ENDPOINT_WITH_QUERY = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
         public static final String DATE_ENDPOINT_WITH_QUERY = "%s/api/v1/query?query=%s";
@@ -443,6 +447,7 @@ public class KruizeConstants {
             public static final String SERVICE_NOT_FOUND = "Can not find service with specified name.";
             public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
             public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
+            public static final String INVALID_DATASOURCE_INFO = "Datasource is either missing or is invalid";
             private DataSourceErrorMsgs() {
             }
         }
@@ -718,6 +723,29 @@ public class KruizeConstants {
         public static final String TAG_NAME = "recommendations_notifications";
         public static final String notification_format_for_LOG = "%s|%s|%s|%s|%s|%s|%s|%s|%s"; //experiment_name,container_name,endtime,level,termname,modelname,code,type,message
         public static final String notification_format_for_METRICS = "%s|%s|%s"; //termname,modelname,type
+
+    }
+
+    public static final class AuthenticationConstants {
+        public static final String AUTHENTICATION = "authentication";
+        public static final String AUTHENTICATION_TYPE = "type";
+        public static final String AUTHENTICATION_CREDENTIALS = "credentials";
+        public static final String AUTHENTICATION_USERNAME = "username";
+        public static final String AUTHENTICATION_PASSWORD = "password";
+        public static final String AUTHENTICATION_TOKEN_FILE = "tokenFilePath";
+        public static final String AUTHENTICATION_API_KEY = "apiKey";
+        public static final String AUTHENTICATION_HEADER_NAME = "header";
+        public static final String AUTHENTICATION_TOKEN_ENDPOINT = "tokenEndpoint";
+        public static final String AUTHENTICATION_CLIENT_ID = "clientId";
+        public static final String AUTHENTICATION_CLIENT_SECRET = "clientSecret";
+        public static final String AUTHENTICATION_GRANT_TYPE = "grantType";
+        public static final String NONE = "none";
+        public static final String BASIC = "basic";
+        public static final String BEARER = "bearer";
+        public static final String API_KEY = "apikey";
+        public static final String OAUTH2 = "oauth2";
+        public static final String UNKNOWN_AUTHENTICATION = "Unknown authentication type: ";
+        public static final String AUTHORIZATION = "Authorization";
 
     }
 }

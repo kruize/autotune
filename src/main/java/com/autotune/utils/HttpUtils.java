@@ -56,7 +56,7 @@ public class HttpUtils
 				connection = (HttpURLConnection) url.openConnection();
 			}
 
-			connection.setRequestProperty("Authorization", bearerToken);
+			connection.setRequestProperty(KruizeConstants.AuthenticationConstants.AUTHORIZATION, bearerToken);
 
 			if (connection.getResponseCode() == HttpsURLConnection.HTTP_OK) {
 				result = getDataFromConnection(connection);

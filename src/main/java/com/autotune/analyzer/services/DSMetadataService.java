@@ -26,6 +26,7 @@ import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.common.datasource.DataSourceMetadataValidation;
+import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
@@ -114,10 +115,11 @@ public class DSMetadataService extends HttpServlet {
             if (validationOutputData.isSuccess()) {
 
                 String dataSourceName = metadataAPIObject.getDataSourceName();
-
-                DataSourceInfo datasource = dataSourceManager.fetchDataSourceFromDBByName(dataSourceName);
-
-                if (datasource == null) {
+                // fetch the DatasourceInfo object based on datasource name
+                DataSourceInfo datasource;
+                try {
+                    datasource = CommonUtils.getDataSourceInfo(dataSourceName);
+                } catch (Exception e) {
                     sendErrorResponse(
                             inputData,
                             response,

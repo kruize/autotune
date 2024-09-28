@@ -47,34 +47,38 @@ public interface DataSourceOperator {
     /**
      * Check if a datasource is reachable, implementation of this function
      * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
-     * @param dataSourceUrl String containing the url for the datasource
+     *
+     * @param dataSource DatasourceInfo object containing the datasource details
      * @return DatasourceReachabilityStatus
      */
-    CommonUtils.DatasourceReachabilityStatus isServiceable(String dataSourceUrl);
+    CommonUtils.DatasourceReachabilityStatus isServiceable(DataSourceInfo dataSource);
 
     /**
      * executes specified query on datasource and returns the result value
-     * @param url String containing the url for the datasource
-     * @param query String containing the query to be executed
+     *
+     * @param dataSource DatasourceInfo object containing the datasource details
+     * @param query      String containing the query to be executed
      * @return Object containing the result value for the specified query
      */
-    Object getValueForQuery(String url, String query);
+    Object getValueForQuery(DataSourceInfo dataSource, String query);
 
     /**
      * executes specified query on datasource and returns the JSON Object
-     * @param url String containing the url for the datasource
-     * @param query String containing the query to be executed
+     *
+     * @param dataSource DatasourceInfo object containing the datasource details
+     * @param query      String containing the query to be executed
      * @return JSONObject for the specified query
      */
-    JSONObject getJsonObjectForQuery(String url, String query);
+    JSONObject getJsonObjectForQuery(DataSourceInfo dataSource, String query);
 
     /**
      * executes specified query on datasource and returns the result array
-     * @param url String containing the url for the datasource
-     * @param query String containing the query to be executed
+     *
+     * @param dataSource DatasourceInfo object containing the datasource details
+     * @param query      String containing the query to be executed
      * @return JsonArray containing the result array for the specified query
      */
-    public JsonArray getResultArrayForQuery(String url, String query);
+    public JsonArray getResultArrayForQuery(DataSourceInfo dataSource, String query);
 
     /**
      * Validates a JSON array to ensure it is not null, not a JSON null, and has at least one element.

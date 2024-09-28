@@ -2,6 +2,7 @@ package com.autotune.common.k8sObjects;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.NamespaceData;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
@@ -14,6 +15,9 @@ public class K8sObject {
     private String namespace;
     @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
     private HashMap<String, ContainerData> containerDataMap;
+    @SerializedName(KruizeConstants.JSONKeys.NAMESPACES)
+    private NamespaceData namespaceData;
+
     public K8sObject(String name, String type, String namespace) {
         this.name = name;
         this.type = type;
@@ -55,6 +59,15 @@ public class K8sObject {
         this.containerDataMap = containerDataMap;
     }
 
+    @JsonProperty(KruizeConstants.JSONKeys.NAMESPACES)
+    public NamespaceData getNamespaceData() {
+        return namespaceData;
+    }
+
+    public void setNamespaceData(NamespaceData namespaceData) {
+        this.namespaceData = namespaceData;
+    }
+
     @Override
     public String toString() {
         return "K8sObject{" +
@@ -62,6 +75,7 @@ public class K8sObject {
                 ", name='" + name + '\'' +
                 ", namespace='" + namespace + '\'' +
                 ", containerDataMap=" + containerDataMap +
+                ", namespaceData=" + namespaceData +
                 '}';
     }
 }

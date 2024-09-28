@@ -23,6 +23,7 @@ import math
 import docker
 from datetime import datetime, timedelta
 from kubernetes import client, config
+from pathlib import Path
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
@@ -41,6 +42,9 @@ UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_
 DUPLICATE_RECORDS_MSG = "An entry for this record already exists!"
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
+CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE = "Can not specify namespace data for container experiment"
+CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER = "Can not specify container data for namespace experiment"
+CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE = "Namespace experiment type is not supported for remote monitoring use case."
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
 UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE = 'interval_end_time is mandatory'
 UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND = 'Not Found: experiment_name does not exist: '
@@ -164,6 +168,8 @@ TERMS_NOTIFICATION_CODES = {
     LONG_TERM: NOTIFICATION_CODE_FOR_LONG_TERM_RECOMMENDATIONS_AVAILABLE,
 }
 
+NAMESPACE_EXPERIMENT_TYPE = "namespace"
+CONTAINER_EXPERIMENT_TYPE = "container"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -446,6 +452,18 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
         validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
                                 list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
 
+def validate_local_monitoring_reco_json(create_exp_json, list_reco_json, expected_duration_in_hours=None, test_name=None):
+    # Validate experiment
+    assert create_exp_json["version"] == list_reco_json["version"]
+    assert create_exp_json["experiment_name"] == list_reco_json["experiment_name"]
+    assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
+
+    # Validate kubernetes objects
+    create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][0]
+    list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
+    experiment_type = create_exp_json.get("experiment_type")
+    validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj, list_reco_kubernetes_obj, expected_duration_in_hours,
+                                             test_name, experiment_type)
 
 def validate_list_exp_results_count(expected_results_count, list_exp_json):
 
@@ -506,6 +524,33 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                 validate_container(update_results_container, update_results_json, list_reco_container,
                                    expected_duration_in_hours, test_name)
 
+def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
+                            list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
+    if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
+        assert list_reco_kubernetes_obj["namespaces"]["namespace_name"] == create_exp_kubernetes_obj["namespaces"]["namespace_name"]
+        list_reco_namespace = list_reco_kubernetes_obj["namespaces"]
+        create_exp_namespace = create_exp_kubernetes_obj["namespaces"]
+        validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name)
+    else:
+        # Validate type, name, namespace
+        assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
+        assert list_reco_kubernetes_obj["name"] == create_exp_kubernetes_obj["name"]
+        assert list_reco_kubernetes_obj["namespace"] == create_exp_kubernetes_obj["namespace"]
+
+        exp_containers_length = len(create_exp_kubernetes_obj["containers"])
+        list_reco_containers_length = len(list_reco_kubernetes_obj["containers"])
+
+
+        # Validate if all the containers are present
+        for i in range(exp_containers_length):
+            list_reco_container = None
+
+            for j in range(list_reco_containers_length):
+                if list_reco_kubernetes_obj["containers"][j]["container_name"] == \
+                        create_exp_kubernetes_obj["containers"][i]["container_name"]:
+                    list_reco_container = list_reco_kubernetes_obj["containers"][j]
+                    create_exp_container = create_exp_kubernetes_obj["containers"][i]
+                    validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name)
 
 def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours,
                        test_name):
@@ -610,6 +655,175 @@ def validate_container(update_results_container, update_results_json, list_reco_
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
 
+def validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name):
+    # Validate container image name and container name
+    if create_exp_container != None and list_reco_container != None:
+        assert list_reco_container["container_image_name"] == create_exp_container["container_image_name"], \
+            f"Container image names did not match! Actual -  {list_reco_container['container_image_name']} Expected - {create_exp_container['container_image_name']}"
+
+        assert list_reco_container["container_name"] == create_exp_container["container_name"], \
+            f"Container names did not match! Acutal = {list_reco_container['container_name']} Expected - {create_exp_container['container_name']}"
+
+
+    if expected_duration_in_hours == None:
+        duration_in_hours = 0.0
+    else:
+        duration_in_hours = expected_duration_in_hours
+
+    if check_if_recommendations_are_present(list_reco_container["recommendations"]):
+        interval_end_time = list(list_reco_container['recommendations']['data'].keys())[0]
+        print(f"interval_end_time = {interval_end_time}")
+
+        terms_obj = list_reco_container["recommendations"]["data"][interval_end_time]["recommendation_terms"]
+        current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
+
+        duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+        for term in duration_terms.keys():
+            if check_if_recommendations_are_present(terms_obj[term]):
+                print(f"reco present for term {term}")
+                # Validate timestamps [deprecated as monitoring end time is moved to higher level]
+                # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
+                #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
+
+                interval_start_time = list_reco_container['recommendations']['data'][interval_end_time]['recommendation_terms'][term]['monitoring_start_time']
+                # Validate the precision of the valid duration
+                duration = terms_obj[term]["duration_in_hours"]
+                assert validate_duration_in_hours_decimal_precision(duration), f"The value '{duration}' for " \
+                                                                               f"'{term}' has more than two decimal places"
+
+                monitoring_start_time = term_based_start_time(interval_end_time, term)
+                assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
+                    f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
+
+                # Validate duration in hrs
+                if expected_duration_in_hours is None:
+                    duration_in_hours = set_duration_based_on_terms(duration_in_hours, term,
+                                                                    interval_start_time, interval_end_time)
+
+                if test_name is not None:
+
+                    if MEDIUM_TERM_TEST in test_name and term == MEDIUM_TERM:
+                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                    elif SHORT_TERM_TEST in test_name and term == SHORT_TERM:
+                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                    elif LONG_TERM_TEST in test_name and term == LONG_TERM:
+                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                else:
+                    print(
+                        f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                    assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                        f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                    duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time,
+                                                                    interval_end_time)
+
+                # Get engine objects
+                engines_list = ["cost", "performance"]
+
+                # Extract recommendation engine objects
+                recommendation_engines_object = None
+                if "recommendation_engines" in terms_obj[term]:
+                    recommendation_engines_object = terms_obj[term]["recommendation_engines"]
+                if recommendation_engines_object is not None:
+                    for engine_entry in engines_list:
+                        if engine_entry in terms_obj[term]["recommendation_engines"]:
+                            engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                            validate_config_local_monitoring(engine_obj["config"])
+                            validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj)
+                # validate Plots data
+                validate_plots(terms_obj, duration_terms, term)
+            # verify that plots isn't generated in case of no recommendations
+            else:
+                assert PLOTS not in terms_obj[term], f"Expected plots to be absent in case of no recommendations"
+    else:
+        notifications = list_reco_container["recommendations"]["notifications"]
+        if NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in notifications:
+            assert notifications[NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA]["message"] == NOT_ENOUGH_DATA_MSG
+
+        data = list_reco_container["recommendations"]["data"]
+        assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
+
+
+def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name):
+    # Validate namespace name
+    if create_exp_namespace != None and list_reco_namespace != None:
+        assert create_exp_namespace["namespace_name"] == list_reco_namespace["namespace_name"], \
+            f"Namespace names did not match! Actual -  {list_reco_namespace['namespace_name']} Expected - {create_exp_namespace['namespace_name']}"
+
+    if expected_duration_in_hours == None:
+        duration_in_hours = 0.0
+    else:
+        duration_in_hours = expected_duration_in_hours
+
+    if check_if_recommendations_are_present(list_reco_namespace["recommendations"]):
+        interval_end_time = list(list_reco_namespace['recommendations']['data'].keys())[0]
+        print(f"interval_end_time = {interval_end_time}")
+
+        terms_obj = list_reco_namespace["recommendations"]["data"][interval_end_time]["recommendation_terms"]
+        current_config = list_reco_namespace["recommendations"]["data"][interval_end_time]["current"]
+
+        duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+        for term in duration_terms.keys():
+            if check_if_recommendations_are_present(terms_obj[term]):
+                print(f"reco present for term {term}")
+
+                interval_start_time = list_reco_namespace['recommendations']['data'][interval_end_time]['recommendation_terms'][term]['monitoring_start_time']
+                # Validate the precision of the valid duration
+                duration = terms_obj[term]["duration_in_hours"]
+                assert validate_duration_in_hours_decimal_precision(duration), f"The value '{duration}' for " \
+                                                                               f"'{term}' has more than two decimal places"
+
+                monitoring_start_time = term_based_start_time(interval_end_time, term)
+                assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
+                    f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
+
+                # Validate duration in hrs
+                if expected_duration_in_hours is None:
+                    duration_in_hours = set_duration_based_on_terms(duration_in_hours, term,
+                                                                    interval_start_time, interval_end_time)
+
+                if test_name is not None:
+
+                    if MEDIUM_TERM_TEST in test_name and term == MEDIUM_TERM:
+                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                    elif SHORT_TERM_TEST in test_name and term == SHORT_TERM:
+                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                    elif LONG_TERM_TEST in test_name and term == LONG_TERM:
+                        assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                            f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                else:
+                    print(
+                        f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                    assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                        f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                    duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time,
+                                                                    interval_end_time)
+
+                # Get engine objects
+                engines_list = ["cost", "performance"]
+
+                # Extract recommendation engine objects
+                recommendation_engines_object = None
+                if "recommendation_engines" in terms_obj[term]:
+                    recommendation_engines_object = terms_obj[term]["recommendation_engines"]
+                if recommendation_engines_object is not None:
+                    for engine_entry in engines_list:
+                        if engine_entry in terms_obj[term]["recommendation_engines"]:
+                            engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                            validate_config_local_monitoring(engine_obj["config"])
+                            validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj)
+    else:
+        notifications = list_reco_namespace["recommendations"]["notifications"]
+        if NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in notifications:
+            assert notifications[NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA]["message"] == NOT_ENOUGH_DATA_MSG
+
+        data = list_reco_namespace["recommendations"]["data"]
+        assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
+
 
 def validate_plots(terms_obj, duration_terms, term):
     plots = terms_obj[term][PLOTS]
@@ -663,6 +877,22 @@ def validate_config(reco_config, metrics):
         assert reco_config[usage]["memory"][
                    "format"] == memory_format_type, f"memory format in recommendation config is {reco_config[usage]['memory']['format']} instead of {memory_format_type}"
 
+def validate_config_local_monitoring(reco_config):
+    cpu_format_type = "cores"
+    memory_format_type = "bytes"
+
+    usage_list = ["requests", "limits"]
+    for usage in usage_list:
+        if "cpu" in reco_config[usage]:
+            assert reco_config[usage]["cpu"][
+                       "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['cpu']['amount']}"
+            assert reco_config[usage]["cpu"][
+                    "format"] == cpu_format_type, f"cpu format in recommendation config is {reco_config[usage]['cpu']['format']} instead of {cpu_format_type}"
+        if "memory" in reco_config[usage]:
+            assert reco_config[usage]["memory"][
+                       "amount"] > 0, f"cpu amount in recommendation config is {reco_config[usage]['memory']['amount']}"
+            assert reco_config[usage]["memory"][
+                       "format"] == memory_format_type, f"memory format in recommendation config is {reco_config[usage]['memory']['format']} instead of {memory_format_type}"
 
 def check_if_recommendations_are_present(cost_obj):
     notifications = cost_obj["notifications"]
@@ -851,6 +1081,86 @@ def validate_variation(current_config: dict, recommended_config: dict, variation
             assert variation_limits[CPU_KEY][FORMAT_KEY] == recommended_limits[CPU_KEY][FORMAT_KEY]
         if MEMORY_KEY in recommended_limits:
             if MEMORY_KEY in current_limits and AMOUNT_KEY in current_limits[MEMORY_KEY]:
+                current_memory_value = current_limits[MEMORY_KEY][AMOUNT_KEY]
+            assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][
+                AMOUNT_KEY] - current_memory_value
+            assert variation_limits[MEMORY_KEY][FORMAT_KEY] == recommended_limits[MEMORY_KEY][FORMAT_KEY]
+
+
+def validate_variation_local_monitoring(current_config: dict, recommended_config: dict, variation_config: dict, engine_obj):
+    # Check structure
+    assert check_if_dict_has_same_keys(recommended_config, variation_config) == True
+
+    # Create temporary dict if it's none jus to make process easier
+    if current_config == None:
+        current_config = {}
+
+    # Check values
+    REQUESTS_KEY = "requests"
+    LIMITS_KEY = "limits"
+    CPU_KEY = "cpu"
+    MEMORY_KEY = "memory"
+    AMOUNT_KEY = "amount"
+    FORMAT_KEY = "format"
+
+    # Initialise requests holders
+    current_requests: dict = None
+    recommended_requests: dict = None
+    variation_requests: dict = None
+
+    # Initialise limits holders
+    current_limits: dict = None
+    recommended_limits: dict = None
+    variation_limits: dict = None
+
+    if REQUESTS_KEY in current_config:
+        current_requests = current_config[REQUESTS_KEY]
+    if LIMITS_KEY in current_config:
+        current_limits = current_config[LIMITS_KEY]
+
+    if REQUESTS_KEY in recommended_config:
+        recommended_requests = recommended_config[REQUESTS_KEY]
+    if LIMITS_KEY in recommended_config:
+        recommended_limits = recommended_config[LIMITS_KEY]
+
+    if REQUESTS_KEY in variation_config:
+        variation_requests = variation_config[REQUESTS_KEY]
+    if LIMITS_KEY in variation_config:
+        variation_limits = variation_config[LIMITS_KEY]
+
+    if recommended_requests is not None:
+        current_cpu_value = 0
+        current_memory_value = 0
+        if CPU_KEY in recommended_requests:
+            if current_requests is not None and CPU_KEY in current_requests and AMOUNT_KEY in current_requests[CPU_KEY]:
+                current_cpu_value = current_requests[CPU_KEY][AMOUNT_KEY]
+            assert variation_requests[CPU_KEY][AMOUNT_KEY] == recommended_requests[CPU_KEY][
+                AMOUNT_KEY] - current_cpu_value
+            assert variation_requests[CPU_KEY][FORMAT_KEY] == recommended_requests[CPU_KEY][FORMAT_KEY]
+        else:
+            assert NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE in engine_obj["notifications"]
+            assert engine_obj["notifications"][NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE]["message"] == NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE
+
+        if MEMORY_KEY in recommended_requests:
+            if current_requests is not None and MEMORY_KEY in current_requests and AMOUNT_KEY in current_requests[MEMORY_KEY]:
+                current_memory_value = current_requests[MEMORY_KEY][AMOUNT_KEY]
+            assert variation_requests[MEMORY_KEY][AMOUNT_KEY] == recommended_requests[MEMORY_KEY][
+                AMOUNT_KEY] - current_memory_value
+            assert variation_requests[MEMORY_KEY][FORMAT_KEY] == recommended_requests[MEMORY_KEY][FORMAT_KEY]
+    if recommended_limits is not None:
+        current_cpu_value = 0
+        current_memory_value = 0
+        if CPU_KEY in recommended_limits:
+            if current_limits is not None and CPU_KEY in current_limits and AMOUNT_KEY in current_limits[CPU_KEY]:
+                current_cpu_value = current_limits[CPU_KEY][AMOUNT_KEY]
+            assert variation_limits[CPU_KEY][AMOUNT_KEY] == recommended_limits[CPU_KEY][AMOUNT_KEY] - current_cpu_value
+            assert variation_limits[CPU_KEY][FORMAT_KEY] == recommended_limits[CPU_KEY][FORMAT_KEY]
+        else:
+            assert NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE in engine_obj["notifications"]
+            assert engine_obj["notifications"][NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE]["message"] == NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE
+
+        if MEMORY_KEY in recommended_limits:
+            if current_limits is not None and MEMORY_KEY in current_limits and AMOUNT_KEY in current_limits[MEMORY_KEY]:
                 current_memory_value = current_limits[MEMORY_KEY][AMOUNT_KEY]
             assert variation_limits[MEMORY_KEY][AMOUNT_KEY] == recommended_limits[MEMORY_KEY][
                 AMOUNT_KEY] - current_memory_value
@@ -1195,3 +1505,24 @@ def wait_for_container_to_complete(container_id):
     )
     exit_code = result.stdout.strip()
     print(f"Container {container_id} has completed with exit code {exit_code}.")
+
+def get_metric_profile_dir():
+    # Get the current directory
+    current_directory = Path(__file__).resolve().parent
+    # Navigate up 3 levels and build the path to the 'manifests/app/adreess' directory
+    base_dir = current_directory.parents[2]  # (index 2 because it's zero-based)
+    metric_profile_dir = base_dir / 'manifests' / 'autotune' / 'performance-profiles'
+
+    return metric_profile_dir
+
+def validate_local_monitoring_recommendation_data_present(recommendations_json):
+    if recommendations_json[0]['experiment_type'] == NAMESPACE_EXPERIMENT_TYPE:
+        assert recommendations_json[0]['kubernetes_objects'][0]['namespaces']['recommendations']['data'], "Recommendations data is expected, but not present."
+        assert recommendations_json[0]['kubernetes_objects'][0]['namespaces']['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE, "Recommendations notification is expected, but not present."
+    if recommendations_json[0]['experiment_type'] == CONTAINER_EXPERIMENT_TYPE:
+        list_reco_containers_length = len(recommendations_json[0]['kubernetes_objects'][0]['containers'])
+
+        # Validate if all the containers are present
+        for i in range(list_reco_containers_length):
+             assert recommendations_json[0]['kubernetes_objects'][0]['containers'][i]['recommendations']['data'], "Recommendations data is expected, but not present."
+             assert recommendations_json[0]['kubernetes_objects'][0]['containers'][i]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE, "Recommendations notification is expected, but not present."

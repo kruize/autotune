@@ -7,8 +7,11 @@ import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
+import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
@@ -16,6 +19,7 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
@@ -57,15 +61,16 @@ public class Converters {
                 List<K8sObject> k8sObjectList = new ArrayList<>();
                 List<KubernetesAPIObject> kubernetesAPIObjectsList = createExperimentAPIObject.getKubernetesObjects();
                 for (KubernetesAPIObject kubernetesAPIObject : kubernetesAPIObjectsList) {
-                    K8sObject k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
-                    List<ContainerAPIObject> containerAPIObjects = kubernetesAPIObject.getContainerAPIObjects();
-                    HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
-                    for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
-                        ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(),
-                                containerAPIObject.getContainer_image_name(), new ContainerRecommendations(), null);
-                        containerDataHashMap.put(containerData.getContainer_name(), containerData);
+                    K8sObject k8sObject = null;
+                    // check if exp type is null to support remote monitoring experiments
+                    if (createExperimentAPIObject.isContainerExperiment()) {
+                        // container recommendations experiment type
+                        k8sObject = createContainerExperiment(kubernetesAPIObject);
+                    } else if (createExperimentAPIObject.isNamespaceExperiment()) {
+                        // namespace recommendations experiment type
+                        k8sObject = createNamespaceExperiment(kubernetesAPIObject);
                     }
-                    k8sObject.setContainerDataMap(containerDataHashMap);
+                    LOGGER.debug("Experiment Type: " + createExperimentAPIObject.getExperimentType());
                     k8sObjectList.add(k8sObject);
                 }
                 kruizeObject.setKubernetes_objects(k8sObjectList);
@@ -76,6 +81,7 @@ public class Converters {
                 kruizeObject.setMode(createExperimentAPIObject.getMode());
                 kruizeObject.setPerformanceProfile(createExperimentAPIObject.getPerformanceProfile());
                 kruizeObject.setDataSource(createExperimentAPIObject.getDatasource());
+                kruizeObject.setExperimentType(createExperimentAPIObject.getExperimentType());
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
                 kruizeObject.setTrial_settings(createExperimentAPIObject.getTrialSettings());
                 kruizeObject.setRecommendation_settings(createExperimentAPIObject.getRecommendationSettings());
@@ -94,6 +100,33 @@ public class Converters {
             return kruizeObject;
         }
 
+        // Generates K8sObject for container type experiments from KubernetesAPIObject
+        public static K8sObject createContainerExperiment(KubernetesAPIObject kubernetesAPIObject) {
+            K8sObject k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
+            k8sObject.setNamespaceData(new NamespaceData());
+            List<ContainerAPIObject> containerAPIObjects = kubernetesAPIObject.getContainerAPIObjects();
+            HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
+            for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
+                ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(),
+                        containerAPIObject.getContainer_image_name(), new ContainerRecommendations(), null);
+                containerDataHashMap.put(containerData.getContainer_name(), containerData);
+            }
+            k8sObject.setContainerDataMap(containerDataHashMap);
+            return k8sObject;
+        }
+
+        // Generates K8sObject for namespace type experiments from KubernetesAPIObject
+        public static K8sObject createNamespaceExperiment(KubernetesAPIObject kubernetesAPIObject) {
+            K8sObject k8sObject = new K8sObject();
+            k8sObject.setNamespace(kubernetesAPIObject.getNamespaceAPIObjects().getnamespace_name());
+            HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
+            k8sObject.setContainerDataMap(containerDataHashMap);
+            NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObjects();
+            k8sObject.setNamespaceData(new NamespaceData(namespaceAPIObject.getnamespace_name(), new NamespaceRecommendations(), null));
+            return k8sObject;
+        }
+
+
         public static ListRecommendationsAPIObject convertKruizeObjectToListRecommendationSO(
                 KruizeObject kruizeObject,
                 boolean getLatest,
@@ -104,11 +137,26 @@ public class Converters {
                 listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
+                listRecommendationsAPIObject.setExperimentType(kruizeObject.getExperimentType());
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
                 KubernetesAPIObject kubernetesAPIObject;
 
                 for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
                     kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
+                    // namespace recommendations experiment type
+                    if (kruizeObject.isNamespaceExperiment()) {
+                        NamespaceAPIObject namespaceAPIObject;
+                        NamespaceData clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceData(), NamespaceData.class);
+
+                        if (null != clonedNamespaceData) {
+                            HashMap<Timestamp, MappedRecommendationForTimestamp> namespaceRecommendations = clonedNamespaceData.getNamespaceRecommendations().getData();
+                            LOGGER.info("Namespace Recommendations: " + namespaceRecommendations.toString());
+                            clonedNamespaceData.getNamespaceRecommendations().setData(namespaceRecommendations);
+                            namespaceAPIObject = new NamespaceAPIObject(clonedNamespaceData.getNamespace_name(), clonedNamespaceData.getNamespaceRecommendations(), null);
+                            kubernetesAPIObject.setNamespaceAPIObject(namespaceAPIObject);
+                        }
+                    }
+
                     HashMap<String, ContainerData> containerDataMap = new HashMap<>();
                     List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
                     for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {

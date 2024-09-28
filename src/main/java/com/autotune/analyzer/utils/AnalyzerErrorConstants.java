@@ -146,6 +146,14 @@ public class AnalyzerErrorConstants {
 
         }
 
+        public static final class generateRecommendationsAPI {
+            public static final String ERROR_FETCHING_METRICS = "Error while fetching metrics.";
+
+            private generateRecommendationsAPI() {
+
+            }
+        }
+
         public static final class ListRecommendationsAPI {
             public static final String RECOMMENDATION_DOES_NOT_EXIST_EXCPTN = "Recommendation does not exist";
             public static final String RECOMMENDATION_DOES_NOT_EXIST_MSG = "Recommendation for timestamp - \" %s \" does not exist";
@@ -157,6 +165,17 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
 
             private ListRecommendationsAPI() {
+
+            }
+        }
+
+        public static final class CreateExperimentAPI {
+            public static final String NAMESPACE_AND_CONTAINER_NOT_NULL = "Only one of Namespace or Container information can be specified.";
+            public static final String CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP = "Can not specify container data for namespace experiment";
+            public static final String NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP = "Can not specify namespace data for container experiment";
+            public static final String NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE = "Namespace experiment type is not supported for remote monitoring use case.";
+
+            private CreateExperimentAPI() {
 
             }
         }

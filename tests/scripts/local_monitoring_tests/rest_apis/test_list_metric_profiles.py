@@ -25,13 +25,15 @@ from helpers.utils import *
 from helpers.list_metric_profiles_validate import *
 from helpers.list_metric_profiles_without_parameters_schema import *
 
+metric_profile_dir = get_metric_profile_dir()
+
 @pytest.mark.sanity
 def test_list_metric_profiles_with_name(cluster_type):
     """
     Test Description: This test validates the response status code of listMetricProfiles API by validating the output
     JSON response by passing metric profile 'name' query parameter
     """
-    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     form_kruize_url(cluster_type)
 
     response = delete_metric_profile(input_json_file)
@@ -69,7 +71,7 @@ def test_list_metric_profiles_without_parameters(cluster_type):
     Test Description: This test validates the response status code of listMetricProfiles API by validating the output
     JSON response without any parameters - expected output is listing all the metric profile names
     """
-    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     form_kruize_url(cluster_type)
 
     response = delete_metric_profile(input_json_file)
@@ -107,7 +109,7 @@ def test_list_metric_profiles_without_creating_profile(cluster_type):
     Test Description: This test validates the response status code of listMetricProfiles API by validating the output
     JSON response without creating metric profile - expected output is an error message
     """
-    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     form_kruize_url(cluster_type)
 
     response = delete_metric_profile(input_json_file)
@@ -142,7 +144,7 @@ def test_list_metric_profiles_invalid_name(test_name, expected_status_code, name
     Test Description: This test validates the response status code of listMetricProfiles API by validating the output
     JSON response by passing invalid query parameter 'name' - expected output is an error message
     """
-    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     form_kruize_url(cluster_type)
 
     response = delete_metric_profile(input_json_file)
@@ -180,7 +182,7 @@ def test_list_metric_profiles_with_verbose(verbose, cluster_type):
     JSON response by passing 'verbose' query parameter - expected output is list of all the metric profiles created
     including all the metric profile fields when verbose=true and list of only the profile names when verbose=false
     """
-    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     form_kruize_url(cluster_type)
 
     response = delete_metric_profile(input_json_file)
@@ -220,7 +222,7 @@ def test_list_metric_profiles_name_and_verbose(verbose, cluster_type):
     JSON response by passing both 'name' and 'verbose' query parameters - expected output is metric profile of the specified
     name as verbose is set to true when name parameter is passed
     """
-    input_json_file = "../json_files/resource_optimization_openshift_metric_profile.json"
+    input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     form_kruize_url(cluster_type)
 
     response = delete_metric_profile(input_json_file)

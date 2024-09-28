@@ -18,6 +18,8 @@ package com.autotune.analyzer.serviceObjects;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.ExperimentTypeAware;
+import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
@@ -28,7 +30,7 @@ import java.util.List;
 /**
  * Simulating the KruizeObject class for the CreateExperiment API
  */
-public class CreateExperimentAPIObject extends BaseSO {
+public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeAware {
     @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
     private String clusterName;
     @SerializedName(KruizeConstants.JSONKeys.PERFORMANCE_PROFILE)
@@ -47,6 +49,8 @@ public class CreateExperimentAPIObject extends BaseSO {
     private RecommendationSettings recommendationSettings;
     @SerializedName(KruizeConstants.JSONKeys.DATASOURCE) //TODO: to be used in future
     private String datasource;
+    @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
+    private String experimentType;
     private AnalyzerConstants.ExperimentStatus status;
     private String experiment_id;   // this id is UUID and getting set at createExperiment API
     private ValidationOutputData validationData;  // This object indicates if this API object is valid or invalid
@@ -148,6 +152,25 @@ public class CreateExperimentAPIObject extends BaseSO {
     }
 
     @Override
+    public String getExperimentType() {
+        return experimentType;
+    }
+
+    public void setExperimentType(String experimentType) {
+        this.experimentType = experimentType;
+    }
+
+    @Override
+    public boolean isNamespaceExperiment() {
+        return ExperimentTypeUtil.isNamespaceExperiment(experimentType);
+    }
+
+    @Override
+    public boolean isContainerExperiment() {
+        return ExperimentTypeUtil.isContainerExperiment(experimentType);
+    }
+
+    @Override
     public String toString() {
         return "CreateExperimentAPIObject{" +
                 "experimentName='" + getExperimentName() + '\'' +
@@ -159,6 +182,7 @@ public class CreateExperimentAPIObject extends BaseSO {
                 ", targetCluster='" + targetCluster + '\'' +
                 ", kubernetesAPIObjects=" + kubernetesAPIObjects.toString() +
                 ", trialSettings=" + trialSettings +
+                ", experimentType=" + experimentType +
                 ", recommendationSettings=" + recommendationSettings +
                 '}';
     }

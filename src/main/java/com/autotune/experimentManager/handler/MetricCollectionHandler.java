@@ -122,8 +122,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                 // TODO: Return an error saying unsupported datasource
                             }
                             String queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
-                                    .get(podMetric.getDatasource())
-                                    .getUrl().toString(), updatedPodQuery);
+                                    .get(podMetric.getDatasource()), updatedPodQuery);
                             if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                 try {
                                     queryResult = queryResult.trim();
@@ -161,8 +160,7 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                 if (null != updatedContainerQuery) {
                                     LOGGER.debug("Updated Query - " + updatedContainerQuery);
                                     String queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
-                                            .get(containerMetric.getDatasource())
-                                            .getUrl().toString(), updatedContainerQuery);
+                                            .get(containerMetric.getDatasource()), updatedContainerQuery);
                                     if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                         try {
                                             queryResult = queryResult.trim();
