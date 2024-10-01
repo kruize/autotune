@@ -1913,9 +1913,8 @@ public class RecommendationEngine {
                     k8sObject.setNamespaceData(namespaceData);
                 }
 
-                List<Metric> namespaceMetricList = metricProfile.getSloInfo().getFunctionVariables().stream()
-                        .filter(metricEntry -> metricEntry.getName().startsWith(AnalyzerConstants.NAMESPACE) && !metricEntry.getName().equals("namespaceMaxDate"))
-                        .toList();
+                List<Metric> namespaceMetricList = filterMetricsBasedOnExpType(metricProfile,
+                        AnalyzerConstants.MetricName.namespaceMaxDate.name(),AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT);
 
                 // Iterate over metrics and aggregation functions
                 for (Metric metricEntry : namespaceMetricList) {
@@ -2098,10 +2097,8 @@ public class RecommendationEngine {
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
 
-                    // Exclude maxDate and namespace queries to fetch container metric data
-                    List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables().stream()
-                            .filter(metricEntry -> !metricEntry.getName().startsWith(AnalyzerConstants.NAMESPACE) && !metricEntry.getName().equals(AnalyzerConstants.MetricName.maxDate.name()))
-                            .toList();
+                    List<Metric> metricList = filterMetricsBasedOnExpType(metricProfile,
+                            AnalyzerConstants.MetricName.maxDate.name(),AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
 
                     List<String> acceleratorFunctions = Arrays.asList(
                             AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
@@ -2375,6 +2372,28 @@ public class RecommendationEngine {
             e.printStackTrace();
             throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
         }
+    }
+
+    /**
+     * Filters out maxDateQuery and namespace metrics based on the experiment type
+     * @param metricProfile  Metric profile to be used
+     * @param maxDateQuery   maxDateQuery metric to be filtered out
+     * @param experimentType experiment type
+     */
+    public List<Metric> filterMetricsBasedOnExpType(PerformanceProfile metricProfile, String maxDateQuery, String experimentType) {
+        String namespace = AnalyzerConstants.NAMESPACE;
+        return metricProfile.getSloInfo().getFunctionVariables().stream()
+            .filter(Metric -> {
+                String name = Metric.getName();
+                if (experimentType.equals(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
+                    // Include metrics that start with namespace and exclude namespaceMaxDate metric
+                    return name.startsWith(namespace) && !name.equals(maxDateQuery);
+                } else {
+                    // Exclude metrics that start with namespace or maxDate metric
+                    return !name.startsWith(namespace) && !name.equals(maxDateQuery);
+                }
+            })
+            .toList();
     }
 }
 
