@@ -7,7 +7,7 @@ import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
-public class CrawlerJobStatus {
+public class BulkJobStatus {
     private String jobID;
     private String status;
     private int progress;
@@ -17,7 +17,7 @@ public class CrawlerJobStatus {
     @JsonProperty("end_time")
     private String endTime;   // Change to String to store formatted time
 
-    public CrawlerJobStatus(String jobID, String status, int progress, Data data, Instant startTime) {
+    public BulkJobStatus(String jobID, String status, int progress, Data data, Instant startTime) {
         this.jobID = jobID;
         this.status = status;
         this.progress = progress;

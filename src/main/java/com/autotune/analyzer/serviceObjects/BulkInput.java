@@ -3,7 +3,7 @@ package com.autotune.analyzer.serviceObjects;
 import java.util.List;
 import java.util.Map;
 
-public class CrawlerInput {
+public class BulkInput {
     private FilterWrapper filter;
     private TimeRange time_range;
     private String datasource;

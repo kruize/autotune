@@ -76,6 +76,8 @@ public class ServerContext {
     public static final String LIST_DEPLOYMENTS = QUERY_CONTEXT + "listDeployments";
     public static final String LIST_K8S_OBJECTS = QUERY_CONTEXT + "listK8sObjects";
 
-    //Crawler Service
-    public static final String CRAWLER_SERVICE = ROOT_CONTEXT + "crawler";
+    //Bulk Service
+    public static final String BULK_SERVICE = ROOT_CONTEXT + "bulk";
 }
+
+

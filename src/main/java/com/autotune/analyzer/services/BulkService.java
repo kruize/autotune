@@ -15,9 +15,9 @@
  *******************************************************************************/
 package com.autotune.analyzer.services;
 
-import com.autotune.analyzer.serviceObjects.CrawlerInput;
-import com.autotune.analyzer.serviceObjects.CrawlerJobStatus;
-import com.autotune.analyzer.workerimpl.CrawlerJobManager;
+import com.autotune.analyzer.serviceObjects.BulkInput;
+import com.autotune.analyzer.serviceObjects.BulkJobStatus;
+import com.autotune.analyzer.workerimpl.BulkJobManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,11 +41,11 @@ import java.util.concurrent.Executors;
  *
  */
 @WebServlet(asyncSupported = true)
-public class CrawlerService extends HttpServlet {
+public class BulkService extends HttpServlet {
     private static final long serialVersionUID = 1L;
-    private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BulkService.class);
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private Map<String, CrawlerJobStatus> jobStatusMap = new ConcurrentHashMap<>();
+    private Map<String, BulkJobStatus> jobStatusMap = new ConcurrentHashMap<>();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -61,7 +61,7 @@ public class CrawlerService extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String jobID = req.getParameter("jobID");
-        CrawlerJobStatus jobStatus = jobStatusMap.get(jobID);
+        BulkJobStatus jobStatus = jobStatusMap.get(jobID);
 
         if (jobStatus == null) {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -95,22 +95,22 @@ public class CrawlerService extends HttpServlet {
         ObjectMapper objectMapper = new ObjectMapper();
 
         // Read the request payload and map to RequestPayload class
-        CrawlerInput payload = objectMapper.readValue(request.getInputStream(), CrawlerInput.class);
+        BulkInput payload = objectMapper.readValue(request.getInputStream(), BulkInput.class);
 
         // Generate a unique jobID
         String jobID = UUID.randomUUID().toString();
-        CrawlerJobStatus.Data data = new CrawlerJobStatus.Data(
-                new CrawlerJobStatus.Experiments(new ArrayList<>(), new ArrayList<>()),
-                new CrawlerJobStatus.Recommendations(0, 0, new CrawlerJobStatus.RecommendationData(
+        BulkJobStatus.Data data = new BulkJobStatus.Data(
+                new BulkJobStatus.Experiments(new ArrayList<>(), new ArrayList<>()),
+                new BulkJobStatus.Recommendations(0, 0, new BulkJobStatus.RecommendationData(
                         new ArrayList<>(),
                         new ArrayList<>(),
                         new ArrayList<>(),
                         new ArrayList<>()
                 ))
         );
-        jobStatusMap.put(jobID, new CrawlerJobStatus(jobID, "IN_PROGRESS", 0, data, Instant.now()));
+        jobStatusMap.put(jobID, new BulkJobStatus(jobID, "IN_PROGRESS", 0, data, Instant.now()));
         // Submit the job to be processed asynchronously
-        executorService.submit(new CrawlerJobManager(jobID, jobStatusMap, payload));
+        executorService.submit(new BulkJobManager(jobID, jobStatusMap, payload));
 
         // Just sending a simple success response back
         // Return the jobID to the user

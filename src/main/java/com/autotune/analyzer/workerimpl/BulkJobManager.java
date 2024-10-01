@@ -33,17 +33,17 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-public class CrawlerJobManager implements Runnable {
-    private static final Logger LOGGER = LoggerFactory.getLogger(CrawlerJobManager.class);
+public class BulkJobManager implements Runnable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BulkJobManager.class);
 
     private String jobID;
-    private Map<String, CrawlerJobStatus> jobStatusMap;
-    private CrawlerInput crawlerInput;
+    private Map<String, BulkJobStatus> jobStatusMap;
+    private BulkInput bulkInput;
 
-    public CrawlerJobManager(String jobID, Map<String, CrawlerJobStatus> jobStatusMap, CrawlerInput payload) {
+    public BulkJobManager(String jobID, Map<String, BulkJobStatus> jobStatusMap, BulkInput payload) {
         this.jobID = jobID;
         this.jobStatusMap = jobStatusMap;
-        this.crawlerInput = payload;
+        this.bulkInput = payload;
     }
 
     public static List<String> appendExperiments(List<String> allExperiments, String experimentName) {
@@ -57,10 +57,10 @@ public class CrawlerJobManager implements Runnable {
 
             String uniqueKey = null;
             // Process labels in the 'include' section
-            if (this.crawlerInput.getFilter() != null && this.crawlerInput.getFilter().getInclude() != null) {
+            if (this.bulkInput.getFilter() != null && this.bulkInput.getFilter().getInclude() != null) {
                 // Initialize StringBuilder for uniqueKey
                 StringBuilder includeLabelsBuilder = new StringBuilder();
-                Map<String, String> includeLabels = this.crawlerInput.getFilter().getInclude().getLabels();
+                Map<String, String> includeLabels = this.bulkInput.getFilter().getInclude().getLabels();
                 if (includeLabels != null && !includeLabels.isEmpty()) {
                     includeLabels.forEach((key, value) ->
                             includeLabelsBuilder.append(key).append("=").append("\"" + value + "\"").append(",")
@@ -78,10 +78,10 @@ public class CrawlerJobManager implements Runnable {
             DataSourceInfo datasource = CommonUtils.getDataSourceInfo("prometheus-1");
 
 
-            if (null != this.crawlerInput.getTime_range() && this.crawlerInput.getTime_range().getStart() != null && this.crawlerInput.getTime_range().getEnd() != null) {
+            if (null != this.bulkInput.getTime_range() && this.bulkInput.getTime_range().getStart() != null && this.bulkInput.getTime_range().getEnd() != null) {
                 // Extract interval start and end times
-                String intervalEndTimeStr = this.crawlerInput.getTime_range().getStart();
-                String intervalStartTimeStr = this.crawlerInput.getTime_range().getEnd();
+                String intervalEndTimeStr = this.bulkInput.getTime_range().getStart();
+                String intervalStartTimeStr = this.bulkInput.getTime_range().getEnd();
                 long interval_end_time_epoc = 0;
                 long interval_start_time_epoc = 0;
                 LocalDateTime localDateTime = LocalDateTime.parse(intervalEndTimeStr, DateTimeFormatter.ofPattern(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT));
