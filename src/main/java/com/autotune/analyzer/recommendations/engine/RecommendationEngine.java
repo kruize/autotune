@@ -2098,7 +2098,10 @@ public class RecommendationEngine {
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
 
-                    List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables();
+                    // Exclude maxDate and namespace queries to fetch container metric data
+                    List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables().stream()
+                            .filter(metricEntry -> !metricEntry.getName().startsWith(AnalyzerConstants.NAMESPACE) && !metricEntry.getName().equals(AnalyzerConstants.MetricName.maxDate.name()))
+                            .toList();
 
                     List<String> acceleratorFunctions = Arrays.asList(
                             AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
