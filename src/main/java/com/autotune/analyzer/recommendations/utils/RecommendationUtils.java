@@ -64,15 +64,15 @@ public class RecommendationUtils {
                 continue;
             IntervalResults intervalResults = filteredResultsMap.get(timestamp);
             if (resourceSetting == AnalyzerConstants.ResourceSetting.requests) {
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
                     metricName = AnalyzerConstants.MetricName.namespaceCpuRequest;
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
                     metricName = AnalyzerConstants.MetricName.namespaceMemoryRequest;
             }
             if (resourceSetting == AnalyzerConstants.ResourceSetting.limits) {
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.cpu)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.CPU)
                     metricName = AnalyzerConstants.MetricName.namespaceCpuLimit;
-                if (recommendationItem == AnalyzerConstants.RecommendationItem.memory)
+                if (recommendationItem == AnalyzerConstants.RecommendationItem.MEMORY)
                     metricName = AnalyzerConstants.MetricName.namespaceMemoryLimit;
             }
             if (null != metricName) {

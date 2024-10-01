@@ -1531,10 +1531,10 @@ public class RecommendationEngine {
                 }
                 if (diffCpuRequestPercentage <= cpuThreshold) {
                     // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
-                    // requestsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // requestsMap.remove(AnalyzerConstants.RecommendationItem.CPU);
 
                     // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
-                    // requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.CPU);
 
                     // Alternative - CPU REQUEST VALUE
                     // Accessing existing recommendation item
@@ -1572,9 +1572,9 @@ public class RecommendationEngine {
                 }
                 if (diffCPULimitPercentage <= cpuThreshold) {
                     // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
-                    // limitsMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // limitsMap.remove(AnalyzerConstants.RecommendationItem.CPU);
                     // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
-                    // limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.cpu);
+                    // limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.CPU);
 
                     // Alternative - CPU LIMIT VALUE
                     // Accessing existing recommendation item
@@ -1612,9 +1612,9 @@ public class RecommendationEngine {
                 }
                 if (diffMemRequestPercentage <= memoryThreshold) {
                     // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
-                    // requestsMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // requestsMap.remove(AnalyzerConstants.RecommendationItem.MEMORY);
                     // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
-                    // requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // requestsVariationMap.remove(AnalyzerConstants.RecommendationItem.MEMORY);
 
                     // Alternative - MEMORY REQUEST VALUE
                     // Accessing existing recommendation item
@@ -1652,9 +1652,9 @@ public class RecommendationEngine {
                 }
                 if (diffMemLimitPercentage <= memoryThreshold) {
                     // Remove from Config (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
-                    // limitsMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // limitsMap.remove(AnalyzerConstants.RecommendationItem.MEMORY);
                     // Remove from Variation (Uncomment next line and comment the alternative if you don't want to display recommendation if threshold is not met)
-                    // limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.memory);
+                    // limitsVariationMap.remove(AnalyzerConstants.RecommendationItem.MEMORY);
 
                     // Alternative - MEMORY LIMIT VALUE
                     // Accessing existing recommendation item
