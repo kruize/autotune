@@ -17,7 +17,6 @@ import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
@@ -27,9 +26,8 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.GpuMetricResult;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
+import com.autotune.common.data.result.*;
 import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.common.auth.AuthenticationStrategy;
-import com.autotune.common.auth.AuthenticationStrategyFactory;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.utils.CommonUtils;
@@ -2061,11 +2059,14 @@ public class RecommendationEngine {
                                 dataSourceInfo.getUrl(),
                                 URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
                         );
+
                         LOGGER.info(dateMetricsUrl);
+
                         client.setBaseURL(dateMetricsUrl);
                         JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                         JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                         JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+
                         // Process fetched metrics
                         if (null != resultArray && !resultArray.isEmpty()) {
                             resultArray = resultArray.get(0)
@@ -2092,7 +2093,6 @@ public class RecommendationEngine {
                     HashMap<Timestamp, IntervalResults> containerDataResults = new HashMap<>();
                     IntervalResults intervalResults = null;
                     HashMap<AnalyzerConstants.MetricName, MetricResults> resMap = null;
-                    HashMap<String, MetricResults> resultMap = null;
                     HashMap<AnalyzerConstants.MetricName, GpuMetricResult> gpuMetricResultMap;
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
@@ -2141,15 +2141,15 @@ public class RecommendationEngine {
                                 format = KruizeConstants.JSONKeys.CORES;
                             }
 
-                            promQL = promQL
-                                    .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
-                                    .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
-                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
-                                    .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
-                                    .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
-
                             // If promQL is determined, fetch metrics from the datasource
                             if (promQL != null) {
+                                promQL = promQL
+                                        .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                                        .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                                        .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
+                                        .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+                                        .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+
                                 LOGGER.info(promQL);
                                 String podMetricsUrl;
                                 try {
@@ -2164,28 +2164,130 @@ public class RecommendationEngine {
                                     JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                                     JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                                     JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+
                                     // Process fetched metrics
                                     // Here also skip for non gpu-workloads
                                     if (null != resultArray && !resultArray.isEmpty()) {
-                                        resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
-                                                        KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
-                                                .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
+                                        if (isGpuMetric) {
+                                            for (JsonElement result : resultArray) {
+                                                JsonObject resultObject = result.getAsJsonObject();
+
+                                                JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
+
+                                                // Set the data only for the container GPU device
+                                                if (null == metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString())
+                                                    continue;
+                                                if (metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString().isEmpty())
+                                                    continue;
+
+                                                // If the container doesn't have gpu detected we skip this process
+                                                if (!containerData.getContainerDeviceList().isGPUDeviceDetected())
+                                                    continue;
+
+                                                ArrayList<DeviceDetails> deviceDetails = containerData.getContainerDeviceList().getDevices(AnalyzerConstants.DeviceType.GPU);
+                                                // Continuing to next element
+                                                // All other elements will also fail as there is no GPU attached
+                                                // TODO: Needs a check to figure out why devicelist is empty if is GPU detected is true
+                                                if (null == deviceDetails)
+                                                    continue;
+                                                if (deviceDetails.isEmpty())
+                                                    continue;
+                                                // Assuming only one MIG supported GPU is attached
+                                                // Needs to be changed when you support multiple GPU's
+                                                DeviceDetails deviceDetail = deviceDetails.get(0);
+                                                GPUDeviceData containerGPUDeviceData = (GPUDeviceData) deviceDetail;
+
+                                                // Skip non-matching GPU entries
+                                                if (!metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString().equalsIgnoreCase(containerGPUDeviceData.getModelName()))
+                                                    continue;
+
+                                                GPUDeviceData gpuDeviceData = new GPUDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
+                                                        metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
+                                                        metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
+                                                        metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
+                                                        true);
+
+                                                JsonArray valuesArray = resultObject.getAsJsonArray(KruizeConstants.DataSourceConstants
                                                         .DataSourceQueryJSONKeys.VALUES);
-                                        sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+                                                sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+                                                // Iterate over fetched metrics
+                                                Timestamp sTime = new Timestamp(interval_start_time_epoc);
+                                                for (JsonElement element : valuesArray) {
+                                                    JsonArray valueArray = element.getAsJsonArray();
+                                                    long epochTime = valueArray.get(0).getAsLong();
+                                                    double value = valueArray.get(1).getAsDouble();
+                                                    String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                                                    Date date = sdf.parse(timestamp);
+                                                    Timestamp tempTime = new Timestamp(date.getTime());
+                                                    Timestamp eTime = CommonUtils.getNearestTimestamp(containerDataResults, tempTime, 5);
 
-                                        // Iterate over fetched metrics
-                                        Timestamp sTime = new Timestamp(interval_start_time_epoc);
-                                        for (JsonElement element : resultArray) {
-                                            JsonArray valueArray = element.getAsJsonArray();
-                                            long epochTime = valueArray.get(0).getAsLong();
-                                            double value = valueArray.get(1).getAsDouble();
-                                            String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
-                                            Date date = sdf.parse(timestamp);
-                                            Timestamp eTime = new Timestamp(date.getTime());
+                                                    // containerDataResults are empty so will use the prometheus timestamp
+                                                    if (null == eTime) {
+                                                        // eTime = tempTime;
+                                                        // Skipping entry, as inconsistency with CPU & memory records may provide null pointer while accessing metric results
+                                                        // TODO: Need to seperate the data records of CPU and memory based on exporter
+                                                        // TODO: Perform recommendation generation by stitching the outcome
+                                                        continue;
+                                                    }
 
-                                            // Prepare interval results
-                                            prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults,
-                                                    metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
+                                                    // Prepare interval results
+                                                    if (containerDataResults.containsKey(eTime)) {
+                                                        intervalResults = containerDataResults.get(eTime);
+                                                        gpuMetricResultMap = intervalResults.getGpuMetricResultHashMap();
+                                                        if (null == gpuMetricResultMap)
+                                                            gpuMetricResultMap = new HashMap<>();
+                                                    } else {
+                                                        intervalResults = new IntervalResults();
+                                                        gpuMetricResultMap = new HashMap<>();
+                                                    }
+                                                    AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
+                                                    if (gpuMetricResultMap.containsKey(metricName)) {
+                                                        metricResults = gpuMetricResultMap.get(metricName).getMetricResults();
+                                                        metricAggregationInfoResults = metricResults.getAggregationInfoResult();
+                                                    } else {
+                                                        metricResults = new MetricResults();
+                                                        metricAggregationInfoResults = new MetricAggregationInfoResults();
+                                                    }
+                                                    Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
+                                                    method.invoke(metricAggregationInfoResults, value);
+                                                    metricAggregationInfoResults.setFormat(format);
+                                                    metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+                                                    metricResults.setName(String.valueOf(metricName));
+                                                    metricResults.setFormat(format);
+                                                    GpuMetricResult gpuMetricResult = new GpuMetricResult(gpuDeviceData, metricResults);
+                                                    gpuMetricResultMap.put(metricName, gpuMetricResult);
+                                                    intervalResults.setGpuMetricResultHashMap(gpuMetricResultMap);
+                                                    intervalResults.setIntervalStartTime(sTime);  //Todo this will change
+                                                    intervalResults.setIntervalEndTime(eTime);
+                                                    intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
+                                                            / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
+                                                            * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
+                                                    containerDataResults.put(eTime, intervalResults);
+                                                    sTime = eTime;
+                                                }
+                                            }
+                                        } else {
+                                            resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
+                                                            KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
+                                                    .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
+                                                            .DataSourceQueryJSONKeys.VALUES);
+                                            sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+
+                                            // Iterate over fetched metrics
+                                            Timestamp sTime = new Timestamp(interval_start_time_epoc);
+                                            for (JsonElement element : resultArray) {
+                                                JsonArray valueArray = element.getAsJsonArray();
+                                                long epochTime = valueArray.get(0).getAsLong();
+                                                double value = valueArray.get(1).getAsDouble();
+                                                String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                                                Date date = sdf.parse(timestamp);
+                                                Timestamp eTime = new Timestamp(date.getTime());
+
+                                                // Prepare interval results
+                                                prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults,
+                                                        metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
+
+                                            }
                                         }
                                     }
                                 } catch (Exception e) {
@@ -2225,10 +2327,17 @@ public class RecommendationEngine {
     /**
      * prepares interval results for namespace and container experiments
      */
-    private void prepareIntervalResults(Map<Timestamp, IntervalResults> dataResultsMap, IntervalResults intervalResults,
-                                        HashMap<AnalyzerConstants.MetricName, MetricResults> resMap, MetricResults metricResults,
-                                        MetricAggregationInfoResults metricAggregationInfoResults, Timestamp sTime, Timestamp eTime, Metric metricEntry,
-                                        Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry, double value, String format) throws Exception {
+    private void prepareIntervalResults(Map<Timestamp, IntervalResults> dataResultsMap,
+                                        IntervalResults intervalResults,
+                                        HashMap<AnalyzerConstants.MetricName, MetricResults> resMap,
+                                        MetricResults metricResults,
+                                        MetricAggregationInfoResults metricAggregationInfoResults,
+                                        Timestamp sTime,
+                                        Timestamp eTime,
+                                        Metric metricEntry,
+                                        Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry,
+                                        double value,
+                                        String format) throws Exception {
         try {
             if (dataResultsMap.containsKey(eTime)) {
                 intervalResults = dataResultsMap.get(eTime);

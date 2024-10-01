@@ -24,6 +24,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ContainerDeviceList;
 import com.autotune.common.data.result.GPUDeviceData;
+import com.autotune.common.data.result.IntervalResults;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.*;
@@ -471,5 +472,26 @@ public class CommonUtils {
         }
 
         return A100_CHECK || H100_CHECK;
+    }
+
+    public static Timestamp getNearestTimestamp(HashMap<Timestamp, IntervalResults> containerDataResults, Timestamp targetTime, int minutesRange) {
+        long rangeInMillis = (long) minutesRange * 60 * 1000;
+        long targetTimeMillis = targetTime.getTime();
+
+        Timestamp nearestTimestamp = null;
+        long nearestDistance = Long.MAX_VALUE;
+
+        for (Map.Entry<Timestamp, IntervalResults> entry : containerDataResults.entrySet()) {
+            Timestamp currentTimestamp = entry.getKey();
+            long currentTimeMillis = currentTimestamp.getTime();
+            long distance = Math.abs(targetTimeMillis - currentTimeMillis);
+
+            if (distance <= rangeInMillis && distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestTimestamp = currentTimestamp;
+            }
+        }
+
+        return nearestTimestamp;
     }
 }

@@ -32,6 +32,8 @@ public class ContainerDeviceList implements DeviceHandler, DeviceComponentDetect
         if (deviceType == AnalyzerConstants.DeviceType.GPU)
             this.isGpuDeviceDetected = true;
 
+        // TODO: Handle multiple same entries
+        // Currently only first MIG is getting added so no check for existing duplicates is done
         if (null == deviceMap.get(deviceType)) {
             ArrayList<DeviceDetails> deviceDetailsList = new ArrayList<DeviceDetails>();
             deviceDetailsList.add(deviceInfo);
@@ -58,6 +60,52 @@ public class ContainerDeviceList implements DeviceHandler, DeviceComponentDetect
     @Override
     public void updateDevice(AnalyzerConstants.DeviceType deviceType, DeviceDetails deviceInfo) {
         // TODO: Need to be implemented if we need a dynamic experiment device updates
+    }
+
+    @Override
+    public DeviceDetails getDeviceByParameter(AnalyzerConstants.DeviceType deviceType, String matchIdentifier, AnalyzerConstants.DeviceParameters deviceParameters) {
+        if (null == deviceType)
+            return null;
+        if (null == matchIdentifier)
+            return null;
+        if (null == deviceParameters)
+            return null;
+        if (matchIdentifier.isEmpty())
+            return null;
+        if (!deviceMap.containsKey(deviceType))
+            return null;
+        if (null == deviceMap.get(deviceType))
+            return null;
+        if (deviceMap.get(deviceType).isEmpty())
+            return null;
+
+        // Todo: Need to add extractors for each device type currently implementing for GPU
+        if (deviceType == AnalyzerConstants.DeviceType.GPU) {
+            for (DeviceDetails deviceDetails: deviceMap.get(deviceType)) {
+                GPUDeviceData deviceData = (GPUDeviceData) deviceDetails;
+                if (deviceParameters == AnalyzerConstants.DeviceParameters.MODEL_NAME) {
+                    if (deviceData.getModelName().equalsIgnoreCase(matchIdentifier)) {
+                        return deviceData;
+                    }
+                }
+            }
+        }
+
+        return null;
+    }
+
+    @Override
+    public ArrayList<DeviceDetails> getDevices(AnalyzerConstants.DeviceType deviceType) {
+        if (null == deviceType)
+            return null;
+        if (!deviceMap.containsKey(deviceType))
+            return null;
+        if (null == deviceMap.get(deviceType))
+            return null;
+        if (deviceMap.get(deviceType).isEmpty())
+            return null;
+
+        return deviceMap.get(deviceType);
     }
 
 

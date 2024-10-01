@@ -620,4 +620,13 @@ public class AnalyzerConstants {
         NETWORK,
         GPU
     }
+
+    public enum DeviceParameters {
+        MODEL_NAME,
+        UUID,
+        HOSTNAME,
+        NAME,
+        MANUFACTURER,
+        DEVICE_NAME
+    }
 }
