@@ -4,9 +4,6 @@ import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.auth.AuthenticationConfig;
-import com.autotune.common.auth.AuthenticationStrategy;
-import com.autotune.common.auth.AuthenticationStrategyFactory;
 import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
 import com.autotune.common.exceptions.datasource.ServiceNotFound;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
@@ -199,7 +196,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
                 monitoringAgentEndpoint = getServiceEndpoint(KruizeDeploymentInfo.monitoring_service);
             }
             if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE)) {
-                monitoringAgent = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, null, null, new URL(monitoringAgentEndpoint));
+                monitoringAgent = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, null, null, new URL(monitoringAgentEndpoint), null);
             }
         }
 
