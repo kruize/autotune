@@ -6,6 +6,9 @@ import com.autotune.common.data.system.info.device.accelerator.AcceleratorDevice
 import java.util.ArrayList;
 import java.util.HashMap;
 
+/**
+ * This class stores the device entries linked to the container
+ */
 public class ContainerDeviceList implements DeviceHandler, DeviceComponentDetector {
     private final HashMap<AnalyzerConstants.DeviceType, ArrayList<DeviceDetails>> deviceMap;
     private boolean isAcceleratorDeviceDetected;
@@ -62,6 +65,17 @@ public class ContainerDeviceList implements DeviceHandler, DeviceComponentDetect
         // TODO: Need to be implemented if we need a dynamic experiment device updates
     }
 
+    /**
+     * Returns the Device which matches the identifier based on the device parameter passed
+     * @param deviceType                    - Type of the device Eg: CPU, Memory, Network or Accelerator
+     * @param matchIdentifier               - String which needs to the matched
+     * @param deviceParameters              - Parameter to search in device details list
+     * @return the appropriate DeviceDetails object
+     *
+     * USE CASE: To search the device based on a particular parameter, Let's say you have multiple accelerators
+     * to the container, you can pass the Model name as parameter and name of model to get the particular
+     * DeviceDetail object.
+     */
     @Override
     public DeviceDetails getDeviceByParameter(AnalyzerConstants.DeviceType deviceType, String matchIdentifier, AnalyzerConstants.DeviceParameters deviceParameters) {
         if (null == deviceType)

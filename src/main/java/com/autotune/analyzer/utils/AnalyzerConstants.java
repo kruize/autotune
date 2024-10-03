@@ -212,10 +212,40 @@ public class AnalyzerConstants {
         DEVICE_NAME
     }
 
-    public static final class SupportedGPUs {
-        public static final String A100_80_GB = "A100-80GB";
-        public static final String A100_40_GB = "A100-40GB";
-        public static final String H100 = "H100";
+    public static final class AcceleratorConstants {
+        private AcceleratorConstants() {
+
+        }
+
+        public static final class SupportedAccelerators {
+            private SupportedAccelerators() {
+
+            }
+            public static final String A100_80_GB = "A100-80GB";
+            public static final String A100_40_GB = "A100-40GB";
+            public static final String H100 = "H100";
+        }
+
+        public static final class AcceleratorProfiles {
+            private AcceleratorProfiles () {
+
+            }
+
+            // A100 40GB Profiles
+            public static final String PROFILE_1G_5GB = "1g.5gb";
+            public static final String PROFILE_1G_10GB = "1g.10gb";
+            public static final String PROFILE_2G_10GB = "2g.10gb";
+            public static final String PROFILE_3G_20GB = "3g.20gb";
+            public static final String PROFILE_4G_20GB = "4g.20gb";
+            public static final String PROFILE_7G_40GB = "7g.40gb";
+
+            // A100 80GB & H100 80GB Profiles
+            public static final String PROFILE_1G_20GB = "1g.20gb";
+            public static final String PROFILE_2G_20GB = "2g.20gb";
+            public static final String PROFILE_3G_40GB = "3g.40gb";
+            public static final String PROFILE_4G_40GB = "4g.40gb";
+            public static final String PROFILE_7G_80GB = "7g.80gb";
+        }
     }
 
     public static final class ExperimentTypes {
