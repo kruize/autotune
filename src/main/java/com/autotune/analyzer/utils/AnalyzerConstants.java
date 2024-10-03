@@ -196,6 +196,13 @@ public class AnalyzerConstants {
         INVALID
     }
 
+    public enum DeviceType {
+        CPU,
+        MEMORY,
+        NETWORK,
+        GPU
+    }
+
     public static final class ExperimentTypes {
         public static final String NAMESPACE_EXPERIMENT = "namespace";
         public static final String CONTAINER_EXPERIMENT = "container";
