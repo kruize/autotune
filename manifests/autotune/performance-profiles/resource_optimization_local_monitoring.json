@@ -412,6 +412,46 @@
             "query": "max(last_over_time(timestamp((sum by (namespace) (container_cpu_usage_seconds_total{namespace=\"$NAMESPACE$\"})) > 0 )[15d:]))"
           }
         ]
+      },
+      {
+        "name": "gpuCoreUsage",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (avg_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace=\"$NAMESPACE$\",exported_container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "max",
+            "query": "max by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (max_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace=\"$NAMESPACE$\",exported_container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "min",
+            "query": "min by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (min_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace=\"$NAMESPACE$\",exported_container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          }
+        ]
+      },
+      {
+        "name": "gpuMemoryUsage",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (avg_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace=\"$NAMESPACE$\",exported_container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "max",
+            "query": "max by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (max_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace=\"$NAMESPACE$\",exported_container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "min",
+            "query": "min by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (min_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace=\"$NAMESPACE$\",exported_container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          }
+        ]
       }
     ]
   }
