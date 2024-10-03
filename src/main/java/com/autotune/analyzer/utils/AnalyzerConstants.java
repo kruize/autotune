@@ -200,7 +200,22 @@ public class AnalyzerConstants {
         CPU,
         MEMORY,
         NETWORK,
-        GPU
+        ACCELERATOR
+    }
+
+    public enum DeviceParameters {
+        MODEL_NAME,
+        UUID,
+        HOSTNAME,
+        NAME,
+        MANUFACTURER,
+        DEVICE_NAME
+    }
+
+    public static final class SupportedGPUs {
+        public static final String A100_80_GB = "A100-80GB";
+        public static final String A100_40_GB = "A100-40GB";
+        public static final String H100 = "H100";
     }
 
     public static final class ExperimentTypes {
