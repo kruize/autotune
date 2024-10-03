@@ -165,16 +165,15 @@ public class DataSourceCollection {
 
                 DataSourceInfo datasource;
                 // Validate input
-                if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) {
+                if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) { //TODO: add validations for auth
                     continue;
                 }
                 if (dataSourceURL.isEmpty()) {
-                    datasource = new DataSourceInfo(name, provider, serviceName, namespace, null);
+                    datasource = new DataSourceInfo(name, provider, serviceName, namespace, null, authConfig);
                 } else {
-                    datasource = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL));
+                    datasource = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL), authConfig);
                 }
-                // set the authentication config
-                datasource.setAuthenticationConfig(authConfig);
+                // add the datasource
                 addDataSource(datasource);
             }
         } catch (IOException e) {
