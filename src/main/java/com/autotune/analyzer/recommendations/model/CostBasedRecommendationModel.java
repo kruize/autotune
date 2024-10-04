@@ -3,16 +3,21 @@ package com.autotune.analyzer.recommendations.model;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.AcceleratorMetricResult;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorMetaDataService;
+import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorProfile;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import software.amazon.awssdk.services.cloudwatchlogs.endpoints.internal.Value;
 
 import java.sql.Timestamp;
 import java.util.*;
@@ -22,6 +27,8 @@ import java.util.stream.Stream;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_CPU_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_MEMORY_PERCENTILE;
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.COST_ACCELERATOR_PERCENTILE;
+
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 
 public class CostBasedRecommendationModel implements RecommendationModel {
@@ -503,6 +510,80 @@ public class CostBasedRecommendationModel implements RecommendationModel {
 
         recommendationConfigItem = new RecommendationConfigItem(namespaceMemRec, format);
         return recommendationConfigItem;
+    }
+
+    @Override
+    public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getAcceleratorRequestRecommendation (
+            Map<Timestamp, IntervalResults> filteredResultsMap,
+            ArrayList<RecommendationNotification> notifications
+    ) {
+        List<Double> acceleratorCoreMaxValues = new ArrayList<>();
+        List<Double> acceleratorMemoryMaxValues = new ArrayList<>();
+
+        boolean isGpuWorkload = false;
+        String acceleratorModel = null;
+
+        for (Map.Entry<Timestamp, IntervalResults> entry : filteredResultsMap.entrySet()) {
+            IntervalResults intervalResults = entry.getValue();
+
+            // Skip if accelerator map is null
+            if (null == intervalResults.getAcceleratorMetricResultHashMap())
+                continue;
+
+            isGpuWorkload = true;
+            for (Map.Entry<AnalyzerConstants.MetricName, AcceleratorMetricResult> gpuEntry : intervalResults.getAcceleratorMetricResultHashMap().entrySet()) {
+                AcceleratorMetricResult gpuMetricResult = gpuEntry.getValue();
+
+                // Set Accelerator name
+                // TODO: Need to handle separate processing in case of container supporting multiple accelerators
+                if (null == acceleratorModel
+                        && null != gpuMetricResult.getAcceleratorDeviceData().getModelName()
+                        && !gpuMetricResult.getAcceleratorDeviceData().getModelName().isEmpty()
+                        && CommonUtils.checkIfModelIsKruizeSupportedMIG(gpuMetricResult.getAcceleratorDeviceData().getModelName())
+                ) {
+                    String obtainedAcceleratorName = CommonUtils.getSupportedModelBasedOnModelName(gpuMetricResult.getAcceleratorDeviceData().getModelName());
+                    if (null != obtainedAcceleratorName)
+                        acceleratorModel = obtainedAcceleratorName;
+                }
+
+                MetricResults metricResults = gpuMetricResult.getMetricResults();
+
+                // Skip if metric results is null
+                if (null == metricResults || null == metricResults.getAggregationInfoResult())
+                    continue;
+
+                MetricAggregationInfoResults aggregationInfo = metricResults.getAggregationInfoResult();
+
+                // Skip if max is null or zero or negative
+                if (null == aggregationInfo.getMax() || aggregationInfo.getMax() <= 0.0)
+                    continue;
+
+                boolean isCoreUsage = gpuEntry.getKey() == AnalyzerConstants.MetricName.gpuCoreUsage;
+                boolean isMemoryUsage = gpuEntry.getKey() == AnalyzerConstants.MetricName.gpuMemoryUsage;
+
+                // Skip if it's none of the Accelerator metrics
+                if (!isCoreUsage && !isMemoryUsage)
+                    continue;
+
+                if (isCoreUsage) {
+                    acceleratorCoreMaxValues.add(aggregationInfo.getMax());
+                } else {
+                    acceleratorMemoryMaxValues.add(aggregationInfo.getMax());
+                }
+            }
+        }
+
+        if (!isGpuWorkload) {
+            return null;
+        }
+
+        double coreAverage = CommonUtils.percentile(COST_ACCELERATOR_PERCENTILE, acceleratorCoreMaxValues);
+        double memoryAverage = CommonUtils.percentile(COST_ACCELERATOR_PERCENTILE, acceleratorMemoryMaxValues);
+
+        double coreFraction = coreAverage / 100;
+        double memoryFraction = memoryAverage / 100;
+
+        return RecommendationUtils.getMapWithOptimalProfile(acceleratorModel, coreFraction, memoryFraction);
     }
 
     public static JSONObject calculateNamespaceMemoryUsage(IntervalResults intervalResults) {

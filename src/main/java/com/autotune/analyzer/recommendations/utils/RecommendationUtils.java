@@ -11,13 +11,14 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.system.info.device.ContainerDeviceList;
 import com.autotune.common.data.system.info.device.accelerator.AcceleratorDeviceData;
 import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.*;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorMetaDataService;
+import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorProfile;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -312,5 +313,44 @@ public class RecommendationUtils {
         return nearestTimestamp;
     }
 
+    public static HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getMapWithOptimalProfile(
+            String acceleratorModel,
+            Double coreFraction,
+            Double memoryFraction
+    ) {
+        if (null == acceleratorModel || null == coreFraction || null == memoryFraction)
+            return null;
+
+        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> returnMap = new HashMap<>();
+
+        AcceleratorMetaDataService gpuMetaDataService = AcceleratorMetaDataService.getInstance();
+        AcceleratorProfile acceleratorProfile = gpuMetaDataService.getAcceleratorProfile(acceleratorModel, coreFraction, memoryFraction);
+        RecommendationConfigItem recommendationConfigItem = new RecommendationConfigItem(1.0, "cores");
+
+        if (acceleratorProfile.getProfileName().equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.PROFILE_1G_5GB)) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_1_CORE_5GB, recommendationConfigItem);
+        } else if (acceleratorProfile.getProfileName().equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.PROFILE_1G_10GB)) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_1_CORE_10GB, recommendationConfigItem);
+        } else if (acceleratorProfile.getProfileName().equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.PROFILE_1G_20GB)) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_1_CORE_20GB, recommendationConfigItem);
+        } else if (acceleratorProfile.getProfileName().equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.PROFILE_2G_10GB)) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_2_CORES_10GB, recommendationConfigItem);
+        } else if (acceleratorProfile.getProfileName().equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.PROFILE_2G_20GB)) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_2_CORES_20GB, recommendationConfigItem);
+        } else if (acceleratorProfile.getProfileName().equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.PROFILE_3G_20GB)) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_3_CORES_20GB, recommendationConfigItem);
+        } else if (acceleratorProfile.getProfileName().equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.PROFILE_3G_40GB)) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_3_CORES_40GB, recommendationConfigItem);
+        } else if (acceleratorProfile.getProfileName().equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.PROFILE_4G_20GB)) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_4_CORES_20GB, recommendationConfigItem);
+        } else if (acceleratorProfile.getProfileName().equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.PROFILE_4G_40GB)) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_4_CORES_40GB, recommendationConfigItem);
+        } else if (acceleratorProfile.getProfileName().equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.PROFILE_7G_40GB)) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_7_CORES_40GB, recommendationConfigItem);
+        } else if (acceleratorProfile.getProfileName().equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.PROFILE_7G_80GB)) {
+            returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_7_CORES_80GB, recommendationConfigItem);
+        }
+        return returnMap;
+    }
 }
 

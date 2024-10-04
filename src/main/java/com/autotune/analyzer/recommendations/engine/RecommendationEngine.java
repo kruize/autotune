@@ -698,6 +698,7 @@ public class RecommendationEngine {
             // Get the Recommendation Items
             RecommendationConfigItem recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
             RecommendationConfigItem recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
+            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
 
             // Get the Recommendation Items
             // Calling requests on limits as we are maintaining limits and requests as same
@@ -728,7 +729,8 @@ public class RecommendationEngine {
                     internalMapToPopulate,
                     numPods,
                     cpuThreshold,
-                    memoryThreshold
+                    memoryThreshold,
+                    recommendationAcceleratorRequestMap
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -1077,7 +1079,8 @@ public class RecommendationEngine {
                     internalMapToPopulate,
                     numPodsInNamespace,
                     namespaceCpuThreshold,
-                    namespaceMemoryThreshold
+                    namespaceMemoryThreshold,
+                    null
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -1100,13 +1103,17 @@ public class RecommendationEngine {
      * @param numPods The number of pods to consider for the recommendation.
      * @param cpuThreshold The CPU usage threshold for the recommendation.
      * @param memoryThreshold The memory usage threshold for the recommendation.
+     * @param recommendationAcceleratorRequestMap The Map which has Accelerator recommendations
      * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
     private boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
                                            MappedRecommendationForModel recommendationModel,
                                            ArrayList<RecommendationNotification> notifications,
                                            HashMap<String, RecommendationConfigItem> internalMapToPopulate,
-                                           int numPods, double cpuThreshold, double memoryThreshold) {
+                                           int numPods,
+                                           double cpuThreshold,
+                                           double memoryThreshold,
+                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap) {
         // Check for cpu & memory Thresholds (Duplicate check if the caller is generateRecommendations)
         String recommendationTerm = termEntry.getKey();
         double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
@@ -1688,6 +1695,11 @@ public class RecommendationEngine {
         // Set Request Map
         if (!requestsMap.isEmpty()) {
             config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+        }
+
+        // Check if accelerator map is not empty and add to limits map
+        if (null != recommendationAcceleratorRequestMap && !recommendationAcceleratorRequestMap.isEmpty()) {
+            limitsMap.putAll(recommendationAcceleratorRequestMap);
         }
 
         // Set Limits Map

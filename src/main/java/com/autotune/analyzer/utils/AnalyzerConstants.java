@@ -254,7 +254,7 @@ public class AnalyzerConstants {
             }
             public static final String A100_80_GB = "A100-80GB";
             public static final String A100_40_GB = "A100-40GB";
-            public static final String H100 = "H100";
+            public static final String H100_80_GB = "H100-80GB";
         }
 
         public static final class AcceleratorProfiles {
