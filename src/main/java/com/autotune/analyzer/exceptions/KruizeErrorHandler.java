@@ -15,7 +15,9 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -56,6 +58,7 @@ public class KruizeErrorHandler extends ErrorPageErrorHandler {
                 .disableHtmlEscaping()
                 .enableComplexMapKeySerialization()
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                 .create();
         String gsonStr = gsonObj.toJson(new KruizeResponse(origMessage, errorCode, "", "ERROR", myList));
 

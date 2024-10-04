@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
@@ -224,6 +225,7 @@ public class ListRecommendations extends HttpServlet {
                             .setPrettyPrinting()
                             .enableComplexMapKeySerialization()
                             .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                            .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                             .setExclusionStrategies(strategy)
                             .create();
                     gsonStr = gsonObj.toJson(recommendationList);
