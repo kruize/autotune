@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
@@ -24,6 +25,7 @@ import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.MetricsConfig;
 import com.google.gson.*;
@@ -80,6 +82,7 @@ public class UpdateResults extends HttpServlet {
                     .registerTypeAdapter(Double.class, new CustomNumberDeserializer())
                     .registerTypeAdapter(Integer.class, new CustomNumberDeserializer())
                     .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                    .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                     .create();
             LOGGER.debug("updateResults API request payload for requestID {} is {}", calCount, inputData);
             try {

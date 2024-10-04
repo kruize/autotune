@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
@@ -29,6 +30,7 @@ import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
@@ -380,6 +382,7 @@ public class MetricProfileService extends HttpServlet {
                 .enableComplexMapKeySerialization()
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                 .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                 // a custom serializer for serializing metadata of JsonNode type.
                 .registerTypeAdapter(JsonNode.class, new JsonSerializer<JsonNode>() {
                     @Override
