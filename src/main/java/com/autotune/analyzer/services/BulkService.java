@@ -17,6 +17,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.serviceObjects.BulkInput;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
+import com.autotune.analyzer.workerimpl.BulkJobManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.json.JSONObject;
 import org.slf4j.Logger;
