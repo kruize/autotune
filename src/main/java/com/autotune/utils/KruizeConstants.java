@@ -167,6 +167,7 @@ public class KruizeConstants {
         public static final String POD_METRICS = "pod_metrics";
         public static final String CONTAINER_METRICS = "container_metrics";
         public static final String METRICS = "metrics";
+        public static final String METRIC = "metric";
         public static final String CONFIG = "config";
         public static final String CURRENT = "current";
         public static final String NAME = "name";
@@ -262,6 +263,10 @@ public class KruizeConstants {
         public static final String PLOTS_DATAPOINTS = "datapoints";
         public static final String PLOTS_DATA = "plots_data";
         public static final String CONFIDENCE_LEVEL = "confidence_level";
+        public static final String HOSTNAME = "Hostname";
+        public static final String UUID = "UUID";
+        public static final String DEVICE = "device";
+        public static final String MODEL_NAME = "modelName";
 
         private JSONKeys() {
         }

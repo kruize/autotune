@@ -16,23 +16,43 @@
 
 package com.autotune.common.utils;
 
+import com.autotune.analyzer.exceptions.FetchMetricsError;
+import com.autotune.common.data.system.info.device.ContainerDeviceList;
+import com.autotune.common.data.system.info.device.accelerator.AcceleratorDeviceData;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
+import com.autotune.analyzer.recommendations.term.Terms;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.IntervalResults;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.*;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 /**
  * This Class holds the utilities needed by the classes in common package
  */
 public class CommonUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommonUtils.class);
 
     /**
      * AutotuneDatasourceTypes is an ENUM which holds different types of
@@ -314,5 +334,165 @@ public class CommonUtils {
     public static boolean isInvalidDataSource(DataSourceInfo datasource) {
         return datasource == null || datasource.getAuthenticationConfig() == null ||
                 datasource.getAuthenticationConfig().toString().isEmpty();
+    }
+
+    public static void markAcceleratorDeviceStatusToContainer (ContainerData containerData,
+                                                               String maxDateQuery,
+                                                               String namespace,
+                                                               String workload,
+                                                               String workload_type,
+                                                               DataSourceInfo dataSourceInfo,
+                                                               Map<String, Terms> termsMap,
+                                                               Double measurementDurationMinutesInDouble,
+                                                               String gpuDetectionQuery)
+            throws IOException, NoSuchAlgorithmException, KeyStoreException,
+            KeyManagementException, ParseException, FetchMetricsError {
+
+        SimpleDateFormat sdf = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT, Locale.ROOT);
+        String containerName = containerData.getContainer_name();
+        String queryToEncode = null;
+        long interval_end_time_epoc = 0;
+        long interval_start_time_epoc = 0;
+
+        LOGGER.info("maxDateQuery: {}", maxDateQuery);
+        queryToEncode =  maxDateQuery
+                .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+                .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+
+        String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
+                dataSourceInfo.getUrl(),
+                URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
+        );
+
+        LOGGER.info(dateMetricsUrl);
+        GenericRestApiClient client = new GenericRestApiClient(dataSourceInfo);
+        client.setBaseURL(dateMetricsUrl);
+        JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+        JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+        JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+
+        if (null == resultArray || resultArray.isEmpty()) {
+            // Need to alert that container max duration is not detected
+            // Ignoring it here, as we take care of it at generate recommendations
+            return;
+        }
+
+        resultArray = resultArray.get(0)
+                .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE);
+        long epochTime = resultArray.get(0).getAsLong();
+        String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+        Date date = sdf.parse(timestamp);
+        Timestamp dateTS = new Timestamp(date.getTime());
+        interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+        int maxDay = Terms.getMaxDays(termsMap);
+        LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
+        Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
+        interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
+                - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
+
+        gpuDetectionQuery = gpuDetectionQuery.replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
+                .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+                .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+
+        String podMetricsUrl;
+        try {
+            podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
+                    dataSourceInfo.getUrl(),
+                    URLEncoder.encode(gpuDetectionQuery, CHARACTER_ENCODING),
+                    interval_start_time_epoc,
+                    interval_end_time_epoc,
+                    measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+            LOGGER.info(podMetricsUrl);
+            client.setBaseURL(podMetricsUrl);
+            genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+
+            jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+            resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+
+            if (null != resultArray && !resultArray.isEmpty()) {
+                for (JsonElement result : resultArray) {
+                    JsonObject resultObject = result.getAsJsonObject();
+                    JsonArray valuesArray = resultObject.getAsJsonArray(KruizeConstants.DataSourceConstants
+                            .DataSourceQueryJSONKeys.VALUES);
+
+                    for (JsonElement element : valuesArray) {
+                        JsonArray valueArray = element.getAsJsonArray();
+                        double value = valueArray.get(1).getAsDouble();
+                        // TODO: Check for non-zero values to mark as GPU workload
+                        break;
+                    }
+
+                    JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
+                    String modelName = metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString();
+                    if (null == modelName)
+                        continue;
+
+                    boolean isSupportedMig = checkIfModelIsKruizeSupportedMIG(modelName);
+                    if (isSupportedMig) {
+                        AcceleratorDeviceData acceleratorDeviceData = new AcceleratorDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
+                                metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
+                                metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
+                                metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
+                                isSupportedMig);
+
+
+                        if (null == containerData.getContainerDeviceList()) {
+                            ContainerDeviceList containerDeviceList = new ContainerDeviceList();
+                            containerData.setContainerDeviceList(containerDeviceList);
+                        }
+                        containerData.getContainerDeviceList().addDevice(AnalyzerConstants.DeviceType.ACCELERATOR, acceleratorDeviceData);
+                        // TODO: Currently we consider only the first mig supported GPU
+                        return;
+                    }
+                }
+            }
+        } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException |
+                 JsonSyntaxException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static boolean checkIfModelIsKruizeSupportedMIG(String modelName) {
+        if (null == modelName || modelName.isEmpty())
+            return false;
+
+        modelName = modelName.toUpperCase();
+
+        boolean A100_CHECK = (modelName.contains("A100") &&
+                (modelName.contains("40GB") || modelName.contains("80GB")));
+
+        boolean H100_CHECK = false;
+
+        if (!A100_CHECK) {
+            H100_CHECK = (modelName.contains("H100") && modelName.contains("80GB"));
+        }
+
+        return A100_CHECK || H100_CHECK;
+    }
+
+    public static Timestamp getNearestTimestamp(HashMap<Timestamp, IntervalResults> containerDataResults, Timestamp targetTime, int minutesRange) {
+        long rangeInMillis = (long) minutesRange * 60 * 1000;
+        long targetTimeMillis = targetTime.getTime();
+
+        Timestamp nearestTimestamp = null;
+        long nearestDistance = Long.MAX_VALUE;
+
+        for (Map.Entry<Timestamp, IntervalResults> entry : containerDataResults.entrySet()) {
+            Timestamp currentTimestamp = entry.getKey();
+            long currentTimeMillis = currentTimestamp.getTime();
+            long distance = Math.abs(targetTimeMillis - currentTimeMillis);
+
+            if (distance <= rangeInMillis && distance < nearestDistance) {
+                nearestDistance = distance;
+                nearestTimestamp = currentTimestamp;
+            }
+        }
+
+        return nearestTimestamp;
     }
 }
