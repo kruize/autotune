@@ -121,7 +121,7 @@ public class BulkService extends HttpServlet {
         );
         jobStatusMap.put(jobID, new BulkJobStatus(jobID, IN_PROGRESS, 0, data, Instant.now()));
         // Submit the job to be processed asynchronously
-        // example executorService.submit(new BulkJobManager(jobID, jobStatusMap, payload));
+        executorService.submit(new BulkJobManager(jobID, jobStatusMap, payload));
 
         // Just sending a simple success response back
         // Return the jobID to the user
