@@ -139,10 +139,10 @@ public class BulkJobManager implements Runnable {
                 Timestamp interval_start_time = Timestamp.from(localDateTime.toInstant(ZoneOffset.UTC));
                 int steps = CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDuration() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE; // todo fetch experiment recommendations setting measurement
                 //Get metaData
-                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, interval_start_time_epoc, interval_end_time_epoc, steps);
+                //example metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, interval_start_time_epoc, interval_end_time_epoc, steps);
             } else {
                 //Get metaData
-                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, 0, 0, 0);
+                //metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, 0, 0, 0);
             }
             List<String> recommendationsRequiredExperiments = new CopyOnWriteArrayList<>();
             if (null == metadataInfo) {
