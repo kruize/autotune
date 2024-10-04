@@ -18,6 +18,7 @@ package com.autotune.common.data.result;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.system.info.device.ContainerDeviceList;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -29,6 +30,7 @@ public class ContainerData {
     private String container_name;
     //key is intervalEndTime
     private HashMap<Timestamp, IntervalResults> results;
+    private ContainerDeviceList containerDeviceList;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private ContainerRecommendations containerRecommendations;
     private HashMap<AnalyzerConstants.MetricName, Metric> metrics;
@@ -84,6 +86,14 @@ public class ContainerData {
 
     public void setMetrics(HashMap<AnalyzerConstants.MetricName, Metric> metrics) {
         this.metrics = metrics;
+    }
+
+    public ContainerDeviceList getContainerDeviceList() {
+        return containerDeviceList;
+    }
+
+    public void setContainerDeviceList(ContainerDeviceList containerDeviceList) {
+        this.containerDeviceList = containerDeviceList;
     }
     @Override
     public String toString() {

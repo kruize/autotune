@@ -16,6 +16,7 @@
 package com.autotune.common.data.result;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.AcceleratorMetricResult;
 import com.autotune.common.data.metrics.MetricResults;
 import com.google.gson.annotations.SerializedName;
 
@@ -32,6 +33,7 @@ import static com.autotune.utils.KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINU
 public class IntervalResults {
     @SerializedName(METRICS)
     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap;
+    HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap;
     @SerializedName(INTERVAL_START_TIME)
     private Timestamp intervalStartTime;
     @SerializedName(INTERVAL_END_TIME)
@@ -83,6 +85,14 @@ public class IntervalResults {
 
     public void setDurationInMinutes(Double durationInMinutes) {
         this.durationInMinutes = durationInMinutes;
+    }
+
+    public HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> getAcceleratorMetricResultHashMap() {
+        return acceleratorMetricResultHashMap;
+    }
+
+    public void setAcceleratorMetricResultHashMap(HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap) {
+        this.acceleratorMetricResultHashMap = acceleratorMetricResultHashMap;
     }
 
     @Override
