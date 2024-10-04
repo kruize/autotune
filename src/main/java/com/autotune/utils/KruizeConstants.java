@@ -674,6 +674,7 @@ public class KruizeConstants {
         public static final String CLOUDWATCH_LOGS_LOG_LEVEL = "logging_cloudwatch_logLevel";
         public static final String LOCAL = "local";
         public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
+        public static final String RECOMMENDATIONS_URL = "recommendationsURL";
     }
 
     public static final class RecommendationEngineConstants {
