@@ -5,18 +5,18 @@ containers, namespaces, etc., for a cluster connected via the datasource integra
 be configured using filters like exclude/include namespaces, workloads, containers, or labels for generating
 recommendations. It also has settings to generate recommendations at both the container or namespace level, or both.
 
-Bulk returns a `jobID` as a response to track the job status. The user can use the `jobID` to monitor the
+Bulk returns a `job_id` as a response to track the job status. The user can use the `job_id` to monitor the
 progress of the job.
 
 ## Task Flow When Bulk Is Invoked
 
-1. Returns a unique `jobID`.
+1. Returns a unique `job_id`.
 2. Background Bulk:
     - First, does a handshake with the datasource.
     - Using queries, it fetches the list of namespaces, workloads, containers of the connected datasource.
     - Creates experiments, one for each container *alpha release.
     - Triggers `generateRecommendations` for each container.
-    - Once all experiments are created, and recommendations are generated, the system marks the `jobID` as "COMPLETED".
+    - Once all experiments are created, and recommendations are generated, the system marks the `job_id` as "COMPLETED".
 
 ## API Specification
 
@@ -79,21 +79,21 @@ progress of the job.
 
 ```json
 {
-  "jobid": "123e4567-e89b-12d3-a456-426614174000"
+  "job_id": "123e4567-e89b-12d3-a456-426614174000"
 }
 ```
 
 ### GET Request:
 
 ```bash
-GET /bulk?jobid=123e4567-e89b-12d3-a456-426614174000
+GET /bulk?job_id=123e4567-e89b-12d3-a456-426614174000
 ```
 
 **Body (JSON):**
 
 ```json
 {
-  "jobID": "123e4567-e89b-12d3-a456-426614174000",
+  "job_id": "123e4567-e89b-12d3-a456-426614174000",
   "status": "IN-PROGRESS",
   "progress": 30,
   "data": {
@@ -136,7 +136,7 @@ GET /bulk?jobid=123e4567-e89b-12d3-a456-426614174000
 
 ### Response Parameters
 
-- **jobID:** Unique identifier for the job.
+- **job_id:** Unique identifier for the job.
 - **status:** Current status of the job. Possible values: `"IN-PROGRESS"`, `"COMPLETED"`, `"FAILED"`.
 - **progress:** Percentage of job completion.
 - **data:** Contains detailed information about the experiments and recommendations.
