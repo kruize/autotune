@@ -59,7 +59,7 @@ public class BulkService extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String jobID = req.getParameter("jobID");
+        String jobID = req.getParameter("job_id");
         BulkJobStatus jobStatus = jobStatusMap.get(jobID);
 
         if (jobStatus == null) {
@@ -114,7 +114,7 @@ public class BulkService extends HttpServlet {
         // Just sending a simple success response back
         // Return the jobID to the user
         response.setContentType("application/json");
-        response.getWriter().write("{\"jobID\":\"" + jobID + "\"}");
+        response.getWriter().write("{\"job_id\":\"" + jobID + "\"}");
     }
 
 
