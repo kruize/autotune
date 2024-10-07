@@ -21,6 +21,7 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.Map;
 
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
 
@@ -32,17 +33,20 @@ public class BulkJobStatus {
     private String jobID;
     private String status;
     private int progress;
-    private Data data;
+    // Mapping each experiment group (like "1-10", "11-20") to its corresponding data
+    @JsonProperty("data")
+    private Map<String, Data> batchData;
+
     @JsonProperty("start_time")
     private String startTime; // Change to String to store formatted time
     @JsonProperty("end_time")
     private String endTime;   // Change to String to store formatted time
 
-    public BulkJobStatus(String jobID, String status, int progress, Data data, Instant startTime) {
+    public BulkJobStatus(String jobID, String status, int progress, Map<String, BulkJobStatus.Data> data, Instant startTime) {
         this.jobID = jobID;
         this.status = status;
         this.progress = progress;
-        this.data = data;
+        this.batchData = data;
         setStartTime(startTime);
     }
 
@@ -64,14 +68,6 @@ public class BulkJobStatus {
 
     public void setProgress(int progress) {
         this.progress = progress;
-    }
-
-    public Data getData() {
-        return data;
-    }
-
-    public void setData(Data data) {
-        this.data = data;
     }
 
     public String getStartTime() {
@@ -97,6 +93,14 @@ public class BulkJobStatus {
                 .withZone(ZoneOffset.UTC);  // Ensure it's in UTC
 
         return formatter.format(instant);
+    }
+
+    public Map<String, Data> getBatchData() {
+        return batchData;
+    }
+
+    public void setBatchData(Map<String, Data> batchData) {
+        this.batchData = batchData;
     }
 
     // Inner class for the data field
@@ -281,6 +285,4 @@ public class BulkJobStatus {
             return (int) ((completed.size() * 100.0) / totalTasks);
         }
     }
-
-
 }

@@ -27,26 +27,19 @@ import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.ProtocolException;
-import java.net.URL;
 import java.sql.Timestamp;
-import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
+import static com.autotune.operator.KruizeDeploymentInfo.BULK_API_CHUNK_SIZE;
 
 import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
@@ -83,6 +76,7 @@ public class BulkJobManager implements Runnable {
     private String jobID;
     private Map<String, BulkJobStatus> jobStatusMap;
     private BulkInput bulkInput;
+
 
     public BulkJobManager(String jobID, Map<String, BulkJobStatus> jobStatusMap, BulkInput payload) {
         this.jobID = jobID;
@@ -145,6 +139,7 @@ public class BulkJobManager implements Runnable {
                 metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, 0, 0, 0);
             }
             List<String> recommendationsRequiredExperiments = new CopyOnWriteArrayList<>();
+            List<String> newExperiments = new CopyOnWriteArrayList<>();
             if (null == metadataInfo) {
                 jobStatusMap.get(jobID).setStatus(COMPLETED);
             } else {
@@ -194,9 +189,11 @@ public class BulkJobManager implements Runnable {
                                             try {
                                                 ValidationOutputData output = new ExperimentDBService().addExperimentToDB(createExperimentAPIObject);
                                                 if (output.isSuccess()) {
+                                                    /*jobStatusMap.get(jobID).getData().getExperiments().setNewExperiments(
                                                     jobStatusMap.get(jobID).getData().getExperiments().setNewExperiments(
                                                             appendExperiments(jobStatusMap.get(jobID).getData().getExperiments().getNewExperiments(), experiment_name)
-                                                    );
+                                                    );*/
+                                                    newExperiments.add(experiment_name);
                                                 }
                                                 recommendationsRequiredExperiments.add(experiment_name);
                                             } catch (Exception e) {
@@ -211,10 +208,13 @@ public class BulkJobManager implements Runnable {
                     }
                 }
                 jobStatusMap.get(jobID).setStatus(IN_PROGRESS);
-                jobStatusMap.get(jobID).getData().getRecommendations().getData().setInqueue(recommendationsRequiredExperiments);
-                jobStatusMap.get(jobID).getData().getRecommendations().setTotalCount(recommendationsRequiredExperiments.size());
+                //jobStatusMap.get(jobID).getData().getRecommendations().getData().setInqueue(recommendationsRequiredExperiments);
+                //jobStatusMap.get(jobID).getData().getRecommendations().setTotalCount(recommendationsRequiredExperiments.size());
 
+                chunkAndStore(recommendationsRequiredExperiments, BULK_API_CHUNK_SIZE, jobStatusMap.get(jobID));
             }
+           /* ExecutorService executor = Executors.newFixedThreadPool(3);
+            ExecutorService executor = Executors.newFixedThreadPool(3);
             ExecutorService executor = Executors.newFixedThreadPool(bulk_thread_pool_size);
             for (String name : recommendationsRequiredExperiments) {
                 executor.submit(() -> {
@@ -263,11 +263,48 @@ public class BulkJobManager implements Runnable {
                     // Close the connection
                     connection.disconnect();
                 });
-            }
+            }*/
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             e.printStackTrace();
             jobStatusMap.get(jobID).setStatus("FAILED");
+        }
+    }
+
+    private void chunkAndStore(List<String> recommendationsRequiredExperiments, int chunkSize, BulkJobStatus bulkJobStatus) {
+        int totalExperiments = recommendationsRequiredExperiments.size();
+        Map<String, BulkJobStatus.Data> batchData = bulkJobStatus.getBatchData();
+        int chunkCount = 0;
+        // Process each chunk
+        for (int i = 0; i < totalExperiments; i += chunkSize) {
+            chunkCount++;
+
+            // Define the chunk start and end indices
+            int start = i + 1;
+            int end = Math.min(i + chunkSize, totalExperiments);
+
+            // Generate the key in the format "start-end"
+            String key = start + "-" + end;
+
+            // Get the sublist (chunk) for the current range
+            List<String> currentChunk = recommendationsRequiredExperiments.subList(i, end);
+
+            if (batchData.containsKey(key)) {
+                batchData.get(key).getRecommendations().getData().setInqueue(currentChunk);
+            } else {
+                BulkJobStatus.Data data = new BulkJobStatus.Data(
+                        new BulkJobStatus.Experiments(new ArrayList<>(), new ArrayList<>()),
+                        new BulkJobStatus.Recommendations(0, 0, new BulkJobStatus.RecommendationData(
+                                new ArrayList<>(),
+                                new ArrayList<>(),
+                                new ArrayList<>(),
+                                new ArrayList<>()
+                        ))
+                );
+                data.getRecommendations().getData().setInqueue(currentChunk);
+                batchData.put(key, data);
+            }
+
         }
     }
 }

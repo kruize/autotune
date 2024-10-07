@@ -169,7 +169,6 @@ public class KruizeConstants {
         public static final String POD_METRICS = "pod_metrics";
         public static final String CONTAINER_METRICS = "container_metrics";
         public static final String METRICS = "metrics";
-        public static final String METRIC = "metric";
         public static final String CONFIG = "config";
         public static final String CURRENT = "current";
         public static final String NAME = "name";
@@ -265,10 +264,6 @@ public class KruizeConstants {
         public static final String PLOTS_DATAPOINTS = "datapoints";
         public static final String PLOTS_DATA = "plots_data";
         public static final String CONFIDENCE_LEVEL = "confidence_level";
-        public static final String HOSTNAME = "Hostname";
-        public static final String UUID = "UUID";
-        public static final String DEVICE = "device";
-        public static final String MODEL_NAME = "modelName";
 
         private JSONKeys() {
         }
@@ -677,6 +672,8 @@ public class KruizeConstants {
         public static final String LOCAL = "local";
         public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
         public static final String RECOMMENDATIONS_URL = "recommendationsURL";
+        public static final String BULK_API_LIMIT = "bulkapilimit";
+        public static final String BULK_API_CHUNK_SIZE = "bulkapichunksize";
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
     }
 

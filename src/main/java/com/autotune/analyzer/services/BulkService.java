@@ -32,11 +32,14 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static com.autotune.operator.KruizeDeploymentInfo.BULK_API_CHUNK_SIZE;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -119,7 +122,9 @@ public class BulkService extends HttpServlet {
                         new ArrayList<>()
                 ))
         );
-        jobStatusMap.put(jobID, new BulkJobStatus(jobID, IN_PROGRESS, 0, data, Instant.now()));
+        Map<String, BulkJobStatus.Data> batchData = new HashMap<>();
+        batchData.put(String.format("0-%s", BULK_API_CHUNK_SIZE), data);
+        jobStatusMap.put(jobID, new BulkJobStatus(jobID, IN_PROGRESS, 0, batchData, Instant.now()));
         // Submit the job to be processed asynchronously
         executorService.submit(new BulkJobManager(jobID, jobStatusMap, payload));
 
