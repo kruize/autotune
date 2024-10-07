@@ -70,10 +70,12 @@ public class BulkService extends HttpServlet {
         resp.setCharacterEncoding(CHARACTER_ENCODING);
 
         if (jobStatus == null) {
-            resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            JSONObject jsonObject = new JSONObject();
-            jsonObject.put(ERROR, JOB_NOT_FOUND_MSG);
-            resp.getWriter().write(jsonObject.toString());
+            sendErrorResponse(
+                    resp,
+                    null,
+                    HttpServletResponse.SC_NOT_FOUND,
+                    JOB_NOT_FOUND_MSG
+            );
         } else {
             try {
                 resp.setStatus(HttpServletResponse.SC_OK);
@@ -133,5 +135,13 @@ public class BulkService extends HttpServlet {
         executorService.shutdown();
     }
 
-
+    public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
+            IOException {
+        if (null != e) {
+            LOGGER.error(e.toString());
+            e.printStackTrace();
+            if (null == errorMsg) errorMsg = e.getMessage();
+        }
+        response.sendError(httpStatusCode, errorMsg);
+    }
 }
