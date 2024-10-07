@@ -8,6 +8,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 public class BulkJobStatus {
+    @JsonProperty("job_id")
     private String jobID;
     private String status;
     private int progress;
