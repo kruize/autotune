@@ -18,6 +18,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.serviceObjects.BulkInput;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,10 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 
 /**
  *
@@ -59,16 +64,19 @@ public class BulkService extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String jobID = req.getParameter("job_id");
+        String jobID = req.getParameter(JOB_ID);
         BulkJobStatus jobStatus = jobStatusMap.get(jobID);
+        resp.setContentType(JSON_CONTENT_TYPE);
+        resp.setCharacterEncoding(CHARACTER_ENCODING);
 
         if (jobStatus == null) {
             resp.setStatus(HttpServletResponse.SC_NOT_FOUND);
-            resp.getWriter().write("{\"error\":\"Job not found\"}");
+            JSONObject jsonObject = new JSONObject();
+            jsonObject.put(ERROR, JOB_NOT_FOUND_MSG);
+            resp.getWriter().write(jsonObject.toString());
         } else {
             try {
-                resp.setContentType("application/json");
-                resp.setCharacterEncoding("UTF-8");
+                resp.setStatus(HttpServletResponse.SC_OK);
                 // Return the JSON representation of the JobStatus object
                 ObjectMapper objectMapper = new ObjectMapper();
                 String jsonResponse = objectMapper.writeValueAsString(jobStatus);
@@ -88,7 +96,8 @@ public class BulkService extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         // Set response type
-        response.setContentType("application/json");
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
 
         // Create ObjectMapper instance
         ObjectMapper objectMapper = new ObjectMapper();
@@ -107,14 +116,15 @@ public class BulkService extends HttpServlet {
                         new ArrayList<>()
                 ))
         );
-        jobStatusMap.put(jobID, new BulkJobStatus(jobID, "IN_PROGRESS", 0, data, Instant.now()));
+        jobStatusMap.put(jobID, new BulkJobStatus(jobID, IN_PROGRESS, 0, data, Instant.now()));
         // Submit the job to be processed asynchronously
-        // example executorService.submit(new BulkJobManager(jobID, jobStatusMap, payload));
+        executorService.submit(new BulkJobManager(jobID, jobStatusMap, payload));
 
         // Just sending a simple success response back
         // Return the jobID to the user
-        response.setContentType("application/json");
-        response.getWriter().write("{\"job_id\":\"" + jobID + "\"}");
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put(JOB_ID, jobID);
+        response.getWriter().write(jsonObject.toString());
     }
 
 
@@ -122,4 +132,6 @@ public class BulkService extends HttpServlet {
     public void destroy() {
         executorService.shutdown();
     }
+
+
 }
