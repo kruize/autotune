@@ -1914,7 +1914,7 @@ public class RecommendationEngine {
                 }
 
                 List<Metric> namespaceMetricList = filterMetricsBasedOnExpType(metricProfile,
-                        AnalyzerConstants.MetricName.namespaceMaxDate.name(),AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT);
+                        AnalyzerConstants.MetricName.namespaceMaxDate.name(), kruizeObject.getExperimentType());
 
                 // Iterate over metrics and aggregation functions
                 for (Metric metricEntry : namespaceMetricList) {
@@ -2098,7 +2098,7 @@ public class RecommendationEngine {
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
 
                     List<Metric> metricList = filterMetricsBasedOnExpType(metricProfile,
-                            AnalyzerConstants.MetricName.maxDate.name(),AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
+                            AnalyzerConstants.MetricName.maxDate.name(), kruizeObject.getExperimentType());
 
                     List<String> acceleratorFunctions = Arrays.asList(
                             AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
@@ -2386,10 +2386,10 @@ public class RecommendationEngine {
             .filter(Metric -> {
                 String name = Metric.getName();
                 if (experimentType.equals(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT)) {
-                    // Include metrics that start with namespace and exclude namespaceMaxDate metric
+                    // Include metrics that start with prefix "namespace" and exclude namespaceMaxDate metric
                     return name.startsWith(namespace) && !name.equals(maxDateQuery);
                 } else {
-                    // Exclude metrics that start with namespace or maxDate metric
+                    // Exclude metrics that start with prefix "namespace" and maxDate metric
                     return !name.startsWith(namespace) && !name.equals(maxDateQuery);
                 }
             })
