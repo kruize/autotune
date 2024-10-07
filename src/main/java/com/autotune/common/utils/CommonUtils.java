@@ -354,7 +354,7 @@ public class CommonUtils {
         long interval_end_time_epoc = 0;
         long interval_start_time_epoc = 0;
 
-        LOGGER.info("maxDateQuery: {}", maxDateQuery);
+        LOGGER.debug("maxDateQuery: {}", maxDateQuery);
         queryToEncode =  maxDateQuery
                 .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
                 .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
@@ -366,7 +366,7 @@ public class CommonUtils {
                 URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
         );
 
-        LOGGER.info(dateMetricsUrl);
+        LOGGER.debug(dateMetricsUrl);
         GenericRestApiClient client = new GenericRestApiClient(dataSourceInfo);
         client.setBaseURL(dateMetricsUrl);
         JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
@@ -388,7 +388,7 @@ public class CommonUtils {
         interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                 - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
         int maxDay = Terms.getMaxDays(termsMap);
-        LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
+        LOGGER.debug(KruizeConstants.APIMessages.MAX_DAY, maxDay);
         Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
         interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                 - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
@@ -407,7 +407,7 @@ public class CommonUtils {
                     interval_start_time_epoc,
                     interval_end_time_epoc,
                     measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-            LOGGER.info(podMetricsUrl);
+            LOGGER.debug(podMetricsUrl);
             client.setBaseURL(podMetricsUrl);
             genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
 
