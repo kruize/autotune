@@ -16,23 +16,43 @@
 
 package com.autotune.common.utils;
 
+import com.autotune.analyzer.exceptions.FetchMetricsError;
+import com.autotune.common.data.system.info.device.ContainerDeviceList;
+import com.autotune.common.data.system.info.device.accelerator.AcceleratorDeviceData;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
+import com.autotune.analyzer.recommendations.term.Terms;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.IntervalResults;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.*;
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 /**
  * This Class holds the utilities needed by the classes in common package
  */
 public class CommonUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommonUtils.class);
 
     /**
      * AutotuneDatasourceTypes is an ENUM which holds different types of

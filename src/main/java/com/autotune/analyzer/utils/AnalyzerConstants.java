@@ -240,6 +240,14 @@ public class AnalyzerConstants {
 
         }
 
+        public static final class AcceleratorMetricConstants {
+            private AcceleratorMetricConstants() {
+
+            }
+
+            public static final int TIMESTAMP_RANGE_CHECK_IN_MINUTES = 5;
+        }
+
         public static final class SupportedAccelerators {
             private SupportedAccelerators() {
 
