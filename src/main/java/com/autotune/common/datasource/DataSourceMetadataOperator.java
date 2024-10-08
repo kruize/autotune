@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.autotune.common.datasource;
 
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
@@ -31,10 +46,14 @@ public class DataSourceMetadataOperator {
      * Currently supported DataSourceProvider - Prometheus
      *
      * @param dataSourceInfo The DataSourceInfo object containing information about the data source.
+     * @param uniqueKey     this is used as labels in query example container="xyz" namespace="abc"
+     * @param startTime     Get metadata from starttime to endtime
+     * @param endTime       Get metadata from starttime to endtime
+     * @param steps         the interval between data points in a range query
      * TODO - support multiple data sources
      */
-    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo) {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo);
+    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) {
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
     }
 
     /**
@@ -75,8 +94,8 @@ public class DataSourceMetadataOperator {
      *  TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
      *         need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
-    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo) {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo);
+    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) {
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
     }
 
     /**
@@ -108,9 +127,14 @@ public class DataSourceMetadataOperator {
      * DataSourceMetadataInfo object
      *
      * @param dataSourceInfo            The DataSourceInfo object containing information about the data source
+     * @param uniqueKey     this is used as labels in query example container="xyz" namespace="abc"
+     * @param startTime     Get metadata from starttime to endtime
+     * @param endTime       Get metadata from starttime to endtime
+     * @param steps         the interval between data points in a range query
      * @return DataSourceMetadataInfo object with populated metadata fields
+     * todo rename processQueriesAndFetchClusterMetadataInfo
      */
-    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo) {
+    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
         /**
          * Get DataSourceOperatorImpl instance on runtime based on dataSource provider
@@ -129,8 +153,25 @@ public class DataSourceMetadataOperator {
          */
         try {
             String dataSourceName = dataSourceInfo.getName();
-            JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceInfo, PromQLDataSourceQueries.NAMESPACE_QUERY);
-            if (false == op.validateResultArray(namespacesDataResultArray)){
+            String namespaceQuery = PromQLDataSourceQueries.NAMESPACE_QUERY;
+            String workloadQuery = PromQLDataSourceQueries.WORKLOAD_QUERY;
+            String containerQuery = PromQLDataSourceQueries.CONTAINER_QUERY;
+            if (null != uniqueKey) {
+                LOGGER.info("uniquekey: {}", uniqueKey);
+                namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
+                workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
+                containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
+            } else {
+                namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "");
+                workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "");
+                containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "");
+            }
+            LOGGER.info("namespaceQuery: {}", namespaceQuery);
+            LOGGER.info("workloadQuery: {}", workloadQuery);
+            LOGGER.info("containerQuery: {}", containerQuery);
+
+            JsonArray namespacesDataResultArray = op.getResultArrayForQuery(dataSourceInfo, namespaceQuery);
+            if (false == op.validateResultArray(namespacesDataResultArray)) {
                 dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
                 throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
             }
@@ -153,7 +194,7 @@ public class DataSourceMetadataOperator {
              */
             HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
             JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
-                    PromQLDataSourceQueries.WORKLOAD_QUERY);
+                    workloadQuery);
 
             if (op.validateResultArray(workloadDataResultArray)) {
                 datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
@@ -172,7 +213,7 @@ public class DataSourceMetadataOperator {
              */
             HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
             JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
-                    PromQLDataSourceQueries.CONTAINER_QUERY);
+                    containerQuery);
 
             if (op.validateResultArray(containerDataResultArray)) {
                 datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);

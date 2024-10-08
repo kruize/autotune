@@ -1,18 +1,3 @@
-/*******************************************************************************
- * Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *    http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- *******************************************************************************/
 package com.autotune.analyzer.workerimpl;
 
 
@@ -138,11 +123,11 @@ public class BulkJobManager implements Runnable {
                 interval_start_time_epoc = localDateTime.toEpochSecond(ZoneOffset.UTC);
                 Timestamp interval_start_time = Timestamp.from(localDateTime.toInstant(ZoneOffset.UTC));
                 int steps = CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDuration() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE; // todo fetch experiment recommendations setting measurement
-                //TODO Get metaData
-                //example metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, interval_start_time_epoc, interval_end_time_epoc, steps);
+                //Get metaData
+                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, interval_start_time_epoc, interval_end_time_epoc, steps);
             } else {
-                //TODO Get metaData
-                //metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, 0, 0, 0);
+                //Get metaData
+                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, 0, 0, 0);
             }
             List<String> recommendationsRequiredExperiments = new CopyOnWriteArrayList<>();
             if (null == metadataInfo) {

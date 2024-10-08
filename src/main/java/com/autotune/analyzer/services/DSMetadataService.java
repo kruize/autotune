@@ -133,7 +133,7 @@ public class DSMetadataService extends HttpServlet {
                     return;
                 }
 
-                DataSourceMetadataInfo metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource);
+                DataSourceMetadataInfo metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource,"",0,0,0);
 
                 // Validate imported metadataInfo object
                 DataSourceMetadataValidation validationObject = new DataSourceMetadataValidation();
