@@ -99,6 +99,7 @@ data:
       "plots": "true",
       "local": "false",
       "logAllHttpReqAndResp": "true",
+      "recommendationsURL" : "http://kruize.monitoring.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",    
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",

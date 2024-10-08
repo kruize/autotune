@@ -1913,9 +1913,8 @@ public class RecommendationEngine {
                     k8sObject.setNamespaceData(namespaceData);
                 }
 
-                List<Metric> namespaceMetricList = metricProfile.getSloInfo().getFunctionVariables().stream()
-                        .filter(metricEntry -> metricEntry.getName().startsWith(AnalyzerConstants.NAMESPACE) && !metricEntry.getName().equals("namespaceMaxDate"))
-                        .toList();
+                List<Metric> namespaceMetricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
+                        AnalyzerConstants.MetricName.namespaceMaxDate.name(), kruizeObject.getExperimentType());
 
                 // Iterate over metrics and aggregation functions
                 for (Metric metricEntry : namespaceMetricList) {
@@ -2098,7 +2097,8 @@ public class RecommendationEngine {
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
 
-                    List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables();
+                    List<Metric> metricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
+                            AnalyzerConstants.MetricName.maxDate.name(), kruizeObject.getExperimentType());
 
                     List<String> acceleratorFunctions = Arrays.asList(
                             AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
@@ -2372,6 +2372,29 @@ public class RecommendationEngine {
             e.printStackTrace();
             throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
         }
+    }
+
+    /**
+     * Filters out maxDateQuery and includes metrics based on the experiment type and kubernetes_object
+     * @param metricProfile  Metric profile to be used
+     * @param maxDateQuery   maxDateQuery metric to be filtered out
+     * @param experimentType experiment type
+     */
+    public List<Metric> filterMetricsBasedOnExpTypeAndK8sObject(PerformanceProfile metricProfile, String maxDateQuery, String experimentType) {
+        String namespace = KruizeConstants.JSONKeys.NAMESPACE;
+        String container = KruizeConstants.JSONKeys.CONTAINER;
+        return metricProfile.getSloInfo().getFunctionVariables().stream()
+            .filter(Metric -> {
+                String name = Metric.getName();
+                String kubernetes_object = Metric.getKubernetesObject();
+
+                // Include metrics based on experiment_type, kubernetes_object and exclude maxDate metric
+                return !name.equals(maxDateQuery) && (
+                        (experimentType.equals(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT) && kubernetes_object.equals(namespace)) ||
+                                (experimentType.equals(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT) && kubernetes_object.equals(container))
+                );
+            })
+            .toList();
     }
 }
 

@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.autotune.common.datasource;
 
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -32,13 +47,19 @@ public class DataSourceManager {
 
     /**
      * Imports Metadata for a specific data source using associated DataSourceInfo.
+     * @param dataSourceInfo
+     * @param uniqueKey     this is used as labels in query example container="xyz" namespace="abc"
+     * @param startTime     Get metadata from starttime to endtime
+     * @param endTime       Get metadata from starttime to endtime
+     * @param steps         the interval between data points in a range query
+     * @return
      */
-    public DataSourceMetadataInfo importMetadataFromDataSource(DataSourceInfo dataSourceInfo) {
+    public DataSourceMetadataInfo importMetadataFromDataSource(DataSourceInfo dataSourceInfo,String uniqueKey,long startTime,long endTime,int steps) {
         try {
             if (null == dataSourceInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo);
+            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo,uniqueKey, startTime, endTime, steps);
             if (null == dataSourceMetadataInfo) {
                 LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceInfo.getName());
                 return null;
@@ -91,7 +112,7 @@ public class DataSourceManager {
             if (null == dataSourceMetadataInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
             }
-            dataSourceMetadataOperator.updateDataSourceMetadata(dataSource);
+            dataSourceMetadataOperator.updateDataSourceMetadata(dataSource,"",0,0,0);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }

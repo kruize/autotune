@@ -17,6 +17,8 @@
 
 package com.autotune.utils;
 
+import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
+
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -412,6 +414,7 @@ public class KruizeConstants {
         public static class DataSourceDetailsInfoConstants {
             public static final String version = "v1.0";
             public static final String CLUSTER_NAME = "default";
+
             private DataSourceDetailsInfoConstants() {
             }
         }
@@ -453,6 +456,7 @@ public class KruizeConstants {
             public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
             public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
             public static final String INVALID_DATASOURCE_INFO = "Datasource is either missing or is invalid";
+
             private DataSourceErrorMsgs() {
             }
         }
@@ -464,6 +468,7 @@ public class KruizeConstants {
             public static final String METRIC = "metric";
             public static final String VALUE = "value";
             public static final String VALUES = "values";
+
             private DataSourceQueryJSONKeys() {
             }
 
@@ -472,6 +477,7 @@ public class KruizeConstants {
         public static class DataSourceQueryStatus {
             public static final String SUCCESS = "success";
             public static final String ERROR = "error";
+
             private DataSourceQueryStatus() {
             }
         }
@@ -482,6 +488,7 @@ public class KruizeConstants {
             public static final String WORKLOAD_TYPE = "workload_type";
             public static final String CONTAINER_NAME = "container";
             public static final String CONTAINER_IMAGE_NAME = "image";
+
             private DataSourceQueryMetricKeys() {
             }
         }
@@ -489,6 +496,7 @@ public class KruizeConstants {
         public static class DataSourceMetadataInfoConstants {
             public static final String version = "v1.0";
             public static final String CLUSTER_NAME = "default";
+
             private DataSourceMetadataInfoConstants() {
             }
         }
@@ -525,6 +533,7 @@ public class KruizeConstants {
             public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_MSG = "Validation of imported metadata failed, mandatory fields missing: %s";
             public static final String NAMESPACE_QUERY_VALIDATION_FAILED = "Validation failed for namespace data query.";
             public static final String DATASOURCE_OPERATOR_RETRIEVAL_FAILURE = "Failed to retrieve data source operator for provider: %s";
+
             private DataSourceMetadataErrorMsgs() {
             }
         }
@@ -542,6 +551,7 @@ public class KruizeConstants {
             public static final String CONTAINERS = "containers";
             public static final String CONTAINER_NAME = "container_name";
             public static final String CONTAINER_IMAGE_NAME = "container_image_name";
+
             private DataSourceMetadataInfoJSONKeys() {
             }
         }
@@ -666,6 +676,8 @@ public class KruizeConstants {
         public static final String CLOUDWATCH_LOGS_LOG_LEVEL = "logging_cloudwatch_logLevel";
         public static final String LOCAL = "local";
         public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
+        public static final String RECOMMENDATIONS_URL = "recommendationsURL";
+        public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
     }
 
     public static final class RecommendationEngineConstants {
@@ -752,5 +764,28 @@ public class KruizeConstants {
         public static final String UNKNOWN_AUTHENTICATION = "Unknown authentication type: ";
         public static final String AUTHORIZATION = "Authorization";
 
+    }
+
+    public static final class KRUIZE_BULK_API {
+        public static final String JOB_ID = "job_id";
+        public static final String ERROR = "error";
+        public static final String JOB_NOT_FOUND_MSG = "Job not found";
+        public static final String IN_PROGRESS = "IN_PROGRESS";
+        public static final String COMPLETED = "COMPLETED";
+        // TODO : Bulk API Create Experiments defaults
+        public static final CreateExperimentConfigBean CREATE_EXPERIMENT_CONFIG_BEAN;
+
+        // Static block to initialize the Bean
+        static {
+            CREATE_EXPERIMENT_CONFIG_BEAN = new CreateExperimentConfigBean();
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMode("monitor");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setTarget("local");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setVersion("v2.0");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setDatasourceName("prometheus-1");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setPerformanceProfile("resource-optimization-local-monitoring");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setThreshold(0.1);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);
+        }
     }
 }
