@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.autotune.analyzer.workerimpl;
 
 
@@ -36,6 +51,32 @@ import java.util.concurrent.Executors;
 import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 
+
+/**
+ * The `run` method processes bulk input to create experiments and generates resource optimization recommendations.
+ * It handles the creation of experiment names based on various data source components, makes HTTP POST requests
+ * to generate recommendations, and updates job statuses based on the progress of the recommendations.
+ *
+ * <p>
+ * Key operations include:
+ * <ul>
+ *     <li>Processing 'include' filter labels to generate a unique key.</li>
+ *     <li>Validating and setting the data source if not provided in the input.</li>
+ *     <li>Extracting time range from the input and converting it to epoch time format.</li>
+ *     <li>Fetching metadata information from the data source for the specified time range and labels.</li>
+ *     <li>Creating experiments for each data source component such as clusters, namespaces, workloads, and containers.</li>
+ *     <li>Submitting HTTP POST requests to retrieve recommendations for each created experiment.</li>
+ *     <li>Updating the job status and progress based on the completion of recommendations.</li>
+ * </ul>
+ * </p>
+ *
+ * <p>
+ * In case of an exception during the process, error messages are logged, and the exception is printed for debugging.
+ * </p>
+ *
+ * @throws RuntimeException if URL or HTTP connection setup fails.
+ * @throws IOException if an error occurs while sending HTTP requests.
+ */
 public class BulkJobManager implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkJobManager.class);
 
