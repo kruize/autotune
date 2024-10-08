@@ -772,7 +772,7 @@ public class KruizeConstants {
         public static final String JOB_NOT_FOUND_MSG = "Job not found";
         public static final String IN_PROGRESS = "IN_PROGRESS";
         public static final String COMPLETED = "COMPLETED";
-        // Static final MonitoringConfigBean instance
+        // TODO : Bulk API Create Experiments defaults
         public static final CreateExperimentConfigBean CREATE_EXPERIMENT_CONFIG_BEAN;
 
         // Static block to initialize the Bean
