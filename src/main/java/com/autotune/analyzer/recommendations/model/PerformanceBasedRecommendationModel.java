@@ -400,6 +400,7 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
                         && RecommendationUtils.checkIfModelIsKruizeSupportedMIG(gpuMetricResult.getAcceleratorDeviceData().getModelName())
                 ) {
                     String obtainedAcceleratorName = RecommendationUtils.getSupportedModelBasedOnModelName(gpuMetricResult.getAcceleratorDeviceData().getModelName());
+
                     if (null != obtainedAcceleratorName)
                         acceleratorModel = obtainedAcceleratorName;
                 }
