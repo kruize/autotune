@@ -8,6 +8,11 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 
+
+/**
+ * This adapter actually specifies the GSON to identify the type of implementation of DeviceDetails
+ * to serialize or deserialize
+ */
 public class DeviceDetailsAdapter extends TypeAdapter<DeviceDetails> {
 
     @Override
