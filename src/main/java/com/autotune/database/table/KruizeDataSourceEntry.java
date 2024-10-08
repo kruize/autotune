@@ -42,6 +42,17 @@ public class KruizeDataSourceEntry {
     private String serviceName;
     private String namespace;
     private String url;
+    @ManyToOne // Assuming many datasources can reference the same auth credentials
+    @JoinColumn(name = "authentication_id") // Foreign key column in the datasource table
+    private KruizeAuthenticationEntry kruizeAuthenticationEntry;
+
+    public KruizeAuthenticationEntry getKruizeAuthenticationEntry() {
+        return kruizeAuthenticationEntry;
+    }
+
+    public void setKruizeAuthenticationEntry(KruizeAuthenticationEntry kruizeAuthenticationEntry) {
+        this.kruizeAuthenticationEntry = kruizeAuthenticationEntry;
+    }
 
     public String getVersion() {
         return version;
