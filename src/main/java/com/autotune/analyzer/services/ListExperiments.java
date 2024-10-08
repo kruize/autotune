@@ -16,6 +16,8 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
@@ -29,6 +31,7 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
 import com.autotune.common.trials.ExperimentTrial;
@@ -281,6 +284,8 @@ public class ListExperiments extends HttpServlet {
                 .setPrettyPrinting()
                 .enableComplexMapKeySerialization()
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                 .setExclusionStrategies(new ExclusionStrategy() {
                     @Override
                     public boolean shouldSkipField(FieldAttributes f) {

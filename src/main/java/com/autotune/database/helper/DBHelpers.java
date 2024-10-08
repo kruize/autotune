@@ -16,6 +16,8 @@
 
 package com.autotune.database.helper;
 
+import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
+import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
@@ -32,6 +34,7 @@ import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.NamespaceData;
+import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceMetadataOperator;
@@ -334,6 +337,8 @@ public class DBHelpers {
                         .enableComplexMapKeySerialization()
                         .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                        .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                         .create();
                 try {
                     kruizeResultsEntry = new KruizeResultsEntry();
@@ -473,6 +478,8 @@ public class DBHelpers {
                         .enableComplexMapKeySerialization()
                         .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                        .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                         .create();
                 try {
                     ListRecommendationsAPIObject listRecommendationsAPIObject = getListRecommendationAPIObjectForDB(
@@ -480,7 +487,12 @@ public class DBHelpers {
                     if (null == listRecommendationsAPIObject) {
                         return null;
                     }
-                    LOGGER.debug(new GsonBuilder().setPrettyPrinting().create().toJson(listRecommendationsAPIObject));
+                    LOGGER.debug(new GsonBuilder()
+                            .setPrettyPrinting()
+                            .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                            .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                            .create()
+                            .toJson(listRecommendationsAPIObject));
                     kruizeRecommendationEntry = new KruizeRecommendationEntry();
                     kruizeRecommendationEntry.setVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
@@ -557,6 +569,8 @@ public class DBHelpers {
                         .enableComplexMapKeySerialization()
                         .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                        .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                         .create();
                 List<UpdateResultsAPIObject> updateResultsAPIObjects = new ArrayList<>();
                 for (KruizeResultsEntry kruizeResultsEntry : kruizeResultsEntries) {
@@ -626,6 +640,8 @@ public class DBHelpers {
                         .enableComplexMapKeySerialization()
                         .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                        .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                         .create();
                 List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList = new ArrayList<>();
                 for (KruizeRecommendationEntry kruizeRecommendationEntry : kruizeRecommendationEntryList) {

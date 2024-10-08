@@ -539,9 +539,9 @@ public class CostBasedRecommendationModel implements RecommendationModel {
                 if (null == acceleratorModel
                         && null != gpuMetricResult.getAcceleratorDeviceData().getModelName()
                         && !gpuMetricResult.getAcceleratorDeviceData().getModelName().isEmpty()
-                        && CommonUtils.checkIfModelIsKruizeSupportedMIG(gpuMetricResult.getAcceleratorDeviceData().getModelName())
+                        && RecommendationUtils.checkIfModelIsKruizeSupportedMIG(gpuMetricResult.getAcceleratorDeviceData().getModelName())
                 ) {
-                    String obtainedAcceleratorName = CommonUtils.getSupportedModelBasedOnModelName(gpuMetricResult.getAcceleratorDeviceData().getModelName());
+                    String obtainedAcceleratorName = RecommendationUtils.getSupportedModelBasedOnModelName(gpuMetricResult.getAcceleratorDeviceData().getModelName());
                     if (null != obtainedAcceleratorName)
                         acceleratorModel = obtainedAcceleratorName;
                 }

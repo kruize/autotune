@@ -740,7 +740,6 @@ public class RecommendationConstants {
             public static final Integer FIFTY_PERCENTILE = 50;
             public static final Integer COST_ACCELERATOR_PERCENTILE = 60;
             public static final Integer PERFORMANCE_ACCELERATOR_PERCENTILE = 98;
-
         }
     }
 }

@@ -352,5 +352,23 @@ public class RecommendationUtils {
         }
         return returnMap;
     }
+
+    public static String getSupportedModelBasedOnModelName(String modelName) {
+        if (null == modelName || modelName.isEmpty())
+            return null;
+
+        modelName = modelName.toUpperCase();
+
+        if (modelName.contains("A100") && modelName.contains("40GB"))
+            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_40_GB;
+
+        if (modelName.contains("A100") && modelName.contains("80GB"))
+            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_80_GB;
+
+        if (modelName.contains("H100") && modelName.contains("80GB"))
+            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_80_GB;
+
+        return null;
+    }
 }
 
