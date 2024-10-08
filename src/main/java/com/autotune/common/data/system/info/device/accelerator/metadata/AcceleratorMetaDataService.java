@@ -63,7 +63,7 @@ public class AcceleratorMetaDataService {
                 1.0, 1.0, 1));
 
         acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_80_GB, new ArrayList<>(commonProfiles));
-        acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100, new ArrayList<>(commonProfiles));
+        acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_80_GB, new ArrayList<>(commonProfiles));
         acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_40_GB, new ArrayList<>(a100_40_gb_profiles));
     }
 
@@ -84,7 +84,7 @@ public class AcceleratorMetaDataService {
         }
         modelName = modelName.strip();
         if (!modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_80_GB)
-                && !modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100)
+                && !modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_80_GB)
                 && !modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_40_GB)) {
             return null;
         }
