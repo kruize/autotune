@@ -33,7 +33,7 @@ data:
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
-      "local": "false",
+      "local": "true",
       "logAllHttpReqAndResp": "true",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
