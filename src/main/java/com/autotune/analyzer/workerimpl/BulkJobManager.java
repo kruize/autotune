@@ -113,7 +113,7 @@ public class BulkJobManager implements Runnable {
                     if (includeLabelsBuilder.length() > 0) {
                         includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
                     }
-                    LOGGER.info("Include Labels: " + includeLabelsBuilder.toString());
+                    LOGGER.debug("Include Labels: " + includeLabelsBuilder.toString());
                     uniqueKey = includeLabelsBuilder.toString();
                 }
             }
@@ -200,7 +200,7 @@ public class BulkJobManager implements Runnable {
                                                 }
                                                 recommendationsRequiredExperiments.add(experiment_name);
                                             } catch (Exception e) {
-                                                LOGGER.info(e.getMessage());
+                                                LOGGER.error(e.getMessage());
                                             }
                                         }
                                     }
@@ -241,9 +241,7 @@ public class BulkJobManager implements Runnable {
                     int statusCode = 0;
                     try {
                         jobStatusMap.get(jobID).getData().getRecommendations().getData().moveToProgress(name);
-                        LOGGER.info(String.format(KruizeDeploymentInfo.recommendations_url, name));
                         statusCode = connection.getResponseCode();
-                        LOGGER.info(String.format(KruizeDeploymentInfo.recommendations_url, name));
                     } catch (IOException e) {
                         LOGGER.error(e.getMessage());
                         throw new RuntimeException(e);
