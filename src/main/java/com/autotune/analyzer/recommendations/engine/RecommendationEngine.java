@@ -2020,7 +2020,7 @@ public class RecommendationEngine {
 
                     // Check if the container data has Accelerator support else check for Accelerator metrics
                     if (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected()) {
-                        CommonUtils.markAcceleratorDeviceStatusToContainer(containerData,
+                        RecommendationUtils.markAcceleratorDeviceStatusToContainer(containerData,
                                 maxDateQuery,
                                 namespace,
                                 workload,
@@ -2213,7 +2213,7 @@ public class RecommendationEngine {
                                             String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
                                             Date date = sdf.parse(timestamp);
                                             Timestamp tempTime = new Timestamp(date.getTime());
-                                            Timestamp eTime = CommonUtils.getNearestTimestamp(containerDataResults,
+                                            Timestamp eTime = RecommendationUtils.getNearestTimestamp(containerDataResults,
                                                     tempTime,
                                                     AnalyzerConstants.AcceleratorConstants.AcceleratorMetricConstants.TIMESTAMP_RANGE_CHECK_IN_MINUTES);
 
