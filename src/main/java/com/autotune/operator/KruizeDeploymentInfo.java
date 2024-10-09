@@ -81,7 +81,8 @@ public class KruizeDeploymentInfo {
     public static Boolean log_http_req_resp = false;
     public static String recommendations_url;
     public static int BULK_API_LIMIT = 1000;
-    public static int BULK_API_CHUNK_SIZE = 10;
+    public static int BULK_API_MAX_BATCH_SIZE = 100;
+    public static Integer bulk_thread_pool_size = 3;
     public static int generate_recommendations_date_range_limit_in_days = 15;
     public static Integer delete_partition_threshold_in_days = DELETE_PARTITION_THRESHOLD_IN_DAYS;
     private static Hashtable<String, Class> tunableLayerPair;
