@@ -42,6 +42,7 @@ public class BulkJobStatus {
     private String startTime; // Change to String to store formatted time
     @JsonProperty("job_end_time")
     private String endTime;   // Change to String to store formatted time
+    private String message;
 
     public BulkJobStatus(String jobID, String status, Data data, Instant startTime) {
         this.jobID = jobID;
@@ -119,13 +120,12 @@ public class BulkJobStatus {
         return formatter.format(instant);
     }
 
-    @Override
-    public BulkJobStatus clone() {
-        try {
-            return (BulkJobStatus) super.clone();
-        } catch (CloneNotSupportedException e) {
-            throw new AssertionError();
-        }
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     // Inner class for the data field

@@ -47,8 +47,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
-import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.COMPLETED;
-import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.CREATE_EXPERIMENT_CONFIG_BEAN;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 
 
 /**
@@ -118,67 +117,72 @@ public class BulkJobManager implements Runnable {
                 Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(metadataInfo); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
                 jobData.setTotal_experiments(createExperimentAPIObjectMap.size());
                 jobData.setProcessed_experiments(0);
-                ExecutorService createExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
-                ExecutorService generateExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
-                for (CreateExperimentAPIObject apiObject : createExperimentAPIObjectMap.values()) {
-                    createExecutor.submit(() -> {
-                        String experiment_name = apiObject.getExperimentName();
-                        BulkJobStatus.Experiments newExperiments = jobData.getData().getExperiments();
-                        BulkJobStatus.RecommendationData recommendationData = jobData.getData().getRecommendations().getData();
-                        try {
-                            ValidationOutputData output = new ExperimentDBService().addExperimentToDB(apiObject);
-                            if (output.isSuccess()) {
-                                jobData.getData().getExperiments().setNewExperiments(
-                                        appendExperiments(newExperiments.getNewExperiments(), experiment_name)
-                                );
-                            }
-                            generateExecutor.submit(() -> {
-
-                                jobData.getData().getRecommendations().getData().setUnprocessed(
-                                        appendExperiments(recommendationData.getUnprocessed(), experiment_name)
-                                );
-
-                                URL url = null;
-                                HttpURLConnection connection = null;
-                                int statusCode = 0;
-                                try {
-                                    url = new URL(String.format(KruizeDeploymentInfo.recommendations_url, experiment_name));
-                                    connection = (HttpURLConnection) url.openConnection();
-                                    connection.setRequestMethod("POST");
-
-                                    recommendationData.moveToProgress(experiment_name);
-
-                                    statusCode = connection.getResponseCode();
-                                } catch (IOException e) {
-                                    LOGGER.error(e.getMessage());
-
-                                    recommendationData.moveToFailed(experiment_name);
-
-                                    throw new RuntimeException(e);
-                                } finally {
-                                    if (null != connection) connection.disconnect();
+                if (jobData.getTotal_experiments() > KruizeDeploymentInfo.BULK_API_LIMIT) {
+                    jobStatusMap.get(jobID).setStatus(FAILED);
+                    jobStatusMap.get(jobID).setMessage(String.format(LIMIT_MESSAGE, KruizeDeploymentInfo.BULK_API_LIMIT));
+                } else {
+                    ExecutorService createExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
+                    ExecutorService generateExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
+                    for (CreateExperimentAPIObject apiObject : createExperimentAPIObjectMap.values()) {
+                        createExecutor.submit(() -> {
+                            String experiment_name = apiObject.getExperimentName();
+                            BulkJobStatus.Experiments newExperiments = jobData.getData().getExperiments();
+                            BulkJobStatus.RecommendationData recommendationData = jobData.getData().getRecommendations().getData();
+                            try {
+                                ValidationOutputData output = new ExperimentDBService().addExperimentToDB(apiObject);
+                                if (output.isSuccess()) {
+                                    jobData.getData().getExperiments().setNewExperiments(
+                                            appendExperiments(newExperiments.getNewExperiments(), experiment_name)
+                                    );
                                 }
-                                if (statusCode == HttpURLConnection.HTTP_CREATED) {
+                                generateExecutor.submit(() -> {
 
-                                    recommendationData.moveToCompleted(experiment_name);
-                                    jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
+                                    jobData.getData().getRecommendations().getData().setUnprocessed(
+                                            appendExperiments(recommendationData.getUnprocessed(), experiment_name)
+                                    );
 
-                                    if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
-                                        jobData.setStatus(COMPLETED);
-                                        jobStatusMap.get(jobID).setEndTime(Instant.now());
+                                    URL url = null;
+                                    HttpURLConnection connection = null;
+                                    int statusCode = 0;
+                                    try {
+                                        url = new URL(String.format(KruizeDeploymentInfo.recommendations_url, experiment_name));
+                                        connection = (HttpURLConnection) url.openConnection();
+                                        connection.setRequestMethod("POST");
+
+                                        recommendationData.moveToProgress(experiment_name);
+
+                                        statusCode = connection.getResponseCode();
+                                    } catch (IOException e) {
+                                        LOGGER.error(e.getMessage());
+
+                                        recommendationData.moveToFailed(experiment_name);
+
+                                        throw new RuntimeException(e);
+                                    } finally {
+                                        if (null != connection) connection.disconnect();
                                     }
+                                    if (statusCode == HttpURLConnection.HTTP_CREATED) {
 
-                                } else {
+                                        recommendationData.moveToCompleted(experiment_name);
+                                        jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
 
-                                    recommendationData.moveToFailed(experiment_name);
+                                        if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
+                                            jobData.setStatus(COMPLETED);
+                                            jobStatusMap.get(jobID).setEndTime(Instant.now());
+                                        }
 
-                                }
-                            });
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                            recommendationData.moveToFailed(experiment_name);
-                        }
-                    });
+                                    } else {
+
+                                        recommendationData.moveToFailed(experiment_name);
+
+                                    }
+                                });
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                                recommendationData.moveToFailed(experiment_name);
+                            }
+                        });
+                    }
                 }
             }
         } catch (Exception e) {
