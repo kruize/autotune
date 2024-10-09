@@ -16,27 +16,27 @@
 package com.autotune.analyzer.workerimpl;
 
 
-import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
 import com.autotune.analyzer.serviceObjects.*;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
-import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.common.utils.CommonUtils;
-import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import org.json.JSONObject;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -300,4 +300,92 @@ public class BulkJobManager implements Runnable {
     }
 
 
+
+    /**
+     * @param dc DataSourceContainer object to get the container details
+     * @param dsc DataSourceCluster object to get the cluster details
+     * @param dsw DataSourceWorkload object to get the workload details
+     * @param namespace DataSourceNamespace object to get the namespace details
+     * @param datasource Datasource name to be set
+     * @return Json string to be sent to the createExperimentAPI for experiment creation
+     * @throws JsonProcessingException
+     */
+    private String prepareCreateExperimentJSONInput(DataSourceContainer dc, DataSourceCluster dsc, DataSourceWorkload dsw,
+                                                    DataSourceNamespace namespace, String experiment_name, String datasource) throws JsonProcessingException {
+
+        CreateExperimentConfigBean createExperimentConfigBean = CREATE_EXPERIMENT_CONFIG_BEAN;
+        // Experiment name
+        createExperimentConfigBean.setExperimentName(experiment_name);
+        // Datasource
+        createExperimentConfigBean.setDatasourceName(datasource);
+        // Cluster name
+        createExperimentConfigBean.setClusterName(dsc.getDataSourceClusterName());
+        // Kubernetes objects
+        List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
+        KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
+        kubernetesAPIObject.setType(dsw.getDataSourceWorkloadType());
+        kubernetesAPIObject.setName(dsw.getDataSourceWorkloadName());
+        kubernetesAPIObject.setNamespace(namespace.getDataSourceNamespaceName());
+        // Containers
+        ContainerAPIObject containerAPIObject = new ContainerAPIObject(dc.getDataSourceContainerName(),
+                dc.getDataSourceContainerImageName(), null, null);
+        // Add container to the Kubernetes object
+        kubernetesAPIObject.setContainerAPIObjects(Arrays.asList(containerAPIObject));
+        kubernetesAPIObjectList.add(kubernetesAPIObject);
+        // Add the Kubernetes objects to the createExperimentConfigBean
+        createExperimentConfigBean.setKubernetesAPIObjects(kubernetesAPIObjectList);
+
+        // Convert to JSON
+        ObjectMapper mapper = new ObjectMapper();
+        String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(createExperimentConfigBean);
+        LOGGER.info("CreateExp JSON: {}", json);
+        return json;
+    }
+
+    public static int sendCreateExperimentRequest(String jsonInput) throws IOException {
+        URL url;
+        try {
+            url = new URL(KruizeDeploymentInfo.experiments_url);
+        } catch (MalformedURLException e) {
+            throw new RuntimeException(e);
+        }
+        HttpURLConnection connection;
+        try {
+            connection = (HttpURLConnection) url.openConnection();
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
+        try {
+            connection.setRequestMethod("POST");
+            connection.setRequestMethod("POST");
+            connection.setRequestProperty("Content-Type", "application/json; utf-8");
+            connection.setRequestProperty("Accept", "application/json");
+        } catch (ProtocolException e) {
+            LOGGER.error(e.getMessage());
+            throw new RuntimeException(e);
+        }
+        // Write JSON input to the connection output stream
+        try(OutputStream os = connection.getOutputStream()) {
+            byte[] input = jsonInput.getBytes(StandardCharsets.UTF_8);
+            os.write(input, 0, input.length);
+        }
+
+        // Check for the response code to verify if request was successful
+        int responseCode = connection.getResponseCode();
+        System.out.println("POST Response Code : " + responseCode);
+        return responseCode;
+
+        // TODO: Read response from input stream if needed
+//        try(BufferedReader br = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream(), "utf-8"))) {
+//            StringBuilder response = new StringBuilder();
+//            String responseLine;
+//            while ((responseLine = br.readLine()) != null) {
+//                response.append(responseLine.trim());
+//            }
+//            System.out.println("Response: " + response);
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
+    }
 }

@@ -15,12 +15,19 @@
  *******************************************************************************/
 package com.autotune.analyzer.kruizeObject;
 
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
+
+import java.util.List;
+
 /**
  * THis is a placeholder class for bulkAPI createExperiment template to store defaults
  */
 public class CreateExperimentConfigBean {
 
     // Private fields
+    private String experimentName;
+    private String clusterName;
+    private List<KubernetesAPIObject> kubernetesAPIObjects;
     private String mode;
     private String target;
     private String version;
@@ -31,6 +38,30 @@ public class CreateExperimentConfigBean {
     private int measurementDuration;
 
     // Getters and Setters
+    public String getExperimentName() {
+        return experimentName;
+    }
+
+    public void setExperimentName(String experimentName) {
+        this.experimentName = experimentName;
+    }
+
+    public String getClusterName() {
+        return clusterName;
+    }
+
+    public void setClusterName(String clusterName) {
+        this.clusterName = clusterName;
+    }
+
+    public List<KubernetesAPIObject> getKubernetesAPIObjects() {
+        return kubernetesAPIObjects;
+    }
+
+    public void setKubernetesAPIObjects(List<KubernetesAPIObject> kubernetesAPIObjects) {
+        this.kubernetesAPIObjects = kubernetesAPIObjects;
+    }
+
     public String getMode() {
         return mode;
     }
@@ -97,8 +128,11 @@ public class CreateExperimentConfigBean {
 
     @Override
     public String toString() {
-        return "MonitoringConfigBean{" +
-                "mode='" + mode + '\'' +
+        return "CreateExperimentConfigBean{" +
+                "experimentName='" + experimentName + '\'' +
+                ", clusterName='" + clusterName + '\'' +
+                ", kubernetesAPIObjects=" + kubernetesAPIObjects +
+                ", mode='" + mode + '\'' +
                 ", target='" + target + '\'' +
                 ", version='" + version + '\'' +
                 ", datasourceName='" + datasourceName + '\'' +
