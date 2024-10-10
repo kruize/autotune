@@ -24,7 +24,9 @@ import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.Utils;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.json.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -35,6 +37,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
@@ -130,19 +133,15 @@ public class BulkJobManager implements Runnable {
                             BulkJobStatus.Experiments newExperiments = jobData.getData().getExperiments();
                             BulkJobStatus.RecommendationData recommendationData = jobData.getData().getRecommendations().getData();
                             try {
-                                ValidationOutputData output = new ExperimentDBService().addExperimentToDB(apiObject);
-                                if (output.isSuccess()) {
-                                    jobData.getData().getExperiments().setNewExperiments(
-                                            appendExperiments(newExperiments.getNewExperiments(), experiment_name)
-                                    );
-                                }
+                                jobData.getData().getExperiments().setNewExperiments(
+                                            appendExperiments(newExperiments.getNewExperiments(), experiment_name));
                                 generateExecutor.submit(() -> {
 
                                     jobData.getData().getRecommendations().getData().setUnprocessed(
                                             appendExperiments(recommendationData.getUnprocessed(), experiment_name)
                                     );
 
-                                    URL url = null;
+                                    URL url;
                                     HttpURLConnection connection = null;
                                     int statusCode = 0;
                                     try {
@@ -194,7 +193,7 @@ public class BulkJobManager implements Runnable {
     }
 
 
-    Map<String, CreateExperimentAPIObject> getExperimentMap(DataSourceMetadataInfo metadataInfo) {
+    Map<String, CreateExperimentAPIObject> getExperimentMap(DataSourceMetadataInfo metadataInfo) throws IOException {
         Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = new HashMap<>();
         Collection<DataSource> dataSourceCollection = metadataInfo.getDataSourceHashMap().values();
         for (DataSource ds : dataSourceCollection) {
@@ -208,38 +207,24 @@ public class BulkJobManager implements Runnable {
                             HashMap<String, DataSourceContainer> dataSourceContainerHashMap = dsw.getDataSourceContainerHashMap();
                             if (dataSourceContainerHashMap != null) {
                                 for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
-                                    CreateExperimentAPIObject createExperimentAPIObject = new CreateExperimentAPIObject();
-                                    createExperimentAPIObject.setMode(CREATE_EXPERIMENT_CONFIG_BEAN.getMode());
-                                    createExperimentAPIObject.setTargetCluster(CREATE_EXPERIMENT_CONFIG_BEAN.getTarget());
-                                    createExperimentAPIObject.setApiVersion(CREATE_EXPERIMENT_CONFIG_BEAN.getVersion());
-                                    String experiment_name = this.bulkInput.getDatasource() + "|" + dsc.getDataSourceClusterName() + "|" + namespace.getDataSourceNamespaceName()
-                                            + "|" + dsw.getDataSourceWorkloadName() + "(" + dsw.getDataSourceWorkloadType() + ")" + "|" + dc.getDataSourceContainerName();
-                                    createExperimentAPIObject.setExperimentName(experiment_name);
-                                    createExperimentAPIObject.setDatasource(this.bulkInput.getDatasource());
-                                    createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
-                                    createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());
-                                    List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
-                                    KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
-                                    ContainerAPIObject cao = new ContainerAPIObject(dc.getDataSourceContainerName(),
-                                            dc.getDataSourceContainerImageName(), null, null);
-                                    kubernetesAPIObject.setContainerAPIObjects(Arrays.asList(cao));
-                                    kubernetesAPIObject.setName(dsw.getDataSourceWorkloadName());
-                                    kubernetesAPIObject.setType(dsw.getDataSourceWorkloadType());
-                                    kubernetesAPIObject.setNamespace(namespace.getDataSourceNamespaceName());
-                                    kubernetesAPIObjectList.add(kubernetesAPIObject);
-                                    createExperimentAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
-                                    RecommendationSettings rs = new RecommendationSettings();
-                                    rs.setThreshold(CREATE_EXPERIMENT_CONFIG_BEAN.getThreshold());
-                                    createExperimentAPIObject.setRecommendationSettings(rs);
-                                    TrialSettings trialSettings = new TrialSettings();
-                                    trialSettings.setMeasurement_durationMinutes(CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDurationStr());
-                                    createExperimentAPIObject.setTrialSettings(trialSettings);
-                                    List<KruizeObject> kruizeExpList = new ArrayList<>();
-
-                                    createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
-                                    createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-                                    createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
-                                    createExperimentAPIObjectMap.put(experiment_name, createExperimentAPIObject);
+                                    // Experiment name - dynamically constructed
+                                    String experiment_name = this.bulkInput.getDatasource() + "|" + dsc.getDataSourceClusterName() + "|"
+                                            + namespace.getDataSourceNamespaceName() + "|" + dsw.getDataSourceWorkloadName() + "("
+                                            + dsw.getDataSourceWorkloadType() + ")" + "|" + dc.getDataSourceContainerName();
+                                    // create JSON to be passed in the createExperimentAPI
+                                    String createExpJSON = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
+                                            experiment_name, this.bulkInput.getDatasource());
+                                    // send request to createExperiment API for experiment creation
+                                    int responseCode = sendCreateExperimentRequest(createExpJSON);
+                                    // if the experiment is successfully created, add it in the map
+                                    if (responseCode == HttpURLConnection.HTTP_CREATED) {
+                                        // Parse and extract the first JSON object from the array
+                                        JsonObject jsonObject = JsonParser.parseString(createExpJSON).getAsJsonArray().get(0).getAsJsonObject();
+                                        // Convert JSON object to CreateExperimentAPIObject
+                                        CreateExperimentAPIObject createExperimentAPIObject = new Gson().fromJson(jsonObject, CreateExperimentAPIObject.class);
+                                        // Add to the map using the experiment_name
+                                        createExperimentAPIObjectMap.put(jsonObject.get("experiment_name").getAsString(), createExperimentAPIObject);
+                                    }
                                 }
                             }
                         }
@@ -266,7 +251,7 @@ public class BulkJobManager implements Runnable {
                     if (includeLabelsBuilder.length() > 0) {
                         includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
                     }
-                    LOGGER.debug("Include Labels: " + includeLabelsBuilder.toString());
+                    LOGGER.debug("Include Labels: " + includeLabelsBuilder);
                     uniqueKey = includeLabelsBuilder.toString();
                 }
             }
@@ -302,16 +287,16 @@ public class BulkJobManager implements Runnable {
 
 
     /**
-     * @param dc DataSourceContainer object to get the container details
-     * @param dsc DataSourceCluster object to get the cluster details
-     * @param dsw DataSourceWorkload object to get the workload details
-     * @param namespace DataSourceNamespace object to get the namespace details
+     * @param dc         DataSourceContainer object to get the container details
+     * @param dsc        DataSourceCluster object to get the cluster details
+     * @param dsw        DataSourceWorkload object to get the workload details
+     * @param namespace  DataSourceNamespace object to get the namespace details
      * @param datasource Datasource name to be set
      * @return Json string to be sent to the createExperimentAPI for experiment creation
      * @throws JsonProcessingException
      */
     private String prepareCreateExperimentJSONInput(DataSourceContainer dc, DataSourceCluster dsc, DataSourceWorkload dsw,
-                                                    DataSourceNamespace namespace, String experiment_name, String datasource) throws JsonProcessingException {
+                                                    DataSourceNamespace namespace, String experiment_name, String datasource) throws IOException {
 
         CreateExperimentConfigBean createExperimentConfigBean = CREATE_EXPERIMENT_CONFIG_BEAN;
         // Experiment name
@@ -382,17 +367,5 @@ public class BulkJobManager implements Runnable {
         int responseCode = connection.getResponseCode();
         System.out.println("POST Response Code : " + responseCode);
         return responseCode;
-
-        // TODO: Read response from input stream if needed
-//        try(BufferedReader br = new BufferedReader(new InputStreamReader(httpURLConnection.getInputStream(), "utf-8"))) {
-//            StringBuilder response = new StringBuilder();
-//            String responseLine;
-//            while ((responseLine = br.readLine()) != null) {
-//                response.append(responseLine.trim());
-//            }
-//            System.out.println("Response: " + response);
-//        } catch (Exception e) {
-//            e.printStackTrace();
-//        }
     }
 }
