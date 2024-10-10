@@ -389,6 +389,10 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
             if (null == intervalResults.getAcceleratorMetricResultHashMap())
                 continue;
 
+            // Skip if map is empty
+            if (intervalResults.getAcceleratorMetricResultHashMap().isEmpty())
+                continue;
+
             isGpuWorkload = true;
             for (Map.Entry<AnalyzerConstants.MetricName, AcceleratorMetricResult> gpuEntry : intervalResults.getAcceleratorMetricResultHashMap().entrySet()) {
                 AcceleratorMetricResult gpuMetricResult = gpuEntry.getValue();
@@ -436,8 +440,17 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
             return null;
         }
 
-        double coreAverage = CommonUtils.percentile(PERFORMANCE_ACCELERATOR_PERCENTILE, acceleratorCoreMaxValues);
-        double memoryAverage = CommonUtils.percentile(PERFORMANCE_ACCELERATOR_PERCENTILE, acceleratorMemoryMaxValues);
+        // Return null if entries are empty
+        if (acceleratorCoreMaxValues.isEmpty() && acceleratorMemoryMaxValues.isEmpty())
+            return null;
+
+        double coreAverage = 0.0;
+        if (!acceleratorCoreMaxValues.isEmpty())
+            coreAverage = CommonUtils.percentile(PERFORMANCE_ACCELERATOR_PERCENTILE, acceleratorCoreMaxValues);
+
+        double memoryAverage = 0.0;
+        if (!acceleratorMemoryMaxValues.isEmpty())
+            memoryAverage = CommonUtils.percentile(PERFORMANCE_ACCELERATOR_PERCENTILE, acceleratorMemoryMaxValues);
 
         double coreFraction = coreAverage / 100;
         double memoryFraction = memoryAverage / 100;
