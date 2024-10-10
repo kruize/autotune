@@ -117,16 +117,11 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
             if (null == jsonObject) {
                 return null;
+            } else {
+                return "1";   //if it returns HTTP STATUS_OK  200
             }
 
-            JSONArray result = jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-            for (Object result_obj : result) {
-                JSONObject result_json = (JSONObject) result_obj;
-                if (result_json.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE)
-                        && !result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).isEmpty()) {
-                    return result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).getString(1);
-                }
-            }
+
         } catch (JSONException e) {
             LOGGER.error(e.getMessage());
         } catch (NullPointerException e) {
@@ -159,6 +154,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             JSONObject jsonObject = apiClient.fetchMetricsJson(
                     KruizeConstants.HttpConstants.MethodType.GET,
                     query);
+            /*  TODO need to separate it out this logic form here
             if (!jsonObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS))
                 return null;
             if (!jsonObject.getString(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS).equalsIgnoreCase(KruizeConstants.DataSourceConstants.DataSourceQueryStatus.SUCCESS))
@@ -169,6 +165,8 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
                 return null;
             if (jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isEmpty())
                 return  null;
+
+             */
 
             return jsonObject;
 
