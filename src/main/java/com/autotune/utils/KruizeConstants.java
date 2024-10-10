@@ -18,6 +18,7 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -784,11 +785,11 @@ public class KruizeConstants {
         // Static block to initialize the Bean
         static {
             CREATE_EXPERIMENT_CONFIG_BEAN = new CreateExperimentConfigBean();
-            CREATE_EXPERIMENT_CONFIG_BEAN.setMode("monitor");
-            CREATE_EXPERIMENT_CONFIG_BEAN.setTarget("local");
-            CREATE_EXPERIMENT_CONFIG_BEAN.setVersion("v2.0");
-            CREATE_EXPERIMENT_CONFIG_BEAN.setDatasourceName("prometheus-1");
-            CREATE_EXPERIMENT_CONFIG_BEAN.setPerformanceProfile("resource-optimization-local-monitoring");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMode(AnalyzerConstants.MONITOR);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setTarget_cluster(AnalyzerConstants.LOCAL);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setVersion(AnalyzerConstants.VersionConstants.CURRENT_KRUIZE_OBJECT_VERSION);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setDatasource("prometheus-1");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setPerformance_profile(AnalyzerConstants.PerformanceProfileConstants.RESOURCE_OPT_LOCAL_MON_PROFILE);
             CREATE_EXPERIMENT_CONFIG_BEAN.setThreshold(0.1);
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);

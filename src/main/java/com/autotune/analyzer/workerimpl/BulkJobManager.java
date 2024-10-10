@@ -100,7 +100,7 @@ public class BulkJobManager implements Runnable {
             BulkJobStatus jobData = jobStatusMap.get(jobID);
             String uniqueKey = getLabels(this.bulkInput.getFilter());
             if (null == this.bulkInput.getDatasource()) {
-                this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
+                this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasource());
             }
             DataSourceMetadataInfo metadataInfo = null;
             DataSourceManager dataSourceManager = new DataSourceManager();
@@ -315,11 +315,11 @@ public class BulkJobManager implements Runnable {
 
         CreateExperimentConfigBean createExperimentConfigBean = CREATE_EXPERIMENT_CONFIG_BEAN;
         // Experiment name
-        createExperimentConfigBean.setExperimentName(experiment_name);
+        createExperimentConfigBean.setExperiment_name(experiment_name);
         // Datasource
-        createExperimentConfigBean.setDatasourceName(datasource);
+        createExperimentConfigBean.setDatasource(datasource);
         // Cluster name
-        createExperimentConfigBean.setClusterName(dsc.getDataSourceClusterName());
+        createExperimentConfigBean.setCluster_name(dsc.getDataSourceClusterName());
         // Kubernetes objects
         List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
         KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
@@ -333,12 +333,18 @@ public class BulkJobManager implements Runnable {
         kubernetesAPIObject.setContainerAPIObjects(Arrays.asList(containerAPIObject));
         kubernetesAPIObjectList.add(kubernetesAPIObject);
         // Add the Kubernetes objects to the createExperimentConfigBean
-        createExperimentConfigBean.setKubernetesAPIObjects(kubernetesAPIObjectList);
+        createExperimentConfigBean.setKubernetes_objects(kubernetesAPIObjectList);
+
+        // list to hold CreateExperimentConfigBean objects
+        List<CreateExperimentConfigBean> createExperimentConfigBeanList = new ArrayList<>();
+
+        // Add CreateExperimentConfigBean object to the list
+        createExperimentConfigBeanList.add(createExperimentConfigBean);
 
         // Convert to JSON
         ObjectMapper mapper = new ObjectMapper();
-        String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(createExperimentConfigBean);
-        LOGGER.info("CreateExp JSON: {}", json);
+        String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(createExperimentConfigBeanList);
+        LOGGER.debug("CreateExp JSON: {}", json);
         return json;
     }
 
@@ -361,6 +367,7 @@ public class BulkJobManager implements Runnable {
             connection.setRequestMethod("POST");
             connection.setRequestProperty("Content-Type", "application/json; utf-8");
             connection.setRequestProperty("Accept", "application/json");
+            connection.setDoOutput(true);
         } catch (ProtocolException e) {
             LOGGER.error(e.getMessage());
             throw new RuntimeException(e);
