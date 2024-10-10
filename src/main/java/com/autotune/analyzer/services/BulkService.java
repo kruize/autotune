@@ -19,6 +19,8 @@ import com.autotune.analyzer.serviceObjects.BulkInput;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.workerimpl.BulkJobManager;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
+import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,8 +40,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 
 /**
@@ -66,11 +67,15 @@ public class BulkService extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         String jobID = req.getParameter(JOB_ID);
-        BulkJobStatus jobStatus = jobStatusMap.get(jobID);
+        String verboseParam = req.getParameter(VERBOSE);
+        // If the parameter is not provided (null), default it to false
+        boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
+        BulkJobStatus jobDetails = jobStatusMap.get(jobID);
         resp.setContentType(JSON_CONTENT_TYPE);
         resp.setCharacterEncoding(CHARACTER_ENCODING);
+        SimpleFilterProvider filters = new SimpleFilterProvider();
 
-        if (jobStatus == null) {
+        if (jobDetails == null) {
             sendErrorResponse(
                     resp,
                     null,
@@ -82,7 +87,13 @@ public class BulkService extends HttpServlet {
                 resp.setStatus(HttpServletResponse.SC_OK);
                 // Return the JSON representation of the JobStatus object
                 ObjectMapper objectMapper = new ObjectMapper();
-                String jsonResponse = objectMapper.writeValueAsString(jobStatus);
+                if (!verbose) {
+                    filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAllExcept("data"));
+                } else {
+                    filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAll());
+                }
+                objectMapper.setFilterProvider(filters);
+                String jsonResponse = objectMapper.writeValueAsString(jobDetails);
                 resp.getWriter().write(jsonResponse);
             } catch (Exception e) {
                 e.printStackTrace();
@@ -112,14 +123,14 @@ public class BulkService extends HttpServlet {
         String jobID = UUID.randomUUID().toString();
         BulkJobStatus.Data data = new BulkJobStatus.Data(
                 new BulkJobStatus.Experiments(new ArrayList<>(), new ArrayList<>()),
-                new BulkJobStatus.Recommendations(0, 0, new BulkJobStatus.RecommendationData(
+                new BulkJobStatus.Recommendations(new BulkJobStatus.RecommendationData(
                         new ArrayList<>(),
                         new ArrayList<>(),
                         new ArrayList<>(),
                         new ArrayList<>()
                 ))
         );
-        jobStatusMap.put(jobID, new BulkJobStatus(jobID, IN_PROGRESS, 0, data, Instant.now()));
+        jobStatusMap.put(jobID, new BulkJobStatus(jobID, IN_PROGRESS, data, Instant.now()));
         // Submit the job to be processed asynchronously
         executorService.submit(new BulkJobManager(jobID, jobStatusMap, payload));
 

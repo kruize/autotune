@@ -15,11 +15,14 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
+import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
@@ -27,21 +30,23 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
 /**
  * Bulk API Response payload Object.
  */
+@JsonFilter("jobFilter")
 public class BulkJobStatus {
     @JsonProperty(JOB_ID)
     private String jobID;
     private String status;
-    private int progress;
+    private int total_experiments;
+    private int processed_experiments;
     private Data data;
-    @JsonProperty("start_time")
+    @JsonProperty("job_start_time")
     private String startTime; // Change to String to store formatted time
-    @JsonProperty("end_time")
+    @JsonProperty("job_end_time")
     private String endTime;   // Change to String to store formatted time
+    private String message;
 
-    public BulkJobStatus(String jobID, String status, int progress, Data data, Instant startTime) {
+    public BulkJobStatus(String jobID, String status, Data data, Instant startTime) {
         this.jobID = jobID;
         this.status = status;
-        this.progress = progress;
         this.data = data;
         setStartTime(startTime);
     }
@@ -58,28 +63,16 @@ public class BulkJobStatus {
         this.status = status;
     }
 
-    public int getProgress() {
-        return progress;
-    }
-
-    public void setProgress(int progress) {
-        this.progress = progress;
-    }
-
-    public Data getData() {
-        return data;
-    }
-
-    public void setData(Data data) {
-        this.data = data;
-    }
-
     public String getStartTime() {
         return startTime;
     }
 
     public void setStartTime(Instant startTime) {
         this.startTime = formatInstantAsUTCString(startTime);
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
     }
 
     public String getEndTime() {
@@ -90,6 +83,34 @@ public class BulkJobStatus {
         this.endTime = formatInstantAsUTCString(endTime);
     }
 
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
+    public int getTotal_experiments() {
+        return total_experiments;
+    }
+
+    public void setTotal_experiments(int total_experiments) {
+        this.total_experiments = total_experiments;
+    }
+
+    public int getProcessed_experiments() {
+        return processed_experiments;
+    }
+
+    public void setProcessed_experiments(int processed_experiments) {
+        this.processed_experiments = processed_experiments;
+    }
+
+    public Data getData() {
+        return data;
+    }
+
+    public void setData(Data data) {
+        this.data = data;
+    }
+
     // Utility function to format Instant into the required UTC format
     private String formatInstantAsUTCString(Instant instant) {
         DateTimeFormatter formatter = DateTimeFormatter
@@ -97,6 +118,14 @@ public class BulkJobStatus {
                 .withZone(ZoneOffset.UTC);  // Ensure it's in UTC
 
         return formatter.format(instant);
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    public void setMessage(String message) {
+        this.message = message;
     }
 
     // Inner class for the data field
@@ -159,32 +188,10 @@ public class BulkJobStatus {
 
     // Inner class for recommendations
     public static class Recommendations {
-        @JsonProperty("count")
-        private int totalCount;
-        @JsonProperty("completed")
-        private int completedCount;
         private RecommendationData data;
 
-        public Recommendations(int totalCount, int completedCount, RecommendationData data) {
-            this.totalCount = totalCount;
-            this.completedCount = completedCount;
+        public Recommendations(RecommendationData data) {
             this.data = data;
-        }
-
-        public int getTotalCount() {
-            return totalCount;
-        }
-
-        public void setTotalCount(int totalCount) {
-            this.totalCount = totalCount;
-        }
-
-        public int getCompletedCount() {
-            return this.data.getCompleted().size();
-        }
-
-        public void setCompletedCount(int completedCount) {
-            this.completedCount = completedCount;
         }
 
         public RecommendationData getData() {
@@ -198,74 +205,74 @@ public class BulkJobStatus {
 
     // Inner class for recommendation data
     public static class RecommendationData {
-        private List<String> completed;
-        private List<String> progress;
-        private List<String> inqueue;
-        private List<String> failed;
+        private List<String> processed = Collections.synchronizedList(new ArrayList<>());
+        private List<String> processing = Collections.synchronizedList(new ArrayList<>());
+        private List<String> unprocessed = Collections.synchronizedList(new ArrayList<>());
+        private List<String> failed = Collections.synchronizedList(new ArrayList<>());
 
-        public RecommendationData(List<String> completed, List<String> progress, List<String> inqueue, List<String> failed) {
-            this.completed = completed;
-            this.progress = progress;
-            this.inqueue = inqueue;
+        public RecommendationData(List<String> processed, List<String> processing, List<String> unprocessed, List<String> failed) {
+            this.processed = processed;
+            this.processing = processing;
+            this.unprocessed = unprocessed;
             this.failed = failed;
         }
 
-        public List<String> getCompleted() {
-            return completed;
+        public List<String> getProcessed() {
+            return processed;
         }
 
-        public void setCompleted(List<String> completed) {
-            this.completed = completed;
+        public synchronized void setProcessed(List<String> processed) {
+            this.processed = processed;
         }
 
-        public List<String> getProgress() {
-            return progress;
+        public List<String> getProcessing() {
+            return processing;
         }
 
-        public void setProgress(List<String> progress) {
-            this.progress = progress;
+        public synchronized void setProcessing(List<String> processing) {
+            this.processing = processing;
         }
 
-        public List<String> getInqueue() {
-            return inqueue;
+        public List<String> getUnprocessed() {
+            return unprocessed;
         }
 
-        public void setInqueue(List<String> inqueue) {
-            this.inqueue = inqueue;
+        public synchronized void setUnprocessed(List<String> unprocessed) {
+            this.unprocessed = unprocessed;
         }
 
         public List<String> getFailed() {
             return failed;
         }
 
-        public void setFailed(List<String> failed) {
+        public synchronized void setFailed(List<String> failed) {
             this.failed = failed;
         }
 
         // Move elements from inqueue to progress
-        public void moveToProgress(String element) {
-            if (inqueue.contains(element)) {
-                inqueue.remove(element);
-                if (!progress.contains(element)) {
-                    progress.add(element);
+        public synchronized void moveToProgress(String element) {
+            if (unprocessed.contains(element)) {
+                unprocessed.remove(element);
+                if (!processing.contains(element)) {
+                    processing.add(element);
                 }
             }
         }
 
         // Move elements from progress to completed
-        public void moveToCompleted(String element) {
-            if (progress.contains(element)) {
-                progress.remove(element);
-                if (!completed.contains(element)) {
-                    completed.add(element);
+        public synchronized void moveToCompleted(String element) {
+            if (processing.contains(element)) {
+                processing.remove(element);
+                if (!processed.contains(element)) {
+                    processed.add(element);
                 }
             }
         }
 
         // Move elements from progress to failed
-        public void moveToFailed(String element) {
-            if (progress.contains(element)) {
-                progress.remove(element);
+        public synchronized void moveToFailed(String element) {
+            if (processing.contains(element)) {
+                processing.remove(element);
                 if (!failed.contains(element)) {
                     failed.add(element);
                 }
@@ -274,13 +281,13 @@ public class BulkJobStatus {
 
         // Calculate the percentage of completion
         public int completionPercentage() {
-            int totalTasks = completed.size() + progress.size() + inqueue.size() + failed.size();
+            int totalTasks = processed.size() + processing.size() + unprocessed.size() + failed.size();
             if (totalTasks == 0) {
                 return (int) 0.0;
             }
-            return (int) ((completed.size() * 100.0) / totalTasks);
+            return (int) ((processed.size() * 100.0) / totalTasks);
         }
+
+
     }
-
-
 }

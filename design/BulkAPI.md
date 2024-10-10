@@ -93,64 +93,162 @@ GET /bulk?job_id=123e4567-e89b-12d3-a456-426614174000
 
 ```json
 {
-  "job_id": "123e4567-e89b-12d3-a456-426614174000",
-  "status": "IN-PROGRESS",
-  "progress": 30,
+  "status": "COMPLETED",
+  "total_experiments": 23,
+  "processed_experiments": 23,
+  "job_id": "54905959-77d4-42ba-8e06-90bb97b823b9",
+  "job_start_time": "2024-10-10T06:07:09.066Z",
+  "job_end_time": "2024-10-10T06:07:17.471Z"
+}
+```
+
+```bash
+GET /bulk?job_id=123e4567-e89b-12d3-a456-426614174000&verbose=true
+```
+
+**Body (JSON):**
+When verbose=true, additional detailed information about the job is provided.
+
+```json
+{
+  "status": "IN_PROGRESS",
+  "total_experiments": 23,
+  "processed_experiments": 22,
   "data": {
     "experiments": {
       "new": [
-        "a",
-        "b",
-        "c"
+        "prometheus-1|default|monitoring|node-exporter(daemonset)|node-exporter",
+        "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor",
+        "prometheus-1|default|monitoring|alertmanager-main(statefulset)|config-reloader",
+        "prometheus-1|default|monitoring|alertmanager-main(statefulset)|alertmanager",
+        "prometheus-1|default|monitoring|prometheus-operator(deployment)|kube-rbac-proxy",
+        "prometheus-1|default|kube-system|coredns(deployment)|coredns",
+        "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|config-reloader",
+        "prometheus-1|default|monitoring|blackbox-exporter(deployment)|kube-rbac-proxy",
+        "prometheus-1|default|monitoring|prometheus-operator(deployment)|prometheus-operator",
+        "prometheus-1|default|monitoring|node-exporter(daemonset)|kube-rbac-proxy",
+        "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-self",
+        "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-state-metrics",
+        "prometheus-1|default|monitoring|kruize(deployment)|kruize",
+        "prometheus-1|default|monitoring|blackbox-exporter(deployment)|module-configmap-reloader",
+        "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|prometheus",
+        "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-main",
+        "prometheus-1|default|kube-system|kube-proxy(daemonset)|kube-proxy",
+        "prometheus-1|default|monitoring|prometheus-adapter(deployment)|prometheus-adapter",
+        "prometheus-1|default|monitoring|grafana(deployment)|grafana",
+        "prometheus-1|default|kube-system|kindnet(daemonset)|kindnet-cni",
+        "prometheus-1|default|monitoring|kruize-db-deployment(deployment)|kruize-db",
+        "prometheus-1|default|monitoring|blackbox-exporter(deployment)|blackbox-exporter"
       ],
       "updated": [],
-      "failed": []
+      "failed": null
     },
     "recommendations": {
-      "count": 9,
-      "completed": 3,
-      "experiments": {
-        "completed": [
-          "exp1",
-          "exp2",
-          "exp3"
+      "data": {
+        "processed": [
+          "prometheus-1|default|monitoring|alertmanager-main(statefulset)|config-reloader",
+          "prometheus-1|default|monitoring|node-exporter(daemonset)|node-exporter",
+          "prometheus-1|default|local-path-storage|local-path-provisioner(deployment)|local-path-provisioner",
+          "prometheus-1|default|monitoring|alertmanager-main(statefulset)|alertmanager",
+          "prometheus-1|default|monitoring|prometheus-operator(deployment)|kube-rbac-proxy",
+          "prometheus-1|default|kube-system|coredns(deployment)|coredns",
+          "prometheus-1|default|monitoring|blackbox-exporter(deployment)|kube-rbac-proxy",
+          "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|config-reloader",
+          "prometheus-1|default|monitoring|prometheus-operator(deployment)|prometheus-operator",
+          "prometheus-1|default|monitoring|node-exporter(daemonset)|kube-rbac-proxy",
+          "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-self",
+          "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-state-metrics",
+          "prometheus-1|default|monitoring|kruize(deployment)|kruize",
+          "prometheus-1|default|monitoring|blackbox-exporter(deployment)|module-configmap-reloader",
+          "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|prometheus",
+          "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-main",
+          "prometheus-1|default|kube-system|kube-proxy(daemonset)|kube-proxy",
+          "prometheus-1|default|monitoring|prometheus-adapter(deployment)|prometheus-adapter",
+          "prometheus-1|default|monitoring|grafana(deployment)|grafana",
+          "prometheus-1|default|kube-system|kindnet(daemonset)|kindnet-cni",
+          "prometheus-1|default|monitoring|kruize-db-deployment(deployment)|kruize-db",
+          "prometheus-1|default|monitoring|blackbox-exporter(deployment)|blackbox-exporter"
         ],
-        "progress": [
-          "exp1",
-          "exp2",
-          "exp3"
+        "processing": [
+          "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor"
         ],
-        "new": [
-          "exp1",
-          "exp2",
-          "exp3"
+        "unprocessed": [
         ],
         "failed": []
       }
     }
   },
-  "job_start_time": "2024-09-23T10:58:47.048Z",
-  "job_end_time": "2024-09-23T11:01:52.205Z"
+  "job_id": "5798a2df-6c67-467b-a3c2-befe634a0e3a",
+  "job_start_time": "2024-10-09T18:09:31.549Z",
+  "job_end_time": null
 }
 ```
 
 ### Response Parameters
 
-- **job_id:** Unique identifier for the job.
-- **status:** Current status of the job. Possible values: `"IN-PROGRESS"`, `"COMPLETED"`, `"FAILED"`.
-- **progress:** Percentage of job completion.
-- **data:** Contains detailed information about the experiments and recommendations.
-    - **experiments:** Tracks the status of experiments.
-        - **new:** List of newly created experiments.
-        - **updated:** List of updated experiments.
-        - **failed:** List of experiments that failed.
-    - **recommendations:** Provides details on recommendations.
-        - **count:** Total number of recommendations.
-        - **completed:** Number of completed recommendations.
-        - **experiments:**
-            - **completed:** List of experiments with completed recommendations.
-            - **progress:** List of experiments in progress.
-            - **new:** List of new experiments.
-            - **failed:** List of failed experiments.
-- **job_start_time:** Timestamp indicating when the job started.
-- **job_end_time:** Timestamp indicating when the job finished.
+## API Description: Experiment and Recommendation Processing Status
+
+This API response describes the status of a job that processes multiple experiments and generates recommendations for
+resource optimization in Kubernetes environments. Below is a breakdown of the JSON response:
+
+### Fields:
+
+- **status**:
+    - **Type**: `String`
+    - **Description**: Current status of the job. Can be "IN_PROGRESS", "COMPLETED", "FAILED", etc.
+
+- **total_experiments**:
+    - **Type**: `Integer`
+    - **Description**: Total number of experiments to be processed in the job.
+
+- **processed_experiments**:
+    - **Type**: `Integer`
+    - **Description**: Number of experiments that have been processed so far.
+
+- **data**:
+    - **Type**: `Object`
+    - **Description**: Contains detailed information about the experiments and recommendations being processed.
+
+    - **experiments**:
+        - **new**:
+            - **Type**: `Array of Strings`
+            - **Description**: List of new experiments that have been identified but not yet processed.
+
+        - **updated**:
+            - **Type**: `Array of Strings`
+            - **Description**: List of experiments that were previously processed but have now been updated.
+
+        - **failed**:
+            - **Type**: `null or Array`
+            - **Description**: List of experiments that failed during processing. If no failures, the value is `null`.
+
+    - **recommendations**:
+        - **data**:
+            - **processed**:
+                - **Type**: `Array of Strings`
+                - **Description**: List of experiments for which recommendations have already been processed.
+
+            - **processing**:
+                - **Type**: `Array of Strings`
+                - **Description**: List of experiments that are currently being processed for recommendations.
+
+            - **unprocessed**:
+                - **Type**: `Array of Strings`
+                - **Description**: List of experiments that have not yet been processed for recommendations.
+
+            - **failed**:
+                - **Type**: `Array of Strings`
+                - **Description**: List of experiments for which the recommendation process failed.
+
+- **job_id**:
+    - **Type**: `String`
+    - **Description**: Unique identifier for the job.
+
+- **job_start_time**:
+    - **Type**: `String (ISO 8601 format)`
+    - **Description**: Start timestamp of the job.
+
+- **job_end_time**:
+    - **Type**: `String (ISO 8601 format) or null`
+    - **Description**: End timestamp of the job. If the job is still in progress, this will be `null`.
+
