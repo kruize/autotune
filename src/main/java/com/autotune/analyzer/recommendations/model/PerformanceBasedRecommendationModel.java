@@ -453,7 +453,19 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
             memoryAverage = CommonUtils.percentile(PERFORMANCE_ACCELERATOR_PERCENTILE, acceleratorMemoryMaxValues);
 
         double coreFraction = coreAverage / 100;
+        // TODO: Need to investigate why data is faulty
+        if (coreFraction > 1) {
+            LOGGER.info("Data irregularity detected, " +
+                    "Notification needs to be added explaining we changed the core usage to 100% as it's more than 100%");
+            coreFraction = 1;
+        }
         double memoryFraction = memoryAverage / 100;
+        // TODO: Need to investigate why data is faulty
+        if (memoryFraction > 1) {
+            LOGGER.info("Data irregularity detected, " +
+                    "Notification needs to be added explaining we changed the memory usage to 100% as it's more than 100%");
+            memoryFraction = 1;
+        }
 
         return RecommendationUtils.getMapWithOptimalProfile(acceleratorModel, coreFraction, memoryFraction);
     }
