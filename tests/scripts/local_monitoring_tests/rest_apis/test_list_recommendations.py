@@ -172,3 +172,150 @@ def test_list_recommendations_namespace_single_result(test_name, expected_status
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
+
+@pytest.mark.sanity
+@pytest.mark.parametrize(
+    "test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
+                         [
+                             ("list_accelerator_recommendations", SUCCESS_STATUS_CODE, "v2.0", "human_eval_exp", "cluster-1", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "container", "statefulset", "human-eval-benchmark", "unpartitioned", None, None, "human-eval-benchmark", "15min", "0.1"),
+                         ]
+                         )
+def test_accelerator_recommendation_if_exists(
+        test_name,
+        expected_status_code,
+        version,
+        experiment_name,
+        cluster_name,
+        performance_profile,
+        mode,
+        target_cluster,
+        datasource,
+        experiment_type,
+        kubernetes_obj_type,
+        name,
+        namespace,
+        namespace_name,
+        container_image_name,
+        container_name,
+        measurement_duration,
+        threshold,
+        cluster_type):
+    """
+    Test Description: This test validates listRecommendations by passing a valid
+    container experiment name which has gpu usage
+    """
+    # Generate a temporary JSON filename
+    tmp_json_file = "/tmp/create_exp_" + test_name + ".json"
+    print("tmp_json_file = ", tmp_json_file)
+
+    # Load the Jinja2 template
+    environment = Environment(loader=FileSystemLoader("../json_files/"))
+    template = environment.get_template("create_exp_template.json")
+
+    # Render the JSON content from the template
+    content = template.render(
+        version=version,
+        experiment_name=experiment_name,
+        cluster_name=cluster_name,
+        performance_profile=performance_profile,
+        mode=mode,
+        target_cluster=target_cluster,
+        datasource=datasource,
+        experiment_type=experiment_type,
+        kubernetes_obj_type=kubernetes_obj_type,
+        name=name,
+        namespace=namespace,
+        namespace_name=namespace_name,
+        container_image_name=container_image_name,
+        container_name=container_name,
+        measurement_duration=measurement_duration,
+        threshold=threshold
+    )
+
+    # Convert rendered content to a dictionary
+    json_content = json.loads(content)
+
+    if json_content[0]["kubernetes_objects"][0]["type"] == "None":
+        json_content[0]["kubernetes_objects"][0].pop("type")
+    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace_name"] == "None":
+        json_content[0]["kubernetes_objects"][0].pop("namespaces")
+    if json_content[0]["kubernetes_objects"][0]["containers"][0]["container_name"] == "None":
+        json_content[0]["kubernetes_objects"][0].pop("containers")
+
+    # Write the final JSON to the temp file
+    with open(tmp_json_file, mode="w", encoding="utf-8") as message:
+        json.dump(json_content, message, indent=4)
+
+    input_json_file = tmp_json_file
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    #Install default metric profile
+    if cluster_type == "minikube":
+        metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring_norecordingrules.json'
+
+    if cluster_type == "openshift":
+        metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
+
+    response = delete_metric_profile(metric_profile_json_file)
+    print("delete metric profile = ", response.status_code)
+
+    # Create metric profile using the specified json
+    response = create_metric_profile(metric_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    json_file = open(metric_profile_json_file, "r")
+    input_json = json.loads(json_file.read())
+    metric_profile_name = input_json['metadata']['name']
+    assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
+
+    response = list_metric_profiles(name=metric_profile_name, logging=False)
+    metric_profile_json = response.json()
+
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    errorMsg = validate_list_metric_profiles_json(metric_profile_json, list_metric_profiles_schema)
+    assert errorMsg == ""
+
+    # Create namespace experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # generate recommendations
+    json_file = open(input_json_file, "r")
+    input_json = json.loads(json_file.read())
+    exp_name = input_json[0]['experiment_name']
+
+    response = generate_recommendations(exp_name)
+    assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Invoke list recommendations for the specified experiment
+    response = list_recommendations(exp_name)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    list_reco_json = response.json()
+
+    # Validate the json against the json schema
+    errorMsg = validate_list_reco_json(list_reco_json, list_reco_namespace_json_local_monitoring_schema)
+    assert errorMsg == ""
+
+    # Validate accelerator info
+    validate_accelerator_recommendations_for_container(list_reco_json)
+
+    # Delete experiment
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+    assert response.status_code == SUCCESS_STATUS_CODE
