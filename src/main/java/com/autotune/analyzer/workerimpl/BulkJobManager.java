@@ -29,14 +29,17 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
+import com.google.gson.Gson;
 import org.json.JSONObject;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -139,11 +142,18 @@ public class BulkJobManager implements Runnable {
                                     );
                                     // send request to generateRecommendations API
                                     GenericRestApiClient apiClient = new GenericRestApiClient(datasource);
-                                    apiClient.setBaseURL(String.format(KruizeDeploymentInfo.recommendations_url, experiment_name));
+                                    String encodedExperimentName;
+                                    try {
+                                        encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8.toString());
+                                    } catch (UnsupportedEncodingException e) {
+                                        LOGGER.error("Error occurred during experiment_name encoding: {}", e.getMessage());
+                                        throw new RuntimeException(e);
+                                    }
+                                    apiClient.setBaseURL(String.format(KruizeDeploymentInfo.recommendations_url, encodedExperimentName));
                                     int responseCode = 0;
                                     try {
                                         responseCode = apiClient.callKruizeAPI(null);
-                                        LOGGER.info("API Response code: {}", responseCode);
+                                        LOGGER.debug("API Response code: {}", responseCode);
                                     } catch (Exception | FetchMetricsError e) {
                                         e.printStackTrace();
                                     }
@@ -206,7 +216,7 @@ public class BulkJobManager implements Runnable {
                                     int responseCode;
                                     try {
                                         responseCode = apiClient.callKruizeAPI(createExpJSON);
-                                        LOGGER.info("API Response code: {}", responseCode);
+                                        LOGGER.debug("API Response code: {}", responseCode);
                                     } catch (Exception | FetchMetricsError e) {
                                         e.printStackTrace();
                                         continue;
@@ -322,9 +332,9 @@ public class BulkJobManager implements Runnable {
         createExperimentAPIObjects.add(createExperimentAPIObject);
 
         // Convert to JSON
-        ObjectMapper mapper = new ObjectMapper();
-        String json = mapper.writerWithDefaultPrettyPrinter().writeValueAsString(createExperimentAPIObjects);
-        LOGGER.info("CreateExp JSON: {}", json);
+        Gson gson = new Gson();
+        String json = gson.toJson(createExperimentAPIObjects);
+        LOGGER.debug("CreateExp JSON: {}", json);
         return json;
     }
 
