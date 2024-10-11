@@ -36,7 +36,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
@@ -103,7 +102,7 @@ public class BulkJobManager implements Runnable {
             BulkJobStatus jobData = jobStatusMap.get(jobID);
             String uniqueKey = getLabels(this.bulkInput.getFilter());
             if (null == this.bulkInput.getDatasource()) {
-                this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasource());
+                this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
             }
             DataSourceMetadataInfo metadataInfo = null;
             DataSourceManager dataSourceManager = new DataSourceManager();
@@ -131,10 +130,16 @@ public class BulkJobManager implements Runnable {
                         createExecutor.submit(() -> {
                             String experiment_name = apiObject.getExperimentName();
                             BulkJobStatus.Experiments newExperiments = jobData.getData().getExperiments();
+                            BulkJobStatus.Experiments failedExperiments = jobData.getData().getExperiments();
                             BulkJobStatus.RecommendationData recommendationData = jobData.getData().getRecommendations().getData();
                             try {
-                                jobData.getData().getExperiments().setNewExperiments(
+                                if (experiment_name.contains(AnalyzerConstants.K8sObjectConstants.Types.JOB)) {
+                                    jobData.getData().getExperiments().setFailedExperiments(
+                                            appendExperiments(failedExperiments.getFailedExperiments(), experiment_name));
+                                } else {
+                                    jobData.getData().getExperiments().setNewExperiments(
                                             appendExperiments(newExperiments.getNewExperiments(), experiment_name));
+                                }
                                 generateExecutor.submit(() -> {
 
                                     jobData.getData().getRecommendations().getData().setUnprocessed(
@@ -143,12 +148,7 @@ public class BulkJobManager implements Runnable {
                                     // send request to generateRecommendations API
                                     GenericRestApiClient apiClient = new GenericRestApiClient(datasource);
                                     String encodedExperimentName;
-                                    try {
-                                        encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8.toString());
-                                    } catch (UnsupportedEncodingException e) {
-                                        LOGGER.error("Error occurred during experiment_name encoding: {}", e.getMessage());
-                                        throw new RuntimeException(e);
-                                    }
+                                    encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
                                     apiClient.setBaseURL(String.format(KruizeDeploymentInfo.recommendations_url, encodedExperimentName));
                                     int responseCode = 0;
                                     try {
@@ -209,7 +209,7 @@ public class BulkJobManager implements Runnable {
                                     // create JSON to be passed in the createExperimentAPI
                                     List<CreateExperimentAPIObject> createExperimentAPIObjectList = new ArrayList<>();
                                     String createExpJSON = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
-                                            experiment_name, this.bulkInput.getDatasource(), createExperimentAPIObjectList);
+                                            experiment_name, createExperimentAPIObjectList);
                                     // send request to createExperiment API for experiment creation
                                     GenericRestApiClient apiClient = new GenericRestApiClient(datasource);
                                     apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
@@ -292,22 +292,21 @@ public class BulkJobManager implements Runnable {
      * @param dsc                        DataSourceCluster object to get the cluster details
      * @param dsw                        DataSourceWorkload object to get the workload details
      * @param namespace                  DataSourceNamespace object to get the namespace details
-     * @param datasource                 Datasource name to be set
      * @param createExperimentAPIObjects
      * @return Json string to be sent to the createExperimentAPI for experiment creation
      * @throws JsonProcessingException
      */
     private String prepareCreateExperimentJSONInput(DataSourceContainer dc, DataSourceCluster dsc, DataSourceWorkload dsw,
-                                                    DataSourceNamespace namespace, String experiment_name, String datasource, List<CreateExperimentAPIObject> createExperimentAPIObjects) throws IOException {
+                                                    DataSourceNamespace namespace, String experiment_name, List<CreateExperimentAPIObject> createExperimentAPIObjects) throws IOException {
 
         CreateExperimentAPIObject createExperimentAPIObject = new CreateExperimentAPIObject();
         createExperimentAPIObject.setMode(CREATE_EXPERIMENT_CONFIG_BEAN.getMode());
-        createExperimentAPIObject.setTargetCluster(CREATE_EXPERIMENT_CONFIG_BEAN.getTarget_cluster());
+        createExperimentAPIObject.setTargetCluster(CREATE_EXPERIMENT_CONFIG_BEAN.getTarget());
         createExperimentAPIObject.setApiVersion(CREATE_EXPERIMENT_CONFIG_BEAN.getVersion());
         createExperimentAPIObject.setExperimentName(experiment_name);
         createExperimentAPIObject.setDatasource(this.bulkInput.getDatasource());
         createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
-        createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformance_profile());
+        createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());
         List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
         KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
         ContainerAPIObject cao = new ContainerAPIObject(dc.getDataSourceContainerName(),
