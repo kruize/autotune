@@ -344,7 +344,9 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     tx = session.beginTransaction();
                     session.persist(recommendationEntry);
                     tx.commit();
-                    updateExperimentTypeInKruizeRecommendationEntry(recommendationEntry);
+                    if (null == recommendationEntry.getExperimentType() || recommendationEntry.getExperimentType().isEmpty()) {
+                        updateExperimentTypeInKruizeRecommendationEntry(recommendationEntry);
+                    }
                     validationOutputData.setSuccess(true);
                     statusValue = "success";
                 } else {
@@ -1091,12 +1093,14 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             for (KruizeExperimentEntry entry : entries) {
                 if (isTargetCluserLocal(entry.getTarget_cluster())) {
-                    String sql = DBConstants.SQLQUERY.SELECT_EXPERIMENT_EXP_TYPE;
-                    Query query = session.createNativeQuery(sql);
-                    query.setParameter("experiment_id", entry.getExperiment_id());
-                    List<String> experimentType = query.getResultList();
-                    if (null != experimentType && !experimentType.isEmpty()) {
-                        entry.setExperimentType(experimentType.get(0));
+                    if (null == entry.getExperimentType() || entry.getExperimentType().isEmpty()) {
+                        String sql = DBConstants.SQLQUERY.SELECT_EXPERIMENT_EXP_TYPE;
+                        Query query = session.createNativeQuery(sql);
+                        query.setParameter("experiment_id", entry.getExperiment_id());
+                        List<String> experimentType = query.getResultList();
+                        if (null != experimentType && !experimentType.isEmpty()) {
+                            entry.setExperimentType(experimentType.get(0));
+                        }
                     }
                 }
             }

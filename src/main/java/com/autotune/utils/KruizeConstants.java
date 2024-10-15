@@ -169,8 +169,8 @@ public class KruizeConstants {
         public static final String POD_METRICS = "pod_metrics";
         public static final String CONTAINER_METRICS = "container_metrics";
         public static final String METRICS = "metrics";
-        public static final String METRIC = "metric";
         public static final String CONFIG = "config";
+        public static final String METRIC = "metric";
         public static final String CURRENT = "current";
         public static final String NAME = "name";
         public static final String QUERY = "query";
@@ -677,6 +677,8 @@ public class KruizeConstants {
         public static final String LOCAL = "local";
         public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
         public static final String RECOMMENDATIONS_URL = "recommendationsURL";
+        public static final String BULK_API_LIMIT = "bulkapilimit";
+        public static final String BULK_API_CHUNK_SIZE = "bulkapichunksize";
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
     }
 
@@ -772,6 +774,9 @@ public class KruizeConstants {
         public static final String JOB_NOT_FOUND_MSG = "Job not found";
         public static final String IN_PROGRESS = "IN_PROGRESS";
         public static final String COMPLETED = "COMPLETED";
+        public static final String FAILED = "FAILED";
+        public static final String LIMIT_MESSAGE = "The number of experiments exceeds %s.";
+        public static final String NOTHING = "Nothing to do.";
         // TODO : Bulk API Create Experiments defaults
         public static final CreateExperimentConfigBean CREATE_EXPERIMENT_CONFIG_BEAN;
 
