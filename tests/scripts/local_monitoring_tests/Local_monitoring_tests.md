@@ -175,6 +175,8 @@ The test `test_list_recommendations.py::test_accelerator_recommendation_if_exist
 
 In addition to the pre-requisites mentioned above we need to make sure that a workload with name `human-eval-benchmark` is running in the namespace `unpartitioned` and has the accelerator usage data.
 
+Check this out for running the benchmark: [How to run the human eval benchmark?](https://github.com/kruize/benchmarks/tree/master/human-eval-benchmark)
+
 Else, you can change the workload name and namespace name in the test to match with your workload.
 
 
