@@ -309,7 +309,7 @@ def test_accelerator_recommendation_if_exists(
     list_reco_json = response.json()
 
     # Validate the json against the json schema
-    errorMsg = validate_list_reco_json(list_reco_json, list_reco_namespace_json_local_monitoring_schema)
+    errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_local_monitoring_schema)
     assert errorMsg == ""
 
     # Validate accelerator info
