@@ -114,7 +114,7 @@ jobs:
           cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           cd tests
           echo "PR_NUMBER = ${{ env.pr_number }}"
-          ./test_autotune.sh -c minikube -i autotune_operator:pr_${{ env.pr_number }} --testsuite=local_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
+          ./test_autotune.sh -c minikube -i autotune_operator:pr_${{ env.pr_number }} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
       - name: Capture ffdc logs
         if: always()
         run: |
