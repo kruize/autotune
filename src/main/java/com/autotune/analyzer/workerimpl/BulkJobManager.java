@@ -16,27 +16,29 @@
 package com.autotune.analyzer.workerimpl;
 
 
-import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.common.utils.CommonUtils;
-import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.gson.Gson;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -115,7 +117,7 @@ public class BulkJobManager implements Runnable {
                 jobData.setStatus(COMPLETED);
                 jobData.setMessage(NOTHING);
             } else {
-                Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(metadataInfo); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
+                Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
                 jobData.setTotal_experiments(createExperimentAPIObjectMap.size());
                 jobData.setProcessed_experiments(0);
                 if (jobData.getTotal_experiments() > KruizeDeploymentInfo.BULK_API_LIMIT) {
@@ -130,54 +132,65 @@ public class BulkJobManager implements Runnable {
                             BulkJobStatus.Experiments newExperiments = jobData.getData().getExperiments();
                             BulkJobStatus.RecommendationData recommendationData = jobData.getData().getRecommendations().getData();
                             try {
-                                ValidationOutputData output = new ExperimentDBService().addExperimentToDB(apiObject);
-                                if (output.isSuccess()) {
-                                    jobData.getData().getExperiments().setNewExperiments(
-                                            appendExperiments(newExperiments.getNewExperiments(), experiment_name)
-                                    );
-                                }
-                                generateExecutor.submit(() -> {
-
-                                    jobData.getData().getRecommendations().getData().setUnprocessed(
-                                            appendExperiments(recommendationData.getUnprocessed(), experiment_name)
-                                    );
-
-                                    URL url = null;
-                                    HttpURLConnection connection = null;
-                                    int statusCode = 0;
-                                    try {
-                                        url = new URL(String.format(KruizeDeploymentInfo.recommendations_url, experiment_name));
-                                        connection = (HttpURLConnection) url.openConnection();
-                                        connection.setRequestMethod("POST");
-
-                                        recommendationData.moveToProgress(experiment_name);
-
-                                        statusCode = connection.getResponseCode();
-                                    } catch (IOException e) {
-                                        LOGGER.error(e.getMessage());
-
-                                        recommendationData.moveToFailed(experiment_name);
-
-                                        throw new RuntimeException(e);
-                                    } finally {
-                                        if (null != connection) connection.disconnect();
-                                    }
-                                    if (statusCode == HttpURLConnection.HTTP_CREATED) {
-
-                                        recommendationData.moveToCompleted(experiment_name);
-                                        jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
-
-                                        if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
-                                            jobData.setStatus(COMPLETED);
-                                            jobStatusMap.get(jobID).setEndTime(Instant.now());
-                                        }
-
+                                // send request to createExperiment API for experiment creation
+                                GenericRestApiClient apiClient = new GenericRestApiClient(datasource);
+                                apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
+                                int responseCode;
+                                boolean expriment_exists = false;
+                                try {
+                                    responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(apiObject) + "]");
+                                    LOGGER.debug("API Response code: {}", responseCode);
+                                    if (responseCode == HttpURLConnection.HTTP_CREATED) {
+                                        newExperiments.setNewExperiments(
+                                                appendExperiments(newExperiments.getNewExperiments(), experiment_name));
+                                        expriment_exists = true;
+                                    } else if (responseCode == HttpURLConnection.HTTP_CONFLICT) {
+                                        expriment_exists = true;
                                     } else {
-
-                                        recommendationData.moveToFailed(experiment_name);
-
+                                        newExperiments.setFailedExperiments(
+                                                appendExperiments(newExperiments.getFailedExperiments(), experiment_name));
+                                        jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                     }
-                                });
+                                } catch (FetchMetricsError e) {
+                                    e.printStackTrace();
+                                    newExperiments.setFailedExperiments(
+                                            appendExperiments(newExperiments.getFailedExperiments(), experiment_name));
+                                    jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
+                                }
+
+                                if (expriment_exists) {
+                                    generateExecutor.submit(() -> {
+                                        recommendationData.setUnprocessed(
+                                                appendExperiments(recommendationData.getUnprocessed(), experiment_name)
+                                        );
+                                        // send request to generateRecommendations API
+                                        GenericRestApiClient recommendationApiClient = new GenericRestApiClient(datasource);
+                                        String encodedExperimentName;
+                                        encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
+                                        recommendationApiClient.setBaseURL(String.format(KruizeDeploymentInfo.recommendations_url, encodedExperimentName));
+                                        int recommendationResponseCode = 0;
+                                        try {
+                                            recommendationData.moveToProgress(experiment_name);
+                                            recommendationResponseCode = recommendationApiClient.callKruizeAPI(null);
+                                            LOGGER.debug("API Response code: {}", recommendationResponseCode);
+                                        } catch (Exception | FetchMetricsError e) {
+                                            e.printStackTrace();
+                                        }
+                                        if (recommendationResponseCode == HttpURLConnection.HTTP_CREATED) {
+                                            recommendationData.moveToCompleted(experiment_name);
+                                            jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
+
+                                            if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
+                                                jobData.setStatus(COMPLETED);
+                                                jobStatusMap.get(jobID).setEndTime(Instant.now());
+                                            }
+
+                                        } else {
+                                            recommendationData.moveToFailed(experiment_name);
+                                        }
+                                    });
+                                }
+
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 recommendationData.moveToFailed(experiment_name);
@@ -194,7 +207,7 @@ public class BulkJobManager implements Runnable {
     }
 
 
-    Map<String, CreateExperimentAPIObject> getExperimentMap(DataSourceMetadataInfo metadataInfo) {
+    Map<String, CreateExperimentAPIObject> getExperimentMap(BulkJobStatus jobData, DataSourceMetadataInfo metadataInfo, DataSourceInfo datasource) throws Exception {
         Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = new HashMap<>();
         Collection<DataSource> dataSourceCollection = metadataInfo.getDataSourceHashMap().values();
         for (DataSource ds : dataSourceCollection) {
@@ -208,38 +221,15 @@ public class BulkJobManager implements Runnable {
                             HashMap<String, DataSourceContainer> dataSourceContainerHashMap = dsw.getDataSourceContainerHashMap();
                             if (dataSourceContainerHashMap != null) {
                                 for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
-                                    CreateExperimentAPIObject createExperimentAPIObject = new CreateExperimentAPIObject();
-                                    createExperimentAPIObject.setMode(CREATE_EXPERIMENT_CONFIG_BEAN.getMode());
-                                    createExperimentAPIObject.setTargetCluster(CREATE_EXPERIMENT_CONFIG_BEAN.getTarget());
-                                    createExperimentAPIObject.setApiVersion(CREATE_EXPERIMENT_CONFIG_BEAN.getVersion());
-                                    String experiment_name = this.bulkInput.getDatasource() + "|" + dsc.getDataSourceClusterName() + "|" + namespace.getDataSourceNamespaceName()
-                                            + "|" + dsw.getDataSourceWorkloadName() + "(" + dsw.getDataSourceWorkloadType() + ")" + "|" + dc.getDataSourceContainerName();
-                                    createExperimentAPIObject.setExperimentName(experiment_name);
-                                    createExperimentAPIObject.setDatasource(this.bulkInput.getDatasource());
-                                    createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
-                                    createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());
-                                    List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
-                                    KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
-                                    ContainerAPIObject cao = new ContainerAPIObject(dc.getDataSourceContainerName(),
-                                            dc.getDataSourceContainerImageName(), null, null);
-                                    kubernetesAPIObject.setContainerAPIObjects(Arrays.asList(cao));
-                                    kubernetesAPIObject.setName(dsw.getDataSourceWorkloadName());
-                                    kubernetesAPIObject.setType(dsw.getDataSourceWorkloadType());
-                                    kubernetesAPIObject.setNamespace(namespace.getDataSourceNamespaceName());
-                                    kubernetesAPIObjectList.add(kubernetesAPIObject);
-                                    createExperimentAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
-                                    RecommendationSettings rs = new RecommendationSettings();
-                                    rs.setThreshold(CREATE_EXPERIMENT_CONFIG_BEAN.getThreshold());
-                                    createExperimentAPIObject.setRecommendationSettings(rs);
-                                    TrialSettings trialSettings = new TrialSettings();
-                                    trialSettings.setMeasurement_durationMinutes(CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDurationStr());
-                                    createExperimentAPIObject.setTrialSettings(trialSettings);
-                                    List<KruizeObject> kruizeExpList = new ArrayList<>();
-
-                                    createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
-                                    createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-                                    createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
-                                    createExperimentAPIObjectMap.put(experiment_name, createExperimentAPIObject);
+                                    // Experiment name - dynamically constructed
+                                    String experiment_name = this.bulkInput.getDatasource() + "|" + dsc.getDataSourceClusterName() + "|"
+                                            + namespace.getDataSourceNamespaceName() + "|" + dsw.getDataSourceWorkloadName() + "("
+                                            + dsw.getDataSourceWorkloadType() + ")" + "|" + dc.getDataSourceContainerName();
+                                    // create JSON to be passed in the createExperimentAPI
+                                    List<CreateExperimentAPIObject> createExperimentAPIObjectList = new ArrayList<>();
+                                    CreateExperimentAPIObject apiObject = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
+                                            experiment_name, createExperimentAPIObjectList);
+                                    createExperimentAPIObjectMap.put(experiment_name, apiObject);
                                 }
                             }
                         }
@@ -266,7 +256,7 @@ public class BulkJobManager implements Runnable {
                     if (includeLabelsBuilder.length() > 0) {
                         includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
                     }
-                    LOGGER.debug("Include Labels: " + includeLabelsBuilder.toString());
+                    LOGGER.debug("Include Labels: " + includeLabelsBuilder);
                     uniqueKey = includeLabelsBuilder.toString();
                 }
             }
@@ -299,5 +289,51 @@ public class BulkJobManager implements Runnable {
         return dateRange;
     }
 
+
+    /**
+     * @param dc                         DataSourceContainer object to get the container details
+     * @param dsc                        DataSourceCluster object to get the cluster details
+     * @param dsw                        DataSourceWorkload object to get the workload details
+     * @param namespace                  DataSourceNamespace object to get the namespace details
+     * @param createExperimentAPIObjects
+     * @return Json string to be sent to the createExperimentAPI for experiment creation
+     * @throws JsonProcessingException
+     */
+    private CreateExperimentAPIObject prepareCreateExperimentJSONInput(DataSourceContainer dc, DataSourceCluster dsc, DataSourceWorkload dsw,
+                                                                       DataSourceNamespace namespace, String experiment_name, List<CreateExperimentAPIObject> createExperimentAPIObjects) throws IOException {
+
+        CreateExperimentAPIObject createExperimentAPIObject = new CreateExperimentAPIObject();
+        createExperimentAPIObject.setMode(CREATE_EXPERIMENT_CONFIG_BEAN.getMode());
+        createExperimentAPIObject.setTargetCluster(CREATE_EXPERIMENT_CONFIG_BEAN.getTarget());
+        createExperimentAPIObject.setApiVersion(CREATE_EXPERIMENT_CONFIG_BEAN.getVersion());
+        createExperimentAPIObject.setExperimentName(experiment_name);
+        createExperimentAPIObject.setDatasource(this.bulkInput.getDatasource());
+        createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
+        createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());
+        List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
+        KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
+        ContainerAPIObject cao = new ContainerAPIObject(dc.getDataSourceContainerName(),
+                dc.getDataSourceContainerImageName(), null, null);
+        kubernetesAPIObject.setContainerAPIObjects(Arrays.asList(cao));
+        kubernetesAPIObject.setName(dsw.getDataSourceWorkloadName());
+        kubernetesAPIObject.setType(dsw.getDataSourceWorkloadType());
+        kubernetesAPIObject.setNamespace(namespace.getDataSourceNamespaceName());
+        kubernetesAPIObjectList.add(kubernetesAPIObject);
+        createExperimentAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+        RecommendationSettings rs = new RecommendationSettings();
+        rs.setThreshold(CREATE_EXPERIMENT_CONFIG_BEAN.getThreshold());
+        createExperimentAPIObject.setRecommendationSettings(rs);
+        TrialSettings trialSettings = new TrialSettings();
+        trialSettings.setMeasurement_durationMinutes(CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDurationStr());
+        createExperimentAPIObject.setTrialSettings(trialSettings);
+
+        createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
+        createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
+        createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
+
+        createExperimentAPIObjects.add(createExperimentAPIObject);
+
+        return createExperimentAPIObject;
+    }
 
 }

@@ -156,8 +156,8 @@ public class DataSourceMetadataOperator {
             String namespaceQuery = PromQLDataSourceQueries.NAMESPACE_QUERY;
             String workloadQuery = PromQLDataSourceQueries.WORKLOAD_QUERY;
             String containerQuery = PromQLDataSourceQueries.CONTAINER_QUERY;
-            if (null != uniqueKey) {
-                LOGGER.info("uniquekey: {}", uniqueKey);
+            if (null != uniqueKey && !uniqueKey.isEmpty()) {
+                LOGGER.debug("uniquekey: {}", uniqueKey);
                 namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
                 workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
                 containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
@@ -171,7 +171,7 @@ public class DataSourceMetadataOperator {
             LOGGER.info("containerQuery: {}", containerQuery);
 
             JsonArray namespacesDataResultArray = op.getResultArrayForQuery(dataSourceInfo, namespaceQuery);
-            if (false == op.validateResultArray(namespacesDataResultArray)) {
+            if (!op.validateResultArray(namespacesDataResultArray)) {
                 dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
                 throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
             }
