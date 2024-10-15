@@ -29,9 +29,9 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
 import org.json.JSONObject;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,7 +117,7 @@ public class BulkJobManager implements Runnable {
                 jobData.setStatus(COMPLETED);
                 jobData.setMessage(NOTHING);
             } else {
-                Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
+                Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
                 jobData.setTotal_experiments(createExperimentAPIObjectMap.size());
                 jobData.setProcessed_experiments(0);
                 if (jobData.getTotal_experiments() > KruizeDeploymentInfo.BULK_API_LIMIT) {
@@ -130,49 +130,67 @@ public class BulkJobManager implements Runnable {
                         createExecutor.submit(() -> {
                             String experiment_name = apiObject.getExperimentName();
                             BulkJobStatus.Experiments newExperiments = jobData.getData().getExperiments();
-                            BulkJobStatus.Experiments failedExperiments = jobData.getData().getExperiments();
                             BulkJobStatus.RecommendationData recommendationData = jobData.getData().getRecommendations().getData();
                             try {
-                                // skip appending the experiments of type - job for now until the 'job' workload is fully supported
-                                if (experiment_name.contains(AnalyzerConstants.K8sObjectConstants.Types.JOB)) {
-                                    jobData.getData().getExperiments().setFailedExperiments(
-                                            appendExperiments(failedExperiments.getFailedExperiments(), experiment_name));
-                                } else {
-                                    jobData.getData().getExperiments().setNewExperiments(
-                                            appendExperiments(newExperiments.getNewExperiments(), experiment_name));
-                                }
-                                generateExecutor.submit(() -> {
-
-                                    jobData.getData().getRecommendations().getData().setUnprocessed(
-                                            appendExperiments(recommendationData.getUnprocessed(), experiment_name)
-                                    );
-                                    // send request to generateRecommendations API
-                                    GenericRestApiClient apiClient = new GenericRestApiClient(datasource);
-                                    String encodedExperimentName;
-                                    encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
-                                    apiClient.setBaseURL(String.format(KruizeDeploymentInfo.recommendations_url, encodedExperimentName));
-                                    int responseCode = 0;
-                                    try {
-                                        responseCode = apiClient.callKruizeAPI(null);
-                                        LOGGER.debug("API Response code: {}", responseCode);
-                                    } catch (Exception | FetchMetricsError e) {
-                                        e.printStackTrace();
-                                    }
+                                // send request to createExperiment API for experiment creation
+                                GenericRestApiClient apiClient = new GenericRestApiClient(datasource);
+                                apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
+                                int responseCode;
+                                boolean expriment_exists = false;
+                                try {
+                                    responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(apiObject) + "]");
+                                    LOGGER.debug("API Response code: {}", responseCode);
                                     if (responseCode == HttpURLConnection.HTTP_CREATED) {
-                                        recommendationData.moveToCompleted(experiment_name);
-                                        jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
-
-                                        if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
-                                            jobData.setStatus(COMPLETED);
-                                            jobStatusMap.get(jobID).setEndTime(Instant.now());
-                                        }
-
+                                        newExperiments.setNewExperiments(
+                                                appendExperiments(newExperiments.getNewExperiments(), experiment_name));
+                                        expriment_exists = true;
+                                    } else if (responseCode == HttpURLConnection.HTTP_CONFLICT) {
+                                        expriment_exists = true;
                                     } else {
-
-                                        recommendationData.moveToFailed(experiment_name);
-
+                                        newExperiments.setFailedExperiments(
+                                                appendExperiments(newExperiments.getFailedExperiments(), experiment_name));
+                                        jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                     }
-                                });
+                                } catch (FetchMetricsError e) {
+                                    e.printStackTrace();
+                                    newExperiments.setFailedExperiments(
+                                            appendExperiments(newExperiments.getFailedExperiments(), experiment_name));
+                                    jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
+                                }
+
+                                if (expriment_exists) {
+                                    generateExecutor.submit(() -> {
+                                        recommendationData.setUnprocessed(
+                                                appendExperiments(recommendationData.getUnprocessed(), experiment_name)
+                                        );
+                                        // send request to generateRecommendations API
+                                        GenericRestApiClient recommendationApiClient = new GenericRestApiClient(datasource);
+                                        String encodedExperimentName;
+                                        encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
+                                        recommendationApiClient.setBaseURL(String.format(KruizeDeploymentInfo.recommendations_url, encodedExperimentName));
+                                        int recommendationResponseCode = 0;
+                                        try {
+                                            recommendationData.moveToProgress(experiment_name);
+                                            recommendationResponseCode = recommendationApiClient.callKruizeAPI(null);
+                                            LOGGER.debug("API Response code: {}", recommendationResponseCode);
+                                        } catch (Exception | FetchMetricsError e) {
+                                            e.printStackTrace();
+                                        }
+                                        if (recommendationResponseCode == HttpURLConnection.HTTP_CREATED) {
+                                            recommendationData.moveToCompleted(experiment_name);
+                                            jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
+
+                                            if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
+                                                jobData.setStatus(COMPLETED);
+                                                jobStatusMap.get(jobID).setEndTime(Instant.now());
+                                            }
+
+                                        } else {
+                                            recommendationData.moveToFailed(experiment_name);
+                                        }
+                                    });
+                                }
+
                             } catch (Exception e) {
                                 e.printStackTrace();
                                 recommendationData.moveToFailed(experiment_name);
@@ -189,7 +207,7 @@ public class BulkJobManager implements Runnable {
     }
 
 
-    Map<String, CreateExperimentAPIObject> getExperimentMap(DataSourceMetadataInfo metadataInfo, DataSourceInfo datasource) throws Exception {
+    Map<String, CreateExperimentAPIObject> getExperimentMap(BulkJobStatus jobData, DataSourceMetadataInfo metadataInfo, DataSourceInfo datasource) throws Exception {
         Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = new HashMap<>();
         Collection<DataSource> dataSourceCollection = metadataInfo.getDataSourceHashMap().values();
         for (DataSource ds : dataSourceCollection) {
@@ -209,24 +227,9 @@ public class BulkJobManager implements Runnable {
                                             + dsw.getDataSourceWorkloadType() + ")" + "|" + dc.getDataSourceContainerName();
                                     // create JSON to be passed in the createExperimentAPI
                                     List<CreateExperimentAPIObject> createExperimentAPIObjectList = new ArrayList<>();
-                                    String createExpJSON = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
+                                    CreateExperimentAPIObject apiObject = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
                                             experiment_name, createExperimentAPIObjectList);
-                                    // send request to createExperiment API for experiment creation
-                                    GenericRestApiClient apiClient = new GenericRestApiClient(datasource);
-                                    apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
-                                    int responseCode;
-                                    try {
-                                        responseCode = apiClient.callKruizeAPI(createExpJSON);
-                                        LOGGER.debug("API Response code: {}", responseCode);
-                                    } catch (Exception | FetchMetricsError e) {
-                                        e.printStackTrace();
-                                        continue;
-                                    }
-                                    // if the experiment is successfully created, add it in the map
-                                    if (responseCode == HttpURLConnection.HTTP_CREATED) {
-                                        // Add to the map using the experiment_name
-                                        createExperimentAPIObjectMap.put(experiment_name, createExperimentAPIObjectList.get(0));
-                                    }
+                                    createExperimentAPIObjectMap.put(experiment_name, apiObject);
                                 }
                             }
                         }
@@ -287,7 +290,6 @@ public class BulkJobManager implements Runnable {
     }
 
 
-
     /**
      * @param dc                         DataSourceContainer object to get the container details
      * @param dsc                        DataSourceCluster object to get the cluster details
@@ -297,8 +299,8 @@ public class BulkJobManager implements Runnable {
      * @return Json string to be sent to the createExperimentAPI for experiment creation
      * @throws JsonProcessingException
      */
-    private String prepareCreateExperimentJSONInput(DataSourceContainer dc, DataSourceCluster dsc, DataSourceWorkload dsw,
-                                                    DataSourceNamespace namespace, String experiment_name, List<CreateExperimentAPIObject> createExperimentAPIObjects) throws IOException {
+    private CreateExperimentAPIObject prepareCreateExperimentJSONInput(DataSourceContainer dc, DataSourceCluster dsc, DataSourceWorkload dsw,
+                                                                       DataSourceNamespace namespace, String experiment_name, List<CreateExperimentAPIObject> createExperimentAPIObjects) throws IOException {
 
         CreateExperimentAPIObject createExperimentAPIObject = new CreateExperimentAPIObject();
         createExperimentAPIObject.setMode(CREATE_EXPERIMENT_CONFIG_BEAN.getMode());
@@ -331,11 +333,7 @@ public class BulkJobManager implements Runnable {
 
         createExperimentAPIObjects.add(createExperimentAPIObject);
 
-        // Convert to JSON
-        Gson gson = new Gson();
-        String json = gson.toJson(createExperimentAPIObjects);
-        LOGGER.debug("CreateExp JSON: {}", json);
-        return json;
+        return createExperimentAPIObject;
     }
 
 }
