@@ -1903,6 +1903,22 @@ function kruize_local_patch() {
 }
 
 #
+# "local" flag is turned off for RM.
+#
+function kruize_remote_patch() {
+	CRC_DIR="./manifests/crc/default-db-included-installation"
+	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
+
+
+  if [ ${cluster_type} == "minikube" ]; then
+    sed -i 's/"local": "false"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+  elif [ ${cluster_type} == "openshift" ]; then
+    sed -i 's/"local": "false"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+  fi
+}
+
+#
 # Modify "serviceName" and "namespace" datasource manifest fields based on input parameters
 #
 function kruize_local_datasource_manifest_patch() {
