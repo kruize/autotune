@@ -86,15 +86,16 @@ public class DataSourceCollection {
         final String provider = datasource.getProvider();
         ValidationOutputData addedToDB = null;
 
-        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE + name);
 
         try {
             if (dataSourceCollection.containsKey(name)) {
-                throw new DataSourceAlreadyExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_ALREADY_EXIST);
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.UPDATING_DATASOURCE + "{}", name);
+            } else {
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE + "{}", name);
             }
 
             if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
-                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY + name);
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY + "{}", name);
                 DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
                 if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
@@ -113,11 +114,7 @@ public class DataSourceCollection {
             } else {
                 throw new UnsupportedDataSourceProvider(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.UNSUPPORTED_DATASOURCE_PROVIDER);
             }
-        } catch (UnsupportedDataSourceProvider e) {
-            LOGGER.error(e.getMessage());
-        } catch (DataSourceNotServiceable e) {
-            LOGGER.error(e.getMessage());
-        } catch (DataSourceAlreadyExist e) {
+        } catch (UnsupportedDataSourceProvider | DataSourceNotServiceable e) {
             LOGGER.error(e.getMessage());
         }
     }
@@ -139,41 +136,64 @@ public class DataSourceCollection {
             for (Object dataSourceObj: dataSourceArr) {
                 JSONObject dataSourceObject = (JSONObject) dataSourceObj;
                 String name = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_NAME);
-                // check the DB if the datasource already exists
+                // Fetch the existing datasource from the DB (if it exists)
+                DataSourceInfo datasource = null;
                 try {
-                    DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
-                    if (null != dataSourceInfo) {
-                        LOGGER.error("Datasource: {} already exists!", name);
-                        continue;
-                    }
+                    datasource = new ExperimentDBService().loadDataSourceFromDBByName(name);
                 } catch (Exception e) {
                     LOGGER.error("Loading saved datasource {} failed: {} ", name, e.getMessage());
                 }
-                String provider = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_PROVIDER);
-                String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
-                String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
-                String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
-                AuthenticationConfig authConfig;
-                try {
+                // Check if datasource already exists in the DB
+                if (datasource != null) {
+                    LOGGER.info("Datasource {} already exists, checking for updates...", name);
+                    // Extract and compare the authentication details
                     JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
-                    // create the corresponding authentication object
-                    authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
-                } catch (Exception e) {
-                    LOGGER.warn("Auth details are missing for datasource: {}", name);
-                    authConfig = AuthenticationConfig.noAuth();
-                }
+                    AuthenticationConfig newAuthConfig;
+                    if (authenticationObj == null) {
+                        LOGGER.warn("Auth details are missing for datasource: {}", name);
+                        newAuthConfig = AuthenticationConfig.noAuth();
+                    } else {
+                        // Create the new authentication config from the JSON object
+                        newAuthConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
+                    }
+                    // Compare with the existing authentication config
+                    if (datasource.hasAuthChanged(newAuthConfig)) {
+                        LOGGER.info("Authentication details for datasource {} have changed. Updating...", name);
+                        datasource.updateAuthConfig(newAuthConfig);
+                        // Update the datasource in the DB
+                        new ExperimentDBService().addDataSourceToDB(datasource);
+                    } else {
+                        LOGGER.info("No changes detected in the authentication details for datasource {}", name);
+                        return;
+                    }
 
-                DataSourceInfo datasource;
-                // Validate input
-                if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) { //TODO: add validations for auth
-                    continue;
-                }
-                if (dataSourceURL.isEmpty()) {
-                    datasource = new DataSourceInfo(name, provider, serviceName, namespace, null, authConfig);
                 } else {
-                    datasource = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL), authConfig);
+                    // Create and add the new datasource
+                    String provider = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_PROVIDER);
+                    String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
+                    String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
+                    String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
+                    AuthenticationConfig authConfig;
+                    try {
+                        JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
+                        // create the corresponding authentication object
+                        authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
+                    } catch (Exception e) {
+                        LOGGER.warn("Auth details are missing for datasource: {}", name);
+                        authConfig = AuthenticationConfig.noAuth();
+                    }
+
+                    // Validate input
+                    if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) { //TODO: add validations for auth
+                        continue;
+                    }
+                    if (dataSourceURL.isEmpty()) {
+                        datasource = new DataSourceInfo(name, provider, serviceName, namespace, null, authConfig);
+                    } else {
+                        datasource = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL), authConfig);
+                    }
                 }
-                // add the datasource
+                // add/update the datasource
                 addDataSource(datasource);
             }
         } catch (IOException e) {

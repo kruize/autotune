@@ -128,6 +128,24 @@ public class DataSourceInfo {
         this.authenticationConfig = authenticationConfig;
     }
 
+    // Method to check if the authentication details have changed
+    public boolean hasAuthChanged(AuthenticationConfig newAuthConfig) {
+        // Handle cases where one of the auth configs is missing or 'noAuth'
+        if (this.authenticationConfig == null) {
+            this.authenticationConfig = AuthenticationConfig.noAuth();
+        }
+        if (newAuthConfig == null) {
+            newAuthConfig = AuthenticationConfig.noAuth();
+        }
+        // Compare the authentication configs
+        return !this.authenticationConfig.equals(newAuthConfig);
+    }
+
+    public void updateAuthConfig(AuthenticationConfig newAuthConfig) {
+        this.setAuthenticationConfig(newAuthConfig);
+        LOGGER.info("Authentication details for datasource {} have been updated.", this.name);
+    }
+
     @Override
     public String toString() {
         return "DataSourceInfo{" +
