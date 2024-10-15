@@ -133,6 +133,7 @@ public class BulkJobManager implements Runnable {
                             BulkJobStatus.Experiments failedExperiments = jobData.getData().getExperiments();
                             BulkJobStatus.RecommendationData recommendationData = jobData.getData().getRecommendations().getData();
                             try {
+                                // skip appending the experiments of type - job for now until the 'job' workload is fully supported
                                 if (experiment_name.contains(AnalyzerConstants.K8sObjectConstants.Types.JOB)) {
                                     jobData.getData().getExperiments().setFailedExperiments(
                                             appendExperiments(failedExperiments.getFailedExperiments(), experiment_name));

@@ -93,7 +93,7 @@ public class GenericRestApiClient {
             // Apply authentication
             applyAuthentication(httpRequestBase);
 
-            LOGGER.info("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
+            LOGGER.debug("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
 
             // Execute the request
             jsonResponse = httpclient.execute(httpRequestBase, new StringResponseHandler());
@@ -149,7 +149,7 @@ public class GenericRestApiClient {
             try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
                 // Get the status code from the response
                 int responseCode = response.getStatusLine().getStatusCode();
-                LOGGER.info("Response code: {}", responseCode);
+                LOGGER.debug("Response code: {}", responseCode);
                 return responseCode;
             } catch (Exception e) {
                 LOGGER.error("Error occurred while calling Kruize API: {}", e.getMessage());

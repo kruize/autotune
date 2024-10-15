@@ -157,7 +157,7 @@ public class DataSourceMetadataOperator {
             String workloadQuery = PromQLDataSourceQueries.WORKLOAD_QUERY;
             String containerQuery = PromQLDataSourceQueries.CONTAINER_QUERY;
             if (null != uniqueKey && !uniqueKey.isEmpty()) {
-                LOGGER.info("uniquekey: {}", uniqueKey);
+                LOGGER.debug("uniquekey: {}", uniqueKey);
                 namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
                 workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
                 containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
