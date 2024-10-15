@@ -454,6 +454,20 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
 
         double coreFraction = coreAverage / 100;
         // TODO: Need to investigate why data is faulty
+
+        /**
+         * The data we deal with is percentages and we are currently considering only one GPU per container
+         * so the usage (Avg or Max) should be 100% and when we calculate the fraction we divide by 100
+         * so the max we need to get is 1.
+         *
+         * Also the AcceleratorMetaDataService consider the core and memory fractions needed to come up
+         * with the recommended accelerator MIG profile so if fractions exceed 1 none of the MIG configs
+         * will match it (not even the whole GPU which considers core and memory fraction as 1) and we will
+         * get NULL and hence there will be no recommendation.
+         *
+         * So if the fractions are greater than 100 there is a higher chance that there is an anomaly in data
+         * so we mark it as 1 to give out full GPU as a recommendation.
+         */
         if (coreFraction > 1) {
             LOGGER.info("Data irregularity detected, " +
                     "Notification needs to be added explaining we changed the core usage to 100% as it's more than 100%");
