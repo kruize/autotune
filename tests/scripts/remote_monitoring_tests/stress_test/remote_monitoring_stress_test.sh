@@ -130,6 +130,8 @@ jmeter_setup
 echo "Invoking jmeter setup...done" | tee -a ${LOG}
 
 echo "Setting up kruize..." | tee -a ${LOG}
+echo "setting local=false"
+kruize_remote_patch
 pushd ${KRUIZE_REPO} > /dev/null
 	echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${LOG_DIR}/kruize_setup.log"
 	./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${LOG_DIR}/kruize_setup.log 2>&1
