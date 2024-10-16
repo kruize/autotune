@@ -149,6 +149,8 @@ KRUIZE_SERVICE_LOG="${LOG_DIR}/kruize_service.log"
 # Setup kruize
 if [ ${kruize_setup} == true ]; then
 	echo "Setting up kruize..." | tee -a ${LOG}
+	echo "setting local=false"
+  kruize_remote_patch
 	pushd ${KRUIZE_REPO} > /dev/null
         	echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
 		./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG} 2>&1
