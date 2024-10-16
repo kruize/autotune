@@ -64,7 +64,7 @@ list_metadata_json_verbose_true_schema = {
                                                                             }
                                                                         }
                                                                     },
-                                                                    "required": ["workload_name", "workload_type", "containers"]
+                                                                    "required": ["workload_name", "workload_type"]
                                                                 }
                                                             }
                                                         }
