@@ -1912,9 +1912,9 @@ function kruize_remote_patch() {
 
 
   if [ ${cluster_type} == "minikube" ]; then
-    sed -i 's/"local": "false"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+    sed -i 's/"local": "true"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
   elif [ ${cluster_type} == "openshift" ]; then
-    sed -i 's/"local": "false"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+    sed -i 's/"local": "true"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
   fi
 }
 
