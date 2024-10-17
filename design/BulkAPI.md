@@ -252,3 +252,61 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
     - **Type**: `String (ISO 8601 format) or null`
     - **Description**: End timestamp of the job. If the job is still in progress, this will be `null`.
 
+**Note: Experiment Name:**
+
+- **Naming Pattern:** Experiment names are currently formed using the following pattern:
+  `datasource_name|cluster_name|namespace|workload_name(workload_type)|container_name`
+    - **Example:** For a Prometheus datasource, if the cluster is named `prod-cluster`, namespace is `default`, workload
+      is `nginx` (of type `Deployment`), and container is `nginx-container`, the experiment name would be:
+      `Prometheus|prod-cluster|default|nginx(Deployment)|nginx-container`
+
+# Bulk Service Configuration
+
+*Note: Configuration is subject to change.*
+
+## Datasource
+
+- **Description:** Provide the details about the datasource during Kruize configuration. This is essential for
+  generating accurate resource optimization recommendations.
+- **Example:** During configuration, the datasource could be Prometheus or Thanos, based on the setup for your
+  Kubernetes cluster.
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+name: kruizeconfig
+namespace: openshift-tuning
+data:
+kruizeconfigjson: |
+  {
+    "datasource": [
+      {
+        "name": "prometheus-1",
+        "provider": "prometheus",
+        "serviceName": "prometheus-k8s",
+        "namespace": "openshift-monitoring",
+        "url": "",
+        "authentication": {
+          "type": "bearer",
+          "credentials": {
+            "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+          }
+        }
+      }
+    ]
+  }
+```
+
+## Limits
+
+- **Default Limit:** Currently, the Bulk service supports only **1000 experiments** by default.
+- **Increasing the Limit:** You can increase this limit by setting the environment variable `bulkapilimit`.
+- **Job Failure on Exceeding Limit:** If the number of experiments exceeds the set limit, the job will fail.
+
+## Bulk API Threads
+
+- **Control Mechanism:** The number of threads used for bulk API operations can be controlled using the environment
+  variable `bulkThreadPoolSize`.
+- **With/Without KEDA Plugin:** This can be configured with or without the KEDA plugin. Ideally, the value should be
+  related to the Kruize pod count to optimize performance.
