@@ -17,18 +17,14 @@ import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.metrics.AggregationFunctions;
-import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.data.metrics.MetricAggregationInfoResults;
-import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.data.metrics.*;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
+import com.autotune.common.data.system.info.device.DeviceDetails;
+import com.autotune.common.data.system.info.device.accelerator.AcceleratorDeviceData;
 import com.autotune.common.datasource.DataSourceInfo;
-import com.autotune.common.auth.AuthenticationStrategy;
-import com.autotune.common.auth.AuthenticationStrategyFactory;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.utils.CommonUtils;
@@ -435,12 +431,12 @@ public class RecommendationEngine {
                 if (null == configItem)
                     continue;
                 if (null == configItem.getAmount()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -449,12 +445,12 @@ public class RecommendationEngine {
                     continue;
                 }
                 if (null == configItem.getFormat()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -463,12 +459,12 @@ public class RecommendationEngine {
                     continue;
                 }
                 if (configItem.getAmount() <= 0.0) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -477,12 +473,12 @@ public class RecommendationEngine {
                     continue;
                 }
                 if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
                                         experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION
                                 .concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME,
@@ -668,20 +664,20 @@ public class RecommendationEngine {
 
         if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
-                currentCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
+                currentCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
             }
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
-                currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
+                currentMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
             }
         }
         if (currentConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) && null != currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = currentConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
-                currentCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
+                currentCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
             }
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
-                currentMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
+                currentMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
             }
         }
         if (null != monitoringStartTime) {
@@ -702,6 +698,7 @@ public class RecommendationEngine {
             // Get the Recommendation Items
             RecommendationConfigItem recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
             RecommendationConfigItem recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
+            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
 
             // Get the Recommendation Items
             // Calling requests on limits as we are maintaining limits and requests as same
@@ -732,7 +729,8 @@ public class RecommendationEngine {
                     internalMapToPopulate,
                     numPods,
                     cpuThreshold,
-                    memoryThreshold
+                    memoryThreshold,
+                    recommendationAcceleratorRequestMap
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -826,40 +824,40 @@ public class RecommendationEngine {
                     continue;
                 }
                 if (null == configItem.getAmount()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_AMOUNT_MISSING_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.AMOUNT_MISSING_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
                     }
                     continue;
                 }
                 if (null == configItem.getFormat()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.FORMAT_MISSING_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
                     }
                     continue;
                 }
                 if (configItem.getAmount() <= 0.0) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_AMOUNT_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_AMOUNT_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
                     }
                     continue;
                 }
                 if (configItem.getFormat().isEmpty() || configItem.getFormat().isBlank()) {
-                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.cpu)) {
+                    if (recommendationItem.equals(AnalyzerConstants.RecommendationItem.CPU)) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_CPU_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_CPU_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
-                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.memory))) {
+                    } else if (recommendationItem.equals((AnalyzerConstants.RecommendationItem.MEMORY))) {
                         notifications.add(RecommendationConstants.RecommendationNotification.ERROR_INVALID_FORMAT_IN_MEMORY_SECTION);
                         LOGGER.error(RecommendationConstants.RecommendationNotificationMsgConstant.INVALID_FORMAT_IN_MEMORY_SECTION.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.EXPERIMENT_AND_INTERVAL_END_TIME, experimentName, interval_end_time)));
                     }
@@ -1019,20 +1017,20 @@ public class RecommendationEngine {
 
         if (currentNamespaceConfigMap.containsKey(AnalyzerConstants.ResourceSetting.requests) && null != currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.requests)) {
             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.requests);
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
-                currentNamespaceCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
+                currentNamespaceCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
             }
-            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
-                currentNamespaceMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            if (requestsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
+                currentNamespaceMemRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
             }
         }
         if (currentNamespaceConfigMap.containsKey(AnalyzerConstants.ResourceSetting.limits) && null != currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.limits)) {
             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsMap = currentNamespaceConfigMap.get(AnalyzerConstants.ResourceSetting.limits);
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.cpu) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.cpu)) {
-                currentNamespaceCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.CPU) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.CPU)) {
+                currentNamespaceCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
             }
-            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.memory) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.memory)) {
-                currentNamespaceMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
+            if (limitsMap.containsKey(AnalyzerConstants.RecommendationItem.MEMORY) && null != limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY)) {
+                currentNamespaceMemLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
             }
         }
         if (null != monitoringStartTime) {
@@ -1081,7 +1079,8 @@ public class RecommendationEngine {
                     internalMapToPopulate,
                     numPodsInNamespace,
                     namespaceCpuThreshold,
-                    namespaceMemoryThreshold
+                    namespaceMemoryThreshold,
+                    null
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -1104,13 +1103,17 @@ public class RecommendationEngine {
      * @param numPods The number of pods to consider for the recommendation.
      * @param cpuThreshold The CPU usage threshold for the recommendation.
      * @param memoryThreshold The memory usage threshold for the recommendation.
+     * @param recommendationAcceleratorRequestMap The Map which has Accelerator recommendations
      * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
     private boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
                                            MappedRecommendationForModel recommendationModel,
                                            ArrayList<RecommendationNotification> notifications,
                                            HashMap<String, RecommendationConfigItem> internalMapToPopulate,
-                                           int numPods, double cpuThreshold, double memoryThreshold) {
+                                           int numPods,
+                                           double cpuThreshold,
+                                           double memoryThreshold,
+                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap) {
         // Check for cpu & memory Thresholds (Duplicate check if the caller is generateRecommendations)
         String recommendationTerm = termEntry.getKey();
         double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
@@ -1273,7 +1276,7 @@ public class RecommendationEngine {
             generatedCpuRequestFormat = recommendationCpuRequest.getFormat();
             if (null != generatedCpuRequestFormat && !generatedCpuRequestFormat.isEmpty()) {
                 isRecommendedCPURequestAvailable = true;
-                requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationCpuRequest);
+                requestsMap.put(AnalyzerConstants.RecommendationItem.CPU, recommendationCpuRequest);
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
@@ -1289,7 +1292,7 @@ public class RecommendationEngine {
             generatedMemRequestFormat = recommendationMemRequest.getFormat();
             if (null != generatedMemRequestFormat && !generatedMemRequestFormat.isEmpty()) {
                 isRecommendedMemoryRequestAvailable = true;
-                requestsMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationMemRequest);
+                requestsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, recommendationMemRequest);
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
@@ -1325,7 +1328,7 @@ public class RecommendationEngine {
             generatedCpuLimitFormat = recommendationCpuLimits.getFormat();
             if (null != generatedCpuLimitFormat && !generatedCpuLimitFormat.isEmpty()) {
                 isRecommendedCPULimitAvailable = true;
-                limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, recommendationCpuLimits);
+                limitsMap.put(AnalyzerConstants.RecommendationItem.CPU, recommendationCpuLimits);
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_CPU_SECTION);
                 notifications.add(recommendationNotification);
@@ -1341,7 +1344,7 @@ public class RecommendationEngine {
             generatedMemLimitFormat = recommendationMemLimits.getFormat();
             if (null != generatedMemLimitFormat && !generatedMemLimitFormat.isEmpty()) {
                 isRecommendedMemoryLimitAvailable = true;
-                limitsMap.put(AnalyzerConstants.RecommendationItem.memory, recommendationMemLimits);
+                limitsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, recommendationMemLimits);
             } else {
                 RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.ERROR_FORMAT_MISSING_IN_MEMORY_SECTION);
                 notifications.add(recommendationNotification);
@@ -1373,7 +1376,7 @@ public class RecommendationEngine {
                                 experimentName, interval_end_time)));
             } else {
                 isCurrentCPURequestAvailable = true;
-                currentRequestsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuRequest);
+                currentRequestsMap.put(AnalyzerConstants.RecommendationItem.CPU, currentCpuRequest);
             }
         }
 
@@ -1393,7 +1396,7 @@ public class RecommendationEngine {
                                 experimentName, interval_end_time)));
             } else {
                 isCurrentMemoryRequestAvailable = true;
-                currentRequestsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemRequest);
+                currentRequestsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, currentMemRequest);
             }
         }
 
@@ -1416,7 +1419,7 @@ public class RecommendationEngine {
                                 experimentName, interval_end_time)));
             } else {
                 isCurrentCPULimitAvailable = true;
-                currentLimitsMap.put(AnalyzerConstants.RecommendationItem.cpu, currentCpuLimit);
+                currentLimitsMap.put(AnalyzerConstants.RecommendationItem.CPU, currentCpuLimit);
             }
         }
 
@@ -1436,7 +1439,7 @@ public class RecommendationEngine {
                                 experimentName, interval_end_time)));
             } else {
                 isCurrentMemoryLimitAvailable = true;
-                currentLimitsMap.put(AnalyzerConstants.RecommendationItem.memory, currentMemLimit);
+                currentLimitsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, currentMemLimit);
             }
         }
 
@@ -1454,7 +1457,7 @@ public class RecommendationEngine {
             // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
             isVariationCPURequestAvailable = true;
             variationCpuRequest = new RecommendationConfigItem(diff, generatedCpuRequestFormat);
-            requestsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, variationCpuRequest);
+            requestsVariationMap.put(AnalyzerConstants.RecommendationItem.CPU, variationCpuRequest);
         }
 
         double currentMemRequestValue = 0.0;
@@ -1466,7 +1469,7 @@ public class RecommendationEngine {
             // TODO: If difference is positive it can be considered as under-provisioning, Need to handle it better
             isVariationMemoryRequestAvailable = true;
             variationMemRequest = new RecommendationConfigItem(diff, generatedMemRequestFormat);
-            requestsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, variationMemRequest);
+            requestsVariationMap.put(AnalyzerConstants.RecommendationItem.MEMORY, variationMemRequest);
         }
 
         // Create a new map for storing variation in limits
@@ -1483,7 +1486,7 @@ public class RecommendationEngine {
             double diff = generatedCpuLimit - currentCpuLimitValue;
             isVariationCPULimitAvailable = true;
             variationCpuLimit = new RecommendationConfigItem(diff, generatedCpuLimitFormat);
-            limitsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, variationCpuLimit);
+            limitsVariationMap.put(AnalyzerConstants.RecommendationItem.CPU, variationCpuLimit);
         }
 
         double currentMemLimitValue = 0.0;
@@ -1494,7 +1497,7 @@ public class RecommendationEngine {
             double diff = generatedMemLimit - currentMemLimitValue;
             isVariationMemoryLimitAvailable = true;
             variationMemLimit = new RecommendationConfigItem(diff, generatedMemLimitFormat);
-            limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, variationMemLimit);
+            limitsVariationMap.put(AnalyzerConstants.RecommendationItem.MEMORY, variationMemLimit);
         }
 
         // build the engine level notifications here
@@ -1535,23 +1538,23 @@ public class RecommendationEngine {
 
                     // Alternative - CPU REQUEST VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    RecommendationConfigItem tempAccessedRecCPURequest = requestsMap.get(AnalyzerConstants.RecommendationItem.CPU);
                     if (null != tempAccessedRecCPURequest) {
                         // Updating it with desired value
                         tempAccessedRecCPURequest.setAmount(currentCpuRequestValue);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    requestsMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPURequest);
+                    requestsMap.put(AnalyzerConstants.RecommendationItem.CPU, tempAccessedRecCPURequest);
 
                     // Alternative - CPU REQUEST VARIATION VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecCPURequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    RecommendationConfigItem tempAccessedRecCPURequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.CPU);
                     if (null != tempAccessedRecCPURequestVariation) {
                         // Updating it with desired value (as we are setting to current variation would be 0)
                         tempAccessedRecCPURequestVariation.setAmount(CPU_ZERO);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPURequestVariation);
+                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.CPU, tempAccessedRecCPURequestVariation);
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_REQUESTS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
@@ -1575,23 +1578,23 @@ public class RecommendationEngine {
 
                     // Alternative - CPU LIMIT VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    RecommendationConfigItem tempAccessedRecCPULimit = limitsMap.get(AnalyzerConstants.RecommendationItem.CPU);
                     if (null != tempAccessedRecCPULimit) {
                         // Updating it with desired value
                         tempAccessedRecCPULimit.setAmount(currentCpuLimitValue);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    limitsMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPULimit);
+                    limitsMap.put(AnalyzerConstants.RecommendationItem.CPU, tempAccessedRecCPULimit);
 
                     // Alternative - CPU LIMIT VARIATION VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecCPULimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.cpu);
+                    RecommendationConfigItem tempAccessedRecCPULimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.CPU);
                     if (null != tempAccessedRecCPULimitVariation) {
                         // Updating it with desired value (as we are setting to current variation would be 0)
                         tempAccessedRecCPULimitVariation.setAmount(CPU_ZERO);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.cpu, tempAccessedRecCPULimitVariation);
+                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.CPU, tempAccessedRecCPULimitVariation);
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_CPU_LIMITS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
@@ -1615,23 +1618,23 @@ public class RecommendationEngine {
 
                     // Alternative - MEMORY REQUEST VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecMemoryRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    RecommendationConfigItem tempAccessedRecMemoryRequest = requestsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
                     if (null != tempAccessedRecMemoryRequest) {
                         // Updating it with desired value
                         tempAccessedRecMemoryRequest.setAmount(currentMemRequestValue);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    requestsMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryRequest);
+                    requestsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, tempAccessedRecMemoryRequest);
 
                     // Alternative - MEMORY REQUEST VARIATION VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecMemoryRequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    RecommendationConfigItem tempAccessedRecMemoryRequestVariation = requestsVariationMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
                     if (null != tempAccessedRecMemoryRequestVariation) {
                         // Updating it with desired value (as we are setting to current variation would be 0)
                         tempAccessedRecMemoryRequestVariation.setAmount(MEM_ZERO);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryRequestVariation);
+                    requestsVariationMap.put(AnalyzerConstants.RecommendationItem.MEMORY, tempAccessedRecMemoryRequestVariation);
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_REQUESTS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
@@ -1655,23 +1658,23 @@ public class RecommendationEngine {
 
                     // Alternative - MEMORY LIMIT VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecMemoryLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    RecommendationConfigItem tempAccessedRecMemoryLimit = limitsMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
                     if (null != tempAccessedRecMemoryLimit) {
                         // Updating it with desired value
                         tempAccessedRecMemoryLimit.setAmount(currentMemLimitValue);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    limitsMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryLimit);
+                    limitsMap.put(AnalyzerConstants.RecommendationItem.MEMORY, tempAccessedRecMemoryLimit);
 
                     // Alternative - MEMORY LIMIT VARIATION VALUE
                     // Accessing existing recommendation item
-                    RecommendationConfigItem tempAccessedRecMemoryLimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.memory);
+                    RecommendationConfigItem tempAccessedRecMemoryLimitVariation = limitsVariationMap.get(AnalyzerConstants.RecommendationItem.MEMORY);
                     if (null != tempAccessedRecMemoryLimitVariation) {
                         // Updating it with desired value (as we are setting to current variation would be 0)
                         tempAccessedRecMemoryLimitVariation.setAmount(MEM_ZERO);
                     }
                     // Replace the updated object (Step not needed as we are updating existing object, but just to make sure it's updated)
-                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.memory, tempAccessedRecMemoryLimitVariation);
+                    limitsVariationMap.put(AnalyzerConstants.RecommendationItem.MEMORY, tempAccessedRecMemoryLimitVariation);
 
                     RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_LIMITS_OPTIMISED);
                     engineNotifications.add(recommendationNotification);
@@ -1692,6 +1695,11 @@ public class RecommendationEngine {
         // Set Request Map
         if (!requestsMap.isEmpty()) {
             config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+        }
+
+        // Check if accelerator map is not empty and add to limits map
+        if (null != recommendationAcceleratorRequestMap && !recommendationAcceleratorRequestMap.isEmpty()) {
+            limitsMap.putAll(recommendationAcceleratorRequestMap);
         }
 
         // Set Limits Map
@@ -1808,9 +1816,17 @@ public class RecommendationEngine {
             }
 
             String maxDateQuery = null;
+            String acceleratorDetectionQuery = null;
             if (kruizeObject.isContainerExperiment()) {
                 maxDateQuery = getMaxDateQuery(metricProfile, AnalyzerConstants.MetricName.maxDate.name());
-                fetchContainerMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, dataSourceInfo, metricProfile, maxDateQuery);
+                acceleratorDetectionQuery = getMaxDateQuery(metricProfile, AnalyzerConstants.MetricName.gpuMemoryUsage.name());
+                fetchContainerMetricsBasedOnDataSourceAndProfile(kruizeObject,
+                        interval_end_time,
+                        interval_start_time,
+                        dataSourceInfo,
+                        metricProfile,
+                        maxDateQuery,
+                        acceleratorDetectionQuery);
             } else if (kruizeObject.isNamespaceExperiment()) {
                 maxDateQuery = getMaxDateQuery(metricProfile, AnalyzerConstants.MetricName.namespaceMaxDate.name());
                 fetchNamespaceMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, dataSourceInfo, metricProfile, maxDateQuery);
@@ -1850,7 +1866,7 @@ public class RecommendationEngine {
                 String namespaceMaxDateQuery = maxDateQuery.replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace);
 
                 if (null == interval_end_time) {
-                    LOGGER.info(KruizeConstants.APIMessages.NAMESPACE_USAGE_INFO);
+                    LOGGER.debug(KruizeConstants.APIMessages.NAMESPACE_USAGE_INFO);
                     String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
                             dataSourceInfo.getUrl(),
                             URLEncoder.encode(namespaceMaxDateQuery, CHARACTER_ENCODING)
@@ -1871,7 +1887,7 @@ public class RecommendationEngine {
                         interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                 - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                         int maxDay = Terms.getMaxDays(kruizeObject.getTerms());
-                        LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
+                        LOGGER.debug(KruizeConstants.APIMessages.MAX_DAY, maxDay);
                         Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
                         interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                 - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
@@ -1897,9 +1913,8 @@ public class RecommendationEngine {
                     k8sObject.setNamespaceData(namespaceData);
                 }
 
-                List<Metric> namespaceMetricList = metricProfile.getSloInfo().getFunctionVariables().stream()
-                        .filter(metricEntry -> metricEntry.getName().startsWith(AnalyzerConstants.NAMESPACE) && !metricEntry.getName().equals("namespaceMaxDate"))
-                        .toList();
+                List<Metric> namespaceMetricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
+                        AnalyzerConstants.MetricName.namespaceMaxDate.name(), kruizeObject.getExperimentType());
 
                 // Iterate over metrics and aggregation functions
                 for (Metric metricEntry : namespaceMetricList) {
@@ -1978,7 +1993,7 @@ public class RecommendationEngine {
 
 
     /**
-     * Fetches namespace metrics based on the specified datasource using queries from the metricProfile for the given time interval.
+     * Fetches Container metrics based on the specified datasource using queries from the metricProfile for the given time interval.
      *
      * @param kruizeObject          KruizeObject
      * @param interval_end_time     The end time of the interval in the format yyyy-MM-ddTHH:mm:sssZ
@@ -1988,7 +2003,13 @@ public class RecommendationEngine {
      * @param maxDateQuery          max date query for containers
      * @throws Exception
      */
-    private void fetchContainerMetricsBasedOnDataSourceAndProfile(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo, PerformanceProfile metricProfile, String maxDateQuery) throws Exception, FetchMetricsError {
+    private void fetchContainerMetricsBasedOnDataSourceAndProfile(KruizeObject kruizeObject,
+                                                                  Timestamp interval_end_time,
+                                                                  Timestamp interval_start_time,
+                                                                  DataSourceInfo dataSourceInfo,
+                                                                  PerformanceProfile metricProfile,
+                                                                  String maxDateQuery,
+                                                                  String acceleratorDetectionQuery) throws Exception, FetchMetricsError {
         try {
             long interval_end_time_epoc = 0;
             long interval_start_time_epoc = 0;
@@ -2007,9 +2028,23 @@ public class RecommendationEngine {
 
                 for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
                     ContainerData containerData = entry.getValue();
+
+                    // Check if the container data has Accelerator support else check for Accelerator metrics
+                    if (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected()) {
+                        RecommendationUtils.markAcceleratorDeviceStatusToContainer(containerData,
+                                maxDateQuery,
+                                namespace,
+                                workload,
+                                workload_type,
+                                dataSourceInfo,
+                                kruizeObject.getTerms(),
+                                measurementDurationMinutesInDouble,
+                                acceleratorDetectionQuery);
+                    }
+
                     String containerName = containerData.getContainer_name();
                     if (null == interval_end_time) {
-                        LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
+                        LOGGER.debug(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
                         String queryToEncode = null;
                         if (null == maxDateQuery || maxDateQuery.isEmpty()) {
                             throw new NullPointerException("maxDate query cannot be empty or null");
@@ -2043,7 +2078,7 @@ public class RecommendationEngine {
                             interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                     - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                             int maxDay = Terms.getMaxDays(kruizeObject.getTerms());
-                            LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
+                            LOGGER.debug(KruizeConstants.APIMessages.MAX_DAY, maxDay);
                             Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
                             interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                     - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
@@ -2058,20 +2093,47 @@ public class RecommendationEngine {
                     HashMap<Timestamp, IntervalResults> containerDataResults = new HashMap<>();
                     IntervalResults intervalResults = null;
                     HashMap<AnalyzerConstants.MetricName, MetricResults> resMap = null;
-                    HashMap<String, MetricResults> resultMap = null;
+                    HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap;
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
 
-                    List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables();
+                    List<Metric> metricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
+                            AnalyzerConstants.MetricName.maxDate.name(), kruizeObject.getExperimentType());
 
+                    List<String> acceleratorFunctions = Arrays.asList(
+                            AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
+                            AnalyzerConstants.MetricName.gpuMemoryUsage.toString()
+                    );
                     // Iterate over metrics and aggregation functions
                     for (Metric metricEntry : metricList) {
+
+                        boolean isAcceleratorMetric = false;
+                        boolean fetchAcceleratorMetrics = false;
+
+                        if (acceleratorFunctions.contains(metricEntry.getName())) {
+                            isAcceleratorMetric = true;
+                        }
+
+                        if (isAcceleratorMetric
+                                && null != containerData.getContainerDeviceList()
+                                && containerData.getContainerDeviceList().isAcceleratorDeviceDetected()) {
+                            fetchAcceleratorMetrics = true;
+                        }
+
+                        // Skip fetching Accelerator metrics if the workload doesn't use Accelerator
+                        if (isAcceleratorMetric && !fetchAcceleratorMetrics)
+                            continue;
+
                         HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
                         for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry: aggregationFunctions.entrySet()) {
                             // Determine promQL query on metric type
                             String promQL = aggregationFunctionsEntry.getValue().getQuery();
-                            String format = null;
 
+                            // Skipping if the promQL is empty
+                            if (null == promQL || promQL.isEmpty())
+                                continue;
+
+                            String format = null;
 
                             // Determine format based on metric type - Todo move this metric profile
                             List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
@@ -2080,8 +2142,11 @@ public class RecommendationEngine {
                                 format = KruizeConstants.JSONKeys.CORES;
                             } else if (memFunction.contains(metricEntry.getName())) {
                                 format = KruizeConstants.JSONKeys.BYTES;
+                            } else if (isAcceleratorMetric) {
+                                format = KruizeConstants.JSONKeys.CORES;
                             }
 
+                            // If promQL is determined, fetch metrics from the datasource
                             promQL = promQL
                                     .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
                                     .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
@@ -2089,48 +2154,150 @@ public class RecommendationEngine {
                                     .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
                                     .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
 
-                            // If promQL is determined, fetch metrics from the datasource
-                            if (promQL != null) {
-                                LOGGER.info(promQL);
-                                String podMetricsUrl;
-                                try {
-                                    podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
-                                            dataSourceInfo.getUrl(),
-                                            URLEncoder.encode(promQL, CHARACTER_ENCODING),
-                                            interval_start_time_epoc,
-                                            interval_end_time_epoc,
-                                            measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-                                    LOGGER.info(podMetricsUrl);
-                                    client.setBaseURL(podMetricsUrl);
-                                    JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
-                                    JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
-                                    JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-                                    // Process fetched metrics
-                                    if (null != resultArray && !resultArray.isEmpty()) {
-                                        resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
-                                                        KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
-                                                .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
-                                                        .DataSourceQueryJSONKeys.VALUES);
-                                        sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+                            LOGGER.debug(promQL);
+                            String podMetricsUrl;
+                            try {
+                                podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
+                                        dataSourceInfo.getUrl(),
+                                        URLEncoder.encode(promQL, CHARACTER_ENCODING),
+                                        interval_start_time_epoc,
+                                        interval_end_time_epoc,
+                                        measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
+                                LOGGER.info(podMetricsUrl);
+                                client.setBaseURL(podMetricsUrl);
+                                JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+                                JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+                                JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
 
+                                // Skipping if Result array is null or empty
+                                if (null == resultArray || resultArray.isEmpty())
+                                    continue;
+
+                                // Process fetched metrics
+                                if (isAcceleratorMetric){
+                                    for (JsonElement result : resultArray) {
+                                        JsonObject resultObject = result.getAsJsonObject();
+                                        JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
+
+                                        // Set the data only for the container Accelerator device
+                                        if (null == metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString())
+                                            continue;
+                                        if (metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString().isEmpty())
+                                            continue;
+
+                                        ArrayList<DeviceDetails> deviceDetails = containerData.getContainerDeviceList().getDevices(AnalyzerConstants.DeviceType.ACCELERATOR);
+                                        // Continuing to next element
+                                        // All other elements will also fail as there is no Accelerator attached
+                                        // Theoretically, it doesn't fail, but the future implementations may change
+                                        // So adding a check after a function call to check it's return value is advisable
+                                        // TODO: Needs a check to figure out why devicelist is empty if is Accelerator detected is true
+                                        if (null == deviceDetails)
+                                            continue;
+                                        if (deviceDetails.isEmpty())
+                                            continue;
+
+                                        // Assuming only one MIG supported Accelerator is attached
+                                        // Needs to be changed when you support multiple Accelerator's
+                                        // Same changes need to be applied at the time of adding the device in
+                                        // DeviceHandler
+                                        DeviceDetails deviceDetail = deviceDetails.get(0);
+                                        AcceleratorDeviceData containerAcceleratorDeviceData = (AcceleratorDeviceData) deviceDetail;
+
+                                        // Skip non-matching Accelerator entries
+                                        if (!metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString().equalsIgnoreCase(containerAcceleratorDeviceData.getModelName()))
+                                            continue;
+
+                                        AcceleratorDeviceData acceleratorDeviceData = new AcceleratorDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
+                                                metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
+                                                metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
+                                                metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
+                                                true);
+
+                                        JsonArray valuesArray = resultObject.getAsJsonArray(KruizeConstants.DataSourceConstants
+                                                .DataSourceQueryJSONKeys.VALUES);
+                                        sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
                                         // Iterate over fetched metrics
                                         Timestamp sTime = new Timestamp(interval_start_time_epoc);
-                                        for (JsonElement element : resultArray) {
+                                        for (JsonElement element : valuesArray) {
                                             JsonArray valueArray = element.getAsJsonArray();
                                             long epochTime = valueArray.get(0).getAsLong();
                                             double value = valueArray.get(1).getAsDouble();
                                             String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
                                             Date date = sdf.parse(timestamp);
-                                            Timestamp eTime = new Timestamp(date.getTime());
+                                            Timestamp tempTime = new Timestamp(date.getTime());
+                                            Timestamp eTime = RecommendationUtils.getNearestTimestamp(containerDataResults,
+                                                    tempTime,
+                                                    AnalyzerConstants.AcceleratorConstants.AcceleratorMetricConstants.TIMESTAMP_RANGE_CHECK_IN_MINUTES);
+
+                                            // containerDataResults are empty so will use the prometheus timestamp
+                                            if (null == eTime) {
+                                                // eTime = tempTime;
+                                                // Skipping entry, as inconsistency with CPU & memory records may provide null pointer while accessing metric results
+                                                // TODO: Need to seperate the data records of CPU and memory based on exporter
+                                                // TODO: Perform recommendation generation by stitching the outcome
+                                                continue;
+                                            }
 
                                             // Prepare interval results
-                                            prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults,
-                                                    metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
+                                            if (containerDataResults.containsKey(eTime)) {
+                                                intervalResults = containerDataResults.get(eTime);
+                                                acceleratorMetricResultHashMap = intervalResults.getAcceleratorMetricResultHashMap();
+                                                if (null == acceleratorMetricResultHashMap)
+                                                    acceleratorMetricResultHashMap = new HashMap<>();
+                                            } else {
+                                                intervalResults = new IntervalResults();
+                                                acceleratorMetricResultHashMap = new HashMap<>();
+                                            }
+                                            AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
+                                            if (acceleratorMetricResultHashMap.containsKey(metricName)) {
+                                                metricResults = acceleratorMetricResultHashMap.get(metricName).getMetricResults();
+                                                metricAggregationInfoResults = metricResults.getAggregationInfoResult();
+                                            } else {
+                                                metricResults = new MetricResults();
+                                                metricAggregationInfoResults = new MetricAggregationInfoResults();
+                                            }
+                                            Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
+                                            method.invoke(metricAggregationInfoResults, value);
+                                            metricAggregationInfoResults.setFormat(format);
+                                            metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+                                            metricResults.setName(String.valueOf(metricName));
+                                            metricResults.setFormat(format);
+                                            AcceleratorMetricResult acceleratorMetricResult = new AcceleratorMetricResult(acceleratorDeviceData, metricResults);
+                                            acceleratorMetricResultHashMap.put(metricName, acceleratorMetricResult);
+                                            intervalResults.setAcceleratorMetricResultHashMap(acceleratorMetricResultHashMap);
+                                            intervalResults.setIntervalStartTime(sTime);  //Todo this will change
+                                            intervalResults.setIntervalEndTime(eTime);
+                                            intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
+                                                    / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
+                                                    * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
+                                            containerDataResults.put(eTime, intervalResults);
+                                            sTime = eTime;
                                         }
                                     }
-                                } catch (Exception e) {
-                                    throw new RuntimeException(e);
+                                } else {
+                                    resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
+                                                    KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
+                                            .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
+                                                    .DataSourceQueryJSONKeys.VALUES);
+                                    sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+
+                                    // Iterate over fetched metrics
+                                    Timestamp sTime = new Timestamp(interval_start_time_epoc);
+                                    for (JsonElement element : resultArray) {
+                                        JsonArray valueArray = element.getAsJsonArray();
+                                        long epochTime = valueArray.get(0).getAsLong();
+                                        double value = valueArray.get(1).getAsDouble();
+                                        String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                                        Date date = sdf.parse(timestamp);
+                                        Timestamp eTime = new Timestamp(date.getTime());
+
+                                        // Prepare interval results
+                                        prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults,
+                                                metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
+                                    }
                                 }
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
                             }
                         }
                     }
@@ -2205,6 +2372,29 @@ public class RecommendationEngine {
             e.printStackTrace();
             throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
         }
+    }
+
+    /**
+     * Filters out maxDateQuery and includes metrics based on the experiment type and kubernetes_object
+     * @param metricProfile  Metric profile to be used
+     * @param maxDateQuery   maxDateQuery metric to be filtered out
+     * @param experimentType experiment type
+     */
+    public List<Metric> filterMetricsBasedOnExpTypeAndK8sObject(PerformanceProfile metricProfile, String maxDateQuery, String experimentType) {
+        String namespace = KruizeConstants.JSONKeys.NAMESPACE;
+        String container = KruizeConstants.JSONKeys.CONTAINER;
+        return metricProfile.getSloInfo().getFunctionVariables().stream()
+            .filter(Metric -> {
+                String name = Metric.getName();
+                String kubernetes_object = Metric.getKubernetesObject();
+
+                // Include metrics based on experiment_type, kubernetes_object and exclude maxDate metric
+                return !name.equals(maxDateQuery) && (
+                        (experimentType.equals(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT) && kubernetes_object.equals(namespace)) ||
+                                (experimentType.equals(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT) && kubernetes_object.equals(container))
+                );
+            })
+            .toList();
     }
 }
 

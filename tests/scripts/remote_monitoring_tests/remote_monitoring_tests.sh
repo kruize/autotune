@@ -61,6 +61,8 @@ function remote_monitoring_tests() {
 	if [ ${skip_setup} -eq 0 ]; then
 		echo "Setting up kruize..." | tee -a ${LOG}
 		echo "${KRUIZE_SETUP_LOG}"
+		echo "setting local=false"
+    kruize_remote_patch
 		setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
 	        echo "Setting up kruize...Done" | tee -a ${LOG}
 	

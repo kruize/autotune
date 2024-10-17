@@ -119,8 +119,31 @@ public class AnalyzerConstants {
     }
 
     public enum RecommendationItem {
-        cpu,
-        memory
+        CPU("cpu"),
+        MEMORY("memory"),
+        NVIDIA_GPU("nvidia.com/gpu"),
+        NVIDIA_GPU_PARTITION_1_CORE_5GB("nvidia.com/mig-1g.5gb"),
+        NVIDIA_GPU_PARTITION_1_CORE_10GB("nvidia.com/mig-1g.10gb"),
+        NVIDIA_GPU_PARTITION_1_CORE_20GB("nvidia.com/mig-1g.20gb"),
+        NVIDIA_GPU_PARTITION_2_CORES_20GB("nvidia.com/mig-2g.20gb"),
+        NVIDIA_GPU_PARTITION_3_CORES_40GB("nvidia.com/mig-3g.40gb"),
+        NVIDIA_GPU_PARTITION_4_CORES_40GB("nvidia.com/mig-4g.40gb"),
+        NVIDIA_GPU_PARTITION_7_CORES_80GB("nvidia.com/mig-7g.80gb"),
+        NVIDIA_GPU_PARTITION_2_CORES_10GB("nvidia.com/mig-2g.10gb"),
+        NVIDIA_GPU_PARTITION_3_CORES_20GB("nvidia.com/mig-3g.20gb"),
+        NVIDIA_GPU_PARTITION_4_CORES_20GB("nvidia.com/mig-4g.20gb"),
+        NVIDIA_GPU_PARTITION_7_CORES_40GB("nvidia.com/mig-7g.40gb");
+
+        private final String value;
+
+        RecommendationItem(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return value;
+        }
     }
 
     public enum CapacityMax {
@@ -194,6 +217,66 @@ public class AnalyzerConstants {
         SUCCESS,
         ALREADY_EXISTS,
         INVALID
+    }
+
+    public enum DeviceType {
+        CPU,
+        MEMORY,
+        NETWORK,
+        ACCELERATOR
+    }
+
+    public enum DeviceParameters {
+        MODEL_NAME,
+        UUID,
+        HOSTNAME,
+        NAME,
+        MANUFACTURER,
+        DEVICE_NAME
+    }
+
+    public static final class AcceleratorConstants {
+        private AcceleratorConstants() {
+
+        }
+
+        public static final class AcceleratorMetricConstants {
+            private AcceleratorMetricConstants() {
+
+            }
+
+            public static final int TIMESTAMP_RANGE_CHECK_IN_MINUTES = 5;
+        }
+
+        public static final class SupportedAccelerators {
+            private SupportedAccelerators() {
+
+            }
+            public static final String A100_80_GB = "A100-80GB";
+            public static final String A100_40_GB = "A100-40GB";
+            public static final String H100_80_GB = "H100-80GB";
+        }
+
+        public static final class AcceleratorProfiles {
+            private AcceleratorProfiles () {
+
+            }
+
+            // A100 40GB Profiles
+            public static final String PROFILE_1G_5GB = "1g.5gb";
+            public static final String PROFILE_1G_10GB = "1g.10gb";
+            public static final String PROFILE_2G_10GB = "2g.10gb";
+            public static final String PROFILE_3G_20GB = "3g.20gb";
+            public static final String PROFILE_4G_20GB = "4g.20gb";
+            public static final String PROFILE_7G_40GB = "7g.40gb";
+
+            // A100 80GB & H100 80GB Profiles
+            public static final String PROFILE_1G_20GB = "1g.20gb";
+            public static final String PROFILE_2G_20GB = "2g.20gb";
+            public static final String PROFILE_3G_40GB = "3g.40gb";
+            public static final String PROFILE_4G_40GB = "4g.40gb";
+            public static final String PROFILE_7G_80GB = "7g.80gb";
+        }
     }
 
     public static final class ExperimentTypes {

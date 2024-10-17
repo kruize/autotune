@@ -77,9 +77,13 @@ public class KruizeDeploymentInfo {
     public static Boolean settings_save_to_db;
     public static String em_only_mode;
     public static Integer bulk_update_results_limit = 100;
-    public static Boolean local = false;
+    public static Boolean local = true;
     public static Boolean log_http_req_resp = false;
-
+    public static String recommendations_url;
+    public static String experiments_url;
+    public static int BULK_API_LIMIT = 1000;
+    public static int BULK_API_MAX_BATCH_SIZE = 100;
+    public static Integer bulk_thread_pool_size = 3;
     public static int generate_recommendations_date_range_limit_in_days = 15;
     public static Integer delete_partition_threshold_in_days = DELETE_PARTITION_THRESHOLD_IN_DAYS;
     private static Hashtable<String, Class> tunableLayerPair;

@@ -1,3 +1,18 @@
+/*******************************************************************************
+ * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.autotune.database.dao;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
@@ -27,7 +42,10 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
@@ -150,9 +168,9 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                             year, month, String.format("%02d", i), year, month, String.format("%02d", i));
                     session.createNativeQuery(daterange).executeUpdate();
                 });
-            } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_DAY)) {
-                String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, String.format("%02d", 1), tableName,
-                        year, month, String.format("%02d", 1), year, month, String.format("%02d", 1));
+            } else if (partitionType.equalsIgnoreCase(DBConstants.PARTITION_TYPES.BY_DAY)) {  //ROS not calling this condition
+                String daterange = String.format(DB_PARTITION_DATERANGE, tableName, year, month, dayOfTheMonth, tableName,
+                        year, month, dayOfTheMonth, year, month, dayOfTheMonth);
                 session.createNativeQuery(daterange).executeUpdate();
             } else {
                 LOGGER.error(DBConstants.DB_MESSAGES.INVALID_PARTITION_TYPE);
@@ -239,7 +257,9 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                             tx.commit();
                             tx = session.beginTransaction();
                             // create partitions based on entry object
-                            createPartitions(entry);
+                            synchronized (new Object()) {
+                                createPartitions(entry);
+                            }
                             session.persist(entry);
                             session.flush();
                         } catch (Exception partitionException) {
@@ -324,7 +344,9 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     tx = session.beginTransaction();
                     session.persist(recommendationEntry);
                     tx.commit();
-                    updateExperimentTypeInKruizeRecommendationEntry(recommendationEntry);
+                    if (null == recommendationEntry.getExperimentType() || recommendationEntry.getExperimentType().isEmpty()) {
+                        updateExperimentTypeInKruizeRecommendationEntry(recommendationEntry);
+                    }
                     validationOutputData.setSuccess(true);
                     statusValue = "success";
                 } else {
@@ -389,6 +411,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     /**
      * Adds MetricProfile to database
+     *
      * @param kruizeMetricProfileEntry Metric Profile Database object to be added
      * @return validationOutputData contains the status of the DB insert operation
      */
@@ -478,7 +501,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
 
-
     @Override
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
         kruizeObject.setStatus(status);
@@ -538,6 +560,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     /**
      * Delete metadata with the name dataSourceName
      * This deletes the metadata from the KruizeDSMetadataEntry table
+     *
      * @param dataSourceName
      * @return
      */
@@ -576,6 +599,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     /**
      * Delete metric profile with specified profile name
      * This deletes the metadata from the KruizeMetricProfileEntry table
+     *
      * @param metricProfileName
      * @return
      */
@@ -699,6 +723,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     /**
      * Fetches all the Metric Profile records from KruizeMetricProfileEntry database table
+     *
      * @return List of all KruizeMetricProfileEntry database objects
      * @throws Exception
      */
@@ -777,7 +802,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return entries;
     }
-
 
 
     @Override
@@ -898,6 +922,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     /**
      * Fetches Metric Profile by name from KruizeMetricProfileEntry database table
+     *
      * @param metricProfileName Metric profile name
      * @return List of KruizeMetricProfileEntry objects
      * @throws Exception
@@ -985,7 +1010,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * Retrieves a list of KruizeDSMetadataEntry objects based on the specified datasource name and cluster name.
      *
      * @param dataSourceName The name of the datasource.
-     * @param clusterName The name of the cluster.
+     * @param clusterName    The name of the cluster.
      * @return A list of KruizeDSMetadataEntry objects associated with the provided datasource and cluster name.
      * @throws Exception If there is an error while loading metadata from the database.
      */
@@ -1010,8 +1035,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * datasource name, cluster name and namespace.
      *
      * @param dataSourceName The name of the datasource.
-     * @param clusterName The name of the cluster.
-     * @param namespace namespace
+     * @param clusterName    The name of the cluster.
+     * @param namespace      namespace
      * @return A list of KruizeDSMetadataEntry objects associated with the provided datasource, cluster name and namespaces.
      * @throws Exception If there is an error while loading metadata from the database.
      */
@@ -1021,7 +1046,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             Query<KruizeDSMetadataEntry> kruizeMetadataQuery = session.createQuery(SELECT_FROM_METADATA_BY_DATASOURCE_NAME_CLUSTER_NAME_AND_NAMESPACE, KruizeDSMetadataEntry.class)
                     .setParameter("datasource_name", dataSourceName)
                     .setParameter("cluster_name", clusterName)
-                    .setParameter("namespace",namespace);
+                    .setParameter("namespace", namespace);
 
             kruizeMetadataList = kruizeMetadataQuery.list();
         } catch (Exception e) {
@@ -1066,14 +1091,16 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     private void getExperimentTypeInKruizeExperimentEntry(List<KruizeExperimentEntry> entries) throws Exception {
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            for (KruizeExperimentEntry entry: entries) {
+            for (KruizeExperimentEntry entry : entries) {
                 if (isTargetCluserLocal(entry.getTarget_cluster())) {
-                    String sql = DBConstants.SQLQUERY.SELECT_EXPERIMENT_EXP_TYPE;
-                    Query query = session.createNativeQuery(sql);
-                    query.setParameter("experiment_id", entry.getExperiment_id());
-                    List<String> experimentType = query.getResultList();
-                    if (null != experimentType && !experimentType.isEmpty()) {
-                        entry.setExperimentType(experimentType.get(0));
+                    if (null == entry.getExperimentType() || entry.getExperimentType().isEmpty()) {
+                        String sql = DBConstants.SQLQUERY.SELECT_EXPERIMENT_EXP_TYPE;
+                        Query query = session.createNativeQuery(sql);
+                        query.setParameter("experiment_id", entry.getExperiment_id());
+                        List<String> experimentType = query.getResultList();
+                        if (null != experimentType && !experimentType.isEmpty()) {
+                            entry.setExperimentType(experimentType.get(0));
+                        }
                     }
                 }
             }
@@ -1101,7 +1128,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     private void getExperimentTypeInKruizeRecommendationsEntry(List<KruizeRecommendationEntry> entries) throws Exception {
-        for (KruizeRecommendationEntry recomEntry: entries) {
+        for (KruizeRecommendationEntry recomEntry : entries) {
             getExperimentTypeInSingleKruizeRecommendationsEntry(recomEntry);
         }
     }

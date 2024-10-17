@@ -19,12 +19,13 @@ package com.autotune.common.utils;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
+
 import com.autotune.utils.KruizeConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
-import java.util.Calendar;
-import java.util.Collections;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,6 +34,8 @@ import java.util.regex.Pattern;
  * This Class holds the utilities needed by the classes in common package
  */
 public class CommonUtils {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(CommonUtils.class);
 
     /**
      * AutotuneDatasourceTypes is an ENUM which holds different types of
