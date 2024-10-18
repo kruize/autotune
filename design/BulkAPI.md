@@ -310,5 +310,3 @@ kruizeconfigjson: |
 
 - **Control Mechanism:** The number of threads used for bulk API operations can be controlled using the environment
   variable `bulkThreadPoolSize`.
-- **With/Without KEDA Plugin:** This can be configured with or without the KEDA plugin. Ideally, the value should be
-  related to the Kruize pod count to optimize performance.
