@@ -270,6 +270,8 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
   generating accurate resource optimization recommendations.
 - **Example:** During configuration, the datasource could be Prometheus or Thanos, based on the setup for your
   Kubernetes cluster.
+- Comprehensive configuration details and an example are available at the
+  following [link](https://github.com/kruize/autotune/blob/cce96ae68876d6ed2afe505bab04efd1567c8239/manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml#L133).
 
 ```yaml
 apiVersion: v1
