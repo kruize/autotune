@@ -310,3 +310,58 @@ kruizeconfigjson: |
 
 - **Control Mechanism:** The number of threads used for bulk API operations can be controlled using the environment
   variable `bulkThreadPoolSize`.
+
+## Experiment_name
+
+# Experiment Name Format Configuration
+
+## **experimentNameFormat**
+
+The `experimentNameFormat` environment variable is used to define the format for experiment names. For example, if the
+experiment name should follow the structure:
+
+```
+org_id|source_id|cluster_id|namespace|k8s_object_type|k8s_object_name
+```
+
+then set or define the `experimentNameFormat` as follows:
+
+```json
+"experimentNameFormat": "%label:org_id%|%label:source_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
+```
+
+When making a /bulk call, ensure the label values used in the experiment name format are passed in the payload's filter
+and include sections, matching the format above.
+
+```angular2html
+ "filter": {
+        "exclude": {
+            "namespace": [],
+            "workload": [],
+            "containers": [],
+            "labels": {
+                "key1": "value1",
+        "key2": "value2"
+    }
+},
+        "include": {
+                "namespace": [],
+                        "workload": [],
+                        "containers": [],
+                        "labels": {
+                        "org_id":"ABCOrga",  "source_id":"ZZZ" ,"cluster_id" : "ABG"
+                                }
+                }
+        }
+```
+
+With the above configuration, the experiment name generated will be:
+
+ABCOrga|ZZZ|ABG|kube-system|deployment|coredns|coredns
+
+If the filter is not specified, it will display as Unknown.
+
+```
+ABCOrga|ZZZ|unknowncluster_id|prometheus-1|default|kube-system|coredns(deployment)|coredns
+```
+    

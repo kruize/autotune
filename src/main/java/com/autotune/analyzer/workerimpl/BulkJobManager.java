@@ -47,6 +47,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
@@ -96,11 +98,28 @@ public class BulkJobManager implements Runnable {
         return allExperiments;
     }
 
+    // Helper method to parse labelString into a map
+    private static Map<String, String> parseLabelString(String labelString) {
+        Map<String, String> labelsMap = new HashMap<>();
+        for (String pair : labelString.split(",\\s*")) { // Split on comma and optional space
+            String[] keyValue = pair.split("=", 2); // Split on first "=" only
+            if (keyValue.length == 2) {
+                String value = keyValue[1].trim();
+                // Remove surrounding quotes if present
+                if (value.startsWith("\"") && value.endsWith("\"")) {
+                    value = value.substring(1, value.length() - 1);
+                }
+                labelsMap.put(keyValue[0].trim(), value);
+            }
+        }
+        return labelsMap;
+    }
+
     @Override
     public void run() {
         try {
             BulkJobStatus jobData = jobStatusMap.get(jobID);
-            String uniqueKey = getLabels(this.bulkInput.getFilter());
+            String labelString = getLabels(this.bulkInput.getFilter());
             if (null == this.bulkInput.getDatasource()) {
                 this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
             }
@@ -109,15 +128,15 @@ public class BulkJobManager implements Runnable {
             DataSourceInfo datasource = CommonUtils.getDataSourceInfo(this.bulkInput.getDatasource());
             JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
             if (null != daterange)
-                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, (Long) daterange.get("start_time"), (Long) daterange.get("end_time"), (Integer) daterange.get("steps"));
+                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get("start_time"), (Long) daterange.get("end_time"), (Integer) daterange.get("steps"));
             else {
-                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, uniqueKey, 0, 0, 0);
+                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, null, 0, 0, 0);
             }
             if (null == metadataInfo) {
                 jobData.setStatus(COMPLETED);
                 jobData.setMessage(NOTHING);
             } else {
-                Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
+                Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
                 jobData.setTotal_experiments(createExperimentAPIObjectMap.size());
                 jobData.setProcessed_experiments(0);
                 if (jobData.getTotal_experiments() > KruizeDeploymentInfo.BULK_API_LIMIT) {
@@ -203,11 +222,11 @@ public class BulkJobManager implements Runnable {
             LOGGER.error(e.getMessage());
             e.printStackTrace();
             jobStatusMap.get(jobID).setStatus("FAILED");
+            jobStatusMap.get(jobID).setMessage(e.getMessage());
         }
     }
 
-
-    Map<String, CreateExperimentAPIObject> getExperimentMap(BulkJobStatus jobData, DataSourceMetadataInfo metadataInfo, DataSourceInfo datasource) throws Exception {
+    Map<String, CreateExperimentAPIObject> getExperimentMap(String labelString, BulkJobStatus jobData, DataSourceMetadataInfo metadataInfo, DataSourceInfo datasource) throws Exception {
         Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = new HashMap<>();
         Collection<DataSource> dataSourceCollection = metadataInfo.getDataSourceHashMap().values();
         for (DataSource ds : dataSourceCollection) {
@@ -222,9 +241,7 @@ public class BulkJobManager implements Runnable {
                             if (dataSourceContainerHashMap != null) {
                                 for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
                                     // Experiment name - dynamically constructed
-                                    String experiment_name = this.bulkInput.getDatasource() + "|" + dsc.getDataSourceClusterName() + "|"
-                                            + namespace.getDataSourceNamespaceName() + "|" + dsw.getDataSourceWorkloadName() + "("
-                                            + dsw.getDataSourceWorkloadType() + ")" + "|" + dc.getDataSourceContainerName();
+                                    String experiment_name = frameExperimentName(labelString, dsc, namespace, dsw, dc);
                                     // create JSON to be passed in the createExperimentAPI
                                     List<CreateExperimentAPIObject> createExperimentAPIObjectList = new ArrayList<>();
                                     CreateExperimentAPIObject apiObject = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
@@ -289,7 +306,6 @@ public class BulkJobManager implements Runnable {
         return dateRange;
     }
 
-
     /**
      * @param dc                         DataSourceContainer object to get the container details
      * @param dsc                        DataSourceCluster object to get the cluster details
@@ -336,4 +352,51 @@ public class BulkJobManager implements Runnable {
         return createExperimentAPIObject;
     }
 
+    /**
+     * @param labelString
+     * @param dataSourceCluster
+     * @param dataSourceNamespace
+     * @param dataSourceWorkload
+     * @param dataSourceContainer
+     * @return
+     */
+    public String frameExperimentName(String labelString, DataSourceCluster dataSourceCluster, DataSourceNamespace dataSourceNamespace, DataSourceWorkload dataSourceWorkload, DataSourceContainer dataSourceContainer) {
+
+        String datasource = this.bulkInput.getDatasource();
+        String clusterName = dataSourceCluster.getDataSourceClusterName();
+        String namespace = dataSourceNamespace.getDataSourceNamespaceName();
+        String workloadName = dataSourceWorkload.getDataSourceWorkloadName();
+        String workloadType = dataSourceWorkload.getDataSourceWorkloadType();
+        String containerName = dataSourceContainer.getDataSourceContainerName();
+
+        String experimentName = KruizeDeploymentInfo.experiment_name_format
+                .replace("%datasource%", datasource)
+                .replace("%clustername%", clusterName)
+                .replace("%namespace%", namespace)
+                .replace("%workloadname%", workloadName)
+                .replace("%workloadtype%", workloadType)
+                .replace("%containername%", containerName);
+
+        // Parse labelString into a map for quick lookup
+        Map<String, String> labelsMap = parseLabelString(labelString);
+
+        // Regular expression to match any %label:labelName% pattern
+        Pattern labelPattern = Pattern.compile("%label:([a-zA-Z0-9_]+)%");
+        Matcher matcher = labelPattern.matcher(experimentName);
+
+        // Process each label placeholder
+        StringBuilder result = new StringBuilder();
+        int lastEnd = 0;
+        while (matcher.find()) {
+            result.append(experimentName, lastEnd, matcher.start());
+            String labelKey = matcher.group(1); // Extracts the label name
+            String labelValue = labelsMap.getOrDefault(labelKey, "unknown" + labelKey);
+            result.append(labelValue != null ? labelValue : "unknown" + labelKey);
+            lastEnd = matcher.end();
+            experimentName = experimentName.replace(matcher.group().toString(), labelValue);
+        }
+        //result.append(experimentName, lastEnd, experimentName.length());
+        LOGGER.debug("Experiment name: {}", experimentName);
+        return experimentName;
+    }
 }
