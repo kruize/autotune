@@ -130,7 +130,7 @@ public class BulkJobManager implements Runnable {
             if (null != daterange)
                 metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get("start_time"), (Long) daterange.get("end_time"), (Integer) daterange.get("steps"));
             else {
-                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, null, 0, 0, 0);
+                metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, 0, 0, 0);
             }
             if (null == metadataInfo) {
                 jobData.setStatus(COMPLETED);
