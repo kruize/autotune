@@ -235,8 +235,10 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             }
         } catch (JsonParseException e) {
             LOGGER.error(e.getMessage());
+            throw e;
         } catch (NullPointerException e) {
             LOGGER.error(e.getMessage());
+            throw e;
         }
         return null;
     }
