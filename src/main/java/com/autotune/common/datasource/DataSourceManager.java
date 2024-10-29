@@ -54,7 +54,7 @@ public class DataSourceManager {
      * @param steps         the interval between data points in a range query
      * @return
      */
-    public DataSourceMetadataInfo importMetadataFromDataSource(DataSourceInfo dataSourceInfo,String uniqueKey,long startTime,long endTime,int steps) {
+    public DataSourceMetadataInfo importMetadataFromDataSource(DataSourceInfo dataSourceInfo,String uniqueKey,long startTime,long endTime,int steps) throws Exception {
         try {
             if (null == dataSourceInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
@@ -67,8 +67,9 @@ public class DataSourceManager {
             return dataSourceMetadataInfo;
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
+            throw e;
         }
-        return null;
+
     }
 
     /**
