@@ -178,10 +178,11 @@ public class BulkJobManager implements Runnable {
                                 }
 
                                 if (expriment_exists) {
+                                    recommendationData.setUnprocessed(
+                                            appendExperiments(recommendationData.getUnprocessed(), experiment_name)
+                                    );
                                     generateExecutor.submit(() -> {
-                                        recommendationData.setUnprocessed(
-                                                appendExperiments(recommendationData.getUnprocessed(), experiment_name)
-                                        );
+
                                         // send request to generateRecommendations API
                                         GenericRestApiClient recommendationApiClient = new GenericRestApiClient(datasource);
                                         String encodedExperimentName;
@@ -377,25 +378,26 @@ public class BulkJobManager implements Runnable {
                 .replace("%workloadtype%", workloadType)
                 .replace("%containername%", containerName);
 
-        // Parse labelString into a map for quick lookup
-        Map<String, String> labelsMap = parseLabelString(labelString);
+        if (null != labelString) {
+            // Parse labelString into a map for quick lookup
+            Map<String, String> labelsMap = parseLabelString(labelString);
 
-        // Regular expression to match any %label:labelName% pattern
-        Pattern labelPattern = Pattern.compile("%label:([a-zA-Z0-9_]+)%");
-        Matcher matcher = labelPattern.matcher(experimentName);
+            // Regular expression to match any %label:labelName% pattern
+            Pattern labelPattern = Pattern.compile("%label:([a-zA-Z0-9_]+)%");
+            Matcher matcher = labelPattern.matcher(experimentName);
 
-        // Process each label placeholder
-        StringBuilder result = new StringBuilder();
-        int lastEnd = 0;
-        while (matcher.find()) {
-            result.append(experimentName, lastEnd, matcher.start());
-            String labelKey = matcher.group(1); // Extracts the label name
-            String labelValue = labelsMap.getOrDefault(labelKey, "unknown" + labelKey);
-            result.append(labelValue != null ? labelValue : "unknown" + labelKey);
-            lastEnd = matcher.end();
-            experimentName = experimentName.replace(matcher.group().toString(), labelValue);
+            // Process each label placeholder
+            StringBuilder result = new StringBuilder();
+            int lastEnd = 0;
+            while (matcher.find()) {
+                result.append(experimentName, lastEnd, matcher.start());
+                String labelKey = matcher.group(1); // Extracts the label name
+                String labelValue = labelsMap.getOrDefault(labelKey, "unknown" + labelKey);
+                result.append(labelValue != null ? labelValue : "unknown" + labelKey);
+                lastEnd = matcher.end();
+                experimentName = experimentName.replace(matcher.group().toString(), labelValue);
+            }
         }
-        //result.append(experimentName, lastEnd, experimentName.length());
         LOGGER.debug("Experiment name: {}", experimentName);
         return experimentName;
     }
