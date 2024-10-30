@@ -42,8 +42,8 @@ public class KruizeDataSourceEntry {
     private String serviceName;
     private String namespace;
     private String url;
-    @ManyToOne // Assuming many datasources can reference the same auth credentials
-    @JoinColumn(name = "authentication_id") // Foreign key column in the datasource table
+    @ManyToOne(cascade = CascadeType.PERSIST) // Cascade PERSIST to auto-save authentication entry
+    @JoinColumn(name = "authentication_id", nullable = false) // Foreign key column in the datasource table
     private KruizeAuthenticationEntry kruizeAuthenticationEntry;
 
     public KruizeAuthenticationEntry getKruizeAuthenticationEntry() {

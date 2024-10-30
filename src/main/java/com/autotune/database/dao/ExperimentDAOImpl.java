@@ -444,15 +444,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     /**
      * @param kruizeDataSourceEntry
+     * @param validationOutputData
      * @return validationOutputData contains the status of the DB insert operation
      */
     @Override
-    public ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+    public ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry, ValidationOutputData validationOutputData) {
         Transaction tx = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
                 tx = session.beginTransaction();
+                KruizeAuthenticationEntry kruizeAuthenticationEntry = session.get(KruizeAuthenticationEntry.class, validationOutputData.getAuthEntryId());
+                kruizeDataSourceEntry.setKruizeAuthenticationEntry(kruizeAuthenticationEntry);
                 session.persist(kruizeDataSourceEntry);
                 tx.commit();
                 validationOutputData.setSuccess(true);
@@ -500,6 +502,38 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+    /**
+     * @param kruizeAuthenticationEntry
+     * @return
+     */
+    @Override
+    public ValidationOutputData addAuthenticationDetailsToDB(KruizeAuthenticationEntry kruizeAuthenticationEntry) {
+        LOGGER.info("kruizeAuthenticationEntry: {}", kruizeAuthenticationEntry);
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        Long authId;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeAuthenticationEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+                validationOutputData.setAuthEntryId(kruizeAuthenticationEntry.getId());
+            } catch (HibernateException e) {
+                LOGGER.error("Unable to save auth details: {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.error("Unable to save auth details: {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        }
+        return validationOutputData;
+    }
 
     @Override
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {

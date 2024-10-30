@@ -23,6 +23,7 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -445,15 +446,26 @@ public class ExperimentDBService {
      * adds datasource to database table
      *
      * @param dataSourceInfo DataSourceInfo object
+     * @param validationOutputData contains validation data
      * @return ValidationOutputData object
      */
-    public ValidationOutputData addDataSourceToDB(DataSourceInfo dataSourceInfo) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+    public ValidationOutputData addDataSourceToDB(DataSourceInfo dataSourceInfo, ValidationOutputData validationOutputData) {
         try {
             KruizeDataSourceEntry kruizeDataSource = DBHelpers.Converters.KruizeObjectConverters.convertDataSourceToDataSourceDBObj(dataSourceInfo);
-            validationOutputData = this.experimentDAO.addDataSourceToDB(kruizeDataSource);
+            validationOutputData = this.experimentDAO.addDataSourceToDB(kruizeDataSource, validationOutputData);
         } catch (Exception e) {
             LOGGER.error("Not able to save data source due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    public ValidationOutputData addAuthenticationDetailsToDB(AuthenticationConfig authenticationConfig, String serviceType) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeAuthenticationEntry kruizeAuthenticationEntry = DBHelpers.Converters.KruizeObjectConverters.convertAuthDetailsToAuthDetailsDBObj(authenticationConfig, serviceType);
+            validationOutputData = this.experimentDAO.addAuthenticationDetailsToDB(kruizeAuthenticationEntry);
+        } catch (Exception e) {
+            LOGGER.error("Unable to save authentication details: {}", e.getMessage());
         }
         return validationOutputData;
     }

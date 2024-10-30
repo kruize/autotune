@@ -49,7 +49,7 @@ public class DataSourceCollection {
             List<DataSourceInfo> availableDataSources = new ExperimentDBService().loadAllDataSources();
             if (null == availableDataSources) {
                 LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.NO_DATASOURCE_FOUND_IN_DB);
-            }else {
+            } else {
                 for (DataSourceInfo dataSourceInfo : availableDataSources) {
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceInfo.getName());
                     dataSourceCollection.put(dataSourceInfo.getName(), dataSourceInfo);
@@ -86,25 +86,31 @@ public class DataSourceCollection {
         final String provider = datasource.getProvider();
         ValidationOutputData addedToDB = null;
 
+        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE, name);
 
         try {
             if (dataSourceCollection.containsKey(name)) {
-                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.UPDATING_DATASOURCE + "{}", name);
-            } else {
-                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE + "{}", name);
+                throw new DataSourceAlreadyExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_ALREADY_EXIST);
             }
 
             if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
-                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY + "{}", name);
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY, name);
                 DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
                 if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
-                    // add the data source to DB
-                    addedToDB = new ExperimentDBService().addDataSourceToDB(datasource);
+                    // add the authentication details to the DB
+                    addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(datasource.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);
                     if (addedToDB.isSuccess()) {
-                        LOGGER.info("Datasource added to the DB successfully.");
+                        LOGGER.info("Auth details added to the DB successfully.");
+                        // add the data source to DB
+                        addedToDB = new ExperimentDBService().addDataSourceToDB(datasource, addedToDB);
+                        if (addedToDB.isSuccess()) {
+                            LOGGER.info("Datasource added to the DB successfully.");
+                        } else {
+                            LOGGER.error("Failed to add datasource to DB: {}", addedToDB.getMessage());
+                        }
                     } else {
-                        LOGGER.error("Failed to add datasource to DB: {}", addedToDB.getMessage());
+                        LOGGER.error("Failed to add auth details to DB: {}", addedToDB.getMessage());
                     }
                     dataSourceCollection.put(name, datasource);
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_ADDED);
@@ -114,7 +120,7 @@ public class DataSourceCollection {
             } else {
                 throw new UnsupportedDataSourceProvider(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.UNSUPPORTED_DATASOURCE_PROVIDER);
             }
-        } catch (UnsupportedDataSourceProvider | DataSourceNotServiceable e) {
+        } catch (UnsupportedDataSourceProvider | DataSourceNotServiceable | DataSourceAlreadyExist e) {
             LOGGER.error(e.getMessage());
         }
     }
@@ -127,6 +133,7 @@ public class DataSourceCollection {
         try {
             String configFile = System.getenv(configFileName);
             JSONObject configObject = null;
+            ValidationOutputData addedToDB;
 
             InputStream is = new FileInputStream(configFile);
             String jsonTxt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -145,7 +152,7 @@ public class DataSourceCollection {
                 }
                 // Check if datasource already exists in the DB
                 if (datasource != null) {
-                    LOGGER.info("Datasource {} already exists, checking for updates...", name);
+                    LOGGER.debug("Datasource {} already exists, checking for updates...", name);
                     // Extract and compare the authentication details
                     JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
                     AuthenticationConfig newAuthConfig;
@@ -158,12 +165,24 @@ public class DataSourceCollection {
                     }
                     // Compare with the existing authentication config
                     if (datasource.hasAuthChanged(newAuthConfig)) {
-                        LOGGER.info("Authentication details for datasource {} have changed. Updating...", name);
+                        LOGGER.info("Authentication details for datasource {} have changed. Checking if the datasource is serviceable with the new config...", name);
+                        // check the datasource with the new config
                         datasource.updateAuthConfig(newAuthConfig);
-                        // Update the datasource in the DB
-                        new ExperimentDBService().addDataSourceToDB(datasource);
+                        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
+                        if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
+                            // update the authentication details in the DB
+                            addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(datasource.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);
+                            if (addedToDB.isSuccess()) {
+                                LOGGER.debug("Auth details updated in the DB successfully.");
+                            } else {
+                                LOGGER.error("Failed to update auth details in the DB: {}", addedToDB.getMessage());
+                            }
+                        } else {
+                            LOGGER.error("New auth config appears to be incorrect. Re-check and try again.");
+                            LOGGER.info("Reverting back to original auth config...");
+                        }
                     } else {
-                        LOGGER.info("No changes detected in the authentication details for datasource {}", name);
+                        LOGGER.debug("No changes detected in the authentication details for datasource {}", name);
                         return;
                     }
 
@@ -192,9 +211,9 @@ public class DataSourceCollection {
                     } else {
                         datasource = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL), authConfig);
                     }
+                    // add/update the datasource
+                    addDataSource(datasource);
                 }
-                // add/update the datasource
-                addDataSource(datasource);
             }
         } catch (IOException e) {
             LOGGER.error(e.getMessage());

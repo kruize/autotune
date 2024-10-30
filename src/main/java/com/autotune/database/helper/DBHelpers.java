@@ -829,9 +829,11 @@ public class DBHelpers {
                             try {
                                 JsonNode credentialsNode = kruizeDataSource.getKruizeAuthenticationEntry().getCredentials();
                                 String authType = kruizeDataSource.getKruizeAuthenticationEntry().getAuthenticationType();
+                                // Parse the JsonNode credentials into a JSONObject
+                                JSONObject credentialsJson = new JSONObject(credentialsNode.toString());
                                 JSONObject authJson = new JSONObject()
-                                        .put("authType", authType)
-                                        .put("credentials", credentialsNode.toString());
+                                        .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TYPE, authType)
+                                        .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_CREDENTIALS, credentialsJson);
                                 authConfig = AuthenticationConfig.createAuthenticationConfigObject(authJson);
                             } catch (Exception e) {
                                 LOGGER.debug("GSON failed to convert the DB Json object in convertKruizeDataSourceToDataSourceObject");
@@ -873,18 +875,6 @@ public class DBHelpers {
                     kruizeDataSource.setServiceName(dataSourceInfo.getServiceName());
                     kruizeDataSource.setNamespace(dataSourceInfo.getNamespace());
                     kruizeDataSource.setUrl(dataSourceInfo.getUrl().toString());
-                    // set the authentication details
-                    String credentialsString = new Gson().toJson(dataSourceInfo.getAuthenticationConfig().getCredentials());
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    JsonNode credentials;
-                    try {
-                        credentials = objectMapper.readTree(credentialsString);
-                    } catch (JsonProcessingException e) {
-                        throw new Exception("Error occurred while creating credentials object : " + e.getMessage());
-                    }
-                    kruizeAuthenticationEntry = new KruizeAuthenticationEntry(String.valueOf(dataSourceInfo.getAuthenticationConfig()
-                            .getType()), credentials, KruizeConstants.JSONKeys.DATASOURCE);
-                    kruizeDataSource.setKruizeAuthenticationEntry(kruizeAuthenticationEntry);
                 } catch (Exception e) {
                     kruizeDataSource = null;
                     LOGGER.error("Error while converting DataSource Object to KruizeDataSource table due to {}", e.getMessage());
@@ -1104,6 +1094,29 @@ public class DBHelpers {
                 return kruizeMetadataList;
             }
 
+            public static KruizeAuthenticationEntry convertAuthDetailsToAuthDetailsDBObj(AuthenticationConfig authenticationConfig, String serviceType) {
+                KruizeAuthenticationEntry kruizeAuthenticationEntry;
+                try {
+                    kruizeAuthenticationEntry = new KruizeAuthenticationEntry();
+                    kruizeAuthenticationEntry.setAuthenticationType(authenticationConfig.getType().toString());
+                    // set the authentication details
+                    String credentialsString = new Gson().toJson(authenticationConfig.getCredentials());
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    JsonNode credentials;
+                    try {
+                        credentials = objectMapper.readTree(credentialsString);
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error occurred while creating credentials object : " + e.getMessage());
+                    }
+                    kruizeAuthenticationEntry.setCredentials(credentials);
+                    kruizeAuthenticationEntry.setServiceType(serviceType);
+                } catch (Exception e) {
+                    kruizeAuthenticationEntry = null;
+                    LOGGER.error("Error while converting Auth details Object to KruizeAuthentication table : {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeAuthenticationEntry;
+            }
         }
 
     }

@@ -421,9 +421,8 @@ public class KruizeConstants {
         }
 
         public static class DataSourceInfoMsgs {
-            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: ";
-            public static final String UPDATING_DATASOURCE = "Updating the datasource in the collection: ";
-            public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: ";
+            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: {}";
+            public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: {}";
             public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
             public static final String CHECKING_AVAILABLE_DATASOURCE_FROM_DB = "Checking available datasources from database:";
             public static final String NO_DATASOURCE_FOUND_IN_DB = "No datasource found in database.";

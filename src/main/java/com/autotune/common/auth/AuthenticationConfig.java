@@ -5,6 +5,8 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Objects;
+
 public class AuthenticationConfig {
     private AuthType type;
     private Credentials credentials;
@@ -29,7 +31,7 @@ public class AuthenticationConfig {
     public static AuthenticationConfig createAuthenticationConfigObject(JSONObject authenticationObj) {
         // Parse and map authentication methods if they exist
         if (authenticationObj != null) {
-            AuthType type = AuthType.valueOf(authenticationObj.getString(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TYPE));
+            AuthType type = AuthType.valueOf(authenticationObj.getString(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TYPE).toUpperCase());
             JSONObject credentialsObj = authenticationObj.getJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION_CREDENTIALS);
 
             Credentials credentials = null;  // Initialize credentials as null, and create specific subclass instances based on the type
@@ -74,10 +76,16 @@ public class AuthenticationConfig {
     }
 
     @Override
-    public String toString() {
-        return "AuthenticationConfig{" +
-                "type='" + type + '\'' +
-                ", credentials=" + credentials +
-                '}';
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        AuthenticationConfig that = (AuthenticationConfig) o;
+        return Objects.equals(type, that.type) &&
+                Objects.equals(credentials, that.credentials);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(type, credentials);
     }
 }

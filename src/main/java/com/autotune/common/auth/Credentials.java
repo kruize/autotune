@@ -1,5 +1,7 @@
 package com.autotune.common.auth;
 
+import java.util.Objects;
+
 public abstract class Credentials {
 }
 
@@ -40,6 +42,22 @@ class OAuth2Credentials extends Credentials {
     public void setTokenEndpoint(String tokenEndpoint) {
         this.tokenEndpoint = tokenEndpoint;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OAuth2Credentials that = (OAuth2Credentials) o;
+        return Objects.equals(grantType, that.grantType) &&
+                Objects.equals(clientId, that.clientId) &&
+                Objects.equals(clientSecret, that.clientSecret) &&
+                Objects.equals(tokenEndpoint, that.tokenEndpoint);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(grantType, clientId, clientSecret, tokenEndpoint);
+    }
 }
 
 class BasicAuthCredentials extends Credentials {
@@ -73,6 +91,25 @@ class BearerTokenCredentials extends Credentials {
     public void setTokenFilePath(String tokenFilePath) {
         this.tokenFilePath = tokenFilePath;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BearerTokenCredentials that = (BearerTokenCredentials) o;
+        return Objects.equals(tokenFilePath, that.tokenFilePath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tokenFilePath);
+    }
+    @Override
+    public String toString() {
+        return "BearerTokenCredentials{" +
+                "tokenFilePath='" + tokenFilePath + '\'' +
+                '}';
+    }
 }
 
 class ApiKeyCredentials extends Credentials {
@@ -93,6 +130,19 @@ class ApiKeyCredentials extends Credentials {
 
     public void setHeaderName(String headerName) {
         this.headerName = headerName;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ApiKeyCredentials that = (ApiKeyCredentials) o;
+        return Objects.equals(apiKey, that.apiKey);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(apiKey);
     }
 }
 

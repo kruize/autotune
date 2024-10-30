@@ -143,7 +143,7 @@ public class DataSourceInfo {
 
     public void updateAuthConfig(AuthenticationConfig newAuthConfig) {
         this.setAuthenticationConfig(newAuthConfig);
-        LOGGER.info("Authentication details for datasource {} have been updated.", this.name);
+        LOGGER.debug("Authentication details for datasource {} have been updated.", this.name);
     }
 
     @Override

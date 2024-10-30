@@ -13,6 +13,7 @@ public class KruizeAuthenticationEntry {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "authentication_type")
     private String authenticationType;
 
     @JdbcTypeCode(SqlTypes.JSON)
