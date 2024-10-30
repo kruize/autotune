@@ -114,7 +114,9 @@ data:
       "local": "true",
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.monitoring.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",    
-      "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",    
+      "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",   
+      "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
+      "bulkapilimit" : 1000,
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",

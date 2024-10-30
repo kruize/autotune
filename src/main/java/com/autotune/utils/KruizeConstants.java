@@ -682,6 +682,7 @@ public class KruizeConstants {
         public static final String BULK_API_LIMIT = "bulkapilimit";
         public static final String BULK_API_CHUNK_SIZE = "bulkapichunksize";
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
+        public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
     }
 
     public static final class RecommendationEngineConstants {
