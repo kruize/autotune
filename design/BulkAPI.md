@@ -365,4 +365,11 @@ If the filter is not specified, it will display as Unknown.
 ```
 ABCOrga|ZZZ|unknowncluster_id|prometheus-1|default|kube-system|coredns(deployment)|coredns
 ```
-    
+
+**Note**:Specifying labels in envirnoment varable `experimentNameFormat` is optional and flexible; there can be any
+number of labels, or none at all. Here are some examples:
+
+- "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%"    -> Default
+- "%label:org_id%|%label:source_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
+- "%label:org_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
+- "%label:org_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%"
