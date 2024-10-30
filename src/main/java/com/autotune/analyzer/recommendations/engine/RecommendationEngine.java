@@ -1866,7 +1866,7 @@ public class RecommendationEngine {
                 String namespaceMaxDateQuery = maxDateQuery.replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace);
 
                 if (null == interval_end_time) {
-                    LOGGER.info(KruizeConstants.APIMessages.NAMESPACE_USAGE_INFO);
+                    LOGGER.debug(KruizeConstants.APIMessages.NAMESPACE_USAGE_INFO);
                     String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
                             dataSourceInfo.getUrl(),
                             URLEncoder.encode(namespaceMaxDateQuery, CHARACTER_ENCODING)
@@ -1887,7 +1887,7 @@ public class RecommendationEngine {
                         interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                 - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                         int maxDay = Terms.getMaxDays(kruizeObject.getTerms());
-                        LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
+                        LOGGER.debug(KruizeConstants.APIMessages.MAX_DAY, maxDay);
                         Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
                         interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                 - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
@@ -2044,7 +2044,7 @@ public class RecommendationEngine {
 
                     String containerName = containerData.getContainer_name();
                     if (null == interval_end_time) {
-                        LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
+                        LOGGER.debug(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
                         String queryToEncode = null;
                         if (null == maxDateQuery || maxDateQuery.isEmpty()) {
                             throw new NullPointerException("maxDate query cannot be empty or null");
@@ -2078,7 +2078,7 @@ public class RecommendationEngine {
                             interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                     - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                             int maxDay = Terms.getMaxDays(kruizeObject.getTerms());
-                            LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
+                            LOGGER.debug(KruizeConstants.APIMessages.MAX_DAY, maxDay);
                             Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
                             interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                     - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
@@ -2154,7 +2154,7 @@ public class RecommendationEngine {
                                     .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
                                     .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
 
-                            LOGGER.info(promQL);
+                            LOGGER.debug(promQL);
                             String podMetricsUrl;
                             try {
                                 podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,

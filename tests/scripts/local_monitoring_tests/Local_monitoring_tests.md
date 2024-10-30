@@ -164,3 +164,21 @@ Local monitoring tests can also be run without using the test_autotune.sh. To do
 
 Note: You can check the report.html for the results as it provides better readability
 
+
+### Accelerator Test:
+
+Kruize 0.1 supports the Accelerator Recommendations which provide right sized MIG config as recommendations.
+
+The test `test_list_recommendations.py::test_accelerator_recommendation_if_exists` is created to check if the accelerator recommendations are in expected format.
+
+#### Prerequisites to run the test:
+
+In addition to the pre-requisites mentioned above we need to make sure that a workload with name `human-eval-benchmark` is running in the namespace `unpartitioned` and has the accelerator usage data.
+
+Check this out for running the benchmark: [How to run the human eval benchmark?](https://github.com/kruize/benchmarks/tree/master/human-eval-benchmark)
+
+Else, you can change the workload name and namespace name in the test to match with your workload.
+
+
+Note: The test will fail if it's run as is if there are no matching workloads that the test looks for. This test result can be ignored in case of a non-gpu workload
+

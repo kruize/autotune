@@ -252,3 +252,124 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
     - **Type**: `String (ISO 8601 format) or null`
     - **Description**: End timestamp of the job. If the job is still in progress, this will be `null`.
 
+**Note: Experiment Name:**
+
+- **Naming Pattern:** Experiment names are currently formed using the following pattern:
+  `datasource_name|cluster_name|namespace|workload_name(workload_type)|container_name`
+    - **Example:** For a Prometheus datasource, if the cluster is named `prod-cluster`, namespace is `default`, workload
+      is `nginx` (of type `Deployment`), and container is `nginx-container`, the experiment name would be:
+      `Prometheus|prod-cluster|default|nginx(Deployment)|nginx-container`
+
+# Bulk Service Configuration
+
+*Note: Configuration is subject to change.*
+
+## Datasource
+
+- **Description:** Provide the details about the datasource during Kruize configuration. This is essential for
+  generating accurate resource optimization recommendations.
+- **Example:** During configuration, the datasource could be Prometheus or Thanos, based on the setup for your
+  Kubernetes cluster.
+- Comprehensive configuration details and an example are available at the
+  following [link](https://github.com/kruize/autotune/blob/cce96ae68876d6ed2afe505bab04efd1567c8239/manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml#L133).
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+name: kruizeconfig
+namespace: openshift-tuning
+data:
+kruizeconfigjson: |
+  {
+    "datasource": [
+      {
+        "name": "prometheus-1",
+        "provider": "prometheus",
+        "serviceName": "prometheus-k8s",
+        "namespace": "openshift-monitoring",
+        "url": "",
+        "authentication": {
+          "type": "bearer",
+          "credentials": {
+            "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+          }
+        }
+      }
+    ]
+  }
+```
+
+## Limits
+
+- **Default Limit:** Currently, the Bulk service supports only **1000 experiments** by default.
+- **Increasing the Limit:** You can increase this limit by setting the environment variable `bulkapilimit`.
+- **Job Failure on Exceeding Limit:** If the number of experiments exceeds the set limit, the job will fail.
+
+## Bulk API Threads
+
+- **Control Mechanism:** The number of threads used for bulk API operations can be controlled using the environment
+  variable `bulkThreadPoolSize`.
+
+## Experiment Name Format Configuration
+
+- **experimentNameFormat:** The `experimentNameFormat` environment variable is used to define the format for experiment
+  names. For example, if the
+  experiment name should follow the structure:
+
+```
+org_id|source_id|cluster_id|namespace|k8s_object_type|k8s_object_name
+```
+
+then set or define the `experimentNameFormat` as follows:
+
+```
+"experimentNameFormat": "%label:org_id%|%label:source_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
+```
+
+When making a /bulk call, ensure the label values used in the experiment name format are passed in the payload's filter
+and include sections, matching the format above.
+
+```json
+{
+  "filter": {
+    "exclude": {
+      "namespace": [],
+      "workload": [],
+      "containers": [],
+      "labels": {
+        "key1": "value1",
+        "key2": "value2"
+      }
+    },
+    "include": {
+      "namespace": [],
+      "workload": [],
+      "containers": [],
+      "labels": {
+        "org_id": "ABCOrga",
+        "source_id": "ZZZ",
+        "cluster_id": "ABG"
+      }
+    }
+  }
+}
+```
+
+With the above configuration, the experiment name generated will be:
+
+ABCOrga|ZZZ|ABG|kube-system|deployment|coredns|coredns
+
+If the filter is not specified, it will display as Unknown.
+
+```
+ABCOrga|ZZZ|unknowncluster_id|prometheus-1|default|kube-system|coredns(deployment)|coredns
+```
+
+**Note**:Specifying labels in envirnoment varable `experimentNameFormat` is optional and flexible; there can be any
+number of labels, or none at all. Here are some examples:
+
+- "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%"    -> Default
+- "%label:org_id%|%label:source_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
+- "%label:org_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
+- "%label:org_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%"

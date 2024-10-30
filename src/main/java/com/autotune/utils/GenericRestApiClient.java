@@ -26,10 +26,13 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
@@ -70,38 +73,91 @@ public class GenericRestApiClient {
     }
 
     /**
-     * This method appends aueryString with baseURL and returns response in JSON using specified authentication.
+     * This method appends queryString with baseURL and returns response in JSON using specified authentication.
      * @param methodType    Http methods like GET,POST,PATCH etc
      * @param queryString
      * @return Json object which contains API response.
      * @throws IOException
      */
     public JSONObject fetchMetricsJson(String methodType, String queryString) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, FetchMetricsError {
-        System.setProperty("https.protocols", "TLSv1.2");
-        String jsonOutputInString = "";
-        SSLContext sslContext = SSLContexts.custom().loadTrustMaterial((chain, authType) -> true).build();  // Trust all certificates
-        SSLConnectionSocketFactory sslConnectionSocketFactory =
-                new SSLConnectionSocketFactory(sslContext, new String[]{"TLSv1.2"}, null, NoopHostnameVerifier.INSTANCE);
-        try (CloseableHttpClient httpclient = HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build()) {
+        String jsonResponse;
+        try (CloseableHttpClient httpclient = setupHttpClient()) {
+
             HttpRequestBase httpRequestBase;
             if (methodType.equalsIgnoreCase("GET")) {
                 httpRequestBase = new HttpGet(baseURL + URLEncoder.encode(queryString, StandardCharsets.UTF_8));
             } else {
                 throw new UnsupportedOperationException("Unsupported method type: " + methodType);
             }
-            // Apply authentication
-            if (authenticationStrategy != null) {
-                String authHeader = authenticationStrategy.applyAuthentication();
-                httpRequestBase.setHeader(KruizeConstants.AuthenticationConstants.AUTHORIZATION, authHeader);
-            }
-            LOGGER.info("Executing request: {}", httpRequestBase.getRequestLine());
-            jsonOutputInString = httpclient.execute(httpRequestBase, new StringResponseHandler());
 
-        } catch (Exception e) {
-            throw new FetchMetricsError(e.getMessage());
+            // Apply authentication
+            applyAuthentication(httpRequestBase);
+
+            LOGGER.debug("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
+
+            // Execute the request
+            jsonResponse = httpclient.execute(httpRequestBase, new StringResponseHandler());
         }
-        return new JSONObject(jsonOutputInString);
+        return new JSONObject(jsonResponse);
     }
+
+
+    /**
+     * Common method to setup SSL context for trust-all certificates.
+     * @return CloseableHttpClient
+     */
+    private CloseableHttpClient setupHttpClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        SSLContext sslContext = SSLContexts.custom().loadTrustMaterial((chain, authType) -> true).build();  // Trust all certificates
+        SSLConnectionSocketFactory sslConnectionSocketFactory =
+                new SSLConnectionSocketFactory(sslContext, new String[]{"TLSv1.2"}, null, NoopHostnameVerifier.INSTANCE);
+        return HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
+    }
+
+    /**
+     * Common method to apply authentication to the HTTP request.
+     * @param httpRequestBase the HTTP request (GET, POST, etc.)
+     */
+    private void applyAuthentication(HttpRequestBase httpRequestBase) {
+        if (authenticationStrategy != null) {
+            String authHeader = authenticationStrategy.applyAuthentication();
+            httpRequestBase.setHeader(KruizeConstants.AuthenticationConstants.AUTHORIZATION, authHeader);
+        }
+    }
+
+    /**
+     * Method to call the Experiment API (e.g., to create an experiment) using POST request.
+     * @param payload JSON payload containing the experiment details
+     * @return API response code
+     * @throws IOException
+     */
+    public int callKruizeAPI(String payload) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, FetchMetricsError {
+
+        // Create an HTTP client
+        try (CloseableHttpClient httpclient = setupHttpClient()) {
+            // Prepare the HTTP POST request
+            HttpPost httpPost = new HttpPost(baseURL);
+            httpPost.setHeader("Content-Type", "application/json");
+            httpPost.setHeader("Accept", "application/json");
+
+            // If payload is present, set it in the request body
+            if (payload != null) {
+                StringEntity entity = new StringEntity(payload, StandardCharsets.UTF_8);
+                httpPost.setEntity(entity);
+            }
+
+            // Execute the request and return the response code
+            try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
+                // Get the status code from the response
+                int responseCode = response.getStatusLine().getStatusCode();
+                LOGGER.debug("Response code: {}", responseCode);
+                return responseCode;
+            } catch (Exception e) {
+                LOGGER.error("Error occurred while calling Kruize API: {}", e.getMessage());
+                throw new FetchMetricsError(e.getMessage());
+            }
+        }
+    }
+
 
     private static class StringResponseHandler implements ResponseHandler<String> {
         @Override

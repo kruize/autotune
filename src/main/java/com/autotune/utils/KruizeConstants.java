@@ -18,6 +18,7 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -678,9 +679,11 @@ public class KruizeConstants {
         public static final String LOCAL = "local";
         public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
         public static final String RECOMMENDATIONS_URL = "recommendationsURL";
+        public static final String EXPERIMENTS_URL = "experimentsURL";
         public static final String BULK_API_LIMIT = "bulkapilimit";
         public static final String BULK_API_CHUNK_SIZE = "bulkapichunksize";
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
+        public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
     }
 
     public static final class RecommendationEngineConstants {
@@ -784,11 +787,11 @@ public class KruizeConstants {
         // Static block to initialize the Bean
         static {
             CREATE_EXPERIMENT_CONFIG_BEAN = new CreateExperimentConfigBean();
-            CREATE_EXPERIMENT_CONFIG_BEAN.setMode("monitor");
-            CREATE_EXPERIMENT_CONFIG_BEAN.setTarget("local");
-            CREATE_EXPERIMENT_CONFIG_BEAN.setVersion("v2.0");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMode(AnalyzerConstants.MONITOR);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setTarget(AnalyzerConstants.LOCAL);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setVersion(AnalyzerConstants.VersionConstants.CURRENT_KRUIZE_OBJECT_VERSION);
             CREATE_EXPERIMENT_CONFIG_BEAN.setDatasourceName("prometheus-1");
-            CREATE_EXPERIMENT_CONFIG_BEAN.setPerformanceProfile("resource-optimization-local-monitoring");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setPerformanceProfile(AnalyzerConstants.PerformanceProfileConstants.RESOURCE_OPT_LOCAL_MON_PROFILE);
             CREATE_EXPERIMENT_CONFIG_BEAN.setThreshold(0.1);
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);

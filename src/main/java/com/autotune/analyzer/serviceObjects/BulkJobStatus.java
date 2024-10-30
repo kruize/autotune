@@ -164,9 +164,10 @@ public class BulkJobStatus {
         @JsonProperty("failed")
         private List<String> failedExperiments;
 
-        public Experiments(List<String> newExperiments, List<String> updatedExperiments) {
+        public Experiments(List<String> newExperiments, List<String> updatedExperiments, List<String> failedExperiments) {
             this.newExperiments = newExperiments;
             this.updatedExperiments = updatedExperiments;
+            this.failedExperiments = failedExperiments;
         }
 
         public List<String> getNewExperiments() {
@@ -183,6 +184,14 @@ public class BulkJobStatus {
 
         public void setUpdatedExperiments(List<String> updatedExperiments) {
             this.updatedExperiments = updatedExperiments;
+        }
+
+        public List<String> getFailedExperiments() {
+            return failedExperiments;
+        }
+
+        public void setFailedExperiments(List<String> failedExperiments) {
+            this.failedExperiments = failedExperiments;
         }
     }
 

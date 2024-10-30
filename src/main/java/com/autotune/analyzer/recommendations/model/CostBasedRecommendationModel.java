@@ -530,7 +530,12 @@ public class CostBasedRecommendationModel implements RecommendationModel {
             if (null == intervalResults.getAcceleratorMetricResultHashMap())
                 continue;
 
+            // Skip if map is empty
+            if (intervalResults.getAcceleratorMetricResultHashMap().isEmpty())
+                continue;
+
             isGpuWorkload = true;
+
             for (Map.Entry<AnalyzerConstants.MetricName, AcceleratorMetricResult> gpuEntry : intervalResults.getAcceleratorMetricResultHashMap().entrySet()) {
                 AcceleratorMetricResult gpuMetricResult = gpuEntry.getValue();
 
@@ -577,11 +582,46 @@ public class CostBasedRecommendationModel implements RecommendationModel {
             return null;
         }
 
-        double coreAverage = CommonUtils.percentile(COST_ACCELERATOR_PERCENTILE, acceleratorCoreMaxValues);
-        double memoryAverage = CommonUtils.percentile(COST_ACCELERATOR_PERCENTILE, acceleratorMemoryMaxValues);
+        // Return null if entries are empty
+        if (acceleratorCoreMaxValues.isEmpty() && acceleratorMemoryMaxValues.isEmpty())
+            return null;
+
+        double coreAverage = 0.0;
+        if (!acceleratorCoreMaxValues.isEmpty())
+            coreAverage = CommonUtils.percentile(COST_ACCELERATOR_PERCENTILE, acceleratorCoreMaxValues);
+
+        double memoryAverage = 0.0;
+        if (!acceleratorMemoryMaxValues.isEmpty())
+            memoryAverage = CommonUtils.percentile(COST_ACCELERATOR_PERCENTILE, acceleratorMemoryMaxValues);
 
         double coreFraction = coreAverage / 100;
+        // TODO: Need to investigate why data is faulty
+
+        /**
+         * The data we deal with is percentages and we are currently considering only one GPU per container
+         * so the usage (Avg or Max) should be 100% and when we calculate the fraction we divide by 100
+         * so the max we need to get is 1.
+         *
+         * Also the AcceleratorMetaDataService consider the core and memory fractions needed to come up
+         * with the recommended accelerator MIG profile so if fractions exceed 1 none of the MIG configs
+         * will match it (not even the whole GPU which considers core and memory fraction as 1) and we will
+         * get NULL and hence there will be no recommendation.
+         *
+         * So if the fractions are greater than 100 there is a higher chance that there is an anomaly in data
+         * so we mark it as 1 to give out full GPU as a recommendation.
+         */
+        if (coreFraction > 1) {
+            LOGGER.info("Data irregularity detected, " +
+                    "Notification needs to be added explaining we changed the core usage to 100% as it's more than 100%");
+            coreFraction = 1;
+        }
         double memoryFraction = memoryAverage / 100;
+        // TODO: Need to investigate why data is faulty
+        if (memoryFraction > 1) {
+            LOGGER.info("Data irregularity detected, " +
+                    "Notification needs to be added explaining we changed the memory usage to 100% as it's more than 100%");
+            memoryFraction = 1;
+        }
 
         return RecommendationUtils.getMapWithOptimalProfile(acceleratorModel, coreFraction, memoryFraction);
     }

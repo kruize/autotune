@@ -122,7 +122,7 @@ public class BulkService extends HttpServlet {
         // Generate a unique jobID
         String jobID = UUID.randomUUID().toString();
         BulkJobStatus.Data data = new BulkJobStatus.Data(
-                new BulkJobStatus.Experiments(new ArrayList<>(), new ArrayList<>()),
+                new BulkJobStatus.Experiments(new ArrayList<>(), new ArrayList<>(), new ArrayList<>()),
                 new BulkJobStatus.Recommendations(new BulkJobStatus.RecommendationData(
                         new ArrayList<>(),
                         new ArrayList<>(),

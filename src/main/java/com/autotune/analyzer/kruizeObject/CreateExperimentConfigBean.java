@@ -97,7 +97,7 @@ public class CreateExperimentConfigBean {
 
     @Override
     public String toString() {
-        return "MonitoringConfigBean{" +
+        return "CreateExperimentConfigBean{" +
                 "mode='" + mode + '\'' +
                 ", target='" + target + '\'' +
                 ", version='" + version + '\'' +
