@@ -144,6 +144,10 @@ public class DataSourceCollection {
                     DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
                     if (null != dataSourceInfo) {
                         LOGGER.error("Datasource: {} already exists!", name);
+                        // add the auth details to local object
+                        AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
+                        dataSourceInfo.setAuthenticationConfig(authConfig);
+                        dataSourceCollection.put(name, dataSourceInfo);
                         continue;
                     }
                 } catch (Exception e) {
@@ -153,16 +157,7 @@ public class DataSourceCollection {
                 String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
                 String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
                 String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
-                AuthenticationConfig authConfig;
-                try {
-                    JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
-                    // create the corresponding authentication object
-                    authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
-                } catch (Exception e) {
-                    LOGGER.warn("Auth details are missing for datasource: {}", name);
-                    authConfig = AuthenticationConfig.noAuth();
-                }
-
+                AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
                 DataSourceInfo datasource;
                 // Validate input
                 if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) {
@@ -180,6 +175,19 @@ public class DataSourceCollection {
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
         }
+    }
+
+    private AuthenticationConfig getAuthenticationDetails(JSONObject dataSourceObject, String name) {
+        AuthenticationConfig authConfig;
+        try {
+            JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
+            // create the corresponding authentication object
+            authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
+        } catch (Exception e) {
+            LOGGER.warn("Auth details are missing for datasource: {}", name);
+            authConfig = AuthenticationConfig.noAuth();
+        }
+        return authConfig;
     }
 
     /**
