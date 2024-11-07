@@ -72,15 +72,15 @@
             "query": "avg by(container, pod, namespace) (avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{container!=\"\", container!=\"POD\", pod!=\"\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           },
           {
-            "function": "min",
+            "function": "max",
             "query": "max by(container, pod, namespace) (max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{container!=\"\", container!=\"POD\", pod!=\"\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           },
           {
-            "function": "max",
+            "function": "sum",
             "query": "sum by(container, pod, namespace) (avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{container!=\"\", container!=\"POD\", pod!=\"\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           },
           {
-            "function": "sum",
+            "function": "min",
             "query": "min by(container, pod, namespace) (min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{container!=\"\", container!=\"POD\", pod!=\"\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           }
         ]
