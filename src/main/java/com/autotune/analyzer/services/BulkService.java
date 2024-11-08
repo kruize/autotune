@@ -33,7 +33,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -88,7 +87,7 @@ public class BulkService extends HttpServlet {
                 // Return the JSON representation of the JobStatus object
                 ObjectMapper objectMapper = new ObjectMapper();
                 if (!verbose) {
-                    filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAllExcept("data"));
+                    filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAllExcept("experiments"));
                 } else {
                     filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAll());
                 }
@@ -121,16 +120,7 @@ public class BulkService extends HttpServlet {
 
         // Generate a unique jobID
         String jobID = UUID.randomUUID().toString();
-        BulkJobStatus.Data data = new BulkJobStatus.Data(
-                new BulkJobStatus.Experiments(new ArrayList<>(), new ArrayList<>(), new ArrayList<>()),
-                new BulkJobStatus.Recommendations(new BulkJobStatus.RecommendationData(
-                        new ArrayList<>(),
-                        new ArrayList<>(),
-                        new ArrayList<>(),
-                        new ArrayList<>()
-                ))
-        );
-        jobStatusMap.put(jobID, new BulkJobStatus(jobID, IN_PROGRESS, data, Instant.now()));
+        jobStatusMap.put(jobID, new BulkJobStatus(jobID, IN_PROGRESS, Instant.now()));
         // Submit the job to be processed asynchronously
         executorService.submit(new BulkJobManager(jobID, jobStatusMap, payload));
 

@@ -795,5 +795,110 @@ public class KruizeConstants {
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);
         }
+
+        public static final class NotificationConstants {
+
+            public static final Notification FETCH_METRIC_FAILURE = new Notification(
+                    NotificationType.ERROR,
+                    "Not able to fetch metrics",
+                    400
+            );
+            public static final Notification DATASOURCE_NOT_REG_INFO = new Notification(
+                    NotificationType.ERROR,
+                    "Datasource not registered with Kruize.",
+                    400
+            );
+            public static final Notification DATASOURCE_DOWN_INFO = new Notification(
+                    NotificationType.ERROR,
+                    "HttpHostConnectException: Unable to connect to the data source. Please try again later.",
+                    503
+            );
+            public static final Notification DATASOURCE_GATEWAY_TIMEOUT_INFO = new Notification(
+                    NotificationType.ERROR,
+                    "SocketTimeoutException: request timed out waiting for a data source response",
+                    504
+            );
+            public static final Notification DATASOURCE_CONNECT_TIMEOUT_INFO = new Notification(
+                    NotificationType.ERROR,
+                    "ConnectTimeoutException: cannot establish a data source connection in a given time frame due to connectivity issues",
+                    503
+            );
+            public static final Notification JOB_NOT_FOUND_INFO = new Notification(
+                    NotificationType.WARNING,
+                    JOB_NOT_FOUND_MSG,
+                    404
+            );
+            public static final Notification LIMIT_INFO = new Notification(
+                    NotificationType.INFO,
+                    LIMIT_MESSAGE,
+                    400
+            );
+
+            public static final Notification NOTHING_INFO = new Notification(
+                    NotificationType.INFO,
+                    NOTHING,
+                    400
+            );
+
+            public enum NotificationType {
+                ERROR("error"),
+                WARNING("warning"),
+                INFO("info");
+
+                private final String type;
+
+                NotificationType(String type) {
+                    this.type = type;
+                }
+
+                public String getType() {
+                    return type;
+                }
+            }
+
+            // More notification constants can be added here as needed
+
+            public enum Status {
+                PROCESSED("PROCESSED"),
+                UNPROCESSED("UNPROCESSED"),
+                PROCESSING("PROCESSING"),
+                FAILED("FAILED");
+
+                private final String status;
+
+                Status(String status) {
+                    this.status = status;
+                }
+
+                public String getStatus() {
+                    return status;
+                }
+            }
+
+            // Notification class representing each constant's details
+            public static class Notification {
+                private final NotificationType type;
+                private final String message;
+                private final int code;
+
+                public Notification(NotificationType type, String message, int code) {
+                    this.type = type;
+                    this.message = message;
+                    this.code = code;
+                }
+
+                public NotificationType getType() {
+                    return type;
+                }
+
+                public String getMessage() {
+                    return message;
+                }
+
+                public int getCode() {
+                    return code;
+                }
+            }
+        }
     }
 }
