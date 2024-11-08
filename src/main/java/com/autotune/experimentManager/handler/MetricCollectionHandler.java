@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.experimentManager.handler;
 
+import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
@@ -121,8 +122,15 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             if (null == ado) {
                                 // TODO: Return an error saying unsupported datasource
                             }
-                            String queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
-                                    .get(podMetric.getDatasource()), updatedPodQuery);
+                            String queryResult = null;
+                            try {
+                                queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
+                                        .get(podMetric.getDatasource()), updatedPodQuery);
+                            } catch (FetchMetricsError e) {
+                                throw new RuntimeException(e);
+                            } catch (Exception e) {
+                                throw new RuntimeException(e);
+                            }
                             if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                 try {
                                     queryResult = queryResult.trim();
@@ -159,8 +167,15 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                 }
                                 if (null != updatedContainerQuery) {
                                     LOGGER.debug("Updated Query - " + updatedContainerQuery);
-                                    String queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
-                                            .get(containerMetric.getDatasource()), updatedContainerQuery);
+                                    String queryResult = null;
+                                    try {
+                                        queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
+                                                .get(containerMetric.getDatasource()), updatedContainerQuery);
+                                    } catch (FetchMetricsError e) {
+                                        throw new RuntimeException(e);
+                                    } catch (Exception e) {
+                                        throw new RuntimeException(e);
+                                    }
                                     if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                         try {
                                             queryResult = queryResult.trim();

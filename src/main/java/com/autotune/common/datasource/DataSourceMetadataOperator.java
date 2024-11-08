@@ -55,7 +55,7 @@ public class DataSourceMetadataOperator {
      * @param startTime      Get metadata from starttime to endtime
      * @param endTime        Get metadata from starttime to endtime
      * @param steps          the interval between data points in a range query
-     *                       TODO - support multiple data sources
+     *                                                                                                               TODO - support multiple data sources
      */
     public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws Exception {
         return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
@@ -97,8 +97,8 @@ public class DataSourceMetadataOperator {
      * @param dataSourceInfo The DataSourceInfo object containing information about the
      *                       data source to be updated.
      *                       <p>
-     *                        TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
-     *                               need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
+     *                                                                                                                TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
+     *                                                                                                                       need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
     public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws Exception {
         return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
@@ -180,56 +180,56 @@ public class DataSourceMetadataOperator {
             JsonArray namespacesDataResultArray = op.getResultArrayForQuery(dataSourceInfo, namespaceQuery);
             if (!op.validateResultArray(namespacesDataResultArray)) {
                 dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
-                throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
+            } else {
+                /**
+                 * Key: Name of namespace
+                 * Value: DataSourceNamespace object corresponding to a namespace
+                 */
+                HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
+                dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, datasourceNamespaces);
+
+                /**
+                 * Outer map:
+                 * Key: Name of namespace
+                 * <p>
+                 * Inner map:
+                 * Key: Name of workload
+                 * Value: DataSourceWorkload object matching the name
+                 * TODO -  get workload metadata for a given namespace
+                 */
+                HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
+                JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
+                        workloadQuery);
+
+                if (op.validateResultArray(workloadDataResultArray)) {
+                    datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
+                }
+                dataSourceDetailsHelper.updateWorkloadDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
+                        datasourceWorkloads);
+
+                /**
+                 * Outer map:
+                 * Key: Name of workload
+                 * <p>
+                 * Inner map:
+                 * Key: Name of container
+                 * Value: DataSourceContainer object matching the name
+                 * TODO - get container metadata for a given workload
+                 */
+                HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
+                JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
+                        containerQuery);
+                LOGGER.debug("containerDataResultArray: {}", containerDataResultArray);
+
+                if (op.validateResultArray(containerDataResultArray)) {
+                    datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
+                }
+                dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
+                        datasourceWorkloads, datasourceContainers);
+                return getDataSourceMetadataInfo(dataSourceInfo);
             }
 
-            /**
-             * Key: Name of namespace
-             * Value: DataSourceNamespace object corresponding to a namespace
-             */
-            HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
-            dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, datasourceNamespaces);
-
-            /**
-             * Outer map:
-             * Key: Name of namespace
-             * <p>
-             * Inner map:
-             * Key: Name of workload
-             * Value: DataSourceWorkload object matching the name
-             * TODO -  get workload metadata for a given namespace
-             */
-            HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
-            JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
-                    workloadQuery);
-
-            if (op.validateResultArray(workloadDataResultArray)) {
-                datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
-            }
-            dataSourceDetailsHelper.updateWorkloadDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
-                    datasourceWorkloads);
-
-            /**
-             * Outer map:
-             * Key: Name of workload
-             * <p>
-             * Inner map:
-             * Key: Name of container
-             * Value: DataSourceContainer object matching the name
-             * TODO - get container metadata for a given workload
-             */
-            HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
-            JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
-                    containerQuery);
-            LOGGER.debug("containerDataResultArray: {}", containerDataResultArray);
-
-            if (op.validateResultArray(containerDataResultArray)) {
-                datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
-            }
-            dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
-                    datasourceWorkloads, datasourceContainers);
-
-            return getDataSourceMetadataInfo(dataSourceInfo);
+            return null;
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             throw e;

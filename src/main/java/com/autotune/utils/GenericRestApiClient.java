@@ -37,9 +37,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -64,6 +66,7 @@ public class GenericRestApiClient {
 
     /**
      * constructor to set the authentication based on the datasourceInfo object
+     *
      * @param dataSourceInfo object containing the datasource details
      */
     public GenericRestApiClient(DataSourceInfo dataSourceInfo) {
@@ -74,12 +77,13 @@ public class GenericRestApiClient {
 
     /**
      * This method appends queryString with baseURL and returns response in JSON using specified authentication.
-     * @param methodType    Http methods like GET,POST,PATCH etc
+     *
+     * @param methodType  Http methods like GET,POST,PATCH etc
      * @param queryString
      * @return Json object which contains API response.
      * @throws IOException
      */
-    public JSONObject fetchMetricsJson(String methodType, String queryString) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, FetchMetricsError {
+    public JSONObject fetchMetricsJson(String methodType, String queryString) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         String jsonResponse;
         try (CloseableHttpClient httpclient = setupHttpClient()) {
 
@@ -97,6 +101,8 @@ public class GenericRestApiClient {
 
             // Execute the request
             jsonResponse = httpclient.execute(httpRequestBase, new StringResponseHandler());
+        } catch (IOException e) {
+            throw e;
         }
         return new JSONObject(jsonResponse);
     }
@@ -104,6 +110,7 @@ public class GenericRestApiClient {
 
     /**
      * Common method to setup SSL context for trust-all certificates.
+     *
      * @return CloseableHttpClient
      */
     private CloseableHttpClient setupHttpClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
@@ -115,6 +122,7 @@ public class GenericRestApiClient {
 
     /**
      * Common method to apply authentication to the HTTP request.
+     *
      * @param httpRequestBase the HTTP request (GET, POST, etc.)
      */
     private void applyAuthentication(HttpRequestBase httpRequestBase) {
@@ -126,12 +134,13 @@ public class GenericRestApiClient {
 
     /**
      * Method to call the Experiment API (e.g., to create an experiment) using POST request.
+     *
      * @param payload JSON payload containing the experiment details
      * @return API response code
      * @throws IOException
      */
-    public int callKruizeAPI(String payload) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, FetchMetricsError {
-
+    public HttpResponseWrapper callKruizeAPI(String payload) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, FetchMetricsError {
+        HttpResponseWrapper httpResponseWrapper = null;
         // Create an HTTP client
         try (CloseableHttpClient httpclient = setupHttpClient()) {
             // Prepare the HTTP POST request
@@ -150,14 +159,33 @@ public class GenericRestApiClient {
                 // Get the status code from the response
                 int responseCode = response.getStatusLine().getStatusCode();
                 LOGGER.debug("Response code: {}", responseCode);
-                return responseCode;
+                if (response.getEntity() != null) {
+                    // Convert response entity to string
+                    String responseBody = EntityUtils.toString(response.getEntity(), "UTF-8");
+                    try {
+                        // Attempt to parse as JSON
+                        JSONObject json = new JSONObject(responseBody);
+                        httpResponseWrapper = new HttpResponseWrapper(responseCode, json);
+                    } catch (JSONException e) {
+                        // If JSON parsing fails, return as plain string
+                        httpResponseWrapper = new HttpResponseWrapper(responseCode, responseBody);
+                    }
+                }
             } catch (Exception e) {
                 LOGGER.error("Error occurred while calling Kruize API: {}", e.getMessage());
                 throw new FetchMetricsError(e.getMessage());
             }
+        } catch (Exception e) {
+            LOGGER.error("Error occurred while calling Kruize API: {}", e.getMessage());
+            throw new FetchMetricsError(e.getMessage());
         }
+        return httpResponseWrapper;
     }
 
+
+    public void setBaseURL(String baseURL) {
+        this.baseURL = baseURL;
+    }
 
     private static class StringResponseHandler implements ResponseHandler<String> {
         @Override
@@ -174,7 +202,29 @@ public class GenericRestApiClient {
 
     }
 
-    public void setBaseURL(String baseURL) {
-        this.baseURL = baseURL;
+    public class HttpResponseWrapper {
+        private int statusCode;
+        private Object responseBody;
+
+        public HttpResponseWrapper(int statusCode, Object responseBody) {
+            this.statusCode = statusCode;
+            this.responseBody = responseBody;
+        }
+
+        public int getStatusCode() {
+            return statusCode;
+        }
+
+        public Object getResponseBody() {
+            return responseBody;
+        }
+
+        @Override
+        public String toString() {
+            return "HttpResponseWrapper{" +
+                    "statusCode=" + statusCode +
+                    ", responseBody=" + responseBody +
+                    '}';
+        }
     }
 }

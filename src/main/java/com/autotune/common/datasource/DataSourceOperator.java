@@ -15,30 +15,38 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.common.utils.CommonUtils;
 import com.google.gson.JsonArray;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+
 /**
  * DataSourceOperator is an abstraction which has a generic and implementation,
  * and it can also be implemented by each data source provider type.
- *
+ * <p>
  * Currently Supported Implementations:
- *  - Prometheus
- *
- *  The Implementation should have helper functions to perform operations related
- *  to datasource
+ * - Prometheus
+ * <p>
+ * The Implementation should have helper functions to perform operations related
+ * to datasource
  */
 
 public interface DataSourceOperator {
     /**
      * Returns the default service port for provider
+     *
      * @return String containing the port number
      */
     String getDefaultServicePortForProvider();
 
     /**
      * Returns the instance of specific operator class based on provider type
+     *
      * @param provider String containing the name of provider
      * @return instance of specific operator
      */
@@ -51,7 +59,7 @@ public interface DataSourceOperator {
      * @param dataSource DatasourceInfo object containing the datasource details
      * @return DatasourceReachabilityStatus
      */
-    CommonUtils.DatasourceReachabilityStatus isServiceable(DataSourceInfo dataSource);
+    CommonUtils.DatasourceReachabilityStatus isServiceable(DataSourceInfo dataSource) throws FetchMetricsError, Exception;
 
     /**
      * executes specified query on datasource and returns the result value
@@ -60,7 +68,7 @@ public interface DataSourceOperator {
      * @param query      String containing the query to be executed
      * @return Object containing the result value for the specified query
      */
-    Object getValueForQuery(DataSourceInfo dataSource, String query);
+    Object getValueForQuery(DataSourceInfo dataSource, String query) throws FetchMetricsError, Exception;
 
     /**
      * executes specified query on datasource and returns the JSON Object
@@ -69,7 +77,7 @@ public interface DataSourceOperator {
      * @param query      String containing the query to be executed
      * @return JSONObject for the specified query
      */
-    JSONObject getJsonObjectForQuery(DataSourceInfo dataSource, String query);
+    JSONObject getJsonObjectForQuery(DataSourceInfo dataSource, String query) throws Exception, FetchMetricsError;
 
     /**
      * executes specified query on datasource and returns the result array
@@ -78,7 +86,7 @@ public interface DataSourceOperator {
      * @param query      String containing the query to be executed
      * @return JsonArray containing the result array for the specified query
      */
-    public JsonArray getResultArrayForQuery(DataSourceInfo dataSource, String query);
+    public JsonArray getResultArrayForQuery(DataSourceInfo dataSource, String query) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException;
 
     /**
      * Validates a JSON array to ensure it is not null, not a JSON null, and has at least one element.
@@ -90,6 +98,7 @@ public interface DataSourceOperator {
 
     /**
      * returns query endpoint for datasource
+     *
      * @return String containing query endpoint
      */
     String getQueryEndpoint();
