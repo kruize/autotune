@@ -154,16 +154,16 @@ public class BulkJobManager implements Runnable {
                                 // send request to createExperiment API for experiment creation
                                 GenericRestApiClient apiClient = new GenericRestApiClient(datasource);
                                 apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
-                                int responseCode;
+                                GenericRestApiClient.HttpResponseWrapper responseCode;
                                 boolean expriment_exists = false;
                                 try {
                                     responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(apiObject) + "]");
                                     LOGGER.debug("API Response code: {}", responseCode);
-                                    if (responseCode == HttpURLConnection.HTTP_CREATED) {
+                                    if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
                                         newExperiments.setNewExperiments(
                                                 appendExperiments(newExperiments.getNewExperiments(), experiment_name));
                                         expriment_exists = true;
-                                    } else if (responseCode == HttpURLConnection.HTTP_CONFLICT) {
+                                    } else if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
                                         expriment_exists = true;
                                     } else {
                                         newExperiments.setFailedExperiments(
@@ -188,26 +188,28 @@ public class BulkJobManager implements Runnable {
                                         String encodedExperimentName;
                                         encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
                                         recommendationApiClient.setBaseURL(String.format(KruizeDeploymentInfo.recommendations_url, encodedExperimentName));
-                                        int recommendationResponseCode = 0;
+
+                                        GenericRestApiClient.HttpResponseWrapper recommendationResponseCode = null;
                                         try {
                                             recommendationData.moveToProgress(experiment_name);
                                             recommendationResponseCode = recommendationApiClient.callKruizeAPI(null);
                                             LOGGER.debug("API Response code: {}", recommendationResponseCode);
+                                            if (recommendationResponseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
+                                                recommendationData.moveToCompleted(experiment_name);
+                                                jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
+
+                                                if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
+                                                    jobData.setStatus(COMPLETED);
+                                                    jobStatusMap.get(jobID).setEndTime(Instant.now());
+                                                }
+
+                                            } else {
+                                                recommendationData.moveToFailed(experiment_name);
+                                            }
                                         } catch (Exception | FetchMetricsError e) {
                                             e.printStackTrace();
                                         }
-                                        if (recommendationResponseCode == HttpURLConnection.HTTP_CREATED) {
-                                            recommendationData.moveToCompleted(experiment_name);
-                                            jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
 
-                                            if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
-                                                jobData.setStatus(COMPLETED);
-                                                jobStatusMap.get(jobID).setEndTime(Instant.now());
-                                            }
-
-                                        } else {
-                                            recommendationData.moveToFailed(experiment_name);
-                                        }
                                     });
                                 }
 
