@@ -146,6 +146,7 @@ public class BulkJobManager implements Runnable {
                 }
                 if (null == metadataInfo) {
                     jobData.setStatus(COMPLETED);
+                    jobData.setEndTime(Instant.now());
                     jobData.setNotification(String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO);
                 } else {
                     Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type

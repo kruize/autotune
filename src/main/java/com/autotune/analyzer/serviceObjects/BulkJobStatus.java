@@ -64,6 +64,46 @@ public class BulkJobStatus {
         notifications.put(key, notification);
     }
 
+    public String getJobID() {
+        return jobID;
+    }
+
+    public void setJobID(String jobID) {
+        this.jobID = jobID;
+    }
+
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setStartTime(Instant startTime) {
+        this.startTime = formatInstantAsUTCString(startTime);
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
+    public void setEndTime(Instant endTime) {
+        this.endTime = formatInstantAsUTCString(endTime);
+    }
+
+    public Map<String, KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(Map<String, KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Notification> notifications) {
+        this.notifications = notifications;
+    }
+
     public Map<String, Experiment> getExperiments() {
         return experiments;
     }
@@ -79,21 +119,12 @@ public class BulkJobStatus {
         return experiment;
     }
 
-
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public void setStartTime(Instant startTime) {
-        this.startTime = formatInstantAsUTCString(startTime);
-    }
-
-    public void setEndTime(Instant endTime) {
-        this.endTime = formatInstantAsUTCString(endTime);
     }
 
     public int getTotal_experiments() {
