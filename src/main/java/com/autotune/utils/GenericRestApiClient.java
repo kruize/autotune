@@ -22,6 +22,8 @@ import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.utils.authModels.APIKeysAuthentication;
 import com.autotune.utils.authModels.BasicAuthentication;
 import com.autotune.utils.authModels.BearerAccessToken;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -58,6 +60,8 @@ import java.security.NoSuchAlgorithmException;
 public class GenericRestApiClient {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRestApiClient.class);
+    private static final int MAX_RETRIES = 5;
+    private static final long INITIAL_BACKOFF_MS = 1000; // 1 second
     private String baseURL;
     private BasicAuthentication basicAuthentication;
     private BearerAccessToken bearerAccessToken;
@@ -97,12 +101,41 @@ public class GenericRestApiClient {
             // Apply authentication
             applyAuthentication(httpRequestBase);
 
-            LOGGER.debug("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
+            LOGGER.info("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
 
-            // Execute the request
-            jsonResponse = httpclient.execute(httpRequestBase, new StringResponseHandler());
-        } catch (IOException e) {
-            throw e;
+            // Execute the request and get the HttpResponse
+            HttpResponse response = httpclient.execute(httpRequestBase);
+
+            // Get and print the response code
+            int responseCode = response.getStatusLine().getStatusCode();
+            LOGGER.info("Response code: {}", responseCode);
+
+            // Get the response body if needed
+            jsonResponse = new StringResponseHandler().handleResponse(response);
+            LOGGER.info("jsonResponse {}", jsonResponse);
+
+            // Parse the JSON response
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(jsonResponse);
+            JsonNode resultNode = rootNode.path("data").path("result");
+            JsonNode warningsNode = rootNode.path("warnings");
+
+            // Check if the result is empty and if there are specific warnings
+            if (resultNode.isArray() && resultNode.size() == 0) {
+                LOGGER.info("resultNode is empty");
+                for (JsonNode warning : warningsNode) {
+                    String warningMessage = warning.asText();
+                    LOGGER.info("warnings is {}", warningMessage);
+                    if (warningMessage.contains("error reading from server") || warningMessage.contains("Please reduce your request rate")) {
+                        LOGGER.warn("Warning detected: {}", warningMessage);
+                        throw new IOException(warningMessage);
+                    } else {
+                        LOGGER.info("no warnings detected");
+                    }
+                }
+            } else {
+                LOGGER.info("resultNode is not empty");
+            }
         }
         return new JSONObject(jsonResponse);
     }

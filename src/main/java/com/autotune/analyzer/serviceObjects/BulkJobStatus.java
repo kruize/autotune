@@ -46,7 +46,7 @@ public class BulkJobStatus {
     private String startTime; // Change to String to store formatted time
     @JsonProperty("job_end_time")
     private String endTime;   // Change to String to store formatted time
-    private Map<String, KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Notification> notifications;
+    private Map<String, Notification> notifications;
     private Map<String, Experiment> experiments = Collections.synchronizedMap(new HashMap<>());
 
     public BulkJobStatus(String jobID, String status, Instant startTime) {
@@ -57,7 +57,7 @@ public class BulkJobStatus {
 
 
     // Method to set a notification in the map
-    public void setNotification(String key, KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Notification notification) {
+    public void setNotification(String key, Notification notification) {
         if (notifications == null) {
             notifications = new HashMap<>(); // Initialize if null
         }
@@ -96,11 +96,11 @@ public class BulkJobStatus {
         this.endTime = formatInstantAsUTCString(endTime);
     }
 
-    public Map<String, KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Notification> getNotifications() {
+    public Map<String, Notification> getNotifications() {
         return notifications;
     }
 
-    public void setNotifications(Map<String, KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Notification> notifications) {
+    public void setNotifications(Map<String, Notification> notifications) {
         this.notifications = notifications;
     }
 
@@ -153,6 +153,22 @@ public class BulkJobStatus {
     }
 
 
+    public static enum NotificationType {
+        ERROR("error"),
+        WARNING("warning"),
+        INFO("info");
+
+        private final String type;
+
+        NotificationType(String type) {
+            this.type = type;
+        }
+
+        public String getType() {
+            return type;
+        }
+    }
+
     public static class Experiment {
         private String name;
         private Notification notification; // Empty by default
@@ -202,15 +218,39 @@ public class BulkJobStatus {
     }
 
     public static class Notification {
-        private String type;
+        private NotificationType type;
         private String message;
         private int code;
 
         // Constructor, getters, and setters
 
-        public Notification(String type, String message, int code) {
+        public Notification(NotificationType type, String message, int code) {
             this.type = type;
             this.message = message;
+            this.code = code;
+        }
+
+        public NotificationType getType() {
+            return type;
+        }
+
+        public void setType(NotificationType type) {
+            this.type = type;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public int getCode() {
+            return code;
+        }
+
+        public void setCode(int code) {
             this.code = code;
         }
     }

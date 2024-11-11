@@ -18,6 +18,7 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
+import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.text.SimpleDateFormat;
@@ -796,65 +797,49 @@ public class KruizeConstants {
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);
         }
 
-        public static final class NotificationConstants {
+        public static class NotificationConstants {
 
-            public static final Notification FETCH_METRIC_FAILURE = new Notification(
-                    NotificationType.ERROR,
-                    "Not able to fetch metrics",
-                    400
-            );
-            public static final Notification DATASOURCE_NOT_REG_INFO = new Notification(
-                    NotificationType.ERROR,
-                    "Datasource not registered with Kruize.",
-                    400
-            );
-            public static final Notification DATASOURCE_DOWN_INFO = new Notification(
-                    NotificationType.ERROR,
-                    "HttpHostConnectException: Unable to connect to the data source. Please try again later.",
-                    503
-            );
-            public static final Notification DATASOURCE_GATEWAY_TIMEOUT_INFO = new Notification(
-                    NotificationType.ERROR,
-                    "SocketTimeoutException: request timed out waiting for a data source response",
-                    504
-            );
-            public static final Notification DATASOURCE_CONNECT_TIMEOUT_INFO = new Notification(
-                    NotificationType.ERROR,
-                    "ConnectTimeoutException: cannot establish a data source connection in a given time frame due to connectivity issues",
-                    503
-            );
-            public static final Notification JOB_NOT_FOUND_INFO = new Notification(
-                    NotificationType.WARNING,
+            public static final BulkJobStatus.Notification JOB_NOT_FOUND_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.WARNING,
                     JOB_NOT_FOUND_MSG,
                     404
             );
-            public static final Notification LIMIT_INFO = new Notification(
-                    NotificationType.INFO,
+            public static final BulkJobStatus.Notification LIMIT_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.INFO,
                     LIMIT_MESSAGE,
                     400
             );
-
-            public static final Notification NOTHING_INFO = new Notification(
-                    NotificationType.INFO,
+            public static final BulkJobStatus.Notification NOTHING_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.INFO,
                     NOTHING,
                     400
             );
+            public static BulkJobStatus.Notification FETCH_METRIC_FAILURE = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Not able to fetch metrics",
+                    400
+            );
+            public static BulkJobStatus.Notification DATASOURCE_NOT_REG_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Datasource not registered with Kruize. (%s)",
+                    400
+            );
+            public static BulkJobStatus.Notification DATASOURCE_DOWN_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "HttpHostConnectException: Unable to connect to the data source. Please try again later.",
+                    503
+            );
+            public static BulkJobStatus.Notification DATASOURCE_GATEWAY_TIMEOUT_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "SocketTimeoutException: request timed out waiting for a data source response",
+                    504
+            );
+            public static BulkJobStatus.Notification DATASOURCE_CONNECT_TIMEOUT_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "ConnectTimeoutException: cannot establish a data source connection in a given time frame due to connectivity issues",
+                    503
+            );
 
-            public enum NotificationType {
-                ERROR("error"),
-                WARNING("warning"),
-                INFO("info");
-
-                private final String type;
-
-                NotificationType(String type) {
-                    this.type = type;
-                }
-
-                public String getType() {
-                    return type;
-                }
-            }
 
             // More notification constants can be added here as needed
 
@@ -875,30 +860,7 @@ public class KruizeConstants {
                 }
             }
 
-            // Notification class representing each constant's details
-            public static class Notification {
-                private final NotificationType type;
-                private final String message;
-                private final int code;
 
-                public Notification(NotificationType type, String message, int code) {
-                    this.type = type;
-                    this.message = message;
-                    this.code = code;
-                }
-
-                public NotificationType getType() {
-                    return type;
-                }
-
-                public String getMessage() {
-                    return message;
-                }
-
-                public int getCode() {
-                    return code;
-                }
-            }
         }
     }
 }
