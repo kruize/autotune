@@ -188,6 +188,8 @@ public class AnalyzerConstants {
         memoryUsage,
         memoryRSS,
         maxDate,
+        imageOwners,
+        imageWorkloads,
         namespaceCpuRequest,
         namespaceCpuLimit,
         namespaceCpuUsage,
