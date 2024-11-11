@@ -1,0 +1,22 @@
+{
+  "filter": {
+    "exclude": {
+      "namespace": [],
+      "workload": [],
+      "containers": [],
+      "labels": {}
+    },
+    "include": {
+      "namespace": [],
+      "workload": [],
+      "containers": [],
+      "labels": {}
+    }
+  },
+  "datasource": "thanos",
+  "time_range": {
+	"start": "2024-09-01T00:00:00.000Z",
+	"end": "2024-09-11T00:00:00.000Z"
+  }
+}
+
