@@ -2692,10 +2692,6 @@ public class RecommendationEngine {
             }
         }
 
-
-        // Ignore rows with 'workload_type' value of 'job'
-        records.removeIf(row -> "job".equals(row.get("workload_type")));
-
         // Add 'k8_object_type' column
 
         // Based on the data observed, these are the assumptions:
