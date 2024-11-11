@@ -15,9 +15,12 @@ limitations under the License.
 """
 
 import json
+import requests
 import subprocess
 
-import requests
+
+def get_kruize_url():
+    return URL
 
 
 def form_kruize_url(cluster_type, SERVER_IP=None):
@@ -28,6 +31,10 @@ def form_kruize_url(cluster_type, SERVER_IP=None):
         print("\nKRUIZE AUTOTUNE URL = ", URL)
         return
 
+    if (cluster_type == "local"):
+        AUTOTUNE_PORT = 8080
+        SERVER_IP = '127.0.0.1'
+        URL = "http://" + str(SERVER_IP) + ":" + str(AUTOTUNE_PORT)
     if (cluster_type == "minikube"):
         port = subprocess.run(
             ['kubectl -n monitoring get svc kruize --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort'],
@@ -43,11 +50,14 @@ def form_kruize_url(cluster_type, SERVER_IP=None):
 
         subprocess.run(['oc expose svc/kruize -n openshift-tuning'], shell=True, stdout=subprocess.PIPE)
         ip = subprocess.run(
-            ['oc status -n openshift-tuning | grep "kruize" | grep -v "kruize-ui" | grep -v "kruize-db" | grep port | cut -d " " -f1 | cut -d "/" -f3'], shell=True,
+            [
+                'oc status -n openshift-tuning | grep "kruize" | grep -v "kruize-ui" | grep -v "kruize-db" | grep port | cut -d " " -f1 | cut -d "/" -f3'],
+            shell=True,
             stdout=subprocess.PIPE)
         SERVER_IP = ip.stdout.decode('utf-8').strip('\n')
         print("IP = ", SERVER_IP)
         URL = "http://" + str(SERVER_IP)
+
     print("\nKRUIZE AUTOTUNE URL = ", URL)
 
 
@@ -381,6 +391,7 @@ def create_metric_profile(metric_profile_json_file):
     print(response.text)
     return response
 
+
 # Description: This function deletes the metric profile
 # Input Parameters: metric profile input json
 def delete_metric_profile(input_json_file, invalid_header=False):
@@ -436,6 +447,7 @@ def list_metric_profiles(name=None, verbose=None, logging=True):
         print(response.text)
         print("\n************************************************************")
     return response
+
 
 # Description: This function generates recommendation for the given experiment_name
 def generate_recommendations(experiment_name):
