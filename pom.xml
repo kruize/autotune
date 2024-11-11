@@ -10,7 +10,7 @@
     <properties>
         <fabric8-version>4.13.2</fabric8-version>
         <org-json-version>20240303</org-json-version>
-        <jetty-version>9.4.56.v20240826</jetty-version>
+        <jetty-version>10.0.24</jetty-version>
         <slf4j-version>2.17.1</slf4j-version>
         <java-version>17</java-version>
         <prometheus-simpleclient>0.14.1</prometheus-simpleclient>
