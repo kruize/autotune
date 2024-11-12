@@ -40,6 +40,7 @@ import org.apache.http.util.EntityUtils;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -64,6 +65,7 @@ public class GenericRestApiClient {
 
     /**
      * constructor to set the authentication based on the datasourceInfo object
+     *
      * @param dataSourceInfo object containing the datasource details
      */
     public GenericRestApiClient(DataSourceInfo dataSourceInfo) {
@@ -74,12 +76,13 @@ public class GenericRestApiClient {
 
     /**
      * This method appends queryString with baseURL and returns response in JSON using specified authentication.
-     * @param methodType    Http methods like GET,POST,PATCH etc
+     *
+     * @param methodType  Http methods like GET,POST,PATCH etc
      * @param queryString
      * @return Json object which contains API response.
      * @throws IOException
      */
-    public JSONObject fetchMetricsJson(String methodType, String queryString) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, FetchMetricsError {
+    public JSONObject fetchMetricsJson(String methodType, String queryString) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         String jsonResponse;
         try (CloseableHttpClient httpclient = setupHttpClient()) {
 
@@ -104,6 +107,7 @@ public class GenericRestApiClient {
 
     /**
      * Common method to setup SSL context for trust-all certificates.
+     *
      * @return CloseableHttpClient
      */
     private CloseableHttpClient setupHttpClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
@@ -115,6 +119,7 @@ public class GenericRestApiClient {
 
     /**
      * Common method to apply authentication to the HTTP request.
+     *
      * @param httpRequestBase the HTTP request (GET, POST, etc.)
      */
     private void applyAuthentication(HttpRequestBase httpRequestBase) {
@@ -126,6 +131,7 @@ public class GenericRestApiClient {
 
     /**
      * Method to call the Experiment API (e.g., to create an experiment) using POST request.
+     *
      * @param payload JSON payload containing the experiment details
      * @return API response code
      * @throws IOException
@@ -158,6 +164,9 @@ public class GenericRestApiClient {
         }
     }
 
+    public void setBaseURL(String baseURL) {
+        this.baseURL = baseURL;
+    }
 
     private static class StringResponseHandler implements ResponseHandler<String> {
         @Override
@@ -172,9 +181,5 @@ public class GenericRestApiClient {
         }
 
 
-    }
-
-    public void setBaseURL(String baseURL) {
-        this.baseURL = baseURL;
     }
 }

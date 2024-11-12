@@ -42,6 +42,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletContext;
+import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.sql.Timestamp;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -121,8 +125,19 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                             if (null == ado) {
                                 // TODO: Return an error saying unsupported datasource
                             }
-                            String queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
-                                    .get(podMetric.getDatasource()), updatedPodQuery);
+                            String queryResult = null;
+                            try {
+                                queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
+                                        .get(podMetric.getDatasource()), updatedPodQuery);
+                            } catch (IOException e) {
+                                throw new RuntimeException(e);
+                            } catch (NoSuchAlgorithmException e) {
+                                throw new RuntimeException(e);
+                            } catch (KeyStoreException e) {
+                                throw new RuntimeException(e);
+                            } catch (KeyManagementException e) {
+                                throw new RuntimeException(e);
+                            }
                             if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                 try {
                                     queryResult = queryResult.trim();
@@ -159,8 +174,19 @@ public class MetricCollectionHandler implements EMHandlerInterface {
                                 }
                                 if (null != updatedContainerQuery) {
                                     LOGGER.debug("Updated Query - " + updatedContainerQuery);
-                                    String queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
-                                            .get(containerMetric.getDatasource()), updatedContainerQuery);
+                                    String queryResult = null;
+                                    try {
+                                        queryResult = (String) ado.getValueForQuery(experimentTrial.getDatasourceInfoHashMap()
+                                                .get(containerMetric.getDatasource()), updatedContainerQuery);
+                                    } catch (IOException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (NoSuchAlgorithmException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (KeyStoreException e) {
+                                        throw new RuntimeException(e);
+                                    } catch (KeyManagementException e) {
+                                        throw new RuntimeException(e);
+                                    }
                                     if (null != queryResult && !queryResult.isEmpty() && !queryResult.isBlank()) {
                                         try {
                                             queryResult = queryResult.trim();
