@@ -831,29 +831,29 @@ public class KruizeConstants {
                     NOTHING,
                     400
             );
-            public static BulkJobStatus.Notification FETCH_METRIC_FAILURE = new BulkJobStatus.Notification(
+            public static final BulkJobStatus.Notification FETCH_METRIC_FAILURE = new BulkJobStatus.Notification(
                     BulkJobStatus.NotificationType.ERROR,
                     "Not able to fetch metrics",
                     400
             );
-            public static BulkJobStatus.Notification DATASOURCE_NOT_REG_INFO = new BulkJobStatus.Notification(
+            public static final BulkJobStatus.Notification DATASOURCE_NOT_REG_INFO = new BulkJobStatus.Notification(
                     BulkJobStatus.NotificationType.ERROR,
                     "Datasource not registered with Kruize. (%s)",
                     400
             );
-            public static BulkJobStatus.Notification DATASOURCE_DOWN_INFO = new BulkJobStatus.Notification(
+            public static final BulkJobStatus.Notification DATASOURCE_DOWN_INFO = new BulkJobStatus.Notification(
                     BulkJobStatus.NotificationType.ERROR,
-                    "HttpHostConnectException: Unable to connect to the data source. Please try again later.",
+                    "HttpHostConnectException: Unable to connect to the data source. Please try again later. (%s)",
                     503
             );
-            public static BulkJobStatus.Notification DATASOURCE_GATEWAY_TIMEOUT_INFO = new BulkJobStatus.Notification(
+            public static final BulkJobStatus.Notification DATASOURCE_GATEWAY_TIMEOUT_INFO = new BulkJobStatus.Notification(
                     BulkJobStatus.NotificationType.ERROR,
-                    "SocketTimeoutException: request timed out waiting for a data source response",
+                    "SocketTimeoutException: request timed out waiting for a data source response. (%s)",
                     504
             );
-            public static BulkJobStatus.Notification DATASOURCE_CONNECT_TIMEOUT_INFO = new BulkJobStatus.Notification(
+            public static final BulkJobStatus.Notification DATASOURCE_CONNECT_TIMEOUT_INFO = new BulkJobStatus.Notification(
                     BulkJobStatus.NotificationType.ERROR,
-                    "ConnectTimeoutException: cannot establish a data source connection in a given time frame due to connectivity issues",
+                    "ConnectTimeoutException: cannot establish a data source connection in a given time frame due to connectivity issues. (%s)",
                     503
             );
 

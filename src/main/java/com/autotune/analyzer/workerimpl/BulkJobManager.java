@@ -16,7 +16,6 @@
 package com.autotune.analyzer.workerimpl;
 
 
-import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -86,13 +85,12 @@ public class BulkJobManager implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkJobManager.class);
 
     private String jobID;
-    private Map<String, BulkJobStatus> jobStatusMap;
     private BulkInput bulkInput;
+    private BulkJobStatus jobData;
 
-
-    public BulkJobManager(String jobID, Map<String, BulkJobStatus> jobStatusMap, BulkInput payload) {
+    public BulkJobManager(String jobID, BulkJobStatus jobData, BulkInput payload) {
         this.jobID = jobID;
-        this.jobStatusMap = jobStatusMap;
+        this.jobData = jobData;
         this.bulkInput = payload;
     }
 
@@ -120,7 +118,6 @@ public class BulkJobManager implements Runnable {
 
     @Override
     public void run() {
-        BulkJobStatus jobData = jobStatusMap.get(jobID);
         try {
             String labelString = getLabels(this.bulkInput.getFilter());
             if (null == this.bulkInput.getDatasource()) {
@@ -182,7 +179,7 @@ public class BulkJobManager implements Runnable {
                                             jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                             experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, responseCode.getResponseBody().toString(), responseCode.getStatusCode()));
                                         }
-                                    } catch (FetchMetricsError e) {
+                                    } catch (Exception e) {
                                         e.printStackTrace();
                                         jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                         experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_BAD_REQUEST));
@@ -210,10 +207,10 @@ public class BulkJobManager implements Runnable {
                                                     experiment.getRecommendation().setStatus(NotificationConstants.Status.FAILED);
                                                     experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, recommendationResponseCode.getResponseBody().toString(), recommendationResponseCode.getStatusCode()));
                                                 }
-                                            } catch (Exception | FetchMetricsError e) {
+                                            } catch (Exception e) {
                                                 e.printStackTrace();
                                                 experiment.getRecommendation().setStatus(NotificationConstants.Status.FAILED);
-                                                experiment.getRecommendation().setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_BAD_REQUEST));
+                                                experiment.getRecommendation().setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
                                             }
                                         });
                                     }
@@ -230,14 +227,16 @@ public class BulkJobManager implements Runnable {
             LOGGER.error(e.getMessage());
             jobData.setStatus("FAILED");
             jobData.setEndTime(Instant.now());
-
+            BulkJobStatus.Notification notification;
             if (e instanceof SocketTimeoutException) {
-                jobData.setNotification(String.valueOf(HttpURLConnection.HTTP_GATEWAY_TIMEOUT), DATASOURCE_GATEWAY_TIMEOUT_INFO);
+                notification = DATASOURCE_GATEWAY_TIMEOUT_INFO;
             } else if (e instanceof ConnectTimeoutException) {
-                jobData.setNotification(String.valueOf(HttpURLConnection.HTTP_UNAVAILABLE), DATASOURCE_CONNECT_TIMEOUT_INFO);
+                notification = DATASOURCE_CONNECT_TIMEOUT_INFO;
             } else {
-                jobData.setNotification(String.valueOf(HttpURLConnection.HTTP_UNAVAILABLE), DATASOURCE_DOWN_INFO);
+                notification = DATASOURCE_DOWN_INFO;
             }
+            notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
+            jobData.setNotification(String.valueOf(HttpURLConnection.HTTP_UNAVAILABLE), notification);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             e.printStackTrace();

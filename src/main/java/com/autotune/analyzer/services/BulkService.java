@@ -49,8 +49,8 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 public class BulkService extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkService.class);
+    private static Map<String, BulkJobStatus> jobStatusMap = new ConcurrentHashMap<>();
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private Map<String, BulkJobStatus> jobStatusMap = new ConcurrentHashMap<>();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -71,9 +71,9 @@ public class BulkService extends HttpServlet {
             // If the parameter is not provided (null), default it to false
             boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
             BulkJobStatus jobDetails;
-            synchronized (jobStatusMap) {
-                jobDetails = jobStatusMap.get(jobID);
-            }
+            LOGGER.info("Job ID: " + jobID);
+            jobDetails = jobStatusMap.get(jobID);
+            LOGGER.info("Job Status: " + jobDetails.getStatus());
             resp.setContentType(JSON_CONTENT_TYPE);
             resp.setCharacterEncoding(CHARACTER_ENCODING);
             SimpleFilterProvider filters = new SimpleFilterProvider();
@@ -127,9 +127,10 @@ public class BulkService extends HttpServlet {
 
         // Generate a unique jobID
         String jobID = UUID.randomUUID().toString();
-        jobStatusMap.put(jobID, new BulkJobStatus(jobID, IN_PROGRESS, Instant.now()));
+        BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now());
+        jobStatusMap.put(jobID, jobStatus);
         // Submit the job to be processed asynchronously
-        executorService.submit(new BulkJobManager(jobID, jobStatusMap, payload));
+        executorService.submit(new BulkJobManager(jobID, jobStatus, payload));
 
         // Just sending a simple success response back
         // Return the jobID to the user
