@@ -22,6 +22,8 @@ import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.utils.authModels.APIKeysAuthentication;
 import com.autotune.utils.authModels.BasicAuthentication;
 import com.autotune.utils.authModels.BearerAccessToken;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -37,6 +39,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,6 +60,8 @@ import java.security.NoSuchAlgorithmException;
 public class GenericRestApiClient {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRestApiClient.class);
+    private static final int MAX_RETRIES = 5;
+    private static final long INITIAL_BACKOFF_MS = 1000; // 1 second
     private String baseURL;
     private BasicAuthentication basicAuthentication;
     private BearerAccessToken bearerAccessToken;
@@ -96,10 +101,41 @@ public class GenericRestApiClient {
             // Apply authentication
             applyAuthentication(httpRequestBase);
 
-            LOGGER.debug("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
+            LOGGER.info("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
 
-            // Execute the request
-            jsonResponse = httpclient.execute(httpRequestBase, new StringResponseHandler());
+            // Execute the request and get the HttpResponse
+            HttpResponse response = httpclient.execute(httpRequestBase);
+
+            // Get and print the response code
+            int responseCode = response.getStatusLine().getStatusCode();
+            LOGGER.info("Response code: {}", responseCode);
+
+            // Get the response body if needed
+            jsonResponse = new StringResponseHandler().handleResponse(response);
+            LOGGER.info("jsonResponse {}", jsonResponse);
+
+            // Parse the JSON response
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(jsonResponse);
+            JsonNode resultNode = rootNode.path("data").path("result");
+            JsonNode warningsNode = rootNode.path("warnings");
+
+            // Check if the result is empty and if there are specific warnings
+            if (resultNode.isArray() && resultNode.size() == 0) {
+                LOGGER.info("resultNode is empty");
+                for (JsonNode warning : warningsNode) {
+                    String warningMessage = warning.asText();
+                    LOGGER.info("warnings is {}", warningMessage);
+                    if (warningMessage.contains("error reading from server") || warningMessage.contains("Please reduce your request rate")) {
+                        LOGGER.warn("Warning detected: {}", warningMessage);
+                        throw new IOException(warningMessage);
+                    } else {
+                        LOGGER.info("no warnings detected");
+                    }
+                }
+            } else {
+                LOGGER.info("resultNode is not empty");
+            }
         }
         return new JSONObject(jsonResponse);
     }
@@ -136,8 +172,8 @@ public class GenericRestApiClient {
      * @return API response code
      * @throws IOException
      */
-    public int callKruizeAPI(String payload) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, FetchMetricsError {
-
+    public HttpResponseWrapper callKruizeAPI(String payload) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, FetchMetricsError {
+        HttpResponseWrapper httpResponseWrapper = null;
         // Create an HTTP client
         try (CloseableHttpClient httpclient = setupHttpClient()) {
             // Prepare the HTTP POST request
@@ -156,13 +192,29 @@ public class GenericRestApiClient {
                 // Get the status code from the response
                 int responseCode = response.getStatusLine().getStatusCode();
                 LOGGER.debug("Response code: {}", responseCode);
-                return responseCode;
+                if (response.getEntity() != null) {
+                    // Convert response entity to string
+                    String responseBody = EntityUtils.toString(response.getEntity(), "UTF-8");
+                    try {
+                        // Attempt to parse as JSON
+                        JSONObject json = new JSONObject(responseBody);
+                        httpResponseWrapper = new HttpResponseWrapper(responseCode, json);
+                    } catch (JSONException e) {
+                        // If JSON parsing fails, return as plain string
+                        httpResponseWrapper = new HttpResponseWrapper(responseCode, responseBody);
+                    }
+                }
             } catch (Exception e) {
                 LOGGER.error("Error occurred while calling Kruize API: {}", e.getMessage());
                 throw new FetchMetricsError(e.getMessage());
             }
+        } catch (Exception e) {
+            LOGGER.error("Error occurred while calling Kruize API: {}", e.getMessage());
+            throw new FetchMetricsError(e.getMessage());
         }
+        return httpResponseWrapper;
     }
+
 
     public void setBaseURL(String baseURL) {
         this.baseURL = baseURL;
@@ -181,5 +233,31 @@ public class GenericRestApiClient {
         }
 
 
+    }
+
+    public class HttpResponseWrapper {
+        private int statusCode;
+        private Object responseBody;
+
+        public HttpResponseWrapper(int statusCode, Object responseBody) {
+            this.statusCode = statusCode;
+            this.responseBody = responseBody;
+        }
+
+        public int getStatusCode() {
+            return statusCode;
+        }
+
+        public Object getResponseBody() {
+            return responseBody;
+        }
+
+        @Override
+        public String toString() {
+            return "HttpResponseWrapper{" +
+                    "statusCode=" + statusCode +
+                    ", responseBody=" + responseBody +
+                    '}';
+        }
     }
 }
