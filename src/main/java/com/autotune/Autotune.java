@@ -122,7 +122,11 @@ public class Autotune {
                 // load available datasources from db
                 loadDataSourcesFromDB();
                 // setting up DataSources
-                setUpDataSources();
+                try {
+                    setUpDataSources();
+                } catch (Exception e) {
+                    LOGGER.error("***Failed to setup datasource connection due to : {}***", e.getMessage());
+                }
                 // checking available DataSources
                 checkAvailableDataSources();
                 // load available metric profiles from db
