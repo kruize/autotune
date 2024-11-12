@@ -54,6 +54,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
+import static com.autotune.analyzer.recommendations.utils.RecommendationUtils.*;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 
@@ -2107,6 +2108,9 @@ public class RecommendationEngine {
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
 
+                    String inputFile = "input.csv";
+                    String outputFile = "output.csv";
+
                     List<Metric> metricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
                             AnalyzerConstants.MetricName.maxDate.name(), kruizeObject.getExperimentType());
 
@@ -2339,7 +2343,9 @@ public class RecommendationEngine {
                         }
                     }
 
-                    List<Map<String, String>> aggr_data = convertContainerResultsByPodMapToCSV(containerDataResultsByPod, metricLabelMapByNameAndPod, "input.csv");
+                    String header = generateCSVHeader();
+                    convertContainerResultsByPodMapToCSV(containerDataResultsByPod, metricLabelMapByNameAndPod, inputFile, header);
+                    List<Map<String, String>> aggr_data = aggregateWorkloads(header, inputFile, outputFile);
                     HashMap<Timestamp, IntervalResults> aggrContainerDataResults = convertAggrDataToIntervalResults(aggr_data);
                     containerData.setResults(aggrContainerDataResults);
                     if (!aggrContainerDataResults.isEmpty())
@@ -2514,242 +2520,8 @@ public class RecommendationEngine {
             .toList();
     }
 
-    public static List<Map<String, String>> convertContainerResultsByPodMapToCSV(HashMap<Timestamp, HashMap<String, IntervalResults>> containerDataResults,
-                                                                      HashMap<Timestamp, HashMap<String, HashMap<String, MetricLabels>>> metricLabelMap, String outputFilePath) {
-
-        // Debugging: Print the absolute path where the file will be created
-        File file = new File(outputFilePath);
-        LOGGER.info("Attempting to create file at: {}", file.getAbsolutePath());
-
-        // List of expected queries
-        List<String> queries = Arrays.asList(
-                "cpuRequest",
-                "cpuLimit",
-                "cpuUsage",
-                "cpuThrottle",
-                "memoryRequest",
-                "memoryLimit",
-                "memoryUsage",
-                "memoryRSS"
-        );
-
-        int totalColumns = 42;
-        // A map to store existing rows, with a key being the podLabel
-        Map<String, String[]> csvRowMap = new HashMap<>();
-
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
-            // Predefined labels for the CSV header
-            String header = "interval_end,interval_start,container,namespace,pod,owner_kind,owner_name,workload_type,workload," +
-                    "cpuRequest_min,cpuRequest_max,cpuRequest_avg,cpuRequest_sum,cpuLimit_min,"
-                    + "cpuLimit_max,cpuLimit_avg,cpuLimit_sum,cpuUsage_min,cpuUsage_max,cpuUsage_avg,cpuUsage_sum," +
-                    "cpuThrottle_min,cpuThrottle_max,cpuThrottle_avg,cpuThrottle_sum,memoryRequest_min,memoryRequest_max," +
-                    "memoryRequest_avg,memoryRequest_sum,memoryLimit_min,memoryLimit_max,memoryLimit_avg,memoryLimit_sum," +
-                    "memoryUsage_min,memoryUsage_max,memoryUsage_avg,memoryUsage_sum,memoryRSS_min,memoryRSS_max," +
-                    "memoryRSS_avg,memoryRSS_sum,k8_object_type,k8_object_name";
-            writer.write(header);
-            writer.newLine();
-
-            // Iterate over the timestamp entries
-            for (Timestamp timestamp : metricLabelMap.keySet()) {
-                HashMap<String, HashMap<String, MetricLabels>> metricMap = metricLabelMap.get(timestamp);
-                // Iterate over the metric names
-                for (String metricName : metricMap.keySet()) {
-                    HashMap<String, MetricLabels> labelMap = metricMap.get(metricName);
-
-                    if(labelMap == null) {
-                        continue;
-                    }
-
-                    // Iterate over the labels and corresponding objects
-                    for (String label : labelMap.keySet()) {
-                        // Create a key combining the timestamp and metric name
-                        String rowKey = timestamp.toString() + "_" + label;
-                        // Use the label as the key for the csvRowMap
-                        String[] dataRow = csvRowMap.getOrDefault(rowKey, new String[totalColumns]);
-
-                        MetricLabels metricLabel = labelMap.get(label);
-                        String container = metricLabel.getContainer();
-                        String namespace = metricLabel.getNamespace();
-
-                        // If this is a new row, initialize with empty values and set the initial columns
-                        if (!csvRowMap.containsKey(rowKey)) {
-                            Arrays.fill(dataRow, "");
-
-                            // Add timestamp and static values at predefined positions
-                            dataRow[0] = timestamp.toString();
-                            dataRow[2] = container;
-                            dataRow[3] = namespace;
-                            dataRow[4] = label;
-                        }
-
-                        if(metricName.equals("imageOwners")) {
-                            dataRow[5] = metricLabel.getOwner_kind();
-                            dataRow[6] = metricLabel.getOwner_name();
-                        } else if(metricName.equals("imageWorkloads")) {
-                            dataRow[7] = metricLabel.getWorkload_name();
-                            dataRow[8] = metricLabel.getWorkload_kind();
-                        }
-
-                        // Add placeholder values for additional columns
-                        csvRowMap.put(rowKey, dataRow);
-                    }
-                }
-            }
-
-            for(Timestamp timestamp : containerDataResults.keySet()) {
-                HashMap<String, IntervalResults> intervalResultsMap = containerDataResults.get(timestamp);
-
-                for(String podLabel: intervalResultsMap.keySet()) {
-                    // Create a key combining the timestamp and pod name
-                    String rowKey = timestamp.toString() + "_" + podLabel;
-                    // Use the rowKey as the key for the csvRowMap
-                    String[] dataRow = csvRowMap.get(rowKey);
-                    IntervalResults intervalResults = intervalResultsMap.get(podLabel);
-                    dataRow[1] = intervalResults.getIntervalStartTime().toString();
-
-                    HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsMap = intervalResults.getMetricResultsMap();
-                    // Fill in values for each query
-                    for (int i = 0; i < queries.size(); i++) {
-                        String query = queries.get(i);
-                        MetricResults metricResults = metricResultsMap.get(AnalyzerConstants.MetricName.valueOf(query));
-                        if(null != metricResults) {
-                            MetricAggregationInfoResults aggregationInfoResults = metricResults.getAggregationInfoResult();
-                            // Append min, max, avg, sum for the current query
-                            dataRow[i * 4 + 9] = aggregationInfoResults.getMin() != null ? aggregationInfoResults.getMin().toString() : "";
-                            dataRow[i * 4 + 10] = aggregationInfoResults.getMax()!= null ? aggregationInfoResults.getMax().toString() : "";
-                            dataRow[i * 4 + 11] = aggregationInfoResults.getAvg() != null ? aggregationInfoResults.getAvg().toString() : "";
-                            dataRow[i * 4 + 12] = aggregationInfoResults.getSum() != null ? aggregationInfoResults.getSum().toString() : "";
-                        } else {
-                            dataRow[i * 4 + 9] = "";
-                            dataRow[i * 4 + 10] = "";
-                            dataRow[i * 4 + 11] = "";
-                            dataRow[i * 4 + 12] = "";
-                        }
-                    }
-                    csvRowMap.put(rowKey, dataRow);
-                }
-            }
-
-            // After processing all data, write the rows to the CSV
-            // Write all rows to the CSV file
-            for (String[] dataRow : csvRowMap.values()) {
-
-                if(null == dataRow[1] || dataRow[1].isEmpty()) {
-                    continue;
-                }
-                // Convert the dataRow array into a comma-separated string
-                StringBuilder csvRow = new StringBuilder();
-                for (String value : dataRow) {
-                    csvRow.append(value).append(",");
-                }
-
-                // Remove trailing comma
-                csvRow.setLength(csvRow.length() - 1);
-
-                // Write the row to the CSV
-                writer.write(csvRow.toString());
-                writer.newLine(); // Move to the next line
-            }
-
-            LOGGER.info("CSV file created successfully: {}", outputFilePath);
-            // After creating the file, read and print its content
-            LOGGER.info("\nPrinting CSV contents:\n");
-            printCsv(outputFilePath);
-
-            LOGGER.info("***********************************");
-            LOGGER.info("Aggregation of workloads");
-            LOGGER.info("***********************************");
-            List<Map<String, String>> aggregatedMetricData = aggregateWorkloads(header, outputFilePath, "output.csv");
-
-            return aggregatedMetricData;
-        } catch (IOException e) {
-            LOGGER.error(String.valueOf(e));
-        }
-        return null;
-    }
-
     public static List<Map<String, String>> aggregateWorkloads(String header, String filename, String outputResults) throws IOException {
         LOGGER.info("Aggregating the data for file: {}", filename);
-
-        // Load the CSV file into a List of Maps
-        List<Map<String, String>> records = readCsv(filename);
-
-        Iterator<Map<String, String>> iterator = records.iterator();
-
-        // Remove the rows if there is no owner_kind, owner_name and workload
-        // Expected to ignore rows which can be pods / invalid
-        while (iterator.hasNext()) {
-            Map<String, String> row = iterator.next();
-            String owner_kind = row.get("owner_kind");
-            String owner_name = row.get("owner_name");
-            String workload = row.get("workload");
-            String workload_type = row.get("workload_type");
-
-            if (null == owner_kind || null == owner_name || null == workload || null == workload_type || owner_kind.isEmpty() || owner_name.isEmpty() ||
-                    workload.isEmpty() || workload_type.isEmpty()) {
-                iterator.remove();
-                LOGGER.info("removing a row");
-            }
-        }
-
-        // Add 'k8_object_type' column
-
-        // Based on the data observed, these are the assumptions:
-        // If owner_kind is 'ReplicaSet' and workload is '<none>', actual workload_type is ReplicaSet
-        // If owner_kind is 'ReplicationCOntroller' and workload is '<none>', actual workload_type is ReplicationController
-        // If owner_kind and workload has some names, workload_type is same as derived through queries.
-        for (Map<String, String> row : records) {
-            String ownerKind = row.get("owner_kind");
-            String workload = row.get("workload");
-            if ("ReplicaSet".equals(ownerKind) && (null==workload)) {
-                row.put("k8_object_type", "replicaset");
-            } else if ("ReplicationController".equals(ownerKind) && (null==workload)) {
-                row.put("k8_object_type", "replicationcontroller");
-            } else {
-                row.put("k8_object_type", row.get("workload_type"));
-            }
-        }
-
-        // Update 'k8_object_name' based on 'workload'
-        // If the workload is <none> (which indicates ReplicaSet and ReplicationCOntroller - ignoring pods/invalid cases), the name of the k8_object can be owner_name.
-        // If the workload has some other name, the k8_object_name is same as workload. In this case, owner_name cannot be used as there can be multiple owner_names for the same deployment(considering there are multiple replicasets)
-        for (Map<String, String> row : records) {
-            if (null != (row.get("workload"))) {
-                row.put("k8_object_name", row.get("workload"));
-            } else {
-                row.put("k8_object_name", row.get("owner_name"));
-            }
-        }
-
-        // Sort and group the data based on below columns to get a container for a workload and for an interval.
-        records.sort(Comparator.comparing((Map<String, String> row) -> row.get("namespace"))
-                .thenComparing(row -> row.get("k8_object_type"))
-                .thenComparing(row -> row.get("workload"))
-                .thenComparing(row -> row.get("container"))
-                .thenComparing(row -> row.get("interval_start")));
-
-
-        // Create output directory to store the output CSV files
-        String outputDir = "output";
-        Files.createDirectories(Paths.get(outputDir));
-
-        // Group records and write to separate CSV files
-        int counter = 0;
-        Map<String, List<Map<String, String>>> groupedData = new HashMap<>();
-        for (Map<String, String> record : records) {
-            String key = String.join("|", record.get("namespace"), record.get("k8_object_type"),
-                    record.get("workload"), record.get("container"), record.get("interval_start"));
-            groupedData.computeIfAbsent(key, k -> new ArrayList<>()).add(record);
-        }
-        LOGGER.info("groupedData: {}", groupedData);
-
-        for (List<Map<String, String>> group : groupedData.values()) {
-            counter++;
-            String fileName = "file_" + counter + ".csv";
-            writeCsv(outputDir + "/" + fileName, group);
-            LOGGER.info("{}/{}", outputDir, fileName);
-        }
-
         // Initialize variables for aggregation
         List<String> headerRow = new ArrayList<>();
         Set<String> columnsToIgnore = new HashSet<>(Arrays.asList("pod", "owner_name", "node"));
@@ -2758,246 +2530,171 @@ public class RecommendationEngine {
         // Map to hold aggregated data for each workload
         Map<String, List<Map<String, String>>> workloadDataMap = new HashMap<>();
 
-        // Step 1: Iterate through CSV files in the output directory
-        for (String fileName : new File(outputDir).list()) {
-            if (fileName.endsWith(".csv")) {
-                List<Map<String, String>> currentData = readCsv(outputDir + "/" + fileName);
-                LOGGER.info("Processing file: {}", fileName);
+        try {
+            // Load the CSV file into a List of Maps
+            List<Map<String, String>> records = readCsv(filename);
 
-                // Step 2: Initialize headers and check for "resource_id"
-                if (headerRow.isEmpty() && !currentData.isEmpty()) {
-                    headerRow.addAll(currentData.get(0).keySet());
-                    if (headerRow.contains("resource_id")) {
-                        columnsToIgnore.add("resource_id");
-                    }
-                }
+            // Remove the rows if there is no owner_kind, owner_name and workload
+            // Expected to ignore rows which can be pods / invalid
+            for (Map<String, String> row: records) {
+                String owner_kind = row.get("owner_kind");
+                String owner_name = row.get("owner_name");
+                String workload = row.get("workload");
+                String workload_type = row.get("workload_type");
 
-                // Step 3: Group the data by 'workload' and aggregate metrics for each workload
-                for (Map<String, String> row : currentData) {
-                    String interval_start = row.get("interval_start");
-                    String container = row.get("container");
-                    String k8_object_type = row.get("k8_object_type");
-                    String namespace = row.get("namespace");
-                    String workload = row.get("workload"); // Assuming 'workload' is a key in your data
-                    String key = interval_start + "|" + container + "|" + k8_object_type + "|" + namespace+ "|" + workload;
-                    workloadDataMap.putIfAbsent(key, new ArrayList<>());
-                    workloadDataMap.get(key).add(row);
-                }
+                records.removeIf(map -> null == owner_kind || null == owner_name || null == workload || null == workload_type || owner_kind.isEmpty() || owner_name.isEmpty() ||
+                        workload.isEmpty() || workload_type.isEmpty());
             }
-        }
 
-        // Step 4: Calculate aggregates (avg, min, max, sum) for each workload
-        for (String uniqueKey : workloadDataMap.keySet()) {
-            List<Map<String, String>> workloadRows = workloadDataMap.get(uniqueKey);
+            // Add 'k8_object_type' column
 
-            Map<String, String> aggregatedRow = new HashMap<>();
-            // Split the unique key to extract namespace, workload, and start_time
-            String[] keyParts = uniqueKey.split("\\|");
-            aggregatedRow.put("interval_start", keyParts[0]);
-            aggregatedRow.put("container", keyParts[1]);
-            aggregatedRow.put("k8_object_type", keyParts[2]);
-            aggregatedRow.put("namespace", keyParts[3]);
-            aggregatedRow.put("workload", keyParts[4]);
-
-            for (String key : headerRow) {
-                if (columnsToIgnore.contains(key)) continue; // Skip ignored columns
-
-                if (key.endsWith("avg")) {
-                    double avg = workloadRows.stream().mapToDouble(r -> {
-                        String value = r.get(key);
-                        return (null == value || value.isEmpty() || value.equals("null")) ? 0.0 : Double.parseDouble(value);
-                    }).average().orElse(0);
-                    aggregatedRow.put(key, String.valueOf(avg));
-                } else if (key.endsWith("min")) {
-                    double min = workloadRows.stream().mapToDouble(r -> {
-                        String value = r.get(key);
-                        return (null == value || value.isEmpty() || value.equals("null")) ? Double.POSITIVE_INFINITY : Double.parseDouble(value);
-                    }).min().orElse(Double.POSITIVE_INFINITY);
-                    aggregatedRow.put(key, String.valueOf(min));
-                } else if (key.endsWith("max")) {
-                    double max = workloadRows.stream().mapToDouble(r -> {
-                        String value = r.get(key);
-                        return (null == value || value.isEmpty() || value.equals("null")) ? Double.NEGATIVE_INFINITY : Double.parseDouble(value);
-                    }).max().orElse(Double.NEGATIVE_INFINITY);
-                    aggregatedRow.put(key, String.valueOf(max));
-                } else if (key.endsWith("sum")) {
-                    double sum = workloadRows.stream().mapToDouble(r -> {
-                        String value = r.get(key);
-                        return (null == value || value.isEmpty() || value.equals("null")) ? 0.0 : Double.parseDouble(value);
-                    }).sum();
-                    aggregatedRow.put(key, String.valueOf(sum));
+            // Based on the data observed, these are the assumptions:
+            // If owner_kind is 'ReplicaSet' and workload is '<none>', actual workload_type is ReplicaSet
+            // If owner_kind is 'ReplicationCOntroller' and workload is '<none>', actual workload_type is ReplicationController
+            // If owner_kind and workload has some names, workload_type is same as derived through queries.
+            for (Map<String, String> row : records) {
+                String ownerKind = row.get("owner_kind");
+                String workload = row.get("workload");
+                if ("ReplicaSet".equals(ownerKind) && (null == workload)) {
+                    row.put("k8_object_type", "replicaset");
+                } else if ("ReplicationController".equals(ownerKind) && (null == workload)) {
+                    row.put("k8_object_type", "replicationcontroller");
                 } else {
-                    // For non-aggregatable columns, just use the value from the first row
-                    aggregatedRow.put(key, workloadRows.get(0).get(key));
+                    row.put("k8_object_type", row.get("workload_type"));
                 }
             }
 
-            // Step 5: Add aggregated row to aggData
-            aggData.add(aggregatedRow);
-        }
-        for (Map<String, String> row : aggData) {
-            // Remove keys from the row that are in the columnsToIgnore set
-            for (String column : columnsToIgnore) {
-                row.remove(column);
-            }
-            // Replace "Infinity" and "-Infinity" with empty strings in the row
-            for (String key : row.keySet()) {
-                String value = row.get(key);
-                if ("Infinity".equals(value) || "-Infinity".equals(value)) {
-                    row.put(key, ""); // Set to empty string
-                } else if((key.contains("avg") || key.contains("sum")) && value.equals("0.0")) {
-                    row.put(key, "");
-                }
-            }
-        }
-
-        // Write the final aggregated results to the output CSV
-        writeFinalResults(header, aggData, outputResults, columnsToIgnore);
-
-        // Write aggregated data to final output CSV
-        printCsv(outputResults);
-
-        return aggData;
-    }
-
-    // Method to read CSV file and return List of Maps
-    private static List<Map<String, String>> readCsv(String filePath) throws IOException {
-        List<Map<String, String>> records = new ArrayList<>();
-        List<String> headers = new ArrayList<>();
-
-        try (BufferedReader br = Files.newBufferedReader(Paths.get(filePath))) {
-            String line;
-            boolean isHeader = true;
-            while ((line = br.readLine()) != null) {
-                String[] values = line.split(",");
-                if (isHeader) {
-                    headers.addAll(Arrays.asList(values));
-                    isHeader = false;
+            // Update 'k8_object_name' based on 'workload'
+            // If the workload is <none> (which indicates ReplicaSet and ReplicationCOntroller - ignoring pods/invalid cases), the name of the k8_object can be owner_name.
+            // If the workload has some other name, the k8_object_name is same as workload. In this case, owner_name cannot be used as there can be multiple owner_names for the same deployment(considering there are multiple replicasets)
+            for (Map<String, String> row : records) {
+                if (null != (row.get("workload"))) {
+                    row.put("k8_object_name", row.get("workload"));
                 } else {
-                    Map<String, String> rowMap = new HashMap<>();
-                    for (int i = 0; i < headers.size(); i++) {
-                        if (i < values.length) {
-                            rowMap.put(headers.get(i), values[i]);
-                        } else {
-                            rowMap.put(headers.get(i), null); // Handle missing columns
+                    row.put("k8_object_name", row.get("owner_name"));
+                }
+            }
+
+            // Sort and group the data based on below columns to get a container for a workload and for an interval.
+            records.sort(Comparator.comparing((Map<String, String> row) -> row.get("namespace"))
+                    .thenComparing(row -> row.get("k8_object_type"))
+                    .thenComparing(row -> row.get("workload"))
+                    .thenComparing(row -> row.get("container"))
+                    .thenComparing(row -> row.get("interval_start")));
+
+
+            // Create output directory to store the output CSV files
+            String outputDir = "output";
+            Files.createDirectories(Paths.get(outputDir));
+
+            // Group records and write to separate CSV files
+            int counter = 0;
+            Map<String, List<Map<String, String>>> groupedData = new HashMap<>();
+            for (Map<String, String> record : records) {
+                String key = String.join("|", record.get("namespace"), record.get("k8_object_type"),
+                        record.get("workload"), record.get("container"), record.get("interval_start"));
+                groupedData.computeIfAbsent(key, k -> new ArrayList<>()).add(record);
+            }
+            LOGGER.info("groupedData: {}", groupedData);
+
+            for (List<Map<String, String>> group : groupedData.values()) {
+                counter++;
+                String fileName = "file_" + counter + ".csv";
+                writeCsv(outputDir + "/" + fileName, group);
+                LOGGER.info("{}/{}", outputDir, fileName);
+            }
+
+            // Step 1: Iterate through CSV files in the output directory
+            for (String fileName : new File(outputDir).list()) {
+                if (fileName.endsWith(".csv")) {
+                    List<Map<String, String>> currentData = readCsv(outputDir + "/" + fileName);
+                    LOGGER.info("Processing file: {}", fileName);
+
+                    // Step 2: Initialize headers and check for "resource_id"
+                    if (headerRow.isEmpty() && !currentData.isEmpty()) {
+                        headerRow.addAll(currentData.get(0).keySet());
+                        if (headerRow.contains("resource_id")) {
+                            columnsToIgnore.add("resource_id");
                         }
                     }
-                    records.add(rowMap);
+
+                    // Step 3: Group the data by 'workload' and aggregate metrics for each workload
+                    for (Map<String, String> row : currentData) {
+                        String interval_start = row.get("interval_start");
+                        String container = row.get("container");
+                        String k8_object_type = row.get("k8_object_type");
+                        String namespace = row.get("namespace");
+                        String workload = row.get("workload");
+                        String key = interval_start + "|" + container + "|" + k8_object_type + "|" + namespace + "|" + workload;
+                        workloadDataMap.putIfAbsent(key, new ArrayList<>());
+                        workloadDataMap.get(key).add(row);
+                    }
                 }
             }
-        }
-        return records;
-    }
 
-    // Write List of Maps to a CSV file
-    private static void writeCsv(String filePath, List<Map<String, String>> data){
-        if (data.isEmpty()) return;
+            // Step 4: Calculate aggregates (avg, min, max, sum) for each workload
+            calculateAggregateValuesForWorkload(workloadDataMap, aggData, headerRow, columnsToIgnore);
 
-        try (BufferedWriter writer = Files.newBufferedWriter(Paths.get(filePath))) {
-            // Write header
-            writer.write(String.join(",", data.get(0).keySet()));
-            writer.newLine();
+            // Write the final aggregated results to the output CSV
+            writeFinalResults(header, aggData, outputResults, columnsToIgnore);
 
-            // Write each row
-            for (Map<String, String> row : data) {
-                writer.write(String.join(",", row.values()));
-                writer.newLine();
-            }
+            // Write aggregated data to final output CSV
+            printCsv(outputResults);
+
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
-    }
-
-    // Print CSV file contents
-    private static void printCsv(String filePath) {
-        LOGGER.info("Contents of {}", filePath + ":");
-        try (BufferedReader br = Files.newBufferedReader(Paths.get(filePath))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                LOGGER.info(line);
-            }
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-        }
-    }
-
-
-    // Write the final aggregated results to the output CSV file
-    private static void writeFinalResults(String headerRow, List<Map<String, String>> aggData,
-                                          String outputFile, Set<String> columnsToIgnore) {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter(outputFile))) {
-            // Step 1: Write the header
-            List<String> filteredHeader = new ArrayList<>();
-            List<String> headerColumns = List.of(headerRow.split(","));
-            for (String column : headerColumns) {
-                if (!columnsToIgnore.contains(column)) {
-                    filteredHeader.add(column); // Add only non-ignored columns to the filtered header
-                }
-            }
-
-            // Step 2: Write the filtered header to the file
-            writer.write(String.join(",", filteredHeader));
-            writer.newLine();
-
-            // Step 3: Write each row's data for only non-ignored columns
-            for (Map<String, String> row : aggData) {
-                List<String> filteredValues = new ArrayList<>();
-                for (String column : filteredHeader) {
-                    filteredValues.add(row.getOrDefault(column, "")); // Add only non-ignored column values
-                }
-                writer.write(String.join(",", filteredValues));
-                writer.newLine();
-            }
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage());
-        }
+        return aggData.isEmpty() ? null: aggData;
     }
 
     /* Converts aggregated data to container intervalResults */
     public HashMap<Timestamp, IntervalResults> convertAggrDataToIntervalResults(List<Map<String, String>> aggr_data) throws Exception {
         HashMap<Timestamp, IntervalResults> containerDataResults = new HashMap<>();
 
-        List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
-        List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString());
-        String format = null;
+        try {
+            List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
+            List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString());
+            String format = null;
 
-        IntervalResults intervalResults = new IntervalResults();
-        MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
-        HashMap<AnalyzerConstants.MetricName, MetricResults> resMap = new HashMap<>();
-        MetricResults metricResults = null;
-
-
-        for(Map<String , String> data_map:aggr_data) {
-            String e_timestamp = data_map.get("interval_end");
-            Timestamp eTime = Timestamp.valueOf(e_timestamp);
-
-            String s_timestamp = data_map.get("interval_start");
-            Timestamp sTime = Timestamp.valueOf(s_timestamp);
-
-            for(Map.Entry<String, String> metric: data_map.entrySet()){
-                String metricName = metric.getKey();
-                String aggrMetricValue = metric.getValue();
-                String metricNameWoFunction = metricName.split("_")[0];
+            IntervalResults intervalResults = new IntervalResults();
+            MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
+            HashMap<AnalyzerConstants.MetricName, MetricResults> resMap = new HashMap<>();
+            MetricResults metricResults = null;
 
 
-                if(!cpuFunction.contains(metricNameWoFunction) && !memFunction.contains(metricNameWoFunction)) {
-                    continue;
+            for (Map<String, String> data_map : aggr_data) {
+                String e_timestamp = data_map.get("interval_end");
+                Timestamp eTime = Timestamp.valueOf(e_timestamp);
+
+                String s_timestamp = data_map.get("interval_start");
+                Timestamp sTime = Timestamp.valueOf(s_timestamp);
+
+                for (Map.Entry<String, String> metric : data_map.entrySet()) {
+                    String metricName = metric.getKey();
+                    String aggrMetricValue = metric.getValue();
+                    String metricNameWoFunction = metricName.split("_")[0];
+
+
+                    if (!cpuFunction.contains(metricNameWoFunction) && !memFunction.contains(metricNameWoFunction)) {
+                        continue;
+                    }
+
+                    if (null == aggrMetricValue || aggrMetricValue.isEmpty()) {
+                        continue;
+                    }
+
+                    double metricValue = Double.parseDouble(aggrMetricValue);
+                    if (cpuFunction.contains(metricNameWoFunction)) {
+                        format = KruizeConstants.JSONKeys.CORES;
+                    } else if (memFunction.contains(metricNameWoFunction)) {
+                        format = KruizeConstants.JSONKeys.BYTES;
+                    }
+
+                    prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults, metricAggregationInfoResults, sTime, eTime, null, metricName, null, metricValue, format);
                 }
-
-                if (null == aggrMetricValue || aggrMetricValue.isEmpty()) {
-                    continue;
-                }
-
-                double metricValue = Double.parseDouble(aggrMetricValue);
-                if (cpuFunction.contains(metricNameWoFunction)) {
-                    format = KruizeConstants.JSONKeys.CORES;
-                } else if (memFunction.contains(metricNameWoFunction)) {
-                    format = KruizeConstants.JSONKeys.BYTES;
-                }
-
-                prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults, metricAggregationInfoResults, sTime, eTime, null, metricName, null, metricValue, format);
             }
-
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
         }
         return containerDataResults;
     }
