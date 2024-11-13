@@ -58,10 +58,10 @@ public class BulkJobStatus {
 
     // Method to set a notification in the map
     public void setNotification(String key, Notification notification) {
-        if (notifications == null) {
-            notifications = new HashMap<>(); // Initialize if null
+        if (this.notifications == null) {
+            this.notifications = new HashMap<>(); // Initialize if null
         }
-        notifications.put(key, notification);
+        this.notifications.put(key, notification);
     }
 
     public String getJobID() {
@@ -192,7 +192,7 @@ public class BulkJobStatus {
 
     public static class Recommendation {
         private KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status status;
-        private Notification notification; // Notifications can hold multiple entries
+        private Notification notifications; // Notifications can hold multiple entries
 
         public Recommendation(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status status) {
             this.status = status;
@@ -208,12 +208,12 @@ public class BulkJobStatus {
             this.status = status;
         }
 
-        public Notification getNotification() {
-            return notification;
+        public Notification getNotifications() {
+            return notifications;
         }
 
-        public void setNotification(Notification notification) {
-            this.notification = notification;
+        public void setNotifications(Notification notifications) {
+            this.notifications = notifications;
         }
     }
 

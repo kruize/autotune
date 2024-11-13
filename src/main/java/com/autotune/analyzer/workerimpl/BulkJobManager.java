@@ -210,7 +210,7 @@ public class BulkJobManager implements Runnable {
                                             } catch (Exception e) {
                                                 e.printStackTrace();
                                                 experiment.getRecommendation().setStatus(NotificationConstants.Status.FAILED);
-                                                experiment.getRecommendation().setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
+                                                experiment.getRecommendation().setNotifications(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
                                             }
                                         });
                                     }

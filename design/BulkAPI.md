@@ -109,6 +109,8 @@ GET /bulk?job_id=123e4567-e89b-12d3-a456-426614174000&verbose=true
 **Body (JSON):**
 When verbose=true, additional detailed information about the job is provided.
 
+example 1:
+
 ```json
 {
   "status": "IN_PROGRESS",
@@ -173,6 +175,27 @@ When verbose=true, additional detailed information about the job is provided.
 }
 ```
 
+example 2:
+
+```json
+{
+  "status": "FAILED",
+  "total_experiments": 0,
+  "processed_experiments": 0,
+  "notifications": {
+    "503": {
+      "type": "ERROR",
+      "message": "HttpHostConnectException: Unable to connect to the data source. Please try again later. (receive series from Addr: 10.96.192.138:10901 LabelSets: {prometheus=\"monitoring/k8stage\", prometheus_replica=\"prometheus-k8stage-0\"},{prometheus=\"monitoring/k8stage\", prometheus_replica=\"prometheus-k8stage-1\"},{replica=\"thanos-ruler-0\", ruler_cluster=\"\"} MinTime: 1730222825216 MaxTime: 1731412800000: rpc error: code = Unknown desc = receive series from 01JBV2JN5SVN84D3HD5MVSGN3A: load chunks: get range reader: Please reduce your request rate)",
+      "code": 503
+    }
+  },
+  "job_id": "270fa4d9-2701-4ca0-b056-74229cc28498",
+  "job_start_time": "2024-11-12T15:05:46.362Z",
+  "job_end_time": "2024-11-12T15:06:05.301Z"
+}
+
+```
+
 ### Response Parameters
 
 ## API Description: Experiment and Recommendation Processing Status
@@ -201,7 +224,7 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
     - Each object in the `experiments` array has the following structure:
 
   | Field                   | Type         | Description                                                              |
-    |-------------------------|--------------|--------------------------------------------------------------------------|
+            |-------------------------|--------------|--------------------------------------------------------------------------|
   | `name`                  | `string`     | Name of the experiment, typically indicating a service name and deployment context. |
   | `notification`          | `object`     | Notifications specific to this experiment (if any).                      |
   | `recommendation`        | `object`     | Recommendation status and notifications specific to this experiment.     |
@@ -212,7 +235,7 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
   errors (if any).
 
   | Field                   | Type         | Description                                                              |
-    |-------------------------|--------------|--------------------------------------------------------------------------|
+            |-------------------------|--------------|--------------------------------------------------------------------------|
   | `status`                | `string`     | Status of the recommendation (e.g., `"unprocessed"`, `"processed"`, `"processing"`, `"failed"`). |
   | `notification`          | `object`     | Notifications related to recommendation processing.                      |
 
@@ -221,7 +244,7 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
   Both the `notification` and `recommendation.notification` fields may contain error messages or warnings as follows:
 
   | Field                   | Type         | Description                                                                |
-    |-------------------------|--------------|----------------------------------------------------------------------------|
+            |-------------------------|--------------|----------------------------------------------------------------------------|
   | `type`                  | `string`     | Type of notification (e.g., `"info"`,`"error"`, `"warning"`).              |
   | `message`               | `string`     | Description of the notification message.                                   |
   | `code`                  | `integer`    | HTTP-like code indicating the type of error (e.g., `400` for bad request). |
