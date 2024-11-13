@@ -288,8 +288,8 @@ public class BulkJobManager implements Runnable {
     private JSONObject processDateRange(BulkInput.TimeRange timeRange) {
         JSONObject dateRange = null;
         if (null != timeRange && timeRange.getStart() != null && timeRange.getEnd() != null) {
-            String intervalEndTimeStr = timeRange.getStart();
-            String intervalStartTimeStr = timeRange.getEnd();
+            String intervalStartTimeStr = timeRange.getStart();
+            String intervalEndTimeStr = timeRange.getEnd();
             long interval_end_time_epoc = 0;
             long interval_start_time_epoc = 0;
             LocalDateTime localDateTime = LocalDateTime.parse(intervalEndTimeStr, DateTimeFormatter.ofPattern(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT));
