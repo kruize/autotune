@@ -66,6 +66,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Scanner;
 
+import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED;
 import static com.autotune.utils.ServerContext.*;
 
 public class Autotune {
@@ -125,7 +126,7 @@ public class Autotune {
                 try {
                     setUpDataSources();
                 } catch (Exception e) {
-                    LOGGER.error("***Failed to setup datasource connection due to : {}***", e.getMessage());
+                    LOGGER.error(DATASOURCE_CONNECTION_FAILED, e.getMessage());
                 }
                 // checking available DataSources
                 checkAvailableDataSources();

@@ -37,6 +37,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.*;
+import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_ADDED;
+
 public class DataSourceCollection {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCollection.class);
     private static DataSourceCollection dataSourceCollectionInstance = new DataSourceCollection();
@@ -97,7 +100,7 @@ public class DataSourceCollection {
 
 
         if (dataSourceCollection.containsKey(name)) {
-            throw new DataSourceAlreadyExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_ALREADY_EXIST);
+            throw new DataSourceAlreadyExist(DATASOURCE_ALREADY_EXIST);
         }
 
         if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
@@ -108,14 +111,14 @@ public class DataSourceCollection {
                 // add the data source to DB
                 addedToDB = new ExperimentDBService().addDataSourceToDB(datasource);
                 if (addedToDB.isSuccess()) {
-                    LOGGER.info("Datasource added to the DB successfully.");
+                    LOGGER.info(DATASOURCE_ADDED);
                 } else {
-                    LOGGER.error("Failed to add datasource to DB: {}", addedToDB.getMessage());
+                    LOGGER.error("{}: {}", DATASOURCE_NOT_SERVICEABLE, addedToDB.getMessage());
                 }
                 dataSourceCollection.put(name, datasource);
-                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_ADDED);
+                LOGGER.info(DATASOURCE_ADDED);
             } else {
-                throw new DataSourceNotServiceable(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE);
+                throw new DataSourceNotServiceable(DATASOURCE_NOT_SERVICEABLE);
             }
         } else {
             throw new UnsupportedDataSourceProvider(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.UNSUPPORTED_DATASOURCE_PROVIDER);
@@ -145,11 +148,11 @@ public class DataSourceCollection {
             try {
                 DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
                 if (null != dataSourceInfo) {
-                    LOGGER.error("Datasource: {} already exists!", name);
+                    LOGGER.error("{} : {}", DATASOURCE_ALREADY_EXIST, name);
                     continue;
                 }
             } catch (Exception e) {
-                LOGGER.error("Loading saved datasource {} failed: {} ", name, e.getMessage());
+                LOGGER.error(DATASOURCE_DB_LOAD_FAILED, name, e.getMessage());
             }
             String provider = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_PROVIDER);
             String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
@@ -161,7 +164,7 @@ public class DataSourceCollection {
                 // create the corresponding authentication object
                 authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
             } catch (Exception e) {
-                LOGGER.warn("Auth details are missing for datasource: {}", name);
+                LOGGER.warn(DATASOURCE_DB_AUTH_LOAD_FAILED, name, e.getMessage());
                 authConfig = AuthenticationConfig.noAuth();
             }
 
@@ -217,7 +220,7 @@ public class DataSourceCollection {
      * deletes the datasource from the Hashmap
      *
      * @param name String containing the name of the datasource to be deleted
-     *                                                             TODO: add db related operations
+     *                                                                                     TODO: add db related operations
      */
     public void deleteDataSource(String name) throws DataSourceMissingRequiredFiled, DataSourceDoesNotExist {
 
@@ -237,7 +240,7 @@ public class DataSourceCollection {
      *
      * @param name          String containing the name of the datasource to be updated
      * @param newDataSource DataSourceInfo object with updated values
-     *                                                                                                          TODO: add db related operations
+     *                                                                                                                                                    TODO: add db related operations
      */
     public void updateDataSource(String name, DataSourceInfo newDataSource) throws UnsupportedDataSourceProvider, DataSourceNotServiceable, DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DataSourceDoesNotExist {
 

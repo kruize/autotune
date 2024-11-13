@@ -34,6 +34,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 
+import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.*;
+import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceMetadataSuccessMsgs.METADATA_ADDED;
+
 /**
  * DataSourceManager is an interface to manage (create and update) metadata
  * of data sources
@@ -150,9 +153,9 @@ public class DataSourceManager {
             // add the data source to DB
             addedToDB = new ExperimentDBService().addMetadataToDB(dataSourceMetadataInfo);
             if (addedToDB.isSuccess()) {
-                LOGGER.debug("Metadata added to the DB successfully.");
+                LOGGER.debug(METADATA_ADDED);
             } else {
-                LOGGER.error("Failed to add metadata to DB: {}", addedToDB.getMessage());
+                LOGGER.error(LOAD_DATASOURCE_METADATA_TO_DB_ERROR, addedToDB.getMessage());
             }
         } catch (Exception e) {
             LOGGER.error("Exception occurred while adding metadata : {} ", e.getMessage());
@@ -165,11 +168,11 @@ public class DataSourceManager {
         try {
             DataSourceMetadataInfo dataSourceMetadataInfo = new ExperimentDBService().loadMetadataFromDBByName(dataSourceName, "false");
             if (null != dataSourceMetadataInfo) {
-                LOGGER.error("Metadata already exists for datasource: {}!", dataSourceName);
+                LOGGER.error(METADATA_EXIST, dataSourceName);
                 isPresent = true;
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to load metadata for the datasource: {}: {} ", dataSourceName, e.getMessage());
+            LOGGER.error(METADATA_LOAD_FROM_DB, dataSourceName, e.getMessage());
         }
         return isPresent;
     }
