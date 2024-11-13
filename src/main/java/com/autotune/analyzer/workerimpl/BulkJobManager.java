@@ -183,6 +183,11 @@ public class BulkJobManager implements Runnable {
                                         e.printStackTrace();
                                         jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                         experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_BAD_REQUEST));
+                                    } finally {
+                                        if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
+                                            jobData.setStatus(COMPLETED);
+                                            jobData.setEndTime(Instant.now());
+                                        }
                                     }
 
                                     if (expriment_exists) {
@@ -198,10 +203,6 @@ public class BulkJobManager implements Runnable {
                                                 LOGGER.debug("API Response code: {}", recommendationResponseCode);
                                                 if (recommendationResponseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
                                                     jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
-                                                    if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
-                                                        jobData.setStatus(COMPLETED);
-                                                        jobData.setEndTime(Instant.now());
-                                                    }
                                                     experiment.getRecommendation().setStatus(NotificationConstants.Status.PROCESSED);
                                                 } else {
                                                     experiment.getRecommendation().setStatus(NotificationConstants.Status.FAILED);
@@ -211,12 +212,19 @@ public class BulkJobManager implements Runnable {
                                                 e.printStackTrace();
                                                 experiment.getRecommendation().setStatus(NotificationConstants.Status.FAILED);
                                                 experiment.getRecommendation().setNotifications(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
+                                            } finally {
+                                                if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
+                                                    jobData.setStatus(COMPLETED);
+                                                    jobData.setEndTime(Instant.now());
+                                                }
                                             }
                                         });
                                     }
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                     experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
+                                } finally {
+
                                 }
                             });
                         }
