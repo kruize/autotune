@@ -203,15 +203,15 @@ public class BulkJobManager implements Runnable {
                                                 LOGGER.debug("API Response code: {}", recommendationResponseCode);
                                                 if (recommendationResponseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
                                                     jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
-                                                    experiment.getRecommendation().setStatus(NotificationConstants.Status.PROCESSED);
+                                                    experiment.getRecommendations().setStatus(NotificationConstants.Status.PROCESSED);
                                                 } else {
-                                                    experiment.getRecommendation().setStatus(NotificationConstants.Status.FAILED);
+                                                    experiment.getRecommendations().setStatus(NotificationConstants.Status.FAILED);
                                                     experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, recommendationResponseCode.getResponseBody().toString(), recommendationResponseCode.getStatusCode()));
                                                 }
                                             } catch (Exception e) {
                                                 e.printStackTrace();
-                                                experiment.getRecommendation().setStatus(NotificationConstants.Status.FAILED);
-                                                experiment.getRecommendation().setNotifications(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
+                                                experiment.getRecommendations().setStatus(NotificationConstants.Status.FAILED);
+                                                experiment.getRecommendations().setNotifications(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
                                             } finally {
                                                 if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
                                                     jobData.setStatus(COMPLETED);

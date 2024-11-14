@@ -172,17 +172,17 @@ public class BulkJobStatus {
     public static class Experiment {
         private String name;
         private Notification notification; // Empty by default
-        private Recommendation recommendation;
+        private Recommendation recommendations;
 
         public Experiment(String name) {
             this.name = name;
             this.notification = null; // Start with null notification
-            this.recommendation = new Recommendation(UNPROCESSED); // Start with unprocessed status
+            this.recommendations = new Recommendation(UNPROCESSED); // Start with unprocessed status
         }
 
         // Getters and setters
-        public Recommendation getRecommendation() {
-            return recommendation;
+        public Recommendation getRecommendations() {
+            return recommendations;
         }
 
         public void setNotification(Notification notification) {

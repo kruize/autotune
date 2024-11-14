@@ -122,25 +122,25 @@ example 1:
   "experiments": [
     {
       "name": "prometheus-1|default|kube-system|coredns(deployment)|coredns",
-      "recommendation": {
+      "recommendations": {
         "status": "unprocessed"
       }
     },
     {
       "name": "prometheus-1|default|kube-system|kindnet(deployment)|kindnet-cni",
-      "recommendation": {
+      "recommendations": {
         "status": "processed"
       }
     },
     {
       "name": "prometheus-1|default|monitoring|kruize(deployment)|kruize",
-      "recommendation": {
+      "recommendations": {
         "status": "processing"
       }
     },
     {
       "name": "prometheus-1|default|monitoring|kruize(deployment)|kruize",
-      "recommendation": {
+      "recommendations": {
         "status": "failed",
         "notifications": {
           "400": {
@@ -153,14 +153,7 @@ example 1:
     },
     {
       "name": "prometheus-1|default|monitoring|kruize(deployment)|kruize",
-      "notifications": {
-        "400": {
-          "type": "error",
-          "message": "Metric Profile not found",
-          "code": 400
-        }
-      },
-      "recommendation": {
+      "recommendations": {
         "status": "failed",
         "notifications": {
           "400": {
@@ -224,7 +217,7 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
     - Each object in the `experiments` array has the following structure:
 
   | Field                   | Type         | Description                                                              |
-            |-------------------------|--------------|--------------------------------------------------------------------------|
+              |-------------------------|--------------|--------------------------------------------------------------------------|
   | `name`                  | `string`     | Name of the experiment, typically indicating a service name and deployment context. |
   | `notification`          | `object`     | Notifications specific to this experiment (if any).                      |
   | `recommendation`        | `object`     | Recommendation status and notifications specific to this experiment.     |
@@ -235,7 +228,7 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
   errors (if any).
 
   | Field                   | Type         | Description                                                              |
-            |-------------------------|--------------|--------------------------------------------------------------------------|
+              |-------------------------|--------------|--------------------------------------------------------------------------|
   | `status`                | `string`     | Status of the recommendation (e.g., `"unprocessed"`, `"processed"`, `"processing"`, `"failed"`). |
   | `notification`          | `object`     | Notifications related to recommendation processing.                      |
 
@@ -244,7 +237,7 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
   Both the `notification` and `recommendation.notification` fields may contain error messages or warnings as follows:
 
   | Field                   | Type         | Description                                                                |
-            |-------------------------|--------------|----------------------------------------------------------------------------|
+              |-------------------------|--------------|----------------------------------------------------------------------------|
   | `type`                  | `string`     | Type of notification (e.g., `"info"`,`"error"`, `"warning"`).              |
   | `message`               | `string`     | Description of the notification message.                                   |
   | `code`                  | `integer`    | HTTP-like code indicating the type of error (e.g., `400` for bad request). |
