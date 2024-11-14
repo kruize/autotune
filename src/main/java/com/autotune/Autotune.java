@@ -24,6 +24,9 @@ import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.exceptions.datasource.DataSourceAlreadyExist;
+import com.autotune.common.exceptions.datasource.DataSourceNotServiceable;
+import com.autotune.common.exceptions.datasource.UnsupportedDataSourceProvider;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.experimentManager.core.ExperimentManager;
@@ -31,7 +34,10 @@ import com.autotune.operator.InitializeDeployment;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
-import com.autotune.utils.*;
+import com.autotune.utils.CloudWatchAppender;
+import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.MetricsConfig;
+import com.autotune.utils.ServerContext;
 import com.autotune.utils.filter.KruizeCORSFilter;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
@@ -50,12 +56,17 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.DispatcherType;
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Scanner;
 
+import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED;
 import static com.autotune.utils.ServerContext.*;
 
 public class Autotune {
@@ -112,7 +123,11 @@ public class Autotune {
                 // load available datasources from db
                 loadDataSourcesFromDB();
                 // setting up DataSources
-                setUpDataSources();
+                try {
+                    setUpDataSources();
+                } catch (Exception e) {
+                    LOGGER.error(DATASOURCE_CONNECTION_FAILED, e.getMessage());
+                }
                 // checking available DataSources
                 checkAvailableDataSources();
                 // load available metric profiles from db
@@ -124,7 +139,7 @@ public class Autotune {
             //Regenerate a Hibernate session following the creation of new tables
             KruizeHibernateUtil.buildSessionFactory();
         } catch (Exception | K8sTypeNotSupportedException | MonitoringAgentNotSupportedException |
-                MonitoringAgentNotFoundException e) {
+                 MonitoringAgentNotFoundException e) {
             e.printStackTrace();
             System.exit(1);
         }
@@ -170,7 +185,7 @@ public class Autotune {
     /**
      * Set up the data sources available at installation time from config file
      */
-    private static void setUpDataSources() {
+    private static void setUpDataSources() throws UnsupportedDataSourceProvider, DataSourceNotServiceable, DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
         dataSourceCollection.addDataSourcesFromConfigFile(KruizeConstants.CONFIG_FILE);
     }
@@ -190,7 +205,7 @@ public class Autotune {
         DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
         LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
         HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
-        for (String name: dataSources.keySet()) {
+        for (String name : dataSources.keySet()) {
             DataSourceInfo dataSource = dataSources.get(name);
             String dataSourceName = dataSource.getName();
             String url = dataSource.getUrl().toString();
