@@ -449,6 +449,8 @@ public class KruizeConstants {
             public static final String UNSUPPORTED_DATASOURCE_PROVIDER = "Datasource provider is invalid.";
             public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
             public static final String DATASOURCE_CONNECTION_FAILED = "Datasource connection refused or timed out.";
+            public static final String DATASOURCE_DB_LOAD_FAILED = "Loading saved datasource {} details from db failed: {}";
+            public static final String DATASOURCE_DB_AUTH_LOAD_FAILED = "Loading datasource {} AUTH details failed: {}";
             public static final String DATASOURCE_ALREADY_EXIST = "Datasource with the name already exist.";
             public static final String DATASOURCE_NOT_EXIST = "Datasource with the name does not exist.";
             public static final String INVALID_DATASOURCE_URL = "Datasource url is not valid.";
@@ -502,7 +504,21 @@ public class KruizeConstants {
             }
         }
 
+        public static class DataSourceMetadataSuccessMsgs {
+            public static final String METADATA_ADDED = "Metadata added to the DB successfully.";
+            public static final String DATASOURCE_DELETED = "Successfully deleted datasource: ";
+            public static final String DATASOURCE_FOUND = "Datasource found: ";
+            public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
+            public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
+
+            private DataSourceMetadataSuccessMsgs() {
+
+            }
+        }
+
         public static class DataSourceMetadataErrorMsgs {
+            public static final String METADATA_EXIST = "Metadata already exists for datasource: {}!";
+            public static final String METADATA_LOAD_FROM_DB = "Failed to load metadata for the datasource: {}: {} ";
             public static final String MISSING_DATASOURCE_METADATA_DATASOURCE_NAME = "DataSourceMetadata Datasource name cannot be empty";
             public static final String MISSING_DATASOURCE_METADATA_WORKLOAD_MAP = "DataSourceMetadata Workload data cannot be empty or null";
             public static final String MISSING_DATASOURCE_METADATA_CONTAINER_MAP = "DataSourceMetadata Container data cannot be empty or null";
@@ -530,6 +546,7 @@ public class KruizeConstants {
             public static final String SET_CONTAINER_MAP_ERROR = "containerHashMap is null, no containers provided for workload: ";
             public static final String SET_NAMESPACE_MAP_ERROR = "namespaceHashMap is null, no namespaces provided for cluster: ";
             public static final String LOAD_DATASOURCE_FROM_DB_ERROR = "Error loading datasource - %s from DB: %s";
+            public static final String LOAD_DATASOURCE_METADATA_TO_DB_ERROR = "Failed to add metadata to DB: {}";
             public static final String LOAD_DATASOURCE_METADATA_FROM_DB_ERROR = "Error loading datasource - %s from DB: %s";
             public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_MSG = "Validation of imported metadata failed, mandatory fields missing: %s";
             public static final String NAMESPACE_QUERY_VALIDATION_FAILED = "Validation failed for namespace data query.";
