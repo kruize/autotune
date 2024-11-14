@@ -59,8 +59,6 @@ import java.security.NoSuchAlgorithmException;
 public class GenericRestApiClient {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRestApiClient.class);
-    private static final int MAX_RETRIES = 5;
-    private static final long INITIAL_BACKOFF_MS = 1000; // 1 second
     private String baseURL;
     private BasicAuthentication basicAuthentication;
     private BearerAccessToken bearerAccessToken;
@@ -100,14 +98,14 @@ public class GenericRestApiClient {
             // Apply authentication
             applyAuthentication(httpRequestBase);
 
-            LOGGER.info("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
+            LOGGER.debug("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
 
             // Execute the request and get the HttpResponse
             HttpResponse response = httpclient.execute(httpRequestBase);
 
             // Get and print the response code
             int responseCode = response.getStatusLine().getStatusCode();
-            LOGGER.info("Response code: {}", responseCode);
+            LOGGER.debug("Response code: {}", responseCode);
 
             // Get the response body if needed
             jsonResponse = new StringResponseHandler().handleResponse(response);
