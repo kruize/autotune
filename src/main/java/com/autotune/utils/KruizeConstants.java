@@ -18,6 +18,7 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
+import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.text.SimpleDateFormat;
@@ -811,6 +812,72 @@ public class KruizeConstants {
             CREATE_EXPERIMENT_CONFIG_BEAN.setThreshold(0.1);
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);
+        }
+
+        public static class NotificationConstants {
+
+            public static final BulkJobStatus.Notification JOB_NOT_FOUND_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.WARNING,
+                    JOB_NOT_FOUND_MSG,
+                    404
+            );
+            public static final BulkJobStatus.Notification LIMIT_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.INFO,
+                    LIMIT_MESSAGE,
+                    400
+            );
+            public static final BulkJobStatus.Notification NOTHING_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.INFO,
+                    NOTHING,
+                    400
+            );
+            public static final BulkJobStatus.Notification FETCH_METRIC_FAILURE = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Not able to fetch metrics",
+                    400
+            );
+            public static final BulkJobStatus.Notification DATASOURCE_NOT_REG_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Datasource not registered with Kruize. (%s)",
+                    400
+            );
+            public static final BulkJobStatus.Notification DATASOURCE_DOWN_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "HttpHostConnectException: Unable to connect to the data source. Please try again later. (%s)",
+                    503
+            );
+            public static final BulkJobStatus.Notification DATASOURCE_GATEWAY_TIMEOUT_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "SocketTimeoutException: request timed out waiting for a data source response. (%s)",
+                    504
+            );
+            public static final BulkJobStatus.Notification DATASOURCE_CONNECT_TIMEOUT_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "ConnectTimeoutException: cannot establish a data source connection in a given time frame due to connectivity issues. (%s)",
+                    503
+            );
+
+
+            // More notification constants can be added here as needed
+
+            public enum Status {
+                PROCESSED("PROCESSED"),
+                UNPROCESSED("UNPROCESSED"),
+                PROCESSING("PROCESSING"),
+                FAILED("FAILED");
+
+                private final String status;
+
+                Status(String status) {
+                    this.status = status;
+                }
+
+                public String getStatus() {
+                    return status;
+                }
+            }
+
+
         }
     }
 }

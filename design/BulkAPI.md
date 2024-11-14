@@ -109,79 +109,84 @@ GET /bulk?job_id=123e4567-e89b-12d3-a456-426614174000&verbose=true
 **Body (JSON):**
 When verbose=true, additional detailed information about the job is provided.
 
+example 1:
+
 ```json
 {
   "status": "IN_PROGRESS",
   "total_experiments": 23,
   "processed_experiments": 22,
-  "data": {
-    "experiments": {
-      "new": [
-        "prometheus-1|default|monitoring|node-exporter(daemonset)|node-exporter",
-        "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor",
-        "prometheus-1|default|monitoring|alertmanager-main(statefulset)|config-reloader",
-        "prometheus-1|default|monitoring|alertmanager-main(statefulset)|alertmanager",
-        "prometheus-1|default|monitoring|prometheus-operator(deployment)|kube-rbac-proxy",
-        "prometheus-1|default|kube-system|coredns(deployment)|coredns",
-        "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|config-reloader",
-        "prometheus-1|default|monitoring|blackbox-exporter(deployment)|kube-rbac-proxy",
-        "prometheus-1|default|monitoring|prometheus-operator(deployment)|prometheus-operator",
-        "prometheus-1|default|monitoring|node-exporter(daemonset)|kube-rbac-proxy",
-        "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-self",
-        "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-state-metrics",
-        "prometheus-1|default|monitoring|kruize(deployment)|kruize",
-        "prometheus-1|default|monitoring|blackbox-exporter(deployment)|module-configmap-reloader",
-        "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|prometheus",
-        "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-main",
-        "prometheus-1|default|kube-system|kube-proxy(daemonset)|kube-proxy",
-        "prometheus-1|default|monitoring|prometheus-adapter(deployment)|prometheus-adapter",
-        "prometheus-1|default|monitoring|grafana(deployment)|grafana",
-        "prometheus-1|default|kube-system|kindnet(daemonset)|kindnet-cni",
-        "prometheus-1|default|monitoring|kruize-db-deployment(deployment)|kruize-db",
-        "prometheus-1|default|monitoring|blackbox-exporter(deployment)|blackbox-exporter"
-      ],
-      "updated": [],
-      "failed": null
-    },
-    "recommendations": {
-      "data": {
-        "processed": [
-          "prometheus-1|default|monitoring|alertmanager-main(statefulset)|config-reloader",
-          "prometheus-1|default|monitoring|node-exporter(daemonset)|node-exporter",
-          "prometheus-1|default|local-path-storage|local-path-provisioner(deployment)|local-path-provisioner",
-          "prometheus-1|default|monitoring|alertmanager-main(statefulset)|alertmanager",
-          "prometheus-1|default|monitoring|prometheus-operator(deployment)|kube-rbac-proxy",
-          "prometheus-1|default|kube-system|coredns(deployment)|coredns",
-          "prometheus-1|default|monitoring|blackbox-exporter(deployment)|kube-rbac-proxy",
-          "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|config-reloader",
-          "prometheus-1|default|monitoring|prometheus-operator(deployment)|prometheus-operator",
-          "prometheus-1|default|monitoring|node-exporter(daemonset)|kube-rbac-proxy",
-          "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-self",
-          "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-state-metrics",
-          "prometheus-1|default|monitoring|kruize(deployment)|kruize",
-          "prometheus-1|default|monitoring|blackbox-exporter(deployment)|module-configmap-reloader",
-          "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|prometheus",
-          "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-main",
-          "prometheus-1|default|kube-system|kube-proxy(daemonset)|kube-proxy",
-          "prometheus-1|default|monitoring|prometheus-adapter(deployment)|prometheus-adapter",
-          "prometheus-1|default|monitoring|grafana(deployment)|grafana",
-          "prometheus-1|default|kube-system|kindnet(daemonset)|kindnet-cni",
-          "prometheus-1|default|monitoring|kruize-db-deployment(deployment)|kruize-db",
-          "prometheus-1|default|monitoring|blackbox-exporter(deployment)|blackbox-exporter"
-        ],
-        "processing": [
-          "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor"
-        ],
-        "unprocessed": [
-        ],
-        "failed": []
-      }
-    }
-  },
   "job_id": "5798a2df-6c67-467b-a3c2-befe634a0e3a",
   "job_start_time": "2024-10-09T18:09:31.549Z",
-  "job_end_time": null
+  "job_end_time": null,
+  "experiments": [
+    {
+      "name": "prometheus-1|default|kube-system|coredns(deployment)|coredns",
+      "recommendations": {
+        "status": "unprocessed"
+      }
+    },
+    {
+      "name": "prometheus-1|default|kube-system|kindnet(deployment)|kindnet-cni",
+      "recommendations": {
+        "status": "processed"
+      }
+    },
+    {
+      "name": "prometheus-1|default|monitoring|kruize(deployment)|kruize",
+      "recommendations": {
+        "status": "processing"
+      }
+    },
+    {
+      "name": "prometheus-1|default|monitoring|kruize(deployment)|kruize",
+      "recommendations": {
+        "status": "failed",
+        "notifications": {
+          "400": {
+            "type": "error",
+            "message": "Not able to fetch metrics",
+            "code": 400
+          }
+        }
+      }
+    },
+    {
+      "name": "prometheus-1|default|monitoring|kruize(deployment)|kruize",
+      "recommendations": {
+        "status": "failed",
+        "notifications": {
+          "400": {
+            "type": "error",
+            "message": "Not able to fetch metrics",
+            "code": 400
+          }
+        }
+      }
+    }
+  ]
 }
+```
+
+example 2:
+
+```json
+{
+  "status": "FAILED",
+  "total_experiments": 0,
+  "processed_experiments": 0,
+  "notifications": {
+    "503": {
+      "type": "ERROR",
+      "message": "HttpHostConnectException: Unable to connect to the data source. Please try again later. (receive series from Addr: 10.96.192.138:10901 LabelSets: {prometheus=\"monitoring/k8stage\", prometheus_replica=\"prometheus-k8stage-0\"},{prometheus=\"monitoring/k8stage\", prometheus_replica=\"prometheus-k8stage-1\"},{replica=\"thanos-ruler-0\", ruler_cluster=\"\"} MinTime: 1730222825216 MaxTime: 1731412800000: rpc error: code = Unknown desc = receive series from 01JBV2JN5SVN84D3HD5MVSGN3A: load chunks: get range reader: Please reduce your request rate)",
+      "code": 503
+    }
+  },
+  "job_id": "270fa4d9-2701-4ca0-b056-74229cc28498",
+  "job_start_time": "2024-11-12T15:05:46.362Z",
+  "job_end_time": "2024-11-12T15:06:05.301Z"
+}
+
 ```
 
 ### Response Parameters
@@ -205,40 +210,37 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
     - **Type**: `Integer`
     - **Description**: Number of experiments that have been processed so far.
 
-- **data**:
-    - **Type**: `Object`
-    - **Description**: Contains detailed information about the experiments and recommendations being processed.
+- **experiments**:
+    - **Type**: `Array `
+    - **Description**: Array of experiment objects, each containing details about individual experiments.
 
-    - **experiments**:
-        - **new**:
-            - **Type**: `Array of Strings`
-            - **Description**: List of new experiments that have been identified but not yet processed.
+    - Each object in the `experiments` array has the following structure:
 
-        - **updated**:
-            - **Type**: `Array of Strings`
-            - **Description**: List of experiments that were previously processed but have now been updated.
+  | Field                   | Type         | Description                                                              |
+              |-------------------------|--------------|--------------------------------------------------------------------------|
+  | `name`                  | `string`     | Name of the experiment, typically indicating a service name and deployment context. |
+  | `notification`          | `object`     | Notifications specific to this experiment (if any).                      |
+  | `recommendation`        | `object`     | Recommendation status and notifications specific to this experiment.     |
 
-        - **failed**:
-            - **Type**: `null or Array`
-            - **Description**: List of experiments that failed during processing. If no failures, the value is `null`.
+  #### Recommendation Object
 
-    - **recommendations**:
-        - **data**:
-            - **processed**:
-                - **Type**: `Array of Strings`
-                - **Description**: List of experiments for which recommendations have already been processed.
+  The `recommendation` field within each experiment provides information about recommendation processing status and
+  errors (if any).
 
-            - **processing**:
-                - **Type**: `Array of Strings`
-                - **Description**: List of experiments that are currently being processed for recommendations.
+  | Field                   | Type         | Description                                                              |
+              |-------------------------|--------------|--------------------------------------------------------------------------|
+  | `status`                | `string`     | Status of the recommendation (e.g., `"unprocessed"`, `"processed"`, `"processing"`, `"failed"`). |
+  | `notification`          | `object`     | Notifications related to recommendation processing.                      |
 
-            - **unprocessed**:
-                - **Type**: `Array of Strings`
-                - **Description**: List of experiments that have not yet been processed for recommendations.
+  #### Notification Object
 
-            - **failed**:
-                - **Type**: `Array of Strings`
-                - **Description**: List of experiments for which the recommendation process failed.
+  Both the `notification` and `recommendation.notification` fields may contain error messages or warnings as follows:
+
+  | Field                   | Type         | Description                                                                |
+              |-------------------------|--------------|----------------------------------------------------------------------------|
+  | `type`                  | `string`     | Type of notification (e.g., `"info"`,`"error"`, `"warning"`).              |
+  | `message`               | `string`     | Description of the notification message.                                   |
+  | `code`                  | `integer`    | HTTP-like code indicating the type of error (e.g., `400` for bad request). |
 
 - **job_id**:
     - **Type**: `String`

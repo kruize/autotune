@@ -15,13 +15,14 @@
  *******************************************************************************/
 package com.autotune.utils;
 
-import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.common.auth.AuthenticationStrategy;
 import com.autotune.common.auth.AuthenticationStrategyFactory;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.utils.authModels.APIKeysAuthentication;
 import com.autotune.utils.authModels.BasicAuthentication;
 import com.autotune.utils.authModels.BearerAccessToken;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
@@ -37,6 +38,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 import org.apache.http.ssl.SSLContexts;
 import org.apache.http.util.EntityUtils;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -98,8 +100,32 @@ public class GenericRestApiClient {
 
             LOGGER.debug("Executing Prometheus metrics request: {}", httpRequestBase.getRequestLine());
 
-            // Execute the request
-            jsonResponse = httpclient.execute(httpRequestBase, new StringResponseHandler());
+            // Execute the request and get the HttpResponse
+            HttpResponse response = httpclient.execute(httpRequestBase);
+
+            // Get and print the response code
+            int responseCode = response.getStatusLine().getStatusCode();
+            LOGGER.debug("Response code: {}", responseCode);
+
+            // Get the response body if needed
+            jsonResponse = new StringResponseHandler().handleResponse(response);
+
+            // Parse the JSON response
+            ObjectMapper objectMapper = new ObjectMapper();
+            JsonNode rootNode = objectMapper.readTree(jsonResponse);
+            JsonNode resultNode = rootNode.path("data").path("result");
+            JsonNode warningsNode = rootNode.path("warnings");
+
+            // Check if the result is empty and if there are specific warnings
+            if (resultNode.isArray() && resultNode.size() == 0) {
+                for (JsonNode warning : warningsNode) {
+                    String warningMessage = warning.asText();
+                    if (warningMessage.contains("error reading from server") || warningMessage.contains("Please reduce your request rate")) {
+                        LOGGER.warn("Warning detected: {}", warningMessage);
+                        throw new IOException(warningMessage);
+                    }
+                }
+            }
         }
         return new JSONObject(jsonResponse);
     }
@@ -136,33 +162,41 @@ public class GenericRestApiClient {
      * @return API response code
      * @throws IOException
      */
-    public int callKruizeAPI(String payload) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, FetchMetricsError {
-
+    public HttpResponseWrapper callKruizeAPI(String payload) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        HttpResponseWrapper httpResponseWrapper = null;
         // Create an HTTP client
         try (CloseableHttpClient httpclient = setupHttpClient()) {
             // Prepare the HTTP POST request
             HttpPost httpPost = new HttpPost(baseURL);
             httpPost.setHeader("Content-Type", "application/json");
             httpPost.setHeader("Accept", "application/json");
-
             // If payload is present, set it in the request body
             if (payload != null) {
                 StringEntity entity = new StringEntity(payload, StandardCharsets.UTF_8);
                 httpPost.setEntity(entity);
             }
-
             // Execute the request and return the response code
             try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
                 // Get the status code from the response
                 int responseCode = response.getStatusLine().getStatusCode();
                 LOGGER.debug("Response code: {}", responseCode);
-                return responseCode;
-            } catch (Exception e) {
-                LOGGER.error("Error occurred while calling Kruize API: {}", e.getMessage());
-                throw new FetchMetricsError(e.getMessage());
+                if (response.getEntity() != null) {
+                    // Convert response entity to string
+                    String responseBody = EntityUtils.toString(response.getEntity(), "UTF-8");
+                    try {
+                        // Attempt to parse as JSON
+                        JSONObject json = new JSONObject(responseBody);
+                        httpResponseWrapper = new HttpResponseWrapper(responseCode, json);
+                    } catch (JSONException e) {
+                        // If JSON parsing fails, return as plain string
+                        httpResponseWrapper = new HttpResponseWrapper(responseCode, responseBody);
+                    }
+                }
             }
         }
+        return httpResponseWrapper;
     }
+
 
     public void setBaseURL(String baseURL) {
         this.baseURL = baseURL;
@@ -181,5 +215,31 @@ public class GenericRestApiClient {
         }
 
 
+    }
+
+    public class HttpResponseWrapper {
+        private int statusCode;
+        private Object responseBody;
+
+        public HttpResponseWrapper(int statusCode, Object responseBody) {
+            this.statusCode = statusCode;
+            this.responseBody = responseBody;
+        }
+
+        public int getStatusCode() {
+            return statusCode;
+        }
+
+        public Object getResponseBody() {
+            return responseBody;
+        }
+
+        @Override
+        public String toString() {
+            return "HttpResponseWrapper{" +
+                    "statusCode=" + statusCode +
+                    ", responseBody=" + responseBody +
+                    '}';
+        }
     }
 }
