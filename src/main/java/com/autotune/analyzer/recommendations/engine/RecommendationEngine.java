@@ -2062,7 +2062,7 @@ public class RecommendationEngine {
                                 dataSourceInfo.getUrl(),
                                 URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
                         );
-                        LOGGER.info(dateMetricsUrl);
+                        LOGGER.debug(dateMetricsUrl);
                         client.setBaseURL(dateMetricsUrl);
                         JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                         JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
@@ -2163,7 +2163,7 @@ public class RecommendationEngine {
                                         interval_start_time_epoc,
                                         interval_end_time_epoc,
                                         measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-                                LOGGER.info(podMetricsUrl);
+                                LOGGER.debug(podMetricsUrl);
                                 client.setBaseURL(podMetricsUrl);
                                 JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                                 JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
