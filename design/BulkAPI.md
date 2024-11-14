@@ -192,7 +192,7 @@ example 1:
 }
 ```
 
-example 2:  Entire Job failed
+example 2:  Job failed
 
 ```json
 {
