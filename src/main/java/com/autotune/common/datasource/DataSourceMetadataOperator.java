@@ -28,6 +28,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.io.IOException;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -67,9 +71,9 @@ public class DataSourceMetadataOperator {
      * @param startTime      Get metadata from starttime to endtime
      * @param endTime        Get metadata from starttime to endtime
      * @param steps          the interval between data points in a range query
-     *                       TODO - support multiple data sources
+     *                                                                                                                                                                                                       TODO - support multiple data sources
      */
-    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws Exception {
+    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
     }
 
@@ -109,8 +113,8 @@ public class DataSourceMetadataOperator {
      * @param dataSourceInfo The DataSourceInfo object containing information about the
      *                       data source to be updated.
      *                       <p>
-     *                        TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
-     *                               need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
+     *                                                                                                                                                                                                        TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
+     *                                                                                                                                                                                                               need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
     public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws Exception {
         return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
@@ -153,7 +157,7 @@ public class DataSourceMetadataOperator {
      * @return DataSourceMetadataInfo object with populated metadata fields
      * todo rename processQueriesAndFetchClusterMetadataInfo
      */
-    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws Exception {
+    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
         /**
          * Get DataSourceOperatorImpl instance on runtime based on dataSource provider
@@ -164,38 +168,35 @@ public class DataSourceMetadataOperator {
             LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_OPERATOR_RETRIEVAL_FAILURE, dataSourceInfo.getProvider());
             return null;
         }
-
         /**
          * For the "prometheus" data source, fetches and processes data related to namespaces, workloads, and containers,
          * creating a comprehensive DataSourceMetadataInfo object that is then added to a list.
          * TODO - Process cluster metadata using a custom query
          */
-        try {
-            String dataSourceName = dataSourceInfo.getName();
-            String namespaceQuery = PromQLDataSourceQueries.NAMESPACE_QUERY;
-            String workloadQuery = PromQLDataSourceQueries.WORKLOAD_QUERY;
-            String containerQuery = PromQLDataSourceQueries.CONTAINER_QUERY;
-            if (null != uniqueKey && !uniqueKey.isEmpty()) {
-                LOGGER.debug("uniquekey: {}", uniqueKey);
-                namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
-                workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
-                containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
-            } else {
-                namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "");
-                workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "");
-                containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "");
-            }
-            LOGGER.info("namespaceQuery: {}", namespaceQuery);
-            LOGGER.info("workloadQuery: {}", workloadQuery);
-            LOGGER.info("containerQuery: {}", containerQuery);
 
-            JsonArray namespacesDataResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
-            LOGGER.debug("namespacesDataResultArray: {}", namespacesDataResultArray);
-            if (!op.validateResultArray(namespacesDataResultArray)) {
-                dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
-                throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
-            }
+        String dataSourceName = dataSourceInfo.getName();
+        String namespaceQuery = PromQLDataSourceQueries.NAMESPACE_QUERY;
+        String workloadQuery = PromQLDataSourceQueries.WORKLOAD_QUERY;
+        String containerQuery = PromQLDataSourceQueries.CONTAINER_QUERY;
+        if (null != uniqueKey && !uniqueKey.isEmpty()) {
+            LOGGER.debug("uniquekey: {}", uniqueKey);
+            namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
+            workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
+            containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
+        } else {
+            namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "");
+            workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "");
+            containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "");
+        }
+        LOGGER.info("namespaceQuery: {}", namespaceQuery);
+        LOGGER.info("workloadQuery: {}", workloadQuery);
+        LOGGER.info("containerQuery: {}", containerQuery);
 
+        JsonArray namespacesDataResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
+        LOGGER.debug("namespacesDataResultArray: {}", namespacesDataResultArray);
+        if (!op.validateResultArray(namespacesDataResultArray)) {
+            dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
+        } else {
             /**
              * Key: Name of namespace
              * Value: DataSourceNamespace object corresponding to a namespace
@@ -241,14 +242,11 @@ public class DataSourceMetadataOperator {
             }
             dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
                     datasourceWorkloads, datasourceContainers);
-
             return getDataSourceMetadataInfo(dataSourceInfo);
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            throw e;
-        } catch (FetchMetricsError e) {
-            throw new RuntimeException(e);
         }
+
+        return null;
+
     }
 
     private JsonArray fetchQueryResults(DataSourceInfo dataSourceInfo, String query, long startTime, long endTime, int steps) throws IOException, FetchMetricsError, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
