@@ -23,17 +23,17 @@ slo:
 
     aggregation_functions:
     - function: avg
-      query: 'avg by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'avg by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     # Show sum of cpu requests in bytes for a container in a deployment
     - function: sum
-      query: 'sum by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'sum by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     - function: min
-      query: 'min by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'min by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     - function: max
-      query: 'max by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'max by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
   # CPU Limit
   # Show cpu limits in bytes for a container in a deployment
@@ -44,17 +44,17 @@ slo:
 
     aggregation_functions:
     - function: avg
-      query: 'avg by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'avg by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     # Show sum of cpu limits in bytes for a container in a deployment
     - function: sum
-      query: 'sum by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'sum by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     - function: max
-      query: 'max by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'max by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     - function: min
-      query: 'min by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'min by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
 
   # CPU Usage
@@ -117,17 +117,17 @@ slo:
 
     aggregation_functions:
     - function: avg
-      query: 'avg by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'avg by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     # Show sum of memory requests in bytes for a container in a deployment
     - function: sum
-      query: 'sum by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'sum by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     - function: max
-      query: 'max by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'max by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     - function: min
-      query: 'min by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'min by(container, pod, namespace) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
 
   # Memory Limit
@@ -139,17 +139,17 @@ slo:
 
     aggregation_functions:
     - function: avg
-      query: 'avg by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'avg by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     # Show sum of memory limits in bytes for a container in a deployment
     - function: sum
-      query: 'sum by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'sum by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     - function: max
-      query: 'max by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'max by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
     - function: min
-      query: 'min by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}) * on(pod, namespace) group_left max by (container, pod, namespace) (kube_pod_status_phase{phase="Running"}))'
+      query: 'min by(container, pod, namespace) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}))'
 
   # Memory Usage
   # Average memory per container in a deployment
