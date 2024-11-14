@@ -81,6 +81,7 @@ public class KruizeDeploymentInfo {
     public static Boolean log_http_req_resp = false;
     public static String recommendations_url;
     public static String experiments_url;
+    public static String webhook_url;
     public static int BULK_API_LIMIT = 1000;
     public static int BULK_API_MAX_BATCH_SIZE = 100;
     public static Integer bulk_thread_pool_size = 3;

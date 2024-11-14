@@ -697,6 +697,7 @@ public class KruizeConstants {
         public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
         public static final String RECOMMENDATIONS_URL = "recommendationsURL";
         public static final String EXPERIMENTS_URL = "experimentsURL";
+        public static final String WEBHOOK_URL = "webhookURL";
         public static final String BULK_API_LIMIT = "bulkapilimit";
         public static final String BULK_API_CHUNK_SIZE = "bulkapichunksize";
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
@@ -880,6 +881,21 @@ public class KruizeConstants {
                 public String getStatus() {
                     return status;
                 }
+            }
+
+            public enum WebHookStatus {
+                INITIATED,       // The  Webhook has initiated a request
+                IN_PROGRESS,     // The request to the Webhook is actively being processed
+                QUEUED,          // The request to the  Webhook has been queued, waiting for resources
+                SENT,            // The request has been sent to the Webhook, but no response yet
+                RECEIVED,        // The Webhook has received a response, but further processing continues
+                SUCCESS,         // The request to the Webhook was successful
+                FAILED,          // The call to the Webhook failed due to an error
+                RETRYING,        // The  Webhook is retrying the call due to a transient error
+                TIMED_OUT,       // The request to the Webhook exceeded the allowed response time
+                ERROR_LOGGED,    // The error has been logged for debugging or monitoring
+                COMPLETED,       // The entire process, including subsequent processing, is finished
+                CANCELLED        // The request was cancelled, potentially by user action or system condition
             }
 
 

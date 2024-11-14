@@ -119,7 +119,10 @@ GET /bulk?job_id=123e4567-e89b-12d3-a456-426614174000
   "processed_experiments": 23,
   "job_id": "54905959-77d4-42ba-8e06-90bb97b823b9",
   "job_start_time": "2024-10-10T06:07:09.066Z",
-  "job_end_time": "2024-10-10T06:07:17.471Z"
+  "job_end_time": "2024-10-10T06:07:17.471Z",
+  "webhook": {
+    "status": "COMPLETED"
+  }
 }
 ```
 
@@ -189,7 +192,7 @@ example 1:
 }
 ```
 
-example 2:
+example 2:  Entire Job failed
 
 ```json
 {
@@ -205,9 +208,33 @@ example 2:
   },
   "job_id": "270fa4d9-2701-4ca0-b056-74229cc28498",
   "job_start_time": "2024-11-12T15:05:46.362Z",
-  "job_end_time": "2024-11-12T15:06:05.301Z"
+  "job_end_time": "2024-11-12T15:06:05.301Z",
+  "webhook": {
+    "status": "COMPLETED"
+  }
 }
 
+```
+
+example 3:  Only Webhook failed
+
+```json
+{
+  "status": "COMPLETED",
+  "total_experiments": 23,
+  "processed_experiments": 23,
+  "job_id": "54905959-77d4-42ba-8e06-90bb97b823b9",
+  "job_start_time": "2024-10-10T06:07:09.066Z",
+  "job_end_time": "2024-10-10T06:07:17.471Z",
+  "webhook": {
+    "status": "FAILED",
+    "notifications": {
+      "type": "ERROR",
+      "message": "HttpHostConnectException: Unable to connect to the webhook. Please try again later.",
+      "code": 503
+    }
+  }
+}
 ```
 
 ### Response Parameters
@@ -275,6 +302,20 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
     - **Type**: `String (ISO 8601 format) or null`
     - **Description**: End timestamp of the job. If the job is still in progress, this will be `null`.
 
+- **webhook**:
+    - **Type**: `Object`
+    - **Description**: An object that provides details about the webhook status and any errors encountered during the
+      webhook invocation.
+
+    - The `webhook` parameter allows the system to notify an external service or consumer about the completion status of
+      an experiment-processing job. When a job is completed, this webhook will be triggered to send an HTTP request to a
+      predefined URL, configured either via an environment variable (`webhookURL`) or within a `kruize` configuration
+      file.
+      This notification mechanism is essential for systems that require real-time updates about the job's processing
+      status, enabling consumers to take immediate follow-up actions. For example, an external analytics dashboard, a
+      monitoring service, or a message queue like Kafka can listen for these webhook calls to further process or log the
+      job completion data.
+
 **Note: Experiment Name:**
 
 - **Naming Pattern:** Experiment names are currently formed using the following pattern:
@@ -300,27 +341,27 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
 apiVersion: v1
 kind: ConfigMap
 metadata:
-name: kruizeconfig
-namespace: openshift-tuning
+  name: kruizeconfig
+  namespace: openshift-tuning
 data:
-kruizeconfigjson: |
-  {
-    "datasource": [
-      {
-        "name": "prometheus-1",
-        "provider": "prometheus",
-        "serviceName": "prometheus-k8s",
-        "namespace": "openshift-monitoring",
-        "url": "",
-        "authentication": {
-          "type": "bearer",
-          "credentials": {
-            "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  kruizeconfigjson: |
+    {
+      "datasource": [
+        {
+          "name": "prometheus-1",
+          "provider": "prometheus",
+          "serviceName": "prometheus-k8s",
+          "namespace": "openshift-monitoring",
+          "url": "",
+          "authentication": {
+            "type": "bearer",
+            "credentials": {
+              "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            }
           }
         }
-      }
-    ]
-  }
+      ]
+    }
 ```
 
 ## Limits
@@ -396,3 +437,14 @@ number of labels, or none at all. Here are some examples:
 - "%label:org_id%|%label:source_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
 - "%label:org_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
 - "%label:org_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%"
+
+## Webhook URL Configuration
+
+The webhook URL can be configured using an environment variable `webhookURL` or within the kruize configuration JSON
+file:
+
+```json
+{
+  "webhookURL": "http://127.0.0.1:8080/webhook"
+}
+```

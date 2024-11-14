@@ -118,23 +118,22 @@ public class BulkJobManager implements Runnable {
 
     @Override
     public void run() {
+        DataSourceMetadataInfo metadataInfo = null;
+        DataSourceManager dataSourceManager = new DataSourceManager();
+        DataSourceInfo datasource = null;
         try {
             String labelString = getLabels(this.bulkInput.getFilter());
             if (null == this.bulkInput.getDatasource()) {
                 this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
             }
-            DataSourceMetadataInfo metadataInfo = null;
-            DataSourceManager dataSourceManager = new DataSourceManager();
-            DataSourceInfo datasource = null;
             try {
                 datasource = CommonUtils.getDataSourceInfo(this.bulkInput.getDatasource());
             } catch (Exception e) {
                 LOGGER.error(e.getMessage());
                 e.printStackTrace();
-                jobData.setStatus(FAILED);
                 BulkJobStatus.Notification notification = DATASOURCE_NOT_REG_INFO;
                 notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
-                jobData.setNotification(String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification);
+                setFinalJobStatus(FAILED,String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST),notification,datasource);
             }
             if (null != datasource) {
                 JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
@@ -144,16 +143,13 @@ public class BulkJobManager implements Runnable {
                     metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, 0, 0, 0);
                 }
                 if (null == metadataInfo) {
-                    jobData.setStatus(COMPLETED);
-                    jobData.setEndTime(Instant.now());
-                    jobData.setNotification(String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO);
+                    setFinalJobStatus(COMPLETED,String.valueOf(HttpURLConnection.HTTP_OK),NOTHING_INFO,datasource);
                 } else {
                     Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
                     jobData.setTotal_experiments(createExperimentAPIObjectMap.size());
                     jobData.setProcessed_experiments(0);
                     if (jobData.getTotal_experiments() > KruizeDeploymentInfo.BULK_API_LIMIT) {
-                        jobData.setStatus(FAILED);
-                        jobData.setNotification(String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO);
+                        setFinalJobStatus(FAILED,String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST),LIMIT_INFO,datasource);
                     } else {
                         ExecutorService createExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
                         ExecutorService generateExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
@@ -185,8 +181,7 @@ public class BulkJobManager implements Runnable {
                                         experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_BAD_REQUEST));
                                     } finally {
                                         if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
-                                            jobData.setStatus(COMPLETED);
-                                            jobData.setEndTime(Instant.now());
+                                            setFinalJobStatus(COMPLETED,null,null,finalDatasource);
                                         }
                                     }
 
@@ -202,7 +197,6 @@ public class BulkJobManager implements Runnable {
                                                 recommendationResponseCode = recommendationApiClient.callKruizeAPI(null);
                                                 LOGGER.debug("API Response code: {}", recommendationResponseCode);
                                                 if (recommendationResponseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
-                                                    jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                                     experiment.getRecommendations().setStatus(NotificationConstants.Status.PROCESSED);
                                                 } else {
                                                     experiment.getRecommendations().setStatus(NotificationConstants.Status.FAILED);
@@ -213,9 +207,9 @@ public class BulkJobManager implements Runnable {
                                                 experiment.getRecommendations().setStatus(NotificationConstants.Status.FAILED);
                                                 experiment.getRecommendations().setNotifications(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
                                             } finally {
+                                                jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                                 if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
-                                                    jobData.setStatus(COMPLETED);
-                                                    jobData.setEndTime(Instant.now());
+                                                    setFinalJobStatus(COMPLETED,null,null,finalDatasource);
                                                 }
                                             }
                                         });
@@ -223,8 +217,10 @@ public class BulkJobManager implements Runnable {
                                 } catch (Exception e) {
                                     e.printStackTrace();
                                     experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
-                                } finally {
-
+                                    jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
+                                    if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
+                                        setFinalJobStatus(COMPLETED,null,null,finalDatasource);
+                                    }
                                 }
                             });
                         }
@@ -233,8 +229,6 @@ public class BulkJobManager implements Runnable {
             }
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
-            jobData.setStatus(FAILED);
-            jobData.setEndTime(Instant.now());
             BulkJobStatus.Notification notification;
             if (e instanceof SocketTimeoutException) {
                 notification = DATASOURCE_GATEWAY_TIMEOUT_INFO;
@@ -244,13 +238,42 @@ public class BulkJobManager implements Runnable {
                 notification = DATASOURCE_DOWN_INFO;
             }
             notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
-            jobData.setNotification(String.valueOf(HttpURLConnection.HTTP_UNAVAILABLE), notification);
+            setFinalJobStatus(FAILED,String.valueOf(HttpURLConnection.HTTP_UNAVAILABLE),notification,datasource);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             e.printStackTrace();
-            jobData.setStatus(FAILED);
-            jobData.setEndTime(Instant.now());
-            jobData.setNotification(String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR), new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
+            setFinalJobStatus(FAILED,String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR),new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR),datasource);
+        }
+    }
+
+    public void setFinalJobStatus(String status,String notificationKey,BulkJobStatus.Notification notification,DataSourceInfo finalDatasource) {
+        jobData.setStatus(status);
+        jobData.setEndTime(Instant.now());
+        if(null!=notification)
+            jobData.setNotification(notificationKey,notification);
+        GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
+        apiClient.setBaseURL(KruizeDeploymentInfo.webhook_url);
+        GenericRestApiClient.HttpResponseWrapper responseCode;
+        BulkJobStatus.Webhook webhook = new BulkJobStatus.Webhook(WebHookStatus.IN_PROGRESS);
+        jobData.setWebhook(webhook);
+        try {
+            responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(jobData) + "]");
+            LOGGER.debug("API Response code: {}", responseCode);
+            if (responseCode.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                webhook.setStatus(WebHookStatus.COMPLETED);
+                jobData.setWebhook(webhook);
+            } else {
+                BulkJobStatus.Notification webHookNotification = new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR,responseCode.getResponseBody().toString(),responseCode.getStatusCode());
+                webhook.setNotifications(webHookNotification);
+                webhook.setStatus(WebHookStatus.FAILED);
+                jobData.setWebhook(webhook);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            BulkJobStatus.Notification webHookNotification = new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR,e.toString(),HttpURLConnection.HTTP_INTERNAL_ERROR);
+            webhook.setNotifications(webHookNotification);
+            webhook.setStatus(WebHookStatus.FAILED);
+            jobData.setWebhook(webhook);
         }
     }
 

@@ -78,4 +78,7 @@ public class ServerContext {
 
     //Bulk Service
     public static final String BULK_SERVICE = ROOT_CONTEXT + "bulk";
+
+    //Web Hook
+    public static final String WEBHOOK_SERVICE = ROOT_CONTEXT + "webhook";
 }
