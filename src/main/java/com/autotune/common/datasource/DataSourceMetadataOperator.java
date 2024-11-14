@@ -180,13 +180,13 @@ public class DataSourceMetadataOperator {
         String containerQuery = PromQLDataSourceQueries.CONTAINER_QUERY;
         if (null != uniqueKey && !uniqueKey.isEmpty()) {
             LOGGER.debug("uniquekey: {}", uniqueKey);
-            namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
-            workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
-            containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
+            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
+            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
+            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
         } else {
-            namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "");
-            workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "");
-            containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "");
+            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
         }
         LOGGER.info("namespaceQuery: {}", namespaceQuery);
         LOGGER.info("workloadQuery: {}", workloadQuery);
@@ -249,7 +249,7 @@ public class DataSourceMetadataOperator {
 
     }
 
-    private JsonArray fetchQueryResults(DataSourceInfo dataSourceInfo, String query, long startTime, long endTime, int steps) throws IOException, FetchMetricsError, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+    private JsonArray fetchQueryResults(DataSourceInfo dataSourceInfo, String query, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         GenericRestApiClient client = new GenericRestApiClient(dataSourceInfo);
         String metricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
                 dataSourceInfo.getUrl(),
