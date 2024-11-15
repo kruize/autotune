@@ -148,7 +148,11 @@ public class DataSourceCollection {
             try {
                 DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
                 if (null != dataSourceInfo) {
-                    LOGGER.error("{} : {}", DATASOURCE_ALREADY_EXIST, name);
+                    LOGGER.error("Datasource: {} already exists!", name);
+                    // add the auth details to local object
+                    AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
+                    dataSourceInfo.setAuthenticationConfig(authConfig);
+                    dataSourceCollection.put(name, dataSourceInfo);
                     continue;
                 }
             } catch (Exception e) {
@@ -158,7 +162,7 @@ public class DataSourceCollection {
             String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
             String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
             String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
-            AuthenticationConfig authConfig;
+            AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
             try {
                 JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
                 // create the corresponding authentication object
@@ -183,6 +187,19 @@ public class DataSourceCollection {
             addDataSource(datasource);
         }
 
+    }
+
+    private AuthenticationConfig getAuthenticationDetails(JSONObject dataSourceObject, String name) {
+        AuthenticationConfig authConfig;
+        try {
+            JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
+            // create the corresponding authentication object
+            authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
+        } catch (Exception e) {
+            LOGGER.warn("Auth details are missing for datasource: {}", name);
+            authConfig = AuthenticationConfig.noAuth();
+        }
+        return authConfig;
     }
 
     /**
