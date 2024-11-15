@@ -307,7 +307,7 @@ public class CommonUtils {
             // fetch the datasource from the DB
             datasource = dataSourceManager.fetchDataSourceFromDBByName(dataSourceName);
             if (isInvalidDataSource(datasource)) {
-                throw new Exception(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DATASOURCE_INFO);
+                throw new Exception(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DATASOURCE_INFO + dataSourceName);
             }
         }
         return datasource;
