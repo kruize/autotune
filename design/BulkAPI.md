@@ -237,25 +237,25 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
 
     - Each object in the `experiments` array has the following structure:
 
-  | Field            | Type     | Description                                                                         |
-  |------------------|----------|-------------------------------------------------------------------------------------|
-  | `name`           | `string` | Name of the experiment, typically indicating a service name and deployment context. |
-  | `notification`   | `object` | Notifications specific to this experiment (if any).                                 |
-  | `recommendation` | `object` | Recommendation status and notifications specific to this experiment.                |
+  | Field             | Type     | Description                                                                         |
+  |-------------------|----------|-------------------------------------------------------------------------------------|
+  | `name`            | `string` | Name of the experiment, typically indicating a service name and deployment context. |
+  | `notifications`   | `object` | Notifications specific to this experiment (if any).                                 |
+  | `recommendations` | `object` | Recommendation status and notifications specific to this experiment.                |
 
   #### Recommendation Object
 
-  The `recommendation` field within each experiment provides information about recommendation processing status and
+  The `recommendations` field within each experiment provides information about recommendation processing status and
   errors (if any).
 
-  | Field          | Type     | Description                                                                                      |
-  |----------------|----------|--------------------------------------------------------------------------------------------------|
-  | `status`       | `string` | Status of the recommendation (e.g., `"unprocessed"`, `"processed"`, `"processing"`, `"failed"`). |
-  | `notification` | `object` | Notifications related to recommendation processing.                                              |
+  | Field           | Type     | Description                                                                                      |
+  |-----------------|----------|--------------------------------------------------------------------------------------------------|
+  | `status`        | `string` | Status of the recommendation (e.g., `"unprocessed"`, `"processed"`, `"processing"`, `"failed"`). |
+  | `notifications` | `object` | Notifications related to recommendation processing.                                              |
 
   #### Notification Object
 
-  Both the `notification` and `recommendation.notification` fields may contain error messages or warnings as follows:
+  Both the `notifications` and `recommendations.notifications` fields may contain error messages or warnings as follows:
 
   | Field                   | Type         | Description                                                                |
   |-------------------------|--------------|----------------------------------------------------------------------------|
