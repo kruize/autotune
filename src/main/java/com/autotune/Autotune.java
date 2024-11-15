@@ -21,6 +21,7 @@ import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
+import com.autotune.analyzer.recommendations.updater.vpa.VpaUpdaterImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -132,6 +133,8 @@ public class Autotune {
                 checkAvailableDataSources();
                 // load available metric profiles from db
                 loadMetricProfilesFromDB();
+                // start updaters
+                startRecommendationUpdaters();
 
             }
             // close the existing session factory before recreating
@@ -285,6 +288,10 @@ public class Autotune {
         }
 
         LOGGER.info(DBConstants.DB_MESSAGES.DB_LIVELINESS_PROBE_SUCCESS);
+    }
+
+    private static void startRecommendationUpdaters() {
+        VpaUpdaterImpl.getInstance().initiateUpdater();
     }
 
 }

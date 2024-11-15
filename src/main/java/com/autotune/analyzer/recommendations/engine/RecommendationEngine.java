@@ -273,6 +273,7 @@ public class RecommendationEngine {
         if (!kruizeObject.getValidation_data().isSuccess())
             return kruizeObject;
         setKruizeObject(kruizeObject);
+        LOGGER.info("Setting Kruize Object.");
         mainKruizeExperimentMAP.put(kruizeObject.getExperimentName(), kruizeObject);
         // continue to generate recommendation when kruizeObject is successfully created
         try {
@@ -1771,10 +1772,11 @@ public class RecommendationEngine {
     private String getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject,
                               String experimentName, Timestamp intervalStartTime, String dataSource) throws Exception, FetchMetricsError {
         String errorMsg = "";
-
+        LOGGER.info("Inside Get Results");
         mainKruizeExperimentMAP.put(experimentName, kruizeObject);
         // get data from the DB in case of remote monitoring
         if (kruizeObject.getExperiment_usecase_type().isRemote_monitoring()) {
+            LOGGER.info("Remote Monitoring.");
             try {
                 boolean resultsAvailable = new ExperimentDBService().loadResultsFromDBByName(mainKruizeExperimentMAP, experimentName, intervalStartTime, interval_end_time);
                 if (!resultsAvailable) {
@@ -1788,6 +1790,7 @@ public class RecommendationEngine {
                 LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.FETCHING_RESULTS_FAILED, e.getMessage()));
             }
         } else if (kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
+            LOGGER.info("Local Monitoring.");
             // get data from the provided datasource in case of local monitoring
             DataSourceInfo dataSourceInfo;
             try {

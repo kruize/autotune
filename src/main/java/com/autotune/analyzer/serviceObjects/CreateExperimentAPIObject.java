@@ -26,6 +26,7 @@ import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Simulating the KruizeObject class for the CreateExperiment API
@@ -168,6 +169,10 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     @Override
     public boolean isContainerExperiment() {
         return ExperimentTypeUtil.isContainerExperiment(experimentType);
+    }
+
+    public boolean isAutoMode() {
+        return AnalyzerConstants.AUTO.equalsIgnoreCase(this.mode);
     }
 
     @Override

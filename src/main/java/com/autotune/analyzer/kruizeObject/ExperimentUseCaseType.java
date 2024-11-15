@@ -43,6 +43,8 @@ public class ExperimentUseCaseType {
                 setLocal_monitoring(true);
             } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.EXPERIMENT)) {
                 setLocal_experiment(true);
+            } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO)) {
+                setLocal_monitoring(true);
             } else {
                 throw new Exception("Invalid Mode " + kruizeObject.getMode() + " for target cluster as Local.");
             }

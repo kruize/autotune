@@ -32,7 +32,7 @@ public class TransitionToCreateConfig extends AbstractBaseTransition {
         IntOrString maxUnavailable = new IntOrString(0);
         rud.setMaxSurge(maxSurge);
         rud.setMaxUnavailable(maxUnavailable);
-        client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).withName(trialData.getConfig().getDeploymentName()).edit().editSpec().editOrNewStrategy().withRollingUpdate(rud).endStrategy().endSpec().done();
+//        client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).withName(trialData.getConfig().getDeploymentName()).edit().editSpec().editOrNewStrategy().withRollingUpdate(rud).endStrategy().endSpec().done();
         Deployment defaultDeployment = client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).withName(trialData.getConfig().getDeploymentName()).get();
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();

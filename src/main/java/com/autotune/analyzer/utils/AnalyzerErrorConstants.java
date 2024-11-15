@@ -286,4 +286,11 @@ public class AnalyzerErrorConstants {
             }
         }
     }
+
+    public static final class RecommendationUpdaterErrorConstant {
+        public static final String INVALID_UPDATER_TYPE = "Recommendation updater {} type is not supported.";
+        public static final String VPA_OBJECT_CREATION_FAILED = "Unable to create VPA object for experiment - {}.";
+        public static final String VPA_NOT_INSTALLED = "VPA is not installed.";
+        public static final String ERROR_PROCESSING_THREADS = "Error processing VPAs in background thread - {}";
+    }
 }

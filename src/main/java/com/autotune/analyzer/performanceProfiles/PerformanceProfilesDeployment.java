@@ -11,6 +11,7 @@ import com.autotune.utils.KubeEventLogger;
 import com.google.gson.Gson;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.WatcherException;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -65,7 +66,12 @@ public class PerformanceProfilesDeployment {
             }
 
             @Override
-            public void onClose(KubernetesClientException e) { }
+            public void onClose(WatcherException e) {
+
+            }
+
+//            @Override
+//            public void onClose(KubernetesClientException e) { }
         };
 
         KubernetesServices kubernetesServices = new KubernetesServicesImpl();
