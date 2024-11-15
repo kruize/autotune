@@ -43,7 +43,10 @@ progress of the job.
       }
     }
   },
-  "time_range": {},
+  "time_range": {
+    "start": "2024-11-01T00:00:00.000Z",
+    "end": "2024-11-15T23:59:59.000Z"
+  },
   "datasource": "Cbank1Xyz",
   "experiment_types": [
     "container",
@@ -82,6 +85,24 @@ progress of the job.
   "job_id": "123e4567-e89b-12d3-a456-426614174000"
 }
 ```
+### Different payload parameters examples
+
+#### 1. **Request Payload with `time_range` specified:**
+
+This object allows users to specify the duration for which they want to query data and receive recommendations. It consists of the following fields:
+
+- **`start`**: The starting timestamp of the query duration in ISO 8601 format (`YYYY-MM-DDTHH:mm:ss.sssZ`).
+- **`end`**: The ending timestamp of the query duration in ISO 8601 format (`YYYY-MM-DDTHH:mm:ss.sssZ`).
+
+The specified time range determines the period over which the data is analyzed to provide recommendations at the container or namespace level. Ensure that:
+- Both `start` and `end` are valid timestamps.
+- The `start` timestamp precedes the `end` timestamp.
+
+#### 2. **Request Payload with `exclude` filter specified:**
+TBA
+
+#### 3. **Request Payload with `include` filter specified:**
+TBA
 
 ### GET Request:
 
@@ -216,28 +237,28 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
 
     - Each object in the `experiments` array has the following structure:
 
-  | Field                   | Type         | Description                                                              |
-              |-------------------------|--------------|--------------------------------------------------------------------------|
-  | `name`                  | `string`     | Name of the experiment, typically indicating a service name and deployment context. |
-  | `notification`          | `object`     | Notifications specific to this experiment (if any).                      |
-  | `recommendation`        | `object`     | Recommendation status and notifications specific to this experiment.     |
+  | Field             | Type     | Description                                                                         |
+  |-------------------|----------|-------------------------------------------------------------------------------------|
+  | `name`            | `string` | Name of the experiment, typically indicating a service name and deployment context. |
+  | `notifications`   | `object` | Notifications specific to this experiment (if any).                                 |
+  | `recommendations` | `object` | Recommendation status and notifications specific to this experiment.                |
 
   #### Recommendation Object
 
-  The `recommendation` field within each experiment provides information about recommendation processing status and
+  The `recommendations` field within each experiment provides information about recommendation processing status and
   errors (if any).
 
-  | Field                   | Type         | Description                                                              |
-              |-------------------------|--------------|--------------------------------------------------------------------------|
-  | `status`                | `string`     | Status of the recommendation (e.g., `"unprocessed"`, `"processed"`, `"processing"`, `"failed"`). |
-  | `notification`          | `object`     | Notifications related to recommendation processing.                      |
+  | Field           | Type     | Description                                                                                      |
+  |-----------------|----------|--------------------------------------------------------------------------------------------------|
+  | `status`        | `string` | Status of the recommendation (e.g., `"unprocessed"`, `"processed"`, `"processing"`, `"failed"`). |
+  | `notifications` | `object` | Notifications related to recommendation processing.                                              |
 
   #### Notification Object
 
-  Both the `notification` and `recommendation.notification` fields may contain error messages or warnings as follows:
+  Both the `notifications` and `recommendations.notifications` fields may contain error messages or warnings as follows:
 
   | Field                   | Type         | Description                                                                |
-              |-------------------------|--------------|----------------------------------------------------------------------------|
+  |-------------------------|--------------|----------------------------------------------------------------------------|
   | `type`                  | `string`     | Type of notification (e.g., `"info"`,`"error"`, `"warning"`).              |
   | `message`               | `string`     | Description of the notification message.                                   |
   | `code`                  | `integer`    | HTTP-like code indicating the type of error (e.g., `400` for bad request). |

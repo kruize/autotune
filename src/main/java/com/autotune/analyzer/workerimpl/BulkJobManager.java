@@ -139,7 +139,7 @@ public class BulkJobManager implements Runnable {
             if (null != datasource) {
                 JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
                 if (null != daterange)
-                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get("start_time"), (Long) daterange.get("end_time"), (Integer) daterange.get("steps"));
+                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get(START_TIME), (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS));
                 else {
                     metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, 0, 0, 0);
                 }
@@ -233,7 +233,7 @@ public class BulkJobManager implements Runnable {
             }
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
-            jobData.setStatus("FAILED");
+            jobData.setStatus(FAILED);
             jobData.setEndTime(Instant.now());
             BulkJobStatus.Notification notification;
             if (e instanceof SocketTimeoutException) {
@@ -248,7 +248,7 @@ public class BulkJobManager implements Runnable {
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             e.printStackTrace();
-            jobData.setStatus("FAILED");
+            jobData.setStatus(FAILED);
             jobData.setEndTime(Instant.now());
             jobData.setNotification(String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR), new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
         }
@@ -298,10 +298,10 @@ public class BulkJobManager implements Runnable {
                             includeLabelsBuilder.append(key).append("=").append("\"" + value + "\"").append(",")
                     );
                     // Remove trailing comma
-                    if (includeLabelsBuilder.length() > 0) {
+                    if (!includeLabelsBuilder.isEmpty()) {
                         includeLabelsBuilder.setLength(includeLabelsBuilder.length() - 1);
                     }
-                    LOGGER.debug("Include Labels: " + includeLabelsBuilder);
+                    LOGGER.debug("Include Labels: {}", includeLabelsBuilder);
                     uniqueKey = includeLabelsBuilder.toString();
                 }
             }
@@ -313,10 +313,11 @@ public class BulkJobManager implements Runnable {
     }
 
     private JSONObject processDateRange(BulkInput.TimeRange timeRange) {
+        //TODO: add validations for the time range
         JSONObject dateRange = null;
         if (null != timeRange && timeRange.getStart() != null && timeRange.getEnd() != null) {
-            String intervalEndTimeStr = timeRange.getStart();
-            String intervalStartTimeStr = timeRange.getEnd();
+            String intervalStartTimeStr = timeRange.getStart();
+            String intervalEndTimeStr = timeRange.getEnd();
             long interval_end_time_epoc = 0;
             long interval_start_time_epoc = 0;
             LocalDateTime localDateTime = LocalDateTime.parse(intervalEndTimeStr, DateTimeFormatter.ofPattern(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT));
@@ -327,9 +328,9 @@ public class BulkJobManager implements Runnable {
             Timestamp interval_start_time = Timestamp.from(localDateTime.toInstant(ZoneOffset.UTC));
             int steps = CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDuration() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE; // todo fetch experiment recommendations setting measurement
             dateRange = new JSONObject();
-            dateRange.put("start_time", interval_start_time_epoc);
-            dateRange.put("end_time", interval_end_time_epoc);
-            dateRange.put("steps", steps);
+            dateRange.put(START_TIME, interval_start_time_epoc);
+            dateRange.put(END_TIME, interval_end_time_epoc);
+            dateRange.put(STEPS, steps);
         }
         return dateRange;
     }

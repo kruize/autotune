@@ -15,10 +15,15 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,7 +31,14 @@ import java.io.IOException;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 
 /**
  * DataSourceMetadataOperator is an abstraction with CRUD operations to manage DataSourceMetadataInfo Object
@@ -168,19 +180,20 @@ public class DataSourceMetadataOperator {
         String containerQuery = PromQLDataSourceQueries.CONTAINER_QUERY;
         if (null != uniqueKey && !uniqueKey.isEmpty()) {
             LOGGER.debug("uniquekey: {}", uniqueKey);
-            namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
-            workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
-            containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "," + uniqueKey);
+            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
+            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
+            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
         } else {
-            namespaceQuery = namespaceQuery.replace("ADDITIONAL_LABEL", "");
-            workloadQuery = workloadQuery.replace("ADDITIONAL_LABEL", "");
-            containerQuery = containerQuery.replace("ADDITIONAL_LABEL", "");
+            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
         }
         LOGGER.info("namespaceQuery: {}", namespaceQuery);
         LOGGER.info("workloadQuery: {}", workloadQuery);
         LOGGER.info("containerQuery: {}", containerQuery);
 
-        JsonArray namespacesDataResultArray = op.getResultArrayForQuery(dataSourceInfo, namespaceQuery);
+        JsonArray namespacesDataResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
+        LOGGER.debug("namespacesDataResultArray: {}", namespacesDataResultArray);
         if (!op.validateResultArray(namespacesDataResultArray)) {
             dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
         } else {
@@ -201,8 +214,8 @@ public class DataSourceMetadataOperator {
              * TODO -  get workload metadata for a given namespace
              */
             HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
-            JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
-                    workloadQuery);
+            JsonArray workloadDataResultArray = fetchQueryResults(dataSourceInfo, workloadQuery, startTime, endTime, steps);
+            LOGGER.debug("workloadDataResultArray: {}", workloadDataResultArray);
 
             if (op.validateResultArray(workloadDataResultArray)) {
                 datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
@@ -220,8 +233,8 @@ public class DataSourceMetadataOperator {
              * TODO - get container metadata for a given workload
              */
             HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
-            JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
-                    containerQuery);
+            JsonArray containerDataResultArray = fetchQueryResults(dataSourceInfo, containerQuery, startTime, endTime, steps);
+
             LOGGER.debug("containerDataResultArray: {}", containerDataResultArray);
 
             if (op.validateResultArray(containerDataResultArray)) {
@@ -234,5 +247,20 @@ public class DataSourceMetadataOperator {
 
         return null;
 
+    }
+
+    private JsonArray fetchQueryResults(DataSourceInfo dataSourceInfo, String query, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        GenericRestApiClient client = new GenericRestApiClient(dataSourceInfo);
+        String metricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
+                dataSourceInfo.getUrl(),
+                URLEncoder.encode(query, CHARACTER_ENCODING),
+                startTime,
+                endTime,
+                steps);
+        LOGGER.debug("MetricsUrl: {}", metricsUrl);
+        client.setBaseURL(metricsUrl);
+        JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+        JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+        return jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
     }
 }

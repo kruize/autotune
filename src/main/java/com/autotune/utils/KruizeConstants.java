@@ -798,6 +798,11 @@ public class KruizeConstants {
         public static final String FAILED = "FAILED";
         public static final String LIMIT_MESSAGE = "The number of experiments exceeds %s.";
         public static final String NOTHING = "Nothing to do.";
+        public static final String START_TIME = "start_time";
+        public static final String END_TIME = "end_time";
+        public static final String STEPS = "steps";
+        public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
+
         // TODO : Bulk API Create Experiments defaults
         public static final CreateExperimentConfigBean CREATE_EXPERIMENT_CONFIG_BEAN;
 
