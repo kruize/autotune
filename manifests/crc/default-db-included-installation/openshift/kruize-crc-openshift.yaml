@@ -109,7 +109,7 @@ data:
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",
       "experimentsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/createExperiment",
-      "webhookURL":" :  "http://kruize.openshift-tuning.svc.cluster.local:8080/webhook",
+      "webhookURL" :  "http://kruize.openshift-tuning.svc.cluster.local:8080/webhook",
       "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
       "bulkapilimit" : 1000,
       "hibernate": {
