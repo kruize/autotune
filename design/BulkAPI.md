@@ -82,6 +82,46 @@ progress of the job.
   "job_id": "123e4567-e89b-12d3-a456-426614174000"
 }
 ```
+### Different payload parameters examples
+
+#### 1. **Request Payload with `time range` specified (JSON):**
+
+```json
+{
+  "filter": {
+    "exclude": {
+      "namespace": [],
+      "workload": [],
+      "containers": [],
+      "labels": {}
+    },
+    "include": {
+      "namespace": [],
+      "workload": [],
+      "containers": [],
+      "labels": {
+        "key1": "value1",
+        "key2": "value2"
+      }
+    }
+  },
+  "time_range": {
+    "start": "2024-11-01T00:00:00.000Z",
+    "end": "2024-11-15T23:59:59.000Z"
+  },
+  "datasource": "Cbank1Xyz",
+  "experiment_types": [
+    "container",
+    "namespace"
+  ]
+}
+```
+
+#### 2. **Request Payload with `exclude` filter specified (JSON):**
+TBA
+
+#### 3. **Request Payload with `include` filter specified (JSON):**
+TBA
 
 ### GET Request:
 
@@ -216,21 +256,21 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
 
     - Each object in the `experiments` array has the following structure:
 
-  | Field                   | Type         | Description                                                              |
-              |-------------------------|--------------|--------------------------------------------------------------------------|
-  | `name`                  | `string`     | Name of the experiment, typically indicating a service name and deployment context. |
-  | `notification`          | `object`     | Notifications specific to this experiment (if any).                      |
-  | `recommendation`        | `object`     | Recommendation status and notifications specific to this experiment.     |
+  | Field            | Type     | Description                                                                         |
+              |------------------|----------|-------------------------------------------------------------------------------------|
+  | `name`           | `string` | Name of the experiment, typically indicating a service name and deployment context. |
+  | `notification`   | `object` | Notifications specific to this experiment (if any).                                 |
+  | `recommendation` | `object` | Recommendation status and notifications specific to this experiment.                |
 
   #### Recommendation Object
 
   The `recommendation` field within each experiment provides information about recommendation processing status and
   errors (if any).
 
-  | Field                   | Type         | Description                                                              |
-              |-------------------------|--------------|--------------------------------------------------------------------------|
-  | `status`                | `string`     | Status of the recommendation (e.g., `"unprocessed"`, `"processed"`, `"processing"`, `"failed"`). |
-  | `notification`          | `object`     | Notifications related to recommendation processing.                      |
+  | Field          | Type     | Description                                                                                      |
+              |----------------|----------|--------------------------------------------------------------------------------------------------|
+  | `status`       | `string` | Status of the recommendation (e.g., `"unprocessed"`, `"processed"`, `"processing"`, `"failed"`). |
+  | `notification` | `object` | Notifications related to recommendation processing.                                              |
 
   #### Notification Object
 
