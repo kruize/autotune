@@ -252,7 +252,11 @@ public class BulkJobManager implements Runnable {
         if(null!=notification)
             jobData.setNotification(notificationKey,notification);
         GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
-        apiClient.setBaseURL(KruizeDeploymentInfo.webhook_url);
+        if(null != bulkInput.getWebhook() && null != bulkInput.getWebhook().getUrl()){
+            apiClient.setBaseURL(bulkInput.getWebhook().getUrl());
+        }else {
+            apiClient.setBaseURL(KruizeDeploymentInfo.webhook_url);
+        }
         GenericRestApiClient.HttpResponseWrapper responseCode;
         BulkJobStatus.Webhook webhook = new BulkJobStatus.Webhook(WebHookStatus.IN_PROGRESS);
         jobData.setWebhook(webhook);

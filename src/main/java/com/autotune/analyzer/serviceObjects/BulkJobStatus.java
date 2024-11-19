@@ -197,6 +197,14 @@ public class BulkJobStatus {
         public void setNotification(Notification notification) {
             this.notification = notification;
         }
+
+        public Notification getNotification() {
+            return notification;
+        }
+
+        public void setRecommendations(Recommendation recommendations) {
+            this.recommendations = recommendations;
+        }
     }
 
     public static class Recommendation {
