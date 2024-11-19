@@ -51,7 +51,10 @@ progress of the job.
   "experiment_types": [
     "container",
     "namespace"
-  ]
+  ],
+  "webhooks": {
+    "url" : "http://127.0.0.1:8080/webhook"
+  }
 }
 ```
 
@@ -74,6 +77,11 @@ progress of the job.
 - **datasource:** The data source, e.g., `"Cbank1Xyz"`.
 
 - **experiment_types:** Specifies the type(s) of experiments to run, e.g., `"container"` or `"namespace"`.
+
+- **webhook:** The `webhook` parameter allows the system to notify an external service or consumer about the completion status of
+  an experiment-processing job. When a job is completed, this webhook will be triggered to send an HTTP request to a
+  predefined URL, configured either via an environment variable (`webhookURL`) or within a `kruize` configuration
+  file or via input payload.
 
 ### Success Response
 
