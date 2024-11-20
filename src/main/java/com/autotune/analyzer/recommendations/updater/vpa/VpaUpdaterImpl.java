@@ -74,7 +74,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
     }
 
     public void initiateUpdater() {
-        LOGGER.info("Trying to start the VPA updater.");
+        LOGGER.info("Trying to start the VPA updater...");
         ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
         if (!isVpaInstalled) {
@@ -94,19 +94,20 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
 
     private void getRecommendationsAndUpdateVpas() {
         try {
-            LOGGER.info("Checking Available VPA Objects - ");
+            LOGGER.info("\\u001B[32m Checking Available VPA Objects - \\u001B[0m");
             NamespacedVerticalPodAutoscalerClient client = new DefaultVerticalPodAutoscalerClient();
             VerticalPodAutoscalerList vpas = client.v1().verticalpodautoscalers().inAnyNamespace().list();
-            LOGGER.info("Found vpa objects." + " " + vpas.getItems().size());
+            LOGGER.info("\\u001B[33m Found " + vpas.getItems().size() + " vpa objects. \\u001B[0m");
 
 //            List<VerticalPodAutoscaler> vpasList = selectVpasForKruizeRecommender(vpas.getItems());
             for (VerticalPodAutoscaler vpa: vpas.getItems()) {
                 String name = vpa.getMetadata().getName();
-                LOGGER.info("Generating Recommendations For VPA {}", name);
+                LOGGER.info("\\u001B[33m Generating Recommendations For VPA - " +  name + " \\u001B[0m");
                 VerticalPodAutoscalerStatus vpaStatus = generateRecommendations(name);
                 if (vpaStatus != null) {
                     vpa.setStatus(vpaStatus);
                     client.v1().verticalpodautoscalers().inNamespace(vpa.getMetadata().getNamespace()).withName(vpa.getMetadata().getName()).patchStatus(vpa);
+                    LOGGER.info("\\u001B[33m VPA Object is patched with recommendations successfully. \\u001B[0m");
                 }
             }
         } catch (Exception e) {
@@ -118,18 +119,16 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
         try {
             RecommendationEngine recommendationEngine = new RecommendationEngine(name, null, null);
             int calCount = 0;
-            LOGGER.info("Inside GR.");
             String validationMessage = recommendationEngine.validate_local();
-            LOGGER.info("Validation msg - " + validationMessage);
             if (validationMessage.isEmpty()) {
                 KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount);
                 if (kruizeObject.getValidation_data().isSuccess()) {
-                    LOGGER.info("Recommendations generated.");
+                    LOGGER.info("\\u001B[33m Recommendations generated. \\u001B[0m");
                     for (K8sObject k8sObject: kruizeObject.getKubernetes_objects()) {
 //                        LOGGER.info(k8sObject.getContainerDataMap().toString());
                         List<RecommendedContainerResources> recoms = convertRecommendationsToContainerPolicy(k8sObject.getContainerDataMap());
                         if (recoms.isEmpty()){
-                            LOGGER.error("NO RECOMS");
+                            LOGGER.error("\\u001B[33m No Recommendations could be generated. \\u001B[0m");
                         } else {
                             RecommendedPodResources recommendedPodResources = new RecommendedPodResources();
                             recommendedPodResources.setContainerRecommendations(recoms);
@@ -140,7 +139,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
                         }
                     }
                 } else {
-                    LOGGER.error("Failed to generate recommendations.");
+                    LOGGER.error("\\u001B[31m Failed to generate recommendations. \\u001B[0m");
                 }
             } else {
                 LOGGER.error(validationMessage);
@@ -164,8 +163,8 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
                     HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = termRecommendations.getCostRecommendations().getConfig();
                     Double shortTermCpu = config.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.CPU).getAmount();
                     Double shortTermMemory = config.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.MEMORY).getAmount();
-                    LOGGER.info("CPU - " + shortTermCpu + " " + containerName);
-                    LOGGER.info("Memory - " + shortTermMemory + " " + containerName);
+                    LOGGER.info("\\u001B[33m Recommended cpu value for container " + containerName + " - " + shortTermCpu + "\\u001B[0m");
+                    LOGGER.info("\\u001B[33m Recommended memory value for container " + containerName + " - " + shortTermMemory + "\\u001B[0m");
                     String finalCpu = resource2str("cpu", shortTermCpu);
                     String finalMemory = resource2str("memory", shortTermMemory);
 
@@ -193,7 +192,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
                     containerRecommendations.add(recommendedContainerResources);
                 }
             } else {
-                LOGGER.error("No Recommendation Data.");
+                LOGGER.error("\\u001B[33m No Recommendation Data. \\u001B[0m");
             }
         }
         return containerRecommendations;
