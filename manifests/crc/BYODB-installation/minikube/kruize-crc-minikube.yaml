@@ -37,7 +37,6 @@ data:
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.monitoring.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",    
       "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",
-      "webhookURL":" :  "http://kruize.monitoring.svc.cluster.local:8080/webhook",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",

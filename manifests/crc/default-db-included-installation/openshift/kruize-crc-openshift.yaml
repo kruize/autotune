@@ -180,13 +180,13 @@ spec:
               value: kruizeDB
             - name: PGDATA
               value: /var/lib/pg_data
-#          resources:
-#            requests:
-#              memory: "2Gi"
-#              cpu: "2"
-#            limits:
-#              memory: "2Gi"
-#              cpu: "2"
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "2"
+            limits:
+              memory: "2Gi"
+              cpu: "2"
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -246,7 +246,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/vinakuma/autotune_operator:shk
+          image: quay.io/kruize/autotune_operator:0.1.1
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -262,13 +262,13 @@ spec:
               value: "/etc/config/kruizeconfigjson"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=80"
-#          resources:
-#            requests:
-#              memory: "2Gi"
-#              cpu: "2"
-#            limits:
-#              memory: "2Gi"
-#              cpu: "2"
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "2"
+            limits:
+              memory: "2Gi"
+              cpu: "2"
           ports:
             - name: kruize-port
               containerPort: 8080
