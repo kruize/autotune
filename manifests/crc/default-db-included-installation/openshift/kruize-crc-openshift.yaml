@@ -253,7 +253,7 @@ spec:
               mountPath: /etc/config
           env:
             - name: LOGGING_LEVEL
-              value: "debug"
+              value: "info"
             - name: ROOT_LOGGING_LEVEL
               value: "error"
             - name: DB_CONFIG_FILE
