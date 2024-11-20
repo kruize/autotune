@@ -686,6 +686,6 @@ public class AnalyzerConstants {
 
         public static final String CREATING_VPA_OBJECT_INFO_MSG = "Creating VPA Object - {}.";
         public static final String CREATED_VPA_OBJECT_INFO_MSG = "Created VPA Object - {}.";
-        public static final String STARTING_VPA_INFO_MSG = "\\u001B[32mStarting VPA updater... VPA CRD found.\\u001B[0m";
+        public static final String STARTING_VPA_INFO_MSG = "Starting VPA updater... VPA CRD found.";
     }
 }
