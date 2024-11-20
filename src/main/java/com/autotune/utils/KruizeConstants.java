@@ -697,7 +697,6 @@ public class KruizeConstants {
         public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
         public static final String RECOMMENDATIONS_URL = "recommendationsURL";
         public static final String EXPERIMENTS_URL = "experimentsURL";
-        public static final String WEBHOOK_URL = "webhookURL";
         public static final String BULK_API_LIMIT = "bulkapilimit";
         public static final String BULK_API_CHUNK_SIZE = "bulkapichunksize";
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";

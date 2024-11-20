@@ -252,32 +252,30 @@ public class BulkJobManager implements Runnable {
         if(null!=notification)
             jobData.setNotification(notificationKey,notification);
         GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
-        if(null != bulkInput.getWebhook() && null != bulkInput.getWebhook().getUrl()){
+        if(null != bulkInput.getWebhook() && null != bulkInput.getWebhook().getUrl()) {
             apiClient.setBaseURL(bulkInput.getWebhook().getUrl());
-        }else {
-            apiClient.setBaseURL(KruizeDeploymentInfo.webhook_url);
-        }
-        GenericRestApiClient.HttpResponseWrapper responseCode;
-        BulkJobStatus.Webhook webhook = new BulkJobStatus.Webhook(WebHookStatus.IN_PROGRESS);
-        jobData.setWebhook(webhook);
-        try {
-            responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(jobData) + "]");
-            LOGGER.debug("API Response code: {}", responseCode);
-            if (responseCode.getStatusCode() == HttpURLConnection.HTTP_OK) {
-                webhook.setStatus(WebHookStatus.COMPLETED);
-                jobData.setWebhook(webhook);
-            } else {
-                BulkJobStatus.Notification webHookNotification = new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR,responseCode.getResponseBody().toString(),responseCode.getStatusCode());
+            GenericRestApiClient.HttpResponseWrapper responseCode;
+            BulkJobStatus.Webhook webhook = new BulkJobStatus.Webhook(WebHookStatus.IN_PROGRESS);
+            jobData.setWebhook(webhook);
+            try {
+                responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(jobData) + "]");
+                LOGGER.debug("API Response code: {}", responseCode);
+                if (responseCode.getStatusCode() == HttpURLConnection.HTTP_OK) {
+                    webhook.setStatus(WebHookStatus.COMPLETED);
+                    jobData.setWebhook(webhook);
+                } else {
+                    BulkJobStatus.Notification webHookNotification = new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, responseCode.getResponseBody().toString(), responseCode.getStatusCode());
+                    webhook.setNotifications(webHookNotification);
+                    webhook.setStatus(WebHookStatus.FAILED);
+                    jobData.setWebhook(webhook);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
+                BulkJobStatus.Notification webHookNotification = new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.toString(), HttpURLConnection.HTTP_INTERNAL_ERROR);
                 webhook.setNotifications(webHookNotification);
                 webhook.setStatus(WebHookStatus.FAILED);
                 jobData.setWebhook(webhook);
             }
-        } catch (Exception e) {
-            e.printStackTrace();
-            BulkJobStatus.Notification webHookNotification = new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR,e.toString(),HttpURLConnection.HTTP_INTERNAL_ERROR);
-            webhook.setNotifications(webHookNotification);
-            webhook.setStatus(WebHookStatus.FAILED);
-            jobData.setWebhook(webhook);
         }
     }
 

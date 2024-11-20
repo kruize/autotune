@@ -109,7 +109,6 @@ data:
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",
       "experimentsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/createExperiment",
-      "webhookURL" :  "http://kruize.openshift-tuning.svc.cluster.local:8080/webhook",
       "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
       "bulkapilimit" : 1000,
       "hibernate": {
@@ -141,10 +140,10 @@ data:
           "namespace": "openshift-monitoring",
           "url": "",
           "authentication": {
-            "type": "bearer",
-            "credentials": {
-              "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
-            }
+              "type": "bearer",
+              "credentials": {
+                "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+              }
           }
         }
       ]
@@ -181,13 +180,13 @@ spec:
               value: kruizeDB
             - name: PGDATA
               value: /var/lib/pg_data
-          resources:
-            requests:
-              memory: "2Gi"
-              cpu: "2"
-            limits:
-              memory: "2Gi"
-              cpu: "2"
+#          resources:
+#            requests:
+#              memory: "2Gi"
+#              cpu: "2"
+#            limits:
+#              memory: "2Gi"
+#              cpu: "2"
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -247,14 +246,14 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.1.1
+          image: quay.io/vinakuma/autotune_operator:shk
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
               mountPath: /etc/config
           env:
             - name: LOGGING_LEVEL
-              value: "info"
+              value: "debug"
             - name: ROOT_LOGGING_LEVEL
               value: "error"
             - name: DB_CONFIG_FILE
@@ -263,13 +262,13 @@ spec:
               value: "/etc/config/kruizeconfigjson"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=80"
-          resources:
-            requests:
-              memory: "2Gi"
-              cpu: "2"
-            limits:
-              memory: "2Gi"
-              cpu: "2"
+#          resources:
+#            requests:
+#              memory: "2Gi"
+#              cpu: "2"
+#            limits:
+#              memory: "2Gi"
+#              cpu: "2"
           ports:
             - name: kruize-port
               containerPort: 8080
