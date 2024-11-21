@@ -39,6 +39,7 @@ import java.util.List;
 
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.*;
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_ADDED;
+import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_AUTH_ADDED_DB;
 
 public class DataSourceCollection {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCollection.class);
@@ -96,7 +97,7 @@ public class DataSourceCollection {
         final String provider = datasource.getProvider();
         ValidationOutputData addedToDB = null;
 
-        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE + name);
+        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE, name);
 
 
         if (dataSourceCollection.containsKey(name)) {
@@ -104,16 +105,23 @@ public class DataSourceCollection {
         }
 
         if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
-            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY + name);
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY, name);
             DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
             if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
                 LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
-                // add the data source to DB
-                addedToDB = new ExperimentDBService().addDataSourceToDB(datasource);
+                // add the authentication details to the DB
+                addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(datasource.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);
                 if (addedToDB.isSuccess()) {
-                    LOGGER.info(DATASOURCE_ADDED);
+                    LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_AUTH_ADDED_DB);
+                    // add the data source to DB
+                    addedToDB = new ExperimentDBService().addDataSourceToDB(datasource, addedToDB);
+                    if (addedToDB.isSuccess()) {
+                        LOGGER.info(DATASOURCE_AUTH_ADDED_DB);
+                    } else {
+                        LOGGER.error("{}: {}", DATASOURCE_NOT_SERVICEABLE, addedToDB.getMessage());
+                    }
                 } else {
-                    LOGGER.error("{}: {}", DATASOURCE_NOT_SERVICEABLE, addedToDB.getMessage());
+                    LOGGER.error(DATASOURCE_AUTH_DB_INSERTION_FAILED, addedToDB.getMessage());
                 }
                 dataSourceCollection.put(name, datasource);
                 LOGGER.info(DATASOURCE_ADDED);
@@ -134,7 +142,8 @@ public class DataSourceCollection {
     public void addDataSourcesFromConfigFile(String configFileName) throws UnsupportedDataSourceProvider, DataSourceNotServiceable, DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 
         String configFile = System.getenv(configFileName);
-        JSONObject configObject = null;
+        JSONObject configObject;
+        ValidationOutputData addedToDB;
 
         InputStream is = new FileInputStream(configFile);
         String jsonTxt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
@@ -144,49 +153,58 @@ public class DataSourceCollection {
         for (Object dataSourceObj : dataSourceArr) {
             JSONObject dataSourceObject = (JSONObject) dataSourceObj;
             String name = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_NAME);
-            // check the DB if the datasource already exists
+            // Fetch the existing datasource from the DB (if it exists)
+            DataSourceInfo dataSourceInfo = null;
             try {
-                DataSourceInfo dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
-                if (null != dataSourceInfo) {
-                    LOGGER.error("Datasource: {} already exists!", name);
-                    // add the auth details to local object
-                    AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
-                    dataSourceInfo.setAuthenticationConfig(authConfig);
-                    dataSourceCollection.put(name, dataSourceInfo);
-                    continue;
-                }
+                dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
             } catch (Exception e) {
                 LOGGER.error(DATASOURCE_DB_LOAD_FAILED, name, e.getMessage());
             }
-            String provider = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_PROVIDER);
-            String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
-            String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
-            String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
-            AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
-            try {
-                JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
-                // create the corresponding authentication object
-                authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
-            } catch (Exception e) {
-                LOGGER.warn(DATASOURCE_DB_AUTH_LOAD_FAILED, name, e.getMessage());
-                authConfig = AuthenticationConfig.noAuth();
-            }
-
-            DataSourceInfo datasource;
-            // Validate input
-            if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) {
-                continue;
-            }
-            if (dataSourceURL.isEmpty()) {
-                datasource = new DataSourceInfo(name, provider, serviceName, namespace, null);
+            if (null != dataSourceInfo) {
+                LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECK_DATASOURCE_UPDATES, name);
+                // get the updated authentication details and compare it with the one in the DB
+                AuthenticationConfig modifiedAuthConfig = getAuthenticationDetails(dataSourceObject, name);
+                // Compare with the existing authentication config
+                if (dataSourceInfo.hasAuthChanged(modifiedAuthConfig)) {
+                    LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.DATASOURCE_AUTH_CHANGED, name);
+                    // check the datasource with the new config
+                    dataSourceInfo.updateAuthConfig(modifiedAuthConfig);
+                    DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
+                    if (op.isServiceable(dataSourceInfo) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
+                        // update the authentication details in the DB
+                        addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(dataSourceInfo.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);
+                        if (addedToDB.isSuccess()) {
+                            LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_AUTH_UPDATED_DB);
+                        } else {
+                            LOGGER.error(DATASOURCE_AUTH_DB_UPDATE_FAILED, addedToDB.getMessage());
+                        }
+                    } else {
+                        LOGGER.error(DATASOURCE_AUTH_UPDATE_INVALID);
+                    }
+                } else {
+                    LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.DATASOURCE_AUTH_UNCHANGED, name);
+                    return;
+                }
             } else {
-                datasource = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL));
-            }
-            // set the authentication config
-            datasource.setAuthenticationConfig(authConfig);
-            addDataSource(datasource);
-        }
+                String provider = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_PROVIDER);
+                String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
+                String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
+                String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
+                AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
 
+                // Validate input
+                if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) { //TODO: add validations for auth
+                    continue;
+                }
+                if (dataSourceURL.isEmpty()) {
+                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, null, authConfig);
+                } else {
+                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL), authConfig);
+                }
+                // add/update the datasource
+                addDataSource(dataSourceInfo);
+            }
+        }
     }
 
     private AuthenticationConfig getAuthenticationDetails(JSONObject dataSourceObject, String name) {

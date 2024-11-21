@@ -42,6 +42,17 @@ public class KruizeDataSourceEntry {
     private String serviceName;
     private String namespace;
     private String url;
+    @ManyToOne(cascade = CascadeType.PERSIST) // Cascade PERSIST to auto-save authentication entry
+    @JoinColumn(name = "authentication_id", nullable = false) // Foreign key column in the datasource table
+    private KruizeAuthenticationEntry kruizeAuthenticationEntry;
+
+    public KruizeAuthenticationEntry getKruizeAuthenticationEntry() {
+        return kruizeAuthenticationEntry;
+    }
+
+    public void setKruizeAuthenticationEntry(KruizeAuthenticationEntry kruizeAuthenticationEntry) {
+        this.kruizeAuthenticationEntry = kruizeAuthenticationEntry;
+    }
 
     public String getVersion() {
         return version;

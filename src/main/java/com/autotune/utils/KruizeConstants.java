@@ -422,20 +422,26 @@ public class KruizeConstants {
         }
 
         public static class DataSourceInfoMsgs {
-            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: ";
-            public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: ";
+            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: {}";
+            public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: {}";
             public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
             public static final String CHECKING_AVAILABLE_DATASOURCE_FROM_DB = "Checking available datasources from database:";
             public static final String NO_DATASOURCE_FOUND_IN_DB = "No datasource found in database.";
-
+            public static final String CHECK_DATASOURCE_UPDATES = "Datasource {} already exists, Checking for updates...";
+            public static final String DATASOURCE_AUTH_CHANGED = "Authentication details for datasource {} have changed. Checking if the datasource is serviceable with the new config...";
+            public static final String DATASOURCE_AUTH_UNCHANGED= "No changes detected in the authentication details for datasource {}";
             private DataSourceInfoMsgs() {
             }
-        }
 
+        }
         public static class DataSourceSuccessMsgs {
+
             public static final String DATASOURCE_ADDED = "Datasource added to the collection successfully.";
+            public static final String DATASOURCE_ADDED_DB = "Datasource added to the database successfully.";
             public static final String DATASOURCE_FOUND = "Datasource found: ";
             public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
+            public static final String DATASOURCE_AUTH_ADDED_DB = "Auth details added to the DB successfully.";
+            public static final String DATASOURCE_AUTH_UPDATED_DB = "Auth details updated in the DB successfully.";
 
             private DataSourceSuccessMsgs() {
             }
@@ -460,6 +466,10 @@ public class KruizeConstants {
             public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
             public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
             public static final String INVALID_DATASOURCE_INFO = "Datasource is either missing or is invalid: ";
+            public static final String MISSING_DATASOURCE_AUTH = "Auth details are missing for datasource: {}";
+            public static final String DATASOURCE_AUTH_DB_INSERTION_FAILED = "Failed to add auth details to DB: {}";
+            public static final String DATASOURCE_AUTH_DB_UPDATE_FAILED = "Failed to update auth details in the DB: {}";
+            public static final String DATASOURCE_AUTH_UPDATE_INVALID = "The updated authentication configuration is invalid. Reverting to the previous configuration.";
 
             private DataSourceErrorMsgs() {
             }
