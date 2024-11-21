@@ -140,10 +140,10 @@ data:
           "namespace": "openshift-monitoring",
           "url": "",
           "authentication": {
-            "type": "bearer",
-            "credentials": {
-              "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
-            }
+              "type": "bearer",
+              "credentials": {
+                "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+              }
           }
         }
       ]

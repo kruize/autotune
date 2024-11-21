@@ -48,6 +48,7 @@ public class BulkJobStatus {
     private String endTime;   // Change to String to store formatted time
     private Map<String, Notification> notifications;
     private Map<String, Experiment> experiments = Collections.synchronizedMap(new HashMap<>());
+    private Webhook webhook;
 
     public BulkJobStatus(String jobID, String status, Instant startTime) {
         this.jobID = jobID;
@@ -110,6 +111,14 @@ public class BulkJobStatus {
 
     public void setExperiments(Map<String, Experiment> experiments) {
         this.experiments = experiments;
+    }
+
+    public Webhook getWebhook() {
+        return webhook;
+    }
+
+    public void setWebhook(Webhook webhook) {
+        this.webhook = webhook;
     }
 
     // Method to add a new experiment with "unprocessed" status and null notification
@@ -188,6 +197,14 @@ public class BulkJobStatus {
         public void setNotification(Notification notification) {
             this.notification = notification;
         }
+
+        public Notification getNotification() {
+            return notification;
+        }
+
+        public void setRecommendations(Recommendation recommendations) {
+            this.recommendations = recommendations;
+        }
     }
 
     public static class Recommendation {
@@ -255,5 +272,29 @@ public class BulkJobStatus {
         }
     }
 
+    public static class Webhook {
+        private KruizeConstants.KRUIZE_BULK_API.NotificationConstants.WebHookStatus status;
+        private Notification notifications; // Notifications can hold multiple entries
 
-}
+        public Webhook(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.WebHookStatus status) {
+            this.status = status;
+        }
+
+        public KruizeConstants.KRUIZE_BULK_API.NotificationConstants.WebHookStatus getStatus() {
+            return status;
+        }
+
+        public void setStatus(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.WebHookStatus status) {
+            this.status = status;
+        }
+
+        public Notification getNotifications() {
+            return notifications;
+        }
+
+        public void setNotifications(Notification notifications) {
+            this.notifications = notifications;
+        }
+    }
+
+    }

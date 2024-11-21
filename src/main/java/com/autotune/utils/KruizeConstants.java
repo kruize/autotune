@@ -882,6 +882,21 @@ public class KruizeConstants {
                 }
             }
 
+            public enum WebHookStatus {
+                INITIATED,       // The  Webhook has initiated a request
+                IN_PROGRESS,     // The request to the Webhook is actively being processed
+                QUEUED,          // The request to the  Webhook has been queued, waiting for resources
+                SENT,            // The request has been sent to the Webhook, but no response yet
+                RECEIVED,        // The Webhook has received a response, but further processing continues
+                SUCCESS,         // The request to the Webhook was successful
+                FAILED,          // The call to the Webhook failed due to an error
+                RETRYING,        // The  Webhook is retrying the call due to a transient error
+                TIMED_OUT,       // The request to the Webhook exceeded the allowed response time
+                ERROR_LOGGED,    // The error has been logged for debugging or monitoring
+                COMPLETED,       // The entire process, including subsequent processing, is finished
+                CANCELLED        // The request was cancelled, potentially by user action or system condition
+            }
+
 
         }
     }

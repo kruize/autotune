@@ -72,6 +72,15 @@ public class BulkService extends HttpServlet {
             boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
             BulkJobStatus jobDetails;
             LOGGER.info("Job ID: " + jobID);
+            if (jobStatusMap.isEmpty()) {
+                sendErrorResponse(
+                        resp,
+                        null,
+                        HttpServletResponse.SC_NOT_FOUND,
+                        JOB_NOT_FOUND_MSG
+                );
+                return;
+            }
             jobDetails = jobStatusMap.get(jobID);
             LOGGER.info("Job Status: " + jobDetails.getStatus());
             resp.setContentType(JSON_CONTENT_TYPE);
