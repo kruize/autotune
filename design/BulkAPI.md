@@ -79,9 +79,7 @@ progress of the job.
 - **experiment_types:** Specifies the type(s) of experiments to run, e.g., `"container"` or `"namespace"`.
 
 - **webhook:** The `webhook` parameter allows the system to notify an external service or consumer about the completion status of
-  an experiment-processing job. When a job is completed, this webhook will be triggered to send an HTTP request to a
-  predefined URL, configured either via an environment variable (`webhookURL`) or within a `kruize` configuration
-  file or via input payload.
+  an experiment-processing job. Once a job is completed, this webhook will be triggered to send an HTTP request to the URL defined in the bulk request payload.
 
 ### Success Response
 
@@ -316,9 +314,7 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
       webhook invocation.
 
     - The `webhook` parameter allows the system to notify an external service or consumer about the completion status of
-      an experiment-processing job. When a job is completed, this webhook will be triggered to send an HTTP request to a
-      predefined URL, configured either via an environment variable (`webhookURL`) or within a `kruize` configuration
-      file.
+      an experiment-processing job. Once a job is completed, this webhook will be triggered to send an HTTP request to the URL defined in the bulk request payload.
       This notification mechanism is essential for systems that require real-time updates about the job's processing
       status, enabling consumers to take immediate follow-up actions. For example, an external analytics dashboard, a
       monitoring service, or a message queue like Kafka can listen for these webhook calls to further process or log the
