@@ -52,7 +52,7 @@ progress of the job.
     "container",
     "namespace"
   ],
-  "webhooks": {
+  "webhook": {
     "url" : "http://127.0.0.1:8080/webhook"
   }
 }
@@ -446,13 +446,3 @@ number of labels, or none at all. Here are some examples:
 - "%label:org_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
 - "%label:org_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%"
 
-## Webhook URL Configuration
-
-The webhook URL can be configured using an environment variable `webhookURL` or within the kruize configuration JSON
-file:
-
-```json
-{
-  "webhookURL": "http://127.0.0.1:8080/webhook"
-}
-```
