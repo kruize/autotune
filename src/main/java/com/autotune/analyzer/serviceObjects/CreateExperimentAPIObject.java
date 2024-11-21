@@ -172,7 +172,7 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     }
 
     public boolean isAutoMode() {
-        return AnalyzerConstants.AUTO.equalsIgnoreCase(this.mode);
+        return (AnalyzerConstants.AUTO.equalsIgnoreCase(this.mode) || AnalyzerConstants.RECREATE.equalsIgnoreCase(this.mode));
     }
 
     @Override
