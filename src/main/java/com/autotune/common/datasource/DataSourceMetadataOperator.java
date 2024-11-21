@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
-import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
 import com.autotune.utils.GenericRestApiClient;
@@ -27,10 +26,6 @@ import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
@@ -71,7 +66,7 @@ public class DataSourceMetadataOperator {
      * @param startTime      Get metadata from starttime to endtime
      * @param endTime        Get metadata from starttime to endtime
      * @param steps          the interval between data points in a range query
-     *                                                                                                                                                                                                       TODO - support multiple data sources
+     *                                                                                                                                                                                                                                                   TODO - support multiple data sources
      */
     public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
@@ -113,8 +108,8 @@ public class DataSourceMetadataOperator {
      * @param dataSourceInfo The DataSourceInfo object containing information about the
      *                       data source to be updated.
      *                       <p>
-     *                                                                                                                                                                                                        TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
-     *                                                                                                                                                                                                               need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
+     *                                                                                                                                                                                                                                                    TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
+     *                                                                                                                                                                                                                                                           need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
     public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws Exception {
         return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
@@ -251,12 +246,21 @@ public class DataSourceMetadataOperator {
 
     private JsonArray fetchQueryResults(DataSourceInfo dataSourceInfo, String query, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         GenericRestApiClient client = new GenericRestApiClient(dataSourceInfo);
-        String metricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
-                dataSourceInfo.getUrl(),
-                URLEncoder.encode(query, CHARACTER_ENCODING),
-                startTime,
-                endTime,
-                steps);
+        String metricsUrl;
+        if (startTime != 0 && endTime != 0 && steps != 0) {
+            metricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY_RANGE,
+                    dataSourceInfo.getUrl(),
+                    URLEncoder.encode(query, CHARACTER_ENCODING),
+                    startTime,
+                    endTime,
+                    steps);
+        } else {
+            metricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
+                    dataSourceInfo.getUrl(),
+                    URLEncoder.encode(query, CHARACTER_ENCODING)
+            );
+        }
+
         LOGGER.debug("MetricsUrl: {}", metricsUrl);
         client.setBaseURL(metricsUrl);
         JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
