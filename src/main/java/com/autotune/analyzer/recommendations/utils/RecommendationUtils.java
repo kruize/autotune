@@ -10,6 +10,8 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.system.info.device.ContainerDeviceList;
 import com.autotune.common.data.system.info.device.accelerator.AcceleratorDeviceData;
+import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorMetaDataService;
+import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorProfile;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
@@ -17,8 +19,6 @@ import com.google.gson.*;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorMetaDataService;
-import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorProfile;
 
 import java.io.IOException;
 import java.net.URLEncoder;
@@ -34,6 +34,7 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHA
 
 public class RecommendationUtils {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationUtils.class);
+
     public static RecommendationConfigItem getCurrentValue(Map<Timestamp, IntervalResults> filteredResultsMap,
                                                            Timestamp timestampToExtract,
                                                            AnalyzerConstants.ResourceSetting resourceSetting,
@@ -153,15 +154,15 @@ public class RecommendationUtils {
         }
     }
 
-    public static void markAcceleratorDeviceStatusToContainer (ContainerData containerData,
-                                                               String maxDateQuery,
-                                                               String namespace,
-                                                               String workload,
-                                                               String workload_type,
-                                                               DataSourceInfo dataSourceInfo,
-                                                               Map<String, Terms> termsMap,
-                                                               Double measurementDurationMinutesInDouble,
-                                                               String gpuDetectionQuery)
+    public static void markAcceleratorDeviceStatusToContainer(ContainerData containerData,
+                                                              String maxDateQuery,
+                                                              String namespace,
+                                                              String workload,
+                                                              String workload_type,
+                                                              DataSourceInfo dataSourceInfo,
+                                                              Map<String, Terms> termsMap,
+                                                              Double measurementDurationMinutesInDouble,
+                                                              String gpuDetectionQuery)
             throws IOException, NoSuchAlgorithmException, KeyStoreException,
             KeyManagementException, ParseException, FetchMetricsError {
 
@@ -172,7 +173,7 @@ public class RecommendationUtils {
         long interval_start_time_epoc = 0;
 
         LOGGER.debug("maxDateQuery: {}", maxDateQuery);
-        queryToEncode =  maxDateQuery
+        queryToEncode = maxDateQuery
                 .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
                 .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
                 .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
@@ -218,7 +219,7 @@ public class RecommendationUtils {
 
         String podMetricsUrl;
         try {
-            podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
+            podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY_RANGE,
                     dataSourceInfo.getUrl(),
                     URLEncoder.encode(gpuDetectionQuery, CHARACTER_ENCODING),
                     interval_start_time_epoc,

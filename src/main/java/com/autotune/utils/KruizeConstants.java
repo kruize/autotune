@@ -407,7 +407,7 @@ public class KruizeConstants {
         public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";
         public static final String OPENSHIFT_MONITORING_PROMETHEUS_DEFAULT_SERVICE_PORT = "9091";
         public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
-        public static final String DATASOURCE_ENDPOINT_WITH_QUERY = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
+        public static final String DATASOURCE_ENDPOINT_WITH_QUERY_RANGE = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
         public static final String DATE_ENDPOINT_WITH_QUERY = "%s/api/v1/query?query=%s";
 
         private DataSourceConstants() {
@@ -465,7 +465,7 @@ public class KruizeConstants {
             public static final String SERVICE_NOT_FOUND = "Can not find service with specified name.";
             public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
             public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
-            public static final String INVALID_DATASOURCE_INFO = "Datasource is either missing or is invalid";
+            public static final String INVALID_DATASOURCE_INFO = "Datasource is either missing or is invalid: ";
             public static final String MISSING_DATASOURCE_AUTH = "Auth details are missing for datasource: {}";
             public static final String DATASOURCE_AUTH_DB_INSERTION_FAILED = "Failed to add auth details to DB: {}";
             public static final String DATASOURCE_AUTH_DB_UPDATE_FAILED = "Failed to update auth details in the DB: {}";
@@ -808,6 +808,11 @@ public class KruizeConstants {
         public static final String FAILED = "FAILED";
         public static final String LIMIT_MESSAGE = "The number of experiments exceeds %s.";
         public static final String NOTHING = "Nothing to do.";
+        public static final String START_TIME = "start_time";
+        public static final String END_TIME = "end_time";
+        public static final String STEPS = "steps";
+        public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
+
         // TODO : Bulk API Create Experiments defaults
         public static final CreateExperimentConfigBean CREATE_EXPERIMENT_CONFIG_BEAN;
 

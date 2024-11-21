@@ -223,6 +223,19 @@ public class DataSourceCollection {
         }
     }
 
+    private AuthenticationConfig getAuthenticationDetails(JSONObject dataSourceObject, String name) {
+        AuthenticationConfig authConfig;
+        try {
+            JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
+            // create the corresponding authentication object
+            authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
+        } catch (Exception e) {
+            LOGGER.warn("Auth details are missing for datasource: {}", name);
+            authConfig = AuthenticationConfig.noAuth();
+        }
+        return authConfig;
+    }
+
     /**
      * validates the input parameters before creating dataSourceInfo objects
      *
