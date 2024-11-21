@@ -162,21 +162,13 @@ public class DataSourceCollection {
             }
             if (null != dataSourceInfo) {
                 LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECK_DATASOURCE_UPDATES, name);
-                // Extract and compare the authentication details
-                JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
-                AuthenticationConfig newAuthConfig;
-                if (authenticationObj == null) {
-                    LOGGER.warn(MISSING_DATASOURCE_AUTH, name);
-                    newAuthConfig = AuthenticationConfig.noAuth();
-                } else {
-                    // Create the new authentication config from the JSON object
-                    newAuthConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
-                }
+                // get the updated authentication details and compare it with the one in the DB
+                AuthenticationConfig modifiedAuthConfig = getAuthenticationDetails(dataSourceObject, name);
                 // Compare with the existing authentication config
-                if (dataSourceInfo.hasAuthChanged(newAuthConfig)) {
+                if (dataSourceInfo.hasAuthChanged(modifiedAuthConfig)) {
                     LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.DATASOURCE_AUTH_CHANGED, name);
                     // check the datasource with the new config
-                    dataSourceInfo.updateAuthConfig(newAuthConfig);
+                    dataSourceInfo.updateAuthConfig(modifiedAuthConfig);
                     DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
                     if (op.isServiceable(dataSourceInfo) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
                         // update the authentication details in the DB
@@ -198,15 +190,7 @@ public class DataSourceCollection {
                 String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
                 String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
                 String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
-                AuthenticationConfig authConfig;
-                try {
-                    JSONObject authenticationObj = dataSourceObject.optJSONObject(KruizeConstants.AuthenticationConstants.AUTHENTICATION);
-                    // create the corresponding authentication object
-                    authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
-                } catch (Exception e) {
-                    LOGGER.warn(DATASOURCE_DB_AUTH_LOAD_FAILED, name, e.getMessage());
-                    authConfig = AuthenticationConfig.noAuth();
-                }
+                AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
 
                 // Validate input
                 if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) { //TODO: add validations for auth
