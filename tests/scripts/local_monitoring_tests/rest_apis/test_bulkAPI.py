@@ -55,15 +55,7 @@ def test_bulk_post_request(cluster_type, bulk_request_payload, expected_job_id_p
 
     with caplog.at_level(logging.INFO):
         # Log request payload and curl command for POST request
-        logger.info("Sending POST request to URL: %s", f"{URL}/bulk")
-        logger.info("Request Payload: %s", bulk_request_payload)
-        curl_command = f"curl -X POST {URL}/bulk -H 'Content-Type: application/json' -d '{json.dumps(bulk_request_payload)}'"
-        logger.info("Equivalent cURL command: %s", curl_command)
-
-        # Send the POST request
-        response = requests.post(f"{URL}/bulk", json=bulk_request_payload)
-        logger.info("Response Status Code: %s", response.status_code)
-        logger.info("Response JSON: %s", response.json())
+        response = post_bulk_api(bulk_request_payload)
 
         # Check if job_id is present in the response
         job_id_present = "job_id" in response.json() and isinstance(response.json()["job_id"], str)
@@ -71,14 +63,10 @@ def test_bulk_post_request(cluster_type, bulk_request_payload, expected_job_id_p
 
         # If a job_id is generated, run the GET request test
         if job_id_present:
-            test_get_job_status(response.json()["job_id"], URL, caplog)
+            get_job_status(response.json()["job_id"], URL, caplog)
 
-
-def test_get_job_status(job_id, base_url, caplog):
-    # Define URLs for both requests
-    url_basic = f"{base_url}/bulk?job_id={job_id}"
-    url_verbose = f"{base_url}/bulk?job_id={job_id}&verbose=true"
-
+@pytest.mark.skip(reason="Not a test function")
+def get_job_status(job_id, base_url, caplog):
     # Common keys expected in both responses
     common_keys = {
         "status", "total_experiments", "processed_experiments", "job_id", "job_start_time", "job_end_time"
@@ -91,27 +79,12 @@ def test_get_job_status(job_id, base_url, caplog):
 
     with caplog.at_level(logging.INFO):
         # Make the GET request without verbose
-        logger.info("Sending GET request to URL (basic): %s", url_basic)
-        curl_command_basic = f"curl -X GET '{url_basic}'"
-        logger.info("Equivalent cURL command (basic): %s", curl_command_basic)
-        response_basic = requests.get(url_basic)
-
-        logger.info("Basic GET Response Status Code: %s", response_basic.status_code)
-        logger.info("Basic GET Response JSON: %s", response_basic.json())
-
+        response_basic = get_bulk_job_status(job_id,False)
         # Verify common keys in the basic response
         assert common_keys.issubset(
             response_basic.json().keys()), f"Missing keys in response: {common_keys - response_basic.json().keys()}"
 
-        # Make the GET request with verbose=true
-        logger.info("Sending GET request to URL (verbose): %s", url_verbose)
-        curl_command_verbose = f"curl -X GET '{url_verbose}'"
-        logger.info("Equivalent cURL command (verbose): %s", curl_command_verbose)
-        response_verbose = requests.get(url_verbose)
-
-        logger.info("Verbose GET Response Status Code: %s", response_verbose.status_code)
-        logger.info("Verbose GET Response JSON: %s", response_verbose.json())
-
+        response_verbose = get_bulk_job_status(job_id,True)
         # Verify common and verbose keys in the verbose response
         assert common_keys.issubset(
             response_verbose.json().keys()), f"Missing keys in verbose response: {common_keys - response_verbose.json().keys()}"
