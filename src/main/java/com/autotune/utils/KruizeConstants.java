@@ -805,7 +805,7 @@ public class KruizeConstants {
         public static final String IN_PROGRESS = "IN_PROGRESS";
         public static final String COMPLETED = "COMPLETED";
         public static final String FAILED = "FAILED";
-        public static final String LIMIT_MESSAGE = "The number of experiments exceeds %s.";
+        public static final String LIMIT_MESSAGE = "The number of experiments exceeds the defined limit.";
         public static final String NOTHING = "Nothing to do.";
         public static final String START_TIME = "start_time";
         public static final String END_TIME = "end_time";
