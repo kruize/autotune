@@ -1,90 +1,131 @@
 package com.autotune.common.auth;
 
-public class Credentials {
-    private String grantType;      // OAuth2
-    private String clientId;       // OAuth2
-    private String clientSecret;   // OAuth2
-    private String username;       // Basic auth
-    private String password;       // Basic auth
-    private String tokenEndpoint;  // OAuth2
-    private String tokenFilePath;  // Bearer token
-    private String apiKey;         // API key
-    private String headerName;     // API key header name
+import java.util.Objects;
 
-    public Credentials(String username, String password) {
-        this.username = username;
-        this.password = password;
-    }
+public abstract class Credentials {
+}
 
-    public Credentials() {
-    }
-
-    public String getUsername() {
-        return username;
-    }
+class OAuth2Credentials extends Credentials {
+    private String grantType;
+    private String clientId;
+    private String clientSecret;
+    private String tokenEndpoint;
 
     public String getGrantType() {
         return grantType;
-    }
-
-    public String getClientSecret() {
-        return clientSecret;
-    }
-
-    public String getClientId() {
-        return clientId;
-    }
-
-    public String getTokenEndpoint() {
-        return tokenEndpoint;
-    }
-
-    public String getHeaderName() {
-        return headerName;
-    }
-
-    public String getApiKey() {
-        return apiKey;
-    }
-
-    public String getTokenFilePath() {
-        return tokenFilePath;
-    }
-
-    public String getPassword() {
-        return password;
     }
 
     public void setGrantType(String grantType) {
         this.grantType = grantType;
     }
 
+    public String getClientId() {
+        return clientId;
+    }
+
     public void setClientId(String clientId) {
         this.clientId = clientId;
+    }
+
+    public String getClientSecret() {
+        return clientSecret;
     }
 
     public void setClientSecret(String clientSecret) {
         this.clientSecret = clientSecret;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
+    public String getTokenEndpoint() {
+        return tokenEndpoint;
     }
 
     public void setTokenEndpoint(String tokenEndpoint) {
         this.tokenEndpoint = tokenEndpoint;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        OAuth2Credentials that = (OAuth2Credentials) o;
+        return Objects.equals(grantType, that.grantType) &&
+                Objects.equals(clientId, that.clientId) &&
+                Objects.equals(clientSecret, that.clientSecret) &&
+                Objects.equals(tokenEndpoint, that.tokenEndpoint);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(grantType, clientId, clientSecret, tokenEndpoint);
+    }
+}
+
+class BasicAuthCredentials extends Credentials {
+    private String username;
+    private String password;
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+
+class BearerTokenCredentials extends Credentials {
+    private String tokenFilePath;
+
+    public String getTokenFilePath() {
+        return tokenFilePath;
+    }
+
     public void setTokenFilePath(String tokenFilePath) {
         this.tokenFilePath = tokenFilePath;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        BearerTokenCredentials that = (BearerTokenCredentials) o;
+        return Objects.equals(tokenFilePath, that.tokenFilePath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(tokenFilePath);
+    }
+    @Override
+    public String toString() {
+        return "BearerTokenCredentials{" +
+                "tokenFilePath='" + tokenFilePath + '\'' +
+                '}';
+    }
+}
+
+class ApiKeyCredentials extends Credentials {
+    private String apiKey;
+    private String headerName;
+
+    public String getApiKey() {
+        return apiKey;
+    }
+
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
+    }
+
+    public String getHeaderName() {
+        return headerName;
     }
 
     public void setHeaderName(String headerName) {
@@ -92,17 +133,16 @@ public class Credentials {
     }
 
     @Override
-    public String toString() {
-        return "Credentials{" +
-                "grantType='" + grantType + '\'' +
-                ", clientId='" + clientId + '\'' +
-                ", clientSecret='" + clientSecret + '\'' +
-                ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
-                ", tokenEndpoint='" + tokenEndpoint + '\'' +
-                ", tokenFilePath='" + tokenFilePath + '\'' +
-                ", apiKey='" + apiKey + '\'' +
-                ", headerName='" + headerName + '\'' +
-                '}';
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        ApiKeyCredentials that = (ApiKeyCredentials) o;
+        return Objects.equals(apiKey, that.apiKey);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(apiKey);
     }
 }
+

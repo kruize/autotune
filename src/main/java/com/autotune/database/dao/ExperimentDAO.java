@@ -29,7 +29,7 @@ public interface ExperimentDAO {
     public ValidationOutputData addMetricProfileToDB(KruizeMetricProfileEntry kruizeMetricProfileEntry);
 
     // Add DataSource to DB
-    ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry);
+    ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry, ValidationOutputData validationOutputData);
 
     // Update experiment status
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status);
@@ -104,4 +104,6 @@ public interface ExperimentDAO {
 
     // Delete metadata
     public ValidationOutputData deleteKruizeDSMetadataEntryByName(String dataSourceName);
+
+    ValidationOutputData addAuthenticationDetailsToDB(KruizeAuthenticationEntry kruizeAuthenticationEntry);
 }

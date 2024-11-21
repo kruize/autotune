@@ -7,9 +7,13 @@ package com.autotune.common.data.dataSourceQueries;
  */
 public class DataSourceQueries {
     public enum PromQLQuery {
-        NAMESPACE_QUERY("sum by (namespace) (kube_namespace_status_phase{phase=\"Active\"})"),
-        WORKLOAD_INFO_QUERY("sum by (namespace, workload, workload_type) (namespace_workload_pod:kube_pod_owner:relabel)"),
-        CONTAINER_INFO_QUERY("sum by (container, image, workload) (kube_pod_container_info * on(pod) group_left(workload, workload_type) (namespace_workload_pod:kube_pod_owner:relabel))");
+        NAMESPACE_QUERY("sum by (namespace) ( avg_over_time(kube_namespace_status_phase{namespace!=\"\" ADDITIONAL_LABEL}[15d]))"),
+        WORKLOAD_INFO_QUERY("sum by (namespace, workload, workload_type) ( avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" ADDITIONAL_LABEL}[15d]))"),
+        CONTAINER_INFO_QUERY("sum by (container, image, workload, workload_type, namespace) (" +
+                "  avg_over_time(kube_pod_container_info{container!=\"\" ADDITIONAL_LABEL}[15d]) *" +
+                "  on (pod, namespace,prometheus_replica) group_left(workload, workload_type)" +
+                "   avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" ADDITIONAL_LABEL}[15d])" +
+                ")");
         private final String query;
 
         PromQLQuery(String query) {

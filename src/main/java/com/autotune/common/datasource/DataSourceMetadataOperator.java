@@ -1,19 +1,44 @@
+/*******************************************************************************
+ * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *    http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ *******************************************************************************/
 package com.autotune.common.datasource;
 
-import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
-import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataHelper;
 import com.autotune.common.data.dataSourceMetadata.*;
+import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.Gson;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+import java.net.URLEncoder;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 
 /**
  * DataSourceMetadataOperator is an abstraction with CRUD operations to manage DataSourceMetadataInfo Object
  * representing JSON for a given data source
- *
+ * <p>
  *  TODO -
  *  object is currently stored in memory going forward need to store cluster metadata in Kruize DB
  *  Implement methods to support update and delete operations for periodic update of DataSourceMetadataInfo
@@ -22,23 +47,34 @@ public class DataSourceMetadataOperator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceMetadataOperator.class);
     private static final DataSourceMetadataOperator dataSourceMetadataOperatorInstance = new DataSourceMetadataOperator();
     private DataSourceMetadataInfo dataSourceMetadataInfo;
-    private DataSourceMetadataOperator() { this.dataSourceMetadataInfo = null; }
-    public static DataSourceMetadataOperator getInstance() { return dataSourceMetadataOperatorInstance; }
+
+    private DataSourceMetadataOperator() {
+        this.dataSourceMetadataInfo = null;
+    }
+
+    public static DataSourceMetadataOperator getInstance() {
+        return dataSourceMetadataOperatorInstance;
+    }
 
     /**
      * Creates and populates metadata for a data source based on the provided DataSourceInfo object.
-     *
+     * <p>
      * Currently supported DataSourceProvider - Prometheus
      *
      * @param dataSourceInfo The DataSourceInfo object containing information about the data source.
-     * TODO - support multiple data sources
+     * @param uniqueKey      this is used as labels in query example container="xyz" namespace="abc"
+     * @param startTime      Get metadata from starttime to endtime
+     * @param endTime        Get metadata from starttime to endtime
+     * @param steps          the interval between data points in a range query
+     *                                                                                                                                                                                                                                                   TODO - support multiple data sources
      */
-    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo) {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo);
+    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
     }
 
     /**
      * Retrieves DataSourceMetadataInfo object.
+     *
      * @return DataSourceMetadataInfo containing metadata about the data source if found, otherwise null.
      */
     public DataSourceMetadataInfo getDataSourceMetadataInfo(DataSourceInfo dataSourceInfo) {
@@ -69,23 +105,24 @@ public class DataSourceMetadataOperator {
      * Updates the metadata information of a data source with the provided DataSourceInfo object,
      * while preserving existing metadata information.
      *
-     * @param dataSourceInfo      The DataSourceInfo object containing information about the
-     *                            data source to be updated.
-     *
-     *  TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
-     *         need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
+     * @param dataSourceInfo The DataSourceInfo object containing information about the
+     *                       data source to be updated.
+     *                       <p>
+     *                                                                                                                                                                                                                                                    TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
+     *                                                                                                                                                                                                                                                           need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
-    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo) {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo);
+    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws Exception {
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
     }
 
     /**
      * Deletes the metadata information of a data source with the provided DataSourceInfo object,
-     * @param dataSourceInfo      The DataSourceInfo object containing information about the
-     *                            metadata to be deleted.
+     *
+     * @param dataSourceInfo The DataSourceInfo object containing information about the
+     *                       metadata to be deleted.
      */
     public void deleteDataSourceMetadata(DataSourceInfo dataSourceInfo) {
-        try{
+        try {
             if (null == dataSourceMetadataInfo) {
                 LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
                 return;
@@ -107,10 +144,15 @@ public class DataSourceMetadataOperator {
      * Fetches and processes metadata related to namespaces, workloads, and containers of a given datasource and populates the
      * DataSourceMetadataInfo object
      *
-     * @param dataSourceInfo            The DataSourceInfo object containing information about the data source
+     * @param dataSourceInfo The DataSourceInfo object containing information about the data source
+     * @param uniqueKey      this is used as labels in query example container="xyz" namespace="abc"
+     * @param startTime      Get metadata from starttime to endtime
+     * @param endTime        Get metadata from starttime to endtime
+     * @param steps          the interval between data points in a range query
      * @return DataSourceMetadataInfo object with populated metadata fields
+     * todo rename processQueriesAndFetchClusterMetadataInfo
      */
-    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo) {
+    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
         /**
          * Get DataSourceOperatorImpl instance on runtime based on dataSource provider
@@ -121,20 +163,35 @@ public class DataSourceMetadataOperator {
             LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_OPERATOR_RETRIEVAL_FAILURE, dataSourceInfo.getProvider());
             return null;
         }
-
         /**
          * For the "prometheus" data source, fetches and processes data related to namespaces, workloads, and containers,
          * creating a comprehensive DataSourceMetadataInfo object that is then added to a list.
          * TODO - Process cluster metadata using a custom query
          */
-        try {
-            String dataSourceName = dataSourceInfo.getName();
-            JsonArray namespacesDataResultArray =  op.getResultArrayForQuery(dataSourceInfo, PromQLDataSourceQueries.NAMESPACE_QUERY);
-            if (false == op.validateResultArray(namespacesDataResultArray)){
-                dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
-                throw new Exception(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.NAMESPACE_QUERY_VALIDATION_FAILED);
-            }
 
+        String dataSourceName = dataSourceInfo.getName();
+        String namespaceQuery = PromQLDataSourceQueries.NAMESPACE_QUERY;
+        String workloadQuery = PromQLDataSourceQueries.WORKLOAD_QUERY;
+        String containerQuery = PromQLDataSourceQueries.CONTAINER_QUERY;
+        if (null != uniqueKey && !uniqueKey.isEmpty()) {
+            LOGGER.debug("uniquekey: {}", uniqueKey);
+            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
+            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
+            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
+        } else {
+            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+        }
+        LOGGER.info("namespaceQuery: {}", namespaceQuery);
+        LOGGER.info("workloadQuery: {}", workloadQuery);
+        LOGGER.info("containerQuery: {}", containerQuery);
+
+        JsonArray namespacesDataResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
+        LOGGER.debug("namespacesDataResultArray: {}", namespacesDataResultArray);
+        if (!op.validateResultArray(namespacesDataResultArray)) {
+            dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
+        } else {
             /**
              * Key: Name of namespace
              * Value: DataSourceNamespace object corresponding to a namespace
@@ -152,8 +209,8 @@ public class DataSourceMetadataOperator {
              * TODO -  get workload metadata for a given namespace
              */
             HashMap<String, HashMap<String, DataSourceWorkload>> datasourceWorkloads = new HashMap<>();
-            JsonArray workloadDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
-                    PromQLDataSourceQueries.WORKLOAD_QUERY);
+            JsonArray workloadDataResultArray = fetchQueryResults(dataSourceInfo, workloadQuery, startTime, endTime, steps);
+            LOGGER.debug("workloadDataResultArray: {}", workloadDataResultArray);
 
             if (op.validateResultArray(workloadDataResultArray)) {
                 datasourceWorkloads = dataSourceDetailsHelper.getWorkloadInfo(workloadDataResultArray);
@@ -171,19 +228,43 @@ public class DataSourceMetadataOperator {
              * TODO - get container metadata for a given workload
              */
             HashMap<String, HashMap<String, DataSourceContainer>> datasourceContainers = new HashMap<>();
-            JsonArray containerDataResultArray = op.getResultArrayForQuery(dataSourceInfo,
-                    PromQLDataSourceQueries.CONTAINER_QUERY);
+            JsonArray containerDataResultArray = fetchQueryResults(dataSourceInfo, containerQuery, startTime, endTime, steps);
+
+            LOGGER.debug("containerDataResultArray: {}", containerDataResultArray);
 
             if (op.validateResultArray(containerDataResultArray)) {
                 datasourceContainers = dataSourceDetailsHelper.getContainerInfo(containerDataResultArray);
             }
             dataSourceDetailsHelper.updateContainerDataSourceMetadataInfoObject(dataSourceName, dataSourceMetadataInfo,
                     datasourceWorkloads, datasourceContainers);
-
             return getDataSourceMetadataInfo(dataSourceInfo);
-        } catch (Exception e) {
-            LOGGER.error(e.getMessage());
         }
+
         return null;
+
+    }
+
+    private JsonArray fetchQueryResults(DataSourceInfo dataSourceInfo, String query, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        GenericRestApiClient client = new GenericRestApiClient(dataSourceInfo);
+        String metricsUrl;
+        if (startTime != 0 && endTime != 0 && steps != 0) {
+            metricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY_RANGE,
+                    dataSourceInfo.getUrl(),
+                    URLEncoder.encode(query, CHARACTER_ENCODING),
+                    startTime,
+                    endTime,
+                    steps);
+        } else {
+            metricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
+                    dataSourceInfo.getUrl(),
+                    URLEncoder.encode(query, CHARACTER_ENCODING)
+            );
+        }
+
+        LOGGER.debug("MetricsUrl: {}", metricsUrl);
+        client.setBaseURL(metricsUrl);
+        JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
+        JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
+        return jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
     }
 }

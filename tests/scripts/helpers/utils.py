@@ -254,6 +254,8 @@ aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "c
                           "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
                           "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
 
+MIG_PATTERN = r"nvidia\.com/mig-[1-4|7]g\.(5|10|20|40|80)gb"
+
 
 def generate_test_data(csvfile, test_data, api_name):
     if os.path.isfile(csvfile):
@@ -1526,3 +1528,60 @@ def validate_local_monitoring_recommendation_data_present(recommendations_json):
         for i in range(list_reco_containers_length):
              assert recommendations_json[0]['kubernetes_objects'][0]['containers'][i]['recommendations']['data'], "Recommendations data is expected, but not present."
              assert recommendations_json[0]['kubernetes_objects'][0]['containers'][i]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE, "Recommendations notification is expected, but not present."
+
+
+def validate_limits_map_for_accelerator(limits: dict):
+    for resource, resource_obj in limits.items():
+        # Check if the key contains "nvidia" and matches the MIG pattern
+        if "nvidia" in resource:
+            # Assert that the key matches the expected MIG pattern
+            assert re.match(MIG_PATTERN, resource), f"Resource '{resource}' does not match the expected MIG pattern."
+
+            # Assert that the amount is 1.0 and format is "cores"
+            assert resource_obj.get("amount") == 1.0, f"Resource '{resource}' has an invalid amount: {resource_obj.get('amount')}"
+            assert resource_obj.get("format") == "cores", f"Resource '{resource}' has an invalid format: {resource_obj.get('format')}"
+
+
+
+def validate_accelerator_recommendations_for_container(recommendations_json):
+    if 'experiment_type' in recommendations_json[0]:
+        assert recommendations_json[0]['experiment_type'] == CONTAINER_EXPERIMENT_TYPE, "Test is only applicable for container experiment type"
+
+    assert recommendations_json[0]['kubernetes_objects'], "Kubernetes objects expected"
+
+    # Test needs to be changed if we support multiple kubernetes objects
+    kubernetes_obj = recommendations_json[0]['kubernetes_objects'][0]
+    assert kubernetes_obj["containers"], "Containers array expected"
+
+    containers = kubernetes_obj["containers"]
+    assert len(containers) > 0, "Expecting atleast one container"
+
+    for container in containers:
+        assert container['recommendations'], "Recommendations object expected"
+        recommendations = container['recommendations']
+
+        assert recommendations["data"], "Data object expected"
+        data = recommendations["data"]
+
+        assert len(data) > 0, "Data object cannot be empty"
+
+        for timestamp, interval_recommendation_obj in data.items():
+            assert interval_recommendation_obj["recommendation_terms"], "Term based recommendations expected"
+            terms = interval_recommendation_obj["recommendation_terms"]
+
+            assert len(terms) > 0, "Atleast one term is expected"
+
+            for term_name, term_obj in terms.items():
+                term_notifications = term_obj["notifications"]
+
+                if NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE in term_notifications:
+                    cost_limits_map = term_obj["recommendation_engines"]["cost"]["config"]["limits"]
+                    validate_limits_map_for_accelerator(cost_limits_map)
+
+                if NOTIFICATION_CODE_FOR_PERFORMANCE_RECOMMENDATIONS_AVAILABLE in term_notifications:
+                    perf_limits_map = term_obj["recommendation_engines"]["performance"]["config"]["limits"]
+                    validate_limits_map_for_accelerator(perf_limits_map)
+
+
+
+

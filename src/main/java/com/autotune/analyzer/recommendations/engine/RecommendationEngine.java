@@ -35,7 +35,10 @@ import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
-import com.google.gson.*;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import io.micrometer.core.instrument.Timer;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -98,6 +101,26 @@ public class RecommendationEngine {
      * @param promQls The map to be populated with PromQL queries.
      */
     private static void getPromQls(Map<AnalyzerConstants.MetricName, String> promQls) {
+    }
+
+    /**
+     * Calculates the number of pods for a namespace based on the provided results map.
+     *
+     * @param filteredResultsMap A map containing timestamp as keys and contains metric results for the corresponding timestamp.
+     * @return int maximum number of pods observed across all timestamps in the filtered results map.
+     */
+    private static int getNumPodsForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        LOGGER.debug("Size of Filter Map: {}", filteredResultsMap.size());
+        Double max_pods_cpu = filteredResultsMap.values()
+                .stream()
+                .map(e -> {
+                    Optional<MetricResults> numPodsResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceTotalPods));
+                    double numPods = numPodsResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+                    return numPods;
+                })
+                .max(Double::compareTo).get();
+
+        return (int) Math.ceil(max_pods_cpu);
     }
 
     private void init() {
@@ -236,7 +259,7 @@ public class RecommendationEngine {
      * @param calCount The count of incoming requests.
      * @return The KruizeObject containing the prepared recommendations.
      */
-    public KruizeObject prepareRecommendations(int calCount) throws FetchMetricsError{
+    public KruizeObject prepareRecommendations(int calCount) throws FetchMetricsError {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
         Map<String, Terms> terms = new HashMap<>();
         ValidationOutputData validationOutputData;
@@ -311,6 +334,7 @@ public class RecommendationEngine {
 
     /**
      * Generates recommendations for the specified KruizeObject
+     *
      * @param kruizeObject The KruizeObject containing experiment data
      */
     public void generateRecommendations(KruizeObject kruizeObject) {
@@ -322,7 +346,7 @@ public class RecommendationEngine {
                 NamespaceData namespaceData = k8sObject.getNamespaceData();
                 LOGGER.info("Generating recommendations for namespace: {}", namespaceName);
                 generateRecommendationsBasedOnNamespace(namespaceData, kruizeObject);
-            } else if (kruizeObject.isContainerExperiment()){
+            } else if (kruizeObject.isContainerExperiment()) {
                 for (String containerName : k8sObject.getContainerDataMap().keySet()) {
                     ContainerData containerData = k8sObject.getContainerDataMap().get(containerName);
 
@@ -740,25 +764,6 @@ public class RecommendationEngine {
         return mappedRecommendationForModel;
     }
 
-    /**
-     * Calculates the number of pods for a namespace based on the provided results map.
-     * @param filteredResultsMap A map containing timestamp as keys and contains metric results for the corresponding timestamp.
-     * @return int maximum number of pods observed across all timestamps in the filtered results map.
-     */
-    private static int getNumPodsForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap) {
-        LOGGER.debug("Size of Filter Map: {}",  filteredResultsMap.size());
-        Double max_pods_cpu = filteredResultsMap.values()
-                .stream()
-                .map(e -> {
-                    Optional<MetricResults> numPodsResults = Optional.ofNullable(e.getMetricResultsMap().get(AnalyzerConstants.MetricName.namespaceTotalPods));
-                    double numPods = numPodsResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
-                    return numPods;
-                })
-                .max(Double::compareTo).get();
-
-        return (int) Math.ceil(max_pods_cpu);
-    }
-
     private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
         Timestamp monitoringEndTime = namespaceData.getResults().keySet().stream().max(Timestamp::compareTo).get();
         NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
@@ -806,8 +811,8 @@ public class RecommendationEngine {
     }
 
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentNamespaceConfigData(NamespaceData namespaceData,
-                                                                                                                   Timestamp monitoringEndTime,
-                                                                                                                   MappedRecommendationForTimestamp timestampRecommendation) {
+                                                                                                                                                              Timestamp monitoringEndTime,
+                                                                                                                                                              MappedRecommendationForTimestamp timestampRecommendation) {
 
         HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentNamespaceConfig = new HashMap<>();
 
@@ -1096,13 +1101,13 @@ public class RecommendationEngine {
      * DO NOT EDIT THIS METHOD UNLESS THERE ARE ANY CHANGES TO BE ADDED IN VALIDATION OR POPULATION MECHANISM
      * EDITING THIS METHOD MIGHT LEAD TO UNEXPECTED OUTCOMES IN RECOMMENDATIONS, PLEASE PROCEED WITH CAUTION
      *
-     * @param termEntry The entry containing a term key and its associated {@link Terms} object.
-     * @param recommendationModel The model used to map recommendations.
-     * @param notifications A list to which recommendation notifications will be added.
-     * @param internalMapToPopulate The internal map to populate with recommendation configuration items.
-     * @param numPods The number of pods to consider for the recommendation.
-     * @param cpuThreshold The CPU usage threshold for the recommendation.
-     * @param memoryThreshold The memory usage threshold for the recommendation.
+     * @param termEntry                           The entry containing a term key and its associated {@link Terms} object.
+     * @param recommendationModel                 The model used to map recommendations.
+     * @param notifications                       A list to which recommendation notifications will be added.
+     * @param internalMapToPopulate               The internal map to populate with recommendation configuration items.
+     * @param numPods                             The number of pods to consider for the recommendation.
+     * @param cpuThreshold                        The CPU usage threshold for the recommendation.
+     * @param memoryThreshold                     The memory usage threshold for the recommendation.
      * @param recommendationAcceleratorRequestMap The Map which has Accelerator recommendations
      * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
@@ -1800,10 +1805,10 @@ public class RecommendationEngine {
     /**
      * Fetches metrics based on the specified datasource using queries from the metricProfile for the given time interval.
      *
-     * @param kruizeObject          KruizeObject
-     * @param interval_end_time     The end time of the interval in the format yyyy-MM-ddTHH:mm:sssZ
-     * @param interval_start_time   The start time of the interval in the format yyyy-MM-ddTHH:mm:sssZ.
-     * @param dataSourceInfo        DataSource object
+     * @param kruizeObject        KruizeObject
+     * @param interval_end_time   The end time of the interval in the format yyyy-MM-ddTHH:mm:sssZ
+     * @param interval_start_time The start time of the interval in the format yyyy-MM-ddTHH:mm:sssZ.
+     * @param dataSourceInfo      DataSource object
      * @throws Exception
      */
     public void fetchMetricsBasedOnProfileAndDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception, FetchMetricsError {
@@ -1839,12 +1844,13 @@ public class RecommendationEngine {
 
     /**
      * Fetches namespace metrics based on the specified datasource using queries from the metricProfile for the given time interval.
-     * @param kruizeObject          KruizeObject
-     * @param interval_end_time     The end time of the interval in the format yyyy-MM-ddTHH:mm:sssZ
-     * @param interval_start_time   The start time of the interval in the format yyyy-MM-ddTHH:mm:sssZ.
-     * @param dataSourceInfo        DataSource object
-     * @param metricProfile         performance profile to be used
-     * @param maxDateQuery          max date query for namespace
+     *
+     * @param kruizeObject        KruizeObject
+     * @param interval_end_time   The end time of the interval in the format yyyy-MM-ddTHH:mm:sssZ
+     * @param interval_start_time The start time of the interval in the format yyyy-MM-ddTHH:mm:sssZ.
+     * @param dataSourceInfo      DataSource object
+     * @param metricProfile       performance profile to be used
+     * @param maxDateQuery        max date query for namespace
      * @throws Exception
      */
     private void fetchNamespaceMetricsBasedOnDataSourceAndProfile(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo, PerformanceProfile metricProfile, String maxDateQuery) throws Exception, FetchMetricsError {
@@ -1866,7 +1872,7 @@ public class RecommendationEngine {
                 String namespaceMaxDateQuery = maxDateQuery.replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace);
 
                 if (null == interval_end_time) {
-                    LOGGER.info(KruizeConstants.APIMessages.NAMESPACE_USAGE_INFO);
+                    LOGGER.debug(KruizeConstants.APIMessages.NAMESPACE_USAGE_INFO);
                     String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
                             dataSourceInfo.getUrl(),
                             URLEncoder.encode(namespaceMaxDateQuery, CHARACTER_ENCODING)
@@ -1887,7 +1893,7 @@ public class RecommendationEngine {
                         interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                 - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                         int maxDay = Terms.getMaxDays(kruizeObject.getTerms());
-                        LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
+                        LOGGER.debug(KruizeConstants.APIMessages.MAX_DAY, maxDay);
                         Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
                         interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                 - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
@@ -1913,9 +1919,8 @@ public class RecommendationEngine {
                     k8sObject.setNamespaceData(namespaceData);
                 }
 
-                List<Metric> namespaceMetricList = metricProfile.getSloInfo().getFunctionVariables().stream()
-                        .filter(metricEntry -> metricEntry.getName().startsWith(AnalyzerConstants.NAMESPACE) && !metricEntry.getName().equals("namespaceMaxDate"))
-                        .toList();
+                List<Metric> namespaceMetricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
+                        AnalyzerConstants.MetricName.namespaceMaxDate.name(), kruizeObject.getExperimentType());
 
                 // Iterate over metrics and aggregation functions
                 for (Metric metricEntry : namespaceMetricList) {
@@ -1942,7 +1947,7 @@ public class RecommendationEngine {
                             LOGGER.info(promQL);
                             String namespaceMetricsUrl;
                             try {
-                                namespaceMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
+                                namespaceMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY_RANGE,
                                         dataSourceInfo.getUrl(),
                                         URLEncoder.encode(promQL, CHARACTER_ENCODING),
                                         interval_start_time_epoc,
@@ -1996,12 +2001,12 @@ public class RecommendationEngine {
     /**
      * Fetches Container metrics based on the specified datasource using queries from the metricProfile for the given time interval.
      *
-     * @param kruizeObject          KruizeObject
-     * @param interval_end_time     The end time of the interval in the format yyyy-MM-ddTHH:mm:sssZ
-     * @param interval_start_time   The start time of the interval in the format yyyy-MM-ddTHH:mm:sssZ.
-     * @param dataSourceInfo        DataSource object
-     * @param metricProfile         performance profile to be used
-     * @param maxDateQuery          max date query for containers
+     * @param kruizeObject        KruizeObject
+     * @param interval_end_time   The end time of the interval in the format yyyy-MM-ddTHH:mm:sssZ
+     * @param interval_start_time The start time of the interval in the format yyyy-MM-ddTHH:mm:sssZ.
+     * @param dataSourceInfo      DataSource object
+     * @param metricProfile       performance profile to be used
+     * @param maxDateQuery        max date query for containers
      * @throws Exception
      */
     private void fetchContainerMetricsBasedOnDataSourceAndProfile(KruizeObject kruizeObject,
@@ -2045,7 +2050,7 @@ public class RecommendationEngine {
 
                     String containerName = containerData.getContainer_name();
                     if (null == interval_end_time) {
-                        LOGGER.info(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
+                        LOGGER.debug(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
                         String queryToEncode = null;
                         if (null == maxDateQuery || maxDateQuery.isEmpty()) {
                             throw new NullPointerException("maxDate query cannot be empty or null");
@@ -2053,7 +2058,7 @@ public class RecommendationEngine {
 
 
                         LOGGER.debug("maxDateQuery: {}", maxDateQuery);
-                        queryToEncode =  maxDateQuery
+                        queryToEncode = maxDateQuery
                                 .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
                                 .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
                                 .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
@@ -2063,7 +2068,7 @@ public class RecommendationEngine {
                                 dataSourceInfo.getUrl(),
                                 URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
                         );
-                        LOGGER.info(dateMetricsUrl);
+                        LOGGER.debug(dateMetricsUrl);
                         client.setBaseURL(dateMetricsUrl);
                         JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                         JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
@@ -2079,7 +2084,7 @@ public class RecommendationEngine {
                             interval_end_time_epoc = dateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                     - ((long) dateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
                             int maxDay = Terms.getMaxDays(kruizeObject.getTerms());
-                            LOGGER.info(KruizeConstants.APIMessages.MAX_DAY, maxDay);
+                            LOGGER.debug(KruizeConstants.APIMessages.MAX_DAY, maxDay);
                             Timestamp startDateTS = Timestamp.valueOf(Objects.requireNonNull(dateTS).toLocalDateTime().minusDays(maxDay));
                             interval_start_time_epoc = startDateTS.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                     - ((long) startDateTS.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
@@ -2098,7 +2103,8 @@ public class RecommendationEngine {
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
 
-                    List<Metric> metricList = metricProfile.getSloInfo().getFunctionVariables();
+                    List<Metric> metricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
+                            AnalyzerConstants.MetricName.maxDate.name(), kruizeObject.getExperimentType());
 
                     List<String> acceleratorFunctions = Arrays.asList(
                             AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
@@ -2125,7 +2131,7 @@ public class RecommendationEngine {
                             continue;
 
                         HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
-                        for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry: aggregationFunctions.entrySet()) {
+                        for (Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry : aggregationFunctions.entrySet()) {
                             // Determine promQL query on metric type
                             String promQL = aggregationFunctionsEntry.getValue().getQuery();
 
@@ -2154,16 +2160,16 @@ public class RecommendationEngine {
                                     .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
                                     .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
 
-                            LOGGER.info(promQL);
+                            LOGGER.debug(promQL);
                             String podMetricsUrl;
                             try {
-                                podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY,
+                                podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY_RANGE,
                                         dataSourceInfo.getUrl(),
                                         URLEncoder.encode(promQL, CHARACTER_ENCODING),
                                         interval_start_time_epoc,
                                         interval_end_time_epoc,
                                         measurementDurationMinutesInDouble.intValue() * KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE);
-                                LOGGER.info(podMetricsUrl);
+                                LOGGER.debug(podMetricsUrl);
                                 client.setBaseURL(podMetricsUrl);
                                 JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                                 JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
@@ -2174,7 +2180,7 @@ public class RecommendationEngine {
                                     continue;
 
                                 // Process fetched metrics
-                                if (isAcceleratorMetric){
+                                if (isAcceleratorMetric) {
                                     for (JsonElement result : resultArray) {
                                         JsonObject resultObject = result.getAsJsonObject();
                                         JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
@@ -2316,13 +2322,14 @@ public class RecommendationEngine {
 
     /**
      * Fetches max date query for namespace and containers from performance profile
-     * @param metricProfile         performance profile to be used
+     *
+     * @param metricProfile performance profile to be used
      */
     private String getMaxDateQuery(PerformanceProfile metricProfile, String metricName) {
         List<Metric> metrics = metricProfile.getSloInfo().getFunctionVariables();
-        for (Metric metric: metrics) {
+        for (Metric metric : metrics) {
             String name = metric.getName();
-            if(name.equals(metricName)) {
+            if (name.equals(metricName)) {
                 return metric.getAggregationFunctionsMap().get("max").getQuery();
             }
         }
@@ -2372,6 +2379,30 @@ public class RecommendationEngine {
             e.printStackTrace();
             throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
         }
+    }
+
+    /**
+     * Filters out maxDateQuery and includes metrics based on the experiment type and kubernetes_object
+     *
+     * @param metricProfile  Metric profile to be used
+     * @param maxDateQuery   maxDateQuery metric to be filtered out
+     * @param experimentType experiment type
+     */
+    public List<Metric> filterMetricsBasedOnExpTypeAndK8sObject(PerformanceProfile metricProfile, String maxDateQuery, String experimentType) {
+        String namespace = KruizeConstants.JSONKeys.NAMESPACE;
+        String container = KruizeConstants.JSONKeys.CONTAINER;
+        return metricProfile.getSloInfo().getFunctionVariables().stream()
+                .filter(Metric -> {
+                    String name = Metric.getName();
+                    String kubernetes_object = Metric.getKubernetesObject();
+
+                    // Include metrics based on experiment_type, kubernetes_object and exclude maxDate metric
+                    return !name.equals(maxDateQuery) && (
+                            (experimentType.equals(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT) && kubernetes_object.equals(namespace)) ||
+                                    (experimentType.equals(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT) && kubernetes_object.equals(container))
+                    );
+                })
+                .toList();
     }
 }
 

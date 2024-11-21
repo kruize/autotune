@@ -58,6 +58,7 @@ public class Analyzer {
         context.addServlet(MetricProfileService.class, ServerContext.DELETE_METRIC_PROFILE);
         context.addServlet(ListDatasources.class, ServerContext.LIST_DATASOURCES);
         context.addServlet(DSMetadataService.class, ServerContext.DATASOURCE_METADATA);
+        context.addServlet(BulkService.class, ServerContext.BULK_SERVICE);
 
         // Adding UI support API's
         context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);

@@ -97,8 +97,12 @@ data:
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
-      "local": "false",
+      "local": "true",
       "logAllHttpReqAndResp": "true",
+      "recommendationsURL" : "http://kruize.monitoring.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",    
+      "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",
+      "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
+      "bulkapilimit" : 1000,
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -151,7 +155,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.0.25_rm
+          image: quay.io/kruize/autotune_operator:0.1.1
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -216,7 +220,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.0.25_rm
+              image: quay.io/kruize/autotune_operator:0.1.1
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -315,7 +319,7 @@ metadata:
 spec:
   containers:
     - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.6
+      image: quay.io/kruize/kruize-ui:0.0.7
       imagePullPolicy: Always
       env:
         - name: KRUIZE_UI_ENV
@@ -342,7 +346,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.0.25_rm
+              image: quay.io/kruize/autotune_operator:0.1.1
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume

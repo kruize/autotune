@@ -2960,6 +2960,506 @@ Returns the recommendation at a particular timestamp if it exists
 
 </details>
 
+
+**Response for GPU workloads**
+
+`GET /listRecommendations`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listRecommendations?experiment_name=job-01`
+
+<details>
+<summary><b>Example Response with GPU Recommendations</b></summary>
+
+```json
+[
+    {
+        "cluster_name": "default",
+        "experiment_type": "container",
+        "kubernetes_objects": [
+            {
+                "type": "statefulset",
+                "name": "human-eval-benchmark",
+                "namespace": "unpartitioned",
+                "containers": [
+                    {
+                        "container_name": "human-eval-benchmark",
+                        "recommendations": {
+                            "version": "1.0",
+                            "notifications": {
+                                "111000": {
+                                    "type": "info",
+                                    "message": "Recommendations Are Available",
+                                    "code": 111000
+                                }
+                            },
+                            "data": {
+                                "2024-10-04T09:16:40.000Z": {
+                                    "notifications": {
+                                        "111101": {
+                                            "type": "info",
+                                            "message": "Short Term Recommendations Available",
+                                            "code": 111101
+                                        },
+                                        "111102": {
+                                            "type": "info",
+                                            "message": "Medium Term Recommendations Available",
+                                            "code": 111102
+                                        }
+                                    },
+                                    "monitoring_end_time": "2024-10-04T09:16:40.000Z",
+                                    "current": {
+                                        "limits": {
+                                            "cpu": {
+                                                "amount": 2.0,
+                                                "format": "cores"
+                                            },
+                                            "memory": {
+                                                "amount": 8.589934592E9,
+                                                "format": "bytes"
+                                            }
+                                        },
+                                        "requests": {
+                                            "cpu": {
+                                                "amount": 1.0,
+                                                "format": "cores"
+                                            },
+                                            "memory": {
+                                                "amount": 8.589934592E9,
+                                                "format": "bytes"
+                                            }
+                                        }
+                                    },
+                                    "recommendation_terms": {
+                                        "short_term": {
+                                            "duration_in_hours": 24.0,
+                                            "notifications": {
+                                                "112101": {
+                                                    "type": "info",
+                                                    "message": "Cost Recommendations Available",
+                                                    "code": 112101
+                                                },
+                                                "112102": {
+                                                    "type": "info",
+                                                    "message": "Performance Recommendations Available",
+                                                    "code": 112102
+                                                }
+                                            },
+                                            "monitoring_start_time": "2024-10-03T09:16:40.000Z",
+                                            "recommendation_engines": {
+                                                "cost": {
+                                                    "pods_count": 1,
+                                                    "confidence_level": 0.0,
+                                                    "config": {
+                                                        "limits": {
+                                                            "cpu": {
+                                                                "amount": 1.004649523106615,
+                                                                "format": "cores"
+                                                            },
+                                                            "nvidia.com/mig-3g.20gb": {
+                                                                "amount": 1.0,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": 4.9960943616E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        },
+                                                        "requests": {
+                                                            "cpu": {
+                                                                "amount": 1.004649523106615,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": 4.9960943616E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        }
+                                                    },
+                                                    "variation": {
+                                                        "limits": {
+                                                            "cpu": {
+                                                                "amount": -0.995350476893385,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": -3.5938402303999996E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        },
+                                                        "requests": {
+                                                            "cpu": {
+                                                                "amount": 0.004649523106615039,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": -3.5938402303999996E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        }
+                                                    },
+                                                    "notifications": {}
+                                                },
+                                                "performance": {
+                                                    "pods_count": 1,
+                                                    "confidence_level": 0.0,
+                                                    "config": {
+                                                        "limits": {
+                                                            "cpu": {
+                                                                "amount": 1.36656145696268,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": 4.9960943616E9,
+                                                                "format": "bytes"
+                                                            },
+                                                            "nvidia.com/mig-4g.20gb": {
+                                                                "amount": 1.0,
+                                                                "format": "cores"
+                                                            }
+                                                        },
+                                                        "requests": {
+                                                            "cpu": {
+                                                                "amount": 1.36656145696268,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": 4.9960943616E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        }
+                                                    },
+                                                    "variation": {
+                                                        "limits": {
+                                                            "cpu": {
+                                                                "amount": -0.63343854303732,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": -3.5938402303999996E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        },
+                                                        "requests": {
+                                                            "cpu": {
+                                                                "amount": 0.36656145696268005,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": -3.5938402303999996E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        }
+                                                    },
+                                                    "notifications": {}
+                                                }
+                                            },
+                                            "plots": {
+                                                "datapoints": 4,
+                                                "plots_data": {
+                                                    "2024-10-04T09:16:40.000Z": {
+                                                        "cpuUsage": {
+                                                            "min": 0.005422723351267242,
+                                                            "q1": 1.003281151419465,
+                                                            "median": 1.0118160468783521,
+                                                            "q3": 1.012961901380266,
+                                                            "max": 1.36656145696268,
+                                                            "format": "cores"
+                                                        },
+                                                        "memoryUsage": {
+                                                            "min": 3.68019456E9,
+                                                            "q1": 3.681001472E9,
+                                                            "median": 4.058411008E9,
+                                                            "q3": 4.093308928E9,
+                                                            "max": 4.094062592E9,
+                                                            "format": "bytes"
+                                                        }
+                                                    },
+                                                    "2024-10-04T03:16:40.000Z": {
+                                                        "cpuUsage": {
+                                                            "min": 0.998888009348188,
+                                                            "q1": 1.0029943714818779,
+                                                            "median": 1.0033621837551019,
+                                                            "q3": 1.0040859908301978,
+                                                            "max": 1.0828338199135354,
+                                                            "format": "cores"
+                                                        },
+                                                        "memoryUsage": {
+                                                            "min": 3.679281152E9,
+                                                            "q1": 3.680755712E9,
+                                                            "median": 3.680989184E9,
+                                                            "q3": 3.687673856E9,
+                                                            "max": 4.163411968E9,
+                                                            "format": "bytes"
+                                                        }
+                                                    },
+                                                    "2024-10-03T15:16:40.000Z": {
+                                                        "cpuUsage": {
+                                                            "min": 0.005425605536480822,
+                                                            "q1": 0.006038658069363403,
+                                                            "median": 0.006183237135144752,
+                                                            "q3": 0.006269460195927269,
+                                                            "max": 0.006916437328481231,
+                                                            "format": "cores"
+                                                        },
+                                                        "memoryUsage": {
+                                                            "min": 2.192125952E9,
+                                                            "q1": 2.192388096E9,
+                                                            "median": 2.192388096E9,
+                                                            "q3": 2.192388096E9,
+                                                            "max": 2.19265024E9,
+                                                            "format": "bytes"
+                                                        }
+                                                    },
+                                                    "2024-10-03T21:16:40.000Z": {
+                                                        "cpuUsage": {
+                                                            "min": 0.0052184839046300075,
+                                                            "q1": 0.006229799261227028,
+                                                            "median": 1.0110868114913476,
+                                                            "q3": 1.0124661560983785,
+                                                            "max": 2.3978065580305032,
+                                                            "format": "cores"
+                                                        },
+                                                        "memoryUsage": {
+                                                            "min": 2.118012928E9,
+                                                            "q1": 2.192392192E9,
+                                                            "median": 4.161662976E9,
+                                                            "q3": 4.162850816E9,
+                                                            "max": 4.163170304E9,
+                                                            "format": "bytes"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "medium_term": {
+                                            "duration_in_hours": 168.0,
+                                            "notifications": {
+                                                "112101": {
+                                                    "type": "info",
+                                                    "message": "Cost Recommendations Available",
+                                                    "code": 112101
+                                                },
+                                                "112102": {
+                                                    "type": "info",
+                                                    "message": "Performance Recommendations Available",
+                                                    "code": 112102
+                                                }
+                                            },
+                                            "monitoring_start_time": "2024-09-27T09:16:40.000Z",
+                                            "recommendation_engines": {
+                                                "cost": {
+                                                    "pods_count": 1,
+                                                    "confidence_level": 0.0,
+                                                    "config": {
+                                                        "limits": {
+                                                            "cpu": {
+                                                                "amount": 0.015580688959425347,
+                                                                "format": "cores"
+                                                            },
+                                                            "nvidia.com/mig-3g.20gb": {
+                                                                "amount": 1.0,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": 4.9960943616E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        },
+                                                        "requests": {
+                                                            "cpu": {
+                                                                "amount": 0.015580688959425347,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": 4.9960943616E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        }
+                                                    },
+                                                    "variation": {
+                                                        "limits": {
+                                                            "cpu": {
+                                                                "amount": -1.9844193110405746,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": -3.5938402303999996E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        },
+                                                        "requests": {
+                                                            "cpu": {
+                                                                "amount": -0.9844193110405747,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": -3.5938402303999996E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        }
+                                                    },
+                                                    "notifications": {}
+                                                },
+                                                "performance": {
+                                                    "pods_count": 1,
+                                                    "confidence_level": 0.0,
+                                                    "config": {
+                                                        "limits": {
+                                                            "cpu": {
+                                                                "amount": 1.025365696933566,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": 4.9960943616E9,
+                                                                "format": "bytes"
+                                                            },
+                                                            "nvidia.com/mig-4g.20gb": {
+                                                                "amount": 1.0,
+                                                                "format": "cores"
+                                                            }
+                                                        },
+                                                        "requests": {
+                                                            "cpu": {
+                                                                "amount": 1.025365696933566,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": 4.9960943616E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        }
+                                                    },
+                                                    "variation": {
+                                                        "limits": {
+                                                            "cpu": {
+                                                                "amount": -0.974634303066434,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": -3.5938402303999996E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        },
+                                                        "requests": {
+                                                            "cpu": {
+                                                                "amount": 0.02536569693356605,
+                                                                "format": "cores"
+                                                            },
+                                                            "memory": {
+                                                                "amount": -3.5938402303999996E9,
+                                                                "format": "bytes"
+                                                            }
+                                                        }
+                                                    },
+                                                    "notifications": {}
+                                                }
+                                            },
+                                            "plots": {
+                                                "datapoints": 7,
+                                                "plots_data": {
+                                                    "2024-09-29T09:16:40.000Z": {},
+                                                    "2024-10-04T09:16:40.000Z": {
+                                                        "cpuUsage": {
+                                                            "min": 0.0052184839046300075,
+                                                            "q1": 0.006207971650471658,
+                                                            "median": 1.0032201196711934,
+                                                            "q3": 1.0115567178617741,
+                                                            "max": 2.3978065580305032,
+                                                            "format": "cores"
+                                                        },
+                                                        "memoryUsage": {
+                                                            "min": 2.118012928E9,
+                                                            "q1": 2.192392192E9,
+                                                            "median": 3.6808704E9,
+                                                            "q3": 4.093349888E9,
+                                                            "max": 4.163411968E9,
+                                                            "format": "bytes"
+                                                        }
+                                                    },
+                                                    "2024-09-30T09:16:40.000Z": {},
+                                                    "2024-10-02T09:16:40.000Z": {
+                                                        "cpuUsage": {
+                                                            "min": 0.00554280490421283,
+                                                            "q1": 0.015358846193868379,
+                                                            "median": 0.015705212168337323,
+                                                            "q3": 1.010702281083678,
+                                                            "max": 1.0139464901392594,
+                                                            "format": "cores"
+                                                        },
+                                                        "memoryUsage": {
+                                                            "min": 2.192125952E9,
+                                                            "q1": 2.717663232E9,
+                                                            "median": 2.719612928E9,
+                                                            "q3": 2.719617024E9,
+                                                            "max": 2.720600064E9,
+                                                            "format": "bytes"
+                                                        }
+                                                    },
+                                                    "2024-09-28T09:16:40.000Z": {},
+                                                    "2024-10-03T09:16:40.000Z": {
+                                                        "cpuUsage": {
+                                                            "min": 0.005373319820852367,
+                                                            "q1": 0.006054991034195089,
+                                                            "median": 0.006142447129874265,
+                                                            "q3": 0.006268777122325054,
+                                                            "max": 0.007366566784856696,
+                                                            "format": "cores"
+                                                        },
+                                                        "memoryUsage": {
+                                                            "min": 2.192125952E9,
+                                                            "q1": 2.192388096E9,
+                                                            "median": 2.192388096E9,
+                                                            "q3": 2.192388096E9,
+                                                            "max": 2.192654336E9,
+                                                            "format": "bytes"
+                                                        }
+                                                    },
+                                                    "2024-10-01T09:16:40.000Z": {
+                                                        "cpuUsage": {
+                                                            "min": 0.003319077875529473,
+                                                            "q1": 1.0101034685479167,
+                                                            "median": 1.0118171810142638,
+                                                            "q3": 1.0208974318073034,
+                                                            "max": 3.5577616386258963,
+                                                            "format": "cores"
+                                                        },
+                                                        "memoryUsage": {
+                                                            "min": 1.77057792E8,
+                                                            "q1": 2.64523776E9,
+                                                            "median": 2.651078656E9,
+                                                            "q3": 2.693431296E9,
+                                                            "max": 2.705133568E9,
+                                                            "format": "bytes"
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        },
+                                        "long_term": {
+                                            "duration_in_hours": 360.0,
+                                            "notifications": {
+                                                "120001": {
+                                                    "type": "info",
+                                                    "message": "There is not enough data available to generate a recommendation.",
+                                                    "code": 120001
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        ],
+        "version": "v2.0",
+        "experiment_name": "human_eval_exp"
+    }
+]
+```
+</details>
+
 ### Invalid Scenarios:
 
 <details>
@@ -5048,6 +5548,11 @@ structured and easily interpretable way for users or external systems to access 
 ```
 
 </details>
+
+
+
+
+
 
 ---
 <a name="generate-recommendations-api"></a>

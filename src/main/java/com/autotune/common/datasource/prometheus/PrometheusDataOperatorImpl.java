@@ -15,20 +15,16 @@
  *******************************************************************************/
 package com.autotune.common.datasource.prometheus;
 
-import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.auth.AuthenticationStrategy;
-import com.autotune.common.auth.AuthenticationStrategyFactory;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.GenericRestApiClient;
-import com.google.gson.*;
-import org.apache.http.conn.HttpHostConnectException;
-import org.json.JSONArray;
-import org.json.JSONException;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
 
@@ -38,19 +34,22 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 
 /**
- *  PrometheusDataOperatorImpl extends DataSourceOperatorImpl class
- *  This class provides Prometheus specific implementation for DataSourceOperator functions
+ * PrometheusDataOperatorImpl extends DataSourceOperatorImpl class
+ * This class provides Prometheus specific implementation for DataSourceOperator functions
  */
 public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(PrometheusDataOperatorImpl.class);
 
-    private static PrometheusDataOperatorImpl prometheusDataOperator = null;;
+    private static PrometheusDataOperatorImpl prometheusDataOperator = null;
+    ;
+
     private PrometheusDataOperatorImpl() {
         super();
     }
 
     /**
      * Returns the instance of PrometheusDataOperatorImpl class
+     *
      * @return PrometheusDataOperatorImpl instance
      */
     public static PrometheusDataOperatorImpl getInstance() {
@@ -62,6 +61,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
     /**
      * Returns the default service port for prometheus
+     *
      * @return String containing the port number
      */
     @Override
@@ -80,7 +80,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      * @return DatasourceReachabilityStatus
      */
     @Override
-    public CommonUtils.DatasourceReachabilityStatus isServiceable(DataSourceInfo dataSource) {
+    public CommonUtils.DatasourceReachabilityStatus isServiceable(DataSourceInfo dataSource) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         String dataSourceStatus;
         Object queryResult;
 
@@ -89,13 +89,13 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
 
         queryResult = this.getValueForQuery(dataSource, query);
 
-        if (queryResult != null){
+        if (queryResult != null) {
             dataSourceStatus = queryResult.toString();
         } else {
             dataSourceStatus = "0";
         }
 
-        if (dataSourceStatus.equalsIgnoreCase("1")){
+        if (dataSourceStatus.equalsIgnoreCase("1")) {
             reachabilityStatus = CommonUtils.DatasourceReachabilityStatus.REACHABLE;
         } else {
             reachabilityStatus = CommonUtils.DatasourceReachabilityStatus.NOT_REACHABLE;
@@ -111,28 +111,17 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      * @return Object containing the result value for the specified query
      */
     @Override
-    public Object getValueForQuery(DataSourceInfo dataSource, String query) {
-        try {
-            JSONObject jsonObject = getJsonObjectForQuery(dataSource, query);
+    public Object getValueForQuery(DataSourceInfo dataSource, String query) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 
-            if (null == jsonObject) {
-                return null;
-            }
+        JSONObject jsonObject = getJsonObjectForQuery(dataSource, query);
 
-            JSONArray result = jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-            for (Object result_obj : result) {
-                JSONObject result_json = (JSONObject) result_obj;
-                if (result_json.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE)
-                        && !result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).isEmpty()) {
-                    return result_json.getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE).getString(1);
-                }
-            }
-        } catch (JSONException e) {
-            LOGGER.error(e.getMessage());
-        } catch (NullPointerException e) {
-            LOGGER.error(e.getMessage());
+        if (null == jsonObject) {
+            return null;
+        } else {
+            return "1";   //if it returns HTTP STATUS_OK  200
         }
-        return null;
+
+
     }
 
     /**
@@ -143,7 +132,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      * @return JSONObject for the specified query
      */
     @Override
-    public JSONObject getJsonObjectForQuery(DataSourceInfo dataSource, String query) {
+    public JSONObject getJsonObjectForQuery(DataSourceInfo dataSource, String query) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         // Create the client
         GenericRestApiClient apiClient = new GenericRestApiClient(dataSource);
         apiClient.setBaseURL(CommonUtils.getBaseDataSourceUrl(
@@ -155,10 +144,11 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             return null;
         }
 
-        try {
-            JSONObject jsonObject = apiClient.fetchMetricsJson(
-                    KruizeConstants.HttpConstants.MethodType.GET,
-                    query);
+
+        JSONObject jsonObject = apiClient.fetchMetricsJson(
+                KruizeConstants.HttpConstants.MethodType.GET,
+                query);
+            /*  TODO need to separate it out this logic form here
             if (!jsonObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS))
                 return null;
             if (!jsonObject.getString(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS).equalsIgnoreCase(KruizeConstants.DataSourceConstants.DataSourceQueryStatus.SUCCESS))
@@ -170,26 +160,16 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
             if (jsonObject.getJSONObject(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getJSONArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isEmpty())
                 return  null;
 
-            return jsonObject;
+             */
 
-        } catch (HttpHostConnectException e) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED);
-        } catch (IOException e) {
-            e.printStackTrace();
-        } catch (NoSuchAlgorithmException e) {
-            e.printStackTrace();
-        } catch (KeyStoreException e) {
-            e.printStackTrace();
-        } catch (KeyManagementException e) {
-            e.printStackTrace();
-        } catch (FetchMetricsError e) {
-            e.printStackTrace();
-        }
-        return null;
+        return jsonObject;
+
+
     }
 
     /**
      * returns query endpoint for prometheus datasource
+     *
      * @return String containing query endpoint
      */
     @Override
@@ -203,43 +183,37 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
      * @param dataSource DatasourceInfo object containing the datasource details
      * @param query      String containing the query to be executed
      * @return JsonArray containing the result array for the specified query
-     *
+     * <p>
      * Example output JsonArray -
      * [
-     *   {
-     *     "metric": {
-     *       "__name__": "exampleMetric"
-     *     },
-     *     "value": [1642612628.987, "1"]
-     *   }
+     * {
+     * "metric": {
+     * "__name__": "exampleMetric"
+     * },
+     * "value": [1642612628.987, "1"]
+     * }
      * ]
      */
 
     @Override
-    public JsonArray getResultArrayForQuery(DataSourceInfo dataSource, String query) {
-        try {
-            JSONObject jsonObject = getJsonObjectForQuery(dataSource, query);
+    public JsonArray getResultArrayForQuery(DataSourceInfo dataSource, String query) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
 
-            if (null == jsonObject) {
-                return null;
-            }
+        JSONObject jsonObject = getJsonObjectForQuery(dataSource, query);
 
+        if (null == jsonObject) {
+            return null;
+        } else {
             String jsonString = jsonObject.toString();
             JsonObject parsedJsonObject = JsonParser.parseString(jsonString).getAsJsonObject();
             JsonObject dataObject = parsedJsonObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.DATA).getAsJsonObject();
-
             if (dataObject.has(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT) && dataObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).isJsonArray()) {
                 JsonArray resultArray = dataObject.getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-
                 if (null != resultArray) {
                     return resultArray;
                 }
             }
-        } catch (JsonParseException e) {
-            LOGGER.error(e.getMessage());
-        } catch (NullPointerException e) {
-            LOGGER.error(e.getMessage());
         }
+
         return null;
     }
 

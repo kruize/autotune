@@ -44,7 +44,7 @@ public class DataSourceInfo {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataSourceInfo.class);
 
-    public DataSourceInfo(String name, String provider, String serviceName, String namespace, URL url) {
+    public DataSourceInfo(String name, String provider, String serviceName, String namespace, URL url, AuthenticationConfig authConfig) {
         this.name = name;
         this.provider = provider;
         if (null == url) {
@@ -54,6 +54,7 @@ public class DataSourceInfo {
         }
         this.serviceName = serviceName;
         this.namespace = namespace;
+        this.authenticationConfig = authConfig;
     }
 
     /**
@@ -127,6 +128,24 @@ public class DataSourceInfo {
         this.authenticationConfig = authenticationConfig;
     }
 
+    // Method to check if the authentication details have changed
+    public boolean hasAuthChanged(AuthenticationConfig newAuthConfig) {
+        // Handle cases where one of the auth configs is missing or 'noAuth'
+        if (this.authenticationConfig == null) {
+            this.authenticationConfig = AuthenticationConfig.noAuth();
+        }
+        if (newAuthConfig == null) {
+            newAuthConfig = AuthenticationConfig.noAuth();
+        }
+        // Compare the authentication configs
+        return !this.authenticationConfig.equals(newAuthConfig);
+    }
+
+    public void updateAuthConfig(AuthenticationConfig newAuthConfig) {
+        this.setAuthenticationConfig(newAuthConfig);
+        LOGGER.debug("Authentication details for datasource {} have been updated.", this.name);
+    }
+
     @Override
     public String toString() {
         return "DataSourceInfo{" +
@@ -135,7 +154,6 @@ public class DataSourceInfo {
                 ", serviceName='" + serviceName + '\'' +
                 ", namespace='" + namespace + '\'' +
                 ", url=" + url +
-                ", authenticationConfig=" + authenticationConfig +
                 '}';
     }
 }

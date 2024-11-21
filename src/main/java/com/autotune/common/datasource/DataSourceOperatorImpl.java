@@ -1,12 +1,8 @@
 package com.autotune.common.datasource;
 
-import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.TooManyRecursiveCallsException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.auth.AuthenticationConfig;
-import com.autotune.common.auth.AuthenticationStrategy;
-import com.autotune.common.auth.AuthenticationStrategyFactory;
 import com.autotune.common.datasource.prometheus.PrometheusDataOperatorImpl;
 import com.autotune.common.exceptions.datasource.ServiceNotFound;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
@@ -20,6 +16,7 @@ import io.fabric8.kubernetes.api.model.Service;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -35,11 +32,13 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
 
     private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(DataSourceOperatorImpl.class);
     private static DataSourceOperatorImpl dataSourceOperator = null;
+
     protected DataSourceOperatorImpl() {
     }
 
     /**
      * Returns the instance of DataSourceOperatorImpl class
+     *
      * @return DataSourceOperatorImpl instance
      */
     public static DataSourceOperatorImpl getInstance() {
@@ -50,142 +49,9 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
     }
 
     /**
-     * Returns the instance of specific operator class based on provider type
-     * @param provider String containg the name of provider
-     * @return instance of specific operator
-     */
-    @Override
-    public DataSourceOperatorImpl getOperator(String provider) {
-        if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
-            return PrometheusDataOperatorImpl.getInstance();
-        }
-        return null;
-    }
-
-    /**
-     * Returns the default service port for prometheus
-     * @return String containing the port number
-     */
-    @Override
-    public String getDefaultServicePortForProvider() {
-        return "";
-    }
-
-    /**
-     * Check if a datasource is reachable, implementation of this function
-     * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
-     *
-     * @param dataSource DatasourceInfo object containing the datasource details
-     * @return DatasourceReachabilityStatus
-     */
-    @Override
-    public CommonUtils.DatasourceReachabilityStatus isServiceable(DataSourceInfo dataSource) {
-        return null;
-    }
-
-    /**
-     * executes specified query on datasource and returns the result value
-     *
-     * @param dataSource DatasourceInfo object containing the datasource details
-     * @param query      String containing the query to be executed
-     * @return Object containing the result value for the specified query
-     */
-    @Override
-    public Object getValueForQuery(DataSourceInfo dataSource, String query) {
-        return null;
-    }
-
-    /**
-     * returns query endpoint for datasource
-     * @return String containing query endpoint
-     */
-    @Override
-    public String getQueryEndpoint() {
-        return null;
-    }
-    /**
-     * executes specified query on datasource and returns the JSON Object
-     *
-     * @param dataSource DatasourceInfo object containing the datasource details
-     * @param query      String containing the query to be executed
-     * @return JSONObject for the specified query
-     */
-    @Override
-    public JSONObject getJsonObjectForQuery(DataSourceInfo dataSource, String query) {
-        return null;
-    }
-
-    /**
-     * executes specified query on datasource and returns the result array
-     *
-     * @param dataSource DatasourceInfo object containing the datasource details
-     * @param query      String containing the query to be executed
-     * @return JsonArray containing the result array for the specified query
-     */
-    @Override
-    public JsonArray getResultArrayForQuery(DataSourceInfo dataSource, String query) {
-        return null;
-    }
-
-    /**
-     * Validates a JSON array to ensure it is not null, not a JSON null, and has at least one element.
-     *
-     * @param resultArray The JSON array to be validated.
-     * @return True if the JSON array is valid (not null, not a JSON null, and has at least one element), otherwise false.
-     */
-    @Override
-    public boolean validateResultArray(JsonArray resultArray) { return false;}
-
-    /**
-     * TODO: To find a suitable place for this function later
-     * returns authentication token for datasource
-     * @return String containing token
-     */
-    public String getToken() throws IOException {
-        String fileName = KruizeConstants.AUTH_MOUNT_PATH+"token";
-        String authToken = new String(Files.readAllBytes(Paths.get(fileName)));
-        return authToken;
-    }
-
-    /**
-     * TODO: To find a suitable place for this function later
-     * Run the getAppsForLayer and return the list of applications matching the layer.
-     * @param dataSource
-     * @param query getAppsForLayer query for the layer
-     * @param key The key to search for in the response
-     * @return ArrayList of all applications from the query
-     * @throws MalformedURLException
-     */
-    public ArrayList<String> getAppsForLayer(DataSourceInfo dataSource, String query, String key) throws MalformedURLException {
-        String dataSourceURL = dataSource.getUrl().toString();
-        String provider = dataSource.getProvider();
-        DataSourceOperator op = this.getOperator(provider);
-        String queryEndpoint = op.getQueryEndpoint();
-        String response = null;
-        ArrayList<String> valuesList = new ArrayList<>();
-        String queryURL = dataSourceURL + queryEndpoint + query;
-        LOGGER.debug("Query URL is: {}", queryURL);
-        try {
-            // Create the client
-            GenericRestApiClient genericRestApiClient = new GenericRestApiClient(dataSource);
-            genericRestApiClient.setBaseURL(dataSourceURL + queryEndpoint);
-            JSONObject responseJson = genericRestApiClient.fetchMetricsJson("GET", query);
-            int level = 0;
-            try {
-                parseJsonForKey(responseJson, key, valuesList, level);
-                LOGGER.debug("Applications for the query: {}", valuesList.toString());
-            } catch (TooManyRecursiveCallsException e) {
-                e.printStackTrace();
-            }
-        } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException | FetchMetricsError e) {
-            LOGGER.error("Unable to proceed due to invalid connection to URL: "+ queryURL);
-        }
-        return valuesList;
-    }
-
-    /**
      * TODO: monitoring agent will be replaced by default datasource later
      * returns DataSourceInfo objects for default datasource which is currently monitoring agent
+     *
      * @return DataSourceInfo objects
      */
     public static DataSourceInfo getMonitoringAgent(String dataSource) throws MonitoringAgentNotFoundException, MalformedURLException {
@@ -199,7 +65,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
                 monitoringAgentEndpoint = getServiceEndpoint(KruizeDeploymentInfo.monitoring_service);
             }
             if (dataSource.equals(AnalyzerConstants.PROMETHEUS_DATA_SOURCE)) {
-                monitoringAgent = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, null, null, new URL(monitoringAgentEndpoint));
+                monitoringAgent = new DataSourceInfo(KruizeDeploymentInfo.monitoring_agent, AnalyzerConstants.PROMETHEUS_DATA_SOURCE, null, null, new URL(monitoringAgentEndpoint), null);
             }
         }
 
@@ -214,6 +80,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
      * TODO: To find a suitable place for this function later
      * Gets the service endpoint for the datasource service through the cluster IP
      * of the service.
+     *
      * @return Endpoint of the service.
      * @throws ServiceNotFound
      */
@@ -256,6 +123,7 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
 
     /**
      * TODO: To find a suitable place for this function later
+     *
      * @param jsonObj The JSON that needs to be parsed
      * @param key     The key to search in the JSON
      * @param values  ArrayList to hold the key values in the JSON
@@ -288,5 +156,145 @@ public class DataSourceOperatorImpl implements DataSourceOperator {
                 }
             }
         }
+    }
+
+    /**
+     * Returns the instance of specific operator class based on provider type
+     *
+     * @param provider String containg the name of provider
+     * @return instance of specific operator
+     */
+    @Override
+    public DataSourceOperatorImpl getOperator(String provider) {
+        if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
+            return PrometheusDataOperatorImpl.getInstance();
+        }
+        return null;
+    }
+
+    /**
+     * Returns the default service port for prometheus
+     *
+     * @return String containing the port number
+     */
+    @Override
+    public String getDefaultServicePortForProvider() {
+        return "";
+    }
+
+    /**
+     * Check if a datasource is reachable, implementation of this function
+     * should check and return the reachability status (REACHABLE, NOT_REACHABLE)
+     *
+     * @param dataSource DatasourceInfo object containing the datasource details
+     * @return DatasourceReachabilityStatus
+     */
+    @Override
+    public CommonUtils.DatasourceReachabilityStatus isServiceable(DataSourceInfo dataSource) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return null;
+    }
+
+    /**
+     * executes specified query on datasource and returns the result value
+     *
+     * @param dataSource DatasourceInfo object containing the datasource details
+     * @param query      String containing the query to be executed
+     * @return Object containing the result value for the specified query
+     */
+    @Override
+    public Object getValueForQuery(DataSourceInfo dataSource, String query) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return null;
+    }
+
+    /**
+     * returns query endpoint for datasource
+     *
+     * @return String containing query endpoint
+     */
+    @Override
+    public String getQueryEndpoint() {
+        return null;
+    }
+
+    /**
+     * executes specified query on datasource and returns the JSON Object
+     *
+     * @param dataSource DatasourceInfo object containing the datasource details
+     * @param query      String containing the query to be executed
+     * @return JSONObject for the specified query
+     */
+    @Override
+    public JSONObject getJsonObjectForQuery(DataSourceInfo dataSource, String query) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return null;
+    }
+
+    /**
+     * executes specified query on datasource and returns the result array
+     *
+     * @param dataSource DatasourceInfo object containing the datasource details
+     * @param query      String containing the query to be executed
+     * @return JsonArray containing the result array for the specified query
+     */
+    @Override
+    public JsonArray getResultArrayForQuery(DataSourceInfo dataSource, String query) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return null;
+    }
+
+    /**
+     * Validates a JSON array to ensure it is not null, not a JSON null, and has at least one element.
+     *
+     * @param resultArray The JSON array to be validated.
+     * @return True if the JSON array is valid (not null, not a JSON null, and has at least one element), otherwise false.
+     */
+    @Override
+    public boolean validateResultArray(JsonArray resultArray) {
+        return false;
+    }
+
+    /**
+     * TODO: To find a suitable place for this function later
+     * returns authentication token for datasource
+     *
+     * @return String containing token
+     */
+    public String getToken() throws IOException {
+        String fileName = KruizeConstants.AUTH_MOUNT_PATH + "token";
+        String authToken = new String(Files.readAllBytes(Paths.get(fileName)));
+        return authToken;
+    }
+
+    /**
+     * TODO: To find a suitable place for this function later
+     * Run the getAppsForLayer and return the list of applications matching the layer.
+     *
+     * @param dataSource
+     * @param query      getAppsForLayer query for the layer
+     * @param key        The key to search for in the response
+     * @return ArrayList of all applications from the query
+     * @throws MalformedURLException
+     */
+    public ArrayList<String> getAppsForLayer(DataSourceInfo dataSource, String query, String key) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        String dataSourceURL = dataSource.getUrl().toString();
+        String provider = dataSource.getProvider();
+        DataSourceOperator op = this.getOperator(provider);
+        String queryEndpoint = op.getQueryEndpoint();
+        String response = null;
+        ArrayList<String> valuesList = new ArrayList<>();
+        String queryURL = dataSourceURL + queryEndpoint + query;
+        LOGGER.debug("Query URL is: {}", queryURL);
+
+        // Create the client
+        GenericRestApiClient genericRestApiClient = new GenericRestApiClient(dataSource);
+        genericRestApiClient.setBaseURL(dataSourceURL + queryEndpoint);
+        JSONObject responseJson = genericRestApiClient.fetchMetricsJson("GET", query);
+        int level = 0;
+        try {
+            parseJsonForKey(responseJson, key, valuesList, level);
+            LOGGER.debug("Applications for the query: {}", valuesList.toString());
+        } catch (TooManyRecursiveCallsException e) {
+            e.printStackTrace();
+        }
+
+        return valuesList;
     }
 }

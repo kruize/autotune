@@ -17,6 +17,10 @@
 
 package com.autotune.utils;
 
+import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
+import com.autotune.analyzer.serviceObjects.BulkJobStatus;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
@@ -167,8 +171,8 @@ public class KruizeConstants {
         public static final String POD_METRICS = "pod_metrics";
         public static final String CONTAINER_METRICS = "container_metrics";
         public static final String METRICS = "metrics";
-        public static final String METRIC = "metric";
         public static final String CONFIG = "config";
+        public static final String METRIC = "metric";
         public static final String CURRENT = "current";
         public static final String NAME = "name";
         public static final String QUERY = "query";
@@ -403,7 +407,7 @@ public class KruizeConstants {
         public static final String PROMETHEUS_DEFAULT_SERVICE_PORT = "9090";
         public static final String OPENSHIFT_MONITORING_PROMETHEUS_DEFAULT_SERVICE_PORT = "9091";
         public static final String PROMETHEUS_REACHABILITY_QUERY = "up";
-        public static final String DATASOURCE_ENDPOINT_WITH_QUERY = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
+        public static final String DATASOURCE_ENDPOINT_WITH_QUERY_RANGE = "%s/api/v1/query_range?query=%s&start=%s&end=%s&step=%s";
         public static final String DATE_ENDPOINT_WITH_QUERY = "%s/api/v1/query?query=%s";
 
         private DataSourceConstants() {
@@ -412,25 +416,32 @@ public class KruizeConstants {
         public static class DataSourceDetailsInfoConstants {
             public static final String version = "v1.0";
             public static final String CLUSTER_NAME = "default";
+
             private DataSourceDetailsInfoConstants() {
             }
         }
 
         public static class DataSourceInfoMsgs {
-            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: ";
-            public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: ";
+            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: {}";
+            public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: {}";
             public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
             public static final String CHECKING_AVAILABLE_DATASOURCE_FROM_DB = "Checking available datasources from database:";
             public static final String NO_DATASOURCE_FOUND_IN_DB = "No datasource found in database.";
-
+            public static final String CHECK_DATASOURCE_UPDATES = "Datasource {} already exists, Checking for updates...";
+            public static final String DATASOURCE_AUTH_CHANGED = "Authentication details for datasource {} have changed. Checking if the datasource is serviceable with the new config...";
+            public static final String DATASOURCE_AUTH_UNCHANGED= "No changes detected in the authentication details for datasource {}";
             private DataSourceInfoMsgs() {
             }
-        }
 
+        }
         public static class DataSourceSuccessMsgs {
+
             public static final String DATASOURCE_ADDED = "Datasource added to the collection successfully.";
+            public static final String DATASOURCE_ADDED_DB = "Datasource added to the database successfully.";
             public static final String DATASOURCE_FOUND = "Datasource found: ";
             public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
+            public static final String DATASOURCE_AUTH_ADDED_DB = "Auth details added to the DB successfully.";
+            public static final String DATASOURCE_AUTH_UPDATED_DB = "Auth details updated in the DB successfully.";
 
             private DataSourceSuccessMsgs() {
             }
@@ -445,6 +456,8 @@ public class KruizeConstants {
             public static final String UNSUPPORTED_DATASOURCE_PROVIDER = "Datasource provider is invalid.";
             public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
             public static final String DATASOURCE_CONNECTION_FAILED = "Datasource connection refused or timed out.";
+            public static final String DATASOURCE_DB_LOAD_FAILED = "Loading saved datasource {} details from db failed: {}";
+            public static final String DATASOURCE_DB_AUTH_LOAD_FAILED = "Loading datasource {} AUTH details failed: {}";
             public static final String DATASOURCE_ALREADY_EXIST = "Datasource with the name already exist.";
             public static final String DATASOURCE_NOT_EXIST = "Datasource with the name does not exist.";
             public static final String INVALID_DATASOURCE_URL = "Datasource url is not valid.";
@@ -452,7 +465,12 @@ public class KruizeConstants {
             public static final String SERVICE_NOT_FOUND = "Can not find service with specified name.";
             public static final String ENDPOINT_NOT_FOUND = "Service endpoint not found.";
             public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
-            public static final String INVALID_DATASOURCE_INFO = "Datasource is either missing or is invalid";
+            public static final String INVALID_DATASOURCE_INFO = "Datasource is either missing or is invalid: ";
+            public static final String MISSING_DATASOURCE_AUTH = "Auth details are missing for datasource: {}";
+            public static final String DATASOURCE_AUTH_DB_INSERTION_FAILED = "Failed to add auth details to DB: {}";
+            public static final String DATASOURCE_AUTH_DB_UPDATE_FAILED = "Failed to update auth details in the DB: {}";
+            public static final String DATASOURCE_AUTH_UPDATE_INVALID = "The updated authentication configuration is invalid. Reverting to the previous configuration.";
+
             private DataSourceErrorMsgs() {
             }
         }
@@ -464,6 +482,7 @@ public class KruizeConstants {
             public static final String METRIC = "metric";
             public static final String VALUE = "value";
             public static final String VALUES = "values";
+
             private DataSourceQueryJSONKeys() {
             }
 
@@ -472,6 +491,7 @@ public class KruizeConstants {
         public static class DataSourceQueryStatus {
             public static final String SUCCESS = "success";
             public static final String ERROR = "error";
+
             private DataSourceQueryStatus() {
             }
         }
@@ -482,6 +502,7 @@ public class KruizeConstants {
             public static final String WORKLOAD_TYPE = "workload_type";
             public static final String CONTAINER_NAME = "container";
             public static final String CONTAINER_IMAGE_NAME = "image";
+
             private DataSourceQueryMetricKeys() {
             }
         }
@@ -489,11 +510,26 @@ public class KruizeConstants {
         public static class DataSourceMetadataInfoConstants {
             public static final String version = "v1.0";
             public static final String CLUSTER_NAME = "default";
+
             private DataSourceMetadataInfoConstants() {
             }
         }
 
+        public static class DataSourceMetadataSuccessMsgs {
+            public static final String METADATA_ADDED = "Metadata added to the DB successfully.";
+            public static final String DATASOURCE_DELETED = "Successfully deleted datasource: ";
+            public static final String DATASOURCE_FOUND = "Datasource found: ";
+            public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
+            public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
+
+            private DataSourceMetadataSuccessMsgs() {
+
+            }
+        }
+
         public static class DataSourceMetadataErrorMsgs {
+            public static final String METADATA_EXIST = "Metadata already exists for datasource: {}!";
+            public static final String METADATA_LOAD_FROM_DB = "Failed to load metadata for the datasource: {}: {} ";
             public static final String MISSING_DATASOURCE_METADATA_DATASOURCE_NAME = "DataSourceMetadata Datasource name cannot be empty";
             public static final String MISSING_DATASOURCE_METADATA_WORKLOAD_MAP = "DataSourceMetadata Workload data cannot be empty or null";
             public static final String MISSING_DATASOURCE_METADATA_CONTAINER_MAP = "DataSourceMetadata Container data cannot be empty or null";
@@ -521,10 +557,12 @@ public class KruizeConstants {
             public static final String SET_CONTAINER_MAP_ERROR = "containerHashMap is null, no containers provided for workload: ";
             public static final String SET_NAMESPACE_MAP_ERROR = "namespaceHashMap is null, no namespaces provided for cluster: ";
             public static final String LOAD_DATASOURCE_FROM_DB_ERROR = "Error loading datasource - %s from DB: %s";
+            public static final String LOAD_DATASOURCE_METADATA_TO_DB_ERROR = "Failed to add metadata to DB: {}";
             public static final String LOAD_DATASOURCE_METADATA_FROM_DB_ERROR = "Error loading datasource - %s from DB: %s";
             public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_MSG = "Validation of imported metadata failed, mandatory fields missing: %s";
             public static final String NAMESPACE_QUERY_VALIDATION_FAILED = "Validation failed for namespace data query.";
             public static final String DATASOURCE_OPERATOR_RETRIEVAL_FAILURE = "Failed to retrieve data source operator for provider: %s";
+
             private DataSourceMetadataErrorMsgs() {
             }
         }
@@ -542,6 +580,7 @@ public class KruizeConstants {
             public static final String CONTAINERS = "containers";
             public static final String CONTAINER_NAME = "container_name";
             public static final String CONTAINER_IMAGE_NAME = "container_image_name";
+
             private DataSourceMetadataInfoJSONKeys() {
             }
         }
@@ -666,6 +705,12 @@ public class KruizeConstants {
         public static final String CLOUDWATCH_LOGS_LOG_LEVEL = "logging_cloudwatch_logLevel";
         public static final String LOCAL = "local";
         public static final String LOG_HTTP_REQ_RESP = "logAllHttpReqAndResp";
+        public static final String RECOMMENDATIONS_URL = "recommendationsURL";
+        public static final String EXPERIMENTS_URL = "experimentsURL";
+        public static final String BULK_API_LIMIT = "bulkapilimit";
+        public static final String BULK_API_CHUNK_SIZE = "bulkapichunksize";
+        public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
+        public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
     }
 
     public static final class RecommendationEngineConstants {
@@ -752,5 +797,117 @@ public class KruizeConstants {
         public static final String UNKNOWN_AUTHENTICATION = "Unknown authentication type: ";
         public static final String AUTHORIZATION = "Authorization";
 
+    }
+
+    public static final class KRUIZE_BULK_API {
+        public static final String JOB_ID = "job_id";
+        public static final String ERROR = "error";
+        public static final String JOB_NOT_FOUND_MSG = "Job not found";
+        public static final String IN_PROGRESS = "IN_PROGRESS";
+        public static final String COMPLETED = "COMPLETED";
+        public static final String FAILED = "FAILED";
+        public static final String LIMIT_MESSAGE = "The number of experiments exceeds %s.";
+        public static final String NOTHING = "Nothing to do.";
+        public static final String START_TIME = "start_time";
+        public static final String END_TIME = "end_time";
+        public static final String STEPS = "steps";
+        public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
+
+        // TODO : Bulk API Create Experiments defaults
+        public static final CreateExperimentConfigBean CREATE_EXPERIMENT_CONFIG_BEAN;
+
+        // Static block to initialize the Bean
+        static {
+            CREATE_EXPERIMENT_CONFIG_BEAN = new CreateExperimentConfigBean();
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMode(AnalyzerConstants.MONITOR);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setTarget(AnalyzerConstants.LOCAL);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setVersion(AnalyzerConstants.VersionConstants.CURRENT_KRUIZE_OBJECT_VERSION);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setDatasourceName("prometheus-1");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setPerformanceProfile(AnalyzerConstants.PerformanceProfileConstants.RESOURCE_OPT_LOCAL_MON_PROFILE);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setThreshold(0.1);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);
+        }
+
+        public static class NotificationConstants {
+
+            public static final BulkJobStatus.Notification JOB_NOT_FOUND_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.WARNING,
+                    JOB_NOT_FOUND_MSG,
+                    404
+            );
+            public static final BulkJobStatus.Notification LIMIT_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.INFO,
+                    LIMIT_MESSAGE,
+                    400
+            );
+            public static final BulkJobStatus.Notification NOTHING_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.INFO,
+                    NOTHING,
+                    400
+            );
+            public static final BulkJobStatus.Notification FETCH_METRIC_FAILURE = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Not able to fetch metrics",
+                    400
+            );
+            public static final BulkJobStatus.Notification DATASOURCE_NOT_REG_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Datasource not registered with Kruize. (%s)",
+                    400
+            );
+            public static final BulkJobStatus.Notification DATASOURCE_DOWN_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "HttpHostConnectException: Unable to connect to the data source. Please try again later. (%s)",
+                    503
+            );
+            public static final BulkJobStatus.Notification DATASOURCE_GATEWAY_TIMEOUT_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "SocketTimeoutException: request timed out waiting for a data source response. (%s)",
+                    504
+            );
+            public static final BulkJobStatus.Notification DATASOURCE_CONNECT_TIMEOUT_INFO = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "ConnectTimeoutException: cannot establish a data source connection in a given time frame due to connectivity issues. (%s)",
+                    503
+            );
+
+
+            // More notification constants can be added here as needed
+
+            public enum Status {
+                PROCESSED("PROCESSED"),
+                UNPROCESSED("UNPROCESSED"),
+                PROCESSING("PROCESSING"),
+                FAILED("FAILED");
+
+                private final String status;
+
+                Status(String status) {
+                    this.status = status;
+                }
+
+                public String getStatus() {
+                    return status;
+                }
+            }
+
+            public enum WebHookStatus {
+                INITIATED,       // The  Webhook has initiated a request
+                IN_PROGRESS,     // The request to the Webhook is actively being processed
+                QUEUED,          // The request to the  Webhook has been queued, waiting for resources
+                SENT,            // The request has been sent to the Webhook, but no response yet
+                RECEIVED,        // The Webhook has received a response, but further processing continues
+                SUCCESS,         // The request to the Webhook was successful
+                FAILED,          // The call to the Webhook failed due to an error
+                RETRYING,        // The  Webhook is retrying the call due to a transient error
+                TIMED_OUT,       // The request to the Webhook exceeded the allowed response time
+                ERROR_LOGGED,    // The error has been logged for debugging or monitoring
+                COMPLETED,       // The entire process, including subsequent processing, is finished
+                CANCELLED        // The request was cancelled, potentially by user action or system condition
+            }
+
+
+        }
     }
 }
