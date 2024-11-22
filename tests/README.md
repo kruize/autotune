@@ -1,6 +1,6 @@
 # **Autotune tests**
 
-Autotune tests repository contains tests to validate individual autotune modules. Going forward we will be adding end-to-end tests and some non-functional tests to test other aspects like stability, scaling and resilience of Autotune. 
+Kruize Autotune tests repository contains tests to validate individual autotune modules. Going forward we will be adding end-to-end tests and some non-functional tests to test other aspects like stability, scaling and resilience of Autotune. 
 
 ## Autotune Modules
 
