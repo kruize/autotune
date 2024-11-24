@@ -148,8 +148,8 @@ public class BulkJobManager implements Runnable {
                     Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
                     jobData.setTotal_experiments(createExperimentAPIObjectMap.size());
                     jobData.setProcessed_experiments(0);
-                    if (jobData.getTotal_experiments() > KruizeDeploymentInfo.BULK_API_LIMIT) {
-                        setFinalJobStatus(FAILED,String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST),LIMIT_INFO,datasource);
+                    if (jobData.getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
+                      setFinalJobStatus(FAILED,String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST),LIMIT_INFO,datasource);
                     } else {
                         ExecutorService createExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
                         ExecutorService generateExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
