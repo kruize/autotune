@@ -182,3 +182,13 @@ Else, you can change the workload name and namespace name in the test to match w
 
 Note: The test will fail if it's run as is if there are no matching workloads that the test looks for. This test result can be ignored in case of a non-gpu workload
 
+### Authentication Test:
+
+Kruize 0.1.1 supports the authentication which provides the user an option to pass authentication details in the yaml for the service they are using.
+
+The authentication test is part of functional bucket and has a separate script similar to local_monitoring tests. It contains various valid and invalid scenarios for testing.
+
+It can be run as shown in the example below:
+
+`/test_autotune.sh -c <cluster-type> -i <image-name> -r benchmarks/ --testsuite=authentication_tests`
+

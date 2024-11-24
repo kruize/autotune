@@ -20,28 +20,10 @@
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 LOCAL_MONITORING_TEST_DIR="${CURRENT_DIR}/local_monitoring_tests"
 
-
 # Source the common functions scripts
 . ${LOCAL_MONITORING_TEST_DIR}/../common/common_functions.sh
 
-NAMESPACE="openshift-tuning"
 APP_DEPLOYMENT="kruize"
-DB_DEPLOYMENT="kruize-db-deployment"
-DB_PVC="kruize-db-pv-claim"
-SECRET_NAME="custom-token-secret" # TODO: to be updated
-AUTOTUNE_IMAGE="quay.io/kruize/autotune_operator:0.0.25_mvp"
-# Configuration
-AUTH_TOKEN_PATH="/var/run/secrets/kubernetes.io/serviceaccount/token"
-DATASOURCE_URL="https://prometheus-k8s.openshift-monitoring.svc.cluster.local:9091"
-YAML_FILE="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml"
-
-# Tests to validate authentication types in Kruize
-function authentication_tests() {
-  TEST_SUITE_DIR="${RESULTS}/authentication_tests"
-  mkdir -p ${TEST_SUITE_DIR} 2>&1
-  for token_type in "${!tokens[@]}"; do
-    deploy_and_check_pod $token_type
-  done
 
 # Define token scenarios
 declare -A tokens
@@ -51,97 +33,149 @@ tokens=(
   ["invalid"]="random-invalid-token-string"
   ["empty"]=""
 )
+# Tests to validate authentication types in Kruize
+function authentication_tests() {
+	start_time=$(get_date)
+	FAILED_CASES=()
+	TESTS=0
+	failed=0
+	((TOTAL_TEST_SUITES++))
 
+  TEST_SUITE_DIR="${RESULTS}/authentication_tests"
+  mkdir -p "${TEST_SUITE_DIR}" 2>&1
+  KRUIZE_SETUP_LOG="${TEST_SUITE_DIR}/kruize_setup.log"
+ 	KRUIZE_POD_LOG="${TEST_SUITE_DIR}/kruize_pod.log"
+ 	target="crc"
+  echo ""
+  echo "Setting up kruize..." | tee -a ${LOG}
+		echo "${KRUIZE_SETUP_LOG}"
+		setup "${KRUIZE_POD_LOG}" >> "${KRUIZE_SETUP_LOG}" 2>&1
+		echo "Setting up kruize...Done" | tee -a ${LOG}
+	sleep 15
+  if [ "$cluster_type" == "minikube" ] || [ "$cluster_type" == "kind" ]; then
+  	NAMESPACE="monitoring"
+  	YAML_FILE="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml"
+	elif [ "$cluster_type" == "openshift" ]; then
+  	NAMESPACE="openshift-tuning"
+		YAML_FILE="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml"
+	else
+		echo "Invalid cluster type found: ${cluster_type}"
+	fi
+  kubectl_cmd="kubectl -n ${NAMESPACE}"
 
-# Update the YAML file with the token
-update_yaml_with_token() {
-  local token_value=$1
-  # Escape special characters in the new token to avoid sed issues
-  new_token_escaped=$(printf '%s\n' "$new_token" | sed -e 's/[\/&]/\\&/g')
+  echo ""
+	echo "******************* Executing test suite ${FUNCNAME} ****************"
+	echo ""
+  for token_type in "${!tokens[@]}";
+  do
+		echo ""
+		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
+		echo "                    Running Test ${token_type}-token"
+		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
 
-  sed -i.bak 's/\("tokenFilePath": \)"[^"]*"/\1"'"$new_token_escaped"'"/' $YAML_FILE
+    deploy_and_check_pod "$token_type"
+
+#	 check for success and failed cases here
+		if [ "${TESTS_FAILED}" -ne "0" ]; then
+			FAILED_CASES+=(${test})
+		fi
+  done
+
+  TESTS=$(($TESTS_PASSED + $TESTS_FAILED))
+  TOTAL_TESTS_FAILED=${TESTS_FAILED}
+	TOTAL_TESTS_PASSED=${TESTS_PASSED}
+	TOTAL_TESTS=${TESTS}
+
+	if [ "${TESTS_FAILED}" -ne "0" ]; then
+		FAILED_TEST_SUITE+=(${FUNCNAME})
+	fi
+
+	end_time=$(get_date)
+	elapsed_time=$(time_diff "${start_time}" "${end_time}")
+
+	# Remove the duplicates
+	FAILED_CASES=( $(printf '%s\n' "${FAILED_CASES[@]}" | uniq ) )
+
+	# print the testsuite summary
+	testsuitesummary ${FUNCNAME} "${elapsed_time}" ${FAILED_CASES}
 }
 
 # Deploy app and check pod status
 deploy_and_check_pod() {
   local token_type=$1
-  echo "**********************************"
-  echo "Testing with $token_type token..."
-  echo "**********************************"
+  POD_LOG="${TEST_SUITE_DIR}/${token_type}-pod.log"
 
-  LOG="${TEST_SUITE_DIR}/${token_type}.log"
-  echo "***********************************"
-  echo "Terminating any existing instance of kruize..."
-  echo "***********************************"
-  kruize_terminate > /dev/null
-  sleep 10
-
-  # Update the secret with the appropriate token
+  # Update the yaml with the appropriate token
   echo "*************************************"
-  echo "Updating the yaml with $token_type token..."
+  echo "Updating the yaml with $token_type token and restarting kruize..."
   echo "*************************************"
   update_yaml_with_token "${tokens[$token_type]}"
   echo ""
 
-  # Restart the app and db pod (if it's already running)
-#  kubectl rollout restart deployment/$APP_DEPLOYMENT -n $NAMESPACE :TODO: to be used once the code is fixed
-  # Run the deployment script again
-  echo "**********************"
-  echo "Redeploying kruize..."
-  echo "**********************"
-  ${LOCAL_MONITORING_TEST_DIR}/../../../deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m crc > /dev/null
-  # Wait for the pod to be ready or fail
-  kubectl wait --for=condition=Ready pod -l app=$APP_DEPLOYMENT -n $NAMESPACE --timeout=120s >> ${LOG} #2> /dev/null
-  local pod_status=$?
-  # Check pod logs for errors
-  if [ $pod_status -ne 0 ]; then
-    echo "$token_type token: Pod failed to start as expected."
-    kubectl logs -l app=$APP_DEPLOYMENT -n $NAMESPACE --tail=20
-  else
-    echo "$token_type token: Pod started successfully (unexpected for invalid tokens)."
-    kubectl logs -l app=$APP_DEPLOYMENT -n $NAMESPACE --tail=20
-  fi
+  # re-apply the yaml to update the auth config
+  $kubectl_cmd apply -f "$YAML_FILE" > /dev/null
+	# get the kruize pod name
+	POD_NAME=$($kubectl_cmd get pods | grep 'kruize' | grep -v -E 'kruize-db|kruize-ui' | awk 'NR==1{print $1}')
+	# Check if POD_NAME is not empty
+	if [ -n "$POD_NAME" ]; then
+		# Delete the pod
+		$kubectl_cmd delete pod "$POD_NAME"
+	else
+		echo "No matching pod found to delete."
+	fi
 
+  # Wait for the new pod to be ready or fail
+  $kubectl_cmd wait --for=condition=Ready pod -l app=$APP_DEPLOYMENT --timeout=120s > /dev/null
  # Check pod logs for errors
   echo "Checking logs for the pod..."
-  pod_logs=$(kubectl logs -l app=$APP_DEPLOYMENT -n $NAMESPACE --tail=100)
-
-  # Check if the log contains the error message
-  if echo "$pod_logs" | grep -q "Datasource is not serviceable."; then
-    echo "$token_type token: Failure detected in logs (as expected for invalid tokens)."
+ 	POD_NAME=$($kubectl_cmd get pods | grep 'kruize' | grep -v -E 'kruize-db|kruize-ui' | awk 'NR==1{print $1}')
+  echo "$kubectl_cmd logs -f ${POD_NAME} > ${POD_LOG} 2>&1 &"
+	$kubectl_cmd logs -f "${POD_NAME}" > "${POD_LOG}" 2>&1 &
+  sleep 10
+	echo ""
+  # Determine the test outcome based on logs
+	if [[ $(grep -i "Datasource connection refused or timed out" ${POD_LOG}) ]]; then
+    if [ "$token_type" == "valid" ]; then
+      echo "$token_type token: Unexpected failure detected in logs."
+      ((TESTS_FAILED++)) # Increment the global TESTS_FAILED
+    else
+      echo "$token_type token: Failure detected in logs (as expected for invalid tokens)."
+      ((TESTS_PASSED++)) # Increment the global TESTS_PASSED
+    fi
   else
-    echo "$token_type token: No failure detected in logs (as expected for valid tokens)."
+    if [ "$token_type" == "valid" ]; then
+      echo "$token_type token: No failure detected in logs (as expected for valid tokens)."
+      ((TESTS_PASSED++)) # Increment the global TESTS_PASSED
+    else
+      echo "$token_type token: Unexpected success detected in logs."
+      ((TESTS_FAILED++)) # Increment the global TESTS_FAILED
+    fi
   fi
    # Restore original YAML file
-  mv ${YAML_FILE}.bak $YAML_FILE
-
+  mv "${YAML_FILE}".token.bak "$YAML_FILE"
+  mv "${YAML_FILE}".image.bak "$YAML_FILE"
 }
 
-function kruize_terminate() {
-    ${LOCAL_MONITORING_TEST_DIR}/../../../deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m crc -t
-    # Wait for the pod to terminate
-    while true; do
-      # Get the status of the pod
-      pod_name=$(kubectl get pod -l app=kruize -o jsonpath="{.items[0].metadata.name}" 2>/dev/null)
-      namespace_status=$(kubectl get namespace $NAMESPACE --no-wait -o jsonpath='{.status.phase}' 2>/dev/null)
+# Update the YAML file with the token
+update_yaml_with_token() {
+  local token_value=$1
 
+  # Escape special characters in the new token to avoid sed issues
+  new_token_escaped=$(printf '%s\n' "$token_value" | sed -e 's/[\/&]/\\&/g')
 
-      # Check if the pod exists
-      if [ -z "$pod_name" ]; then
-        echo "Pod has fully terminated."
-        break
-      fi
+  # Update the tokenFilePath
+  sed -i.token.bak 's/\("tokenFilePath": \)"[^"]*"/\1"'"$new_token_escaped"'"/' "$YAML_FILE"
+  echo "Token updated"
 
-      # Get the pod phase (Running, Succeeded, Failed, etc.)
-      pod_phase=$(kubectl get pod $pod_name -o jsonpath='{.status.phase}' 2>/dev/null)
-
-      # Check the pod phase
-      if [ "$pod_phase" == "Succeeded" ] || [ "$pod_phase" == "Failed" ]; then
-        echo "Pod has terminated with status: $pod_phase."
-        break
-      fi
-
-      echo "Waiting for pod to terminate..."
-      sleep 5
-    done
+  # Update the image in the Deployment YAML
+  sed -i.image.bak '
+	/kind: Deployment/,/kind:/{
+		/name: kruize$/,/containers:/{
+			/^        - name: kruize$/{
+				n
+				s|image: .*|image: '"$AUTOTUNE_IMAGE"'|
+			}
+		}
+	}' "$YAML_FILE"
+  echo "Updated image in YAML to $AUTOTUNE_IMAGE"
 }
