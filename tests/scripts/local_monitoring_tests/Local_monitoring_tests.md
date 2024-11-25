@@ -97,6 +97,16 @@ The above tests are developed using pytest framework and the tests are run using
 - Creates a resource optimization metric profile using the [createMetricProfile API](/design/MetricProfileAPI.md)
 - Runs the above tests using pytest
 
+### **Bulk API tests**
+This test script validates the functionality of a bulk POST [API](/design/MonitoringModeAPI.md) and associated GET job status API for a Kubernetes resource optimization service, focusing on the creation and monitoring of job IDs.
+
+Here are the test scenarios:
+- Validate the bulk POST API's ability to generate a job_id for given payloads.
+  - Empty Payload: Ensures a job_id is generated even when no data is sent.
+  - Sample JSON Payload: Verifies the API correctly processes a structured payload and generates a job_id.
+- Verify the response of the GET job status API for the generated job_id.
+  - Tests both verbose=false and verbose=true GET requests for comprehensive verification.
+
 ## Prerequisites for running the tests:
 - Minikube setup or access to Openshift cluster
 - Tools like kubectl, oc, curl, jq, python
