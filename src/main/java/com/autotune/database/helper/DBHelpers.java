@@ -28,8 +28,8 @@ import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTime
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -47,6 +47,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -822,13 +823,28 @@ public class DBHelpers {
                 int failureCount = 0;
                 for (KruizeDataSourceEntry kruizeDataSource : kruizeDataSourceList) {
                     try {
-                        DataSourceInfo dataSourceInfo = null;
+                        DataSourceInfo dataSourceInfo;
+                        AuthenticationConfig authConfig = null;
+                        if (kruizeDataSource.getKruizeAuthenticationEntry() != null) {
+                            try {
+                                JsonNode credentialsNode = kruizeDataSource.getKruizeAuthenticationEntry().getCredentials();
+                                String authType = kruizeDataSource.getKruizeAuthenticationEntry().getAuthenticationType();
+                                // Parse the JsonNode credentials into a JSONObject
+                                JSONObject credentialsJson = new JSONObject(credentialsNode.toString());
+                                JSONObject authJson = new JSONObject()
+                                        .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TYPE, authType)
+                                        .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_CREDENTIALS, credentialsJson);
+                                authConfig = AuthenticationConfig.createAuthenticationConfigObject(authJson);
+                            } catch (Exception e) {
+                                LOGGER.debug("GSON failed to convert the DB Json object in convertKruizeDataSourceToDataSourceObject");
+                            }
+                        }
                         if (kruizeDataSource.getServiceName().isEmpty() && null != kruizeDataSource.getUrl()) {
                             dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
-                                    .getProvider(), null, null, new URL(kruizeDataSource.getUrl()));
+                                    .getProvider(), null, null, new URL(kruizeDataSource.getUrl()), authConfig);
                         } else{
                             dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
-                                    .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace(), null);
+                                    .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace(), null, authConfig);
                         }
                         dataSourceInfoList.add(dataSourceInfo);
                     } catch (Exception e) {
@@ -850,6 +866,7 @@ public class DBHelpers {
              */
             public static KruizeDataSourceEntry convertDataSourceToDataSourceDBObj(DataSourceInfo dataSourceInfo) {
                 KruizeDataSourceEntry kruizeDataSource;
+                KruizeAuthenticationEntry kruizeAuthenticationEntry;
                 try {
                     kruizeDataSource = new KruizeDataSourceEntry();
                     kruizeDataSource.setVersion(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoConstants.version);
@@ -1077,6 +1094,29 @@ public class DBHelpers {
                 return kruizeMetadataList;
             }
 
+            public static KruizeAuthenticationEntry convertAuthDetailsToAuthDetailsDBObj(AuthenticationConfig authenticationConfig, String serviceType) {
+                KruizeAuthenticationEntry kruizeAuthenticationEntry;
+                try {
+                    kruizeAuthenticationEntry = new KruizeAuthenticationEntry();
+                    kruizeAuthenticationEntry.setAuthenticationType(authenticationConfig.getType().toString());
+                    // set the authentication details
+                    String credentialsString = new Gson().toJson(authenticationConfig.getCredentials());
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    JsonNode credentials;
+                    try {
+                        credentials = objectMapper.readTree(credentialsString);
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error occurred while creating credentials object : " + e.getMessage());
+                    }
+                    kruizeAuthenticationEntry.setCredentials(credentials);
+                    kruizeAuthenticationEntry.setServiceType(serviceType);
+                } catch (Exception e) {
+                    kruizeAuthenticationEntry = null;
+                    LOGGER.error("Error while converting Auth details Object to KruizeAuthentication table : {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeAuthenticationEntry;
+            }
         }
 
     }

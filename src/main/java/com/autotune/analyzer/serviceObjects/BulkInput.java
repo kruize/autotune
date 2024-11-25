@@ -25,6 +25,7 @@ public class BulkInput {
     private FilterWrapper filter;
     private TimeRange time_range;
     private String datasource;
+    private Webhook webhook;
 
     // Getters and Setters
 
@@ -135,5 +136,23 @@ public class BulkInput {
         public void setEnd(String end) {
             this.end = end;
         }
+    }
+
+    public static class Webhook{
+        private String url;
+        public String getUrl() {
+            return url;
+        }
+        public void setUrl(String url) {
+            this.url = url;
+        }
+    }
+
+    public Webhook getWebhook() {
+        return webhook;
+    }
+
+    public void setWebhook(Webhook webhook) {
+        this.webhook = webhook;
     }
 }

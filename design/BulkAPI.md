@@ -43,12 +43,18 @@ progress of the job.
       }
     }
   },
-  "time_range": {},
+  "time_range": {
+    "start": "2024-11-01T00:00:00.000Z",
+    "end": "2024-11-15T23:59:59.000Z"
+  },
   "datasource": "Cbank1Xyz",
   "experiment_types": [
     "container",
     "namespace"
-  ]
+  ],
+  "webhook": {
+    "url" : "http://127.0.0.1:8080/webhook"
+  }
 }
 ```
 
@@ -72,6 +78,9 @@ progress of the job.
 
 - **experiment_types:** Specifies the type(s) of experiments to run, e.g., `"container"` or `"namespace"`.
 
+- **webhook:** The `webhook` parameter allows the system to notify an external service or consumer about the completion status of
+  an experiment-processing job. Once a job is completed, this webhook will be triggered to send an HTTP request to the URL defined in the bulk request payload.
+
 ### Success Response
 
 - **Status:** 200 OK
@@ -82,6 +91,24 @@ progress of the job.
   "job_id": "123e4567-e89b-12d3-a456-426614174000"
 }
 ```
+### Different payload parameters examples
+
+#### 1. **Request Payload with `time_range` specified:**
+
+This object allows users to specify the duration for which they want to query data and receive recommendations. It consists of the following fields:
+
+- **`start`**: The starting timestamp of the query duration in ISO 8601 format (`YYYY-MM-DDTHH:mm:ss.sssZ`).
+- **`end`**: The ending timestamp of the query duration in ISO 8601 format (`YYYY-MM-DDTHH:mm:ss.sssZ`).
+
+The specified time range determines the period over which the data is analyzed to provide recommendations at the container or namespace level. Ensure that:
+- Both `start` and `end` are valid timestamps.
+- The `start` timestamp precedes the `end` timestamp.
+
+#### 2. **Request Payload with `exclude` filter specified:**
+TBA
+
+#### 3. **Request Payload with `include` filter specified:**
+TBA
 
 ### GET Request:
 
@@ -98,7 +125,10 @@ GET /bulk?job_id=123e4567-e89b-12d3-a456-426614174000
   "processed_experiments": 23,
   "job_id": "54905959-77d4-42ba-8e06-90bb97b823b9",
   "job_start_time": "2024-10-10T06:07:09.066Z",
-  "job_end_time": "2024-10-10T06:07:17.471Z"
+  "job_end_time": "2024-10-10T06:07:17.471Z",
+  "webhook": {
+    "status": "COMPLETED"
+  }
 }
 ```
 
@@ -109,78 +139,107 @@ GET /bulk?job_id=123e4567-e89b-12d3-a456-426614174000&verbose=true
 **Body (JSON):**
 When verbose=true, additional detailed information about the job is provided.
 
+example 1:
+
 ```json
 {
   "status": "IN_PROGRESS",
   "total_experiments": 23,
   "processed_experiments": 22,
-  "data": {
-    "experiments": {
-      "new": [
-        "prometheus-1|default|monitoring|node-exporter(daemonset)|node-exporter",
-        "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor",
-        "prometheus-1|default|monitoring|alertmanager-main(statefulset)|config-reloader",
-        "prometheus-1|default|monitoring|alertmanager-main(statefulset)|alertmanager",
-        "prometheus-1|default|monitoring|prometheus-operator(deployment)|kube-rbac-proxy",
-        "prometheus-1|default|kube-system|coredns(deployment)|coredns",
-        "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|config-reloader",
-        "prometheus-1|default|monitoring|blackbox-exporter(deployment)|kube-rbac-proxy",
-        "prometheus-1|default|monitoring|prometheus-operator(deployment)|prometheus-operator",
-        "prometheus-1|default|monitoring|node-exporter(daemonset)|kube-rbac-proxy",
-        "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-self",
-        "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-state-metrics",
-        "prometheus-1|default|monitoring|kruize(deployment)|kruize",
-        "prometheus-1|default|monitoring|blackbox-exporter(deployment)|module-configmap-reloader",
-        "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|prometheus",
-        "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-main",
-        "prometheus-1|default|kube-system|kube-proxy(daemonset)|kube-proxy",
-        "prometheus-1|default|monitoring|prometheus-adapter(deployment)|prometheus-adapter",
-        "prometheus-1|default|monitoring|grafana(deployment)|grafana",
-        "prometheus-1|default|kube-system|kindnet(daemonset)|kindnet-cni",
-        "prometheus-1|default|monitoring|kruize-db-deployment(deployment)|kruize-db",
-        "prometheus-1|default|monitoring|blackbox-exporter(deployment)|blackbox-exporter"
-      ],
-      "updated": [],
-      "failed": null
-    },
-    "recommendations": {
-      "data": {
-        "processed": [
-          "prometheus-1|default|monitoring|alertmanager-main(statefulset)|config-reloader",
-          "prometheus-1|default|monitoring|node-exporter(daemonset)|node-exporter",
-          "prometheus-1|default|local-path-storage|local-path-provisioner(deployment)|local-path-provisioner",
-          "prometheus-1|default|monitoring|alertmanager-main(statefulset)|alertmanager",
-          "prometheus-1|default|monitoring|prometheus-operator(deployment)|kube-rbac-proxy",
-          "prometheus-1|default|kube-system|coredns(deployment)|coredns",
-          "prometheus-1|default|monitoring|blackbox-exporter(deployment)|kube-rbac-proxy",
-          "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|config-reloader",
-          "prometheus-1|default|monitoring|prometheus-operator(deployment)|prometheus-operator",
-          "prometheus-1|default|monitoring|node-exporter(daemonset)|kube-rbac-proxy",
-          "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-self",
-          "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-state-metrics",
-          "prometheus-1|default|monitoring|kruize(deployment)|kruize",
-          "prometheus-1|default|monitoring|blackbox-exporter(deployment)|module-configmap-reloader",
-          "prometheus-1|default|monitoring|prometheus-k8s(statefulset)|prometheus",
-          "prometheus-1|default|monitoring|kube-state-metrics(deployment)|kube-rbac-proxy-main",
-          "prometheus-1|default|kube-system|kube-proxy(daemonset)|kube-proxy",
-          "prometheus-1|default|monitoring|prometheus-adapter(deployment)|prometheus-adapter",
-          "prometheus-1|default|monitoring|grafana(deployment)|grafana",
-          "prometheus-1|default|kube-system|kindnet(daemonset)|kindnet-cni",
-          "prometheus-1|default|monitoring|kruize-db-deployment(deployment)|kruize-db",
-          "prometheus-1|default|monitoring|blackbox-exporter(deployment)|blackbox-exporter"
-        ],
-        "processing": [
-          "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor"
-        ],
-        "unprocessed": [
-        ],
-        "failed": []
-      }
-    }
-  },
   "job_id": "5798a2df-6c67-467b-a3c2-befe634a0e3a",
   "job_start_time": "2024-10-09T18:09:31.549Z",
-  "job_end_time": null
+  "job_end_time": null,
+  "experiments": [
+    {
+      "name": "prometheus-1|default|kube-system|coredns(deployment)|coredns",
+      "recommendations": {
+        "status": "unprocessed"
+      }
+    },
+    {
+      "name": "prometheus-1|default|kube-system|kindnet(deployment)|kindnet-cni",
+      "recommendations": {
+        "status": "processed"
+      }
+    },
+    {
+      "name": "prometheus-1|default|monitoring|kruize(deployment)|kruize",
+      "recommendations": {
+        "status": "processing"
+      }
+    },
+    {
+      "name": "prometheus-1|default|monitoring|kruize(deployment)|kruize",
+      "recommendations": {
+        "status": "failed",
+        "notifications": {
+          "400": {
+            "type": "error",
+            "message": "Not able to fetch metrics",
+            "code": 400
+          }
+        }
+      }
+    },
+    {
+      "name": "prometheus-1|default|monitoring|kruize(deployment)|kruize",
+      "recommendations": {
+        "status": "failed",
+        "notifications": {
+          "400": {
+            "type": "error",
+            "message": "Not able to fetch metrics",
+            "code": 400
+          }
+        }
+      }
+    }
+  ]
+}
+```
+
+example 2:  Job failed
+
+```json
+{
+  "status": "FAILED",
+  "total_experiments": 0,
+  "processed_experiments": 0,
+  "notifications": {
+    "503": {
+      "type": "ERROR",
+      "message": "HttpHostConnectException: Unable to connect to the data source. Please try again later. (receive series from Addr: 10.96.192.138:10901 LabelSets: {prometheus=\"monitoring/k8stage\", prometheus_replica=\"prometheus-k8stage-0\"},{prometheus=\"monitoring/k8stage\", prometheus_replica=\"prometheus-k8stage-1\"},{replica=\"thanos-ruler-0\", ruler_cluster=\"\"} MinTime: 1730222825216 MaxTime: 1731412800000: rpc error: code = Unknown desc = receive series from 01JBV2JN5SVN84D3HD5MVSGN3A: load chunks: get range reader: Please reduce your request rate)",
+      "code": 503
+    }
+  },
+  "job_id": "270fa4d9-2701-4ca0-b056-74229cc28498",
+  "job_start_time": "2024-11-12T15:05:46.362Z",
+  "job_end_time": "2024-11-12T15:06:05.301Z",
+  "webhook": {
+    "status": "COMPLETED"
+  }
+}
+
+```
+
+example 3:  Only Webhook failed
+
+```json
+{
+  "status": "COMPLETED",
+  "total_experiments": 23,
+  "processed_experiments": 23,
+  "job_id": "54905959-77d4-42ba-8e06-90bb97b823b9",
+  "job_start_time": "2024-10-10T06:07:09.066Z",
+  "job_end_time": "2024-10-10T06:07:17.471Z",
+  "webhook": {
+    "status": "FAILED",
+    "notifications": {
+      "type": "ERROR",
+      "message": "HttpHostConnectException: Unable to connect to the webhook. Please try again later.",
+      "code": 503
+    }
+  }
 }
 ```
 
@@ -205,40 +264,37 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
     - **Type**: `Integer`
     - **Description**: Number of experiments that have been processed so far.
 
-- **data**:
-    - **Type**: `Object`
-    - **Description**: Contains detailed information about the experiments and recommendations being processed.
+- **experiments**:
+    - **Type**: `Array `
+    - **Description**: Array of experiment objects, each containing details about individual experiments.
 
-    - **experiments**:
-        - **new**:
-            - **Type**: `Array of Strings`
-            - **Description**: List of new experiments that have been identified but not yet processed.
+    - Each object in the `experiments` array has the following structure:
 
-        - **updated**:
-            - **Type**: `Array of Strings`
-            - **Description**: List of experiments that were previously processed but have now been updated.
+  | Field             | Type     | Description                                                                         |
+  |-------------------|----------|-------------------------------------------------------------------------------------|
+  | `name`            | `string` | Name of the experiment, typically indicating a service name and deployment context. |
+  | `notifications`   | `object` | Notifications specific to this experiment (if any).                                 |
+  | `recommendations` | `object` | Recommendation status and notifications specific to this experiment.                |
 
-        - **failed**:
-            - **Type**: `null or Array`
-            - **Description**: List of experiments that failed during processing. If no failures, the value is `null`.
+  #### Recommendation Object
 
-    - **recommendations**:
-        - **data**:
-            - **processed**:
-                - **Type**: `Array of Strings`
-                - **Description**: List of experiments for which recommendations have already been processed.
+  The `recommendations` field within each experiment provides information about recommendation processing status and
+  errors (if any).
 
-            - **processing**:
-                - **Type**: `Array of Strings`
-                - **Description**: List of experiments that are currently being processed for recommendations.
+  | Field           | Type     | Description                                                                                      |
+  |-----------------|----------|--------------------------------------------------------------------------------------------------|
+  | `status`        | `string` | Status of the recommendation (e.g., `"unprocessed"`, `"processed"`, `"processing"`, `"failed"`). |
+  | `notifications` | `object` | Notifications related to recommendation processing.                                              |
 
-            - **unprocessed**:
-                - **Type**: `Array of Strings`
-                - **Description**: List of experiments that have not yet been processed for recommendations.
+  #### Notification Object
 
-            - **failed**:
-                - **Type**: `Array of Strings`
-                - **Description**: List of experiments for which the recommendation process failed.
+  Both the `notifications` and `recommendations.notifications` fields may contain error messages or warnings as follows:
+
+  | Field                   | Type         | Description                                                                |
+  |-------------------------|--------------|----------------------------------------------------------------------------|
+  | `type`                  | `string`     | Type of notification (e.g., `"info"`,`"error"`, `"warning"`).              |
+  | `message`               | `string`     | Description of the notification message.                                   |
+  | `code`                  | `integer`    | HTTP-like code indicating the type of error (e.g., `400` for bad request). |
 
 - **job_id**:
     - **Type**: `String`
@@ -251,6 +307,18 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
 - **job_end_time**:
     - **Type**: `String (ISO 8601 format) or null`
     - **Description**: End timestamp of the job. If the job is still in progress, this will be `null`.
+
+- **webhook**:
+    - **Type**: `Object`
+    - **Description**: An object that provides details about the webhook status and any errors encountered during the
+      webhook invocation.
+
+    - The `webhook` parameter allows the system to notify an external service or consumer about the completion status of
+      an experiment-processing job. Once a job is completed, this webhook will be triggered to send an HTTP request to the URL defined in the bulk request payload.
+      This notification mechanism is essential for systems that require real-time updates about the job's processing
+      status, enabling consumers to take immediate follow-up actions. For example, an external analytics dashboard, a
+      monitoring service, or a message queue like Kafka can listen for these webhook calls to further process or log the
+      job completion data.
 
 **Note: Experiment Name:**
 
@@ -277,27 +345,27 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
 apiVersion: v1
 kind: ConfigMap
 metadata:
-name: kruizeconfig
-namespace: openshift-tuning
+  name: kruizeconfig
+  namespace: openshift-tuning
 data:
-kruizeconfigjson: |
-  {
-    "datasource": [
-      {
-        "name": "prometheus-1",
-        "provider": "prometheus",
-        "serviceName": "prometheus-k8s",
-        "namespace": "openshift-monitoring",
-        "url": "",
-        "authentication": {
-          "type": "bearer",
-          "credentials": {
-            "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+  kruizeconfigjson: |
+    {
+      "datasource": [
+        {
+          "name": "prometheus-1",
+          "provider": "prometheus",
+          "serviceName": "prometheus-k8s",
+          "namespace": "openshift-monitoring",
+          "url": "",
+          "authentication": {
+            "type": "bearer",
+            "credentials": {
+              "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+            }
           }
         }
-      }
-    ]
-  }
+      ]
+    }
 ```
 
 ## Limits
@@ -310,3 +378,67 @@ kruizeconfigjson: |
 
 - **Control Mechanism:** The number of threads used for bulk API operations can be controlled using the environment
   variable `bulkThreadPoolSize`.
+
+## Experiment Name Format Configuration
+
+- **experimentNameFormat:** The `experimentNameFormat` environment variable is used to define the format for experiment
+  names. For example, if the
+  experiment name should follow the structure:
+
+```
+org_id|source_id|cluster_id|namespace|k8s_object_type|k8s_object_name
+```
+
+then set or define the `experimentNameFormat` as follows:
+
+```
+"experimentNameFormat": "%label:org_id%|%label:source_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
+```
+
+When making a /bulk call, ensure the label values used in the experiment name format are passed in the payload's filter
+and include sections, matching the format above.
+
+```json
+{
+  "filter": {
+    "exclude": {
+      "namespace": [],
+      "workload": [],
+      "containers": [],
+      "labels": {
+        "key1": "value1",
+        "key2": "value2"
+      }
+    },
+    "include": {
+      "namespace": [],
+      "workload": [],
+      "containers": [],
+      "labels": {
+        "org_id": "ABCOrga",
+        "source_id": "ZZZ",
+        "cluster_id": "ABG"
+      }
+    }
+  }
+}
+```
+
+With the above configuration, the experiment name generated will be:
+
+ABCOrga|ZZZ|ABG|kube-system|deployment|coredns|coredns
+
+If the filter is not specified, it will display as Unknown.
+
+```
+ABCOrga|ZZZ|unknowncluster_id|prometheus-1|default|kube-system|coredns(deployment)|coredns
+```
+
+**Note**:Specifying labels in envirnoment varable `experimentNameFormat` is optional and flexible; there can be any
+number of labels, or none at all. Here are some examples:
+
+- "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%"    -> Default
+- "%label:org_id%|%label:source_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
+- "%label:org_id%|%namespace%|%workloadtype%|%workloadname%|%containername%"
+- "%label:org_id%|%label:cluster_id%|%namespace%|%workloadtype%|%workloadname%"
+

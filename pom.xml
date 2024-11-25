@@ -6,11 +6,11 @@
 
     <groupId>org.autotune</groupId>
     <artifactId>autotune</artifactId>
-    <version>0.1</version>
+    <version>0.2</version>
     <properties>
         <fabric8-version>4.13.2</fabric8-version>
         <org-json-version>20240303</org-json-version>
-        <jetty-version>9.4.55.v20240627</jetty-version>
+        <jetty-version>10.0.24</jetty-version>
         <slf4j-version>2.17.1</slf4j-version>
         <java-version>17</java-version>
         <prometheus-simpleclient>0.14.1</prometheus-simpleclient>
@@ -25,7 +25,7 @@
         <hibernatecp30-version>6.1.7.Final</hibernatecp30-version>
         <hibernate-Validator>8.0.1.Final</hibernate-Validator>
         <micrometer-version>1.9.9</micrometer-version>
-        <awssdk-version>2.25.35</awssdk-version>
+        <awssdk-version>2.29.16</awssdk-version>
     </properties>
     <dependencies>
         <dependency>

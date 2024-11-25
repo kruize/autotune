@@ -22,6 +22,7 @@ public class ValidationOutputData {
     private boolean success;
     private String message;
     private Integer errorCode;
+    private Long authEntryId;
 
     public ValidationOutputData(boolean success, String message, Integer errorCode) {
         this.success = success;
@@ -51,6 +52,14 @@ public class ValidationOutputData {
 
     public void setErrorCode(Integer errorCode) {
         this.errorCode = errorCode;
+    }
+
+    public Long getAuthEntryId() {
+        return authEntryId;
+    }
+
+    public void setAuthEntryId(Long authEntryId) {
+        this.authEntryId = authEntryId;
     }
 
     @Override

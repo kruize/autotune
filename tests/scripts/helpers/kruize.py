@@ -15,9 +15,12 @@ limitations under the License.
 """
 
 import json
+import requests
 import subprocess
 
-import requests
+
+def get_kruize_url():
+    return URL
 
 
 def form_kruize_url(cluster_type, SERVER_IP=None):
@@ -28,6 +31,10 @@ def form_kruize_url(cluster_type, SERVER_IP=None):
         print("\nKRUIZE AUTOTUNE URL = ", URL)
         return
 
+    if (cluster_type == "local"):
+        AUTOTUNE_PORT = 8080
+        SERVER_IP = '127.0.0.1'
+        URL = "http://" + str(SERVER_IP) + ":" + str(AUTOTUNE_PORT)
     if (cluster_type == "minikube"):
         port = subprocess.run(
             ['kubectl -n monitoring get svc kruize --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort'],
@@ -43,11 +50,14 @@ def form_kruize_url(cluster_type, SERVER_IP=None):
 
         subprocess.run(['oc expose svc/kruize -n openshift-tuning'], shell=True, stdout=subprocess.PIPE)
         ip = subprocess.run(
-            ['oc status -n openshift-tuning | grep "kruize" | grep -v "kruize-ui" | grep -v "kruize-db" | grep port | cut -d " " -f1 | cut -d "/" -f3'], shell=True,
+            [
+                'oc status -n openshift-tuning | grep "kruize" | grep -v "kruize-ui" | grep -v "kruize-db" | grep port | cut -d " " -f1 | cut -d "/" -f3'],
+            shell=True,
             stdout=subprocess.PIPE)
         SERVER_IP = ip.stdout.decode('utf-8').strip('\n')
         print("IP = ", SERVER_IP)
         URL = "http://" + str(SERVER_IP)
+
     print("\nKRUIZE AUTOTUNE URL = ", URL)
 
 
@@ -452,4 +462,33 @@ def generate_recommendations(experiment_name):
     print("Response status code = ", response.status_code)
     print(response.text)
     print("\n************************************************************")
+    return response
+
+def post_bulk_api(input_json_file):
+    print("\n************************************************************")
+    print("Sending POST request to URL: ", f"{URL}/bulk")
+    print("Request Payload: ", input_json_file)
+    curl_command = f"curl -X POST {URL}/bulk -H 'Content-Type: application/json' -d '{json.dumps(input_json_file)}'"
+    print("Equivalent cURL command: ", curl_command)
+
+    # Send the POST request
+    response = requests.post(f"{URL}/bulk", json=input_json_file)
+    print("Response Status Code: ", response.status_code)
+    print("Response JSON: ", response.json())
+    return response
+
+def get_bulk_job_status(job_id,verbose=False):
+    print("\n************************************************************")
+    url_basic = f"{URL}/bulk?job_id={job_id}"
+    url_verbose = f"{URL}/bulk?job_id={job_id}&verbose={verbose}"
+    getJobIDURL = url_basic
+    if verbose:
+        getJobIDURL = url_verbose
+    print("Sending GET request to URL ( verbose=",verbose," ): ", getJobIDURL)
+    curl_command_verbose = f"curl -X GET '{getJobIDURL}'"
+    print("Equivalent cURL command : ", curl_command_verbose)
+    response = requests.get(url_verbose)
+
+    print("Verbose GET Response Status Code: ", response.status_code)
+    print("Verbose GET Response JSON: ", response.json())
     return response

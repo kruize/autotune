@@ -15,44 +15,117 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.UNPROCESSED;
 
 /**
  * Bulk API Response payload Object.
  */
 @JsonFilter("jobFilter")
 public class BulkJobStatus {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BulkJobStatus.class);
     @JsonProperty(JOB_ID)
     private String jobID;
     private String status;
     private int total_experiments;
     private int processed_experiments;
-    private Data data;
     @JsonProperty("job_start_time")
     private String startTime; // Change to String to store formatted time
     @JsonProperty("job_end_time")
     private String endTime;   // Change to String to store formatted time
-    private String message;
+    private Map<String, Notification> notifications;
+    private Map<String, Experiment> experiments = Collections.synchronizedMap(new HashMap<>());
+    private Webhook webhook;
 
-    public BulkJobStatus(String jobID, String status, Data data, Instant startTime) {
+    public BulkJobStatus(String jobID, String status, Instant startTime) {
         this.jobID = jobID;
         this.status = status;
-        this.data = data;
         setStartTime(startTime);
+    }
+
+
+    // Method to set a notification in the map
+    public void setNotification(String key, Notification notification) {
+        if (this.notifications == null) {
+            this.notifications = new HashMap<>(); // Initialize if null
+        }
+        this.notifications.put(key, notification);
     }
 
     public String getJobID() {
         return jobID;
+    }
+
+    public void setJobID(String jobID) {
+        this.jobID = jobID;
+    }
+
+    public String getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(String startTime) {
+        this.startTime = startTime;
+    }
+
+    public void setStartTime(Instant startTime) {
+        this.startTime = formatInstantAsUTCString(startTime);
+    }
+
+    public String getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(String endTime) {
+        this.endTime = endTime;
+    }
+
+    public void setEndTime(Instant endTime) {
+        this.endTime = formatInstantAsUTCString(endTime);
+    }
+
+    public Map<String, Notification> getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(Map<String, Notification> notifications) {
+        this.notifications = notifications;
+    }
+
+    public Map<String, Experiment> getExperiments() {
+        return experiments;
+    }
+
+    public void setExperiments(Map<String, Experiment> experiments) {
+        this.experiments = experiments;
+    }
+
+    public Webhook getWebhook() {
+        return webhook;
+    }
+
+    public void setWebhook(Webhook webhook) {
+        this.webhook = webhook;
+    }
+
+    // Method to add a new experiment with "unprocessed" status and null notification
+    public synchronized Experiment addExperiment(String experimentName) {
+        Experiment experiment = new Experiment(experimentName);
+        experiments.put(experimentName, experiment);
+        return experiment;
     }
 
     public String getStatus() {
@@ -61,30 +134,6 @@ public class BulkJobStatus {
 
     public void setStatus(String status) {
         this.status = status;
-    }
-
-    public String getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(Instant startTime) {
-        this.startTime = formatInstantAsUTCString(startTime);
-    }
-
-    public void setStartTime(String startTime) {
-        this.startTime = startTime;
-    }
-
-    public String getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(Instant endTime) {
-        this.endTime = formatInstantAsUTCString(endTime);
-    }
-
-    public void setEndTime(String endTime) {
-        this.endTime = endTime;
     }
 
     public int getTotal_experiments() {
@@ -103,14 +152,6 @@ public class BulkJobStatus {
         this.processed_experiments = processed_experiments;
     }
 
-    public Data getData() {
-        return data;
-    }
-
-    public void setData(Data data) {
-        this.data = data;
-    }
-
     // Utility function to format Instant into the required UTC format
     private String formatInstantAsUTCString(Instant instant) {
         DateTimeFormatter formatter = DateTimeFormatter
@@ -120,183 +161,140 @@ public class BulkJobStatus {
         return formatter.format(instant);
     }
 
-    public String getMessage() {
-        return message;
+
+    public static enum NotificationType {
+        ERROR("error"),
+        WARNING("warning"),
+        INFO("info");
+
+        private final String type;
+
+        NotificationType(String type) {
+            this.type = type;
+        }
+
+        public String getType() {
+            return type;
+        }
     }
 
-    public void setMessage(String message) {
-        this.message = message;
-    }
+    public static class Experiment {
+        private String name;
+        private Notification notification; // Empty by default
+        private Recommendation recommendations;
 
-    // Inner class for the data field
-    public static class Data {
-        private Experiments experiments;
-        private Recommendations recommendations;
-
-        public Data(Experiments experiments, Recommendations recommendations) {
-            this.experiments = experiments;
-            this.recommendations = recommendations;
+        public Experiment(String name) {
+            this.name = name;
+            this.notification = null; // Start with null notification
+            this.recommendations = new Recommendation(UNPROCESSED); // Start with unprocessed status
         }
 
-        public Experiments getExperiments() {
-            return experiments;
-        }
-
-        public void setExperiments(Experiments experiments) {
-            this.experiments = experiments;
-        }
-
-        public Recommendations getRecommendations() {
+        // Getters and setters
+        public Recommendation getRecommendations() {
             return recommendations;
         }
 
-        public void setRecommendations(Recommendations recommendations) {
+        public void setNotification(Notification notification) {
+            this.notification = notification;
+        }
+
+        public Notification getNotification() {
+            return notification;
+        }
+
+        public void setRecommendations(Recommendation recommendations) {
             this.recommendations = recommendations;
         }
     }
 
-    // Inner class for experiments
-    public static class Experiments {
-        @JsonProperty("new")
-        private List<String> newExperiments;
-        @JsonProperty("updated")
-        private List<String> updatedExperiments;
-        @JsonProperty("failed")
-        private List<String> failedExperiments;
+    public static class Recommendation {
+        private KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status status;
+        private Notification notifications; // Notifications can hold multiple entries
 
-        public Experiments(List<String> newExperiments, List<String> updatedExperiments, List<String> failedExperiments) {
-            this.newExperiments = newExperiments;
-            this.updatedExperiments = updatedExperiments;
-            this.failedExperiments = failedExperiments;
+        public Recommendation(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status status) {
+            this.status = status;
         }
 
-        public List<String> getNewExperiments() {
-            return newExperiments;
+        // Getters and setters
+
+        public KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status getStatus() {
+            return status;
         }
 
-        public void setNewExperiments(List<String> newExperiments) {
-            this.newExperiments = newExperiments;
+        public void setStatus(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status status) {
+            this.status = status;
         }
 
-        public List<String> getUpdatedExperiments() {
-            return updatedExperiments;
+        public Notification getNotifications() {
+            return notifications;
         }
 
-        public void setUpdatedExperiments(List<String> updatedExperiments) {
-            this.updatedExperiments = updatedExperiments;
-        }
-
-        public List<String> getFailedExperiments() {
-            return failedExperiments;
-        }
-
-        public void setFailedExperiments(List<String> failedExperiments) {
-            this.failedExperiments = failedExperiments;
+        public void setNotifications(Notification notifications) {
+            this.notifications = notifications;
         }
     }
 
-    // Inner class for recommendations
-    public static class Recommendations {
-        private RecommendationData data;
+    public static class Notification {
+        private NotificationType type;
+        private String message;
+        private int code;
 
-        public Recommendations(RecommendationData data) {
-            this.data = data;
+        // Constructor, getters, and setters
+
+        public Notification(NotificationType type, String message, int code) {
+            this.type = type;
+            this.message = message;
+            this.code = code;
         }
 
-        public RecommendationData getData() {
-            return data;
+        public NotificationType getType() {
+            return type;
         }
 
-        public void setData(RecommendationData data) {
-            this.data = data;
+        public void setType(NotificationType type) {
+            this.type = type;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public int getCode() {
+            return code;
+        }
+
+        public void setCode(int code) {
+            this.code = code;
         }
     }
 
-    // Inner class for recommendation data
-    public static class RecommendationData {
-        private List<String> processed = Collections.synchronizedList(new ArrayList<>());
-        private List<String> processing = Collections.synchronizedList(new ArrayList<>());
-        private List<String> unprocessed = Collections.synchronizedList(new ArrayList<>());
-        private List<String> failed = Collections.synchronizedList(new ArrayList<>());
+    public static class Webhook {
+        private KruizeConstants.KRUIZE_BULK_API.NotificationConstants.WebHookStatus status;
+        private Notification notifications; // Notifications can hold multiple entries
 
-        public RecommendationData(List<String> processed, List<String> processing, List<String> unprocessed, List<String> failed) {
-            this.processed = processed;
-            this.processing = processing;
-            this.unprocessed = unprocessed;
-            this.failed = failed;
+        public Webhook(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.WebHookStatus status) {
+            this.status = status;
         }
 
-        public List<String> getProcessed() {
-            return processed;
+        public KruizeConstants.KRUIZE_BULK_API.NotificationConstants.WebHookStatus getStatus() {
+            return status;
         }
 
-        public synchronized void setProcessed(List<String> processed) {
-            this.processed = processed;
+        public void setStatus(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.WebHookStatus status) {
+            this.status = status;
         }
 
-        public List<String> getProcessing() {
-            return processing;
+        public Notification getNotifications() {
+            return notifications;
         }
 
-        public synchronized void setProcessing(List<String> processing) {
-            this.processing = processing;
+        public void setNotifications(Notification notifications) {
+            this.notifications = notifications;
         }
-
-        public List<String> getUnprocessed() {
-            return unprocessed;
-        }
-
-        public synchronized void setUnprocessed(List<String> unprocessed) {
-            this.unprocessed = unprocessed;
-        }
-
-        public List<String> getFailed() {
-            return failed;
-        }
-
-        public synchronized void setFailed(List<String> failed) {
-            this.failed = failed;
-        }
-
-        // Move elements from inqueue to progress
-        public synchronized void moveToProgress(String element) {
-            if (unprocessed.contains(element)) {
-                unprocessed.remove(element);
-                if (!processing.contains(element)) {
-                    processing.add(element);
-                }
-            }
-        }
-
-        // Move elements from progress to completed
-        public synchronized void moveToCompleted(String element) {
-            if (processing.contains(element)) {
-                processing.remove(element);
-                if (!processed.contains(element)) {
-                    processed.add(element);
-                }
-            }
-        }
-
-        // Move elements from progress to failed
-        public synchronized void moveToFailed(String element) {
-            if (processing.contains(element)) {
-                processing.remove(element);
-                if (!failed.contains(element)) {
-                    failed.add(element);
-                }
-            }
-        }
-
-        // Calculate the percentage of completion
-        public int completionPercentage() {
-            int totalTasks = processed.size() + processing.size() + unprocessed.size() + failed.size();
-            if (totalTasks == 0) {
-                return (int) 0.0;
-            }
-            return (int) ((processed.size() * 100.0) / totalTasks);
-        }
-
+    }
 
     }
-}

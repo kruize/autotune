@@ -33,7 +33,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
@@ -50,8 +49,8 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 public class BulkService extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkService.class);
+    private static Map<String, BulkJobStatus> jobStatusMap = new ConcurrentHashMap<>();
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private Map<String, BulkJobStatus> jobStatusMap = new ConcurrentHashMap<>();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -66,38 +65,54 @@ public class BulkService extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        String jobID = req.getParameter(JOB_ID);
-        String verboseParam = req.getParameter(VERBOSE);
-        // If the parameter is not provided (null), default it to false
-        boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
-        BulkJobStatus jobDetails = jobStatusMap.get(jobID);
-        resp.setContentType(JSON_CONTENT_TYPE);
-        resp.setCharacterEncoding(CHARACTER_ENCODING);
-        SimpleFilterProvider filters = new SimpleFilterProvider();
-
-        if (jobDetails == null) {
-            sendErrorResponse(
-                    resp,
-                    null,
-                    HttpServletResponse.SC_NOT_FOUND,
-                    JOB_NOT_FOUND_MSG
-            );
-        } else {
-            try {
-                resp.setStatus(HttpServletResponse.SC_OK);
-                // Return the JSON representation of the JobStatus object
-                ObjectMapper objectMapper = new ObjectMapper();
-                if (!verbose) {
-                    filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAllExcept("data"));
-                } else {
-                    filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAll());
-                }
-                objectMapper.setFilterProvider(filters);
-                String jsonResponse = objectMapper.writeValueAsString(jobDetails);
-                resp.getWriter().write(jsonResponse);
-            } catch (Exception e) {
-                e.printStackTrace();
+        try {
+            String jobID = req.getParameter(JOB_ID);
+            String verboseParam = req.getParameter(VERBOSE);
+            // If the parameter is not provided (null), default it to false
+            boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
+            BulkJobStatus jobDetails;
+            LOGGER.info("Job ID: " + jobID);
+            if (jobStatusMap.isEmpty()) {
+                sendErrorResponse(
+                        resp,
+                        null,
+                        HttpServletResponse.SC_NOT_FOUND,
+                        JOB_NOT_FOUND_MSG
+                );
+                return;
             }
+            jobDetails = jobStatusMap.get(jobID);
+            LOGGER.info("Job Status: " + jobDetails.getStatus());
+            resp.setContentType(JSON_CONTENT_TYPE);
+            resp.setCharacterEncoding(CHARACTER_ENCODING);
+            SimpleFilterProvider filters = new SimpleFilterProvider();
+
+            if (jobDetails == null) {
+                sendErrorResponse(
+                        resp,
+                        null,
+                        HttpServletResponse.SC_NOT_FOUND,
+                        JOB_NOT_FOUND_MSG
+                );
+            } else {
+                try {
+                    resp.setStatus(HttpServletResponse.SC_OK);
+                    // Return the JSON representation of the JobStatus object
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    if (!verbose) {
+                        filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAllExcept("experiments"));
+                    } else {
+                        filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAll());
+                    }
+                    objectMapper.setFilterProvider(filters);
+                    String jsonResponse = objectMapper.writeValueAsString(jobDetails);
+                    resp.getWriter().write(jsonResponse);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
     }
 
@@ -121,18 +136,10 @@ public class BulkService extends HttpServlet {
 
         // Generate a unique jobID
         String jobID = UUID.randomUUID().toString();
-        BulkJobStatus.Data data = new BulkJobStatus.Data(
-                new BulkJobStatus.Experiments(new ArrayList<>(), new ArrayList<>(), new ArrayList<>()),
-                new BulkJobStatus.Recommendations(new BulkJobStatus.RecommendationData(
-                        new ArrayList<>(),
-                        new ArrayList<>(),
-                        new ArrayList<>(),
-                        new ArrayList<>()
-                ))
-        );
-        jobStatusMap.put(jobID, new BulkJobStatus(jobID, IN_PROGRESS, data, Instant.now()));
+        BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now());
+        jobStatusMap.put(jobID, jobStatus);
         // Submit the job to be processed asynchronously
-        executorService.submit(new BulkJobManager(jobID, jobStatusMap, payload));
+        executorService.submit(new BulkJobManager(jobID, jobStatus, payload));
 
         // Just sending a simple success response back
         // Return the jobID to the user

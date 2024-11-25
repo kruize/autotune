@@ -36,7 +36,7 @@ data:
       "local": "true",
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.monitoring.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",    
-      "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",    
+      "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -92,7 +92,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.1
+          image: kruize/autotune_operator:0.2
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume

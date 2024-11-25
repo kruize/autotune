@@ -54,7 +54,7 @@ metadata:
 spec:
   storageClassName: manual
   capacity:
-    storage: 1Gi # Sets PV Volume
+    storage: 500Mi # Sets PV Volume
   accessModes:
     - ReadWriteMany
   hostPath:
@@ -73,7 +73,7 @@ spec:
     - ReadWriteMany  # Sets read and write access
   resources:
     requests:
-      storage: 1Gi  # Sets volume size
+      storage: 500Mi  # Sets volume size
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -109,6 +109,8 @@ data:
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",
       "experimentsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/createExperiment",
+      "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
+      "bulkapilimit" : 1000,
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -138,10 +140,10 @@ data:
           "namespace": "openshift-monitoring",
           "url": "",
           "authentication": {
-            "type": "bearer",
-            "credentials": {
-              "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
-            }
+              "type": "bearer",
+              "credentials": {
+                "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+              }
           }
         }
       ]
@@ -180,11 +182,11 @@ spec:
               value: /var/lib/pg_data
           resources:
             requests:
-              memory: "2Gi"
-              cpu: "2"
+              memory: "100Mi"
+              cpu: "0.5"
             limits:
-              memory: "2Gi"
-              cpu: "2"
+              memory: "100Mi"
+              cpu: "0.5"
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -244,7 +246,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.1
+          image: quay.io/kruize/autotune_operator:0.2
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -262,11 +264,11 @@ spec:
               value: "-XX:MaxRAMPercentage=80"
           resources:
             requests:
-              memory: "2Gi"
-              cpu: "2"
+              memory: "350Mi"
+              cpu: "0.7"
             limits:
-              memory: "2Gi"
-              cpu: "2"
+              memory: "350Mi"
+              cpu: "0.7"
           ports:
             - name: kruize-port
               containerPort: 8080
@@ -316,7 +318,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: kruize/autotune_operator:0.1
+              image: quay.io/kruize/autotune_operator:0.2
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -357,7 +359,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: kruize/autotune_operator:0.1
+              image: quay.io/kruize/autotune_operator:0.2
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume

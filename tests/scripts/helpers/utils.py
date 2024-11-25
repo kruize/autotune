@@ -21,6 +21,7 @@ import subprocess
 import time
 import math
 import docker
+from helpers.kruize import *
 from datetime import datetime, timedelta
 from kubernetes import client, config
 from pathlib import Path
@@ -1582,6 +1583,30 @@ def validate_accelerator_recommendations_for_container(recommendations_json):
                     perf_limits_map = term_obj["recommendation_engines"]["performance"]["config"]["limits"]
                     validate_limits_map_for_accelerator(perf_limits_map)
 
+#@pytest.mark.skip(reason="Not a test function")
+def validate_job_status(job_id, base_url, caplog):
+    # Common keys expected in both responses
+    common_keys = {
+        "status", "total_experiments", "processed_experiments", "job_id", "job_start_time", "job_end_time"
+    }
+
+    # Extra keys expected when verbose=true
+    verbose_keys = {
+        "experiments"
+    }
+
+    # Make the GET request without verbose
+    response_basic = get_bulk_job_status(job_id,False)
+    # Verify common keys in the basic response
+    assert common_keys.issubset(
+        response_basic.json().keys()), f"Missing keys in response: {common_keys - response_basic.json().keys()}"
+
+    response_verbose = get_bulk_job_status(job_id,True)
+    # Verify common and verbose keys in the verbose response
+    assert common_keys.issubset(
+        response_verbose.json().keys()), f"Missing keys in verbose response: {common_keys - response_verbose.json().keys()}"
+    assert verbose_keys.issubset(
+        response_verbose.json().keys()), f"Missing verbose keys in response: {verbose_keys - response_verbose.json().keys()}"
 
 
 
