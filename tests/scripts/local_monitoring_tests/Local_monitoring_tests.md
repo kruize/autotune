@@ -98,7 +98,7 @@ The above tests are developed using pytest framework and the tests are run using
 - Runs the above tests using pytest
 
 ### **Bulk API tests**
-This test script validates the functionality of a bulk POST API and associated GET job status API for a Kubernetes resource optimization service, focusing on the creation and monitoring of job IDs.
+This test script validates the functionality of a bulk POST [API](/design/MonitoringModeAPI.md) and associated GET job status API for a Kubernetes resource optimization service, focusing on the creation and monitoring of job IDs.
 
 Here are the test scenarios:
 - Validate the bulk POST API's ability to generate a job_id for given payloads.

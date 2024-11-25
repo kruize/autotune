@@ -480,7 +480,7 @@ def post_bulk_api(input_json_file):
 def get_bulk_job_status(job_id,verbose=False):
     print("\n************************************************************")
     url_basic = f"{URL}/bulk?job_id={job_id}"
-    url_verbose = f"{URL}/bulk?job_id={job_id}&verbose=true"
+    url_verbose = f"{URL}/bulk?job_id={job_id}&verbose={verbose}"
     getJobIDURL = url_basic
     if verbose:
         getJobIDURL = url_verbose
