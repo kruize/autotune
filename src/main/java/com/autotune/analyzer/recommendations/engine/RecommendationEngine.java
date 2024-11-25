@@ -2156,10 +2156,17 @@ public class RecommendationEngine {
                             }
 
                             // If promQL is determined, fetch metrics from the datasource
+//                            promQL = promQL
+//                                    .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+//                                    .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+//                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
+//                                    .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+//                                    .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+
                             promQL = promQL
                                     .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
                                     .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
-                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
+                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(1))
                                     .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
                                     .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
 
