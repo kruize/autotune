@@ -30,7 +30,7 @@ declare -A tokens
 tokens=(
   ["valid"]="/var/run/secrets/kubernetes.io/serviceaccount/token"
   ["expired"]="EXPIRED_TOKEN"
-  ["invalid"]="random-invalid-token-string"
+  ["invalid"]="/var/run/secrets/kubernetes.io/serviceaccount/token2"
   ["empty"]=""
 )
 # Tests to validate authentication types in Kruize

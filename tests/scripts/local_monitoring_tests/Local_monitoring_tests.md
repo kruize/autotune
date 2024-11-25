@@ -184,7 +184,7 @@ Note: The test will fail if it's run as is if there are no matching workloads th
 
 ### Authentication Test:
 
-Kruize 0.1.1 supports the authentication which provides the user an option to pass authentication details in the yaml for the service they are using.
+Kruize 0.2 supports the authentication which provides the user an option to pass authentication details in the yaml for the service they are using.
 
 The authentication test is part of functional bucket and has a separate script similar to local_monitoring tests. It contains various valid and invalid scenarios for testing.
 
@@ -192,3 +192,11 @@ It can be run as shown in the example below:
 
 `/test_autotune.sh -c <cluster-type> -i <image-name> -r benchmarks/ --testsuite=authentication_tests`
 
+#### Scenarios
+**_valid_**: a valid path to the token
+
+**_expired_**: an expired token value
+
+**_invalid_**: an invalid path to the token
+
+**_empty_**: a blank input in place of the token file path
