@@ -33,6 +33,7 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 . ${SCRIPTS_DIR}/em/em_standalone_tests.sh
 . ${SCRIPTS_DIR}/remote_monitoring_tests/remote_monitoring_tests.sh
 . ${SCRIPTS_DIR}/local_monitoring_tests/local_monitoring_tests.sh
+. ${SCRIPTS_DIR}/local_monitoring_tests/authentication_tests.sh
 
 # Iterate through the commandline options
 while getopts i:o:r:-: gopts
