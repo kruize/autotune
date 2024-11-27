@@ -40,6 +40,7 @@ This document describes the test plan for Kruize remote monitoring release 0.2
 * Fix datasource missing issue on pod restart
 * Environment variable error found in the log
 * Removed the autotune job from the PR check workflow
+* Ensure access to the variable is synchronized
 
 ---
 
@@ -54,23 +55,24 @@ This document describes the test plan for Kruize remote monitoring release 0.2
 
 ### New Test Cases Developed
 
-| # | ISSUE (NEW FEATURE)                   | TEST DESCRIPTION                                                     | TEST DELIVERABLES | RESULTS | COMMENTS |
-|---|---------------------------------------|----------------------------------------------------------------------|-------------------|---------|----------|
-| 1 | Webhook implementation                |                                                                      |                   |         |          |
-| 2 | Add time range filter for bulk API    |                                                                      |                   |         |          |
-| 3 | Bulk API error handling with New JSON |                                                                      |                   |         |
-| 4 | Database updates for authentication   | New tests added [1307](https://github.com/kruize/autotune/pull/1307) |                   |         |          |
-| 5 | Datasource Exception handler          |                                                                      |                   |         |          |
-
+| # | ISSUE (NEW FEATURE)                   | TEST DESCRIPTION                                                                                                                                       | TEST DELIVERABLES                                    | RESULTS | COMMENTS                                                          |
+|---|---------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|------------------------------------------------------|---------|-------------------------------------------------------------------|
+| 1 | Webhook implementation                | Tests will be added later, tested using the Bulk demo                                                                                                  |                                                      | PASSED  |                                                                   |
+| 2 | Add time range filter for bulk API    | Tests will be added later, tested using the Bulk demo                                                                                                  |                                                      | PASSED  |                                                                   |
+| 3 | Bulk API error handling with New JSON | Tests will be added later, tested using the Bulk demo                                                                                                  |                                                      | PASSED  |
+| 4 | Database updates for authentication   | [New tests added](https://github.com/kruize/autotune/blob/mvp_demo/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md#authentication-test) | [1307](https://github.com/kruize/autotune/pull/1307) | PASSED  |                                                                   |
+| 5 | Datasource Exception handler          | Regression testing                                                                                                                                     |                                                      |         | Issue seen [1395](https://github.com/kruize/autotune/issues/1395) |
+| 6 | Bulk test cases                       | [New tests added](https://github.com/kruize/autotune/blob/master/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md#bulk-api-tests)        | [1372](https://github.com/kruize/autotune/pull/1372) | PASSED  |                                                                   |
 
 ### Regression Testing
 
-| # | ISSUE (BUG/NEW FEATURE)                             | TEST CASE | RESULTS | COMMENTS |
-|---|-----------------------------------------------------|-----------|---------|----------|
-| 1 | Fix datasource missing issue on pod restart         |           |         |          | 
-| 2 | Time_range fix                                      |           |         |          |
-| 3 | Environment variable error found in the log         |           |         |          |
-| 4 | Removed the autotune job from the PR check workflow |           |         |          |
+| # | ISSUE (BUG/NEW FEATURE)                             | TEST CASE                                                | RESULTS | COMMENTS |
+|---|-----------------------------------------------------|----------------------------------------------------------|---------|----------|
+| 1 | Fix datasource missing issue on pod restart         | Kruize local monitoring Bulk demo with thanos datasource | PASSED  |          | 
+| 2 | Time_range fix                                      | Kruize local monitoring bulk service demo                | PASSED  |          |
+| 3 | Environment variable error found in the log         | Kruize local monitoring functional tests                 | PASSED  |          |
+| 4 | Removed the autotune job from the PR check workflow | Autotune PR check is removed from github workflows       | PASSED  |          |
+| 5 | Ensure access to the variable is synchronized       | Kruize local monitoring bulk service demo                | PASSED  |          |
 
 ---
 
@@ -88,7 +90,7 @@ Short Scalability run
 |----------------|------------------------|----------------|-------------------------------|---------------|----------------------|----------------------|----------------|------------------------|
 |                |                        |                | UpdateRecommendations         | UpdateResults | LoadResultsByExpName |                      |                |                        |
 | 0.1            | 5K / 72L / 3L          | 5h 02 mins     | 0.97 / 0.55                   | 0.16 / 0.14   | 0.52 / 0.36          | 21757                | 7.3            | 33.67                  |
-| 0.2            | 5K / 72L / 3L          |                |                               |               |                      |                      |                |                        |
+| 0.2            | 5K / 72L / 3L          | 4h 08 mins     | 0.81 / 0.48                   | 0.14 / 0.12   | 0.55 / 0.38          | 21749                | 4.78           | 25.31 GB               |
 
 ----
 ## RELEASE TESTING
@@ -105,17 +107,17 @@ As part of the release testing, following tests will be executed:
 - [Kruize local monitoring Functional tests](/tests/scripts/local_monitoring_tests/Local_monitoring_tests.md)
 
 
-| # | TEST SUITE                                     | EXPECTED RESULTS                        | ACTUAL RESULTS                          | COMMENTS                                                                                                                                                                                                     |
-|---|------------------------------------------------|-----------------------------------------|-----------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| 
-| 1 | Kruize Remote monitoring Functional testsuite  | TOTAL - 359, PASSED - 316 / FAILED - 43 | TOTAL - 359, PASSED - 316 / FAILED - 43 | Intermittent issue seen [1281](https://github.com/kruize/autotune/issues/1281), existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
-| 2 | Fault tolerant test                            | PASSED                                  |                                         |                                                                                                                                                                                                              |
-| 3 | Stress test                                    | PASSED                                  |                                         |                                                                                                                                                                                                              |
-| 4 | Scalability test (short run)                   |                                         |                                         |                                                                                                                                                                                                              |
-| 5 | DB Migration test                              | PASSED                                  |                                         |                                                                                                                                                                                                              |
-| 6 | Recommendation and box plot values validations | PASSED                                  |                                         |                                                                                                                                                                                                              |
-| 7 | Kruize remote monitoring demo                  | PASSED                                  |                                         |                                                                                                                                                                                                              |
-| 8 | Kruize Local monitoring demo                   | PASSED                                  |                                         |                                                                                                                                                                                                              |
-| 9 | Kruize Local Functional tests                  | TOTAL - 78, PASSED - 75 / FAILED - 3    |                                         |                                                                                                                                                                                                              |
+| # | TEST SUITE                                     | EXPECTED RESULTS                        | ACTUAL RESULTS                          | COMMENTS                                                                                                                                                                                                      |
+|---|------------------------------------------------|-----------------------------------------|-----------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------| 
+| 1 | Kruize Remote monitoring Functional testsuite  | TOTAL - 359, PASSED - 316 / FAILED - 43 | TOTAL - 359, PASSED - 316 / FAILED - 43 | Intermittent issue seen [1281](https://github.com/kruize/autotune/issues/1281), [1393](https://github.com/kruize/autotune/issues/1393), existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
+| 2 | Fault tolerant test                            | PASSED                                  | PASSED                                  |                                                                                                                                                                                                               |
+| 3 | Stress test                                    | PASSED                                  |                                         |                                                                                                                                                                                                               |
+| 4 | Scalability test (short run)                   | PASSED                                  | PASSED                                  | Exps - 5000, Results - 72000, execution time - 4 hours, 8 mins                                                                                                                                                |
+| 5 | DB Migration test                              | PASSED                                  | PASSED                                  |                                                                                                                                                                                                               |
+| 6 | Recommendation and box plot values validations | PASSED                                  |                                         |                                                                                                                                                                                                               |
+| 7 | Kruize remote monitoring demo                  | PASSED                                  | PASSED                                  |                                                                                                                                                                                                               |
+| 8 | Kruize Local monitoring demo                   | PASSED                                  | PASSED                                  |                                                                                                                                                                                                               |
+| 9 | Kruize Local Functional tests                  | TOTAL - 81, PASSED - 78 / FAILED - 3    | TOTAL - 81, PASSED - 61 / FAILED - 20   | Intermittent issue seen [1395](https://github.com/kruize/autotune/issues/1395)                                                                                                                                |
 
 ---
 
