@@ -106,7 +106,7 @@ public class HttpUtils
 
 		SSLContext sslContext = null;
 		try {
-			sslContext = SSLContext.getInstance("SSL");
+			sslContext = SSLContext.getInstance("TLSv1.2");
 			sslContext.init(null, dummyTrustManager, new java.security.SecureRandom());
 		} catch (NoSuchAlgorithmException | KeyManagementException e) {
 			e.printStackTrace();
