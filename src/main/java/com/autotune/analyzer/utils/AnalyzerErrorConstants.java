@@ -57,6 +57,7 @@ public class AnalyzerErrorConstants {
         public static final String SLO_CLASS_NOT_SUPPORTED = "slo_class " + UNSUPPORTED;
         public static final String DIRECTION_NOT_SUPPORTED = "direction " + UNSUPPORTED;
         public static final String FUNCTION_VARIABLES_EMPTY = "function_variables is empty\n";
+        public static final String QUERY_VARIABLES_EMPTY = "query_variables is empty\n";
         public static final String OBJECTIVE_FUNCTION_MISSING = "objective_function missing\n";
         public static final String MODE_NOT_SUPPORTED = "Autotune object mode " + UNSUPPORTED;
         public static final String TARGET_CLUSTER_NOT_SUPPORTED = "Autotune object targetCluster " + UNSUPPORTED;

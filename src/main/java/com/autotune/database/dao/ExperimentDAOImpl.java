@@ -776,6 +776,19 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
+    public List<KruizeMetadataProfileEntry> loadAllMetadataProfiles() throws Exception {
+        String statusValue = "failure";
+        List<KruizeMetadataProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_METADATA_PROFILE, KruizeMetadataProfileEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Metadata Profile  due to {}", e.getMessage());
+            throw new Exception("Error while loading existing Metadata Profile from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
+
+    @Override
     public List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
         List<KruizeExperimentEntry> entries = null;

@@ -586,6 +586,13 @@ public class AnalyzerConstants {
         );
     }
 
+    public static final class MetadataProfileConstants {
+
+        public static final String QUERY_VARIABLES = "functionVariables";
+        public static final String METADATA_PROFILE_NAME = "name";
+        public static final String K8S_TYPE = "k8s_type";
+    }
+
     public static final class K8sObjectConstants {
         private K8sObjectConstants() {
 

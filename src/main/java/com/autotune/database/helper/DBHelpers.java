@@ -21,6 +21,7 @@ import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
@@ -31,6 +32,7 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.data.dataSourceMetadata.*;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.NamespaceData;
@@ -809,6 +811,40 @@ public class DBHelpers {
                     throw new Exception("None of the Metric Profiles loaded from DB.");
 
                 return metricProfiles;
+            }
+
+
+            public static List<MetadataProfile> convertMetadataProfileEntryToMetadatProfileObject(List<KruizeMetadataProfileEntry> kruizeMetadataProfileEntryList) throws Exception {
+                List<MetadataProfile> metadataProfiles = new ArrayList<>();
+                int failureThreshHold = kruizeMetadataProfileEntryList.size();
+                int failureCount = 0;
+                for (KruizeMetadataProfileEntry entry : kruizeMetadataProfileEntryList) {
+                    try {
+                        JsonNode metadata = entry.getMetadata();
+                        JsonNode query_variables = entry.getQuery_variables();
+                        ArrayList<Metric> queryVariablesList = new ArrayList<>();
+
+                        if (query_variables.isArray()) {
+                            for (JsonNode node : query_variables) {
+                                String metric_rawJson = node.toString();
+                                Metric metric = new Gson().fromJson(metric_rawJson, Metric.class);
+                                queryVariablesList.add(metric);
+                            }
+                        }
+
+                        MetadataProfile metadataProfile = new MetadataProfile(
+                                entry.getApi_version(), entry.getKind(), metadata, entry.getProfile_version(), entry.getK8s_type(), queryVariablesList);
+                        metadataProfiles.add(metadataProfile);
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while reading from MetadataProfile DB object due to : {}", e.getMessage());
+                        LOGGER.error(entry.toString());
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the Metadata Profiles loaded from DB.");
+
+                return metadataProfiles;
             }
 
 

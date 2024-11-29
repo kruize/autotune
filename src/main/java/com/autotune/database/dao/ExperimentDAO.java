@@ -52,6 +52,9 @@ public interface ExperimentDAO {
     // If Kruize restarts load all metric profiles
     List<KruizeMetricProfileEntry> loadAllMetricProfiles() throws Exception;
 
+    // If Kruize restarts load all metadata profiles
+    List<KruizeMetadataProfileEntry> loadAllMetadataProfiles() throws Exception;
+
     // Load a single experiment based on experimentName
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
 

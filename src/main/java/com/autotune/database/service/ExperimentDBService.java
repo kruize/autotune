@@ -19,6 +19,8 @@ import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryEx
 import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.serviceObjects.*;
@@ -145,6 +147,17 @@ public class ExperimentDBService {
             if (!performanceProfiles.isEmpty()) {
                 performanceProfiles.forEach(performanceProfile ->
                         PerformanceProfileUtil.addMetricProfile(metricProfileMap, performanceProfile));
+            }
+        }
+    }
+
+    public void loadAllMetadataProfiles(Map<String, MetadataProfile> metadataProfileMap) throws Exception {
+        List<KruizeMetadataProfileEntry> entries = experimentDAO.loadAllMetadataProfiles();
+        if (null != entries && !entries.isEmpty()) {
+            List<MetadataProfile> metadataProfiles = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileEntryToMetadatProfileObject(entries);
+            if (!metadataProfiles.isEmpty()) {
+                metadataProfiles.forEach(metadataProfile ->
+                        MetadataProfileUtil.validateAndAddProfile(metadataProfileMap, metadataProfile));
             }
         }
     }
