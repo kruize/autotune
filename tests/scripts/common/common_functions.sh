@@ -1905,6 +1905,7 @@ function kruize_local_patch() {
 
 #
 # "local" flag is turned off for RM.
+# Restores kruize default cpu/memory resources, PV storage for openshift
 #
 function kruize_remote_patch() {
 	CRC_DIR="./manifests/crc/default-db-included-installation"
@@ -1916,6 +1917,8 @@ function kruize_remote_patch() {
     sed -i 's/"local": "true"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
   elif [ ${cluster_type} == "openshift" ]; then
     sed -i 's/"local": "true"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+    sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+    sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
   fi
 }
 
