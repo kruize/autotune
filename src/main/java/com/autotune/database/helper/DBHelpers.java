@@ -814,7 +814,8 @@ public class DBHelpers {
             }
 
 
-            public static List<MetadataProfile> convertMetadataProfileEntryToMetadatProfileObject(List<KruizeMetadataProfileEntry> kruizeMetadataProfileEntryList) throws Exception {
+            public static List<MetadataProfile> convertMetadataProfileEntryToMetadataProfileObject(List<KruizeMetadataProfileEntry> kruizeMetadataProfileEntryList) throws Exception {
+                LOGGER.info("Inside convertMetadataProfileEntryToMetadataProfileObject");
                 List<MetadataProfile> metadataProfiles = new ArrayList<>();
                 int failureThreshHold = kruizeMetadataProfileEntryList.size();
                 int failureCount = 0;
@@ -834,6 +835,7 @@ public class DBHelpers {
 
                         MetadataProfile metadataProfile = new MetadataProfile(
                                 entry.getApi_version(), entry.getKind(), metadata, entry.getProfile_version(), entry.getK8s_type(), queryVariablesList);
+                        LOGGER.info("metric profile: {}", metadataProfile);
                         metadataProfiles.add(metadataProfile);
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while reading from MetadataProfile DB object due to : {}", e.getMessage());
@@ -841,11 +843,45 @@ public class DBHelpers {
                         failureCount++;
                     }
                 }
-                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
                     throw new Exception("None of the Metadata Profiles loaded from DB.");
+                }
 
                 return metadataProfiles;
             }
+
+            public static KruizeMetadataProfileEntry convertMetadataProfileObjToMetadataProfileDBObj(MetadataProfile metadataProfile) {
+                KruizeMetadataProfileEntry kruizeMetadataProfileEntry = null;
+                try {
+                    kruizeMetadataProfileEntry = new KruizeMetadataProfileEntry();
+                    kruizeMetadataProfileEntry.setApi_version(metadataProfile.getApiVersion());
+                    kruizeMetadataProfileEntry.setKind(metadataProfile.getKind());
+                    kruizeMetadataProfileEntry.setProfile_version(metadataProfile.getProfile_version());
+                    kruizeMetadataProfileEntry.setK8s_type(metadataProfile.getK8s_type());
+
+                    ObjectMapper objectMapper = new ObjectMapper();
+
+                    try {
+                        JsonNode metadataNode = objectMapper.readTree(metadataProfile.getMetadata().toString());
+                        kruizeMetadataProfileEntry.setMetadata(metadataNode);
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating metadataProfile due to : " + e.getMessage());
+                    }
+                    kruizeMetadataProfileEntry.setName(metadataProfile.getMetadata().get("name").asText());
+
+                    try {
+                        kruizeMetadataProfileEntry.setQuery_variables(
+                                objectMapper.readTree(new Gson().toJson(metadataProfile.getQueryVariables())));
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating query_variables data due to : " + e.getMessage());
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error occurred while converting MetadataProfile Object to MetadataProfile table due to {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeMetadataProfileEntry;
+            }
+
 
 
             /**

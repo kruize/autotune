@@ -43,6 +43,14 @@ public class MetadataProfile {
         this.metrics = metrics;
     }
 
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public String getKind() {
+        return kind;
+    }
+
     public JsonNode getMetadata() {
         return metadata;
     }

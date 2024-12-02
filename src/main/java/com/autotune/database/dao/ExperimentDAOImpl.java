@@ -502,6 +502,31 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+    @Override
+    public ValidationOutputData addMetadataProfileToDB(KruizeMetadataProfileEntry kruizeMetadataProfileEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeMetadataProfileEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save metadata profile due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save metadata profile source due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        }
+        return validationOutputData;
+    }
+
     /**
      * @param kruizeAuthenticationEntry
      * @return
@@ -670,6 +695,38 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
+    public ValidationOutputData deleteKruizeMetadataProfileEntryByName(String metadataProfileName) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(DELETE_FROM_METADATA_PROFILE_BY_PROFILE_NAME, null);
+                query.setParameter("metadataProfileName", metadataProfileName);
+                int deletedCount = query.executeUpdate();
+
+                if (deletedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.DELETE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME + metadataProfileName);
+                } else {
+                    validationOutputData.setSuccess(true);
+                }
+                tx.commit();
+            } catch (HibernateException e) {
+                LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.DELETE_METADATA_PROFILE_ENTRY_ERROR_MSG, metadataProfileName, e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.DELETE_METADATA_PROFILE_ENTRY_ERROR_MSG, metadataProfileName, e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    @Override
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
         List<KruizeExperimentEntry> entries = null;
@@ -777,6 +834,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     @Override
     public List<KruizeMetadataProfileEntry> loadAllMetadataProfiles() throws Exception {
+        LOGGER.info("Inside loadAllMetadataProfiles");
         String statusValue = "failure";
         List<KruizeMetadataProfileEntry> entries = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {

@@ -154,10 +154,10 @@ public class ExperimentDBService {
     public void loadAllMetadataProfiles(Map<String, MetadataProfile> metadataProfileMap) throws Exception {
         List<KruizeMetadataProfileEntry> entries = experimentDAO.loadAllMetadataProfiles();
         if (null != entries && !entries.isEmpty()) {
-            List<MetadataProfile> metadataProfiles = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileEntryToMetadatProfileObject(entries);
+            List<MetadataProfile> metadataProfiles = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileEntryToMetadataProfileObject(entries);
             if (!metadataProfiles.isEmpty()) {
                 metadataProfiles.forEach(metadataProfile ->
-                        MetadataProfileUtil.validateAndAddProfile(metadataProfileMap, metadataProfile));
+                        MetadataProfileUtil.addMetadataProfile(metadataProfileMap, metadataProfile));
             }
         }
     }
@@ -310,6 +310,17 @@ public class ExperimentDBService {
             validationOutputData = this.experimentDAO.addMetricProfileToDB(kruizeMetricProfileEntry);
         } catch (Exception e) {
             LOGGER.error("Not able to save Metric Profile due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    public ValidationOutputData addMetadataProfileToDB(MetadataProfile metadataProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeMetadataProfileEntry kruizeMetadataProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileObjToMetadataProfileDBObj(metadataProfile);
+            validationOutputData = this.experimentDAO.addMetadataProfileToDB(kruizeMetadataProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save Metadata Profile due to {}", e.getMessage());
         }
         return validationOutputData;
     }

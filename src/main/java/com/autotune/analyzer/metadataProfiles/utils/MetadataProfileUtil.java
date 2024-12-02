@@ -35,7 +35,7 @@ public class MetadataProfileUtil {
      * @param metadataProfile
      * @return
      */
-    public static ValidationOutputData validateAndAddProfile(Map<String, MetadataProfile> metadataProfileMapProfilesMap, MetadataProfile metadataProfile) {
+    public static ValidationOutputData validateAndAddMetadataProfile(Map<String, MetadataProfile> metadataProfileMapProfilesMap, MetadataProfile metadataProfile) {
         ValidationOutputData validationOutputData;
         try {
             validationOutputData = new MetadataProfileValidation(metadataProfileMapProfilesMap).validate(metadataProfile);
@@ -45,7 +45,7 @@ public class MetadataProfileUtil {
                 validationOutputData.setMessage("Validation failed: " + validationOutputData.getMessage());
             }
         } catch (Exception e) {
-            LOGGER.error("Validate and add profile failed: " + e.getMessage());
+            LOGGER.error("Validate and add profile failed: {}", e.getMessage());
             validationOutputData = new ValidationOutputData(false, "Validation failed: " + e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;

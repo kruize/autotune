@@ -82,7 +82,9 @@ public class AnalyzerErrorConstants {
         public static final String DUPLICATE_PERF_PROFILE = "Performance Profile already exists: ";
         public static final String MISSING_PERF_PROFILE = "Not Found: performance_profile does not exist: ";
         public static final String MISSING_METRIC_PROFILE_METADATA= "metadata missing\n";
+        public static final String MISSING_METADATA_PROFILE_METADATA= "metadata missing\n";
         public static final String DUPLICATE_METRIC_PROFILE = "Metric Profile already exists: ";
+        public static final String DUPLICATE_METADATA_PROFILE = "Metadata Profile already exists: ";
         public static final String MISSING_EXPERIMENT_NAME = "Not Found: experiment_name does not exist: ";
         public static final String NO_METRICS_AVAILABLE = "No metrics available from %s to %s";
         public static final String UNSUPPORTED_EXPERIMENT = String.format("At present, the system does not support bulk entries!");
@@ -267,6 +269,30 @@ public class AnalyzerErrorConstants {
             public static final String DELETE_METRIC_PROFILE_FAILURE_MSG = "Failed to delete the specified metric profile data: %s";
             public static final String DELETE_METRIC_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeMetricProfileEntry not found with metric profile name: ";
             public static final String DELETE_METRIC_PROFILE_ENTRY_ERROR_MSG = "Not able to delete metric profile for metric profile {} due to {}";
+        }
+
+        public static final class ListMetadataProfileAPI {
+            public ListMetadataProfileAPI() {
+            }
+            public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+            public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
+            public static final String INVALID_METADATA_PROFILE_NAME_EXCPTN = "Invalid Metadata Profile Name";
+            public static final String INVALID_METADATA_PROFILE_NAME_MSG = "Given metadata profile name - %s either does not exist or is not valid";
+            public static final String NO_METADATA_PROFILES_EXCPTN = "No metadata profile";
+            public static final String NO_METADATA_PROFILES = "No metadata profiles found!";
+        }
+
+        public static final class DeleteMetadataProfileAPI {
+            public DeleteMetadataProfileAPI() {
+            }
+            public static final String INVALID_METADATA_PROFILE_NAME_EXCPTN = "Invalid Metadata Profile Name";
+            public static final String INVALID_METADATA_PROFILE_NAME_MSG = "Given metadata profile name - %s either does not exist or is not valid";
+            public static final String MISSING_METADATA_PROFILE_NAME_EXCPTN = "Missing Metadata Profile Name";
+            public static final String MISSING_METADATA_PROFILE_NAME_MSG = "Missing metadata profile 'name' parameter";
+            public static final String DELETE_METADATA_PROFILE_FROM_DB_FAILURE_MSG = "Failed to delete metadata profile from DB: %s";
+            public static final String DELETE_METADATA_PROFILE_FAILURE_MSG = "Failed to delete the specified metadata profile data: %s";
+            public static final String DELETE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeMetadataProfileEntry not found with metadata profile name: ";
+            public static final String DELETE_METADATA_PROFILE_ENTRY_ERROR_MSG = "Not able to delete metadata profile for metadata profile {} due to {}";
         }
     }
 

@@ -20,6 +20,7 @@ import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceCollection;
@@ -132,6 +133,8 @@ public class Autotune {
                 checkAvailableDataSources();
                 // load available metric profiles from db
                 loadMetricProfilesFromDB();
+                // load available metadata profiles from db
+                loadMetadataProfilesFromDB();
 
             }
             // close the existing session factory before recreating
@@ -219,6 +222,14 @@ public class Autotune {
     private static void loadMetricProfilesFromDB() {
         MetricProfileCollection metricProfileCollection = MetricProfileCollection.getInstance();
         metricProfileCollection.loadMetricProfilesFromDB();
+    }
+
+    /**
+     * loads metadata profiles from database
+     */
+    private static void loadMetadataProfilesFromDB() {
+        MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
+        metadataProfileCollection.loadMetadataProfilesFromDB();
     }
 
     private static void addAutotuneServlets(ServletContextHandler context) {

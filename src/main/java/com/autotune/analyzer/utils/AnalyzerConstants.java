@@ -299,6 +299,7 @@ public class AnalyzerConstants {
         public static final String OBJ_FUNCTION_TYPE = "function_type";
         public static final String EXPRESSION = "expression";
         public static final String FUNCTION_VARIABLES = "function_variables";
+        public static final String QUERY_VARIABLES = "query_variables";
         public static final String NAME = "name";
         public static final String QUERY = "query";
         public static final String VALUE_TYPE = "value_type";
@@ -323,6 +324,7 @@ public class AnalyzerConstants {
         public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
         public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
         public static final String FUNCTION_VARIABLE = "function_variable: ";
+        public static final String QUERY_VARIABLE = "query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
 
         private AutotuneObjectConstants() {
@@ -588,9 +590,11 @@ public class AnalyzerConstants {
 
     public static final class MetadataProfileConstants {
 
-        public static final String QUERY_VARIABLES = "functionVariables";
+        public static final String QUERY_VARIABLES = "queryVariables";
         public static final String METADATA_PROFILE_NAME = "name";
         public static final String K8S_TYPE = "k8s_type";
+        public static final String METADATA_PROFILE_MAP = "metadataProfileMap";
+        public static final String VALUE_TYPE = "valueType";
     }
 
     public static final class K8sObjectConstants {

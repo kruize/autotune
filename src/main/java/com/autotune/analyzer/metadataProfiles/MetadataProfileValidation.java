@@ -35,7 +35,8 @@ public class MetadataProfileValidation {
 
     private final List<String> mandatoryQueryVariables = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.AutotuneObjectConstants.NAME,
-            AnalyzerConstants.AutotuneObjectConstants.DATASOURCE
+            AnalyzerConstants.AutotuneObjectConstants.DATASOURCE,
+            AnalyzerConstants.MetadataProfileConstants.VALUE_TYPE
     ));
 
     public MetadataProfileValidation(Map<String, MetadataProfile> metadataProfilesMap) {
@@ -76,11 +77,11 @@ public class MetadataProfileValidation {
                 // Check if metadata exists
                 JsonNode metadata = metadataProfile.getMetadata();
                 if (null == metadata) {
-                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRIC_PROFILE_METADATA);
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_METADATA);
                 }
                 // check if the metadata profile already exists
                 if (null != metadataProfilesMap.get(metadataProfile.getMetadata().get("name").asText())) {
-                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METRIC_PROFILE).append(metadataProfile.getMetadata().get("name").asText());
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METADATA_PROFILE).append(metadataProfile.getMetadata().get("name").asText());
                     return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
                 }
 
@@ -199,23 +200,30 @@ public class MetadataProfileValidation {
         }
 
 
-        // Check if function_variables is empty
+        // Check if query_variables is empty
         if (metadataProfile.getQueryVariables().isEmpty())
             errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_VARIABLES_EMPTY);
 
 
-        for (Metric functionVariable : metadataProfile.getQueryVariables()) {
+        for (Metric queryVariable : metadataProfile.getQueryVariables()) {
             // Check if datasource is supported
-            if (!KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(functionVariable.getDatasource().toLowerCase())) {
-                errorString.append(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLE)
-                        .append(functionVariable.getName())
+            if (!KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(queryVariable.getDatasource().toLowerCase())) {
+                errorString.append(AnalyzerConstants.AutotuneObjectConstants.QUERY_VARIABLE)
+                        .append(queryVariable.getName())
                         .append(AnalyzerErrorConstants.AutotuneObjectErrors.DATASOURCE_NOT_SUPPORTED);
             }
 
+            // Check if value_type is supported
+            if (!KruizeSupportedTypes.VALUE_TYPES_SUPPORTED.contains(queryVariable.getValueType().toLowerCase())) {
+                errorString.append(AnalyzerConstants.AutotuneObjectConstants.QUERY_VARIABLE)
+                        .append(queryVariable.getName())
+                        .append(AnalyzerErrorConstants.AutotuneObjectErrors.VALUE_TYPE_NOT_SUPPORTED);
+            }
+
             // Check if kubernetes_object type is supported, set default to 'container' if it's absent.
-            String kubernetes_object = functionVariable.getKubernetesObject();
+            String kubernetes_object = queryVariable.getKubernetesObject();
             if (null == kubernetes_object)
-                functionVariable.setKubernetesObject(KruizeConstants.JSONKeys.CONTAINER);
+                queryVariable.setKubernetesObject(KruizeConstants.JSONKeys.CONTAINER);
             else {
                 if (!KruizeSupportedTypes.KUBERNETES_OBJECTS_SUPPORTED.contains(kubernetes_object.toLowerCase()))
                     errorString.append(AnalyzerConstants.KUBERNETES_OBJECTS).append(kubernetes_object)
