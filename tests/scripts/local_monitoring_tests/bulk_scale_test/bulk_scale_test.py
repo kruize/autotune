@@ -355,8 +355,8 @@ if __name__ == '__main__':
         sys.exit(1)
 
     start_time = time.time()
-    #responses = parallel_requests_to_bulk(max_workers, results_dir)
-    responses = parallel_requests_with_time_range(max_workers, results_dir, initial_end_date, interval_hours, days_of_res)
+    responses = parallel_requests_to_bulk(max_workers, results_dir)
+    #responses = parallel_requests_with_time_range(max_workers, results_dir, initial_end_date, interval_hours, days_of_res)
 
     # Print the results
     for i, response in enumerate(responses):
