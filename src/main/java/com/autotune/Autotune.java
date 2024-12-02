@@ -115,6 +115,7 @@ public class Autotune {
             InitializeDeployment.setup_deployment_info();
             // Configure AWS CloudWatch
             CloudWatchAppender.configureLoggerForCloudWatchLog();
+            LOGGER.debug("ROS enabled : {}" ,KruizeDeploymentInfo.is_ros_enabled);
             // Read and execute the DDLs here
             executeDDLs(AnalyzerConstants.ROS_DDL_SQL);
             if (KruizeDeploymentInfo.local == true) {
