@@ -27,9 +27,11 @@ import com.autotune.common.utils.CommonUtils;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.Gson;
+import io.micrometer.core.instrument.Timer;
 import org.apache.http.conn.ConnectTimeoutException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -118,6 +120,8 @@ public class BulkJobManager implements Runnable {
 
     @Override
     public void run() {
+        String statusValue = "failure";
+        io.micrometer.core.instrument.Timer.Sample timerRunJob = Timer.start(MetricsConfig.meterRegistry());
         DataSourceMetadataInfo metadataInfo = null;
         DataSourceManager dataSourceManager = new DataSourceManager();
         DataSourceInfo datasource = null;
@@ -159,6 +163,8 @@ public class BulkJobManager implements Runnable {
                             DataSourceInfo finalDatasource = datasource;
                             createExecutor.submit(() -> {
                                 try {
+                                    String createstatusValue = "failure";
+                                    Timer.Sample timerCreateBulkExp = Timer.start(MetricsConfig.meterRegistry());
                                     // send request to createExperiment API for experiment creation
                                     GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
                                     apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
@@ -169,8 +175,10 @@ public class BulkJobManager implements Runnable {
                                         LOGGER.debug("API Response code: {}", responseCode);
                                         if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
                                             expriment_exists = true;
+                                            createstatusValue = "success";
                                         } else if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
                                             expriment_exists = true;
+                                            createstatusValue = "success";
                                         } else {
                                             jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                             experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, responseCode.getResponseBody().toString(), responseCode.getStatusCode()));
@@ -183,10 +191,16 @@ public class BulkJobManager implements Runnable {
                                         if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
                                             setFinalJobStatus(COMPLETED,null,null,finalDatasource);
                                         }
+                                        if (null != timerCreateBulkExp) {
+                                            MetricsConfig.timerCreateBulkExp = MetricsConfig.timerBCreateBulkExp.tag("status", createstatusValue).register(MetricsConfig.meterRegistry());
+                                            timerCreateBulkExp.stop(MetricsConfig.timerCreateBulkExp);
+                                        }
                                     }
 
                                     if (expriment_exists) {
                                         generateExecutor.submit(() -> {
+                                            String genstatusValue = "failure";
+                                            Timer.Sample timerGenerateBulkRec = Timer.start(MetricsConfig.meterRegistry());
                                             // send request to generateRecommendations API
                                             GenericRestApiClient recommendationApiClient = new GenericRestApiClient(finalDatasource);
                                             String encodedExperimentName;
@@ -198,6 +212,7 @@ public class BulkJobManager implements Runnable {
                                                 LOGGER.debug("API Response code: {}", recommendationResponseCode);
                                                 if (recommendationResponseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
                                                     experiment.getRecommendations().setStatus(NotificationConstants.Status.PROCESSED);
+                                                    genstatusValue = "success";
                                                 } else {
                                                     experiment.getRecommendations().setStatus(NotificationConstants.Status.FAILED);
                                                     experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, recommendationResponseCode.getResponseBody().toString(), recommendationResponseCode.getStatusCode()));
@@ -210,6 +225,10 @@ public class BulkJobManager implements Runnable {
                                                 jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                                 if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
                                                     setFinalJobStatus(COMPLETED,null,null,finalDatasource);
+                                                }
+                                                if (null != timerGenerateBulkRec) {
+                                                    MetricsConfig.timerGenerateBulkRec = MetricsConfig.timerBGenerateBulkRec.tag("status", genstatusValue).register(MetricsConfig.meterRegistry());
+                                                    timerGenerateBulkRec.stop(MetricsConfig.timerGenerateBulkRec);
                                                 }
                                             }
                                         });
@@ -227,6 +246,7 @@ public class BulkJobManager implements Runnable {
                     }
                 }
             }
+            statusValue = "success";
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
             BulkJobStatus.Notification notification;
@@ -243,6 +263,11 @@ public class BulkJobManager implements Runnable {
             LOGGER.error(e.getMessage());
             e.printStackTrace();
             setFinalJobStatus(FAILED,String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR),new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR),datasource);
+        } finally {
+            if (null != timerRunJob) {
+                MetricsConfig.timerRunJob = MetricsConfig.timerBRunJob.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerRunJob.stop(MetricsConfig.timerRunJob);
+            }
         }
     }
 
@@ -280,34 +305,44 @@ public class BulkJobManager implements Runnable {
     }
 
     Map<String, CreateExperimentAPIObject> getExperimentMap(String labelString, BulkJobStatus jobData, DataSourceMetadataInfo metadataInfo, DataSourceInfo datasource) throws Exception {
-        Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = new HashMap<>();
-        Collection<DataSource> dataSourceCollection = metadataInfo.getDataSourceHashMap().values();
-        for (DataSource ds : dataSourceCollection) {
-            HashMap<String, DataSourceCluster> clusterHashMap = ds.getDataSourceClusterHashMap();
-            for (DataSourceCluster dsc : clusterHashMap.values()) {
-                HashMap<String, DataSourceNamespace> namespaceHashMap = dsc.getDataSourceNamespaceHashMap();
-                for (DataSourceNamespace namespace : namespaceHashMap.values()) {
-                    HashMap<String, DataSourceWorkload> dataSourceWorkloadHashMap = namespace.getDataSourceWorkloadHashMap();
-                    if (dataSourceWorkloadHashMap != null) {
-                        for (DataSourceWorkload dsw : dataSourceWorkloadHashMap.values()) {
-                            HashMap<String, DataSourceContainer> dataSourceContainerHashMap = dsw.getDataSourceContainerHashMap();
-                            if (dataSourceContainerHashMap != null) {
-                                for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
-                                    // Experiment name - dynamically constructed
-                                    String experiment_name = frameExperimentName(labelString, dsc, namespace, dsw, dc);
-                                    // create JSON to be passed in the createExperimentAPI
-                                    List<CreateExperimentAPIObject> createExperimentAPIObjectList = new ArrayList<>();
-                                    CreateExperimentAPIObject apiObject = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
-                                            experiment_name, createExperimentAPIObjectList);
-                                    createExperimentAPIObjectMap.put(experiment_name, apiObject);
+        String statusValue = "failure";
+        Timer.Sample timerGetExpMap = Timer.start(MetricsConfig.meterRegistry());
+        try {
+            Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = new HashMap<>();
+            Collection<DataSource> dataSourceCollection = metadataInfo.getDataSourceHashMap().values();
+            for (DataSource ds : dataSourceCollection) {
+                HashMap<String, DataSourceCluster> clusterHashMap = ds.getDataSourceClusterHashMap();
+                for (DataSourceCluster dsc : clusterHashMap.values()) {
+                    HashMap<String, DataSourceNamespace> namespaceHashMap = dsc.getDataSourceNamespaceHashMap();
+                    for (DataSourceNamespace namespace : namespaceHashMap.values()) {
+                        HashMap<String, DataSourceWorkload> dataSourceWorkloadHashMap = namespace.getDataSourceWorkloadHashMap();
+                        if (dataSourceWorkloadHashMap != null) {
+                            for (DataSourceWorkload dsw : dataSourceWorkloadHashMap.values()) {
+                                HashMap<String, DataSourceContainer> dataSourceContainerHashMap = dsw.getDataSourceContainerHashMap();
+                                if (dataSourceContainerHashMap != null) {
+                                    for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
+                                        // Experiment name - dynamically constructed
+                                        String experiment_name = frameExperimentName(labelString, dsc, namespace, dsw, dc);
+                                        // create JSON to be passed in the createExperimentAPI
+                                        List<CreateExperimentAPIObject> createExperimentAPIObjectList = new ArrayList<>();
+                                        CreateExperimentAPIObject apiObject = prepareCreateExperimentJSONInput(dc, dsc, dsw, namespace,
+                                                experiment_name, createExperimentAPIObjectList);
+                                        createExperimentAPIObjectMap.put(experiment_name, apiObject);
+                                        statusValue = "success";
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
+            return createExperimentAPIObjectMap;
+        } finally {
+            if (null != timerGetExpMap) {
+                MetricsConfig.timerGetExpMap = MetricsConfig.timerBGetExpMap.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerGetExpMap.stop(MetricsConfig.timerGetExpMap);
+            }
         }
-        return createExperimentAPIObjectMap;
     }
 
     private String getLabels(BulkInput.FilterWrapper filter) {
