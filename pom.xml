@@ -10,8 +10,7 @@
     <properties>
         <fabric8-version>4.13.2</fabric8-version>
         <org-json-version>20240303</org-json-version>
-        <jetty-version>10.0.24</jetty-version>
-        <jetty-http-version>12.0.12</jetty-http-version>
+        <jetty-version>12.0.12</jetty-version>
         <slf4j-version>2.17.1</slf4j-version>
         <java-version>17</java-version>
         <prometheus-simpleclient>0.14.1</prometheus-simpleclient>
@@ -85,38 +84,19 @@
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
             <version>${jetty-version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.jetty</groupId>
-                    <artifactId>jetty-http</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlets -->
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlets</artifactId>
+            <groupId>org.eclipse.jetty.ee8</groupId>
+            <artifactId>jetty-ee8-servlets</artifactId>
             <version>${jetty-version}</version>
-            <exclusions>
-                <exclusion>
-                    <groupId>org.eclipse.jetty</groupId>
-                    <artifactId>jetty-http</artifactId>
-                </exclusion>
-            </exclusions>
-        </dependency>
-
-        <!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-http -->
-        <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-http</artifactId>
-            <version>${jetty-http-version}</version>
         </dependency>
 
         <!-- https://mvnrepository.com/artifact/org.eclipse.jetty/jetty-servlet -->
         <dependency>
-            <groupId>org.eclipse.jetty</groupId>
-            <artifactId>jetty-servlet</artifactId>
+            <groupId>org.eclipse.jetty.ee8</groupId>
+            <artifactId>jetty-ee8-servlet</artifactId>
             <version>${jetty-version}</version>
         </dependency>
 
