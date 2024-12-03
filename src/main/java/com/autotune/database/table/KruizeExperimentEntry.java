@@ -57,6 +57,7 @@ public class KruizeExperimentEntry {
     private String mode;
     private String target_cluster;
     private String performance_profile;
+    private String metadata_profile;
     @Transient
     private String experiment_type;
     @Enumerated(EnumType.STRING)
@@ -167,4 +168,7 @@ public class KruizeExperimentEntry {
         this.experiment_type = experimentType;
     }
 
+    public String getMetadata_profile() {return metadata_profile;}
+
+    public void setMetadata_profile(String metadata_profile) { this.metadata_profile = metadata_profile;}
 }

@@ -255,6 +255,7 @@ public class KruizeConstants {
 
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String PERFORMANCE_PROFILE = "performance_profile";
+        public static final String METADATA_PROFILE = "metadata_profile";
         public static final String TARGET_CLUSTER = "target_cluster";
         public static final String KUBERNETES_OBJECTS = "kubernetes_objects";
         public static final String VERSION = "version";

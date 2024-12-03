@@ -80,6 +80,8 @@ public interface ExperimentDAO {
     // Load a single Metric Profile based on name
     List<KruizeMetricProfileEntry> loadMetricProfileByName(String metricProfileName) throws Exception;
 
+    List<KruizeMetadataProfileEntry> loadMetadataProfileByName(String metadataProfileName) throws Exception;
+
     // Delete metric profile for the specified metric profile name
     public ValidationOutputData deleteKruizeMetricProfileEntryByName(String metricProfileName);
 

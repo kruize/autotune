@@ -64,6 +64,8 @@ public final class KruizeObject implements ExperimentTypeAware {
     private AnalyzerConstants.ExperimentStatus status;
     @SerializedName("performance_profile")
     private String performanceProfile;
+    @SerializedName("metadata_profile")
+    private String metadataProfile;
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
     private ExperimentUseCaseType experiment_usecase_type;
@@ -80,6 +82,7 @@ public final class KruizeObject implements ExperimentTypeAware {
                         String hpoAlgoImpl,
                         SelectorInfo selectorInfo,
                         String performanceProfile,
+                        String metadataProfile,
                         String datasource,
                         ObjectReference objectReference
     ) throws InvalidValueException {
@@ -107,6 +110,7 @@ public final class KruizeObject implements ExperimentTypeAware {
             throw new InvalidValueException(error.toString());
         }
         this.performanceProfile = performanceProfile;
+        this.metadataProfile = metadataProfile;
         if (KruizeSupportedTypes.HPO_ALGOS_SUPPORTED.contains(hpoAlgoImpl))
             this.hpoAlgoImpl = hpoAlgoImpl;
         else
@@ -320,6 +324,14 @@ public final class KruizeObject implements ExperimentTypeAware {
         return ExperimentTypeUtil.isContainerExperiment(experimentType);
     }
 
+    public String getMetadataProfile() {
+        return metadataProfile;
+    }
+
+    public void setMetadataProfile(String metadataProfile) {
+        this.metadataProfile = metadataProfile;
+    }
+
     @Override
     public String toString() {
         // Creating a temporary cluster name as we allow null for cluster name now
@@ -340,6 +352,7 @@ public final class KruizeObject implements ExperimentTypeAware {
                 ", objectReference=" + objectReference +
                 ", status=" + status +
                 ", performanceProfile='" + performanceProfile + '\'' +
+                ", metadataProfile='"+ metadataProfile + '\'' +
                 ", trial_settings=" + trial_settings +
                 ", recommendation_settings=" + recommendation_settings +
                 ", experimentUseCaseType=" + experiment_usecase_type +

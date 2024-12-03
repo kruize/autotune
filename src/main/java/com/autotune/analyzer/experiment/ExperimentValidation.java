@@ -16,6 +16,7 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
@@ -49,6 +50,7 @@ public class ExperimentValidation {
     private String errorMessage;
     private Map<String, KruizeObject> mainKruizeExperimentMAP;
     private Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
+    private Map<String, MetadataProfile> metadataProfilesMap = new HashMap<>();
     //Mandatory fields
     private List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.NAME,
@@ -137,6 +139,29 @@ public class ExperimentValidation {
                             proceed = true;
                         }
                     }
+
+                    if(null != kruizeObject.getMetadataProfile()) {
+                        // fetch the Metadata Profile from the DB
+                        try {
+                            if (KruizeDeploymentInfo.local) {
+                                new ExperimentDBService().loadMetadataProfileFromDBByName(metadataProfilesMap, kruizeObject.getMetadataProfile());
+                            } else {
+                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.METADATA_PROFILE_NOT_SUPPORTED + kruizeObject.getMetadataProfile();
+                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            }
+                        } catch (Exception e) {
+                            LOGGER.error("Loading saved Metadata Profile {} failed: {} ", expName, e.getMessage());
+                        }
+                        if (null == metadataProfilesMap.get(kruizeObject.getMetadataProfile())) {
+                            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + kruizeObject.getMetadataProfile();
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        } else {
+                            proceed = true;
+                        }
+                    } else {
+                        errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE;
+                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                    }
                 } else {
                     errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_EXPERIMENT)).concat(expName);
                     validationOutputData.setErrorCode(HttpServletResponse.SC_CONFLICT);
@@ -175,6 +200,30 @@ public class ExperimentValidation {
                 kruizeObject.setKubernetes_objects(k8sObjectList);
             } catch (Exception e) {
                 LOGGER.error("Failed to set Performance Profile Metrics to the Kruize Object: {}", e.getMessage());
+            }
+
+            // set Metadata Profile metrics in the Kruize Object
+            MetadataProfile metadataProfile = metadataProfilesMap.get(kruizeObject.getMetadataProfile());
+            try {
+                //TODO change MetricName constants here
+                HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
+                for (Metric metric : metadataProfile.getQueryVariables()) {
+                    if (metric.getKubernetesObject().equals(KruizeConstants.JSONKeys.CONTAINER))
+                        metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
+                }
+                List<K8sObject> k8sObjectList = new ArrayList<>();
+                HashMap<String, ContainerData> containerDataMap = new HashMap<>();
+                for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                    for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                        containerDataMap.put(containerData.getContainer_name(), new ContainerData(
+                                containerData.getContainer_name(), containerData.getContainer_image_name(), new ContainerRecommendations(), metricsMap));
+                    }
+                    k8sObject.setContainerDataMap(containerDataMap);
+                    k8sObjectList.add(k8sObject);
+                }
+                kruizeObject.setKubernetes_objects(k8sObjectList);
+            } catch (Exception e) {
+                LOGGER.error("Failed to set Metadata Profile Metrics to the Kruize Object: {}", e.getMessage());
             }
         }
     }

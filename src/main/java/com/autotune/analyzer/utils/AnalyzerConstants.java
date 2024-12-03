@@ -201,7 +201,10 @@ public class AnalyzerConstants {
         namespaceRunningPods,
         namespaceMaxDate,
         gpuCoreUsage,
-        gpuMemoryUsage
+        gpuMemoryUsage,
+        namespacesAcrossCluster,
+        workloadsAcrossCluster,
+        containersAcrossCluster
     }
 
     public enum K8S_OBJECT_TYPES {
@@ -595,6 +598,12 @@ public class AnalyzerConstants {
         public static final String K8S_TYPE = "k8s_type";
         public static final String METADATA_PROFILE_MAP = "metadataProfileMap";
         public static final String VALUE_TYPE = "valueType";
+        public static final String DEFAULT_API_VERSION = "recommender.com/v1";
+        public static final String DEFAULT_KIND = "KruizeMetadataProfile";
+        public static final String DEFAULT_PROFILE = "default";
+        public static final String METADATA_PROFILE = "metadataProfile";
+        public static final String METADATA_PROFILE_PLURALS = "kruizemetadataprofiles";
+        public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
     }
 
     public static final class K8sObjectConstants {

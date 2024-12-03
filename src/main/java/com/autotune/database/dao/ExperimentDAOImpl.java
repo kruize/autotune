@@ -834,7 +834,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     @Override
     public List<KruizeMetadataProfileEntry> loadAllMetadataProfiles() throws Exception {
-        LOGGER.info("Inside loadAllMetadataProfiles");
         String statusValue = "failure";
         List<KruizeMetadataProfileEntry> entries = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
@@ -1042,6 +1041,18 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to load Metric Profile {} due to {}", metricProfileName, e.getMessage());
             throw new Exception("Error while loading existing metric profile from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
+
+    public List<KruizeMetadataProfileEntry> loadMetadataProfileByName(String metadataProfileName) throws Exception {
+        List<KruizeMetadataProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_METADATA_PROFILE_BY_NAME, KruizeMetadataProfileEntry.class)
+                    .setParameter("name", metadataProfileName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Metadata Profile {} due to {}", metadataProfileName, e.getMessage());
+            throw new Exception("Error while loading existing metadata profile from database due to : " + e.getMessage());
         }
         return entries;
     }

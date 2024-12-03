@@ -302,6 +302,7 @@ public class DBHelpers {
                     kruizeExperimentEntry.setCluster_name(apiObject.getClusterName());
                     kruizeExperimentEntry.setMode(apiObject.getMode());
                     kruizeExperimentEntry.setPerformance_profile(apiObject.getPerformanceProfile());
+                    kruizeExperimentEntry.setMetadata_profile(apiObject.getMetadataProfile());
                     kruizeExperimentEntry.setVersion(apiObject.getApiVersion());
                     kruizeExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
                     kruizeExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
@@ -815,7 +816,6 @@ public class DBHelpers {
 
 
             public static List<MetadataProfile> convertMetadataProfileEntryToMetadataProfileObject(List<KruizeMetadataProfileEntry> kruizeMetadataProfileEntryList) throws Exception {
-                LOGGER.info("Inside convertMetadataProfileEntryToMetadataProfileObject");
                 List<MetadataProfile> metadataProfiles = new ArrayList<>();
                 int failureThreshHold = kruizeMetadataProfileEntryList.size();
                 int failureCount = 0;
@@ -835,7 +835,6 @@ public class DBHelpers {
 
                         MetadataProfile metadataProfile = new MetadataProfile(
                                 entry.getApi_version(), entry.getKind(), metadata, entry.getProfile_version(), entry.getK8s_type(), queryVariablesList);
-                        LOGGER.info("metric profile: {}", metadataProfile);
                         metadataProfiles.add(metadataProfile);
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while reading from MetadataProfile DB object due to : {}", e.getMessage());
