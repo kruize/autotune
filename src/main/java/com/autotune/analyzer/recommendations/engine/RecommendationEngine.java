@@ -45,8 +45,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.*;
 import java.lang.reflect.Method;
 import java.net.URLEncoder;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.util.*;
@@ -54,6 +57,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
+import static com.autotune.analyzer.recommendations.utils.RecommendationUtils.*;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 
@@ -1977,7 +1981,7 @@ public class RecommendationEngine {
 
                                         // Prepare interval results
                                         prepareIntervalResults(namespaceDataResults, namespaceIntervalResults, namespaceResMap, namespaceMetricResults,
-                                                namespaceMetricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
+                                                namespaceMetricAggregationInfoResults, sTime, eTime, metricEntry, "", aggregationFunctionsEntry, value, format);
                                     }
                                 }
                             } catch (Exception e) {
@@ -2096,12 +2100,22 @@ public class RecommendationEngine {
                         interval_start_time_epoc = interval_start_time.getTime() / KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC
                                 - ((long) interval_start_time.getTimezoneOffset() * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC);
                     }
+                    // <timestamp : <podLabel: <IntervalResults>>>
+                    HashMap<Timestamp, HashMap<String, IntervalResults>> containerDataResultsByPod = new HashMap<>();
                     HashMap<Timestamp, IntervalResults> containerDataResults = new HashMap<>();
+
+                    // <timestamp : <MetricName : <PodLabel, MetricLabels>>>
+                    HashMap<Timestamp, HashMap<String, HashMap<String, MetricLabels>>> metricLabelMapByNameAndPod = new HashMap<>();
+
                     IntervalResults intervalResults = null;
+                    HashMap<String, IntervalResults> intervalResultsMap = null;
                     HashMap<AnalyzerConstants.MetricName, MetricResults> resMap = null;
                     HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap;
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
+
+                    String inputFile = "input.csv";
+                    String outputFile = "output.csv";
 
                     List<Metric> metricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
                             AnalyzerConstants.MetricName.maxDate.name(), kruizeObject.getExperimentType());
@@ -2281,25 +2295,52 @@ public class RecommendationEngine {
                                         }
                                     }
                                 } else {
-                                    resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(
-                                                    KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT).get(0)
-                                            .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
-                                                    .DataSourceQueryJSONKeys.VALUES);
-                                    sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+                                    JsonObject metricObject;
+                                    MetricLabels metricLabels;
+                                    HashMap<String, MetricLabels> imageMetricLabelsMap = new HashMap<>();
 
-                                    // Iterate over fetched metrics
-                                    Timestamp sTime = new Timestamp(interval_start_time_epoc);
-                                    for (JsonElement element : resultArray) {
-                                        JsonArray valueArray = element.getAsJsonArray();
-                                        long epochTime = valueArray.get(0).getAsLong();
-                                        double value = valueArray.get(1).getAsDouble();
-                                        String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
-                                        Date date = sdf.parse(timestamp);
-                                        Timestamp eTime = new Timestamp(date.getTime());
+                                    for (JsonElement jsonElement : resultArray) {
+                                        metricObject = jsonElement.getAsJsonObject().get(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.METRIC).getAsJsonObject();
+                                        String containerLabel = metricObject.get(KruizeConstants.JSONKeys.CONTAINER).getAsString();
+                                        String namespaceLabel = metricObject.get(KruizeConstants.JSONKeys.NAMESPACE).getAsString();
+                                        String podLabel = metricObject.get("pod").getAsString(); //TODO
 
-                                        // Prepare interval results
-                                        prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults,
-                                                metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
+                                        if (metricEntry.getName().equals("imageOwners")) {
+                                            // Extract fields from the metric object
+                                            String owner_kindLabel = metricObject.get("owner_kind").getAsString();
+                                            String owner_nameLabel = metricObject.get("owner_name").getAsString();
+                                            metricLabels = new MetricLabels(metricEntry.getName(), containerLabel, namespaceLabel, owner_kindLabel, owner_nameLabel, podLabel, true);
+                                        } else if (metricEntry.getName().equals("imageWorkloads")) {
+                                            String workload_kindLabel = metricObject.get("workload").getAsString();
+                                            String workload_nameLabel = metricObject.get("workload_type").getAsString();
+                                            metricLabels = new MetricLabels(metricEntry.getName(), containerLabel, namespaceLabel, workload_kindLabel, workload_nameLabel, podLabel, false);
+                                        } else {
+                                            metricLabels = new MetricLabels(metricEntry.getName(), containerLabel, namespaceLabel, podLabel);
+                                        }
+                                        imageMetricLabelsMap.put(podLabel, metricLabels);
+
+                                        JsonArray valueResultArray = jsonElement.getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants
+                                                .DataSourceQueryJSONKeys.VALUES);
+                                        sdf.setTimeZone(TimeZone.getTimeZone(KruizeConstants.TimeUnitsExt.TimeZones.UTC));
+
+                                        // Iterate over fetched metrics
+                                        //Timestamp sTime = new Timestamp(interval_start_time_epoc);
+                                        String start_timestamp = sdf.format(new Date(interval_start_time_epoc * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                                        Date start_date = sdf.parse(start_timestamp);
+                                        Timestamp sTime = new Timestamp(start_date.getTime());
+                                        for (JsonElement element : valueResultArray) {
+                                            JsonArray valueArray = element.getAsJsonArray();
+                                            long epochTime = valueArray.get(0).getAsLong();
+                                            double value = valueArray.get(1).getAsDouble();
+                                            String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
+                                            Date date = sdf.parse(timestamp);
+                                            Timestamp eTime = new Timestamp(date.getTime());
+
+                                            // Prepare interval results
+                                            prepareContainerIntervalResultsByPod(containerDataResultsByPod, intervalResultsMap, intervalResults, podLabel, metricLabelMapByNameAndPod, imageMetricLabelsMap, resMap,
+                                                    metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
+                                            sTime = eTime;
+                                        }
                                     }
                                 }
                             } catch (Exception e) {
@@ -2308,9 +2349,13 @@ public class RecommendationEngine {
                         }
                     }
 
-                    containerData.setResults(containerDataResults);
-                    if (!containerDataResults.isEmpty())
-                        setInterval_end_time(Collections.max(containerDataResults.keySet()));    //TODO Temp fix invalid date is set if experiment having two container with different last seen date
+                    String header = generateCSVHeader();
+                    convertContainerResultsByPodMapToCSV(containerDataResultsByPod, metricLabelMapByNameAndPod, inputFile, header);
+                    List<Map<String, String>> aggr_data = aggregateWorkloads(header, inputFile, outputFile);
+                    HashMap<Timestamp, IntervalResults> aggrContainerDataResults = convertAggrDataToIntervalResults(aggr_data);
+                    containerData.setResults(aggrContainerDataResults);
+                    if (!aggrContainerDataResults.isEmpty())
+                        setInterval_end_time(Collections.max(aggrContainerDataResults.keySet())); //TODO Temp fix invalid date is set if experiment having two container with different last seen date
 
                 }
             }
@@ -2341,7 +2386,7 @@ public class RecommendationEngine {
      */
     private void prepareIntervalResults(Map<Timestamp, IntervalResults> dataResultsMap, IntervalResults intervalResults,
                                         HashMap<AnalyzerConstants.MetricName, MetricResults> resMap, MetricResults metricResults,
-                                        MetricAggregationInfoResults metricAggregationInfoResults, Timestamp sTime, Timestamp eTime, Metric metricEntry,
+                                        MetricAggregationInfoResults metricAggregationInfoResults, Timestamp sTime, Timestamp eTime, Metric metricEntry, String aggrMetricName,
                                         Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry, double value, String format) throws Exception {
         try {
             if (dataResultsMap.containsKey(eTime)) {
@@ -2351,7 +2396,84 @@ public class RecommendationEngine {
                 intervalResults = new IntervalResults();
                 resMap = new HashMap<>();
             }
+
+            String metricEntryName;
+            String metricEntryMethod;
+
+            if(null == metricEntry && null == aggregationFunctionsEntry) {
+                metricEntryName = aggrMetricName.split("_")[0];
+                metricEntryMethod = aggrMetricName.split("_")[1];
+            } else {
+                metricEntryName = metricEntry.getName();
+                metricEntryMethod = aggregationFunctionsEntry.getKey();
+            }
+
+            AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntryName);
+            if (resMap.containsKey(metricName)) {
+                metricResults = resMap.get(metricName);
+                metricAggregationInfoResults = metricResults.getAggregationInfoResult();
+            } else {
+                metricResults = new MetricResults();
+                metricAggregationInfoResults = new MetricAggregationInfoResults();
+            }
+
+            Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + metricEntryMethod.substring(0, 1).toUpperCase() + metricEntryMethod.substring(1), Double.class);
+            method.invoke(metricAggregationInfoResults, value);
+            metricAggregationInfoResults.setFormat(format);
+            metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+            metricResults.setName(metricEntryName);
+            metricResults.setFormat(format);
+            resMap.put(metricName, metricResults);
+            intervalResults.setMetricResultsMap(resMap);
+            intervalResults.setIntervalStartTime(sTime);  //Todo this will change
+            intervalResults.setIntervalEndTime(eTime);
+            intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
+                    / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
+                    * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
+            dataResultsMap.put(eTime, intervalResults);
+            sTime = eTime;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
+        }
+    }
+
+    /**
+     * prepares interval results for container experiments by pod
+     */
+    private void prepareContainerIntervalResultsByPod(HashMap<Timestamp, HashMap<String, IntervalResults>> dataResultsMap, HashMap<String, IntervalResults> intervalResultsMap, IntervalResults intervalResults,
+                                                 String podLabel, HashMap<Timestamp, HashMap<String, HashMap<String, MetricLabels>>> metricLabelMap, HashMap<String, MetricLabels> imageMetricLabelsMap, HashMap<AnalyzerConstants.MetricName, MetricResults> resMap,
+                                                 MetricAggregationInfoResults metricAggregationInfoResults, Timestamp sTime, Timestamp eTime, Metric metricEntry,
+                                                 Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry, double value, String format) throws Exception {
+        try {
+            if (dataResultsMap.containsKey(eTime)) {
+                intervalResultsMap = dataResultsMap.get(eTime);
+                if(intervalResultsMap.containsKey(podLabel)) {
+                    intervalResults = intervalResultsMap.get(podLabel);
+                    resMap = intervalResults.getMetricResultsMap();
+                } else {
+                    intervalResults = new IntervalResults();
+                    resMap = new HashMap<>();
+                }
+            } else {
+                intervalResultsMap = new HashMap<>();
+                intervalResults = new IntervalResults();
+                resMap = new HashMap<>();
+            }
+
+            //check for metric labels
+            HashMap<String, HashMap<String, MetricLabels>> labelsMap;
+            if (metricLabelMap.containsKey(eTime)) {
+                labelsMap = metricLabelMap.get(eTime);
+            } else {
+                labelsMap = new HashMap<>();
+            }
+
+            labelsMap.put(metricEntry.getName(), imageMetricLabelsMap);
+            metricLabelMap.put(eTime, labelsMap);
+
             AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metricEntry.getName());
+            MetricResults metricResults;
             if (resMap.containsKey(metricName)) {
                 metricResults = resMap.get(metricName);
                 metricAggregationInfoResults = metricResults.getAggregationInfoResult();
@@ -2373,7 +2495,8 @@ public class RecommendationEngine {
             intervalResults.setDurationInMinutes((double) ((eTime.getTime() - sTime.getTime())
                     / ((long) KruizeConstants.TimeConv.NO_OF_SECONDS_PER_MINUTE
                     * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC)));
-            dataResultsMap.put(eTime, intervalResults);
+            intervalResultsMap.put(podLabel, intervalResults);
+            dataResultsMap.put(eTime, intervalResultsMap);
             sTime = eTime;
         } catch (Exception e) {
             e.printStackTrace();
@@ -2403,6 +2526,185 @@ public class RecommendationEngine {
                     );
                 })
                 .toList();
+    }
+
+    public static List<Map<String, String>> aggregateWorkloads(String header, String filename, String outputResults) throws IOException {
+        LOGGER.info("Aggregating the data for file: {}", filename);
+        // Initialize variables for aggregation
+        List<String> headerRow = new ArrayList<>();
+        Set<String> columnsToIgnore = new HashSet<>(Arrays.asList("pod", "owner_name", "node"));
+        List<Map<String, String>> aggData = new ArrayList<>(); // To store non-duplicate rows
+
+        // Map to hold aggregated data for each workload
+        Map<String, List<Map<String, String>>> workloadDataMap = new HashMap<>();
+
+        try {
+            // Load the CSV file into a List of Maps
+            List<Map<String, String>> records = readCsv(filename);
+
+            // Remove the rows if there is no owner_kind, owner_name and workload
+            // Expected to ignore rows which can be pods / invalid
+            for (Map<String, String> row: records) {
+                String owner_kind = row.get("owner_kind");
+                String owner_name = row.get("owner_name");
+                String workload = row.get("workload");
+                String workload_type = row.get("workload_type");
+
+                records.removeIf(map -> null == owner_kind || null == owner_name || null == workload || null == workload_type || owner_kind.isEmpty() || owner_name.isEmpty() ||
+                        workload.isEmpty() || workload_type.isEmpty());
+            }
+
+            // Add 'k8_object_type' column
+
+            // Based on the data observed, these are the assumptions:
+            // If owner_kind is 'ReplicaSet' and workload is '<none>', actual workload_type is ReplicaSet
+            // If owner_kind is 'ReplicationCOntroller' and workload is '<none>', actual workload_type is ReplicationController
+            // If owner_kind and workload has some names, workload_type is same as derived through queries.
+            for (Map<String, String> row : records) {
+                String ownerKind = row.get("owner_kind");
+                String workload = row.get("workload");
+                if ("ReplicaSet".equals(ownerKind) && (null == workload)) {
+                    row.put("k8_object_type", "replicaset");
+                } else if ("ReplicationController".equals(ownerKind) && (null == workload)) {
+                    row.put("k8_object_type", "replicationcontroller");
+                } else {
+                    row.put("k8_object_type", row.get("workload_type"));
+                }
+            }
+
+            // Update 'k8_object_name' based on 'workload'
+            // If the workload is <none> (which indicates ReplicaSet and ReplicationCOntroller - ignoring pods/invalid cases), the name of the k8_object can be owner_name.
+            // If the workload has some other name, the k8_object_name is same as workload. In this case, owner_name cannot be used as there can be multiple owner_names for the same deployment(considering there are multiple replicasets)
+            for (Map<String, String> row : records) {
+                if (null != (row.get("workload"))) {
+                    row.put("k8_object_name", row.get("workload"));
+                } else {
+                    row.put("k8_object_name", row.get("owner_name"));
+                }
+            }
+
+            // Sort and group the data based on below columns to get a container for a workload and for an interval.
+            records.sort(Comparator.comparing((Map<String, String> row) -> row.get("namespace"))
+                    .thenComparing(row -> row.get("k8_object_type"))
+                    .thenComparing(row -> row.get("workload"))
+                    .thenComparing(row -> row.get("container"))
+                    .thenComparing(row -> row.get("interval_start")));
+
+
+            // Create output directory to store the output CSV files
+            String outputDir = "output";
+            Files.createDirectories(Paths.get(outputDir));
+
+            // Group records and write to separate CSV files
+            int counter = 0;
+            Map<String, List<Map<String, String>>> groupedData = new HashMap<>();
+            for (Map<String, String> record : records) {
+                String key = String.join("|", record.get("namespace"), record.get("k8_object_type"),
+                        record.get("workload"), record.get("container"), record.get("interval_start"));
+                groupedData.computeIfAbsent(key, k -> new ArrayList<>()).add(record);
+            }
+            LOGGER.info("groupedData: {}", groupedData);
+
+            for (List<Map<String, String>> group : groupedData.values()) {
+                counter++;
+                String fileName = "file_" + counter + ".csv";
+                writeCsv(outputDir + "/" + fileName, group);
+                LOGGER.info("{}/{}", outputDir, fileName);
+            }
+
+            // Step 1: Iterate through CSV files in the output directory
+            for (String fileName : new File(outputDir).list()) {
+                if (fileName.endsWith(".csv")) {
+                    List<Map<String, String>> currentData = readCsv(outputDir + "/" + fileName);
+                    LOGGER.info("Processing file: {}", fileName);
+
+                    // Step 2: Initialize headers and check for "resource_id"
+                    if (headerRow.isEmpty() && !currentData.isEmpty()) {
+                        headerRow.addAll(currentData.get(0).keySet());
+                        if (headerRow.contains("resource_id")) {
+                            columnsToIgnore.add("resource_id");
+                        }
+                    }
+
+                    // Step 3: Group the data by 'workload' and aggregate metrics for each workload
+                    for (Map<String, String> row : currentData) {
+                        String interval_start = row.get("interval_start");
+                        String container = row.get("container");
+                        String k8_object_type = row.get("k8_object_type");
+                        String namespace = row.get("namespace");
+                        String workload = row.get("workload");
+                        String key = interval_start + "|" + container + "|" + k8_object_type + "|" + namespace + "|" + workload;
+                        workloadDataMap.putIfAbsent(key, new ArrayList<>());
+                        workloadDataMap.get(key).add(row);
+                    }
+                }
+            }
+
+            // Step 4: Calculate aggregates (avg, min, max, sum) for each workload
+            calculateAggregateValuesForWorkload(workloadDataMap, aggData, headerRow, columnsToIgnore);
+
+            // Write the final aggregated results to the output CSV
+            writeFinalResults(header, aggData, outputResults, columnsToIgnore);
+
+            // Write aggregated data to final output CSV
+            printCsv(outputResults);
+
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+        return aggData.isEmpty() ? null: aggData;
+    }
+
+    /* Converts aggregated data to container intervalResults */
+    public HashMap<Timestamp, IntervalResults> convertAggrDataToIntervalResults(List<Map<String, String>> aggr_data) throws Exception {
+        HashMap<Timestamp, IntervalResults> containerDataResults = new HashMap<>();
+
+        try {
+            List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
+            List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString());
+            String format = null;
+
+            IntervalResults intervalResults = new IntervalResults();
+            MetricAggregationInfoResults metricAggregationInfoResults = new MetricAggregationInfoResults();
+            HashMap<AnalyzerConstants.MetricName, MetricResults> resMap = new HashMap<>();
+            MetricResults metricResults = null;
+
+
+            for (Map<String, String> data_map : aggr_data) {
+                String e_timestamp = data_map.get("interval_end");
+                Timestamp eTime = Timestamp.valueOf(e_timestamp);
+
+                String s_timestamp = data_map.get("interval_start");
+                Timestamp sTime = Timestamp.valueOf(s_timestamp);
+
+                for (Map.Entry<String, String> metric : data_map.entrySet()) {
+                    String metricName = metric.getKey();
+                    String aggrMetricValue = metric.getValue();
+                    String metricNameWoFunction = metricName.split("_")[0];
+
+
+                    if (!cpuFunction.contains(metricNameWoFunction) && !memFunction.contains(metricNameWoFunction)) {
+                        continue;
+                    }
+
+                    if (null == aggrMetricValue || aggrMetricValue.isEmpty()) {
+                        continue;
+                    }
+
+                    double metricValue = Double.parseDouble(aggrMetricValue);
+                    if (cpuFunction.contains(metricNameWoFunction)) {
+                        format = KruizeConstants.JSONKeys.CORES;
+                    } else if (memFunction.contains(metricNameWoFunction)) {
+                        format = KruizeConstants.JSONKeys.BYTES;
+                    }
+
+                    prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults, metricAggregationInfoResults, sTime, eTime, null, metricName, null, metricValue, format);
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+        return containerDataResults;
     }
 }
 
