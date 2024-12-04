@@ -91,6 +91,9 @@ public class AnalyzerConstants {
     public static final String KRUIZE_LOCAL_DDL_SQL = "kruize_local_ddl.sql";
     public static final String VERSION = "version";
     public static final String DATASOURCE_NAME = "dataSourceName";
+    public static final String METADATA_PROFILE = "metadataProfile";
+    public static final String WORKLOAD = "workload";
+    public static final String CONTAINER = "container";
 
 
     private AnalyzerConstants() {
@@ -604,6 +607,7 @@ public class AnalyzerConstants {
         public static final String METADATA_PROFILE = "metadataProfile";
         public static final String METADATA_PROFILE_PLURALS = "kruizemetadataprofiles";
         public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
+        public static final String CLUSTER_METADATA_PROFILE = "cluster-metadata-local-monitoring";
     }
 
     public static final class K8sObjectConstants {
