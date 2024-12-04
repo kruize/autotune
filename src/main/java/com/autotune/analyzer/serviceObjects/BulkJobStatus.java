@@ -41,7 +41,7 @@ public class BulkJobStatus {
     private String jobID;
     private String status;
     private int total_experiments;
-    private int processed_experiments;
+    private int processed_experiments;  //todo : If the primary operations are increments or simple atomic updates, use AtomicInteger. It is designed for lock-free thread-safe access
     @JsonProperty("job_start_time")
     private String startTime; // Change to String to store formatted time
     @JsonProperty("job_end_time")
@@ -144,11 +144,11 @@ public class BulkJobStatus {
         this.total_experiments = total_experiments;
     }
 
-    public int getProcessed_experiments() {
+    public synchronized int getProcessed_experiments() {
         return processed_experiments;
     }
 
-    public void setProcessed_experiments(int processed_experiments) {
+    public synchronized void setProcessed_experiments(int processed_experiments) {
         this.processed_experiments = processed_experiments;
     }
 
