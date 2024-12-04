@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.database.table;
+package com.autotune.database.table.lm;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.database.helper.GenerateExperimentID;
-import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -42,9 +41,9 @@ import org.hibernate.type.SqlTypes;
  * The ExperimentDetail class also has getters and setters for all its fields.
  */
 @Entity
-@Table(name = "kruize_experiments")
+@Table(name = "kruize_lm_experiments")
 @IdClass(GenerateExperimentID.class)
-public class KruizeExperimentEntry {
+public class KruizeLMExperimentEntry {
     @Id
     //@GeneratedValue(strategy = GenerationType.IDENTITY)
     private String experiment_id;
@@ -68,21 +67,6 @@ public class KruizeExperimentEntry {
 
 //    TODO: update KruizeDSMetadataEntry
 
-
-    public KruizeExperimentEntry(KruizeLMExperimentEntry kruizeLMExperimentEntry) {
-        this.experiment_id = kruizeLMExperimentEntry.getExperiment_id();
-        this.version = kruizeLMExperimentEntry.getVersion();
-        this.experiment_name = kruizeLMExperimentEntry.getExperiment_name();
-        this.cluster_name = kruizeLMExperimentEntry.getCluster_name();
-        this.mode = kruizeLMExperimentEntry.getMode();
-        this.target_cluster = kruizeLMExperimentEntry.getTarget_cluster();
-        this.performance_profile = kruizeLMExperimentEntry.getPerformance_profile();
-        this.experiment_type = kruizeLMExperimentEntry.getExperimentType();
-        this.status = kruizeLMExperimentEntry.getStatus();
-        this.datasource = kruizeLMExperimentEntry.getDatasource();
-        this.extended_data = kruizeLMExperimentEntry.getExtended_data();
-        this.meta_data = kruizeLMExperimentEntry.getMeta_data();
-    }
 
     public String getVersion() {
         return version;
@@ -179,5 +163,6 @@ public class KruizeExperimentEntry {
     public void setExperimentType(String experimentType) {
         this.experiment_type = experimentType;
     }
+
 
 }
