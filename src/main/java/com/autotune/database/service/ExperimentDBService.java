@@ -33,6 +33,7 @@ import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.*;
+import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
@@ -204,8 +205,14 @@ public class ExperimentDBService {
     public ValidationOutputData addExperimentToDB(CreateExperimentAPIObject createExperimentAPIObject) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
-            KruizeExperimentEntry kruizeExperimentEntry = DBHelpers.Converters.KruizeObjectConverters.convertCreateAPIObjToExperimentDBObj(createExperimentAPIObject);
-            validationOutputData = this.experimentDAO.addExperimentToDB(kruizeExperimentEntry);
+            KruizeLMExperimentEntry kruizeLMExperimentEntry = DBHelpers.Converters.KruizeObjectConverters.convertCreateAPIObjToExperimentDBObj(createExperimentAPIObject);
+            LOGGER.debug("is_ros_enabled:{} , targetCluster:{} ", KruizeDeploymentInfo.is_ros_enabled, createExperimentAPIObject.getTargetCluster());
+            if (KruizeDeploymentInfo.is_ros_enabled && createExperimentAPIObject.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
+                KruizeExperimentEntry oldKruizeExperimentEntry = new KruizeExperimentEntry(kruizeLMExperimentEntry);
+                validationOutputData = this.experimentDAO.addExperimentToDB(oldKruizeExperimentEntry);
+            } else {
+                validationOutputData = this.experimentDAO.addExperimentToDB(kruizeLMExperimentEntry);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
         }
@@ -445,7 +452,7 @@ public class ExperimentDBService {
     /**
      * adds datasource to database table
      *
-     * @param dataSourceInfo DataSourceInfo object
+     * @param dataSourceInfo       DataSourceInfo object
      * @param validationOutputData contains validation data
      * @return ValidationOutputData object
      */

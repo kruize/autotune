@@ -24,6 +24,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.*;
+import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Timer;
@@ -70,7 +71,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     session.persist(kruizeExperimentEntry);
                     tx.commit();
                     // TODO: remove native sql query and transient
-                    updateExperimentTypeInKruizeExperimentEntry(kruizeExperimentEntry);
+                    //updateExperimentTypeInKruizeExperimentEntry(kruizeExperimentEntry);  #Todo this function no more required and see if it can applied without using update sql
                     validationOutputData.setSuccess(true);
                     statusValue = "success";
                 } catch (HibernateException e) {
@@ -93,6 +94,44 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return validationOutputData;
     }
+
+    @Override
+    public ValidationOutputData addExperimentToDB(KruizeLMExperimentEntry kruizeLMExperimentEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        String statusValue = "failure";
+        Timer.Sample timerAddExpDB = Timer.start(MetricsConfig.meterRegistry());
+        try {
+            try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+                try {
+                    tx = session.beginTransaction();
+                    session.persist(kruizeLMExperimentEntry);
+                    tx.commit();
+                    // TODO: remove native sql query and transient
+                    //updateExperimentTypeInKruizeExperimentEntry(kruizeLMExperimentEntry);
+                    validationOutputData.setSuccess(true);
+                    statusValue = "success";
+                } catch (HibernateException e) {
+                    LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+                    if (tx != null) tx.rollback();
+                    e.printStackTrace();
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(e.getMessage());
+                    //TODO: save error to API_ERROR_LOG
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerAddExpDB) {
+                MetricsConfig.timerAddExpDB = MetricsConfig.timerBAddExpDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerAddExpDB.stop(MetricsConfig.timerAddExpDB);
+            }
+        }
+        return validationOutputData;
+    }
+
 
     /**
      * Deletes database partitions based on a specified threshold day count.
@@ -1144,6 +1183,23 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
     }
 
+    /*private void updateExperimentTypeInKruizeExperimentEntry(KruizeLMExperimentEntry kruizeLMExperimentEntry) throws Exception {
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            if (isTargetCluserLocal(kruizeLMExperimentEntry.getTarget_cluster())) {
+                Transaction tx = session.beginTransaction();
+                String sql = DBConstants.SQLQUERY.UPDATE_EXPERIMENT_EXP_TYPE;
+                Query query = session.createNativeQuery(sql);
+                query.setParameter("experiment_type", kruizeLMExperimentEntry.getExperimentType());
+                query.setParameter("experiment_name", kruizeLMExperimentEntry.getExperiment_name());
+                query.executeUpdate();
+                tx.commit();
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to update experiment type in experiment entry due to {}", e.getMessage());
+            throw new Exception("Error while updating experiment type to database due to : " + e.getMessage());
+        }
+    }
+
     private void updateExperimentTypeInKruizeExperimentEntry(KruizeExperimentEntry kruizeExperimentEntry) throws Exception {
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             if (isTargetCluserLocal(kruizeExperimentEntry.getTarget_cluster())) {
@@ -1159,7 +1215,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             LOGGER.error("Not able to update experiment type in experiment entry due to {}", e.getMessage());
             throw new Exception("Error while updating experiment type to database due to : " + e.getMessage());
         }
-    }
+    }*/
 
     private void getExperimentTypeInKruizeRecommendationsEntry(List<KruizeRecommendationEntry> entries) throws Exception {
         for (KruizeRecommendationEntry recomEntry : entries) {

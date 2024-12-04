@@ -17,7 +17,6 @@ package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -108,7 +107,7 @@ public class ExperimentValidation {
                         } else {
                             // fetch the Performance / Metric Profile from the DB
                             try {
-                                if (!KruizeDeploymentInfo.local) {
+                                if (KruizeDeploymentInfo.is_ros_enabled && target_cluster.equalsIgnoreCase(AnalyzerConstants.REMOTE)) { // todo call this in function and use across every where
                                     new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
                                 } else {
                                     new ExperimentDBService().loadMetricProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
