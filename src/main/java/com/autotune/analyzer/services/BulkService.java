@@ -159,6 +159,7 @@ public class BulkService extends HttpServlet {
             JSONObject jsonObject = new JSONObject();
             jsonObject.put(JOB_ID, jobID);
             response.getWriter().write(jsonObject.toString());
+            statusValue = "success";
         } finally {
             if (null != timerCreateBulkJob) {
                 MetricsConfig.timerCreateBulkJob = MetricsConfig.timerBCreateBulkJob.tag("status", statusValue).register(MetricsConfig.meterRegistry());
