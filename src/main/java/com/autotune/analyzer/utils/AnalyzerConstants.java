@@ -207,7 +207,13 @@ public class AnalyzerConstants {
         gpuMemoryUsage,
         namespacesAcrossCluster,
         workloadsAcrossCluster,
-        containersAcrossCluster
+        containersAcrossCluster,
+        namespacesForOrgAndClusterId,
+        namespacesForAdditionalLabel,
+        workloadsForOrgAndClusterId,
+        workloadsForAdditionalLabel,
+        containersForOrgAndClusterId,
+        containersForAdditionalLabel
     }
 
     public enum K8S_OBJECT_TYPES {
