@@ -10,6 +10,7 @@
     {
       "name": "namespacesAcrossCluster",
       "datasource": "prometheus",
+      "value_type": "double",
       "kubernetes_object": "container",
       "aggregation_functions": [
         {
@@ -21,6 +22,7 @@
     {
       "name": "workloadsAcrossCluster",
       "datasource": "prometheus",
+      "value_type": "double",
       "kubernetes_object": "container",
       "aggregation_functions": [
         {
@@ -32,6 +34,7 @@
     {
       "name": "containersAcrossCluster",
       "datasource": "prometheus",
+      "value_type": "double",
       "kubernetes_object": "container",
       "aggregation_functions": [
         {

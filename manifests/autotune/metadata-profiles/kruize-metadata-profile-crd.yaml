@@ -50,6 +50,9 @@ spec:
                   datasource:
                     description: 'datasource of the query'
                     type: string
+                  value_type:
+                    description: 'can be double or integer'
+                    type: string
                   kubernetes_object:
                     description: 'k8s object that this query is tied to: "deployment", "pod" or "container"'
                     type: string

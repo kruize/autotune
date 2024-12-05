@@ -8,6 +8,7 @@ query_variables:
 
 - name: 'namespacesAcrossCluster'
   datasource: prometheus
+  value_type: "double"
   kubernetes_object: "container" # or namespace
   aggregation_functions:
   - function: sum
@@ -15,6 +16,7 @@ query_variables:
 
 - name: 'workloadsAcrossCluster'
   datasource: prometheus
+  value_type: "double"
   kubernetes_object: "container"
   aggregation_functions:
   - function: sum
@@ -22,6 +24,7 @@ query_variables:
 
 - name: 'containersAcrossCluster'
   datasource: prometheus
+  value_type: "double"
   kubernetes_object: "container"
   aggregation_functions:
   - function: sum
