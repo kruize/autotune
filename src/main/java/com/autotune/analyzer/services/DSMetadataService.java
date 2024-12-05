@@ -49,8 +49,12 @@ import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.io.PrintWriter;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -102,6 +106,43 @@ public class DSMetadataService extends HttpServlet {
         String inputData = "";
         DataSourceManager dataSourceManager = new DataSourceManager();
 
+        String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
+        String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
+        long interval_end_time, interval_start_time;
+        int defaultSteps = 900;
+
+        if(null==intervalEndTimeStr && null==intervalStartTimeStr) {
+            ZonedDateTime currentTimestamp = ZonedDateTime.now(ZoneOffset.UTC);
+            ZonedDateTime currentTimestampMinus15Days = currentTimestamp.minusDays(15);
+
+            Instant instantEnd = currentTimestamp.toInstant();
+            Instant instantStart = currentTimestampMinus15Days.toInstant();
+
+            // Convert to long (seconds since epoch)
+            interval_end_time = instantEnd.getEpochSecond();
+            interval_start_time = instantStart.getEpochSecond();
+        } else if (null==intervalStartTimeStr && null!=intervalEndTimeStr) {
+            ZonedDateTime currentTimestamp = ZonedDateTime.parse(intervalEndTimeStr, DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC));
+            ZonedDateTime currentTimestampMinus15Days = currentTimestamp.minusDays(15);
+
+            Instant instantEnd = currentTimestamp.toInstant();
+            Instant instantStart = currentTimestampMinus15Days.toInstant();
+
+            // Convert to long (seconds since epoch)
+            interval_end_time = instantEnd.getEpochSecond();
+            interval_start_time = instantStart.getEpochSecond();
+        } else {
+            ZonedDateTime currentTimestamp = ZonedDateTime.parse(intervalEndTimeStr, DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC));
+            ZonedDateTime currentTimestampMinus15Days = ZonedDateTime.parse(intervalStartTimeStr, DateTimeFormatter.ISO_DATE_TIME.withZone(ZoneOffset.UTC));
+
+            Instant instantEnd = currentTimestamp.toInstant();
+            Instant instantStart = currentTimestampMinus15Days.toInstant();
+
+            // Convert to long (seconds since epoch)
+            interval_end_time = instantEnd.getEpochSecond();
+            interval_start_time = instantStart.getEpochSecond();
+        }
+
         try {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
@@ -118,6 +159,8 @@ public class DSMetadataService extends HttpServlet {
             if (validationOutputData.isSuccess()) {
 
                 String dataSourceName = metadataAPIObject.getDataSourceName();
+                String metadataProfileName = metadataAPIObject.getMetadataProfile();
+                String measurementDuration = metadataAPIObject.getMeasurementDurationMinutes();
                 // fetch the DatasourceInfo object based on datasource name
                 DataSourceInfo datasource;
                 try {
@@ -133,7 +176,7 @@ public class DSMetadataService extends HttpServlet {
                     return;
                 }
 
-                DataSourceMetadataInfo metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource,"",0,0,0);
+                DataSourceMetadataInfo metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource,"", interval_start_time, interval_end_time,defaultSteps, measurementDuration);
 
                 // Validate imported metadataInfo object
                 DataSourceMetadataValidation validationObject = new DataSourceMetadataValidation();
@@ -197,7 +240,8 @@ public class DSMetadataService extends HttpServlet {
 
     private List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.VERSION,
-            AnalyzerConstants.DATASOURCE_NAME
+            AnalyzerConstants.DATASOURCE_NAME,
+            AnalyzerConstants.METADATA_PROFILE
     ));
 
     public ValidationOutputData validateMandatoryFields(DSMetadataAPIObject metadataAPIObject) {

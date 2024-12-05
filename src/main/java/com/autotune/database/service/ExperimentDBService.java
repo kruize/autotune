@@ -19,6 +19,8 @@ import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryEx
 import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.serviceObjects.*;
@@ -145,6 +147,17 @@ public class ExperimentDBService {
             if (!performanceProfiles.isEmpty()) {
                 performanceProfiles.forEach(performanceProfile ->
                         PerformanceProfileUtil.addMetricProfile(metricProfileMap, performanceProfile));
+            }
+        }
+    }
+
+    public void loadAllMetadataProfiles(Map<String, MetadataProfile> metadataProfileMap) throws Exception {
+        List<KruizeMetadataProfileEntry> entries = experimentDAO.loadAllMetadataProfiles();
+        if (null != entries && !entries.isEmpty()) {
+            List<MetadataProfile> metadataProfiles = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileEntryToMetadataProfileObject(entries);
+            if (!metadataProfiles.isEmpty()) {
+                metadataProfiles.forEach(metadataProfile ->
+                        MetadataProfileUtil.addMetadataProfile(metadataProfileMap, metadataProfile));
             }
         }
     }
@@ -301,6 +314,17 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
+    public ValidationOutputData addMetadataProfileToDB(MetadataProfile metadataProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeMetadataProfileEntry kruizeMetadataProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileObjToMetadataProfileDBObj(metadataProfile);
+            validationOutputData = this.experimentDAO.addMetadataProfileToDB(kruizeMetadataProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save Metadata Profile due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
     /*
      * This is a Java method that loads all experiments from the database using an experimentDAO object.
      * The method then converts the retrieved data into KruizeObject format, adds them to a list,
@@ -407,6 +431,21 @@ public class ExperimentDBService {
                 for (PerformanceProfile performanceProfile : metricProfiles) {
                     if (null != performanceProfile) {
                         PerformanceProfileUtil.addMetricProfile(metricProfileMap, performanceProfile);
+                    }
+                }
+            }
+        }
+    }
+
+    public void loadMetadataProfileFromDBByName(Map<String, MetadataProfile> metadataProfileMap, String metadataProfileName) throws Exception {
+        List<KruizeMetadataProfileEntry> entries = experimentDAO.loadMetadataProfileByName(metadataProfileName);
+        if (null != entries && !entries.isEmpty()) {
+            List<MetadataProfile> metadataProfiles = DBHelpers.Converters.KruizeObjectConverters
+                    .convertMetadataProfileEntryToMetadataProfileObject(entries);
+            if (!metadataProfiles.isEmpty()) {
+                for (MetadataProfile metadataProfile : metadataProfiles) {
+                    if (null != metadataProfile) {
+                        MetadataProfileUtil.addMetadataProfile(metadataProfileMap, metadataProfile);
                     }
                 }
             }

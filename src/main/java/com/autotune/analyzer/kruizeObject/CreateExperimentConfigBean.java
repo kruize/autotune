@@ -26,6 +26,7 @@ public class CreateExperimentConfigBean {
     private String version;
     private String datasourceName;
     private String performanceProfile;
+    private String metadataProfile;
     private double threshold;
     private String measurementDurationStr;
     private int measurementDuration;
@@ -71,6 +72,14 @@ public class CreateExperimentConfigBean {
         this.performanceProfile = performanceProfile;
     }
 
+    public String getMetadataProfile() {
+        return metadataProfile;
+    }
+
+    public void setMetadataProfile(String metadataProfile) {
+        this.metadataProfile = metadataProfile;
+    }
+
     public double getThreshold() {
         return threshold;
     }
@@ -103,6 +112,7 @@ public class CreateExperimentConfigBean {
                 ", version='" + version + '\'' +
                 ", datasourceName='" + datasourceName + '\'' +
                 ", performanceProfile='" + performanceProfile + '\'' +
+                ", metadataProfile='" + metadataProfile + '\'' +
                 ", threshold=" + threshold +
                 ", measurementDurationStr='" + measurementDurationStr + '\'' +
                 ", measurementDuration=" + measurementDuration +

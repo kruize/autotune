@@ -17,6 +17,8 @@ package com.autotune.analyzer.workerimpl;
 
 
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.dataSourceMetadata.*;
@@ -121,6 +123,10 @@ public class BulkJobManager implements Runnable {
         DataSourceMetadataInfo metadataInfo = null;
         DataSourceManager dataSourceManager = new DataSourceManager();
         DataSourceInfo datasource = null;
+        //TODO make metadataProfileName and measurementDuration dynamic
+        MetadataProfile metadataProfile = MetadataProfileCollection.getInstance().getMetadataProfileCollection().get(AnalyzerConstants.MetadataProfileConstants.CLUSTER_METADATA_PROFILE);
+        String metadataProfileName = metadataProfile.getName();
+        String measurementDuration = "15";
         try {
             String labelString = getLabels(this.bulkInput.getFilter());
             if (null == this.bulkInput.getDatasource()) {
@@ -138,9 +144,9 @@ public class BulkJobManager implements Runnable {
             if (null != datasource) {
                 JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
                 if (null != daterange)
-                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get(START_TIME), (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS));
+                    metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, (Long) daterange.get(START_TIME), (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), measurementDuration);
                 else {
-                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, 0, 0, 0);
+                    metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, 0, 0, 0, measurementDuration);
                 }
                 if (null == metadataInfo) {
                     setFinalJobStatus(COMPLETED,String.valueOf(HttpURLConnection.HTTP_OK),NOTHING_INFO,datasource);
@@ -380,6 +386,7 @@ public class BulkJobManager implements Runnable {
         createExperimentAPIObject.setDatasource(this.bulkInput.getDatasource());
         createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
         createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());
+        createExperimentAPIObject.setMetadataProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile());
         List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
         KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
         ContainerAPIObject cao = new ContainerAPIObject(dc.getDataSourceContainerName(),

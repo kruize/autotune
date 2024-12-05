@@ -91,6 +91,9 @@ public class AnalyzerConstants {
     public static final String KRUIZE_LOCAL_DDL_SQL = "kruize_local_ddl.sql";
     public static final String VERSION = "version";
     public static final String DATASOURCE_NAME = "dataSourceName";
+    public static final String METADATA_PROFILE = "metadataProfile";
+    public static final String WORKLOAD = "workload";
+    public static final String CONTAINER = "container";
 
 
     private AnalyzerConstants() {
@@ -201,7 +204,16 @@ public class AnalyzerConstants {
         namespaceRunningPods,
         namespaceMaxDate,
         gpuCoreUsage,
-        gpuMemoryUsage
+        gpuMemoryUsage,
+        namespacesAcrossCluster,
+        workloadsAcrossCluster,
+        containersAcrossCluster,
+        namespacesForOrgAndClusterId,
+        namespacesForAdditionalLabel,
+        workloadsForOrgAndClusterId,
+        workloadsForAdditionalLabel,
+        containersForOrgAndClusterId,
+        containersForAdditionalLabel
     }
 
     public enum K8S_OBJECT_TYPES {
@@ -299,6 +311,7 @@ public class AnalyzerConstants {
         public static final String OBJ_FUNCTION_TYPE = "function_type";
         public static final String EXPRESSION = "expression";
         public static final String FUNCTION_VARIABLES = "function_variables";
+        public static final String QUERY_VARIABLES = "query_variables";
         public static final String NAME = "name";
         public static final String QUERY = "query";
         public static final String VALUE_TYPE = "value_type";
@@ -323,6 +336,7 @@ public class AnalyzerConstants {
         public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
         public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
         public static final String FUNCTION_VARIABLE = "function_variable: ";
+        public static final String QUERY_VARIABLE = "query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
 
         private AutotuneObjectConstants() {
@@ -584,6 +598,22 @@ public class AnalyzerConstants {
                 RESOURCE_OPT_OPENSHIFT_PROFILE, "ResourceOptimizationOpenshiftImpl",
                 RESOURCE_OPT_LOCAL_MON_PROFILE, "ResourceOptimizationOpenshiftImpl"
         );
+    }
+
+    public static final class MetadataProfileConstants {
+
+        public static final String QUERY_VARIABLES = "queryVariables";
+        public static final String METADATA_PROFILE_NAME = "name";
+        public static final String K8S_TYPE = "k8s_type";
+        public static final String METADATA_PROFILE_MAP = "metadataProfileMap";
+        public static final String VALUE_TYPE = "valueType";
+        public static final String DEFAULT_API_VERSION = "recommender.com/v1";
+        public static final String DEFAULT_KIND = "KruizeMetadataProfile";
+        public static final String DEFAULT_PROFILE = "default";
+        public static final String METADATA_PROFILE = "metadataProfile";
+        public static final String METADATA_PROFILE_PLURALS = "kruizemetadataprofiles";
+        public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
+        public static final String CLUSTER_METADATA_PROFILE = "cluster-metadata-local-monitoring";
     }
 
     public static final class K8sObjectConstants {

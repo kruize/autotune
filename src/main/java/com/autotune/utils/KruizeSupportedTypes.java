@@ -91,4 +91,8 @@ public class KruizeSupportedTypes
 	public static final Set<String> LIST_METRIC_PROFILES_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
 			"name", "verbose"
 	));
+
+	public static final Set<String> LIST_METADATA_PROFILES_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
+			"name", "verbose"
+	));
 }

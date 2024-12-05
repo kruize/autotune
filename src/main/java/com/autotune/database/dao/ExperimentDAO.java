@@ -28,6 +28,9 @@ public interface ExperimentDAO {
     // Add Metric Profile  to DB
     public ValidationOutputData addMetricProfileToDB(KruizeMetricProfileEntry kruizeMetricProfileEntry);
 
+    // Add Metadata Profile  to DB
+    public ValidationOutputData addMetadataProfileToDB(KruizeMetadataProfileEntry kruizeMetadataProfileEntry);
+
     // Add DataSource to DB
     ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry, ValidationOutputData validationOutputData);
 
@@ -36,6 +39,8 @@ public interface ExperimentDAO {
 
     // Delete experiment
     public ValidationOutputData deleteKruizeExperimentEntryByName(String experimentName);
+
+    ValidationOutputData deleteKruizeMetadataProfileEntryByName(String metadataProfileName);
 
     // If Kruize object restarts load all experiment which are in inprogress
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception;
@@ -51,6 +56,9 @@ public interface ExperimentDAO {
 
     // If Kruize restarts load all metric profiles
     List<KruizeMetricProfileEntry> loadAllMetricProfiles() throws Exception;
+
+    // If Kruize restarts load all metadata profiles
+    List<KruizeMetadataProfileEntry> loadAllMetadataProfiles() throws Exception;
 
     // Load a single experiment based on experimentName
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
@@ -71,6 +79,8 @@ public interface ExperimentDAO {
 
     // Load a single Metric Profile based on name
     List<KruizeMetricProfileEntry> loadMetricProfileByName(String metricProfileName) throws Exception;
+
+    List<KruizeMetadataProfileEntry> loadMetadataProfileByName(String metadataProfileName) throws Exception;
 
     // Delete metric profile for the specified metric profile name
     public ValidationOutputData deleteKruizeMetricProfileEntryByName(String metricProfileName);

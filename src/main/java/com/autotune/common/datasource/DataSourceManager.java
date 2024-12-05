@@ -64,11 +64,11 @@ public class DataSourceManager {
      * @param steps          the interval between data points in a range query
      * @return
      */
-    public DataSourceMetadataInfo importMetadataFromDataSource(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws DataSourceDoesNotExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+    public DataSourceMetadataInfo importMetadataFromDataSource(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps, String measurementDuration) throws DataSourceDoesNotExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         if (null == dataSourceInfo) {
             throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
         }
-        DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo, uniqueKey, startTime, endTime, steps);
+        DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.createDataSourceMetadata(metadataProfileName, dataSourceInfo, uniqueKey, startTime, endTime, steps, measurementDuration);
         if (null == dataSourceMetadataInfo) {
             LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceInfo.getName());
             return null;
@@ -110,7 +110,7 @@ public class DataSourceManager {
      * @param dataSourceMetadataInfo The existing DataSourceMetadataInfo object containing the current
      *                               metadata information of the data source.
      */
-    public void updateMetadataFromDataSource(DataSourceInfo dataSource, DataSourceMetadataInfo dataSourceMetadataInfo) {
+    public void updateMetadataFromDataSource(String metadataProfileName, DataSourceInfo dataSource, DataSourceMetadataInfo dataSourceMetadataInfo, String measurementDuration) {
         try {
             if (null == dataSource) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
@@ -118,7 +118,7 @@ public class DataSourceManager {
             if (null == dataSourceMetadataInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
             }
-            dataSourceMetadataOperator.updateDataSourceMetadata(dataSource, "", 0, 0, 0);
+            dataSourceMetadataOperator.updateDataSourceMetadata(metadataProfileName, dataSource, "", 0, 0, 0, measurementDuration);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }

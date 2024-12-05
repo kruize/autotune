@@ -25,6 +25,9 @@ import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SelectorInfo;
 import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileDeployment;
+import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
@@ -32,6 +35,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.k8sObjects.KubernetesContexts;
@@ -334,6 +338,7 @@ public class KruizeOperator {
             JSONObject metadataJson = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
             String name;
             String perfProfileName = null;
+            String metadataProfileName = null;
             String mode;
             String targetCluster;
             String clusterName;
@@ -379,6 +384,16 @@ public class KruizeOperator {
                         perfProfileName = setDefaultPerformanceProfile(sloInfo, mode, targetCluster);
                     }
                 }
+                metadataProfileName = specJson.optString(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE);
+                if (!metadataProfileName.isEmpty()) {
+                        // check if the Performance profile with the given name exist
+                        if (null == MetadataProfileDeployment.metadataProfileMap.get(metadataProfileName)) {
+                            throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + metadataProfileName);
+                        }
+                } else {
+                        metadataProfileName = setDefaultMetadataProfile(mode, targetCluster);
+                }
+
                 selectorJson = specJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SELECTOR);
             }
             assert selectorJson != null;
@@ -415,6 +430,7 @@ public class KruizeOperator {
                     hpoAlgoImpl,
                     selectorInfo,
                     perfProfileName,
+                    metadataProfileName,
                     datasource,
                     objectReference
             );
@@ -486,6 +502,40 @@ public class KruizeOperator {
         return metricProfile.getName();
     }
 
+    public static String setDefaultMetadataProfile(String mode, String targetCluster) {
+        MetadataProfile metadataProfile = null;
+        try {
+            String apiVersion = AnalyzerConstants.MetadataProfileConstants.DEFAULT_API_VERSION;
+            String kind = AnalyzerConstants.MetadataProfileConstants.DEFAULT_KIND;
+            String name = AnalyzerConstants.MetadataProfileConstants.DEFAULT_PROFILE;
+            ObjectMapper objectMapper = new ObjectMapper();
+            ObjectNode metadataNode = objectMapper.createObjectNode();
+            metadataNode.put("name",name);
+            ArrayList<Metric> queryVariables = new ArrayList<>();
+
+            double profile_version = AnalyzerConstants.DEFAULT_PROFILE_VERSION;
+            String k8s_type = AnalyzerConstants.DEFAULT_K8S_TYPE;
+            metadataProfile = new MetadataProfile(apiVersion, kind, metadataNode, profile_version, k8s_type, queryVariables);
+
+            if (null != metadataProfile) {
+                ValidationOutputData validationOutputData = MetadataProfileUtil.validateAndAddMetadataProfile(MetadataProfileDeployment.metadataProfileMap, metadataProfile);
+                if (validationOutputData.isSuccess()) {
+                    LOGGER.info("Added metadata Profile : {} into the map with version: {}",
+                            metadataProfile.getName(), metadataProfile.getProfile_version());
+                } else {
+                    new KubeEventLogger(Clock.systemUTC()).log("Failed", validationOutputData.getMessage(), EventLogger.Type.Warning, null, null, null, null);
+                }
+            } else {
+                new KubeEventLogger(Clock.systemUTC()).log("Failed", "Unable to create metric profile ", EventLogger.Type.Warning, null, null, null, null);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception while adding Metadata profile with message: {} ", e.getMessage());
+            new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null, null, null);
+            return null;
+        }
+        return metadataProfile.getName();
+    }
+
     /**
      * Parse KruizeLayer JSON and create matching KruizeLayer object
      *
@@ -505,9 +555,9 @@ public class KruizeOperator {
             JSONArray layerPresenceQueryJson = null;
             JSONArray layerPresenceLabelJson = null;
             if (presenceJson != null) {
-                presence = presenceJson.optString(AnalyzerConstants.AutotuneConfigConstants.PRESENCE);
-                layerPresenceQueryJson = presenceJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
-                layerPresenceLabelJson = presenceJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.LABEL);
+                presence = presenceJson.optString(AutotuneConfigConstants.PRESENCE);
+                layerPresenceQueryJson = presenceJson.optJSONArray(AutotuneConfigConstants.QUERIES);
+                layerPresenceLabelJson = presenceJson.optJSONArray(AutotuneConfigConstants.LABEL);
             }
 
             String name = autotuneConfigJson.getJSONObject(AutotuneConfigConstants.METADATA).optString(AutotuneConfigConstants.NAME);
@@ -517,7 +567,7 @@ public class KruizeOperator {
             ArrayList<Map<String, String>> queryVarList = null;
             try {
                 Map<String, Object> envVariblesMap = kubernetesServices.getCRDEnvMap(autotuneVariableContext, namespace, KruizeDeploymentInfo.k8s_type);
-                queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AnalyzerConstants.AutotuneConfigConstants.QUERY_VARIABLES);
+                queryVarList = (ArrayList<Map<String, String>>) envVariblesMap.get(AutotuneConfigConstants.QUERY_VARIABLES);
             } catch (Exception e) {
                 LOGGER.error("Autotunequeryvariable and autotuneconfig {} not in the same namespace", name);
                 return null;
@@ -530,10 +580,10 @@ public class KruizeOperator {
             if (layerPresenceQueryJson != null) {
                 for (Object query : layerPresenceQueryJson) {
                     JSONObject queryJson = (JSONObject) query;
-                    String datasource = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
+                    String datasource = queryJson.getString(AutotuneConfigConstants.DATASOURCE);
                     if (datasource.equalsIgnoreCase(KruizeDeploymentInfo.monitoring_agent)) {
-                        layerPresenceQueryStr = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
-                        layerPresenceKey = queryJson.getString(AnalyzerConstants.AutotuneConfigConstants.KEY);
+                        layerPresenceQueryStr = queryJson.getString(AutotuneConfigConstants.QUERY);
+                        layerPresenceKey = queryJson.getString(AutotuneConfigConstants.KEY);
                         // Replace the queryvariables in the query
                         try {
                             layerPresenceQueryStr = Variables.updateQueryWithVariables(null, null,
@@ -558,32 +608,32 @@ public class KruizeOperator {
                 }
             }
 
-            String layerName = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
-            String details = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.DETAILS);
-            int level = autotuneConfigJson.optInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
-            JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
+            String layerName = autotuneConfigJson.optString(AutotuneConfigConstants.LAYER_NAME);
+            String details = autotuneConfigJson.optString(AutotuneConfigConstants.DETAILS);
+            int level = autotuneConfigJson.optInt(AutotuneConfigConstants.LAYER_LEVEL);
+            JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AutotuneConfigConstants.TUNABLES);
             ArrayList<Tunable> tunableArrayList = new ArrayList<>();
 
             for (Object tunablesObject : tunablesJsonArray) {
                 JSONObject tunableJson = (JSONObject) tunablesObject;
-                JSONArray tunableQueriesArray = tunableJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.QUERIES);
+                JSONArray tunableQueriesArray = tunableJson.optJSONArray(AutotuneConfigConstants.QUERIES);
 
                 // Store the datasource and query from the JSON in a map
                 Map<String, String> queriesMap = new HashMap<>();
                 if (tunableQueriesArray != null) {
                     for (Object tunableQuery : tunableQueriesArray) {
                         JSONObject tunableQueryObj = (JSONObject) tunableQuery;
-                        String datasource = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.DATASOURCE);
-                        String datasourceQuery = tunableQueryObj.optString(AnalyzerConstants.AutotuneConfigConstants.QUERY);
+                        String datasource = tunableQueryObj.optString(AutotuneConfigConstants.DATASOURCE);
+                        String datasourceQuery = tunableQueryObj.optString(AutotuneConfigConstants.QUERY);
                         queriesMap.put(datasource, datasourceQuery);
                     }
                 }
 
-                String tunableName = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
-                String tunableValueType = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE);
+                String tunableName = tunableJson.optString(AutotuneConfigConstants.NAME);
+                String tunableValueType = tunableJson.optString(AutotuneConfigConstants.VALUE_TYPE);
 
                 ArrayList<String> sloClassList = new ArrayList<>();
-                JSONArray sloClassJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.SLO_CLASS);
+                JSONArray sloClassJson = tunableJson.getJSONArray(AutotuneConfigConstants.SLO_CLASS);
 
                 for (Object sloClassObject : sloClassJson) {
                     String sloClass = (String) sloClassObject;
@@ -600,15 +650,15 @@ public class KruizeOperator {
                      * and then invoke the corresponding constructor
                      */
                     if (tunableValueType.equalsIgnoreCase("categorical")) {
-                        JSONArray categoricalChoicesJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES);
+                        JSONArray categoricalChoicesJson = tunableJson.getJSONArray(AutotuneConfigConstants.TUNABLE_CHOICES);
                         for (Object categoricalChoiceObject : categoricalChoicesJson) {
                             String categoricalChoice = (String) categoricalChoiceObject;
                             choices.add(categoricalChoice);
                         }
                         tunable = new Tunable(tunableName, tunableValueType, queriesMap, sloClassList, layerName, choices);
                     } else {
-                        upperBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND);
-                        lowerBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND);
+                        upperBound = tunableJson.optString(AutotuneConfigConstants.UPPER_BOUND);
+                        lowerBound = tunableJson.optString(AutotuneConfigConstants.LOWER_BOUND);
                         // Read in step from the tunable, set it to '1' if not specified.
                         step = tunableJson.optDouble(AutotuneConfigConstants.STEP, 1);
                         tunable = new Tunable(tunableName, tunableValueType, queriesMap, sloClassList, layerName, step, upperBound, lowerBound);
