@@ -1,6 +1,8 @@
 package com.autotune.utils;
 
 import io.micrometer.core.instrument.Counter;
+import io.micrometer.core.instrument.Gauge;
+import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
@@ -9,6 +11,8 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class MetricsConfig {
     
@@ -19,13 +23,13 @@ public class MetricsConfig {
     public static Timer timerAddPerfProfileDB, timerLoadPerfProfileName, timerLoadAllPerfProfiles;
     public static Timer timerImportMetadata, timerGetMetadata;
     public static Timer timerJobStatus, timerCreateBulkJob, timerGetExpMap, timerCreateBulkExp, timerGenerateBulkRec, timerRunJob;
-    public static Counter timerKruizeNotifications;
+    public static Counter timerKruizeNotifications , timerBulkJobs;
     public static Timer.Builder timerBListRec, timerBListExp, timerBCreateExp, timerBUpdateResults, timerBUpdateRecommendations;
     public static Timer.Builder timerBLoadRecExpName, timerBLoadResultsExpName, timerBLoadExpName, timerBLoadRecExpNameDate, timerBBoxPlots;
     public static Timer.Builder timerBLoadAllRec, timerBLoadAllExp, timerBLoadAllResults;
     public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB;
     public static Timer.Builder timerBAddPerfProfileDB, timerBLoadPerfProfileName, timerBLoadAllPerfProfiles;
-    public static Counter.Builder timerBKruizeNotifications;
+    public static Counter.Builder timerBKruizeNotifications, timerBBulkJobs;
     public static PrometheusMeterRegistry meterRegistry;
     public static Timer timerListDS, timerImportDSMetadata, timerListDSMetadata;
     public static Timer.Builder timerBListDS, timerBImportDSMetadata, timerBListDSMetadata;
@@ -35,6 +39,8 @@ public class MetricsConfig {
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
     public String DB_METRIC_DESC = "Time taken for KruizeDB methods";
     public String METHOD_METRIC_DESC = "Time taken for Kruize methods";
+    public static final AtomicInteger activeJobs = new AtomicInteger(0);
+    public static Gauge.Builder timerBBulkRunJobs;
 
     private MetricsConfig() {
         meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
@@ -72,16 +78,17 @@ public class MetricsConfig {
         timerBJobStatus = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "bulk").tag("method", "jobStatus");
         timerBCreateBulkJob = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "bulk").tag("method", "createBulkJob");
         timerBGetExpMap = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "bulk").tag("method", "getExperimentMap");
-        timerBCreateBulkExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "bulk").tag("method", "createBulkExperiment");
-        timerBGenerateBulkRec = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "bulk").tag("method", "generateBulkRecommendation");
+        //timerBCreateBulkExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "bulk").tag("method", "createBulkExperiment");
+        //timerBGenerateBulkRec = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "bulk").tag("method", "generateBulkRecommendation");
         timerBRunJob = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "bulk").tag("method", "runBulkJob");
+        timerBBulkRunJobs = Gauge.builder("kruizeAPI_active_jobs_count", activeJobs, AtomicInteger::get).description("No.of bulk jobs running").tags("api", "bulk", "method", "runBulkJob" , "status", "running");
+        timerBBulkRunJobs.register(meterRegistry);
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);
         new JvmGcMetrics().bindTo(meterRegistry);
         new JvmMemoryMetrics().bindTo(meterRegistry);
         meterRegistry.config().namingConvention(NamingConvention.dot);
-
     }
 
     public static PrometheusMeterRegistry meterRegistry() {
