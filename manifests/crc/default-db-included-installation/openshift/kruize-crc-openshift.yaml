@@ -3,11 +3,62 @@ kind: Namespace
 metadata:
   name: openshift-tuning
 ---
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kruize-vpa-role
+rules:
+  - apiGroups:
+      - ""
+    resources:
+      - pods
+      - customresourcedefinitions
+    verbs:
+      - '*'
+  - apiGroups:
+      - apiextensions.k8s.io
+    resources:
+      - customresourcedefinitions
+    verbs:
+      - '*'
+  - apiGroups:
+      - autoscaling.k8s.io
+    resources:
+      - verticalpodautoscalers
+      - verticalpodautoscalercheckpoints
+    verbs:
+      - '*'
+  - apiGroups:
+      - rbac.authorization.k8s.io
+    resources:
+      - clusterrolebindings
+    verbs:
+      - '*'
+  - apiGroups:
+      - apps
+    resources:
+      - deployments
+    verbs:
+      - "*"
+---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   name: kruize-sa
   namespace: openshift-tuning
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: kruize-vpa-role-binding
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: kruize-vpa-role
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding

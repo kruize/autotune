@@ -273,6 +273,7 @@ public class RecommendationEngine {
         if (!kruizeObject.getValidation_data().isSuccess())
             return kruizeObject;
         setKruizeObject(kruizeObject);
+        LOGGER.info("Setting Kruize Object.");
         mainKruizeExperimentMAP.put(kruizeObject.getExperimentName(), kruizeObject);
         // continue to generate recommendation when kruizeObject is successfully created
         try {
@@ -1771,7 +1772,6 @@ public class RecommendationEngine {
     private String getResults(Map<String, KruizeObject> mainKruizeExperimentMAP, KruizeObject kruizeObject,
                               String experimentName, Timestamp intervalStartTime, String dataSource) throws Exception, FetchMetricsError {
         String errorMsg = "";
-
         mainKruizeExperimentMAP.put(experimentName, kruizeObject);
         // get data from the DB in case of remote monitoring
         if (kruizeObject.getExperiment_usecase_type().isRemote_monitoring()) {
@@ -2153,10 +2153,17 @@ public class RecommendationEngine {
                             }
 
                             // If promQL is determined, fetch metrics from the datasource
+//                            promQL = promQL
+//                                    .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+//                                    .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+//                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
+//                                    .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+//                                    .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+
                             promQL = promQL
                                     .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
                                     .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
-                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
+                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(1))
                                     .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
                                     .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
 

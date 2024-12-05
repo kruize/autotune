@@ -51,6 +51,7 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
 import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.WatcherException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -117,10 +118,13 @@ public class KruizeOperator {
                 }
             }
 
-
             @Override
-            public void onClose(KubernetesClientException e) {
+            public void onClose(WatcherException e) {
+
             }
+//            @Override
+//            public void onClose(KubernetesClientException e) {
+//            }
         };
 
         Watcher<String> autotuneConfigWatcher = new Watcher<>() {
@@ -153,8 +157,12 @@ public class KruizeOperator {
                 }
             }
 
+//            @Override
+//            public void onClose(KubernetesClientException e) {
+//            }
             @Override
-            public void onClose(KubernetesClientException e) {
+            public void onClose(WatcherException e) {
+
             }
         };
 

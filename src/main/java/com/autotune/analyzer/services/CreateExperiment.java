@@ -18,8 +18,11 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.InvalidExperimentType;
 import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.exceptions.VpaObjectCreateError;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.updater.RecommendationUpdater;
+import com.autotune.analyzer.recommendations.updater.vpa.VpaUpdaterImpl;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
@@ -134,6 +137,16 @@ public class CreateExperiment extends HttpServlet {
                         validAPIObj.setValidationData(ko.getValidation_data());
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
                         addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+                        if (addedToDB.isSuccess() && validAPIObj.isAutoMode() && validAPIObj.isContainerExperiment()) {
+                            for (KubernetesAPIObject kubernetesAPIObject : validAPIObj.getKubernetesObjects()) {
+                                try {
+                                    VpaUpdaterImpl vpaUpdater = VpaUpdaterImpl.getInstance();
+                                    vpaUpdater.createVpaObject(ko.getExperimentName(), kubernetesAPIObject.getName(), kubernetesAPIObject.getNamespace(), kubernetesAPIObject.getContainerAPIObjects());
+                                } catch (Exception | VpaObjectCreateError e) {
+                                    LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrorConstant.VPA_OBJECT_CREATION_FAILED + " " + e.getMessage());
+                                }
+                            }
+                        }
                     }
                     if (addedToDB.isSuccess()) {
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
