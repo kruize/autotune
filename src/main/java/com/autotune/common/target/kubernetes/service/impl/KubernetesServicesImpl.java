@@ -26,12 +26,8 @@ import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
 import io.fabric8.kubernetes.api.model.apps.DeploymentStatus;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
-import io.fabric8.kubernetes.client.DefaultKubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClient;
-import io.fabric8.kubernetes.client.KubernetesClientException;
-import io.fabric8.kubernetes.client.Watcher;
+import io.fabric8.kubernetes.client.*;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
-import io.fabric8.kubernetes.client.dsl.internal.RawCustomResourceOperationsImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -224,9 +220,16 @@ public class KubernetesServicesImpl implements KubernetesServices {
      */
     @Override
     public Map<String, Object> getCRDEnvMap(CustomResourceDefinitionContext crd, String namespace, String kubernetesType) {
+        GenericKubernetesResource kubernetesResource = null;
         Map<String, Object> envMap = null;
         try {
-            envMap = kubernetesClient.customResource(crd).get(namespace, kubernetesType);
+            kubernetesResource = kubernetesClient.genericKubernetesResources(crd)
+                    .inNamespace(namespace)
+                    .withName(crd.getName())
+                    .get();
+            if (kubernetesResource != null) {
+                envMap = kubernetesResource.getAdditionalProperties();
+            }
         } catch (Exception e) {
             new TargetHandlerException(e, "getCRDEnvMap failed!");
         }
@@ -418,9 +421,9 @@ public class KubernetesServicesImpl implements KubernetesServices {
     @Override
     public void addWatcher(CustomResourceDefinitionContext crd, Watcher watcher) {
         try {
-            RawCustomResourceOperationsImpl rawCustomResourceOperations = kubernetesClient.customResource(crd);
-            if (null != rawCustomResourceOperations.list())
-                rawCustomResourceOperations.watch(watcher);
+            kubernetesClient.genericKubernetesResources(crd)
+                    .inAnyNamespace()
+                    .watch(watcher);
         } catch (Exception e) {
             LOGGER.warn("Watcher not added! Only REST API access is enabled.");
         }
@@ -437,7 +440,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
     public Event getEvent(String namespace, String eventName) {
         Event event = null;
         try {
-            event = kubernetesClient.events().inNamespace(namespace).withName(eventName).get();
+            event = kubernetesClient.v1().events().inNamespace(namespace).withName(eventName).get();
         } catch (Exception e) {
             new TargetHandlerException(e, "getEvent failed! Event : " + event + " not found!");
         }
@@ -456,7 +459,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
     public boolean replaceEvent(String namespace, String eventName, Event newEvent) {
         boolean replaced = false;
         try {
-            kubernetesClient.events().inNamespace(namespace).withName(eventName).replace(newEvent);
+            kubernetesClient.v1().events().inNamespace(namespace).withName(eventName).replace(newEvent);
             replaced = true;
         } catch (Exception e) {
             new TargetHandlerException(e, "replaceEvent for the eventName " + eventName + " failed!");
@@ -476,7 +479,7 @@ public class KubernetesServicesImpl implements KubernetesServices {
     public boolean createEvent(String namespace, String eventName, Event newEvent) {
         boolean created = false;
         try {
-            kubernetesClient.events().inNamespace(namespace).withName(eventName).create(newEvent);
+            kubernetesClient.v1().events().inNamespace(namespace).withName(eventName).create(newEvent);
             created = true;
         } catch (Exception e) {
             new TargetHandlerException(e, "createEvent for the eventName " + eventName + " failed!");
@@ -491,19 +494,19 @@ public class KubernetesServicesImpl implements KubernetesServices {
      */
     @Override
     public void watchEndpoints(CustomResourceDefinitionContext crd) {
-        Watcher<String> autotuneObjectWatcher = new Watcher<>() {
+        Watcher<GenericKubernetesResource> autotuneObjectWatcher = new Watcher<>() {
 
             @Override
-            public void eventReceived(Action action, String resource) {
+            public void eventReceived(Action action, GenericKubernetesResource genericKubernetesResource) {
             }
 
             @Override
-            public void onClose(KubernetesClientException cause) {
+            public void onClose(WatcherException e) {
             }
         };
         try {
-            kubernetesClient.customResource(crd).watch(autotuneObjectWatcher);
-        } catch (IOException e) {
+            kubernetesClient.genericKubernetesResources(crd).watch(autotuneObjectWatcher);
+        } catch (Exception e) {
             e.printStackTrace();
         }
     }
