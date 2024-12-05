@@ -666,4 +666,37 @@ public class AnalyzerConstants {
             }
         }
     }
+
+    public static final class RecommendationUpdaterConstants {
+        private RecommendationUpdaterConstants() {
+
+        }
+
+        public static final class SupportedUpdaters {
+            public static final String VPA = "vpa";
+
+            private SupportedUpdaters() {
+
+            }
+        }
+
+        public static final class VPA {
+            public static final String VPA_PLURAL = "VerticalPodAutoscaler";
+
+            private VPA() {
+
+            }
+        }
+
+        public static final class InfoMsgs {
+            public static final String GENERATING_RECOMMENDATIONS = "Generating recommendations for experiment: {}";
+            public static final String GENERATED_RECOMMENDATIONS = "Generated recommendations for experiment: {}";
+            public static final String CHECKING_IF_UPDATER_INSTALLED = "Verifying if the updater is installed: {}";
+            public static final String FOUND_UPDATER_INSTALLED = "Found updater is installed: {}";
+
+            private InfoMsgs() {
+
+            }
+        }
+    }
 }
