@@ -8,7 +8,7 @@
     <artifactId>autotune</artifactId>
     <version>0.2</version>
     <properties>
-        <fabric8-version>6.13.4</fabric8-version>
+        <fabric8-version>7.0.0</fabric8-version>
         <org-json-version>20240303</org-json-version>
         <jetty-version>12.0.12</jetty-version>
         <slf4j-version>2.17.1</slf4j-version>
