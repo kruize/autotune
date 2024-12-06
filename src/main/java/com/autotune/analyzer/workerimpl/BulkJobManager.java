@@ -166,6 +166,7 @@ public class BulkJobManager implements Runnable {
                                     String experiment_name = apiObject.getExperimentName();
                                     BulkJobStatus.Experiment experiment = jobData.addExperiment(experiment_name);
                                     try {
+                                        // send request to createExperiment API for experiment creation
                                         GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
                                         apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
                                         GenericRestApiClient.HttpResponseWrapper responseCode;
@@ -198,7 +199,8 @@ public class BulkJobManager implements Runnable {
                                                 }
                                             }
 					}
-                                        if (experiment_exists) {
+
+                                        if (expriment_exists) {
                                             generateExecutor.submit(() -> {
                                                 // send request to generateRecommendations API
                                                 GenericRestApiClient recommendationApiClient = new GenericRestApiClient(finalDatasource);
