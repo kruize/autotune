@@ -89,6 +89,7 @@ public class KruizeDeploymentInfo {
     private static Hashtable<String, Class> tunableLayerPair;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
+    public static Boolean is_ros_enabled = false;
 
 
     private KruizeDeploymentInfo() {
