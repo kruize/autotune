@@ -121,6 +121,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 }
             }
         } catch (Exception e) {
+            LOGGER.debug("kruizeLMExperimentEntry={}", kruizeLMExperimentEntry);
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
             validationOutputData.setMessage(e.getMessage());
         } finally {
@@ -717,7 +718,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_EXPERIMENTS, KruizeExperimentEntry.class).list();
             // TODO: remove native sql query and transient
-            getExperimentTypeInKruizeExperimentEntry(entries);
+            //getExperimentTypeInKruizeExperimentEntry(entries);
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to load experiment due to {}", e.getMessage());
@@ -815,6 +816,31 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
+    public List<KruizeLMExperimentEntry> loadLMExperimentByName(String experimentName) throws Exception {
+        //todo load only experimentStatus=inprogress , playback may not require completed experiments
+        List<KruizeLMExperimentEntry> entries = null;
+        String statusValue = "failure";
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_LM_EXPERIMENTS_BY_EXP_NAME, KruizeLMExperimentEntry.class)
+                    .setParameter("experimentName", experimentName).list();
+            // TODO: remove native sql query and transient
+            //getExperimentTypeInKruizeExperimentEntry(entries);
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiment {} due to {}", experimentName, e.getMessage());
+            throw new Exception("Error while loading existing experiment from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadExpName) {
+                MetricsConfig.timerLoadExpName = MetricsConfig.timerBLoadExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
+            }
+
+        }
+        return entries;
+    }
+
+    @Override
     public List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
         List<KruizeExperimentEntry> entries = null;
@@ -824,7 +850,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_EXPERIMENTS_BY_EXP_NAME, KruizeExperimentEntry.class)
                     .setParameter("experimentName", experimentName).list();
             // TODO: remove native sql query and transient
-            getExperimentTypeInKruizeExperimentEntry(entries);
+            //getExperimentTypeInKruizeExperimentEntry(entries);
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to load experiment {} due to {}", experimentName, e.getMessage());
@@ -1162,11 +1188,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
-    private void getExperimentTypeInKruizeExperimentEntry(List<KruizeExperimentEntry> entries) throws Exception {
+   /* private void getExperimentTypeInKruizeExperimentEntry(List<KruizeExperimentEntry> entries) throws Exception {
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             for (KruizeExperimentEntry entry : entries) {
                 if (isTargetCluserLocal(entry.getTarget_cluster())) {
-                    if (null == entry.getExperimentType() || entry.getExperimentType().isEmpty()) {
+                    if (null == entry.getE || entry.getExperimentType().isEmpty()) {
                         String sql = DBConstants.SQLQUERY.SELECT_EXPERIMENT_EXP_TYPE;
                         Query query = session.createNativeQuery(sql);
                         query.setParameter("experiment_id", entry.getExperiment_id());
@@ -1181,7 +1207,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             LOGGER.error("Not able to get experiment type from experiment entry due to {}", e.getMessage());
             throw new Exception("Error while loading experiment type from database due to : " + e.getMessage());
         }
-    }
+    }*/
 
     /*private void updateExperimentTypeInKruizeExperimentEntry(KruizeLMExperimentEntry kruizeLMExperimentEntry) throws Exception {
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {

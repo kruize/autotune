@@ -10,8 +10,6 @@ import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
@@ -23,6 +21,8 @@ import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,12 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class Converters {
     private Converters() {
@@ -70,7 +67,7 @@ public class Converters {
                         // namespace recommendations experiment type
                         k8sObject = createNamespaceExperiment(kubernetesAPIObject);
                     }
-                    LOGGER.debug("Experiment Type: " + createExperimentAPIObject.getExperimentType());
+                    LOGGER.debug("Experiment Type: {}", createExperimentAPIObject.getExperimentType());
                     k8sObjectList.add(k8sObject);
                 }
                 kruizeObject.setKubernetes_objects(k8sObjectList);

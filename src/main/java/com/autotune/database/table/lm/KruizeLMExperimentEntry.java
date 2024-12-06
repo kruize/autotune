@@ -22,6 +22,10 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.sql.Timestamp;
+import java.util.Date;
+
+
 /**
  * This is a Java class named KruizeExperimentEntry annotated with JPA annotations.
  * It represents a table named kruize_experiment in a relational database.
@@ -54,8 +58,6 @@ public class KruizeLMExperimentEntry {
     private String mode;
     private String target_cluster;
     private String performance_profile;
-    @Transient
-    private String experiment_type;
     @Enumerated(EnumType.STRING)
     private AnalyzerConstants.ExperimentStatus status;
     @JdbcTypeCode(SqlTypes.JSON)
@@ -64,6 +66,14 @@ public class KruizeLMExperimentEntry {
     private JsonNode extended_data;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode meta_data;
+    @Enumerated(EnumType.STRING)
+    private AnalyzerConstants.ExperimentType experiment_type;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "creation_date", updatable = false)
+    private Timestamp creation_date;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "updated_date")
+    private Timestamp updated_date;
 
 //    TODO: update KruizeDSMetadataEntry
 
@@ -156,13 +166,47 @@ public class KruizeLMExperimentEntry {
         this.datasource = datasource;
     }
 
-    public String getExperimentType() {
+    public AnalyzerConstants.ExperimentType getExperiment_type() {
         return experiment_type;
     }
 
-    public void setExperimentType(String experimentType) {
-        this.experiment_type = experimentType;
+    public void setExperiment_type(AnalyzerConstants.ExperimentType experiment_type) {
+        this.experiment_type = experiment_type;
     }
 
+    public Date getCreation_date() {
+        return creation_date;
+    }
 
+    public void setCreation_date(Timestamp creation_date) {
+        this.creation_date = creation_date;
+    }
+
+    public Date getUpdated_date() {
+        return updated_date;
+    }
+
+    public void setUpdated_date(Timestamp updated_date) {
+        this.updated_date = updated_date;
+    }
+
+    @Override
+    public String toString() {
+        return "KruizeLMExperimentEntry{" +
+                "experiment_id='" + experiment_id + '\'' +
+                ", version='" + version + '\'' +
+                ", experiment_name='" + experiment_name + '\'' +
+                ", cluster_name='" + cluster_name + '\'' +
+                ", mode='" + mode + '\'' +
+                ", target_cluster='" + target_cluster + '\'' +
+                ", performance_profile='" + performance_profile + '\'' +
+                ", status=" + status +
+                ", datasource=" + datasource +
+                ", extended_data=" + extended_data +
+                ", meta_data=" + meta_data +
+                ", experiment_type=" + experiment_type +
+                ", creation_date=" + creation_date +
+                ", updated_date=" + updated_date +
+                '}';
+    }
 }

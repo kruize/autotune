@@ -55,8 +55,6 @@ public class KruizeExperimentEntry {
     private String mode;
     private String target_cluster;
     private String performance_profile;
-    @Transient
-    private String experiment_type;
     @Enumerated(EnumType.STRING)
     private AnalyzerConstants.ExperimentStatus status;
     @JdbcTypeCode(SqlTypes.JSON)
@@ -77,11 +75,14 @@ public class KruizeExperimentEntry {
         this.mode = kruizeLMExperimentEntry.getMode();
         this.target_cluster = kruizeLMExperimentEntry.getTarget_cluster();
         this.performance_profile = kruizeLMExperimentEntry.getPerformance_profile();
-        this.experiment_type = kruizeLMExperimentEntry.getExperimentType();
         this.status = kruizeLMExperimentEntry.getStatus();
         this.datasource = kruizeLMExperimentEntry.getDatasource();
         this.extended_data = kruizeLMExperimentEntry.getExtended_data();
         this.meta_data = kruizeLMExperimentEntry.getMeta_data();
+    }
+
+    public KruizeExperimentEntry() {
+        
     }
 
     public String getVersion() {
@@ -172,12 +173,5 @@ public class KruizeExperimentEntry {
         this.datasource = datasource;
     }
 
-    public String getExperimentType() {
-        return experiment_type;
-    }
-
-    public void setExperimentType(String experimentType) {
-        this.experiment_type = experimentType;
-    }
 
 }

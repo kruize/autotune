@@ -405,7 +405,7 @@ public class BulkJobManager implements Runnable {
 
         createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
         createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-        createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
+        createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentType.CONTAINER);
 
         createExperimentAPIObjects.add(createExperimentAPIObject);
 

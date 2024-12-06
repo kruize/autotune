@@ -89,7 +89,11 @@ public class ExperimentValidation {
             if (validationOutputData.isSuccess()) {
                 String expName = kruizeObject.getExperimentName();
                 try {
-                    new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, expName);
+                    if (KruizeDeploymentInfo.is_ros_enabled && kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) { // todo call this in function and use across every where
+                        new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, expName);
+                    } else {
+                        new ExperimentDBService().loadLMExperimentFromDBByName(mainKruizeExperimentMAP, expName);
+                    }
                 } catch (Exception e) {
                     LOGGER.error("Loading saved experiment {} failed: {} ", expName, e.getMessage());
                 }
