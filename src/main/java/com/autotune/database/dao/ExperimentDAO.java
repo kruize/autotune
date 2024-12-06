@@ -58,6 +58,10 @@ public interface ExperimentDAO {
     // Load a single experiment based on experimentName
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
 
+    // Load a single experiment based on experimentName
+    List<KruizeLMExperimentEntry> loadLMExperimentByName(String experimentName) throws Exception;
+
+
     // Load a single data source based on name
     List<KruizeDataSourceEntry> loadDataSourceByName(String name) throws Exception;
 

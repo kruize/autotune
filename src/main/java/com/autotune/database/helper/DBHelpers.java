@@ -430,7 +430,7 @@ public class DBHelpers {
                     kruizeLMExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
                     kruizeLMExperimentEntry.setMeta_data(null);
                     kruizeLMExperimentEntry.setDatasource(null);
-                    kruizeLMExperimentEntry.setExperimentType(apiObject.getExperimentType());
+                    kruizeLMExperimentEntry.setExperiment_type(apiObject.getExperimentType());
 
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
@@ -623,7 +623,7 @@ public class DBHelpers {
                     kruizeRecommendationEntry.setVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
                     kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
-                    kruizeRecommendationEntry.setExperimentType(listRecommendationsAPIObject.getExperimentType());
+                    //kruizeRecommendationEntry.setExperimentType(listRecommendationsAPIObject.getExperimentType());
 
                     Timestamp endInterval = null;
                     // todo : what happens if two k8 objects or Containers with different timestamp
@@ -660,6 +660,30 @@ public class DBHelpers {
                 return kruizeRecommendationEntry;
             }
 
+            public static List<CreateExperimentAPIObject> convertLMExperimentEntryToCreateExperimentAPIObject(List<KruizeLMExperimentEntry> entries) throws Exception {
+                List<CreateExperimentAPIObject> createExperimentAPIObjects = new ArrayList<>();
+                int failureThreshHold = entries.size();
+                int failureCount = 0;
+                for (KruizeLMExperimentEntry entry : entries) {
+                    try {
+                        JsonNode extended_data = entry.getExtended_data();
+                        String extended_data_rawJson = extended_data.toString();
+                        CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
+                        apiObj.setExperiment_id(entry.getExperiment_id());
+                        apiObj.setStatus(entry.getStatus());
+                        createExperimentAPIObjects.add(apiObj);
+                    } catch (Exception e) {
+                        LOGGER.error("Error in converting to apiObj from db object due to : {}", e.getMessage());
+                        LOGGER.error(entry.toString());
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the experiments are able to load from DB.");
+
+                return createExperimentAPIObjects;
+            }
+
             public static List<CreateExperimentAPIObject> convertExperimentEntryToCreateExperimentAPIObject(List<KruizeExperimentEntry> entries) throws Exception {
                 List<CreateExperimentAPIObject> createExperimentAPIObjects = new ArrayList<>();
                 int failureThreshHold = entries.size();
@@ -671,7 +695,6 @@ public class DBHelpers {
                         CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
                         apiObj.setExperiment_id(entry.getExperiment_id());
                         apiObj.setStatus(entry.getStatus());
-                        apiObj.setExperimentType(entry.getExperimentType());
                         createExperimentAPIObjects.add(apiObj);
                     } catch (Exception e) {
                         LOGGER.error("Error in converting to apiObj from db object due to : {}", e.getMessage());

@@ -323,6 +323,32 @@ public class ExperimentDBService {
         loadAllRecommendations(KruizeOperator.autotuneObjectMap);
     }
 
+    public void loadLMExperimentFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeLMExperimentEntry> entries = experimentDAO.loadLMExperimentByName(experimentName);
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertLMExperimentEntryToCreateExperimentAPIObject(entries);
+            if (null != createExperimentAPIObjects && !createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+
+                int failureThreshHold = createExperimentAPIObjects.size();
+                int failureCount = 0;
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    } else {
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("Experiment " + experimentName + " unable to load from DB.");
+                }
+                experimentInterface.addExperimentToLocalStorage(mainKruizeExperimentMap, kruizeExpList);
+            }
+        }
+    }
+
     public void loadExperimentFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         List<KruizeExperimentEntry> entries = experimentDAO.loadExperimentByName(experimentName);
