@@ -200,7 +200,7 @@ public class BulkJobManager implements Runnable {
                                             }
 					}
 
-                                        if (expriment_exists) {
+                                        if (experiment_exists) {
                                             generateExecutor.submit(() -> {
                                                 // send request to generateRecommendations API
                                                 GenericRestApiClient recommendationApiClient = new GenericRestApiClient(finalDatasource);
