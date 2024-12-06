@@ -167,22 +167,18 @@ public class BulkJobManager implements Runnable {
                                 DataSourceInfo finalDatasource = datasource;
                                 createExecutor.submit(() -> {
                                     try {
-                                        //String createstatusValue = "failure";
-                                        //Timer.Sample timerCreateBulkExp = Timer.start(MetricsConfig.meterRegistry());
                                         // send request to createExperiment API for experiment creation
                                         GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
                                         apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
                                         GenericRestApiClient.HttpResponseWrapper responseCode;
-                                        boolean expriment_exists = false;
+                                        boolean experiment_exists = false;
                                         try {
                                             responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(apiObject) + "]");
                                             LOGGER.debug("API Response code: {}", responseCode);
                                             if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
-                                                expriment_exists = true;
-                                                //createstatusValue = "success";
+                                                experiment_exists = true;
                                             } else if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
-                                                expriment_exists = true;
-                                                //createstatusValue = "success";
+                                                experiment_exists = true;
                                             } else {
                                                 jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                                 experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, responseCode.getResponseBody().toString(), responseCode.getStatusCode()));
@@ -195,16 +191,10 @@ public class BulkJobManager implements Runnable {
                                             if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
                                                 setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                             }
-                                            /* if (null != timerCreateBulkExp) {
-                                                MetricsConfig.timerCreateBulkExp = MetricsConfig.timerBCreateBulkExp.tag("status", createstatusValue).register(MetricsConfig.meterRegistry());
-                                                timerCreateBulkExp.stop(MetricsConfig.timerCreateBulkExp);
-                                            }*/
                                         }
 
                                         if (expriment_exists) {
                                             generateExecutor.submit(() -> {
-                                                //String genstatusValue = "failure";
-                                                //Timer.Sample timerGenerateBulkRec = Timer.start(MetricsConfig.meterRegistry());
                                                 // send request to generateRecommendations API
                                                 GenericRestApiClient recommendationApiClient = new GenericRestApiClient(finalDatasource);
                                                 String encodedExperimentName;
@@ -216,7 +206,6 @@ public class BulkJobManager implements Runnable {
                                                     LOGGER.debug("API Response code: {}", recommendationResponseCode);
                                                     if (recommendationResponseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
                                                         experiment.getRecommendations().setStatus(NotificationConstants.Status.PROCESSED);
-                                                        //genstatusValue = "success";
                                                     } else {
                                                         experiment.getRecommendations().setStatus(NotificationConstants.Status.FAILED);
                                                         experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, recommendationResponseCode.getResponseBody().toString(), recommendationResponseCode.getStatusCode()));
@@ -230,10 +219,6 @@ public class BulkJobManager implements Runnable {
                                                     if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
                                                         setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                                     }
-                                                    /* if (null != timerGenerateBulkRec) {
-                                                        MetricsConfig.timerGenerateBulkRec = MetricsConfig.timerBGenerateBulkRec.tag("status", genstatusValue).register(MetricsConfig.meterRegistry());
-                                                        timerGenerateBulkRec.stop(MetricsConfig.timerGenerateBulkRec);
-                                                    } */
                                                 }
                                             });
                                         }
