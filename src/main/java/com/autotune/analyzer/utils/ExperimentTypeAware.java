@@ -20,9 +20,11 @@ package com.autotune.analyzer.utils;
  */
 public interface ExperimentTypeAware {
     // Retrieves the experiment type associated with the implementing class.
-    String getExperimentType();
+    AnalyzerConstants.ExperimentType getExperimentType();
+
     // checks if the experiment type is namespace
     boolean isNamespaceExperiment();
+
     // checks if the experiment type is container
     boolean isContainerExperiment();
 }

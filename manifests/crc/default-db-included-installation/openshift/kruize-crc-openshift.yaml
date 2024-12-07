@@ -106,6 +106,7 @@ data:
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
       "local": "true",
+      "isROSEnabled": "false",
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",
       "experimentsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/createExperiment",

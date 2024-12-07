@@ -236,6 +236,13 @@ public class AnalyzerConstants {
         DEVICE_NAME
     }
 
+    public enum ExperimentType {
+        CONTAINER,  // For container-level experiments
+        NAMESPACE,  // For namespace-level experiments
+        CLUSTER,    // For cluster-wide experiments
+        APPLICATION // For application-specific experiments
+    }
+
     public static final class AcceleratorConstants {
         private AcceleratorConstants() {
 
@@ -253,6 +260,7 @@ public class AnalyzerConstants {
             public static final String A100_80_GB = "A100-80GB";
             public static final String A100_40_GB = "A100-40GB";
             public static final String H100_80_GB = "H100-80GB";
+
             private SupportedAccelerators() {
 
             }
@@ -272,6 +280,7 @@ public class AnalyzerConstants {
             public static final String PROFILE_3G_40GB = "3g.40gb";
             public static final String PROFILE_4G_40GB = "4g.40gb";
             public static final String PROFILE_7G_80GB = "7g.80gb";
+
             private AcceleratorProfiles() {
 
             }
