@@ -1915,12 +1915,12 @@ function kruize_remote_patch() {
 
   if [ ${cluster_type} == "minikube" ]; then
     #sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
-    sed -i 's/"local": "true"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+    #sed -i 's/"local": "true"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
     sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
     #sed -i '/"local": "false"/a \ \ \ \ "isROSEnabled": "true",' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
   elif [ ${cluster_type} == "openshift" ]; then
     #sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-    sed -i 's/"local": "true"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+    #sed -i 's/"local": "true"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
     sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
     sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
     sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
