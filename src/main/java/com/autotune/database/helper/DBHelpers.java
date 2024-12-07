@@ -40,6 +40,7 @@ import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceMetadataOperator;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.*;
+import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -275,6 +276,130 @@ public class DBHelpers {
         }
     }
 
+    /**
+     * Retrieves an existing DataSource from the DB entry or creates a new one if not found.
+     *
+     * @param kruizeMetadata         KruizeDSMetadataEntry object
+     * @param dataSourceMetadataInfo DataSourceMetadataInfo object
+     * @return The DataSource instance associated with the DB entry.
+     */
+    private static DataSource getOrCreateDataSourceFromDB(KruizeDSMetadataEntry kruizeMetadata, DataSourceMetadataInfo dataSourceMetadataInfo) {
+        String dataSourceName = kruizeMetadata.getDataSourceName();
+
+        // Check if the data source already exists
+        if (dataSourceMetadataInfo.getDataSourceHashMap().containsKey(dataSourceName)) {
+            return dataSourceMetadataInfo.getDataSourceHashMap().get(dataSourceName);
+        }
+
+        DataSource dataSource = new DataSource(dataSourceName, new HashMap<>());
+        dataSourceMetadataInfo.getDataSourceHashMap().put(dataSourceName, dataSource);
+
+        return dataSource;
+    }
+
+    /**
+     * Retrieves an existing DataSourceCluster from the DB entry or creates a new one if not found.
+     *
+     * @param kruizeMetadata KruizeDSMetadataEntry object
+     * @param dataSource     DataSource object
+     * @return The DataSourceCluster instance associated with the DB entry
+     */
+    private static DataSourceCluster getOrCreateDataSourceClusterFromDB(KruizeDSMetadataEntry kruizeMetadata, DataSource dataSource) {
+        String clusterName = kruizeMetadata.getClusterName();
+
+        // Check if the cluster already exists in the DataSource
+        if (dataSource.getDataSourceClusterHashMap().containsKey(clusterName)) {
+            return dataSource.getDataSourceClusterHashMap().get(clusterName);
+        }
+
+        DataSourceCluster dataSourceCluster = new DataSourceCluster(clusterName, new HashMap<>());
+        dataSource.getDataSourceClusterHashMap().put(clusterName, dataSourceCluster);
+
+        return dataSourceCluster;
+    }
+
+    /**
+     * Retrieves an existing DataSourceNamespace from the DB entry or creates a new one if not found.
+     *
+     * @param kruizeMetadata    KruizeDSMetadataEntry object
+     * @param dataSourceCluster DataSourceCluster object
+     * @return The DataSourceNamespace instance associated with the DB entry
+     */
+    private static DataSourceNamespace getOrCreateDataSourceNamespaceFromDB(KruizeDSMetadataEntry kruizeMetadata, DataSourceCluster dataSourceCluster) {
+        String namespaceName = kruizeMetadata.getNamespace();
+
+        // Check if the namespace already exists in the DataSourceCluster
+        if (dataSourceCluster.getDataSourceNamespaceHashMap().containsKey(namespaceName)) {
+            return dataSourceCluster.getDataSourceNamespaceHashMap().get(namespaceName);
+        }
+
+        DataSourceNamespace dataSourceNamespace = new DataSourceNamespace(namespaceName, new HashMap<>());
+        dataSourceCluster.getDataSourceNamespaceHashMap().put(namespaceName, dataSourceNamespace);
+
+        return dataSourceNamespace;
+    }
+
+    /**
+     * Retrieves an existing DataSourceWorkload from the DB entry or creates a new one if not found.
+     *
+     * @param kruizeMetadata      KruizeDSMetadataEntry object
+     * @param dataSourceNamespace DataSourceNamespace object
+     * @return The DataSourceWorkload instance associated with the DB entry
+     */
+    private static DataSourceWorkload getOrCreateDataSourceWorkloadFromDB(KruizeDSMetadataEntry kruizeMetadata, DataSourceNamespace dataSourceNamespace) {
+        String workloadName = kruizeMetadata.getWorkloadName();
+
+        if (null == workloadName) {
+            return null;
+        }
+
+        // Check if the workload already exists in the DataSourceNamespace
+        if (dataSourceNamespace.getDataSourceWorkloadHashMap().containsKey(workloadName)) {
+            return dataSourceNamespace.getDataSourceWorkloadHashMap().get(workloadName);
+        }
+
+        DataSourceWorkload dataSourceWorkload = new DataSourceWorkload(workloadName, kruizeMetadata.getWorkloadType(), new HashMap<>());
+        dataSourceNamespace.getDataSourceWorkloadHashMap().put(workloadName, dataSourceWorkload);
+
+        return dataSourceWorkload;
+    }
+
+    /**
+     * Retrieves an existing DataSourceContainer from the DB entry or creates a new one if not found.
+     *
+     * @param kruizeMetadata     KruizeDSMetadataEntry object
+     * @param dataSourceWorkload DataSourceWorkload object
+     * @return The DataSourceContainer instance associated with the DB entry
+     */
+    private static DataSourceContainer getOrCreateDataSourceContainerFromDB(KruizeDSMetadataEntry kruizeMetadata, DataSourceWorkload dataSourceWorkload) {
+        String containerName = kruizeMetadata.getContainerName();
+
+        if (null == containerName) {
+            return null;
+        }
+
+        // Check if the container already exists in the DataSourceWorkload
+        if (dataSourceWorkload.getDataSourceContainerHashMap().containsKey(containerName)) {
+            return dataSourceWorkload.getDataSourceContainerHashMap().get(containerName);
+        }
+
+        DataSourceContainer dataSourceContainer = new DataSourceContainer(containerName, kruizeMetadata.getContainerImageName());
+        dataSourceWorkload.getDataSourceContainerHashMap().put(containerName, dataSourceContainer);
+
+        return dataSourceContainer;
+    }
+
+    private static KruizeDSMetadataEntry getMetadata(String datasource) {
+        DataSourceMetadataOperator dataSourceMetadataOperator = DataSourceMetadataOperator.getInstance();
+        HashMap<String, DataSourceInfo> dataSources = DataSourceCollection.getInstance().getDataSourcesCollection();
+        DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSources.get(datasource));
+        List<KruizeDSMetadataEntry> kruizeMetadataList = Converters.KruizeObjectConverters.convertDataSourceMetadataToMetadataObj(dataSourceMetadataInfo);
+        if (kruizeMetadataList.isEmpty())
+            return null;
+        else
+            return kruizeMetadataList.get(0);
+    }
+
     public static class Converters {
         private Converters() {
 
@@ -291,25 +416,25 @@ public class DBHelpers {
              * @return KruizeExperimentEntry
              * This methode facilitate to store data into db by accumulating required data from KruizeObject.
              */
-            public static KruizeExperimentEntry convertCreateAPIObjToExperimentDBObj(CreateExperimentAPIObject apiObject) {
-                KruizeExperimentEntry kruizeExperimentEntry = null;
+            public static KruizeLMExperimentEntry convertCreateAPIObjToExperimentDBObj(CreateExperimentAPIObject apiObject) {
+                KruizeLMExperimentEntry kruizeLMExperimentEntry = null;
                 try {
-                    kruizeExperimentEntry = new KruizeExperimentEntry();
-                    kruizeExperimentEntry.setExperiment_name(apiObject.getExperimentName());
-                    kruizeExperimentEntry.setExperiment_id(Utils.generateID(apiObject));
-                    kruizeExperimentEntry.setCluster_name(apiObject.getClusterName());
-                    kruizeExperimentEntry.setMode(apiObject.getMode());
-                    kruizeExperimentEntry.setPerformance_profile(apiObject.getPerformanceProfile());
-                    kruizeExperimentEntry.setVersion(apiObject.getApiVersion());
-                    kruizeExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
-                    kruizeExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
-                    kruizeExperimentEntry.setMeta_data(null);
-                    kruizeExperimentEntry.setDatasource(null);
-                    kruizeExperimentEntry.setExperimentType(apiObject.getExperimentType());
+                    kruizeLMExperimentEntry = new KruizeLMExperimentEntry();
+                    kruizeLMExperimentEntry.setExperiment_name(apiObject.getExperimentName());
+                    kruizeLMExperimentEntry.setExperiment_id(Utils.generateID(apiObject));
+                    kruizeLMExperimentEntry.setCluster_name(apiObject.getClusterName());
+                    kruizeLMExperimentEntry.setMode(apiObject.getMode());
+                    kruizeLMExperimentEntry.setPerformance_profile(apiObject.getPerformanceProfile());
+                    kruizeLMExperimentEntry.setVersion(apiObject.getApiVersion());
+                    kruizeLMExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
+                    kruizeLMExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
+                    kruizeLMExperimentEntry.setMeta_data(null);
+                    kruizeLMExperimentEntry.setDatasource(null);
+                    kruizeLMExperimentEntry.setExperiment_type(apiObject.getExperimentType());
 
                     ObjectMapper objectMapper = new ObjectMapper();
                     try {
-                        kruizeExperimentEntry.setExtended_data(
+                        kruizeLMExperimentEntry.setExtended_data(
                                 objectMapper.readTree(
                                         new Gson().toJson(apiObject)
                                 )
@@ -318,11 +443,11 @@ public class DBHelpers {
                         throw new Exception("Error while creating Extended data due to : " + e.getMessage());
                     }
                 } catch (Exception e) {
-                    kruizeExperimentEntry = null;
+                    kruizeLMExperimentEntry = null;
                     LOGGER.error("Error while converting Kruize Object to experimentDetailTable due to {}", e.getMessage());
                     e.printStackTrace();
                 }
-                return kruizeExperimentEntry;
+                return kruizeLMExperimentEntry;
             }
 
             /**
@@ -498,7 +623,7 @@ public class DBHelpers {
                     kruizeRecommendationEntry.setVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
                     kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
-                    kruizeRecommendationEntry.setExperimentType(listRecommendationsAPIObject.getExperimentType());
+                    //kruizeRecommendationEntry.setExperimentType(listRecommendationsAPIObject.getExperimentType());
 
                     Timestamp endInterval = null;
                     // todo : what happens if two k8 objects or Containers with different timestamp
@@ -535,6 +660,30 @@ public class DBHelpers {
                 return kruizeRecommendationEntry;
             }
 
+            public static List<CreateExperimentAPIObject> convertLMExperimentEntryToCreateExperimentAPIObject(List<KruizeLMExperimentEntry> entries) throws Exception {
+                List<CreateExperimentAPIObject> createExperimentAPIObjects = new ArrayList<>();
+                int failureThreshHold = entries.size();
+                int failureCount = 0;
+                for (KruizeLMExperimentEntry entry : entries) {
+                    try {
+                        JsonNode extended_data = entry.getExtended_data();
+                        String extended_data_rawJson = extended_data.toString();
+                        CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
+                        apiObj.setExperiment_id(entry.getExperiment_id());
+                        apiObj.setStatus(entry.getStatus());
+                        createExperimentAPIObjects.add(apiObj);
+                    } catch (Exception e) {
+                        LOGGER.error("Error in converting to apiObj from db object due to : {}", e.getMessage());
+                        LOGGER.error(entry.toString());
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the experiments are able to load from DB.");
+
+                return createExperimentAPIObjects;
+            }
+
             public static List<CreateExperimentAPIObject> convertExperimentEntryToCreateExperimentAPIObject(List<KruizeExperimentEntry> entries) throws Exception {
                 List<CreateExperimentAPIObject> createExperimentAPIObjects = new ArrayList<>();
                 int failureThreshHold = entries.size();
@@ -546,7 +695,6 @@ public class DBHelpers {
                         CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
                         apiObj.setExperiment_id(entry.getExperiment_id());
                         apiObj.setStatus(entry.getStatus());
-                        apiObj.setExperimentType(entry.getExperimentType());
                         createExperimentAPIObjects.add(apiObj);
                     } catch (Exception e) {
                         LOGGER.error("Error in converting to apiObj from db object due to : {}", e.getMessage());
@@ -745,6 +893,7 @@ public class DBHelpers {
 
             /**
              * converts MetricProfile object to KruizeMetricProfileEntry table object
+             *
              * @param metricProfile metricProfile object to be converted
              * @return KruizeMetricProfileEntry table object
              */
@@ -782,6 +931,7 @@ public class DBHelpers {
 
             /**
              * converts KruizeMetricProfileEntry table objects to MetricProfile objects
+             *
              * @param kruizeMetricProfileEntryList List of KruizeMetricProfileEntry table objects to be converted
              * @return List containing the MetricProfile objects
              * @throws Exception
@@ -814,6 +964,7 @@ public class DBHelpers {
 
             /**
              * converts KruizeDataSourceEntry table objects to DataSourceInfo objects
+             *
              * @param kruizeDataSourceList List containing the KruizeDataSourceEntry table objects
              * @return List containing the DataSourceInfo objects
              */
@@ -842,7 +993,7 @@ public class DBHelpers {
                         if (kruizeDataSource.getServiceName().isEmpty() && null != kruizeDataSource.getUrl()) {
                             dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
                                     .getProvider(), null, null, new URL(kruizeDataSource.getUrl()), authConfig);
-                        } else{
+                        } else {
                             dataSourceInfo = new DataSourceInfo(kruizeDataSource.getName(), kruizeDataSource
                                     .getProvider(), kruizeDataSource.getServiceName(), kruizeDataSource.getNamespace(), null, authConfig);
                         }
@@ -861,6 +1012,7 @@ public class DBHelpers {
 
             /**
              * converts DataSourceInfo objects to KruizeDataSourceEntry table objects
+             *
              * @param dataSourceInfo DataSourceInfo objects
              * @return KruizeDataSourceEntry table object
              */
@@ -885,7 +1037,8 @@ public class DBHelpers {
 
             /**
              * converts DataSourceMetadataInfo objects to KruizeDSMetadataEntry table objects
-             * @param kruizeMetadataList    List of KruizeDSMetadataEntry objects
+             *
+             * @param kruizeMetadataList List of KruizeDSMetadataEntry objects
              * @return DataSourceMetadataInfo object
              * @throws Exception
              */
@@ -933,7 +1086,8 @@ public class DBHelpers {
 
             /**
              * Converts KruizeDSMetadataEntry table objects to DataSourceMetadataInfo with only cluster-level metadata
-             * @param kruizeMetadataList    KruizeDSMetadataEntry objects
+             *
+             * @param kruizeMetadataList KruizeDSMetadataEntry objects
              * @return DataSourceMetadataInfo object with only cluster-level metadata
              * @throws Exception
              */
@@ -974,8 +1128,9 @@ public class DBHelpers {
 
             /**
              * Converts KruizeDSMetadataEntry table objects to DataSourceMetadataInfo with only namespace-level metadata
-             * @param kruizeMetadataList    List of KruizeDSMetadataEntry objects
-             * @return  DataSourceMetadataInfo with only namespace-level metadata
+             *
+             * @param kruizeMetadataList List of KruizeDSMetadataEntry objects
+             * @return DataSourceMetadataInfo with only namespace-level metadata
              * @throws Exception
              */
             public static List<DataSourceMetadataInfo> convertKruizeMetadataToNamespaceLevelDataSourceMetadata(List<KruizeDSMetadataEntry> kruizeMetadataList) throws Exception {
@@ -1019,6 +1174,7 @@ public class DBHelpers {
 
             /**
              * Converts DataSourceMetadataInfo object to KruizeDSMetadataEntry objects
+             *
              * @param dataSourceMetadataInfo DataSourceMetadataInfo object
              * @return List of KruizeDSMetadataEntry objects
              */
@@ -1051,7 +1207,7 @@ public class DBHelpers {
 
                                 for (DataSourceWorkload dataSourceWorkload : dataSourceNamespace.getDataSourceWorkloadHashMap().values()) {
                                     // handles 'job' workload type with no containers
-                                    if(null == dataSourceWorkload.getDataSourceContainerHashMap()) {
+                                    if (null == dataSourceWorkload.getDataSourceContainerHashMap()) {
                                         KruizeDSMetadataEntry kruizeMetadata = new KruizeDSMetadataEntry();
                                         kruizeMetadata.setVersion(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoConstants.version);
 
@@ -1119,124 +1275,5 @@ public class DBHelpers {
             }
         }
 
-    }
-
-    /**
-     * Retrieves an existing DataSource from the DB entry or creates a new one if not found.
-     * @param kruizeMetadata            KruizeDSMetadataEntry object
-     * @param dataSourceMetadataInfo    DataSourceMetadataInfo object
-     * @return The DataSource instance associated with the DB entry.
-     */
-    private static DataSource getOrCreateDataSourceFromDB(KruizeDSMetadataEntry kruizeMetadata, DataSourceMetadataInfo dataSourceMetadataInfo) {
-        String dataSourceName = kruizeMetadata.getDataSourceName();
-
-        // Check if the data source already exists
-        if (dataSourceMetadataInfo.getDataSourceHashMap().containsKey(dataSourceName)) {
-            return dataSourceMetadataInfo.getDataSourceHashMap().get(dataSourceName);
-        }
-
-        DataSource dataSource = new DataSource(dataSourceName, new HashMap<>());
-        dataSourceMetadataInfo.getDataSourceHashMap().put(dataSourceName, dataSource);
-
-        return dataSource;
-    }
-
-    /**
-     * Retrieves an existing DataSourceCluster from the DB entry or creates a new one if not found.
-     * @param kruizeMetadata    KruizeDSMetadataEntry object
-     * @param dataSource        DataSource object
-     * @return The DataSourceCluster instance associated with the DB entry
-     */
-    private static DataSourceCluster getOrCreateDataSourceClusterFromDB(KruizeDSMetadataEntry kruizeMetadata, DataSource dataSource) {
-        String clusterName = kruizeMetadata.getClusterName();
-
-        // Check if the cluster already exists in the DataSource
-        if (dataSource.getDataSourceClusterHashMap().containsKey(clusterName)) {
-            return dataSource.getDataSourceClusterHashMap().get(clusterName);
-        }
-
-        DataSourceCluster dataSourceCluster = new DataSourceCluster(clusterName, new HashMap<>());
-        dataSource.getDataSourceClusterHashMap().put(clusterName, dataSourceCluster);
-
-        return dataSourceCluster;
-    }
-
-    /**
-     * Retrieves an existing DataSourceNamespace from the DB entry or creates a new one if not found.
-     * @param kruizeMetadata    KruizeDSMetadataEntry object
-     * @param dataSourceCluster DataSourceCluster object
-     * @return The DataSourceNamespace instance associated with the DB entry
-     */
-    private static DataSourceNamespace getOrCreateDataSourceNamespaceFromDB(KruizeDSMetadataEntry kruizeMetadata, DataSourceCluster dataSourceCluster) {
-        String namespaceName = kruizeMetadata.getNamespace();
-
-        // Check if the namespace already exists in the DataSourceCluster
-        if (dataSourceCluster.getDataSourceNamespaceHashMap().containsKey(namespaceName)) {
-            return dataSourceCluster.getDataSourceNamespaceHashMap().get(namespaceName);
-        }
-
-        DataSourceNamespace dataSourceNamespace = new DataSourceNamespace(namespaceName, new HashMap<>());
-        dataSourceCluster.getDataSourceNamespaceHashMap().put(namespaceName, dataSourceNamespace);
-
-        return dataSourceNamespace;
-    }
-
-    /**
-     * Retrieves an existing DataSourceWorkload from the DB entry or creates a new one if not found.
-     * @param kruizeMetadata        KruizeDSMetadataEntry object
-     * @param dataSourceNamespace   DataSourceNamespace object
-     * @return The DataSourceWorkload instance associated with the DB entry
-     */
-    private static DataSourceWorkload getOrCreateDataSourceWorkloadFromDB(KruizeDSMetadataEntry kruizeMetadata, DataSourceNamespace dataSourceNamespace) {
-        String workloadName = kruizeMetadata.getWorkloadName();
-
-        if (null == workloadName) {
-            return null;
-        }
-
-        // Check if the workload already exists in the DataSourceNamespace
-        if (dataSourceNamespace.getDataSourceWorkloadHashMap().containsKey(workloadName)) {
-            return dataSourceNamespace.getDataSourceWorkloadHashMap().get(workloadName);
-        }
-
-        DataSourceWorkload dataSourceWorkload = new DataSourceWorkload(workloadName, kruizeMetadata.getWorkloadType(), new HashMap<>());
-        dataSourceNamespace.getDataSourceWorkloadHashMap().put(workloadName, dataSourceWorkload);
-
-        return dataSourceWorkload;
-    }
-
-    /**
-     * Retrieves an existing DataSourceContainer from the DB entry or creates a new one if not found.
-     * @param kruizeMetadata        KruizeDSMetadataEntry object
-     * @param dataSourceWorkload    DataSourceWorkload object
-     * @return The DataSourceContainer instance associated with the DB entry
-     */
-    private static DataSourceContainer getOrCreateDataSourceContainerFromDB(KruizeDSMetadataEntry kruizeMetadata, DataSourceWorkload dataSourceWorkload) {
-        String containerName = kruizeMetadata.getContainerName();
-
-        if (null == containerName) {
-            return null;
-        }
-
-        // Check if the container already exists in the DataSourceWorkload
-        if (dataSourceWorkload.getDataSourceContainerHashMap().containsKey(containerName)) {
-            return dataSourceWorkload.getDataSourceContainerHashMap().get(containerName);
-        }
-
-        DataSourceContainer dataSourceContainer = new DataSourceContainer(containerName, kruizeMetadata.getContainerImageName());
-        dataSourceWorkload.getDataSourceContainerHashMap().put(containerName, dataSourceContainer);
-
-        return dataSourceContainer;
-    }
-
-    private static KruizeDSMetadataEntry getMetadata(String datasource) {
-        DataSourceMetadataOperator dataSourceMetadataOperator = DataSourceMetadataOperator.getInstance();
-        HashMap<String, DataSourceInfo> dataSources = DataSourceCollection.getInstance().getDataSourcesCollection();
-        DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.getDataSourceMetadataInfo(dataSources.get(datasource));
-        List<KruizeDSMetadataEntry> kruizeMetadataList = Converters.KruizeObjectConverters.convertDataSourceMetadataToMetadataObj(dataSourceMetadataInfo);
-        if (kruizeMetadataList.isEmpty())
-            return null;
-        else
-            return kruizeMetadataList.get(0);
     }
 }
