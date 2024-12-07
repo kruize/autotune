@@ -1916,11 +1916,12 @@ function kruize_remote_patch() {
   if [ ${cluster_type} == "minikube" ]; then
     #sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
     #sed -i 's/"local": "true"/"local": "false"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
-    if grep -q '"isROSEnabled": "false"' kruize-crc-minikube.yaml; then
+    if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}; then
+      echo "match found"
       sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
     else
-        echo "Error: Match not found" >&2
-        exit 1
+      echo "Error: Match not found" >&2
+      exit 1
     fi
     #sed -i '/"local": "false"/a \ \ \ \ "isROSEnabled": "true",' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
   elif [ ${cluster_type} == "openshift" ]; then
