@@ -51,6 +51,8 @@ public final class KruizeObject implements ExperimentTypeAware {
     private String datasource;
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
     private AnalyzerConstants.ExperimentType experimentType;
+    @SerializedName("default_updater")
+    private String defaultUpdater;
     private String namespace;               // TODO: Currently adding it at this level with an assumption that there is only one entry in k8s object needs to be changed
     private String mode;                    //Todo convert into Enum
     @SerializedName("target_cluster")
@@ -309,6 +311,14 @@ public final class KruizeObject implements ExperimentTypeAware {
         this.experimentType = experimentType;
     }
 
+
+    public String getDefaultUpdater() {
+        return defaultUpdater;
+    }
+
+    public void setDefaultUpdater(String defaultUpdater) {
+        this.defaultUpdater = defaultUpdater;
+    }
 
     @Override
     public String toString() {
