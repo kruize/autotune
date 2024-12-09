@@ -24,8 +24,6 @@ def get_kruize_url():
 
 def form_kruize_url(cluster_type, SERVER_IP=None):
     global URL
-    KIND_IP="127.0.0.1"
-    KRUIZE_PORT=8080
 
     if SERVER_IP != None:
         URL = "http://" + str(SERVER_IP)
@@ -46,8 +44,7 @@ def form_kruize_url(cluster_type, SERVER_IP=None):
         ip = subprocess.run(['minikube ip'], shell=True, stdout=subprocess.PIPE)
         SERVER_IP = ip.stdout.decode('utf-8').strip('\n')
         URL = "http://" + str(SERVER_IP) + ":" + str(AUTOTUNE_PORT)
-    elif (cluster_type == "kind"):
-        URL = "http://" + KIND_IP + ":" + str(KRUIZE_PORT)
+
     elif (cluster_type == "openshift"):
 
         subprocess.run(['oc expose svc/kruize -n openshift-tuning'], shell=True, stdout=subprocess.PIPE)
@@ -62,33 +59,6 @@ def form_kruize_url(cluster_type, SERVER_IP=None):
 
     print("\nKRUIZE AUTOTUNE URL = ", URL)
 
-# Description: This function invokes the Kruize bulk service API
-# Input Parameters: bulk json
-def bulk(bulk_json_file):
-    json_file = open(bulk_json_file, "r")
-    bulk_json = json.loads(json_file.read())
-
-    #print("\nInvoking bulk service...")
-    url = URL + "/bulk"
-    print("URL = ", url)
-
-    response = requests.post(url, json=bulk_json)
-    return response
-
-# Description: This function invokes the Kruize bulk service API
-# Input Parameters: job id returned from bulk service
-def get_bulk_job_status(job_id, verbose = None):
-    #print("\nGet the bulk job status for job id %s " % (job_id))
-    queryString = "?"
-    if job_id:
-        queryString = queryString + "job_id=%s" % (job_id)
-    if verbose:
-        queryString = queryString + "&verbose=%s" % (verbose)
-
-    url = URL + "/bulk%s" % (queryString)
-    #print("URL = ", url)
-    response = requests.get(url, )
-    return response
 
 # Description: This function validates the input json and posts the experiment using createExperiment API to Kruize Autotune
 # Input Parameters: experiment input json
@@ -205,10 +175,10 @@ def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=
     print("PARAMS = ", PARAMS)
     response = requests.get(url=url, params=PARAMS)
 
-    #print("Response status code = ", response.status_code)
-    #print("\n************************************************************")
-    #print(response.text)
-    #print("\n************************************************************")
+    print("Response status code = ", response.status_code)
+    print("\n************************************************************")
+    print(response.text)
+    print("\n************************************************************")
     return response
 
 
