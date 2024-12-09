@@ -197,9 +197,13 @@ public class RecommendationEngine {
         KruizeObject kruizeObject = new KruizeObject();
         try {
 
-            if (KruizeDeploymentInfo.is_ros_enabled && null != target_cluster && target_cluster.equalsIgnoreCase(AnalyzerConstants.REMOTE)) { // todo call this in function and use across every where
-                new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
-            } else {
+            if (KruizeDeploymentInfo.is_ros_enabled){
+                if(null == target_cluster ||  target_cluster.equalsIgnoreCase(AnalyzerConstants.REMOTE)){
+                    new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
+                }else{
+                    new ExperimentDBService().loadLMExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
+                }
+            }else{
                 new ExperimentDBService().loadLMExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
             }
 
