@@ -50,6 +50,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
@@ -121,8 +122,15 @@ public class BulkJobManager implements Runnable {
         DataSourceMetadataInfo metadataInfo = null;
         DataSourceManager dataSourceManager = new DataSourceManager();
         DataSourceInfo datasource = null;
+        String labelString = null;
+        Map<String, String> includeResourcesMap = null;
+        Map<String, String> excludeResourcesMap = null;
         try {
-            String labelString = getLabels(this.bulkInput.getFilter());
+            if (this.bulkInput.getFilter() != null) {
+                labelString = getLabels(this.bulkInput.getFilter());
+                includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
+                excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
+            }
             if (null == this.bulkInput.getDatasource()) {
                 this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
             }
@@ -137,10 +145,13 @@ public class BulkJobManager implements Runnable {
             }
             if (null != datasource) {
                 JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
-                if (null != daterange)
-                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get(START_TIME), (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS));
+                if (null != daterange) {
+                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get(START_TIME),
+                            (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), includeResourcesMap, excludeResourcesMap);
+                }
                 else {
-                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, 0, 0, 0);
+                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, 0, 0,
+                            0, includeResourcesMap, excludeResourcesMap);
                 }
                 if (null == metadataInfo) {
                     setFinalJobStatus(COMPLETED,String.valueOf(HttpURLConnection.HTTP_OK),NOTHING_INFO,datasource);
@@ -314,7 +325,7 @@ public class BulkJobManager implements Runnable {
         String uniqueKey = null;
         try {
             // Process labels in the 'include' section
-            if (filter != null && filter.getInclude() != null) {
+            if (filter.getInclude() != null) {
                 // Initialize StringBuilder for uniqueKey
                 StringBuilder includeLabelsBuilder = new StringBuilder();
                 Map<String, String> includeLabels = filter.getInclude().getLabels();
@@ -335,6 +346,19 @@ public class BulkJobManager implements Runnable {
             LOGGER.error(e.getMessage());
         }
         return uniqueKey;
+    }
+
+    private Map<String, String> buildRegexFilters(BulkInput.Filter filter) {
+        Map<String, String> resourceFilters = new HashMap<>();
+        if (filter != null) {
+            resourceFilters.put("namespaceRegex", filter.getNamespace() != null ?
+                    filter.getNamespace().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+            resourceFilters.put("workloadRegex", filter.getWorkload() != null ?
+                    filter.getWorkload().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+            resourceFilters.put("containerRegex", filter.getContainers() != null ?
+                    filter.getContainers().stream().map(String::trim).collect(Collectors.joining("|")) : "");
+        }
+        return resourceFilters;
     }
 
     private JSONObject processDateRange(BulkInput.TimeRange timeRange) {
