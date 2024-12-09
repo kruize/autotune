@@ -28,18 +28,23 @@ progress of the job.
 {
   "filter": {
     "exclude": {
-      "namespace": [],
-      "workload": [],
-      "containers": [],
-      "labels": {}
+      "namespace": ["cadvisor", "openshift-tuning", "openshift-monitoring", "thanos-bench"],
+      "workload": ["osd-rebalance-infra-nodes-28887030", "blackbox-exporter", "thanos-query"],
+      "containers": ["tfb-0", "alertmanager"],
+      "labels": {
+        "org_id": "ABCOrga",
+        "source_id": "ZZZ",
+        "cluster_id": "ABG"
+      }
     },
     "include": {
-      "namespace": [],
-      "workload": [],
-      "containers": [],
+      "namespace": ["cadvisor", "openshift-tuning", "openshift-monitoring", "thanos-bench"],
+      "workload": ["osd-rebalance-infra-nodes-28887030", "blackbox-exporter", "thanos-query"],
+      "containers": ["tfb-0", "alertmanager"],
       "labels": {
-        "key1": "value1",
-        "key2": "value2"
+        "org_id": "ABCOrga",
+        "source_id": "ZZZ",
+        "cluster_id": "ABG"
       }
     }
   },
@@ -105,10 +110,12 @@ The specified time range determines the period over which the data is analyzed t
 - The `start` timestamp precedes the `end` timestamp.
 
 #### 2. **Request Payload with `exclude` filter specified:**
-TBA
+ 
+- **`exclude`** filters out namespaces like `"cadvisor"` and workloads like `"blackbox-exporter"`, along with containers and labels that match the specified values. So, we'll generate create experiments and generate recommendations for every namespace, workload and containers except those.
 
 #### 3. **Request Payload with `include` filter specified:**
-TBA
+
+- **`include`** explicitly selects the namespaces, workloads, containers, and labels to be queried. So, for only those we'll create experiments and get the recommendations.
 
 ### GET Request:
 
