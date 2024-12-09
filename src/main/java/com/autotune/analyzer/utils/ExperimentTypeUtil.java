@@ -20,11 +20,11 @@ package com.autotune.analyzer.utils;
  * This class contains utility functions to determine experiment type
  */
 public class ExperimentTypeUtil {
-    public static boolean isContainerExperiment(String experimentType) {
-        return experimentType == null || experimentType.equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
+    public static boolean isContainerExperiment(AnalyzerConstants.ExperimentType experimentType) {
+        return experimentType == null || AnalyzerConstants.ExperimentType.CONTAINER.equals(experimentType);
     }
 
-    public static boolean isNamespaceExperiment(String experimentType) {
-        return experimentType != null && experimentType.equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT);
+    public static boolean isNamespaceExperiment(AnalyzerConstants.ExperimentType experimentType) {
+        return experimentType != null && AnalyzerConstants.ExperimentType.NAMESPACE.equals(experimentType);
     }
 }

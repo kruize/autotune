@@ -13,19 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.database.table;
+package com.autotune.database.table.lm;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.database.helper.GenerateExperimentID;
-import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import java.sql.Timestamp;
+import java.util.Date;
+
+
 /**
- * This is a Java class named KruizeExperimentEntry annotated with JPA annotations.
- * It represents a table named kruize_experiment in a relational database.
+ * This is a Java class named KruizeLMExperimentEntry annotated with JPA annotations.
+ * It represents a table named kruize_lm_experiments in a relational database.
  * <p>
  * The class has the following fields:
  * <p>
@@ -39,12 +42,13 @@ import org.hibernate.type.SqlTypes;
  * status: An enum representing the status of the experiment, defined in AnalyzerConstants.ExperimentStatus.
  * extended_data: A JSON object representing extended data for the experiment.
  * meta_data: A string representing metadata for the experiment.
+ * experiment_type : Recommendation generation at container, namespace level etc.
  * The ExperimentDetail class also has getters and setters for all its fields.
  */
 @Entity
-@Table(name = "kruize_experiments")
+@Table(name = "kruize_lm_experiments")
 @IdClass(GenerateExperimentID.class)
-public class KruizeExperimentEntry {
+public class KruizeLMExperimentEntry {
     @Id
     //@GeneratedValue(strategy = GenerationType.IDENTITY)
     private String experiment_id;
@@ -63,27 +67,17 @@ public class KruizeExperimentEntry {
     private JsonNode extended_data;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode meta_data;
+    @Enumerated(EnumType.STRING)
+    private AnalyzerConstants.ExperimentType experiment_type;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "creation_date", updatable = false)
+    private Timestamp creation_date;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = "updated_date")
+    private Timestamp updated_date;
 
 //    TODO: update KruizeDSMetadataEntry
 
-
-    public KruizeExperimentEntry(KruizeLMExperimentEntry kruizeLMExperimentEntry) {
-        this.experiment_id = kruizeLMExperimentEntry.getExperiment_id();
-        this.version = kruizeLMExperimentEntry.getVersion();
-        this.experiment_name = kruizeLMExperimentEntry.getExperiment_name();
-        this.cluster_name = kruizeLMExperimentEntry.getCluster_name();
-        this.mode = kruizeLMExperimentEntry.getMode();
-        this.target_cluster = kruizeLMExperimentEntry.getTarget_cluster();
-        this.performance_profile = kruizeLMExperimentEntry.getPerformance_profile();
-        this.status = kruizeLMExperimentEntry.getStatus();
-        this.datasource = kruizeLMExperimentEntry.getDatasource();
-        this.extended_data = kruizeLMExperimentEntry.getExtended_data();
-        this.meta_data = kruizeLMExperimentEntry.getMeta_data();
-    }
-
-    public KruizeExperimentEntry() {
-        
-    }
 
     public String getVersion() {
         return version;
@@ -173,5 +167,47 @@ public class KruizeExperimentEntry {
         this.datasource = datasource;
     }
 
+    public AnalyzerConstants.ExperimentType getExperiment_type() {
+        return experiment_type;
+    }
 
+    public void setExperiment_type(AnalyzerConstants.ExperimentType experiment_type) {
+        this.experiment_type = experiment_type;
+    }
+
+    public Date getCreation_date() {
+        return creation_date;
+    }
+
+    public void setCreation_date(Timestamp creation_date) {
+        this.creation_date = creation_date;
+    }
+
+    public Date getUpdated_date() {
+        return updated_date;
+    }
+
+    public void setUpdated_date(Timestamp updated_date) {
+        this.updated_date = updated_date;
+    }
+
+    @Override
+    public String toString() {
+        return "KruizeLMExperimentEntry{" +
+                "experiment_id='" + experiment_id + '\'' +
+                ", version='" + version + '\'' +
+                ", experiment_name='" + experiment_name + '\'' +
+                ", cluster_name='" + cluster_name + '\'' +
+                ", mode='" + mode + '\'' +
+                ", target_cluster='" + target_cluster + '\'' +
+                ", performance_profile='" + performance_profile + '\'' +
+                ", status=" + status +
+                ", datasource=" + datasource +
+                ", extended_data=" + extended_data +
+                ", meta_data=" + meta_data +
+                ", experiment_type=" + experiment_type +
+                ", creation_date=" + creation_date +
+                ", updated_date=" + updated_date +
+                '}';
+    }
 }

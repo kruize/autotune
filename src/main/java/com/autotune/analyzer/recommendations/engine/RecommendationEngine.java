@@ -192,11 +192,21 @@ public class RecommendationEngine {
         this.kruizeObject = kruizeObject;
     }
 
-    private KruizeObject createKruizeObject() {
+    private KruizeObject createKruizeObject(String target_cluster) {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
         KruizeObject kruizeObject = new KruizeObject();
         try {
-            new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
+
+            if (KruizeDeploymentInfo.is_ros_enabled){
+                if(null == target_cluster ||  target_cluster.equalsIgnoreCase(AnalyzerConstants.REMOTE)){
+                    new ExperimentDBService().loadExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
+                }else{
+                    new ExperimentDBService().loadLMExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
+                }
+            }else{
+                new ExperimentDBService().loadLMExperimentFromDBByName(mainKruizeExperimentMAP, experimentName);
+            }
+
             if (null != mainKruizeExperimentMAP.get(experimentName)) {
                 kruizeObject = mainKruizeExperimentMAP.get(experimentName);
                 kruizeObject.setValidation_data(new ValidationOutputData(true, null, null));
@@ -259,7 +269,7 @@ public class RecommendationEngine {
      * @param calCount The count of incoming requests.
      * @return The KruizeObject containing the prepared recommendations.
      */
-    public KruizeObject prepareRecommendations(int calCount) throws FetchMetricsError {
+    public KruizeObject prepareRecommendations(int calCount, String target_cluster) throws FetchMetricsError {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
         Map<String, Terms> terms = new HashMap<>();
         ValidationOutputData validationOutputData;
@@ -269,7 +279,7 @@ public class RecommendationEngine {
                     intervalEndTimeStr);
             setInterval_end_time(interval_end_time);
         }
-        KruizeObject kruizeObject = createKruizeObject();
+        KruizeObject kruizeObject = createKruizeObject(target_cluster);
         if (!kruizeObject.getValidation_data().isSuccess())
             return kruizeObject;
         setKruizeObject(kruizeObject);
@@ -2388,7 +2398,7 @@ public class RecommendationEngine {
      * @param maxDateQuery   maxDateQuery metric to be filtered out
      * @param experimentType experiment type
      */
-    public List<Metric> filterMetricsBasedOnExpTypeAndK8sObject(PerformanceProfile metricProfile, String maxDateQuery, String experimentType) {
+    public List<Metric> filterMetricsBasedOnExpTypeAndK8sObject(PerformanceProfile metricProfile, String maxDateQuery, AnalyzerConstants.ExperimentType experimentType) {
         String namespace = KruizeConstants.JSONKeys.NAMESPACE;
         String container = KruizeConstants.JSONKeys.CONTAINER;
         return metricProfile.getSloInfo().getFunctionVariables().stream()

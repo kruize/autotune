@@ -26,9 +26,6 @@ import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.result.ContainerData;
-import com.autotune.common.data.result.NamespaceData;
-import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
@@ -47,7 +44,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -101,9 +101,9 @@ public class CreateExperiment extends HttpServlet {
                     createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
                     createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
                     // validating the kubernetes objects and experiment type
-                    for (KubernetesAPIObject kubernetesAPIObject: createExperimentAPIObject.getKubernetesObjects()) {
+                    for (KubernetesAPIObject kubernetesAPIObject : createExperimentAPIObject.getKubernetesObjects()) {
                         if (createExperimentAPIObject.isContainerExperiment()) {
-                            createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT);
+                            createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentType.CONTAINER);
                             // check if namespace data is also set for container-type experiments
                             if (null != kubernetesAPIObject.getNamespaceAPIObjects()) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP);
