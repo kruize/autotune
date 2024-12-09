@@ -27,8 +27,8 @@ import java.util.Date;
 
 
 /**
- * This is a Java class named KruizeExperimentEntry annotated with JPA annotations.
- * It represents a table named kruize_experiment in a relational database.
+ * This is a Java class named KruizeLMExperimentEntry annotated with JPA annotations.
+ * It represents a table named kruize_lm_experiments in a relational database.
  * <p>
  * The class has the following fields:
  * <p>
@@ -42,6 +42,7 @@ import java.util.Date;
  * status: An enum representing the status of the experiment, defined in AnalyzerConstants.ExperimentStatus.
  * extended_data: A JSON object representing extended data for the experiment.
  * meta_data: A string representing metadata for the experiment.
+ * experiment_type : Recommendation generation at container, namespace level etc.
  * The ExperimentDetail class also has getters and setters for all its fields.
  */
 @Entity
