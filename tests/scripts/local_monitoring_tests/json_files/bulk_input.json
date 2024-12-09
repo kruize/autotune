@@ -1,0 +1,18 @@
+{
+  "filter": {
+    "exclude": {
+      "namespace": [],
+      "workload": [],
+      "containers": [],
+      "labels": {}
+    },
+    "include": {
+      "namespace": [],
+      "workload": [],
+      "containers": [],
+      "labels": {}
+    }
+  },
+  "datasource": "thanos",
+}
+
