@@ -74,7 +74,7 @@ public class RecommendationUpdaterImpl implements RecommendationUpdater {
             int calCount = 0;
             String validationMessage = recommendationEngine.validate_local();
             if (validationMessage.isEmpty()) {
-                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount);
+                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, null);
                 if (kruizeObject.getValidation_data().isSuccess()) {
                     LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.GENERATED_RECOMMENDATIONS, experimentName);
                     return kruizeObject;

@@ -16,15 +16,35 @@
 
 package com.autotune.analyzer.recommendations.updater.vpa;
 
+import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
+import com.autotune.analyzer.exceptions.UnableToCreateVPAException;
+import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.updater.RecommendationUpdaterImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.k8sObjects.K8sObject;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
+import com.autotune.analyzer.recommendations.objects.TermRecommendations;
+import io.fabric8.autoscaling.api.model.v1.*;
+import io.fabric8.kubernetes.api.model.ObjectMeta;
+import io.fabric8.kubernetes.api.model.Quantity;
 import io.fabric8.kubernetes.api.model.apiextensions.v1.CustomResourceDefinitionList;
+import io.fabric8.kubernetes.api.model.autoscaling.v1.CrossVersionObjectReferenceBuilder;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.ApiextensionsAPIGroupDSL;
+import io.fabric8.verticalpodautoscaler.client.DefaultVerticalPodAutoscalerClient;
+import io.fabric8.verticalpodautoscaler.client.NamespacedVerticalPodAutoscalerClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(VpaUpdaterImpl.class);
@@ -60,8 +80,292 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
         if (isVpaInstalled) {
             LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.FOUND_UPDATER_INSTALLED, AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA);
         } else {
-            LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDATER_NOT_INSTALLED, AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA);
+            LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDATER_NOT_INSTALLED);
         }
         return isVpaInstalled;
+    }
+
+    /**
+     * Checks if a Vertical Pod Autoscaler (VPA) object with the specified name is present.
+     *
+     * @param vpaName String containing the name of the VPA object to search for
+     * @return true if the VPA object with the specified name is present, false otherwise
+     */
+    private boolean checkIfVpaIsPresent(String vpaName) {
+        try {
+            LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_IF_VPA_PRESENT, vpaName));
+            NamespacedVerticalPodAutoscalerClient client = new DefaultVerticalPodAutoscalerClient();
+            VerticalPodAutoscalerList vpas = client.v1().verticalpodautoscalers().inAnyNamespace().list();
+
+            // TODO:// later we can also check here is the recommender is Kruize to confirm
+            for (VerticalPodAutoscaler vpa : vpas.getItems()) {
+                if (vpaName.equals(vpa.getMetadata().getName())) {
+                    LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_FOUND, vpaName));
+                    return true;
+                }
+            }
+            LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_NOT_FOUND, vpaName));
+            return false;
+        } catch (Exception e) {
+            LOGGER.error("Error while checking VPA presence: " + e.getMessage(), e);
+            return false;
+        }
+    }
+
+
+    /**
+     * Returns the VPA Object if present with the name
+     *
+     * @param vpaName String containing the name of the VPA object to search for
+     * @return VerticalPodAutoscaler if the VPA object with the specified name is present, null otherwise
+     */
+    private VerticalPodAutoscaler getVpaIsPresent(String vpaName) {
+        try {
+            LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_IF_VPA_PRESENT, vpaName));
+            NamespacedVerticalPodAutoscalerClient client = new DefaultVerticalPodAutoscalerClient();
+            VerticalPodAutoscalerList vpas = client.v1().verticalpodautoscalers().inAnyNamespace().list();
+
+            for (VerticalPodAutoscaler vpa : vpas.getItems()) {
+                if (vpaName.equals(vpa.getMetadata().getName())) {
+                    LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_FOUND, vpaName));
+                    return vpa;
+                }
+            }
+            LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_NOT_FOUND, vpaName));
+            return null;
+        } catch (Exception e) {
+            LOGGER.error("Error while checking VPA presence: " + e.getMessage(), e);
+            return null;
+        }
+    }
+
+
+    /**
+     * Applies the resource recommendations contained within the provided KruizeObject
+     * This method will take the KruizeObject, which contains the resource recommendations,
+     * and apply them to the desired resources.
+     *
+     * @param kruizeObject KruizeObject containing the resource recommendations to be applied.
+     * @throws ApplyRecommendationsError in case of any error.
+     */
+    @Override
+    public void applyResourceRecommendationsForExperiment(KruizeObject kruizeObject) throws ApplyRecommendationsError {
+        try {
+            // checking if VPA is installed or not
+            if (isUpdaterInstalled()) {
+                String expName = kruizeObject.getExperimentName();
+                boolean vpaPresent = checkIfVpaIsPresent(expName);
+
+                // create VPA Object is not present
+                if (!vpaPresent) {
+                    createVpaObject(kruizeObject);
+                }
+
+                for (K8sObject k8sObject: kruizeObject.getKubernetes_objects()) {
+                    List<RecommendedContainerResources> containerRecommendations = convertRecommendationsToContainerPolicy(k8sObject.getContainerDataMap());
+                    if (containerRecommendations.isEmpty()){
+                        LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.RECOMMENDATION_DATA_NOT_PRESENT);
+                    } else {
+                        RecommendedPodResources recommendedPodResources = new RecommendedPodResources();
+                        recommendedPodResources.setContainerRecommendations(containerRecommendations);
+                        VerticalPodAutoscalerStatus vpaObjectStatus = new VerticalPodAutoscalerStatusBuilder()
+                                .withRecommendation(recommendedPodResources)
+                                .build();
+
+                        // patching existing VPA Object
+                        if (vpaObjectStatus != null) {
+                            VerticalPodAutoscaler vpaObject = getVpaIsPresent(expName);
+                            vpaObject.setStatus(vpaObjectStatus);
+
+                            NamespacedVerticalPodAutoscalerClient client = new DefaultVerticalPodAutoscalerClient();
+                            client.v1().verticalpodautoscalers()
+                                    .inNamespace(vpaObject
+                                            .getMetadata()
+                                            .getNamespace())
+                                    .withName(vpaObject
+                                            .getMetadata()
+                                            .getName())
+                                    .patchStatus(vpaObject);
+
+                            LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_PATCHED,
+                                    vpaObject.getMetadata().getName()));
+                        }
+                    }
+                }
+
+            } else {
+                LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDATER_NOT_INSTALLED);
+            }
+        } catch (Exception e) {
+            throw new ApplyRecommendationsError(e.getMessage());
+        }
+    }
+
+    /**
+     * This function converts container recommendations for VPA Container Recommendations Object Format
+     */
+    private List<RecommendedContainerResources>  convertRecommendationsToContainerPolicy(HashMap<String, ContainerData> containerDataMap) {
+        List<RecommendedContainerResources> containerRecommendations = new ArrayList<>();
+
+        for (Map.Entry<String, ContainerData> containerDataEntry : containerDataMap.entrySet()) {
+            // fetcing container data
+            ContainerData containerData = containerDataEntry.getValue();
+            String containerName = containerData.getContainer_name();
+            HashMap<Timestamp, MappedRecommendationForTimestamp> recommendationData = containerData.getContainerRecommendations().getData();
+
+            // checking if recommendation data is present
+            if (recommendationData != null) {
+                for (MappedRecommendationForTimestamp value : recommendationData.values()) {
+                    /*
+                     * Fetching Short Term Cost Recommendations By Default
+                     * TODO:// Implement functionality to choose the desired term and model
+                     **/
+                    TermRecommendations termRecommendations = value.getShortTermRecommendations();
+                    HashMap<AnalyzerConstants.ResourceSetting,
+                            HashMap<AnalyzerConstants.RecommendationItem,
+                                    RecommendationConfigItem>> recommendationsConfig = termRecommendations.getCostRecommendations().getConfig();
+
+                    Double cpuRecommendationValue = recommendationsConfig.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.CPU).getAmount();
+                    Double memoryRecommendationValue = recommendationsConfig.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.MEMORY).getAmount();
+
+                    LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.RECOMMENDATION_VALUE, "CPU", containerName, cpuRecommendationValue));
+                    LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.RECOMMENDATION_VALUE, "MEMORY", containerName, memoryRecommendationValue));
+
+                    String cpuRecommendationValueForVpa = resource2str("CPU", cpuRecommendationValue);
+                    String memoryRecommendationValueForVpa = resource2str("MEMORY", memoryRecommendationValue);
+
+                    // creating container resource vpa object
+                    RecommendedContainerResources recommendedContainerResources = new RecommendedContainerResources();
+                    recommendedContainerResources.setContainerName(containerName);
+
+                    // setting target values
+                    Map<String, Quantity> target = new HashMap<>();
+                    target.put("cpu", new Quantity(cpuRecommendationValueForVpa));
+                    target.put("memory", new Quantity(memoryRecommendationValueForVpa));
+
+                    // setting lower bound values
+                    Map<String, Quantity> lowerBound = new HashMap<>();
+                    lowerBound.put("cpu", new Quantity(cpuRecommendationValueForVpa));
+                    lowerBound.put("memory", new Quantity(memoryRecommendationValueForVpa));
+
+                    // setting upper bound values
+                    Map<String, Quantity> upperBound = new HashMap<>();
+                    upperBound.put("cpu", new Quantity(cpuRecommendationValueForVpa));
+                    upperBound.put("memory", new Quantity(memoryRecommendationValueForVpa));
+
+                    recommendedContainerResources.setLowerBound(lowerBound);
+                    recommendedContainerResources.setTarget(target);
+                    recommendedContainerResources.setUpperBound(upperBound);
+
+                    containerRecommendations.add(recommendedContainerResources);
+                }
+            } else {
+                LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.RECOMMENDATION_DATA_NOT_PRESENT);
+            }
+        }
+        return containerRecommendations;
+    }
+
+    /**
+     * This function converts the cpu and memory values to VPA desired format
+     */
+    public static String resource2str(String resource, double value) {
+        if (resource.equalsIgnoreCase("CPU")) {
+            // cpu related conversions
+            if (value < 1) {
+                return (int) (value * 1000) + "m";
+            } else {
+                return String.valueOf(value);
+            }
+        } else {
+            // memory related conversions
+            if (value < 1024) {
+                return (int) value + "B";
+            } else if (value < 1024 * 1024) {
+                return (int) (value / 1024) + "k";
+            } else if (value < 1024 * 1024 * 1024) {
+                return (int) (value / 1024 / 1024) + "Mi";
+            } else {
+                return (int) (value / 1024 / 1024 / 1024) + "Gi";
+            }
+        }
+    }
+
+    /*
+     * Creates a Vertical Pod Autoscaler (VPA) object in the specified namespace
+     * for the given deployment and containers.
+     */
+    public void createVpaObject(KruizeObject kruizeObject) throws UnableToCreateVPAException {
+        try {
+            // checks if updater is installed or not
+            if (isUpdaterInstalled()) {
+                LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CREATEING_VPA, kruizeObject.getExperimentName());
+
+                // updating recommender to Kruize for VPA Object
+                Map<String, Object> additionalVpaObjectProps = getAdditionalVpaObjectProps();
+
+                // updating controlled resources
+                List<String> controlledResources = new ArrayList<>();
+                controlledResources.add("cpu");
+                controlledResources.add("memory");
+
+                // updating container policies
+                for (K8sObject k8sObject: kruizeObject.getKubernetes_objects()) {
+                    List<String> containers = new ArrayList<>(k8sObject.getContainerDataMap().keySet());
+                    List<ContainerResourcePolicy> containerPolicies = new ArrayList<>();
+                    for (String containerName : containers) {
+                        ContainerResourcePolicy policy = new ContainerResourcePolicyBuilder()
+                                .withContainerName(containerName)
+                                .withControlledResources(controlledResources)
+                                .build();
+                        containerPolicies.add(policy);
+                    }
+
+                    PodResourcePolicy podPolicy = new PodResourcePolicyBuilder()
+                            .withContainerPolicies(containerPolicies)
+                            .build();
+
+                    VerticalPodAutoscaler vpa = new VerticalPodAutoscalerBuilder()
+                            .withApiVersion(AnalyzerConstants.RecommendationUpdaterConstants.VPA.VPA_API_VERSION)
+                            .withKind(AnalyzerConstants.RecommendationUpdaterConstants.VPA.VPA_PLURAL)
+                            .withMetadata(new ObjectMeta() {{
+                                setName(kruizeObject.getExperimentName());
+                            }})
+                            .withSpec(new VerticalPodAutoscalerSpecBuilder()
+                                    .withTargetRef(new CrossVersionObjectReferenceBuilder()
+                                            .withApiVersion(AnalyzerConstants.RecommendationUpdaterConstants.VPA.VPA_TARGET_REF_API_VERSION)
+                                            .withKind(AnalyzerConstants.RecommendationUpdaterConstants.VPA.VPA_TARGET_REF_KIND)
+                                            .withName(k8sObject.getName())
+                                            .build())
+                                    .withResourcePolicy(podPolicy)
+                                    .withAdditionalProperties(additionalVpaObjectProps)
+                                    .build())
+                            .build();
+
+                    kubernetesClient.resource(vpa).inNamespace(k8sObject.getNamespace()).createOrReplace();
+                    LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CREATED_VPA, kruizeObject.getExperimentName()));
+                }
+
+            } else {
+                throw new UnableToCreateVPAException(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDATER_NOT_INSTALLED);
+            }
+        } catch (Exception e) {
+            throw new UnableToCreateVPAException(e.getMessage());
+        }
+    }
+
+    /*
+     * Prepare Object Map with addiional properties required for VPA Object
+     * such as - Recommender Name
+     */
+    private static Map<String, Object> getAdditionalVpaObjectProps() {
+        Map<String, Object> additionalVpaObjectProps = new HashMap<>();
+        List<Map<String, Object>> recommenders = new ArrayList<>();
+        Map<String, Object> recommender = new HashMap<>();
+        recommender.put(AnalyzerConstants.RecommendationUpdaterConstants.VPA.RECOMMENDER_KEY,
+                AnalyzerConstants.RecommendationUpdaterConstants.VPA.RECOMMENDER_NAME);
+        recommenders.add(recommender);
+        additionalVpaObjectProps.put(AnalyzerConstants.RecommendationUpdaterConstants.VPA.RECOMMENDERS, recommenders);
+        return additionalVpaObjectProps;
     }
 }

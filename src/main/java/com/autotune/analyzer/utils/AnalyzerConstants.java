@@ -691,6 +691,13 @@ public class AnalyzerConstants {
 
         public static final class VPA {
             public static final String VPA_PLURAL = "VerticalPodAutoscaler";
+            public static final String RECOMMENDERS = "recommenders";
+            public static final String RECOMMENDER_KEY = "recommender";
+            public static final String RECOMMENDER_NAME = "Kruize";
+            public static final String VPA_API_VERSION = "autoscaling.k8s.io/v1";
+            public static final String VPA_TARGET_REF_API_VERSION = "apps/v1";
+            public static final String VPA_TARGET_REF_KIND = "Deployment";
+
 
             private VPA() {
 
@@ -702,7 +709,13 @@ public class AnalyzerConstants {
             public static final String GENERATED_RECOMMENDATIONS = "Generated recommendations for experiment: {}";
             public static final String CHECKING_IF_UPDATER_INSTALLED = "Verifying if the updater is installed: {}";
             public static final String FOUND_UPDATER_INSTALLED = "Found updater is installed: {}";
-
+            public static final String CHECKING_IF_VPA_PRESENT = "Checking for the presence of VPA with name: %s";
+            public static final String VPA_WITH_NAME_FOUND = "VPA with name %s found.";
+            public static final String VPA_WITH_NAME_NOT_FOUND = "VPA with name %s not found.";
+            public static final String RECOMMENDATION_VALUE = "%s request recommendations for container %s is %f";
+            public static final String VPA_PATCHED = "VPA object with name %s is patched successfully with recommendations.";
+            public static final String CREATEING_VPA = "Creating VPA with name: %s";
+            public static final String CREATED_VPA = "Created VPA with name: %s";
             private InfoMsgs() {
 
             }
