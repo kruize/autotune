@@ -299,7 +299,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
         try {
             // checks if updater is installed or not
             if (isUpdaterInstalled()) {
-                LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CREATEING_VPA, kruizeObject.getExperimentName());
+                LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CREATEING_VPA, kruizeObject.getExperimentName()));
 
                 // updating recommender to Kruize for VPA Object
                 Map<String, Object> additionalVpaObjectProps = getAdditionalVpaObjectProps();
