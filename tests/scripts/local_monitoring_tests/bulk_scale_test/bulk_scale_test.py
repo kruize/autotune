@@ -44,14 +44,13 @@ def setup_logger(name, log_file, level=logging.INFO):
 def invoke_bulk_with_time_range_labels(worker_number, resultsdir, bulk_json, delay):
     try:
         #time.sleep(delay)
-        print("In bulk")
         scale_log_dir = resultsdir + "/scale_logs"
         os.makedirs(scale_log_dir, exist_ok=True)
 
         org_id = bulk_json['filter']['include']['labels']['org_id']
         cluster_id = bulk_json['filter']['include']['labels']['cluster_id']
 
-        log_id = "worker_" + str(worker_number) + "-" + org_id + "-" + cluster_id
+        log_id = str(worker_number) + "-" + org_id + "-" + cluster_id
 
         print(log_id)
 
@@ -156,21 +155,16 @@ def invoke_bulk_with_time_range_labels(worker_number, resultsdir, bulk_json, del
     except Exception as e:
         return {'error': str(e)}
 
-def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, interval_hours, days_of_res, test, interval_seconds):
+def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, interval_hours, days_of_res, org_ids, cluster_ids, interval_seconds):
     results = []
-    # To do: For every 6 hrs time range (starting from end_time until 15 days), trigger parallel requests with same timerange
+
     print(f"initial_end_time - {initial_end_time}")
     print(f"days_of_res - {days_of_res}")
     print(f"interval_hours - {interval_hours}")
+
     num_tsdb_blocks = int((days_of_res * 24) / interval_hours)
 
     print(f"num_tsdb_blocks - {num_tsdb_blocks}")
-
-    # 100k exps
-    # org * clusters * namespaces * workloads
-    # 100k - 10 * 10 * 20 * 50
-    org_ids=10
-    cluster_ids=10
 
     current_end_time = initial_end_time
     
@@ -229,37 +223,42 @@ if __name__ == '__main__':
     max_workers = 1
     days_of_res = 1
     results_dir = "."
-    initial_end_date = "2024-12-06T18:00:00.001Z"
+    initial_end_date = "2024-12-10T11:50:00.001Z"
     interval_hours = 6
-    test = ""
+    org_ids = 10
+    cluster_ids = 10
     rampup_interval_seconds = 2
 
     parser = argparse.ArgumentParser()
 
     # add the named arguments
-    parser.add_argument('--test', type=str, help='specify the test to be run')
     parser.add_argument('--workers', type=str, help='specify the number of workers')
-    parser.add_argument('--startdate', type=str, help='Specify start date and time in "%Y-%m-%dT%H:%M:%S.%fZ" format.')
+    parser.add_argument('--enddate', type=str, help='Specify end date and time of the tsdb block in "%Y-%m-%dT%H:%M:%S.%fZ" format.')
     parser.add_argument('--interval', type=str, help='specify the interval hours')
     parser.add_argument('--resultsdir', type=str, help='specify the results dir')
+    parser.add_argument('--org_ids', type=str, help='specify the no. of orgs')
+    parser.add_argument('--cluster_ids', type=str, help='specify the no. of clusters / org')
 
     # parse the arguments from the command line
     args = parser.parse_args()
 
-    if args.test:
-        test = args.test
-
     if args.workers:
         max_workers = int(args.workers)
 
-    if args.startdate:
-        initial_end_date = args.startdate
+    if args.enddate:
+        initial_end_date = args.enddate
 
     if args.interval:
         interval_hours = int(args.interval)
 
     if args.resultsdir:
         results_dir = args.resultsdir
+
+    if args.org_ids:
+        org_ids = int(args.org_ids)
+
+    if args.cluster_ids:
+        org_ids = int(args.cluster_ids)
 
     form_kruize_url(cluster_type)
 
@@ -273,18 +272,9 @@ if __name__ == '__main__':
     datasource_name = None
     list_response = list_datasources(datasource_name)
 
-    # Import datasource metadata
-    # input_json_file = "../json_files/thanos_import_metadata.json"
-    # meta_response = import_metadata(input_json_file)
-    # metadata_json = meta_response.json()
-    # print(metadata_json)
-    # if meta_response.status_code != 201:
-    #     print("Importing metadata from the datasource failed!")
-    #     sys.exit(1)
-
     start_time = time.time()
     print(f"initial_end_date to parallel requests - {initial_end_date}")
-    responses = parallel_requests_with_labels(max_workers, results_dir, initial_end_date, interval_hours, days_of_res, test, rampup_interval_seconds)
+    responses = parallel_requests_with_labels(max_workers, results_dir, initial_end_date, interval_hours, days_of_res, org_ids, cluster_ids, rampup_interval_seconds)
 
     # Print the results
     for i, response in enumerate(responses):

@@ -31,12 +31,14 @@ CLUSTER_TYPE=openshift
 NAMESPACE=openshift-tuning
 num_workers=5
 interval_hours=6
-initial_start_date="2024-12-07T00:00:00.000Z"
+initial_end_date="2024-12-10T11:50:00.000Z"
+org_ids=10
+cluster_ids=10
 
 skip_setup=0
 prometheus_ds=0
 replicas=3
-test="time_range"
+
 ds_url="http://thanos-query-frontend.thanos-bench.svc.cluster.local:9090/"
 
 target="crc"
@@ -44,10 +46,10 @@ KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-w No. of workers (default - 5)] [-t interval hours (default - 2)] [-s Initial start date (default - 2024-11-11T00:00:00.000Z)]"
+	echo "Usage: [-i Kruize image] [-w No. of workers (default - 5)] [-t interval hours (default - 2)] [-s Initial end date of tsdb block (default - 2024-11-11T00:00:00.000Z)]"
 	echo "[-a kruize replicas (default - 3)][-r <resultsdir path>] [--skipsetup skip kruize setup] [ -z to test with prometheus datasource]"
-	echo "[--test Specify the test to be run (default - time_range)] [--url Datasource url (default - ${ds_url}]"
-	exit -1
+	echo "[--url Datasource url (default - ${ds_url}] [-o No. of orgs (default - 10)] [-c No. of clusters / org (default - 10)]"
+	exit 1
 }
 
 function get_kruize_pod_log() {
@@ -95,15 +97,12 @@ function kruize_local_thanos_patch() {
 }
 
 
-while getopts r:i:w:s:t:a:zh:-: gopts
+while getopts r:i:w:s:t:a:o:c:zh:-: gopts
 do
 	case ${gopts} in
 	-)
 		case "${OPTARG}" in
-			test=*)
-				test=${OPTARG#*=}
-				;;
-			url=*)
+		  url=*)
 				ds_url=${OPTARG#*=}
 				;;
 			skipsetup)
@@ -125,13 +124,19 @@ do
 		num_workers="${OPTARG}"		
 		;;
 	s)
-		initial_start_date="${OPTARG}"		
+		initial_end_date="${OPTARG}"
 		;;
 	t)
 		interval_hours="${OPTARG}"		
 		;;
 	a)
 		replicas="${OPTARG}"
+		;;
+  o)
+		org_ids="${OPTARG}"
+		;;
+  c)
+    cluster_ids="${OPTARG}"
 		;;
 	z)
 		prometheus_ds=1
@@ -207,7 +212,7 @@ export PYTHONUNBUFFERED=1
 echo ""
 echo "Running scale test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 echo ""
-python3 bulk_scale_test.py --test ${test} --workers ${num_workers} --startdate ${initial_start_date} --interval ${interval_hours} --resultsdir ${LOG_DIR} | tee -a ${LOG}
+python3 bulk_scale_test.py --org_ids ${org_ids} --cluster_ids ${cluster_ids} --workers ${num_workers} --enddate ${initial_end_date} --interval ${interval_hours} --resultsdir ${LOG_DIR} | tee -a ${LOG}
 
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
