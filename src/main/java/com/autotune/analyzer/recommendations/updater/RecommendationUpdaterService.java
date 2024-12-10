@@ -52,7 +52,7 @@ public class RecommendationUpdaterService {
                     for (Map.Entry<String, KruizeObject> experiment : experiments.entrySet()) {
                         KruizeObject kruizeObject = updater.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
                         // TODO:// add default updater in kruizeObject and check if GPU recommendations are present
-                        if (kruizeObject.getDefaultUpdater().isEmpty() || kruizeObject.getDefaultUpdater() == null) {
+                        if (kruizeObject.getDefaultUpdater() == null) {
                              kruizeObject.setDefaultUpdater(AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA);
                         }
 
@@ -61,10 +61,13 @@ public class RecommendationUpdaterService {
                             vpaUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
                         }
                     }
+                    LOGGER.info("Done");
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
                 }
-            }, 0, AnalyzerConstants.RecommendationUpdaterConstants.DEFAULT_SLEEP_INTERVAL, TimeUnit.SECONDS);
+            }, AnalyzerConstants.RecommendationUpdaterConstants.DEFAULT_INITIAL_DELAY,
+                    AnalyzerConstants.RecommendationUpdaterConstants.DEFAULT_SLEEP_INTERVAL,
+                    TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDTAER_SERVICE_START_ERROR + e.getMessage());
         }
@@ -72,8 +75,9 @@ public class RecommendationUpdaterService {
 
     private static Map<String, KruizeObject> getAutoModeExperiments() {
         try {
+            LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_AUTO_EXP);
             Map<String, KruizeObject> mainKruizeExperimentMap = new ConcurrentHashMap<>();
-            new ExperimentDBService().loadAllExperiments(mainKruizeExperimentMap);
+            new ExperimentDBService().loadAllLMExperiments(mainKruizeExperimentMap);
             // filter map to only include entries where mode is auto or recreate
             Map<String, KruizeObject> filteredMap = mainKruizeExperimentMap.entrySet().stream()
                     .filter(entry -> {
@@ -81,7 +85,6 @@ public class RecommendationUpdaterService {
                         return AnalyzerConstants.AUTO.equalsIgnoreCase(mode) || AnalyzerConstants.RECREATE.equalsIgnoreCase(mode);
                     })
                     .collect(Collectors.toConcurrentMap(Map.Entry::getKey, Map.Entry::getValue));
-
             return filteredMap;
         } catch (Exception e) {
             LOGGER.error(e.getMessage());

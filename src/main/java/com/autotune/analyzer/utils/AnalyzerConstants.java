@@ -684,7 +684,8 @@ public class AnalyzerConstants {
 
         }
 
-        public static final int DEFAULT_SLEEP_INTERVAL = 120;
+        public static final int DEFAULT_SLEEP_INTERVAL = 60;
+        public static final int DEFAULT_INITIAL_DELAY = 30;
         public static final class SupportedUpdaters {
             public static final String VPA = "vpa";
 
@@ -721,6 +722,7 @@ public class AnalyzerConstants {
             public static final String CREATEING_VPA = "Creating VPA with name: %s";
             public static final String CREATED_VPA = "Created VPA with name: %s";
             public static final String STARTING_SERVICE = "Starting recommendation updater.";
+            public static final String CHECKING_AUTO_EXP = "Searching for experiments with auto or recreate mode.";
             private InfoMsgs() {
 
             }

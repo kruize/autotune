@@ -77,6 +77,32 @@ public class ExperimentDBService {
         }
     }
 
+    public void loadAllLMExperiments(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeLMExperimentEntry> entries = experimentDAO.loadAllLMExperiments();
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertLMExperimentEntryToCreateExperimentAPIObject(entries);
+            if (null != createExperimentAPIObjects && !createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+
+                int failureThreshHold = createExperimentAPIObjects.size();
+                int failureCount = 0;
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    } else {
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("None of the experiments are able to load from DB.");
+                }
+                experimentInterface.addExperimentToLocalStorage(mainKruizeExperimentMap, kruizeExpList);
+            }
+        }
+    }
+
     public void loadAllResults(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         KruizeObject kruizeObject;
