@@ -43,6 +43,9 @@ public interface ExperimentDAO {
     // If Kruize object restarts load all experiment which are in inprogress
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception;
 
+    // If Kruize object restarts load all local monitoring experiments which are in inprogress
+    public List<KruizeLMExperimentEntry> loadAllLMExperiments() throws Exception;
+
     // If Kruize object restarts load all results from the experiments which are in inprogress
     List<KruizeResultsEntry> loadAllResults() throws Exception;
 

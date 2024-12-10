@@ -733,6 +733,29 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
+    public List<KruizeLMExperimentEntry> loadAllLMExperiments() throws Exception {
+        //todo load only experimentStatus=inprogress , playback may not require completed experiments
+        List<KruizeLMExperimentEntry> entries = null;
+        String statusValue = "failure";
+        Timer.Sample timerLoadAllExp = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(SELECT_FROM_LM_EXPERIMENTS, KruizeLMExperimentEntry.class).list();
+            // TODO: remove native sql query and transient
+            //getExperimentTypeInKruizeExperimentEntry(entries);
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiment due to {}", e.getMessage());
+            throw new Exception("Error while loading exsisting experiments from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadAllExp) {
+                MetricsConfig.timerLoadAllExp = MetricsConfig.timerBLoadAllExp.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadAllExp.stop(MetricsConfig.timerLoadAllExp);
+            }
+        }
+        return entries;
+    }
+
+    @Override
     public List<KruizeResultsEntry> loadAllResults() throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
         List<KruizeResultsEntry> kruizeResultsEntries = null;
