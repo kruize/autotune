@@ -50,6 +50,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -165,26 +166,29 @@ public class BulkJobManager implements Runnable {
                                     String experiment_name = apiObject.getExperimentName();
                                     BulkJobStatus.Experiment experiment = jobData.addExperiment(experiment_name);
                                     try {
-                                        // send request to createExperiment API for experiment creation
                                         GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
                                         apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
                                         GenericRestApiClient.HttpResponseWrapper responseCode;
-                                        boolean expriment_exists = false;
+                                        boolean experiment_exists = false;
                                         try {
                                             responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(apiObject) + "]");
                                             LOGGER.debug("API Response code: {}", responseCode);
                                             if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
-                                                expriment_exists = true;
+                                                experiment_exists = true;
                                             } else if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
-                                                expriment_exists = true;
+                                                experiment_exists = true;
                                             } else {
+                                            } else if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
+                                                experiment_exists = true;
+                                            } else {
+                                                jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                                 experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, responseCode.getResponseBody().toString(), responseCode.getStatusCode()));
                                             }
                                         } catch (Exception e) {
                                             e.printStackTrace();
                                             experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_BAD_REQUEST));
                                         } finally {
-                                            if (!expriment_exists) {
+                                            if (!experiment_exists) {
                                                 LOGGER.info("Processing experiment {}", jobData.getProcessed_experiments());
                                                 jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                             }
@@ -193,9 +197,8 @@ public class BulkJobManager implements Runnable {
                                                     setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                                 }
                                             }
-                                        }
-
-                                        if (expriment_exists) {
+					}
+                                        if (experiment_exists) {
                                             generateExecutor.submit(() -> {
                                                 // send request to generateRecommendations API
                                                 GenericRestApiClient recommendationApiClient = new GenericRestApiClient(finalDatasource);
