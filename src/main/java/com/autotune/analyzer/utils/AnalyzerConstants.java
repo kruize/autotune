@@ -692,7 +692,7 @@ public class AnalyzerConstants {
         public static final class VPA {
             public static final String VPA_PLURAL = "VerticalPodAutoscaler";
             public static final String RECOMMENDERS = "recommenders";
-            public static final String RECOMMENDER_KEY = "recommender";
+            public static final String RECOMMENDER_KEY = "name";
             public static final String RECOMMENDER_NAME = "Kruize";
             public static final String VPA_API_VERSION = "autoscaling.k8s.io/v1";
             public static final String VPA_TARGET_REF_API_VERSION = "apps/v1";
