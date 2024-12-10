@@ -6,6 +6,7 @@ public class DBConstants {
 
     public static final class SQLQUERY {
         public static final String SELECT_FROM_EXPERIMENTS = "from KruizeExperimentEntry";
+        public static final String SELECT_FROM_LM_EXPERIMENTS = "from KruizeLMExperimentEntry";
         public static final String SELECT_FROM_EXPERIMENTS_BY_EXP_NAME = "from KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_LM_EXPERIMENTS_BY_EXP_NAME = "from KruizeLMExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_RESULTS = "from KruizeResultsEntry";
