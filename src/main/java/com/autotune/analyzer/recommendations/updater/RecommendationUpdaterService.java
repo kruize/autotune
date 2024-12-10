@@ -61,7 +61,6 @@ public class RecommendationUpdaterService {
                             vpaUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
                         }
                     }
-                    LOGGER.info("Done");
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
                 }
