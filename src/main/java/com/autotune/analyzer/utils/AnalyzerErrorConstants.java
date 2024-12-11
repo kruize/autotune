@@ -296,5 +296,6 @@ public class AnalyzerErrorConstants {
         public static final String GENERATE_RECOMMNEDATION_FAILED = "Failed to generate recommendations for experiment: {}";
         public static final String UPDATER_NOT_INSTALLED = "Updater is not installed.";
         public static final String RECOMMENDATION_DATA_NOT_PRESENT = "Recommendations are not present for the experiment.";
+        public static final String INVALID_VPA_NAME = "VPA name cannot be null or empty.";
     }
 }
