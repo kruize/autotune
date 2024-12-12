@@ -61,9 +61,16 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
     }
 
     public static synchronized VpaUpdaterImpl getInstance() {
-        if (vpaUpdater == null) {
-            vpaUpdater = new VpaUpdaterImpl();
+        if (null != vpaUpdater) {
+            return vpaUpdater;
         }
+
+        synchronized (VpaUpdaterImpl.class) {
+            if (null == vpaUpdater) {
+                vpaUpdater = new VpaUpdaterImpl();
+            }
+        }
+
         return vpaUpdater;
     }
 
