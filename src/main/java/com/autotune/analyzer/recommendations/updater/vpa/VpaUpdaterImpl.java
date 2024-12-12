@@ -60,7 +60,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
         this.apiextensionsClient = kubernetesClient.apiextensions();
     }
 
-    public static synchronized VpaUpdaterImpl getInstance() {
+    public static VpaUpdaterImpl getInstance() {
         if (null != vpaUpdater) {
             return vpaUpdater;
         }
