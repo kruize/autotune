@@ -66,39 +66,21 @@ def invoke_bulk_with_time_range_labels(resultsdir, chunk, current_start_time, cu
     try:
         for org_id, cluster_id in chunk:
             #time.sleep(delay)
-            print(f"In bulk for - {org_id}  {cluster_id}")
+
             scale_log_dir = resultsdir + "/scale_logs"
             os.makedirs(scale_log_dir, exist_ok=True)
 
-            #bulk_json = update_bulk_config(org_id, cluster_id, current_start_time, current_end_time)
-            org_value = "org-" + str(org_id)
-            cluster_value = "eu-" + str(org_id) + "-" + str(cluster_id)
-
-            new_labels = {
-                "org_id": org_value,
-                "cluster_id": cluster_value
-            }
-
-            # Update time range in the bulk input json
-            bulk_json_file = "../json_files/bulk_input_timerange.json"
-
-            json_file = open(bulk_json_file, "r")
-            bulk_json = json.loads(json_file.read())
-
-            bulk_json['time_range']['start'] = current_start_time
-            bulk_json['time_range']['end'] = current_end_time
-            bulk_json['filter']['include']['labels'].update(new_labels)
+            bulk_json = update_bulk_config(org_id, cluster_id, current_start_time, current_end_time)
 
             log_id = str(org_id) + "-" + str(cluster_id)
             log_file = f"{scale_log_dir}/worker_{log_id}.log"
 
             logger = setup_logger(f"logger_{log_id}", log_file)
-            logger.info(f"log id = {log_id}")
 
             # Invoke the bulk service
             logger.info("Invoking bulk service with bulk json")
             logger.info(bulk_json)
-            bulk_response = post_bulk_api(bulk_json)
+            bulk_response = post_bulk_api(bulk_json, logger)
 
             # Obtain the job id from the response from bulk service
             job_id_json = bulk_response.json()
@@ -108,14 +90,14 @@ def invoke_bulk_with_time_range_labels(resultsdir, chunk, current_start_time, cu
 
             # Get the bulk job status using the job id
             verbose = "true"
-            bulk_job_response = get_bulk_job_status(job_id, verbose)
+            bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
             job_status_json = bulk_job_response.json()
 
             # Loop until job status is COMPLETED
             job_status = job_status_json['status']
-            print(job_status)
+
             while job_status != "COMPLETED":
-                bulk_job_response = get_bulk_job_status(job_id, verbose)
+                bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
                 job_status_json = bulk_job_response.json()
                 job_status = job_status_json['status']
                 if job_status == "FAILED":
@@ -202,15 +184,15 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
 
     current_end_time = initial_end_time
 
-    for k in range(1, num_tsdb_blocks):
+    for k in range(1, num_tsdb_blocks + 1):
 
         current_start_time = datetime.strptime(current_end_time, '%Y-%m-%dT%H:%M:%S.%fZ') - timedelta(
             hours=interval_hours)
         current_end_time = datetime.strptime(current_end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
-        print(current_end_time)
-        print(current_start_time)
+
         current_start_time = current_start_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
         current_end_time = current_end_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+        print(f"Invoking bulk service with the tsdb time range {current_start_time} and {current_end_time}")
 
         # Create all tasks
         tasks = [(org_id, cluster_id) for org_id in range(1, org_ids + 1) for cluster_id in range(1, cluster_ids + 1)]
@@ -226,7 +208,7 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
             for future in as_completed(futures):
                 try:
                     chunk = future.result()
-                    results.extend(chunk_results)
+                    results.append(chunk_results)
                 except Exception as e:
                     print(f"Error processing chunk: {e}")
 
@@ -292,13 +274,20 @@ if __name__ == '__main__':
     # List datasources
     datasource_name = None
     list_response = list_datasources(datasource_name)
+    list_response_json = list_response.json()
+
+    if list_response_json['datasources'][0]['name'] != "thanos":
+        print("Failed! Thanos datasource is not registered with Kruize!")
+        sys.exit(1)
 
     start_time = time.time()
-    print(f"initial_end_date to parallel requests - {initial_end_date}")
     responses = parallel_requests_with_labels(max_workers, results_dir, initial_end_date, interval_hours, days_of_res, org_ids, cluster_ids,
                     chunk_size, rampup_interval_seconds)
 
     # Print the results
+    print("\n*************************************************")
+    print(responses)
+    print("\n*************************************************")
     for i, response in enumerate(responses):
         print(f"Response {i+1}: {json.dumps(response, indent=2)}")
 
