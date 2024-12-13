@@ -2408,8 +2408,8 @@ public class RecommendationEngine {
 
                     // Include metrics based on experiment_type, kubernetes_object and exclude maxDate metric
                     return !name.equals(maxDateQuery) && (
-                            (experimentType.equals(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT) && kubernetes_object.equals(namespace)) ||
-                                    (experimentType.equals(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT) && kubernetes_object.equals(container))
+                            (experimentType.name().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.NAMESPACE_EXPERIMENT) && kubernetes_object.equals(namespace)) ||
+                                    (experimentType.name().equalsIgnoreCase(AnalyzerConstants.ExperimentTypes.CONTAINER_EXPERIMENT) && kubernetes_object.equals(container))
                     );
                 })
                 .toList();
