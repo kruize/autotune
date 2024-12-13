@@ -28,9 +28,9 @@ progress of the job.
 {
   "filter": {
     "exclude": {
-      "namespace": ["cadvisor", "openshift-tuning", "openshift-monitoring", "thanos-bench"],
-      "workload": ["osd-rebalance-infra-nodes-28887030", "blackbox-exporter", "thanos-query"],
-      "containers": ["tfb-0", "alertmanager"],
+      "namespace": ["openshift-.*"],
+      "workload": [],
+      "containers": [],
       "labels": {
         "org_id": "ABCOrga",
         "source_id": "ZZZ",
@@ -38,9 +38,9 @@ progress of the job.
       }
     },
     "include": {
-      "namespace": ["cadvisor", "openshift-tuning", "openshift-monitoring", "thanos-bench"],
-      "workload": ["osd-rebalance-infra-nodes-28887030", "blackbox-exporter", "thanos-query"],
-      "containers": ["tfb-0", "alertmanager"],
+      "namespace": ["openshift-tuning"],
+      "workload": [],
+      "containers": [],
       "labels": {
         "org_id": "ABCOrga",
         "source_id": "ZZZ",
@@ -111,11 +111,15 @@ The specified time range determines the period over which the data is analyzed t
 
 #### 2. **Request Payload with `exclude` filter specified:**
  
-- **`exclude`** filters out namespaces like `"cadvisor"` and workloads like `"blackbox-exporter"`, along with containers and labels that match the specified values. So, we'll generate create experiments and generate recommendations for every namespace, workload and containers except those.
+- **`exclude`** As shown in the example above, it filters out all namespaces starting with the name `openshift-` . So, we'll create experiments and generate recommendations for every namespace except those.
 
 #### 3. **Request Payload with `include` filter specified:**
 
-- **`include`** explicitly selects the namespaces, workloads, containers, and labels to be queried. So, for only those we'll create experiments and get the recommendations.
+- **`include`** As shown in the example above, it filters out the namespace `openshift-`. So, we'll create experiments and generate recommendations for every namespace starting with the specified name.
+
+#### 3. **Request Payload with both `include` and `exclude` filter specified:**
+
+- **`include`** As shown in the example above, it filters out all namespaces starting with the name `openshift-` but includes the `openshift-tuning` one. So, we'll create experiments and generate recommendations for the `openshift-tuning` namespace.
 
 ### GET Request:
 
