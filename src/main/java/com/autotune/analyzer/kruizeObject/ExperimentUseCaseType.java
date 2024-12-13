@@ -41,16 +41,13 @@ public class ExperimentUseCaseType {
         } else if (kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
             switch (kruizeObject.getMode().toLowerCase()) {
                 case AnalyzerConstants.MONITOR:
+                case AnalyzerConstants.RECREATE:
+                case AnalyzerConstants.AUTO:
                     setLocal_monitoring(true);
                     break;
 
                 case AnalyzerConstants.EXPERIMENT:
                     setLocal_experiment(true);
-                    break;
-
-                case AnalyzerConstants.RECREATE:
-                case AnalyzerConstants.AUTO:
-                    setLocal_monitoring(true);
                     break;
 
                 default:
