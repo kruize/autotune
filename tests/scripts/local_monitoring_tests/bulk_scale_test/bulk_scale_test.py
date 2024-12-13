@@ -52,21 +52,16 @@ def invoke_bulk_with_time_range_labels(worker_number, resultsdir, bulk_json, del
 
         log_id = str(worker_number) + "-" + org_id + "-" + cluster_id
 
-        print(log_id)
-
         log_file = f"{scale_log_dir}/worker_{log_id}.log"
-        print(f"log_file - {log_file}")
+
         logger = setup_logger(f"logger_{log_id}", log_file)
-        print("logger created")
         logger.info(f"log id = {log_id}")
 
         logger.info(f"worker number = {worker_number}")
 
         # Invoke the bulk service
         logger.info("Invoking bulk service with bulk json")
-        bulk_response = post_bulk_api(bulk_json)
-
-        logger.info(bulk_json)
+        bulk_response = post_bulk_api(bulk_json, logger)
 
         # Obtain the job id from the response from bulk service
         job_id_json = bulk_response.json()
@@ -76,14 +71,14 @@ def invoke_bulk_with_time_range_labels(worker_number, resultsdir, bulk_json, del
 
         # Get the bulk job status using the job id
         verbose = "true"
-        bulk_job_response = get_bulk_job_status(job_id, verbose)
+        bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
         job_status_json = bulk_job_response.json()
 
         # Loop until job status is COMPLETED
         job_status = job_status_json['status']
-        print(job_status)
+
         while job_status != "COMPLETED":
-                bulk_job_response = get_bulk_job_status(job_id, verbose)
+                bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
                 job_status_json = bulk_job_response.json()
                 job_status = job_status_json['status']
                 if job_status == "FAILED":
@@ -167,8 +162,13 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
     print(f"num_tsdb_blocks - {num_tsdb_blocks}")
 
     current_end_time = initial_end_time
-    
-    for k in range(1, num_tsdb_blocks):
+    # Update time range in the bulk input json
+    bulk_json_file = "../json_files/bulk_input_timerange.json"
+
+    json_file = open(bulk_json_file, "r")
+    bulk_input_json = json.loads(json_file.read())
+
+    for k in range(1, num_tsdb_blocks + 1):
 
         current_start_time = datetime.strptime(current_end_time, '%Y-%m-%dT%H:%M:%S.%fZ') - timedelta(
             hours=interval_hours)
@@ -178,8 +178,8 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
         current_start_time = current_start_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
         current_end_time = current_end_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
-        for org_id in range(1, org_ids):
-            for cluster_id in range(1, cluster_ids):
+        for org_id in range(1, org_ids + 1):
+            for cluster_id in range(1, cluster_ids + 1):
                 org_value = "org-" + str(org_id)
                 cluster_value = "eu-" + str(org_id) + "-" + str(cluster_id)
 
@@ -188,14 +188,7 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
                     "cluster_id": cluster_value
                 }
 
-                # Update time range in the bulk input json
-                bulk_json_file = "../json_files/bulk_input_timerange.json"
-
-                json_file = open(bulk_json_file, "r")
-                bulk_json = json.loads(json_file.read())
-
-                print(f"bulk current start time - {current_start_time}")
-                print(f"bulk current end time - {current_end_time}")
+                bulk_json = bulk_input_json
                 bulk_json['time_range']['start'] = current_start_time
                 bulk_json['time_range']['end'] = current_end_time
                 bulk_json['filter']['include']['labels'].update(new_labels)
@@ -271,6 +264,11 @@ if __name__ == '__main__':
     # List datasources
     datasource_name = None
     list_response = list_datasources(datasource_name)
+    list_response_json = list_response.json()
+
+    if list_response_json['datasources'][0]['name'] != "thanos":
+        print("Failed! Thanos datasource is not registered with Kruize!")
+        sys.exit(1)
 
     start_time = time.time()
     print(f"initial_end_date to parallel requests - {initial_end_date}")
