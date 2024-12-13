@@ -217,7 +217,7 @@ public class DataSourceMetadataOperator {
         LOGGER.info("containerQuery: {}", containerQuery);
 
         JsonArray namespacesDataResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
-        LOGGER.debug("namespacesDataResultArray: {}", namespacesDataResultArray);
+        LOGGER.info("namespacesDataResultArray: {}", namespacesDataResultArray);
         if (!op.validateResultArray(namespacesDataResultArray)) {
             dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, null);
         } else {
@@ -226,6 +226,7 @@ public class DataSourceMetadataOperator {
              * Value: DataSourceNamespace object corresponding to a namespace
              */
             HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
+            LOGGER.info("datasourceNamespaces: {}", datasourceNamespaces.keySet());
             dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, datasourceNamespaces);
 
             /**
