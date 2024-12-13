@@ -438,6 +438,7 @@ public class AnalyzerConstants {
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String VERBOSE = "verbose";
         public static final String FALSE = "false";
+        public static final String RM = "rm";
 
         private ServiceConstants() {
         }

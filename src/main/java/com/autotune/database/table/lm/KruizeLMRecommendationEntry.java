@@ -1,15 +1,17 @@
-package com.autotune.database.table;
+package com.autotune.database.table.lm;
 
-import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.fasterxml.jackson.databind.JsonNode;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Index;
+import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
 
 @Entity
-@Table(name = "kruize_recommendations", indexes = {
+@Table(name = "kruize_lm_recommendations", indexes = {
         @Index(
                 name = "idx_recommendation_experiment_name",
                 columnList = "experiment_name",
@@ -19,7 +21,7 @@ import java.sql.Timestamp;
                 columnList = "interval_end_time",
                 unique = false)
 })
-public class KruizeRecommendationEntry {
+public class KruizeLMRecommendationEntry {
     private String version;
     @Id
     private String experiment_name;
@@ -28,20 +30,7 @@ public class KruizeRecommendationEntry {
     private String cluster_name;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode extended_data;
-    @Transient
     private String experiment_type;
-
-    public KruizeRecommendationEntry(KruizeLMRecommendationEntry recommendationEntry) {
-        this.experiment_name = recommendationEntry.getExperiment_name();
-        this.interval_end_time = recommendationEntry.getInterval_end_time();
-        this.cluster_name = recommendationEntry.getCluster_name();
-        this.extended_data = recommendationEntry.getExtended_data();
-        this.version = recommendationEntry.getVersion();
-    }
-
-    public KruizeRecommendationEntry() {
-
-    }
 
     public String getExperiment_name() {
         return experiment_name;

@@ -34,6 +34,7 @@ import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
@@ -41,6 +42,8 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.*;
+
+import static com.autotune.operator.KruizeDeploymentInfo.is_ros_enabled;
 
 public class ExperimentDBService {
     private static final long serialVersionUID = 1L;
@@ -129,6 +132,26 @@ public class ExperimentDBService {
         }
     }
 
+    public void loadAllLMRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        // Load Recommendations from DB and save to local
+        List<KruizeLMRecommendationEntry> recommendationEntries = experimentDAO.loadAllLMRecommendations();
+        if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
+            List<ListRecommendationsAPIObject> recommendationsAPIObjects = null;
+            try {
+                recommendationsAPIObjects = DBHelpers.Converters.KruizeObjectConverters
+                        .convertLMRecommendationEntryToRecommendationAPIObject(recommendationEntries);
+            } catch (InvalidConversionOfRecommendationEntryException e) {
+                e.printStackTrace();
+            }
+            if (null != recommendationsAPIObjects && !recommendationsAPIObjects.isEmpty()) {
+                experimentInterface.addRecommendationsToLocalStorage(mainKruizeExperimentMap,
+                        recommendationsAPIObjects,
+                        true);
+            }
+        }
+    }
+
     public void loadAllRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
 
@@ -144,7 +167,6 @@ public class ExperimentDBService {
                 e.printStackTrace();
             }
             if (null != recommendationsAPIObjects && !recommendationsAPIObjects.isEmpty()) {
-
                 experimentInterface.addRecommendationsToLocalStorage(mainKruizeExperimentMap,
                         recommendationsAPIObjects,
                         true);
@@ -228,12 +250,32 @@ public class ExperimentDBService {
         }
     }
 
+    public void loadLMRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        // Load Recommendations from DB and save to local
+        List<KruizeLMRecommendationEntry> recommendationEntries = experimentDAO.loadLMRecommendationsByExperimentName(experimentName);
+        if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
+            List<ListRecommendationsAPIObject> recommendationsAPIObjects
+                    = null;
+            try {
+                recommendationsAPIObjects = DBHelpers.Converters.KruizeObjectConverters
+                        .convertLMRecommendationEntryToRecommendationAPIObject(recommendationEntries);
+            } catch (InvalidConversionOfRecommendationEntryException e) {
+                e.printStackTrace();
+            }
+            if (null != recommendationsAPIObjects && !recommendationsAPIObjects.isEmpty()) {
+                experimentInterface.addRecommendationsToLocalStorage(mainKruizeExperimentMap,
+                        recommendationsAPIObjects,
+                        true);
+            }
+        }
+    }
+
     public ValidationOutputData addExperimentToDB(CreateExperimentAPIObject createExperimentAPIObject) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
             KruizeLMExperimentEntry kruizeLMExperimentEntry = DBHelpers.Converters.KruizeObjectConverters.convertCreateAPIObjToExperimentDBObj(createExperimentAPIObject);
-            LOGGER.debug("is_ros_enabled:{} , targetCluster:{} ", KruizeDeploymentInfo.is_ros_enabled, createExperimentAPIObject.getTargetCluster());
-            if (KruizeDeploymentInfo.is_ros_enabled && createExperimentAPIObject.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
+            if (is_ros_enabled && createExperimentAPIObject.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
                 KruizeExperimentEntry oldKruizeExperimentEntry = new KruizeExperimentEntry(kruizeLMExperimentEntry);
                 validationOutputData = this.experimentDAO.addExperimentToDB(oldKruizeExperimentEntry);
             } else {
@@ -277,10 +319,22 @@ public class ExperimentDBService {
             LOGGER.error("Trying to locate Recommendation for non existent experiment: " + kruizeObject.getExperimentName());
             return validationOutputData; // todo: need to set the correct message
         }
-        KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
-                convertKruizeObjectTORecommendation(kruizeObject, interval_end_time);
-        if (null != kr) {
-            if (KruizeDeploymentInfo.local == true) {   //todo this code will be removed
+
+        if (KruizeDeploymentInfo.is_ros_enabled && kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
+            KruizeRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
+                    convertKruizeObjectTORecommendation(kruizeObject, interval_end_time);
+            if (null != kr) {
+                ValidationOutputData tempValObj = new ExperimentDAOImpl().addRecommendationToDB(kr);
+                if (!tempValObj.isSuccess()) {
+                    validationOutputData.setSuccess(false);
+                    String errMsg = String.format("Experiment name : %s , Interval end time : %s | ", kruizeObject.getExperimentName(), interval_end_time);
+                    validationOutputData.setMessage(validationOutputData.getMessage() + errMsg);
+                }
+            }
+        } else {
+            KruizeLMRecommendationEntry kr = DBHelpers.Converters.KruizeObjectConverters.
+                    convertKruizeObjectTOLMRecommendation(kruizeObject, interval_end_time);
+            if (null != kr) {
                 // Create a Calendar object and set the time with the timestamp
                 Calendar localDateTime = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
                 localDateTime.setTime(kr.getInterval_end_time());
@@ -288,19 +342,20 @@ public class ExperimentDBService {
                 int dayOfTheMonth = localDateTime.get(Calendar.DAY_OF_MONTH);
                 try {
                     synchronized (new Object()) {
-                        dao.addPartitions(DBConstants.TABLE_NAMES.KRUIZE_RECOMMENDATIONS, String.format("%02d", localDateTime.get(Calendar.MONTH) + 1), String.valueOf(localDateTime.get(Calendar.YEAR)), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_DAY);
+                        dao.addPartitions(DBConstants.TABLE_NAMES.KRUIZE_LM_RECOMMENDATIONS, String.format("%02d", localDateTime.get(Calendar.MONTH) + 1), String.valueOf(localDateTime.get(Calendar.YEAR)), dayOfTheMonth, DBConstants.PARTITION_TYPES.BY_DAY);
                     }
                 } catch (Exception e) {
                     LOGGER.warn(e.getMessage());
                 }
-            }
-            ValidationOutputData tempValObj = new ExperimentDAOImpl().addRecommendationToDB(kr);
-            if (!tempValObj.isSuccess()) {
-                validationOutputData.setSuccess(false);
-                String errMsg = String.format("Experiment name : %s , Interval end time : %s | ", kruizeObject.getExperimentName(), interval_end_time);
-                validationOutputData.setMessage(validationOutputData.getMessage() + errMsg);
+                ValidationOutputData tempValObj = new ExperimentDAOImpl().addRecommendationToDB(kr);
+                if (!tempValObj.isSuccess()) {
+                    validationOutputData.setSuccess(false);
+                    String errMsg = String.format("Experiment name : %s , Interval end time : %s | ", kruizeObject.getExperimentName(), interval_end_time);
+                    validationOutputData.setMessage(validationOutputData.getMessage() + errMsg);
+                }
             }
         }
+
         if (validationOutputData.getMessage().equals(""))
             validationOutputData.setSuccess(true);
         return validationOutputData;
@@ -435,6 +490,13 @@ public class ExperimentDBService {
         loadRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName);
     }
 
+    public void loadLMExperimentAndRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
+
+        loadLMExperimentFromDBByName(mainKruizeExperimentMap, experimentName);
+
+        loadLMRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName);
+    }
+
     public void loadPerformanceProfileFromDBByName(Map<String, PerformanceProfile> performanceProfileMap, String performanceProfileName) throws Exception {
         List<KruizePerformanceProfileEntry> entries = experimentDAO.loadPerformanceProfileByName(performanceProfileName);
         if (null != entries && !entries.isEmpty()) {
@@ -477,6 +539,13 @@ public class ExperimentDBService {
         loadAllExperiments(mainKruizeExperimentMap);
 
         loadAllRecommendations(mainKruizeExperimentMap);
+    }
+
+    public void loadAllLMExperimentsAndRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
+
+        loadAllLMExperiments(mainKruizeExperimentMap);
+
+        loadAllLMRecommendations(mainKruizeExperimentMap);
     }
 
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {

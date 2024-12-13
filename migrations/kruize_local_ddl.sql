@@ -5,4 +5,4 @@ create table IF NOT EXISTS kruize_dsmetadata (id serial, version varchar(255), d
 alter table kruize_lm_experiments  add column metadata_id bigint references kruize_dsmetadata(id);
 alter table if exists kruize_lm_experiments add constraint UK_lm_experiment_name unique (experiment_name);
 create table IF NOT EXISTS kruize_metric_profiles (api_version varchar(255), kind varchar(255), metadata jsonb, name varchar(255) not null, k8s_type varchar(255), profile_version float(53) not null, slo jsonb, primary key (name));
-alter table kruize_recommendations add column experiment_type varchar(255);
+create table IF NOT EXISTS kruize_lm_recommendations (interval_end_time timestamp(6) not null, experiment_name varchar(255) not null, cluster_name varchar(255), extended_data jsonb, version varchar(255),experiment_type varchar(255), primary key (experiment_name, interval_end_time)) PARTITION BY RANGE (interval_end_time);
