@@ -40,6 +40,7 @@ prometheus_ds=0
 replicas=3
 
 ds_url="http://thanos-query-frontend.thanos-bench.svc.cluster.local:9090/"
+#ds_url="http://thanos-query-frontend-example-query-thanos-operator-system.apps.kruize-scalelab.h0b5.p1.openshiftapps.com"
 
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
@@ -218,3 +219,12 @@ end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
 echo ""
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
+
+if [[ $(grep -i "error\|exception" ${KRUIZE_SERVICE_LOG}) ]]; then
+		echo "Bulk scale test failed! Check the logs for details" | tee -a ${LOG}
+		exit 1
+else
+		echo "Bulk scale test completed! Check the logs for details" | tee -a ${LOG}
+		exit 0
+fi
+
