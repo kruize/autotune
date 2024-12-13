@@ -68,7 +68,7 @@ public class RecommendationUpdaterImpl implements RecommendationUpdater {
     @Override
     public KruizeObject generateResourceRecommendationsForExperiment(String experimentName) {
         try {
-            LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.GENERATING_RECOMMENDATIONS, experimentName);
+            LOGGER.debug(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.GENERATING_RECOMMENDATIONS, experimentName);
             // generating latest recommendations for experiment
             RecommendationEngine recommendationEngine = new RecommendationEngine(experimentName, null, null);
             int calCount = 0;
@@ -76,7 +76,7 @@ public class RecommendationUpdaterImpl implements RecommendationUpdater {
             if (validationMessage.isEmpty()) {
                 KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, null);
                 if (kruizeObject.getValidation_data().isSuccess()) {
-                    LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.GENERATED_RECOMMENDATIONS, experimentName);
+                    LOGGER.debug(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.GENERATED_RECOMMENDATIONS, experimentName);
                     return kruizeObject;
                 } else {
                     throw new Exception(kruizeObject.getValidation_data().getMessage());

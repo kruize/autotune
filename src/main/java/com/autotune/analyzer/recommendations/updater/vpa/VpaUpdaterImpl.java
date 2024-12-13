@@ -81,7 +81,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
     @Override
     public boolean isUpdaterInstalled() {
         try {
-            LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_IF_UPDATER_INSTALLED,
+            LOGGER.debug(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_IF_UPDATER_INSTALLED,
                     AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA);
             // checking if VPA CRD is present or not
             boolean isVpaInstalled = false;
@@ -90,7 +90,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
                 isVpaInstalled = crdList.getItems().stream().anyMatch(crd -> AnalyzerConstants.RecommendationUpdaterConstants.VPA.VPA_PLURAL.equalsIgnoreCase(crd.getSpec().getNames().getKind()));
             }
             if (isVpaInstalled) {
-                LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.FOUND_UPDATER_INSTALLED, AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA);
+                LOGGER.debug(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.FOUND_UPDATER_INSTALLED, AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA);
             } else {
                 LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDATER_NOT_INSTALLED);
             }
@@ -112,7 +112,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
             if (null == vpaName || vpaName.isEmpty()) {
                 throw new Exception(AnalyzerErrorConstants.RecommendationUpdaterErrors.INVALID_VPA_NAME);
             } else {
-                LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_IF_VPA_PRESENT, vpaName));
+                LOGGER.debug(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_IF_VPA_PRESENT, vpaName));
                 NamespacedVerticalPodAutoscalerClient client = new DefaultVerticalPodAutoscalerClient();
                 VerticalPodAutoscalerList vpas = client.v1().verticalpodautoscalers().inAnyNamespace().list();
 
@@ -120,12 +120,12 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
                     // TODO:// later we can also check here is the recommender is Kruize to confirm
                     for (VerticalPodAutoscaler vpa : vpas.getItems()) {
                         if (vpaName.equals(vpa.getMetadata().getName())) {
-                            LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_FOUND, vpaName));
+                            LOGGER.debug(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_FOUND, vpaName));
                             return true;
                         }
                     }
                 }
-                LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_NOT_FOUND, vpaName));
+                LOGGER.error(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_NOT_FOUND, vpaName));
                 return false;
             }
         } catch (Exception e) {
@@ -146,19 +146,19 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
             if (null == vpaName || vpaName.isEmpty()) {
                 throw new Exception(AnalyzerErrorConstants.RecommendationUpdaterErrors.INVALID_VPA_NAME);
             } else {
-                LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_IF_VPA_PRESENT, vpaName));
+                LOGGER.debug(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_IF_VPA_PRESENT, vpaName));
                 NamespacedVerticalPodAutoscalerClient client = new DefaultVerticalPodAutoscalerClient();
                 VerticalPodAutoscalerList vpas = client.v1().verticalpodautoscalers().inAnyNamespace().list();
 
                 if (null != vpas && null != vpas.getItems() && !vpas.getItems().isEmpty()) {
                     for (VerticalPodAutoscaler vpa : vpas.getItems()) {
                         if (vpaName.equals(vpa.getMetadata().getName())) {
-                            LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_FOUND, vpaName));
+                            LOGGER.debug(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_FOUND, vpaName));
                             return vpa;
                         }
                     }
                 }
-                LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_NOT_FOUND, vpaName));
+                LOGGER.error(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_WITH_NAME_NOT_FOUND, vpaName));
                 return null;
             }
         } catch (Exception e) {
@@ -217,7 +217,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
                                             .getName())
                                     .patchStatus(vpaObject);
 
-                            LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_PATCHED,
+                            LOGGER.debug(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.VPA_PATCHED,
                                     vpaObject.getMetadata().getName()));
                         }
                     }
@@ -257,9 +257,9 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
                     Double cpuRecommendationValue = recommendationsConfig.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.CPU).getAmount();
                     Double memoryRecommendationValue = recommendationsConfig.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.MEMORY).getAmount();
 
-                    LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.RECOMMENDATION_VALUE,
+                    LOGGER.debug(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.RECOMMENDATION_VALUE,
                             AnalyzerConstants.RecommendationItem.CPU, containerName, cpuRecommendationValue));
-                    LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.RECOMMENDATION_VALUE,
+                    LOGGER.debug(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.RECOMMENDATION_VALUE,
                             AnalyzerConstants.RecommendationItem.MEMORY, containerName, memoryRecommendationValue));
 
                     String cpuRecommendationValueForVpa = RecommendationUtils.resource2str(AnalyzerConstants.RecommendationItem.CPU.toString(),
@@ -305,7 +305,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
         try {
             // checks if updater is installed or not
             if (isUpdaterInstalled()) {
-                LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CREATEING_VPA, kruizeObject.getExperimentName()));
+                LOGGER.debug(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CREATEING_VPA, kruizeObject.getExperimentName()));
 
                 // updating recommender to Kruize for VPA Object
                 Map<String, Object> additionalVpaObjectProps = getAdditionalVpaObjectProps();
@@ -349,7 +349,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
                             .build();
 
                     kubernetesClient.resource(vpa).inNamespace(k8sObject.getNamespace()).createOrReplace();
-                    LOGGER.info(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CREATED_VPA, kruizeObject.getExperimentName()));
+                    LOGGER.debug(String.format(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CREATED_VPA, kruizeObject.getExperimentName()));
                 }
 
             } else {
