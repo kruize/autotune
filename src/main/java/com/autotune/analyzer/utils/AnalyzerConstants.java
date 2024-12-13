@@ -30,6 +30,9 @@ public class AnalyzerConstants {
     public static final String EXPERIMENT = "experiment";
     public static final String LOCAL = "local";
     public static final String REMOTE = "remote";
+    public static final String AUTO = "auto";
+    public static final String RECREATE = "recreate";
+
 
 
     // Used to parse autotune configmaps
