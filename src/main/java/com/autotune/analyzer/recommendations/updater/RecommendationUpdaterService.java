@@ -74,7 +74,7 @@ public class RecommendationUpdaterService {
 
     private static Map<String, KruizeObject> getAutoModeExperiments() {
         try {
-            LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_AUTO_EXP);
+            LOGGER.debug(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_AUTO_EXP);
             Map<String, KruizeObject> mainKruizeExperimentMap = new ConcurrentHashMap<>();
             new ExperimentDBService().loadAllLMExperiments(mainKruizeExperimentMap);
             // filter map to only include entries where mode is auto or recreate
