@@ -24,6 +24,8 @@ import com.autotune.common.exceptions.datasource.DataSourceDoesNotExist;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.MetricsConfig;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -66,19 +68,27 @@ public class DataSourceManager {
      * @param excludeResources
      * @return
      */
-    public DataSourceMetadataInfo importMetadataFromDataSource(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
-                                                               long endTime, int steps, Map<String, String> includeResources,
+    public DataSourceMetadataInfo importMetadataFromDataSource(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps, Map<String, String> includeResources,
                                                                Map<String, String> excludeResources) throws DataSourceDoesNotExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        if (null == dataSourceInfo) {
-            throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+        String statusValue = "failure";
+        io.micrometer.core.instrument.Timer.Sample timerImportMetadata = Timer.start(MetricsConfig.meterRegistry());
+        try {
+            if (null == dataSourceInfo) {
+                throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+            }
+            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo, uniqueKey, startTime, endTime, steps, includeResources, excludeResources);
+            if (null == dataSourceMetadataInfo) {
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceInfo.getName());
+                return null;
+            }
+            statusValue = "success";
+            return dataSourceMetadataInfo;
+        } finally {
+            if (null != timerImportMetadata) {
+                MetricsConfig.timerImportMetadata = MetricsConfig.timerBImportMetadata.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerImportMetadata.stop(MetricsConfig.timerImportMetadata);
+            }
         }
-        DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo,
-                uniqueKey, startTime, endTime, steps, includeResources, excludeResources);
-        if (null == dataSourceMetadataInfo) {
-            LOGGER.error(DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceInfo.getName());
-            return null;
-        }
-        return dataSourceMetadataInfo;
     }
 
     /**
@@ -89,6 +99,8 @@ public class DataSourceManager {
      * @throws DataSourceDoesNotExist Thrown when the provided data source information is null.
      */
     public DataSourceMetadataInfo getMetadataFromDataSource(DataSourceInfo dataSource) {
+        String statusValue = "failure";
+        io.micrometer.core.instrument.Timer.Sample timerGetMetadata = Timer.start(MetricsConfig.meterRegistry());
         try {
             if (null == dataSource) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
@@ -99,11 +111,17 @@ public class DataSourceManager {
                 LOGGER.error(DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceName);
                 return null;
             }
+            statusValue = "success";
             return dataSourceMetadataInfo;
         } catch (DataSourceDoesNotExist e) {
             LOGGER.error(e.getMessage());
         } catch (Exception e) {
             LOGGER.error("Loading saved datasource metadata failed: {} ", e.getMessage());
+        } finally {
+            if (null != timerGetMetadata) {
+                MetricsConfig.timerGetMetadata = MetricsConfig.timerBGetMetadata.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerGetMetadata.stop(MetricsConfig.timerGetMetadata);
+            }
         }
         return null;
     }

@@ -710,6 +710,7 @@ public class KruizeConstants {
         public static final String BULK_API_LIMIT = "bulkapilimit";
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
         public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
+        public static final String IS_ROS_ENABLED = "isROSEnabled";
     }
 
     public static final class RecommendationEngineConstants {

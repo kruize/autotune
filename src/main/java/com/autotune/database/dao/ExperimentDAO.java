@@ -5,6 +5,7 @@ import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.table.*;
+import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -13,6 +14,8 @@ public interface ExperimentDAO {
 
     // Add New experiments from local storage to DB and set status to Inprogress
     public ValidationOutputData addExperimentToDB(KruizeExperimentEntry kruizeExperimentEntry);
+
+    public ValidationOutputData addExperimentToDB(KruizeLMExperimentEntry kruizeLMExperimentEntry);
 
     // Add experiment results from local storage to DB and set status to Inprogress
     public ValidationOutputData addResultsToDB(KruizeResultsEntry resultsEntry);
@@ -54,6 +57,10 @@ public interface ExperimentDAO {
 
     // Load a single experiment based on experimentName
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
+
+    // Load a single experiment based on experimentName
+    List<KruizeLMExperimentEntry> loadLMExperimentByName(String experimentName) throws Exception;
+
 
     // Load a single data source based on name
     List<KruizeDataSourceEntry> loadDataSourceByName(String name) throws Exception;

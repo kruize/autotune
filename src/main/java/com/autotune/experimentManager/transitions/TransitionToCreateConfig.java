@@ -5,6 +5,8 @@ import com.autotune.experimentManager.data.ExperimentTrialData;
 import com.autotune.experimentManager.transitions.util.TransistionHelper;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
+import io.fabric8.kubernetes.api.model.apps.DeploymentSpec;
+import io.fabric8.kubernetes.api.model.apps.DeploymentStrategy;
 import io.fabric8.kubernetes.api.model.apps.RollingUpdateDeployment;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
@@ -32,7 +34,17 @@ public class TransitionToCreateConfig extends AbstractBaseTransition {
         IntOrString maxUnavailable = new IntOrString(0);
         rud.setMaxSurge(maxSurge);
         rud.setMaxUnavailable(maxUnavailable);
-        client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).withName(trialData.getConfig().getDeploymentName()).edit().editSpec().editOrNewStrategy().withRollingUpdate(rud).endStrategy().endSpec().done();
+        client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).withName(trialData.getConfig().getDeploymentName()).edit(deployment -> {
+            DeploymentSpec spec = deployment.getSpec();
+            if (spec != null) {
+                if (spec.getStrategy() == null) {
+                    spec.setStrategy(new DeploymentStrategy());
+                }
+                spec.getStrategy().setRollingUpdate(rud);
+                spec.getStrategy().setType("RollingUpdate");
+            }
+            return deployment;
+        });
         Deployment defaultDeployment = client.apps().deployments().inNamespace(trialData.getConfig().getDeploymentNamespace()).withName(trialData.getConfig().getDeploymentName()).get();
         try {
             ByteArrayOutputStream bos = new ByteArrayOutputStream();

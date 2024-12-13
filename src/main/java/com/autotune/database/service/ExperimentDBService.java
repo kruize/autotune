@@ -33,6 +33,7 @@ import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.*;
+import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import org.slf4j.Logger;
@@ -204,8 +205,14 @@ public class ExperimentDBService {
     public ValidationOutputData addExperimentToDB(CreateExperimentAPIObject createExperimentAPIObject) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
-            KruizeExperimentEntry kruizeExperimentEntry = DBHelpers.Converters.KruizeObjectConverters.convertCreateAPIObjToExperimentDBObj(createExperimentAPIObject);
-            validationOutputData = this.experimentDAO.addExperimentToDB(kruizeExperimentEntry);
+            KruizeLMExperimentEntry kruizeLMExperimentEntry = DBHelpers.Converters.KruizeObjectConverters.convertCreateAPIObjToExperimentDBObj(createExperimentAPIObject);
+            LOGGER.debug("is_ros_enabled:{} , targetCluster:{} ", KruizeDeploymentInfo.is_ros_enabled, createExperimentAPIObject.getTargetCluster());
+            if (KruizeDeploymentInfo.is_ros_enabled && createExperimentAPIObject.getTargetCluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
+                KruizeExperimentEntry oldKruizeExperimentEntry = new KruizeExperimentEntry(kruizeLMExperimentEntry);
+                validationOutputData = this.experimentDAO.addExperimentToDB(oldKruizeExperimentEntry);
+            } else {
+                validationOutputData = this.experimentDAO.addExperimentToDB(kruizeLMExperimentEntry);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to save experiment due to {}", e.getMessage());
         }
@@ -314,6 +321,32 @@ public class ExperimentDBService {
         loadAllResults(KruizeOperator.autotuneObjectMap);
 
         loadAllRecommendations(KruizeOperator.autotuneObjectMap);
+    }
+
+    public void loadLMExperimentFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        List<KruizeLMExperimentEntry> entries = experimentDAO.loadLMExperimentByName(experimentName);
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertLMExperimentEntryToCreateExperimentAPIObject(entries);
+            if (null != createExperimentAPIObjects && !createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+
+                int failureThreshHold = createExperimentAPIObjects.size();
+                int failureCount = 0;
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    } else {
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("Experiment " + experimentName + " unable to load from DB.");
+                }
+                experimentInterface.addExperimentToLocalStorage(mainKruizeExperimentMap, kruizeExpList);
+            }
+        }
     }
 
     public void loadExperimentFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
@@ -445,7 +478,7 @@ public class ExperimentDBService {
     /**
      * adds datasource to database table
      *
-     * @param dataSourceInfo DataSourceInfo object
+     * @param dataSourceInfo       DataSourceInfo object
      * @param validationOutputData contains validation data
      * @return ValidationOutputData object
      */
