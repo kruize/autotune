@@ -476,6 +476,26 @@ public class ExperimentDBService {
         }
     }
 
+    public void loadLMExperimentFromDBByInputJSON(Map<String, KruizeObject> mKruizeExperimentMap, StringBuilder clusterName, List<KubernetesAPIObject> kubernetesAPIObjectList) throws Exception {
+        ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
+        // assuming there will be only one Kubernetes object
+        KubernetesAPIObject kubernetesAPIObject = kubernetesAPIObjectList.get(0);
+        List<KruizeLMExperimentEntry> entries = experimentDAO.loadLMExperimentFromDBByInputJSON(clusterName, kubernetesAPIObject);
+        if (null != entries && !entries.isEmpty()) {
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = DBHelpers.Converters.KruizeObjectConverters.convertLMExperimentEntryToCreateExperimentAPIObject(entries);
+            if (!createExperimentAPIObjects.isEmpty()) {
+                List<KruizeObject> kruizeExpList = new ArrayList<>();
+                for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+                    if (null != kruizeObject) {
+                        kruizeExpList.add(kruizeObject);
+                    }
+                }
+                experimentInterface.addExperimentToLocalStorage(mKruizeExperimentMap, kruizeExpList);
+            }
+        }
+    }
+
     public void loadExperimentAndResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
 
         loadExperimentFromDBByName(mainKruizeExperimentMap, experimentName);

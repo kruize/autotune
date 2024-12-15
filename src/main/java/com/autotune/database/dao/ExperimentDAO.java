@@ -108,6 +108,8 @@ public interface ExperimentDAO {
 
     List<KruizeExperimentEntry> loadExperimentFromDBByInputJSON(StringBuilder clusterName, KubernetesAPIObject kubernetesAPIObject) throws Exception;
 
+    List<KruizeLMExperimentEntry> loadLMExperimentFromDBByInputJSON(StringBuilder clusterName, KubernetesAPIObject kubernetesAPIObject) throws Exception;
+
     // Load all the datasources
     List<KruizeDataSourceEntry> loadAllDataSources() throws Exception;
 
