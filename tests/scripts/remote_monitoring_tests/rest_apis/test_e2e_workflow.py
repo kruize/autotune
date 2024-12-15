@@ -18,6 +18,7 @@ import json
 
 import pytest
 import sys
+
 sys.path.append("../../")
 
 from helpers.fixtures import *
@@ -120,10 +121,11 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
             data = response.json()
             assert response.status_code == SUCCESS_STATUS_CODE
             assert data[0]['experiment_name'] == experiment_name
-            assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+            assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+                       NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                        'message'] == RECOMMENDATIONS_AVAILABLE
 
-            response = list_recommendations(experiment_name)
+            response = list_recommendations(experiment_name, rm=True)
             if response.status_code == SUCCESS_200_STATUS_CODE:
                 recommendation_json = response.json()
                 recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0][
@@ -133,13 +135,14 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
                 assert INFO_RECOMMENDATIONS_AVAILABLE_CODE in high_level_notifications
                 data_section = recommendation_section["data"]
                 short_term_recommendation = \
-                    data_section[end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z"]["recommendation_terms"]["short_term"]
+                    data_section[end_time.strftime("%Y-%m-%dT%H:%M:%S.%fZ")[:-4] + "Z"]["recommendation_terms"][
+                        "short_term"]
                 short_term_notifications = short_term_recommendation["notifications"]
                 for notification in short_term_notifications.values():
                     assert notification["type"] != "error"
 
         # Invoke list recommendations for the specified experiment
-        response = list_recommendations(experiment_name)
+        response = list_recommendations(experiment_name, rm=True)
         assert response.status_code == SUCCESS_200_STATUS_CODE
         list_reco_json = response.json()
 
@@ -157,7 +160,7 @@ def test_list_recommendations_multiple_exps_from_diff_json_files(cluster_type):
 
     # Invoke list recommendations for a non-existing experiment
     experiment_name = "Non-existing-exp"
-    response = list_recommendations(experiment_name)
+    response = list_recommendations(experiment_name, rm=True)
     assert response.status_code == ERROR_STATUS_CODE
 
     data = response.json()
