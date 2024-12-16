@@ -333,12 +333,51 @@ measure_query_time() {
     status=$(echo "$response" | jq -r '.status')
 
      if [[ "$status" == "success" ]]; then
-        echo "Success, ${time_taken}, ${start_timestamp}, ${end_timestamp}, ${query}" >> "$OUTPUT_FILE"
+        echo "Success, ${time_taken}, ${start_timestamp}, ${end_timestamp}, ${namespace}, ${container}, ${query}" >> "$OUTPUT_FILE"
      else
         error_type=$(echo "$response" | jq -r '.errorType')
         error_message=$(echo "$response" | jq -r '.error')
-        echo "Failed | ErrorType: $error_type | Error: $error_message", ${time_taken}, ${start_timestamp}, ${end_timestamp}, ${query}>> "$OUTPUT_FILE"
+        echo "Failed | ErrorType: $error_type | Error: $error_message", ${time_taken}, ${start_timestamp}, ${end_timestamp}, ${namespace}, ${container}, ${query}>> "$OUTPUT_FILE"
      fi
+}
+
+# Function to fetch namespaces using Prometheus
+fetch_namespaces() {
+    local start_timestamp="$1"
+    local end_timestamp="$2"
+    # Prometheus query to fetch unique namespaces
+    local query="count by (namespace) (kube_pod_container_info)"
+
+    # Fetch namespaces from Prometheus
+    response=$(curl -G -kH "Authorization: Bearer ${TOKEN}" \
+                --data-urlencode "query=${query}" \
+                --data-urlencode "start=${start_timestamp}" \
+                --data-urlencode "end=${end_timestamp}" \
+                --data-urlencode "step=900" \
+                "${PROMETHEUS_URL}/api/v1/query_range")
+    # Parse response and extract namespaces
+    echo "$response" | jq -r '.data.result[].metric.namespace'
+}
+
+# Function to fetch containers for a specific namespace using Prometheus
+fetch_containers_for_namespace() {
+    local namespace="$1"
+    local start_timestamp="$2"
+    local end_timestamp="$3"
+
+    # Prometheus query to fetch containers in a namespace
+    local query="count by (container) (kube_pod_container_info{namespace='${namespace}'})"
+
+    # Fetch containers from Prometheus
+        response=$(curl -G -kH "Authorization: Bearer ${TOKEN}" \
+                    --data-urlencode "query=${query}" \
+                    --data-urlencode "start=${start_timestamp}" \
+                    --data-urlencode "end=${end_timestamp}" \
+                    --data-urlencode "step=900" \
+                    "${PROMETHEUS_URL}/api/v1/query_range")
+
+    # Parse response and extract container names
+    echo "$response" | jq -r '.data.result[].metric.container'
 }
 
 # Function to capture resource metrics (CPU and memory) of Prometheus pods
@@ -382,29 +421,61 @@ QUERY_SET=${QUERY_SET:-$DEFAULT_QUERY_SET}
 START_TIME=${START_TIME:-$DEFAULT_START_TIME}
 END_TIME=${END_TIME:-$DEFAULT_END_TIME}
 
-# Output file to store the results
-OUTPUT_FILE="prometheus_${QUERY_SET}_stats.csv"
-RESPONSE_LOG_FILE="${QUERY_SET}_response.log"
-
-# Clear the output file before starting
-> "$OUTPUT_FILE"
-> "$RESPONSE_LOG_FILE"
-
-echo "status, time_taken(s), start_time, end_time, query" > "$OUTPUT_FILE"
 
 queries=()  # Declare an empty array to store the returned queries
 
 # Get the query set
 get_queries "$QUERY_SET" queries
 
-if [[ "$QUERY_SET" == "grouped_queriesBy5days" ]]; then
-    for query in "${queries[@]}"; do
-            run_query_across_5day_windows "$query" "$NAMESPACE" "$CONTAINER" "$START_TIME" "$END_TIME"
-    done
+if [ -z "${NAMESPACE}" ] && [ -z "${CONTAINER}" ]; then
+
+  # Output file to store the results
+  OUTPUT_FILE="prometheus_${QUERY_SET}_all_containers_stats.csv"
+  RESPONSE_LOG_FILE="${QUERY_SET}_all_containers_response.log"
+
+  # Clear the output file before starting
+  > "$OUTPUT_FILE"
+  > "$RESPONSE_LOG_FILE"
+
+  echo "status, time_taken(s), start_time, end_time, namespace, container, query" > "$OUTPUT_FILE"
+
+  namespaces=$(fetch_namespaces "$START_TIME" "$END_TIME")
+  for namespace in $namespaces; do
+      containers=$(fetch_containers_for_namespace "$namespace" "$START_TIME" "$END_TIME")
+      echo $containers
+      for container in $containers; do
+        if [[ "$QUERY_SET" == "grouped_queriesBy5days" ]]; then
+            for query in "${queries[@]}"; do
+                    run_query_across_5day_windows "$query" "$namespace" "$container" "$START_TIME" "$END_TIME"
+            done
+        else
+            for query in "${queries[@]}"; do
+                    measure_query_time "$query" "$namespace" "$container" "$START_TIME" "$END_TIME"
+            done
+        fi
+      done
+  done
 else
-    for query in "${queries[@]}"; do
-            measure_query_time "$query" "$NAMESPACE" "$CONTAINER" "$START_TIME" "$END_TIME"
-    done
+
+  # Output file to store the results
+  OUTPUT_FILE="prometheus_${QUERY_SET}_${NAMESPACE}_${CONTAINER}_stats.csv"
+  RESPONSE_LOG_FILE="${QUERY_SET}_${NAMESPACE}_${CONTAINER}_response.log"
+
+  # Clear the output file before starting
+  > "$OUTPUT_FILE"
+  > "$RESPONSE_LOG_FILE"
+
+  echo "status, time_taken(s), start_time, end_time, namespace, container, query" > "$OUTPUT_FILE"
+
+  if [[ "$QUERY_SET" == "grouped_queriesBy5days" ]]; then
+      for query in "${queries[@]}"; do
+              run_query_across_5day_windows "$query" "$NAMESPACE" "$CONTAINER" "$START_TIME" "$END_TIME"
+      done
+  else
+      for query in "${queries[@]}"; do
+              measure_query_time "$query" "$NAMESPACE" "$CONTAINER" "$START_TIME" "$END_TIME"
+      done
+  fi
 fi
 
 capture_prometheus_resource_metrics
