@@ -15,6 +15,7 @@ limitations under the License.
 """
 import pytest
 import sys
+
 sys.path.append("../../")
 from helpers.fixtures import *
 from helpers.kruize import *
@@ -102,7 +103,7 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
                 assert data[0]['experiment_name'] == experiment_name
                 assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
                            'message'] == 'Recommendations Are Available'
-                response = list_recommendations(experiment_name)
+                response = list_recommendations(experiment_name, rm=True)
                 if response.status_code == SUCCESS_200_STATUS_CODE:
                     recommendation_json = response.json()
                     recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0][
@@ -124,7 +125,7 @@ def test_update_valid_recommendations_after_results_after_create_exp(cluster_typ
                    'message'] == 'Recommendations Are Available'
 
         # Invoke list recommendations for the specified experiment
-        response = list_recommendations(experiment_name)
+        response = list_recommendations(experiment_name, rm=True)
         assert response.status_code == SUCCESS_200_STATUS_CODE
         list_reco_json = response.json()
 
@@ -228,7 +229,7 @@ def test_plots_with_no_recommendations_in_some_terms(cluster_type):
                 assert data[0]['experiment_name'] == experiment_name
                 assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
                            'message'] == 'Recommendations Are Available'
-                response = list_recommendations(experiment_name)
+                response = list_recommendations(experiment_name, rm=True)
                 if response.status_code == SUCCESS_200_STATUS_CODE:
                     recommendation_json = response.json()
                     recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0][
@@ -250,7 +251,7 @@ def test_plots_with_no_recommendations_in_some_terms(cluster_type):
                    'message'] == 'Recommendations Are Available'
 
         # Invoke list recommendations for the specified experiment
-        response = list_recommendations(experiment_name)
+        response = list_recommendations(experiment_name, rm=True)
         assert response.status_code == SUCCESS_200_STATUS_CODE
         list_reco_json = response.json()
 
@@ -351,9 +352,10 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
                 data = response.json()
                 assert response.status_code == SUCCESS_STATUS_CODE
                 assert data[0]['experiment_name'] == experiment_name
-                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][INFO_RECOMMENDATIONS_AVAILABLE_CODE][
+                assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+                           INFO_RECOMMENDATIONS_AVAILABLE_CODE][
                            'message'] == RECOMMENDATIONS_AVAILABLE
-                response = list_recommendations(experiment_name)
+                response = list_recommendations(experiment_name, rm=True)
                 if response.status_code == SUCCESS_200_STATUS_CODE:
                     recommendation_json = response.json()
                     recommendation_section = recommendation_json[0]["kubernetes_objects"][0]["containers"][0][
@@ -371,11 +373,12 @@ def test_update_valid_recommendations_just_endtime_input_after_results_after_cre
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
-        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][INFO_RECOMMENDATIONS_AVAILABLE_CODE][
+        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+                   INFO_RECOMMENDATIONS_AVAILABLE_CODE][
                    'message'] == RECOMMENDATIONS_AVAILABLE
 
         # Invoke list recommendations for the specified experiment
-        response = list_recommendations(experiment_name)
+        response = list_recommendations(experiment_name, rm=True)
         assert response.status_code == SUCCESS_200_STATUS_CODE
         list_reco_json = response.json()
 

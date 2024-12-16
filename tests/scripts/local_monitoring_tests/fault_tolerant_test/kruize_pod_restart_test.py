@@ -14,21 +14,24 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 
-import sys, getopt
+import getopt
 import json
 import os
+import sys
 import time
+
 sys.path.append("../../")
 from helpers.kruize import *
 from helpers.utils import *
 from helpers.generate_rm_jsons import *
+
 
 def main(argv):
     cluster_type = "minikube"
     results_dir = "."
     failed = 0
     try:
-        opts, args = getopt.getopt(argv,"h:c:a:u:r:")
+        opts, args = getopt.getopt(argv, "h:c:a:u:r:")
     except getopt.GetoptError:
         print("kruize_pod_restart_test.py -c <cluster type> -a <openshift kruize route> -r <results dir>")
         print("Note: -a option is required only on openshift when kruize service is exposed")
@@ -43,7 +46,6 @@ def main(argv):
             server_ip_addr = arg
         elif opt == '-r':
             results_dir = arg
-        
 
     print(f"Cluster type = {cluster_type}")
     print(f"Results dir = {results_dir}")
@@ -110,7 +112,7 @@ def main(argv):
     experiment_name = None
     response = list_experiments(results, recommendations, latest, experiment_name)
     if response.status_code == SUCCESS_200_STATUS_CODE:
-       list_exp_json = response.json()
+        list_exp_json = response.json()
     else:
         print(f"listExperiments failed!")
         failed = 1
@@ -122,7 +124,7 @@ def main(argv):
     experiment_name = None
     latest = "false"
     interval_end_time = None
-    response = list_recommendations(experiment_name, latest, interval_end_time)
+    response = list_recommendations(experiment_name, latest, interval_end_time, rm=True)
     if response.status_code == SUCCESS_200_STATUS_CODE:
         list_reco_json_file_before = list_reco_json_dir + '/list_reco_json_before.json'
         write_json_data_to_file(list_reco_json_file_before, response.json())
@@ -193,7 +195,7 @@ def main(argv):
     # Fetch the recommendations for all the experiments
     latest = "false"
     interval_end_time = None
-    response = list_recommendations(experiment_name, latest, interval_end_time)
+    response = list_recommendations(experiment_name, latest, interval_end_time, rm=True)
     if response.status_code == SUCCESS_200_STATUS_CODE:
         list_reco_json_file_after = list_reco_json_dir + '/list_reco_json_after.json'
         write_json_data_to_file(list_reco_json_file_after, response.json())
@@ -267,6 +269,7 @@ def main(argv):
     else:
         print("Test Passed! Check the logs for details")
         sys.exit(0)
+
 
 if __name__ == '__main__':
     main(sys.argv[1:])
