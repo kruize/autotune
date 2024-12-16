@@ -286,4 +286,16 @@ public class AnalyzerErrorConstants {
             }
         }
     }
+
+    public static final class RecommendationUpdaterErrors {
+        private RecommendationUpdaterErrors() {
+
+        }
+
+        public static final String UNSUPPORTED_UPDATER_TYPE = "Updater type %s is not supported.";
+        public static final String GENERATE_RECOMMNEDATION_FAILED = "Failed to generate recommendations for experiment: {}";
+        public static final String UPDATER_NOT_INSTALLED = "Updater is not installed.";
+        public static final String RECOMMENDATION_DATA_NOT_PRESENT = "Recommendations are not present for the experiment.";
+        public static final String INVALID_VPA_NAME = "VPA name cannot be null or empty.";
+    }
 }

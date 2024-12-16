@@ -30,6 +30,9 @@ public class AnalyzerConstants {
     public static final String EXPERIMENT = "experiment";
     public static final String LOCAL = "local";
     public static final String REMOTE = "remote";
+    public static final String AUTO = "auto";
+    public static final String RECREATE = "recreate";
+
 
 
     // Used to parse autotune configmaps
@@ -671,6 +674,52 @@ public class AnalyzerConstants {
             public static final String CURRENT_UPDATE_RECOMMENDATIONS_VERSION = "v2.0";
 
             private APIVersionConstants() {
+
+            }
+        }
+    }
+
+    public static final class RecommendationUpdaterConstants {
+        private RecommendationUpdaterConstants() {
+
+        }
+
+        public static final class SupportedUpdaters {
+            public static final String VPA = "vpa";
+
+            private SupportedUpdaters() {
+
+            }
+        }
+
+        public static final class VPA {
+            public static final String VPA_PLURAL = "VerticalPodAutoscaler";
+            public static final String RECOMMENDERS = "recommenders";
+            public static final String RECOMMENDER_KEY = "name";
+            public static final String RECOMMENDER_NAME = "Kruize";
+            public static final String VPA_API_VERSION = "autoscaling.k8s.io/v1";
+            public static final String VPA_TARGET_REF_API_VERSION = "apps/v1";
+            public static final String VPA_TARGET_REF_KIND = "Deployment";
+
+
+            private VPA() {
+
+            }
+        }
+
+        public static final class InfoMsgs {
+            public static final String GENERATING_RECOMMENDATIONS = "Generating recommendations for experiment: {}";
+            public static final String GENERATED_RECOMMENDATIONS = "Generated recommendations for experiment: {}";
+            public static final String CHECKING_IF_UPDATER_INSTALLED = "Verifying if the updater is installed: {}";
+            public static final String FOUND_UPDATER_INSTALLED = "Found updater is installed: {}";
+            public static final String CHECKING_IF_VPA_PRESENT = "Checking for the presence of VPA with name: %s";
+            public static final String VPA_WITH_NAME_FOUND = "VPA with name %s found.";
+            public static final String VPA_WITH_NAME_NOT_FOUND = "VPA with name %s not found.";
+            public static final String RECOMMENDATION_VALUE = "%s request recommendations for container %s is %f";
+            public static final String VPA_PATCHED = "VPA object with name %s is patched successfully with recommendations.";
+            public static final String CREATEING_VPA = "Creating VPA with name: %s";
+            public static final String CREATED_VPA = "Created VPA with name: %s";
+            private InfoMsgs() {
 
             }
         }
