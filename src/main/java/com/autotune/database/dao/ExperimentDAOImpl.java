@@ -59,7 +59,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentDAOImpl.class);
 
     @Override
-    public ValidationOutputData addExperimentToDB(KruizeExperimentEntry kruizeExperimentEntry) {
+    public synchronized ValidationOutputData addExperimentToDB(KruizeExperimentEntry kruizeExperimentEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         Transaction tx = null;
         String statusValue = "failure";
