@@ -292,6 +292,7 @@ public class AnalyzerErrorConstants {
 
         }
 
+        public static final String UPDTAER_SERVICE_START_ERROR = "Error occurred while initializing RecommendationUpdaterService.";
         public static final String UNSUPPORTED_UPDATER_TYPE = "Updater type %s is not supported.";
         public static final String GENERATE_RECOMMNEDATION_FAILED = "Failed to generate recommendations for experiment: {}";
         public static final String UPDATER_NOT_INSTALLED = "Updater is not installed.";
