@@ -1122,7 +1122,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             recommendationEntries = kruizeRecommendationEntryQuery.getSingleResult();
             statusValue = "success";
         } catch (NoResultException e) {
-            LOGGER.debug("Generating new recommendation for Experiment name : %s interval_end_time: %S", experimentName, interval_end_time);
+            LOGGER.debug("Generating new recommendation for Experiment name : {} interval_end_time: {}", experimentName, interval_end_time);
         } catch (Exception e) {
             LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
             recommendationEntries = null;

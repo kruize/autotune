@@ -28,18 +28,23 @@ progress of the job.
 {
   "filter": {
     "exclude": {
-      "namespace": [],
-      "workload": [],
-      "containers": [],
-      "labels": {}
-    },
-    "include": {
-      "namespace": [],
+      "namespace": ["openshift-.*"],
       "workload": [],
       "containers": [],
       "labels": {
-        "key1": "value1",
-        "key2": "value2"
+        "org_id": "ABCOrga",
+        "source_id": "ZZZ",
+        "cluster_id": "ABG"
+      }
+    },
+    "include": {
+      "namespace": ["openshift-tuning"],
+      "workload": [],
+      "containers": [],
+      "labels": {
+        "org_id": "ABCOrga",
+        "source_id": "ZZZ",
+        "cluster_id": "ABG"
       }
     }
   },
@@ -105,10 +110,16 @@ The specified time range determines the period over which the data is analyzed t
 - The `start` timestamp precedes the `end` timestamp.
 
 #### 2. **Request Payload with `exclude` filter specified:**
-TBA
+ 
+- **`exclude`** As shown in the example above, it filters out all namespaces starting with the name `openshift-` . So, we'll create experiments and generate recommendations for every namespace except those.
 
 #### 3. **Request Payload with `include` filter specified:**
-TBA
+
+- **`include`** As shown in the example above, it filters out the namespace `openshift-`. So, we'll create experiments and generate recommendations for every namespace starting with the specified name.
+
+#### 3. **Request Payload with both `include` and `exclude` filter specified:**
+
+- **`include`** As shown in the example above, it filters out all namespaces starting with the name `openshift-` but includes the `openshift-tuning` one. So, we'll create experiments and generate recommendations for the `openshift-tuning` namespace.
 
 ### GET Request:
 
