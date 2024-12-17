@@ -57,6 +57,7 @@ import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.*;
 
+
 /**
  * The `run` method processes bulk input to create experiments and generates resource optimization recommendations.
  * It handles the creation of experiment names based on various data source components, makes HTTP POST requests
@@ -121,7 +122,7 @@ public class BulkJobManager implements Runnable {
     public void run() {
         String statusValue = "failure";
         MetricsConfig.activeJobs.incrementAndGet();
-        Timer.Sample timerRunJob = Timer.start(MetricsConfig.meterRegistry());
+        io.micrometer.core.instrument.Timer.Sample timerRunJob = Timer.start(MetricsConfig.meterRegistry());
         DataSourceMetadataInfo metadataInfo = null;
         DataSourceManager dataSourceManager = new DataSourceManager();
         DataSourceInfo datasource = null;

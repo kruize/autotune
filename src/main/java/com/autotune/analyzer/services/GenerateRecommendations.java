@@ -102,7 +102,7 @@ public class GenerateRecommendations extends HttpServlet {
             // validate and create KruizeObject if successful
             String validationMessage = recommendationEngine.validate_local();
             if (validationMessage.isEmpty()) {
-                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, null);
+                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, AnalyzerConstants.LOCAL);   // todo target cluster is set to LOCAL always
                 if (kruizeObject.getValidation_data().isSuccess()) {
                     LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
                     interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,

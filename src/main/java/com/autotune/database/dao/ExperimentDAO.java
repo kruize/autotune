@@ -6,6 +6,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -24,6 +25,10 @@ public interface ExperimentDAO {
 
     // Add recommendation  to DB
     public ValidationOutputData addRecommendationToDB(KruizeRecommendationEntry recommendationEntry);
+
+    // Add recommendation  to DB
+    public ValidationOutputData addRecommendationToDB(KruizeLMRecommendationEntry recommendationEntry);
+
 
     // Add Performance Profile  to DB
     public ValidationOutputData addPerformanceProfileToDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry);
@@ -52,6 +57,8 @@ public interface ExperimentDAO {
     // If Kruize restarts load all recommendations
     List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception;
 
+    List<KruizeLMRecommendationEntry> loadAllLMRecommendations() throws Exception;
+
     // If Kruize restarts load all performance profiles
     List<KruizePerformanceProfileEntry> loadAllPerformanceProfiles() throws Exception;
 
@@ -75,6 +82,8 @@ public interface ExperimentDAO {
     // Load all recommendations of a particular experiment
     List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception;
 
+    // Load all recommendations of a particular experiment
+    List<KruizeLMRecommendationEntry> loadLMRecommendationsByExperimentName(String experimentName) throws Exception;
 
     // Load a single Performance Profile based on name
     List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception;
@@ -87,6 +96,8 @@ public interface ExperimentDAO {
 
     // Load all recommendations of a particular experiment and interval end Time
     KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, String cluster_name, Timestamp interval_end_time) throws Exception;
+
+    KruizeLMRecommendationEntry loadLMRecommendationsByExperimentNameAndDate(String experimentName, String cluster_name, Timestamp interval_end_time) throws Exception;
 
     // Get KruizeResult Record
     List<KruizeResultsEntry> getKruizeResultsEntry(String experiment_name, String cluster_name, Timestamp interval_start_time, Timestamp interval_end_time) throws Exception;

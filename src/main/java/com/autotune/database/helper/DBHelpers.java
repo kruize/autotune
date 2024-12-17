@@ -41,6 +41,7 @@ import com.autotune.common.datasource.DataSourceMetadataOperator;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -209,8 +210,6 @@ public class DBHelpers {
                             )
                     );
                 }
-
-
                 for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
                     if (null == kubernetesAPIObject.getName()) {
                         // namespace recommendations experiment type
@@ -498,102 +497,6 @@ public class DBHelpers {
                 return kruizeResultsEntry;
             }
 
-            public static ListRecommendationsAPIObject getListRecommendationAPIObjectForDB(KruizeObject kruizeObject, Timestamp monitoringEndTime) {
-                if (null == kruizeObject)
-                    return null;
-                if (null == monitoringEndTime)
-                    return null;
-                if (null == kruizeObject.getKubernetes_objects())
-                    return null;
-                if (kruizeObject.getKubernetes_objects().isEmpty())
-                    return null;
-                List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
-                for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
-                    if (null == k8sObject)
-                        continue;
-                    if (null == k8sObject.getContainerDataMap() && kruizeObject.isContainerExperiment())
-                        continue;
-                    if (k8sObject.getContainerDataMap().isEmpty() && kruizeObject.isContainerExperiment())
-                        continue;
-                    KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
-                    boolean matchFound = false;
-                    if (kruizeObject.isNamespaceExperiment()) {
-                        // saving namespace recommendations
-                        NamespaceData clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceData(), NamespaceData.class);
-                        if (null == clonedNamespaceData)
-                            continue;
-                        if (null == clonedNamespaceData.getNamespaceRecommendations())
-                            continue;
-                        if (null == clonedNamespaceData.getNamespaceRecommendations().getData())
-                            continue;
-                        if (clonedNamespaceData.getNamespaceRecommendations().getData().isEmpty())
-                            continue;
-                        HashMap<Timestamp, MappedRecommendationForTimestamp> namespaceRecommendations = clonedNamespaceData.getNamespaceRecommendations().getData();
-                        if (null != monitoringEndTime && namespaceRecommendations.containsKey(monitoringEndTime)) {
-                            matchFound = true;
-                            NamespaceAPIObject namespaceAPIObject = null;
-                            List<Timestamp> tempList = new ArrayList<>();
-                            for (Timestamp timestamp : namespaceRecommendations.keySet()) {
-                                if (!timestamp.equals(monitoringEndTime))
-                                    tempList.add(timestamp);
-                            }
-                            for (Timestamp timestamp : tempList) {
-                                namespaceRecommendations.remove(timestamp);
-                            }
-                            clonedNamespaceData.getNamespaceRecommendations().setData(namespaceRecommendations);
-                            namespaceAPIObject = new NamespaceAPIObject(clonedNamespaceData.getNamespace_name(),
-                                    clonedNamespaceData.getNamespaceRecommendations(),
-                                    null);
-                            kubernetesAPIObject.setNamespaceAPIObject(namespaceAPIObject);
-                        }
-                    }
-
-                    List<ContainerAPIObject> containerAPIObjectList = new ArrayList<>();
-                    for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
-                        ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
-                        if (null == clonedContainerData.getContainerRecommendations())
-                            continue;
-                        if (null == clonedContainerData.getContainerRecommendations().getData())
-                            continue;
-                        if (clonedContainerData.getContainerRecommendations().getData().isEmpty())
-                            continue;
-                        HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations
-                                = clonedContainerData.getContainerRecommendations().getData();
-                        if (null != monitoringEndTime && recommendations.containsKey(monitoringEndTime)) {
-                            matchFound = true;
-                            ContainerAPIObject containerAPIObject = null;
-                            List<Timestamp> tempList = new ArrayList<>();
-                            for (Timestamp timestamp : recommendations.keySet()) {
-                                if (!timestamp.equals(monitoringEndTime))
-                                    tempList.add(timestamp);
-                            }
-                            for (Timestamp timestamp : tempList) {
-                                recommendations.remove(timestamp);
-                            }
-                            clonedContainerData.getContainerRecommendations().setData(recommendations);
-                            containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
-                                    clonedContainerData.getContainer_image_name(),
-                                    clonedContainerData.getContainerRecommendations(),
-                                    null);
-                            containerAPIObjectList.add(containerAPIObject);
-                        }
-                    }
-                    kubernetesAPIObject.setContainerAPIObjects(containerAPIObjectList);
-                    if (matchFound) {
-                        kubernetesAPIObjectList.add(kubernetesAPIObject);
-                    }
-                }
-                ListRecommendationsAPIObject listRecommendationsAPIObject = null;
-                if (!kubernetesAPIObjectList.isEmpty()) {
-                    listRecommendationsAPIObject = new ListRecommendationsAPIObject();
-                    listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
-                    listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
-                    listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
-                    listRecommendationsAPIObject.setExperimentType(kruizeObject.getExperimentType());
-                }
-                return listRecommendationsAPIObject;
-            }
-
             public static KruizeRecommendationEntry convertKruizeObjectTORecommendation(KruizeObject kruizeObject, Timestamp monitoringEndTime) {
                 KruizeRecommendationEntry kruizeRecommendationEntry = null;
                 Boolean checkForTimestamp = false;
@@ -660,6 +563,179 @@ public class DBHelpers {
                 return kruizeRecommendationEntry;
             }
 
+
+            public static KruizeLMRecommendationEntry convertKruizeObjectTOLMRecommendation(KruizeObject kruizeObject, Timestamp monitoringEndTime) {
+                KruizeLMRecommendationEntry kruizeRecommendationEntry = null;
+                Boolean checkForTimestamp = false;
+                Boolean getLatest = true;
+                Gson gson = new GsonBuilder()
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .enableComplexMapKeySerialization()
+                        .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
+                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                        .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                        .create();
+                try {
+                    ListRecommendationsAPIObject listRecommendationsAPIObject = getListRecommendationAPIObjectForDB(
+                            kruizeObject, monitoringEndTime);
+                    if (null == listRecommendationsAPIObject) {
+                        return null;
+                    }
+                    LOGGER.debug(new GsonBuilder()
+                            .setPrettyPrinting()
+                            .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                            .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                            .create()
+                            .toJson(listRecommendationsAPIObject));
+                    kruizeRecommendationEntry = new KruizeLMRecommendationEntry();
+                    kruizeRecommendationEntry.setVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
+                    kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
+                    kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
+                    kruizeRecommendationEntry.setExperimentType(kruizeObject.getExperimentType().name());
+
+                    Timestamp endInterval = null;
+                    // todo : what happens if two k8 objects or Containers with different timestamp
+                    for (KubernetesAPIObject k8sObject : listRecommendationsAPIObject.getKubernetesObjects()) {
+                        if (listRecommendationsAPIObject.isNamespaceExperiment()) {
+                            endInterval = k8sObject.getNamespaceAPIObjects().getnamespaceRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
+                        } else {
+                            for (ContainerAPIObject containerAPIObject : k8sObject.getContainerAPIObjects()) {
+                                endInterval = containerAPIObject.getContainerRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
+                                break;
+                            }
+                        }
+                    }
+                    kruizeRecommendationEntry.setInterval_end_time(endInterval);
+                    Map k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, listRecommendationsAPIObject.getKubernetesObjects());
+                    String k8sObjectString = gson.toJson(k8sObjectsMap);
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    DateFormat df = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+                    objectMapper.setDateFormat(df);
+                    try {
+                        kruizeRecommendationEntry.setExtended_data(
+                                objectMapper.readTree(
+                                        k8sObjectString
+                                )
+                        );
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating Extended data due to : " + e.getMessage());
+                    }
+                } catch (Exception e) {
+                    kruizeRecommendationEntry = null;
+                    LOGGER.error("Error while converting KruizeObject to KruizeRecommendationEntry due to {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeRecommendationEntry;
+            }
+
+            public static ListRecommendationsAPIObject getListRecommendationAPIObjectForDB(KruizeObject kruizeObject, Timestamp monitoringEndTime) {
+                if (null == kruizeObject)
+                    return null;
+                if (null == monitoringEndTime)
+                    return null;
+                if (null == kruizeObject.getKubernetes_objects())
+                    return null;
+                if (kruizeObject.getKubernetes_objects().isEmpty())
+                    return null;
+                List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
+                for (K8sObject k8sObject : kruizeObject.getKubernetes_objects()) {
+                    if (null == k8sObject)
+                        continue;
+                    if (null == k8sObject.getContainerDataMap() && kruizeObject.isContainerExperiment())
+                        continue;
+                    if (k8sObject.getContainerDataMap().isEmpty() && kruizeObject.isContainerExperiment())
+                        continue;
+                    KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
+                    boolean matchFound = false;
+                    if (kruizeObject.isNamespaceExperiment()) {
+                        // saving namespace recommendations
+                        NamespaceData clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceData(), NamespaceData.class);
+                        if (null == clonedNamespaceData)
+                            continue;
+                        if (null == clonedNamespaceData.getNamespaceRecommendations())
+                            continue;
+                        if (null == clonedNamespaceData.getNamespaceRecommendations().getData())
+                            continue;
+                        if (clonedNamespaceData.getNamespaceRecommendations().getData().isEmpty())
+                            continue;
+                        HashMap<Timestamp, MappedRecommendationForTimestamp> namespaceRecommendations = clonedNamespaceData.getNamespaceRecommendations().getData();
+
+                        if (null != monitoringEndTime && namespaceRecommendations.containsKey(monitoringEndTime)) {
+                            matchFound = true;
+                            NamespaceAPIObject namespaceAPIObject = null;
+                            List<Timestamp> tempList = new ArrayList<>();
+                            for (Timestamp timestamp : namespaceRecommendations.keySet()) {
+                                if (!timestamp.equals(monitoringEndTime))
+                                    tempList.add(timestamp);
+                            }
+                            for (Timestamp timestamp : tempList) {
+                                namespaceRecommendations.remove(timestamp);
+                            }
+                            clonedNamespaceData.getNamespaceRecommendations().setData(namespaceRecommendations);
+                            namespaceAPIObject = new NamespaceAPIObject(clonedNamespaceData.getNamespace_name(),
+                                    clonedNamespaceData.getNamespaceRecommendations(),
+                                    null);
+                            kubernetesAPIObject.setNamespaceAPIObject(namespaceAPIObject);
+                        }
+                    }
+
+                    List<ContainerAPIObject> containerAPIObjectList = new ArrayList<>();
+                    for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                        ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
+                        if (null == clonedContainerData.getContainerRecommendations())
+                            continue;
+                        if (null == clonedContainerData.getContainerRecommendations().getData())
+                            continue;
+                        if (clonedContainerData.getContainerRecommendations().getData().isEmpty())
+                            continue;
+                        HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations
+                                = clonedContainerData.getContainerRecommendations().getData();
+                        if (null != monitoringEndTime && !recommendations.containsKey(monitoringEndTime)) {
+                            try {
+                                Timestamp endInterval = containerData.getContainerRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
+                                monitoringEndTime = endInterval;
+                            } catch (Exception e) {
+                                LOGGER.error("Error while converting ContainerData to Timestamp due to and not able to save date into recommendation table: " + e.getMessage());
+                            }
+                        }
+                        if (null != monitoringEndTime && recommendations.containsKey(monitoringEndTime)) {
+                            matchFound = true;
+                            ContainerAPIObject containerAPIObject = null;
+                            List<Timestamp> tempList = new ArrayList<>();
+                            for (Timestamp timestamp : recommendations.keySet()) {
+                                if (!timestamp.equals(monitoringEndTime))
+                                    tempList.add(timestamp);
+                            }
+                            for (Timestamp timestamp : tempList) {
+                                recommendations.remove(timestamp);
+                            }
+                            clonedContainerData.getContainerRecommendations().setData(recommendations);
+                            containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
+                                    clonedContainerData.getContainer_image_name(),
+                                    clonedContainerData.getContainerRecommendations(),
+                                    null);
+                            containerAPIObjectList.add(containerAPIObject);
+                        }
+                    }
+                    kubernetesAPIObject.setContainerAPIObjects(containerAPIObjectList);
+                    if (matchFound) {
+                        kubernetesAPIObjectList.add(kubernetesAPIObject);
+                    }
+                }
+                ListRecommendationsAPIObject listRecommendationsAPIObject = null;
+                if (!kubernetesAPIObjectList.isEmpty()) {
+                    listRecommendationsAPIObject = new ListRecommendationsAPIObject();
+                    listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
+                    listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
+                    listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+                    listRecommendationsAPIObject.setExperimentType(kruizeObject.getExperimentType());
+                }
+                return listRecommendationsAPIObject;
+            }
+
+
             public static List<CreateExperimentAPIObject> convertLMExperimentEntryToCreateExperimentAPIObject(List<KruizeLMExperimentEntry> entries) throws Exception {
                 List<CreateExperimentAPIObject> createExperimentAPIObjects = new ArrayList<>();
                 int failureThreshHold = entries.size();
@@ -671,6 +747,9 @@ public class DBHelpers {
                         CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
                         apiObj.setExperiment_id(entry.getExperiment_id());
                         apiObj.setStatus(entry.getStatus());
+                        apiObj.setTargetCluster(entry.getTarget_cluster());
+                        apiObj.setMode(entry.getMode());
+                        apiObj.setExperimentType(entry.getExperiment_type());
                         createExperimentAPIObjects.add(apiObj);
                     } catch (Exception e) {
                         LOGGER.error("Error in converting to apiObj from db object due to : {}", e.getMessage());
@@ -707,6 +786,7 @@ public class DBHelpers {
 
                 return createExperimentAPIObjects;
             }
+
 
             public static List<UpdateResultsAPIObject> convertResultEntryToUpdateResultsAPIObject(List<KruizeResultsEntry> kruizeResultsEntries) {
                 ObjectMapper mapper = new ObjectMapper();
@@ -794,6 +874,74 @@ public class DBHelpers {
                         .create();
                 List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList = new ArrayList<>();
                 for (KruizeRecommendationEntry kruizeRecommendationEntry : kruizeRecommendationEntryList) {
+                    // Check if instance of KruizeRecommendationEntry is null
+                    if (null == kruizeRecommendationEntry) {
+                        // Throw an exception stating it cannot be null
+                        throw new InvalidConversionOfRecommendationEntryException(
+                                String.format(
+                                        AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_NULL,
+                                        KruizeRecommendationEntry.class.getSimpleName()
+                                )
+                        );
+                    }
+                    // Create an Object Mapper to extract value from JSON Node
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    DateFormat df = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);
+                    objectMapper.setDateFormat(df);
+                    // Create a holder for recommendation object to save the result from object mapper
+                    ListRecommendationsAPIObject listRecommendationsAPIObject = null;
+                    JsonNode extendedData = kruizeRecommendationEntry.getExtended_data().get(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS);
+                    if (null == extendedData)
+                        continue;
+                    try {
+                        // If successful, the object mapper returns the list recommendation API Object
+                        List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
+                        if (extendedData.isArray()) {
+                            for (JsonNode node : extendedData) {
+                                KubernetesAPIObject kubernetesAPIObject = gson.fromJson(objectMapper.writeValueAsString(node), KubernetesAPIObject.class);
+                                if (null != kubernetesAPIObject) {
+                                    kubernetesAPIObjectList.add(kubernetesAPIObject);
+                                } else {
+                                    LOGGER.debug("GSON failed to convert the DB Json object in convertRecommendationEntryToRecommendationAPIObject");
+                                }
+                            }
+                        }
+                        if (null != kubernetesAPIObjectList) {
+                            listRecommendationsAPIObject = new ListRecommendationsAPIObject();
+                            listRecommendationsAPIObject.setApiVersion(kruizeRecommendationEntry.getVersion());
+                            listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
+                            listRecommendationsAPIObject.setExperimentName(kruizeRecommendationEntry.getExperiment_name());
+                            listRecommendationsAPIObject.setClusterName(kruizeRecommendationEntry.getCluster_name());
+                        }
+                    } catch (JsonProcessingException e) {
+                        e.printStackTrace();
+                        LOGGER.debug(e.getMessage());
+                    }
+                    if (null != listRecommendationsAPIObject)
+                        listRecommendationsAPIObjectList.add(listRecommendationsAPIObject);
+                }
+                if (listRecommendationsAPIObjectList.isEmpty())
+                    return null;
+                return listRecommendationsAPIObjectList;
+            }
+
+            public static List<ListRecommendationsAPIObject> convertLMRecommendationEntryToRecommendationAPIObject(
+                    List<KruizeLMRecommendationEntry> kruizeRecommendationEntryList) throws InvalidConversionOfRecommendationEntryException {
+                if (null == kruizeRecommendationEntryList)
+                    return null;
+                if (kruizeRecommendationEntryList.size() == 0)
+                    return null;
+                Gson gson = new GsonBuilder()
+                        .disableHtmlEscaping()
+                        .setPrettyPrinting()
+                        .enableComplexMapKeySerialization()
+                        .setDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT)
+                        .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                        .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                        .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                        .create();
+                List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList = new ArrayList<>();
+                for (KruizeLMRecommendationEntry kruizeRecommendationEntry : kruizeRecommendationEntryList) {
                     // Check if instance of KruizeRecommendationEntry is null
                     if (null == kruizeRecommendationEntry) {
                         // Throw an exception stating it cannot be null

@@ -84,18 +84,25 @@ public class ListRecommendations extends HttpServlet {
         String experimentName = request.getParameter(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME);
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String monitoringEndTime = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
+        String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
         Timestamp monitoringEndTimestamp = null;
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
-        ;
 
         boolean getLatest = true;
         boolean checkForTimestamp = false;
         boolean error = false;
+        boolean rmTable = false;
         if (null != latestRecommendation
                 && !latestRecommendation.isEmpty()
                 && latestRecommendation.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)
         ) {
             getLatest = false;
+        }
+        if (null != rm
+                && !rm.isEmpty()
+                && rm.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)
+        ) {
+            rmTable = true;
         }
         List<KruizeObject> kruizeObjectList = new ArrayList<>();
         try {
@@ -104,7 +111,11 @@ public class ListRecommendations extends HttpServlet {
                 // trim the experiment name to remove whitespaces
                 experimentName = experimentName.trim();
                 try {
-                    new ExperimentDBService().loadExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+                    if (rmTable) {
+                        new ExperimentDBService().loadExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+                    } else {
+                        new ExperimentDBService().loadLMExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+                    }
                 } catch (Exception e) {
                     LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
                 }
@@ -151,7 +162,11 @@ public class ListRecommendations extends HttpServlet {
                 }
             } else {
                 try {
-                    new ExperimentDBService().loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
+                    if (rmTable) {
+                        new ExperimentDBService().loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
+                    } else {
+                        new ExperimentDBService().loadAllLMExperimentsAndRecommendations(mKruizeExperimentMap);
+                    }
                 } catch (Exception e) {
                     LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
                 }
