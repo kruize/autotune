@@ -986,6 +986,38 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
+    @Override
+    public List<KruizeLMExperimentEntry> loadLMExperimentFromDBByInputJSON(StringBuilder clusterName, KubernetesAPIObject kubernetesAPIObject) throws Exception {
+        //todo load only experimentStatus=inprogress , playback may not require completed experiments
+        List<KruizeLMExperimentEntry> entries;
+        String statusValue = "failure";
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            // assuming there will be only one container
+            ContainerAPIObject containerAPIObject = kubernetesAPIObject.getContainerAPIObjects().get(0);
+            // Set parameters for KubernetesObject and Container
+            Query<KruizeLMExperimentEntry> query = session.createNativeQuery(SELECT_FROM_LM_EXPERIMENTS_BY_INPUT_JSON, KruizeLMExperimentEntry.class);
+            query.setParameter(CLUSTER_NAME, clusterName.toString());
+            query.setParameter(KruizeConstants.JSONKeys.NAME, kubernetesAPIObject.getName());
+            query.setParameter(KruizeConstants.JSONKeys.NAMESPACE, kubernetesAPIObject.getNamespace());
+            query.setParameter(KruizeConstants.JSONKeys.TYPE, kubernetesAPIObject.getType());
+            query.setParameter(KruizeConstants.JSONKeys.CONTAINER_NAME, containerAPIObject.getContainer_name());
+            query.setParameter(KruizeConstants.JSONKeys.CONTAINER_IMAGE_NAME, containerAPIObject.getContainer_image_name());
+
+            entries = query.getResultList();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Error fetching experiment data: {}", e.getMessage());
+            throw new Exception("Error while fetching experiment data from database: " + e.getMessage());
+        } finally {
+            if (null != timerLoadExpName) {
+                MetricsConfig.timerLoadExpName = MetricsConfig.timerBLoadExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
+            }
+        }
+        return entries;
+    }
+
 
     @Override
     public List<KruizeResultsEntry> loadResultsByExperimentName(String experimentName, String cluster_name, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {

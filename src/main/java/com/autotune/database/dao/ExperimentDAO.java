@@ -48,7 +48,7 @@ public interface ExperimentDAO {
     // If Kruize object restarts load all experiment which are in inprogress
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception;
 
-    // If Kruize object restarts load all local monitoring experiments which are in inprogress
+
     public List<KruizeLMExperimentEntry> loadAllLMExperiments() throws Exception;
 
     // If Kruize object restarts load all results from the experiments which are in inprogress
@@ -107,6 +107,8 @@ public interface ExperimentDAO {
     public void addPartitions(String tableName, String month, String year, int dayOfTheMonth, String partitionType) throws Exception;
 
     List<KruizeExperimentEntry> loadExperimentFromDBByInputJSON(StringBuilder clusterName, KubernetesAPIObject kubernetesAPIObject) throws Exception;
+
+    List<KruizeLMExperimentEntry> loadLMExperimentFromDBByInputJSON(StringBuilder clusterName, KubernetesAPIObject kubernetesAPIObject) throws Exception;
 
     // Load all the datasources
     List<KruizeDataSourceEntry> loadAllDataSources() throws Exception;

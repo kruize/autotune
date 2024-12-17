@@ -85,6 +85,15 @@ public class DBConstants {
                 " WHERE container->>'container_name' = :container_name" +
                 " AND container->>'container_image_name' = :container_image_name" +
                 " ))";
+        public static final String SELECT_FROM_LM_EXPERIMENTS_BY_INPUT_JSON = "SELECT * FROM kruize_lm_experiments WHERE cluster_name = :cluster_name " +
+                "AND EXISTS (SELECT 1 FROM jsonb_array_elements(extended_data->'kubernetes_objects') AS kubernetes_object" +
+                " WHERE kubernetes_object->>'name' = :name " +
+                " AND kubernetes_object->>'namespace' = :namespace " +
+                " AND kubernetes_object->>'type' = :type " +
+                " AND EXISTS (SELECT 1 FROM jsonb_array_elements(kubernetes_object->'containers') AS container" +
+                " WHERE container->>'container_name' = :container_name" +
+                " AND container->>'container_image_name' = :container_image_name" +
+                " ))";
     }
 
     public static final class TABLE_NAMES {

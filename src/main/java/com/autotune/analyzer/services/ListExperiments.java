@@ -107,18 +107,26 @@ public class ListExperiments extends HttpServlet {
         String latest = request.getParameter(LATEST);
         String recommendations = request.getParameter(KruizeConstants.JSONKeys.RECOMMENDATIONS);
         String experimentName = request.getParameter(EXPERIMENT_NAME);
+        String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
         String requestBody = request.getReader().lines().collect(Collectors.joining(System.lineSeparator()));
         StringBuilder clusterName = new StringBuilder();
         List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
         boolean isJSONValid = true;
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<>();
         boolean error = false;
+        boolean rmTable = false;
         // validate Query params
         Set<String> invalidParams = new HashSet<>();
         for (String param : request.getParameterMap().keySet()) {
             if (!KruizeSupportedTypes.QUERY_PARAMS_SUPPORTED.contains(param)) {
                 invalidParams.add(param);
             }
+        }
+        if (null != rm
+                && !rm.isEmpty()
+                && rm.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)
+        ) {
+            rmTable = true;
         }
         try {
             if (invalidParams.isEmpty()) {
@@ -142,13 +150,21 @@ public class ListExperiments extends HttpServlet {
                                 // parse the requestBody JSON into corresponding classes
                                 parseInputJSON(requestBody, clusterName, kubernetesAPIObjectList);
                                 try {
-                                    new ExperimentDBService().loadExperimentFromDBByInputJSON(mKruizeExperimentMap, clusterName, kubernetesAPIObjectList);
+                                    if (rmTable)
+                                        new ExperimentDBService().loadExperimentFromDBByInputJSON(mKruizeExperimentMap, clusterName, kubernetesAPIObjectList);
+                                    else {
+                                        new ExperimentDBService().loadLMExperimentFromDBByInputJSON(mKruizeExperimentMap, clusterName, kubernetesAPIObjectList);
+                                    }
                                 } catch (Exception e) {
                                     LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
                                 }
                             } else {
                                 // Fetch experiments data from the DB and check if the requested experiment exists
-                                loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
+                                if (rmTable) {
+                                    loadExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
+                                } else {
+                                    loadLMExperimentsFromDatabase(mKruizeExperimentMap, experimentName);
+                                }
                             }
                             // Check if experiment exists
                             if (experimentName != null && !mKruizeExperimentMap.containsKey(experimentName)) {
@@ -161,18 +177,18 @@ public class ListExperiments extends HttpServlet {
                                 );
                             }
                             if (!error) {
-                                    // create Gson Object
-                                    Gson gsonObj = createGsonObject();
+                                // create Gson Object
+                                Gson gsonObj = createGsonObject();
 
-                                    // Modify the JSON response here based on query params.
-                                    gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
-                                    if (gsonStr.isEmpty()) {
-                                        gsonStr = generateDefaultResponse();
-                                    }
-                                    response.getWriter().println(gsonStr);
-                                    response.getWriter().close();
-                                    statusValue = "success";
+                                // Modify the JSON response here based on query params.
+                                gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
+                                if (gsonStr.isEmpty()) {
+                                    gsonStr = generateDefaultResponse();
                                 }
+                                response.getWriter().println(gsonStr);
+                                response.getWriter().close();
+                                statusValue = "success";
+                            }
                         } catch (Exception e) {
                             LOGGER.error("Exception: " + e.getMessage());
                             e.printStackTrace();
@@ -272,6 +288,18 @@ public class ListExperiments extends HttpServlet {
                 new ExperimentDBService().loadAllExperiments(mKruizeExperimentMap);
             else
                 new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, experimentName);
+
+        } catch (Exception e) {
+            LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
+        }
+    }
+
+    private void loadLMExperimentsFromDatabase(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
+        try {
+            if (experimentName == null || experimentName.isEmpty())
+                new ExperimentDBService().loadAllLMExperiments(mKruizeExperimentMap);
+            else
+                new ExperimentDBService().loadLMExperimentFromDBByName(mKruizeExperimentMap, experimentName);
 
         } catch (Exception e) {
             LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
