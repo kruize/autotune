@@ -124,7 +124,7 @@ def main(argv):
     experiment_name = None
     latest = "false"
     interval_end_time = None
-    response = list_recommendations(experiment_name, latest, interval_end_time, rm=True)
+    response = list_recommendations(experiment_name, latest, interval_end_time)
     if response.status_code == SUCCESS_200_STATUS_CODE:
         list_reco_json_file_before = list_reco_json_dir + '/list_reco_json_before.json'
         write_json_data_to_file(list_reco_json_file_before, response.json())
