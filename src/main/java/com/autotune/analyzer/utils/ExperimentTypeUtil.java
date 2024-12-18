@@ -16,10 +16,7 @@
 
 package com.autotune.analyzer.utils;
 
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonParseException;
+import com.google.gson.*;
 
 import java.lang.reflect.Type;
 
@@ -35,7 +32,15 @@ public class ExperimentTypeUtil {
         return experimentType != null && AnalyzerConstants.ExperimentType.NAMESPACE.equals(experimentType);
     }
 
-    public class ExperimentTypeDeserializer implements JsonDeserializer<AnalyzerConstants.ExperimentType> {
+    public class ExperimentTypeSerializer implements JsonSerializer<AnalyzerConstants.ExperimentType>, JsonDeserializer<AnalyzerConstants.ExperimentType> {
+        @Override
+        public JsonElement serialize(AnalyzerConstants.ExperimentType experimentType, Type typeOfT, JsonSerializationContext context) {
+            if (experimentType != null) {
+                return new JsonPrimitive(experimentType.name().toLowerCase());
+            }
+            return null;
+        }
+
         @Override
         public AnalyzerConstants.ExperimentType deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             String experimentType = json.getAsString();

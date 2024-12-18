@@ -19,6 +19,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.ExperimentTypeAware;
 import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -27,6 +28,7 @@ public class ListRecommendationsAPIObject extends BaseSO implements ExperimentTy
     @SerializedName(KruizeConstants.JSONKeys.CLUSTER_NAME)
     private String clusterName;
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE)
+    @JsonAdapter(ExperimentTypeUtil.ExperimentTypeSerializer.class)
     private AnalyzerConstants.ExperimentType experimentType;
 
     @SerializedName(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS)

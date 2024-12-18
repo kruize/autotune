@@ -51,7 +51,7 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     @SerializedName(KruizeConstants.JSONKeys.DATASOURCE) //TODO: to be used in future
     private String datasource;
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
-    @JsonAdapter(ExperimentTypeUtil.ExperimentTypeDeserializer.class)
+    @JsonAdapter(ExperimentTypeUtil.ExperimentTypeSerializer.class)
     private AnalyzerConstants.ExperimentType experimentType;
     private AnalyzerConstants.ExperimentStatus status;
     private String experiment_id;   // this id is UUID and getting set at createExperiment API
