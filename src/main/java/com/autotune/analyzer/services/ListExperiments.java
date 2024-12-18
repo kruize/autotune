@@ -31,6 +31,7 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
@@ -85,6 +86,15 @@ public class ListExperiments extends HttpServlet {
                 containerDataMap.put(containerAPIObject.getContainer_name(), containerData);
             }
             k8sObject.setContainerDataMap(containerDataMap);
+
+            // adding namespace recommendations to K8sObject
+            NamespaceData namespaceData = new NamespaceData();
+            if (kubernetesAPIObject.getNamespaceAPIObjects() != null && kubernetesAPIObject.getNamespaceAPIObjects().getnamespaceRecommendations() != null) {
+                namespaceData.setNamespace_name(kubernetesAPIObject.getNamespace());
+                namespaceData.setNamespaceRecommendations(kubernetesAPIObject.getNamespaceAPIObjects().getnamespaceRecommendations());
+                k8sObject.setNamespaceData(namespaceData);
+            }
+
             k8sObjectList.add(k8sObject);
         }
         return k8sObjectList;
@@ -181,7 +191,7 @@ public class ListExperiments extends HttpServlet {
                                 Gson gsonObj = createGsonObject();
 
                                 // Modify the JSON response here based on query params.
-                                gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName);
+                                gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName, rmTable);
                                 if (gsonStr.isEmpty()) {
                                     gsonStr = generateDefaultResponse();
                                 }
@@ -364,7 +374,7 @@ public class ListExperiments extends HttpServlet {
     }
 
     private String buildResponseBasedOnQuery(Map<String, KruizeObject> mKruizeExperimentMap, Gson gsonObj, String results,
-                                             String recommendations, String latest, String experimentName) {
+                                             String recommendations, String latest, String experimentName, boolean rmTable) {
         // Case : default
         // return the response without results or recommendations
         if (results.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE) && recommendations.equalsIgnoreCase(AnalyzerConstants.BooleanString.FALSE)) {
@@ -376,7 +386,7 @@ public class ListExperiments extends HttpServlet {
                         AnalyzerConstants.BooleanString.TRUE)) {
                     // Case: results=true , recommendations=true
                     // fetch results and recomm. from the DB
-                    loadRecommendations(mKruizeExperimentMap, experimentName);
+                    loadRecommendations(mKruizeExperimentMap, experimentName, rmTable);
                     buildRecommendationsResponse(mKruizeExperimentMap, latest);
                     loadResults(mKruizeExperimentMap, experimentName);
 
@@ -398,7 +408,7 @@ public class ListExperiments extends HttpServlet {
                     return gsonObj.toJson(new ArrayList<>(mKruizeExperimentMap.values()));
                 } else {
                     // Case: results=false , recommendations=true
-                    loadRecommendations(mKruizeExperimentMap, experimentName);
+                    loadRecommendations(mKruizeExperimentMap, experimentName, rmTable);
                     buildRecommendationsResponse(mKruizeExperimentMap, latest);
                     return gsonObj.toJson(new ArrayList<>(mKruizeExperimentMap.values()));
                 }
@@ -421,13 +431,19 @@ public class ListExperiments extends HttpServlet {
         }
     }
 
-    private void loadRecommendations(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
+    private void loadRecommendations(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName, boolean rmTable) {
         try {
-            if (experimentName == null || experimentName.isEmpty())
-                new ExperimentDBService().loadAllRecommendations(mKruizeExperimentMap);
-            else
-                new ExperimentDBService().loadRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
-
+            if (rmTable) {
+                if (experimentName == null || experimentName.isEmpty())
+                    new ExperimentDBService().loadAllRecommendations(mKruizeExperimentMap);
+                else
+                    new ExperimentDBService().loadRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+            } else {
+                if (experimentName == null || experimentName.isEmpty())
+                    new ExperimentDBService().loadAllLMRecommendations(mKruizeExperimentMap);
+                else
+                    new ExperimentDBService().loadLMRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+            }
         } catch (Exception e) {
             LOGGER.error("Failed to load saved recommendations data: {} ", e.getMessage());
         }
