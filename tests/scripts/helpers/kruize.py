@@ -229,7 +229,7 @@ def create_performance_profile(perf_profile_json_file):
 
 # Description: This function obtains the experiments from Kruize Autotune using listExperiments API
 # Input Parameters: None
-def list_experiments(results=None, recommendations=None, latest=None, experiment_name=None):
+def list_experiments(results=None, recommendations=None, latest=None, experiment_name=None, rm=False):
     print("\nListing the experiments...")
     query_params = {}
 
@@ -245,7 +245,11 @@ def list_experiments(results=None, recommendations=None, latest=None, experiment
     query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
 
     url = URL + "/listExperiments"
-    if query_string:
+    if rm:
+        url += "?rm=true"
+        if query_string:
+            url += "&" + query_string
+    else:
         url += "?" + query_string
     print("URL = ", url)
     response = requests.get(url)
