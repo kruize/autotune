@@ -23,6 +23,7 @@ import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -50,6 +51,7 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     @SerializedName(KruizeConstants.JSONKeys.DATASOURCE) //TODO: to be used in future
     private String datasource;
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
+    @JsonAdapter(ExperimentTypeUtil.ExperimentTypeDeserializer.class)
     private AnalyzerConstants.ExperimentType experimentType;
     private AnalyzerConstants.ExperimentStatus status;
     private String experiment_id;   // this id is UUID and getting set at createExperiment API

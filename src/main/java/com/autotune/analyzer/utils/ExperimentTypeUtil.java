@@ -16,6 +16,13 @@
 
 package com.autotune.analyzer.utils;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+
+import java.lang.reflect.Type;
+
 /**
  * This class contains utility functions to determine experiment type
  */
@@ -26,5 +33,16 @@ public class ExperimentTypeUtil {
 
     public static boolean isNamespaceExperiment(AnalyzerConstants.ExperimentType experimentType) {
         return experimentType != null && AnalyzerConstants.ExperimentType.NAMESPACE.equals(experimentType);
+    }
+
+    public class ExperimentTypeDeserializer implements JsonDeserializer<AnalyzerConstants.ExperimentType> {
+        @Override
+        public AnalyzerConstants.ExperimentType deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+            String experimentType = json.getAsString();
+            if (experimentType != null) {
+                return AnalyzerConstants.ExperimentType.valueOf(experimentType.toUpperCase());
+            }
+            return null;
+        }
     }
 }
