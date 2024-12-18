@@ -18,6 +18,7 @@ import json
 
 import pytest
 import sys
+
 sys.path.append("../../")
 
 from helpers.all_terms_list_reco_json_schema import all_terms_list_reco_json_schema
@@ -54,10 +55,10 @@ term_input = [
     ("medium_term_test_192_data_points_non_contiguous", 192, medium_term_list_reco_json_schema, 48.0, 0, False),
     ("long_term_test_768_data_points_non_continguous", 768, long_term_list_reco_json_schema, 192.0, 0, False),
     # Uncomment below in future when monitoring_end_time to updateRecommendations need not have result uploaded with the same end_time
-    #("short_term_test_2_data_points_end_time_after_1hr", 2, list_reco_json_schema, 0.5, 60),
-    #("medium_term_test_192_data_points_end_time_after_1hr", 192, medium_term_list_reco_json_schema, 48, 60),
-    #("long_term_test_768_data_points_end_time_after_1hr", 768, long_term_list_reco_json_schema, 192, 60),
-    #("long_term_test_769_data_points_end_time_after_1hr", 769, long_term_list_reco_json_schema, 192.25, 60),
+    # ("short_term_test_2_data_points_end_time_after_1hr", 2, list_reco_json_schema, 0.5, 60),
+    # ("medium_term_test_192_data_points_end_time_after_1hr", 192, medium_term_list_reco_json_schema, 48, 60),
+    # ("long_term_test_768_data_points_end_time_after_1hr", 768, long_term_list_reco_json_schema, 192, 60),
+    # ("long_term_test_769_data_points_end_time_after_1hr", 769, long_term_list_reco_json_schema, 192.25, 60),
 ]
 term_input_for_missing_terms = [
     # test_name, num_res, reco_json_schema, expected_duration_in_hours, increment_end_time_by, logging,
@@ -68,21 +69,30 @@ term_input_for_missing_terms = [
     ("only_short_term_min_recomm", 2, short_term_list_reco_json_schema, 0.5, 0, True, False, False, True),
     ("only_medium_term_min_recomm", 192, medium_term_list_reco_json_schema, 48.0, 0, False, False, True, False),
     ("only_long_term_min_recomm", 768, long_term_list_reco_json_schema, 192.0, 0, False, True, False, False),
-    ("short_term_and_medium_term_min_recomm", 192, short_and_medium_term_list_reco_json_schema, 24.0, 0, False, False, True, True),
-    ("short_term_and_long_term_min_recomm", 768, short_and_long_term_list_reco_json_schema, 24.0, 0, False, True, False, True),
-    ("medium_term_and_long_term_min_recomm", 768, medium_and_long_term_list_reco_json_schema, 168.0, 0, False, True, True, False)
+    ("short_term_and_medium_term_min_recomm", 192, short_and_medium_term_list_reco_json_schema, 24.0, 0, False, False,
+     True, True),
+    ("short_term_and_long_term_min_recomm", 768, short_and_long_term_list_reco_json_schema, 24.0, 0, False, True, False,
+     True),
+    ("medium_term_and_long_term_min_recomm", 768, medium_and_long_term_list_reco_json_schema, 168.0, 0, False, True,
+     True, False)
 ]
 
 term_input_for_missing_terms_non_contiguous = [
     # test_name, num_res, reco_json_schema, expected_duration_in_hours, increment_end_time_by
     # non-contiguous scenarios
     ("all_terms_min_recomm_non_contiguous", 768, all_terms_list_reco_json_schema, 192, 15, False, True, True, True),
-    ("only_short_term_min_recomm_non_contiguous", 2, short_term_list_reco_json_schema, 0.5, 15, True, False, False, True),
-    ("only_medium_term_min_recomm_non_contiguous", 192, medium_term_list_reco_json_schema, 48.0, 15, False, False, True, False),
-    ("only_long_term_min_recomm_non_contiguous", 768, long_term_list_reco_json_schema, 192.0, 15, False, True, False, False),
-    ("short_term_and_medium_term_min_recomm_non_contiguous", 192, short_and_medium_term_list_reco_json_schema, 24.0, 15, False, False, True, True),
-    ("short_term_and_long_term_min_recomm_non_contiguous", 768, short_and_long_term_list_reco_json_schema, 24.0, 15, False, True, False, True),
-    ("medium_term_and_long_term_min_recomm_non_contiguous", 768, medium_and_long_term_list_reco_json_schema, 168.0, 15, False, True, True, False)
+    ("only_short_term_min_recomm_non_contiguous", 2, short_term_list_reco_json_schema, 0.5, 15, True, False, False,
+     True),
+    ("only_medium_term_min_recomm_non_contiguous", 192, medium_term_list_reco_json_schema, 48.0, 15, False, False, True,
+     False),
+    ("only_long_term_min_recomm_non_contiguous", 768, long_term_list_reco_json_schema, 192.0, 15, False, True, False,
+     False),
+    ("short_term_and_medium_term_min_recomm_non_contiguous", 192, short_and_medium_term_list_reco_json_schema, 24.0, 15,
+     False, False, True, True),
+    ("short_term_and_long_term_min_recomm_non_contiguous", 768, short_and_long_term_list_reco_json_schema, 24.0, 15,
+     False, True, False, True),
+    ("medium_term_and_long_term_min_recomm_non_contiguous", 768, medium_and_long_term_list_reco_json_schema, 168.0, 15,
+     False, True, True, False)
 ]
 
 invalid_term_input = [
@@ -94,61 +104,65 @@ invalid_term_input = [
 
 term_input_exceeding_limit = [
     ("short_term_test_non_contiguous_2_data_points_exceeding_24_hours", 2, list_reco_json_schema, 0.5, 1440, True),
-    ("medium_term_test_non_contiguous_192_data_points_exceeding_7_days", 192, medium_term_list_reco_json_schema, 48.0, 420, False),
-    ("long_term_test_non_contiguous_768_data_points_exceeding_15_days", 768, long_term_list_reco_json_schema, 192.0, 360, False)
+    ("medium_term_test_non_contiguous_192_data_points_exceeding_7_days", 192, medium_term_list_reco_json_schema, 48.0,
+     420, False),
+    (
+        "long_term_test_non_contiguous_768_data_points_exceeding_15_days", 768, long_term_list_reco_json_schema, 192.0,
+        360,
+        False)
 ]
 
 profile_notifications = [
-    ("cpu_zero_test",1,True, [
-            {"cpuRequest" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
-            {"cpuLimit" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
-            {"cpuUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}},
-            {"cpuThrottle" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}}
-        ],
-        NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO,NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO_MESSAGE
-    ),
-     ("cpu_usage_less_than_millicore_test",1,True, [
-                {"cpuRequest" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
-                {"cpuLimit" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
-                {"cpuUsage" : {'sum':0.000001 , "avg":0.000001 , "min":0.000001 , "max":0.000001 , "format": "cores"}},
-                {"cpuThrottle" : {'sum':0.000001 , "avg":0.000001 , "min":0.000001 , "max":0.000001 , "format": "cores"}}
-            ],
-            NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE,NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE
-        ),
-         ("memory_zero_test",1,True, [
-                 {"memoryRequest" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
-                 {"memoryLimit" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
-                 {"memoryUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}},
-                 {"memoryRSS" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}}
-             ],
-             NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO,NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO_MESSAGE
-         )
-     ,
-              ("cpu_memory_zero_test",1,True, [
-                      {"memoryRequest" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
-                      {"memoryLimit" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
-                      {"memoryUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}},
-                      {"memoryRSS" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}},
-                        {"cpuRequest" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
-                                  {"cpuLimit" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
-                                  {"cpuUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}},
-                                  {"cpuThrottle" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}}
-                  ],
-                  NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO,NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO_MESSAGE
-              )
+    ("cpu_zero_test", 1, True, [
+        {"cpuRequest": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuLimit": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuUsage": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "cores"}},
+        {"cpuThrottle": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "cores"}}
+    ],
+     NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO, NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO_MESSAGE
+     ),
+    ("cpu_usage_less_than_millicore_test", 1, True, [
+        {"cpuRequest": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuLimit": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuUsage": {'sum': 0.000001, "avg": 0.000001, "min": 0.000001, "max": 0.000001, "format": "cores"}},
+        {"cpuThrottle": {'sum': 0.000001, "avg": 0.000001, "min": 0.000001, "max": 0.000001, "format": "cores"}}
+    ],
+     NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE, NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_IDLE_MESSAGE
+     ),
+    ("memory_zero_test", 1, True, [
+        {"memoryRequest": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryLimit": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryUsage": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "MiB"}},
+        {"memoryRSS": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "MiB"}}
+    ],
+     NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO, NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO_MESSAGE
+     )
     ,
-              ("memory_cpu_zero_test",1,True, [
-                      {"memoryRequest" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
-                      {"memoryLimit" : {'sum':100 , "avg":100 , "min":100 , "max":100 , "format": "MiB"}},
-                      {"memoryUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}},
-                      {"memoryRSS" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "MiB"}},
-                        {"cpuRequest" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
-                                  {"cpuLimit" : {'sum':5 , "avg":5 , "min":5 , "max":5 , "format": "cores"}},
-                                  {"cpuUsage" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}},
-                                  {"cpuThrottle" : {'sum':0 , "avg":0 , "min":0 , "max":0 , "format": "cores"}}
-                  ],
-                  NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO,NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO_MESSAGE
-              )
+    ("cpu_memory_zero_test", 1, True, [
+        {"memoryRequest": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryLimit": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryUsage": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "MiB"}},
+        {"memoryRSS": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "MiB"}},
+        {"cpuRequest": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuLimit": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuUsage": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "cores"}},
+        {"cpuThrottle": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "cores"}}
+    ],
+     NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO, NOTIFICATION_CODE_FOR_CPU_RECORDS_ARE_ZERO_MESSAGE
+     )
+    ,
+    ("memory_cpu_zero_test", 1, True, [
+        {"memoryRequest": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryLimit": {'sum': 100, "avg": 100, "min": 100, "max": 100, "format": "MiB"}},
+        {"memoryUsage": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "MiB"}},
+        {"memoryRSS": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "MiB"}},
+        {"cpuRequest": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuLimit": {'sum': 5, "avg": 5, "min": 5, "max": 5, "format": "cores"}},
+        {"cpuUsage": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "cores"}},
+        {"cpuThrottle": {'sum': 0, "avg": 0, "min": 0, "max": 0, "format": "cores"}}
+    ],
+     NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO, NOTIFICATION_CODE_FOR_MEMORY_RECORDS_ARE_ZERO_MESSAGE
+     )
 ]
 
 
@@ -196,7 +210,7 @@ def test_list_recommendations_single_result(cluster_type):
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
 
-    response = list_recommendations(experiment_name)
+    response = list_recommendations(experiment_name, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -256,7 +270,7 @@ def test_list_recommendations_without_parameters(cluster_type):
 
     # Get the experiment name
     experiment_name = None
-    response = list_recommendations(experiment_name)
+    response = list_recommendations(experiment_name, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -310,7 +324,7 @@ def test_list_recommendations_invalid_exp(cluster_type):
     # Get the experiment name
     experiment_name = "xyz"
 
-    response = list_recommendations(experiment_name)
+    response = list_recommendations(experiment_name, rm=True)
 
     data = response.json()
     print(data)
@@ -346,7 +360,7 @@ def test_list_recommendations_without_results(cluster_type):
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
 
-    response = list_recommendations(experiment_name)
+    response = list_recommendations(experiment_name, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -401,9 +415,9 @@ def test_list_recommendations_single_exp_multiple_results(cluster_type):
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
-            NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
+               NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
 
-    response = list_recommendations(experiment_name)
+    response = list_recommendations(experiment_name, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -428,7 +442,9 @@ def test_list_recommendations_single_exp_multiple_results(cluster_type):
 
 
 @pytest.mark.sanity
-@pytest.mark.parametrize("memory_format_type", ["bytes", "Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "kB", "KB", "MB", "GB", "TB", "PB", "EB", "K", "k", "M", "G", "T", "P", "E"])
+@pytest.mark.parametrize("memory_format_type",
+                         ["bytes", "Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "Ki", "Mi", "Gi", "Ti", "Pi",
+                          "Ei", "kB", "KB", "MB", "GB", "TB", "PB", "EB", "K", "k", "M", "G", "T", "P", "E"])
 @pytest.mark.parametrize("cpu_format_type", ["cores", "m"])
 def test_list_recommendations_supported_metric_formats(memory_format_type, cpu_format_type, cluster_type):
     """
@@ -450,7 +466,6 @@ def test_list_recommendations_supported_metric_formats(memory_format_type, cpu_f
 
     # Update results for the experiment
     result_json_file = "../json_files/multiple_results_single_exp.json"
-
 
     # Update the memory format and cpu format
     result_json = read_json_data_from_file(result_json_file)
@@ -479,16 +494,16 @@ def test_list_recommendations_supported_metric_formats(memory_format_type, cpu_f
     # Get the experiment name
     json_data = json.load(open(input_json_file))
     experiment_name = json_data[0]['experiment_name']
-    end_time = "2023-04-14T23:59:20.982Z" 
+    end_time = "2023-04-14T23:59:20.982Z"
 
     response = update_recommendations(experiment_name, None, end_time)
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
-            NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
+               NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
 
-    response = list_recommendations(experiment_name)
+    response = list_recommendations(experiment_name, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -587,11 +602,12 @@ def test_list_recommendations_multiple_exps_from_diff_json_files_2(cluster_type)
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data[0]['experiment_name'] == experiment_name
-        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+        assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+                   NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                    'message'] == RECOMMENDATIONS_AVAILABLE
 
         # Invoke list recommendations for the specified experiment
-        response = list_recommendations(experiment_name)
+        response = list_recommendations(experiment_name, rm=True)
         assert response.status_code == SUCCESS_200_STATUS_CODE
 
         list_reco_json = response.json()
@@ -678,10 +694,11 @@ def test_list_recommendations_exp_name_and_latest(latest, cluster_type):
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
-    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+               NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                'message'] == RECOMMENDATIONS_AVAILABLE
 
-    response = list_recommendations(experiment_name, latest)
+    response = list_recommendations(experiment_name, latest, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -759,7 +776,7 @@ def test_list_recommendations_exp_name_and_monitoring_end_time_invalid(monitorin
     experiment_name = json_data[0]['experiment_name']
 
     latest = None
-    response = list_recommendations(experiment_name, latest, monitoring_end_time)
+    response = list_recommendations(experiment_name, latest, monitoring_end_time, rm=True)
     list_reco_json = response.json()
 
     print(list_reco_json['message'])
@@ -828,11 +845,12 @@ def test_list_recommendations_exp_name_and_monitoring_end_time(test_name, monito
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
-    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
+    assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
+               NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                'message'] == RECOMMENDATIONS_AVAILABLE
 
     latest = None
-    response = list_recommendations(experiment_name, latest, monitoring_end_time)
+    response = list_recommendations(experiment_name, latest, monitoring_end_time, rm=True)
 
     list_reco_json = response.json()
 
@@ -924,7 +942,7 @@ def test_list_recommendations_multiple_exps_with_missing_metrics(cluster_type):
         json_data = json.load(open(create_exp_json_file))
         experiment_name = json_data[0]['experiment_name']
 
-        response = list_recommendations(experiment_name)
+        response = list_recommendations(experiment_name, rm=True)
 
         list_reco_json = response.json()
         assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -947,8 +965,11 @@ def test_list_recommendations_multiple_exps_with_missing_metrics(cluster_type):
 
 
 @pytest.mark.extended
-@pytest.mark.parametrize("test_name, num_days, reco_json_schema, expected_duration_in_hours, latest, logging", reco_term_input)
-def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, num_days, reco_json_schema, expected_duration_in_hours, latest, logging, cluster_type):
+@pytest.mark.parametrize("test_name, num_days, reco_json_schema, expected_duration_in_hours, latest, logging",
+                         reco_term_input)
+def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, num_days, reco_json_schema,
+                                                                   expected_duration_in_hours, latest, logging,
+                                                                   cluster_type):
     """
         Test Description: This test validates list recommendations for all the terms for multiple experiments posted using different json files
                           and query with only the parameter latest and with both latest=true and latest=false
@@ -1021,7 +1042,7 @@ def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, nu
             json_data = json.load(open(create_exp_json_file))
             experiment_name = json_data[0]['experiment_name']
 
-            response = list_recommendations(experiment_name)
+            response = list_recommendations(experiment_name, rm=True)
             assert response.status_code == SUCCESS_200_STATUS_CODE
 
         list_of_result_json_arr.append(result_json_arr)
@@ -1034,7 +1055,7 @@ def test_list_recommendations_for_diff_reco_terms_with_only_latest(test_name, nu
                    NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                    'message'] == RECOMMENDATIONS_AVAILABLE
     experiment_name = None
-    response = list_recommendations(experiment_name, latest)
+    response = list_recommendations(experiment_name, latest, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -1169,7 +1190,7 @@ def test_list_recommendations_notification_codes(cluster_type: str):
             json_data = json.load(open(create_exp_json_file))
             experiment_name = json_data[0]['experiment_name']
 
-            response = list_recommendations(experiment_name)
+            response = list_recommendations(experiment_name, rm=True)
             assert response.status_code == SUCCESS_200_STATUS_CODE
 
             #############################################################################################
@@ -1226,7 +1247,8 @@ def test_list_recommendations_notification_codes(cluster_type: str):
                     assert "config" in short_term_recommendation["recommendation_engines"]["performance"]
 
                 short_term_recommendation_config = short_term_recommendation["recommendation_engines"]["cost"]["config"]
-                short_term_recommendation_variation = short_term_recommendation["recommendation_engines"]["cost"]["variation"]
+                short_term_recommendation_variation = short_term_recommendation["recommendation_engines"]["cost"][
+                    "variation"]
 
                 response = update_recommendations(experiment_name, None, end_time)
                 data = response.json()
@@ -1237,9 +1259,12 @@ def test_list_recommendations_notification_codes(cluster_type: str):
                         NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
                 assert short_term_recommendation['notifications'][NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE][
                            'message'] == COST_RECOMMENDATIONS_AVAILABLE
-                assert short_term_recommendation['notifications'][NOTIFICATION_CODE_FOR_PERFORMANCE_RECOMMENDATIONS_AVAILABLE][
-                           'message'] == PERFORMANCE_RECOMMENDATIONS_AVAILABLE
-                validate_variation(recommendation_current, short_term_recommendation_config, short_term_recommendation_variation)
+                assert \
+                    short_term_recommendation['notifications'][
+                        NOTIFICATION_CODE_FOR_PERFORMANCE_RECOMMENDATIONS_AVAILABLE][
+                        'message'] == PERFORMANCE_RECOMMENDATIONS_AVAILABLE
+                validate_variation(recommendation_current, short_term_recommendation_config,
+                                   short_term_recommendation_variation)
 
     # Delete the experiments
     for i in range(num_exps):
@@ -1250,17 +1275,21 @@ def test_list_recommendations_notification_codes(cluster_type: str):
 
 
 def validate_error_msgs(j: int, status_message, cname, experiment_name):
-
     if j == 96:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_REQUEST + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_REQUEST + CONTAINER_AND_EXPERIMENT_NAME % (
+            cname, experiment_name)
     elif j == 97:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_REQUEST + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_REQUEST + CONTAINER_AND_EXPERIMENT_NAME % (
+            cname, experiment_name)
     elif j == 98:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_LIMIT + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + CPU_LIMIT + CONTAINER_AND_EXPERIMENT_NAME % (
+            cname, experiment_name)
     elif j == 99:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_LIMIT + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG + MEMORY_LIMIT + CONTAINER_AND_EXPERIMENT_NAME % (
+            cname, experiment_name)
     elif j > 100:
-        assert status_message == UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG + CONTAINER_AND_EXPERIMENT_NAME % (cname, experiment_name)
+        assert status_message == UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG + CONTAINER_AND_EXPERIMENT_NAME % (
+            cname, experiment_name)
 
 
 @pytest.mark.negative
@@ -1446,7 +1475,8 @@ def test_invalid_list_recommendations_notification_codes(cluster_type: str):
             if j in range(96, 104):
                 assert response.status_code == ERROR_STATUS_CODE
                 assert data['status'] == ERROR_STATUS
-                validate_error_msgs(j, data['data'][0]['errors'][0]['message'], container_name_to_update, experiment_name)
+                validate_error_msgs(j, data['data'][0]['errors'][0]['message'], container_name_to_update,
+                                    experiment_name)
             else:
                 assert response.status_code == SUCCESS_STATUS_CODE
                 assert data['status'] == SUCCESS_STATUS
@@ -1462,7 +1492,7 @@ def test_invalid_list_recommendations_notification_codes(cluster_type: str):
                 json_data = json.load(open(create_exp_json_file))
                 experiment_name = json_data[0]['experiment_name']
 
-                response = list_recommendations(experiment_name)
+                response = list_recommendations(experiment_name, rm=True)
                 assert response.status_code == SUCCESS_200_STATUS_CODE
 
                 #############################################################################################
@@ -1514,7 +1544,8 @@ def test_invalid_list_recommendations_notification_codes(cluster_type: str):
                     assert "config" in short_term_recommendation["recommendation_engines"]["performance"]
 
                 short_term_recommendation_config = short_term_recommendation["recommendation_engines"]["cost"]["config"]
-                short_term_recommendation_variation = short_term_recommendation["recommendation_engines"]["cost"]["variation"]
+                short_term_recommendation_variation = short_term_recommendation["recommendation_engines"]["cost"][
+                    "variation"]
 
                 if j == 104:
                     response = update_recommendations(experiment_name, None, end_time)
@@ -1590,8 +1621,9 @@ def validate_term_recommendations(data, end_time, term):
 
 
 @pytest.mark.sanity
-@pytest.mark.parametrize("test_name, num_res, reco_json_schema, expected_duration_in_hours, increment_end_time_by, logging",
-                         term_input)
+@pytest.mark.parametrize(
+    "test_name, num_res, reco_json_schema, expected_duration_in_hours, increment_end_time_by, logging",
+    term_input)
 def test_list_recommendations_term_min_data_threshold(test_name, num_res, reco_json_schema, expected_duration_in_hours,
                                                       increment_end_time_by, logging, cluster_type):
     """
@@ -1752,7 +1784,7 @@ def test_list_recommendations_term_min_data_threshold(test_name, num_res, reco_j
 
     experiment_name = None
     latest = True
-    response = list_recommendations(experiment_name, latest)
+    response = list_recommendations(experiment_name, latest, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -1793,7 +1825,8 @@ def test_list_recommendations_term_min_data_threshold(test_name, num_res, reco_j
 
 
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, num_res, reco_json_schema, expected_duration_in_hours, logging", invalid_term_input)
+@pytest.mark.parametrize("test_name, num_res, reco_json_schema, expected_duration_in_hours, logging",
+                         invalid_term_input)
 def test_list_recommendations_invalid_term_min_data_threshold(test_name, num_res, reco_json_schema,
                                                               expected_duration_in_hours, logging, cluster_type):
     """
@@ -1936,7 +1969,7 @@ def test_list_recommendations_invalid_term_min_data_threshold(test_name, num_res
 
     experiment_name = None
     latest = True
-    response = list_recommendations(experiment_name, latest)
+    response = list_recommendations(experiment_name, latest, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -1982,8 +2015,9 @@ def test_list_recommendations_invalid_term_min_data_threshold(test_name, num_res
 
 
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, num_res, reco_json_schema, expected_duration_in_hours, increment_end_time_by, logging",
-                         term_input_exceeding_limit)
+@pytest.mark.parametrize(
+    "test_name, num_res, reco_json_schema, expected_duration_in_hours, increment_end_time_by, logging",
+    term_input_exceeding_limit)
 def test_list_recommendations_min_data_threshold_exceeding_max_duration(test_name, num_res, reco_json_schema,
                                                                         expected_duration_in_hours,
                                                                         increment_end_time_by, logging, cluster_type):
@@ -2042,7 +2076,6 @@ def test_list_recommendations_min_data_threshold_exceeding_max_duration(test_nam
                 start_time = increment_timestamp_by_given_mins(end_time, increment_end_time_by)
             else:
                 start_time = end_time
-
 
             result_json[0]['interval_start_time'] = start_time
             end_time = increment_timestamp_by_given_mins(start_time, 15)
@@ -2132,7 +2165,7 @@ def test_list_recommendations_min_data_threshold_exceeding_max_duration(test_nam
 
     experiment_name = None
     latest = True
-    response = list_recommendations(experiment_name, latest)
+    response = list_recommendations(experiment_name, latest, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -2173,7 +2206,8 @@ def test_list_recommendations_min_data_threshold_exceeding_max_duration(test_nam
 
 @pytest.mark.sanity
 @pytest.mark.parametrize("test_name, num_res, reco_json_schema, expected_duration_in_hours, increment_end_time_by, "
-                         "logging, long_term_present, medium_term_present, short_term_present", term_input_for_missing_terms)
+                         "logging, long_term_present, medium_term_present, short_term_present",
+                         term_input_for_missing_terms)
 def test_list_recommendations_for_missing_terms(test_name, num_res, reco_json_schema, expected_duration_in_hours,
                                                 increment_end_time_by, logging, long_term_present, medium_term_present,
                                                 short_term_present, cluster_type):
@@ -2335,7 +2369,7 @@ def test_list_recommendations_for_missing_terms(test_name, num_res, reco_json_sc
 
     experiment_name = None
     latest = True
-    response = list_recommendations(experiment_name, latest)
+    response = list_recommendations(experiment_name, latest, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -2535,7 +2569,7 @@ def test_list_recommendations_for_missing_terms_non_contiguous(test_name, num_re
 
     experiment_name = None
     latest = True
-    response = list_recommendations(experiment_name, latest)
+    response = list_recommendations(experiment_name, latest, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -2590,6 +2624,7 @@ def validate_and_assert_term_recommendations(data, end_time, term):
     assert_notification_presence(data, end_time, term, TERMS_NOTIFICATION_CODES[term])
     validate_term_recommendations(data, end_time, term)
 
+
 @pytest.mark.sanity
 def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
     """
@@ -2610,7 +2645,7 @@ def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
 
     # Create experiment using the specified json
     num_exps = 1
-    num_res = 1450 # 15 days + 10 entries buffer
+    num_res = 1450  # 15 days + 10 entries buffer
 
     for i in range(num_exps):
         create_exp_json_file = "/tmp/create_exp_" + str(i) + ".json"
@@ -2736,7 +2771,7 @@ def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
                 json_data = json.load(open(create_exp_json_file))
                 experiment_name = json_data[0]['experiment_name']
 
-                response = list_recommendations(experiment_name)
+                response = list_recommendations(experiment_name, rm=True)
                 assert response.status_code == SUCCESS_200_STATUS_CODE
 
                 recommendation_json = response.json()
@@ -2773,9 +2808,9 @@ def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
                 short_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["short_term"]
                 medium_term_recommendation = None
                 long_term_recommendation = None
-                if j > 671: # 7 days
+                if j > 671:  # 7 days
                     medium_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["medium_term"]
-                if j > 1439: # 15 days
+                if j > 1439:  # 15 days
                     long_term_recommendation = data_section[str(end_time)]["recommendation_terms"]["long_term"]
 
                 if INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE in short_term_recommendation["notifications"]:
@@ -2806,24 +2841,31 @@ def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
                                                                       current=recommendation_current,
                                                                       profile="performance")
 
-                short_term_recommendation_cost_notifications = short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
-                short_term_recommendation_perf_notifications = short_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+                short_term_recommendation_cost_notifications = \
+                    short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+                short_term_recommendation_perf_notifications = \
+                    short_term_recommendation["recommendation_engines"]["performance"]["notifications"]
 
-                check_optimised_codes(short_term_recommendation_cost_notifications, short_term_recommendation_perf_notifications)
-
+                check_optimised_codes(short_term_recommendation_cost_notifications,
+                                      short_term_recommendation_perf_notifications)
 
                 if j > 672:
-                    medium_term_recommendation_cost_notifications = medium_term_recommendation["recommendation_engines"]["cost"]["notifications"]
-                    medium_term_recommendation_perf_notifications = medium_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+                    medium_term_recommendation_cost_notifications = \
+                        medium_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+                    medium_term_recommendation_perf_notifications = \
+                        medium_term_recommendation["recommendation_engines"]["performance"]["notifications"]
 
-                    check_optimised_codes(medium_term_recommendation_cost_notifications, medium_term_recommendation_perf_notifications)
+                    check_optimised_codes(medium_term_recommendation_cost_notifications,
+                                          medium_term_recommendation_perf_notifications)
 
                 if j > 1439:
-                    long_term_recommendation_cost_notifications = long_term_recommendation["recommendation_engines"]["cost"]["notifications"]
-                    long_term_recommendation_perf_notifications = long_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+                    long_term_recommendation_cost_notifications = \
+                        long_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+                    long_term_recommendation_perf_notifications = \
+                        long_term_recommendation["recommendation_engines"]["performance"]["notifications"]
 
-                    check_optimised_codes(long_term_recommendation_cost_notifications, long_term_recommendation_perf_notifications)
-
+                    check_optimised_codes(long_term_recommendation_cost_notifications,
+                                          long_term_recommendation_perf_notifications)
 
     # Delete the experiments
     for i in range(num_exps):
@@ -2834,14 +2876,15 @@ def test_list_recommendations_cpu_mem_optimised(cluster_type: str):
 
 
 @pytest.mark.sanity
-@pytest.mark.parametrize("test_name,num_days,logging,update_metrics,code,message",profile_notifications)
-def test_list_recommendations_profile_notifications(test_name,num_days,logging,update_metrics,code,message,cluster_type: str):
+@pytest.mark.parametrize("test_name,num_days,logging,update_metrics,code,message", profile_notifications)
+def test_list_recommendations_profile_notifications(test_name, num_days, logging, update_metrics, code, message,
+                                                    cluster_type: str):
     """
         Test Description: Check if notifications are generated at profile level if cpu_usage is less than millicore
     """
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results.json"
-    print ("Test Name --- %s " %(test_name) )
+    print("Test Name --- %s " % (test_name))
     find = []
     json_data = json.load(open(input_json_file))
 
@@ -2906,12 +2949,12 @@ def test_list_recommendations_profile_notifications(test_name,num_days,logging,u
         response = update_recommendations(experiment_name, None, end_time)
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
-        validate_recommendations_notifications(experiment_name,end_time,code,message,data)
+        validate_recommendations_notifications(experiment_name, end_time, code, message, data)
 
-        response = list_recommendations(experiment_name)
+        response = list_recommendations(experiment_name, rm=True)
         assert response.status_code == SUCCESS_200_STATUS_CODE
         data = response.json()
-        validate_recommendations_notifications(experiment_name,end_time,code,message,data)
+        validate_recommendations_notifications(experiment_name, end_time, code, message, data)
 
     # Delete the experiments
     for i in range(num_exps):
@@ -2920,12 +2963,16 @@ def test_list_recommendations_profile_notifications(test_name,num_days,logging,u
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
 
-def validate_recommendations_notifications(experiment_name,end_time,code,message,data):
+
+def validate_recommendations_notifications(experiment_name, end_time, code, message, data):
     assert data[0]['experiment_name'] == experiment_name
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
                NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                'message'] == RECOMMENDATIONS_AVAILABLE
-    short_term_recommendation = data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['data'][str(end_time)]["recommendation_terms"]["short_term"]
+    short_term_recommendation = \
+        data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['data'][str(end_time)][
+            "recommendation_terms"][
+            "short_term"]
 
     assert short_term_recommendation['notifications'][NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE][
                'message'] == COST_RECOMMENDATIONS_AVAILABLE
@@ -2933,7 +2980,9 @@ def validate_recommendations_notifications(experiment_name,end_time,code,message
                'message'] == PERFORMANCE_RECOMMENDATIONS_AVAILABLE
 
     assert short_term_recommendation['recommendation_engines']['cost']['notifications'][code]['message'] == message
-    assert short_term_recommendation['recommendation_engines']['performance']['notifications'][code]['message'] == message
+    assert short_term_recommendation['recommendation_engines']['performance']['notifications'][code][
+               'message'] == message
+
 
 @pytest.mark.sanity
 def test_list_recommendations_job_type_exp(cluster_type):
@@ -2973,9 +3022,9 @@ def test_list_recommendations_job_type_exp(cluster_type):
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data[0]['experiment_name'] == experiment_name
     assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications'][
-            NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
+               NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE]['message'] == RECOMMENDATIONS_AVAILABLE
 
-    response = list_recommendations(experiment_name)
+    response = list_recommendations(experiment_name, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
