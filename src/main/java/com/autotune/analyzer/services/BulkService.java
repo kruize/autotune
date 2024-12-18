@@ -109,7 +109,10 @@ public class BulkService extends HttpServlet {
                         filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAll());
                     }
                     objectMapper.setFilterProvider(filters);
-                    String jsonResponse = objectMapper.writeValueAsString(jobDetails);
+                    String jsonResponse;
+                    synchronized (jobDetails) {
+                        jsonResponse = objectMapper.writeValueAsString(jobDetails);
+                    }
                     resp.getWriter().write(jsonResponse);
                     statusValue = "success";
                 } catch (Exception e) {

@@ -228,8 +228,8 @@ public class BulkJobManager implements Runnable {
                                                     experiment.getRecommendations().setStatus(NotificationConstants.Status.FAILED);
                                                     experiment.getRecommendations().setNotifications(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
                                                 } finally {
-                                                    jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                                     synchronized (new Object()) {
+                                                        jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
                                                         if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
                                                             setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                                         }
