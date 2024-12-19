@@ -147,7 +147,7 @@ public class BulkJobStatus {
     }
 
 
-    public synchronized void incrementProcessed_experiments() {
+    public void incrementProcessed_experiments() {
         this.processed_experiments.incrementAndGet();
     }
 
