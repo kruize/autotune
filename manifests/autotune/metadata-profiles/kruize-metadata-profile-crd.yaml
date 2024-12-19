@@ -1,0 +1,85 @@
+apiVersion: "recommender.com/v1"
+kind: CustomResourceDefinition
+metadata:
+  #name must match the spec fields below, and be in the form: <plural>.<group>
+  name: kruizemetadataprofiles.recommender.com
+spec:
+  # group name to use for REST API: /apis/<group>/<version>
+  group: "recommender.com"
+  names:
+    plural: kruizemetadataprofiles
+    singular: kruizemetadataprofile
+    #types can be identified with this tag
+    kind: KruizeMetadataProfile
+  scope: Namespaced
+  versions:
+    - name: v1
+      served: true
+      storage: true
+      schema:
+        openAPIV3Schema:
+          type: object
+          properties:
+            apiVersion:
+              description: 'APIVersion defines the versioned schema of this representation
+          of an object. Servers should convert recognized schemas to the latest
+          internal value, and may reject unrecognized values. More info: https://git.k8s.io/
+          community/contributors/devel/sig-architecture/api-conventions.md#resources'
+              type: string
+            kind:
+              description: 'Kind is a string value representing the REST resource this
+            object represents. Servers may infer this from the endpoint the client
+            submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/
+            community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+              type: string
+            profile_version:
+              description: 'Version of the profile'
+              type: number
+            k8s_type:
+              description: 'minikube or openshift'
+              type: string
+            query_variables:
+              description: 'Query variables to be used'
+              type: array
+              items:
+                type: object
+                properties:
+                  name:
+                    description: 'name of the variable'
+                    type: string
+                  datasource:
+                    description: 'datasource of the query'
+                    type: string
+                  value_type:
+                    description: 'can be double or integer'
+                    type: string
+                  kubernetes_object:
+                    description: 'k8s object that this query is tied to: "deployment", "pod", "namespace" or "container"'
+                    type: string
+                  query:
+                    description: 'one of the query or aggregation_functions is mandatory'
+                    type: string
+                  aggregation_functions:
+                    description: 'one of the query or aggregation_functions is mandatory'
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        function:
+                          description: 'aggregate functions associated with this variable'
+                          type: string
+                        query:
+                          description: 'query'
+                          type: string
+                        version:
+                          description: 'Any specific version that this query is tied to'
+                          type: string
+                      required:
+                        - function
+                        - query
+                required:
+                  - name
+                  - datasource
+                  - value_type
+          required:
+            - query_variables
