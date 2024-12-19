@@ -1,0 +1,87 @@
+apiVersion: "recommender.com/v1"
+kind: "KruizeMetadataProfile"
+metadata:
+  name: "cluster-metadata-local-monitoring"
+profile_version: 1.0
+k8s_type: openshift
+query_variables:
+
+# list of namespaces across cluster
+- name: 'namespacesAcrossCluster'
+  datasource: prometheus
+  kubernetes_object: "container" # or namespace
+  aggregation_functions:
+  - function: sum
+    query: 'sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=""}[15d]))'
+
+
+# list of namespaces for specified org_id and cluster_id
+- name: 'namespacesForOrgAndClusterId'
+  datasource: prometheus
+  kubernetes_object: "container" # or namespace
+  aggregation_functions:
+  - function: sum
+    query: 'sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!="", org_id="$org_id$", cluster_id="$cluster_id$"}[15d]))'
+
+
+# list of namespaces for user specified custom label
+- name: 'namespacesForAdditionalLabel' # or 'namespacesForCustomLabel'
+  datasource: prometheus
+  kubernetes_object: "container" # or namespace
+  aggregation_functions:
+  - function: sum
+    query: 'sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=""}[15d]))'
+
+
+# list of all the workloads across cluster
+- name: 'workloadsAcrossCluster'
+  datasource: prometheus
+  kubernetes_object: "container"
+  aggregation_functions:
+  - function: sum
+    query: 'sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=""}[15d]))'
+
+
+# list of workloads for specified org_id and cluster_id
+- name: 'workloadsForOrgAndClusterId'
+  datasource: prometheus
+  kubernetes_object: "container"
+  aggregation_functions:
+  - function: sum
+    query: 'sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!="", org_id="$org_id$", cluster_id="$cluster_id$"}[15d]))'
+
+
+# list of workloads for user specified custom label
+- name: 'workloadsForAdditionalLabel' # or 'workloadsForCustomLabel'
+  datasource: prometheus
+  kubernetes_object: "container"
+  aggregation_functions:
+  - function: sum
+    query: 'sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!="" ADDITIONAL_LABEL}[15d]))'
+
+
+# list of all the containers across cluster
+- name: 'containersAcrossCluster'
+  datasource: prometheus
+  kubernetes_object: "container"
+  aggregation_functions:
+  - function: sum
+    query: 'sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=""}[15d]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=""}[15d]))'
+
+
+# list of containers for specified org_id and cluster_id
+- name: 'containersForOrgAndClusterId'
+  datasource: prometheus
+  kubernetes_object: "container"
+  aggregation_functions:
+  - function: sum
+    query: 'sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!="", org_id="$org_id$", cluster_id="$cluster_id$"}[15d]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!="", org_id="$org_id$", cluster_id="$cluster_id$"}[15d]))'
+
+
+# list of containers for user specified custom label
+- name: 'containersForAdditionalLabel' # or 'containersForCustomLabel'
+  datasource: prometheus
+  kubernetes_object: "container"
+  aggregation_functions:
+  - function: sum
+    query: 'sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!="" ADDITIONAL_LABEL}[15d]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!="" ADDITIONAL_LABEL}[15d]))'
