@@ -1,0 +1,62 @@
+apiVersion: "recommender.com/v1"
+kind: "KruizeMetadataProfile"
+metadata:
+  name: "add_name_here"
+
+# Version of the profile.
+# This helps when queries change often
+profile_version: 1.0
+
+# Is this for a specific kubernetes type?
+# OPTIONAL.
+# If not present, assumed to be used universally.
+# If specified, it should have a corresponding config in
+# manifests/configmaps dir (i.e. supported target by Kruize)
+# Eg. manifests/configmaps/openshift-config.yaml
+k8s_type: openshift
+
+# Describe the query variables to be used
+# MANDATORY
+query_variables:
+
+# name of the variable
+# MANDATORY
+- name: namespacesAcrossCluster
+  # datasource of the query
+  # MANDATORY
+  datasource: prometheus
+  # value_type. Supported are "double" or "integer".
+  # MANDATORY
+  value_type: "double"
+
+  # Any k8s object that this query is tied to
+  # eg. "deployment", "pod", "container"
+  # OPTIONAL
+  kubernetes_object: "namespace"
+
+  # One of query or aggregation_functions mandatory
+  # Both can be present together
+  query: 'sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=""}[$MEASUREMENT_DURATION_IN_MIN$d]))'
+
+  # aggregate functions associated with this variable
+  # Eg. "avg", "sum", "max", "min"
+  aggregation_functions:
+    # MANDATORY
+    - function: sum
+      # query
+      # MANDATORY
+      query: 'sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=""}[$MEASUREMENT_DURATION_IN_MIN$d]))'
+
+      # Any specific versions that this query is tied to
+      # OPTIONAL
+      version: ">4.9"
+
+# list of all the workloads present in the cluster
+- name: workloadsAcrossCluster
+  datasource: prometheus
+  value_type: "double"
+  kubernetes_object: "container"
+  # sum of the pod ownership metrics, grouped by namespace, workload, and workload_type, filtering out empty workloads.
+  aggregation_functions:
+    - function: sum
+      query: 'sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=""}[$MEASUREMENT_DURATION_IN_MIN$d]))'
