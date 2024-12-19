@@ -179,14 +179,14 @@ public class BulkJobManager implements Runnable {
                                         GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
                                         apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
                                         GenericRestApiClient.HttpResponseWrapper responseCode;
-                                        boolean expriment_exists = false;
+                                        boolean experiment_exists = false;
                                         try {
                                             responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(apiObject) + "]");
                                             LOGGER.debug("API Response code: {}", responseCode);
                                             if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
-                                                expriment_exists = true;
+                                                experiment_exists = true;
                                             } else if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
-                                                expriment_exists = true;
+                                                experiment_exists = true;
                                             } else {
                                                 experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, responseCode.getResponseBody().toString(), responseCode.getStatusCode()));
                                             }
@@ -194,7 +194,7 @@ public class BulkJobManager implements Runnable {
                                             e.printStackTrace();
                                             experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_BAD_REQUEST));
                                         } finally {
-                                            if (!expriment_exists) {
+                                            if (!experiment_exists) {
                                                 LOGGER.info("Processing experiment {}", jobData.getProcessed_experiments());
                                                 jobData.incrementProcessed_experiments();
                                             }
@@ -205,7 +205,7 @@ public class BulkJobManager implements Runnable {
                                             }
                                         }
 
-                                        if (expriment_exists) {
+                                        if (experiment_exists) {
                                             generateExecutor.submit(() -> {
                                                 // send request to generateRecommendations API
                                                 GenericRestApiClient recommendationApiClient = new GenericRestApiClient(finalDatasource);
