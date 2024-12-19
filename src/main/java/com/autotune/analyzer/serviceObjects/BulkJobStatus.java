@@ -27,6 +27,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.UNPROCESSED;
@@ -41,7 +42,7 @@ public class BulkJobStatus {
     private String jobID;
     private String status;
     private int total_experiments;
-    private int processed_experiments;  //todo : If the primary operations are increments or simple atomic updates, use AtomicInteger. It is designed for lock-free thread-safe access
+    private AtomicInteger processed_experiments;  //todo : If the primary operations are increments or simple atomic updates, use AtomicInteger. It is designed for lock-free thread-safe access
     @JsonProperty("job_start_time")
     private String startTime; // Change to String to store formatted time
     @JsonProperty("job_end_time")
@@ -54,6 +55,7 @@ public class BulkJobStatus {
         this.jobID = jobID;
         this.status = status;
         setStartTime(startTime);
+        this.processed_experiments = new AtomicInteger(0);
     }
 
 
@@ -144,12 +146,17 @@ public class BulkJobStatus {
         this.total_experiments = total_experiments;
     }
 
-    public synchronized int getProcessed_experiments() {
+
+    public synchronized void incrementProcessed_experiments() {
+        this.processed_experiments.incrementAndGet();
+    }
+
+    public AtomicInteger getProcessed_experiments() {
         return processed_experiments;
     }
 
-    public synchronized void setProcessed_experiments(int processed_experiments) {
-        this.processed_experiments = processed_experiments;
+    public void setProcessed_experiments(int count) {
+        this.processed_experiments.set(count);
     }
 
     // Utility function to format Instant into the required UTC format
@@ -194,16 +201,16 @@ public class BulkJobStatus {
             return recommendations;
         }
 
-        public void setNotification(Notification notification) {
-            this.notification = notification;
+        public void setRecommendations(Recommendation recommendations) {
+            this.recommendations = recommendations;
         }
 
         public Notification getNotification() {
             return notification;
         }
 
-        public void setRecommendations(Recommendation recommendations) {
-            this.recommendations = recommendations;
+        public void setNotification(Notification notification) {
+            this.notification = notification;
         }
     }
 
@@ -297,4 +304,4 @@ public class BulkJobStatus {
         }
     }
 
-    }
+}

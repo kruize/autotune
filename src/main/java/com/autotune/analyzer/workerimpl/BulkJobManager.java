@@ -153,8 +153,7 @@ public class BulkJobManager implements Runnable {
                 if (null != daterange) {
                     metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get(START_TIME),
                             (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), includeResourcesMap, excludeResourcesMap);
-                }
-                else {
+                } else {
                     metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, 0, 0,
                             0, includeResourcesMap, excludeResourcesMap);
                 }
@@ -197,10 +196,10 @@ public class BulkJobManager implements Runnable {
                                         } finally {
                                             if (!expriment_exists) {
                                                 LOGGER.info("Processing experiment {}", jobData.getProcessed_experiments());
-                                                jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
+                                                jobData.incrementProcessed_experiments();
                                             }
                                             synchronized (new Object()) {
-                                                if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
+                                                if (jobData.getTotal_experiments() == jobData.getProcessed_experiments().get()) {
                                                     setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                                 }
                                             }
@@ -228,9 +227,9 @@ public class BulkJobManager implements Runnable {
                                                     experiment.getRecommendations().setStatus(NotificationConstants.Status.FAILED);
                                                     experiment.getRecommendations().setNotifications(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
                                                 } finally {
-                                                    jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
+                                                    jobData.incrementProcessed_experiments();
                                                     synchronized (new Object()) {
-                                                        if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
+                                                        if (jobData.getTotal_experiments() == jobData.getProcessed_experiments().get()) {
                                                             setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                                         }
                                                     }
@@ -240,8 +239,8 @@ public class BulkJobManager implements Runnable {
                                     } catch (Exception e) {
                                         e.printStackTrace();
                                         experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
-                                        jobData.setProcessed_experiments(jobData.getProcessed_experiments() + 1);
-                                        if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
+                                        jobData.incrementProcessed_experiments();
+                                        if (jobData.getTotal_experiments() == jobData.getProcessed_experiments().get()) {
                                             setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                         }
                                     }
@@ -270,7 +269,7 @@ public class BulkJobManager implements Runnable {
                                 }
                             }
 
-                            if (jobData.getTotal_experiments() == jobData.getProcessed_experiments()) {
+                            if (jobData.getTotal_experiments() == jobData.getProcessed_experiments().get()) {
                                 statusValue = "success";
                             }
                         }
