@@ -26,6 +26,7 @@ import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.Utils;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 
@@ -50,6 +51,7 @@ public final class KruizeObject implements ExperimentTypeAware {
     @SerializedName("datasource")
     private String datasource;
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
+    @JsonAdapter(ExperimentTypeUtil.ExperimentTypeSerializer.class)
     private AnalyzerConstants.ExperimentType experimentType;
     @SerializedName("default_updater")
     private String defaultUpdater;
