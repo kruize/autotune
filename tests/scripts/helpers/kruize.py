@@ -185,7 +185,35 @@ def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=
 
 # Description: This function deletes the experiment and posts the experiment using createExperiment API to Kruize Autotune
 # Input Parameters: experiment input json
-def delete_experiment(input_json_file, invalid_header=False):
+def delete_experiment(input_json_file, rm=True):
+    json_file = open(input_json_file, "r")
+    input_json = json.loads(json_file.read())
+
+    print("\nDeleting the experiment...")
+    url = URL + "/createExperiment"
+    PARAMS = {'rm': True}
+
+    print("URL = ", url)
+
+    experiment_name = input_json[0]['experiment_name']
+
+    delete_json = [{
+        "experiment_name": experiment_name
+    }]
+
+    headers = {'content-type': 'application/xml'}
+    if invalid_header:
+        print("Invalid header")
+        response = requests.delete(url, json=delete_json, headers=headers, PARAMS=PARAMS)
+    else:
+        response = requests.delete(url, json=delete_json, PARAMS=PARAMS)
+
+    print(response)
+    print("Response status code = ", response.status_code)
+    return response
+
+
+def delete_experiment_local(input_json_file):
     json_file = open(input_json_file, "r")
     input_json = json.loads(json_file.read())
 
@@ -202,9 +230,9 @@ def delete_experiment(input_json_file, invalid_header=False):
     headers = {'content-type': 'application/xml'}
     if invalid_header:
         print("Invalid header")
-        response = requests.delete(url, json=delete_json, headers=headers)
+        response = requests.delete(url, json=delete_json, headers=headers, PARAMS=False)
     else:
-        response = requests.delete(url, json=delete_json)
+        response = requests.delete(url, json=delete_json, PARAMS=False)
 
     print(response)
     print("Response status code = ", response.status_code)
