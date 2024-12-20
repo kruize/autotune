@@ -185,7 +185,7 @@ def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=
 
 # Description: This function deletes the experiment and posts the experiment using createExperiment API to Kruize Autotune
 # Input Parameters: experiment input json
-def delete_experiment(input_json_file, rm=True):
+def delete_experiment(input_json_file, invalid_header=False):
     json_file = open(input_json_file, "r")
     input_json = json.loads(json_file.read())
 
@@ -213,7 +213,7 @@ def delete_experiment(input_json_file, rm=True):
     return response
 
 
-def delete_experiment_local(input_json_file):
+def delete_experiment_local(input_json_file, invalid_header=False):
     json_file = open(input_json_file, "r")
     input_json = json.loads(json_file.read())
 
