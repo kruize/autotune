@@ -785,7 +785,7 @@ def test_update_results__duplicate_records_with_single_exp_multiple_results(clus
     results = "true"
     recommendations = "false"
     latest = "false"
-    response = list_experiments(results, recommendations, latest, experiment_name)
+    response = list_experiments(results, recommendations, latest, experiment_name, True)
 
     list_exp_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
