@@ -19,6 +19,9 @@ import time
 
 import pytest
 import sys
+
+from tests.scripts.helpers.kruize import delete_experiment_local
+
 sys.path.append("../../")
 
 from helpers.all_terms_list_reco_json_schema import all_terms_list_reco_json_schema
@@ -100,7 +103,7 @@ def test_list_recommendations_namespace_single_result(test_name, expected_status
     input_json_file = tmp_json_file
 
     form_kruize_url(cluster_type)
-    response = delete_experiment(input_json_file)
+    response = delete_experiment_local(input_json_file)
     print("delete exp = ", response.status_code)
 
     #Install default metric profile
@@ -169,7 +172,7 @@ def test_list_recommendations_namespace_single_result(test_name, expected_status
     validate_local_monitoring_reco_json(namespace_exp_json[0], list_reco_json[0])
 
     # Delete experiment
-    response = delete_experiment(input_json_file)
+    response = delete_experiment_local(input_json_file)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
 
@@ -249,7 +252,7 @@ def test_accelerator_recommendation_if_exists(
     input_json_file = tmp_json_file
 
     form_kruize_url(cluster_type)
-    response = delete_experiment(input_json_file)
+    response = delete_experiment_local(input_json_file)
     print("delete exp = ", response.status_code)
 
     #Install default metric profile
@@ -316,6 +319,6 @@ def test_accelerator_recommendation_if_exists(
     validate_accelerator_recommendations_for_container(list_reco_json)
 
     # Delete experiment
-    response = delete_experiment(input_json_file)
+    response = delete_experiment_local(input_json_file)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE

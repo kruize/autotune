@@ -171,6 +171,14 @@ public class CreateExperiment extends HttpServlet {
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
         String inputData = "";
+        String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
+        boolean rmTable = false;
+        if (null != rm
+                && !rm.isEmpty()
+                && rm.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)
+        ) {
+            rmTable = true;
+        }
         try {
             inputData = request.getReader().lines().collect(Collectors.joining());
             CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
@@ -180,7 +188,11 @@ public class CreateExperiment extends HttpServlet {
             } else {
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                     try {
-                        new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                        if(rmTable) {
+                            new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                        } else {
+                            new ExperimentDBService().loadLMExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                        }
                     } catch (Exception e) {
                         LOGGER.error("Loading saved experiment {} failed: {} ", ko.getExperimentName(), e.getMessage());
                     }
