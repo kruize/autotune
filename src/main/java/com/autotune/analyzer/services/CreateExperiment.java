@@ -201,7 +201,12 @@ public class CreateExperiment extends HttpServlet {
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                     String expName = ko.getExperimentName();
                     if (!mKruizeExperimentMap.isEmpty() && mKruizeExperimentMap.containsKey(expName)) {
-                        ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
+                        ValidationOutputData validationOutputData;
+                        if(rmTable) {
+                            validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
+                        } else {
+                            validationOutputData = new ExperimentDAOImpl().deleteKruizeLMExperimentEntryByName(expName);
+                        }
                         if (validationOutputData.isSuccess()) {
                             mKruizeExperimentMap.remove(ko.getExperimentName());
                         } else {

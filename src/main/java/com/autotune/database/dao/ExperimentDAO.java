@@ -42,8 +42,11 @@ public interface ExperimentDAO {
     // Update experiment status
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status);
 
-    // Delete experiment
+    // Delete RM experiment
     public ValidationOutputData deleteKruizeExperimentEntryByName(String experimentName);
+
+    // Delete LM experiment
+    public ValidationOutputData deleteKruizeLMExperimentEntryByName(String experimentName);
 
     // If Kruize object restarts load all experiment which are in inprogress
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception;

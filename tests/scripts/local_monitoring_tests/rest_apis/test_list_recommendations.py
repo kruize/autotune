@@ -20,8 +20,6 @@ import time
 import pytest
 import sys
 
-from tests.scripts.helpers.kruize import delete_experiment_local
-
 sys.path.append("../../")
 
 from helpers.all_terms_list_reco_json_schema import all_terms_list_reco_json_schema
