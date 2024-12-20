@@ -198,7 +198,7 @@ public class BulkJobManager implements Runnable {
                                                 LOGGER.info("Processing experiment {}", jobData.getProcessed_experiments());
                                                 jobData.incrementProcessed_experiments();
                                             }
-                                            synchronized (new Object()) {
+                                            synchronized (jobData) {
                                                 if (jobData.getTotal_experiments() == jobData.getProcessed_experiments().get()) {
                                                     setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                                 }
@@ -228,7 +228,7 @@ public class BulkJobManager implements Runnable {
                                                     experiment.getRecommendations().setNotifications(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
                                                 } finally {
                                                     jobData.incrementProcessed_experiments();
-                                                    synchronized (new Object()) {
+                                                    synchronized (jobData) {
                                                         if (jobData.getTotal_experiments() == jobData.getProcessed_experiments().get()) {
                                                             setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                                         }
