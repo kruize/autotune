@@ -181,13 +181,13 @@ def test_list_recommendations_namespace_exps(cluster_type):
     ns3_exp_json_file = tmp_json_file_3
 
     # delete tfb experiments
-    response = delete_experiment_local(ns1_exp_json_file)
+    response = delete_experiment(ns1_exp_json_file, rm=False)
     print("delete tfb exp = ", response.status_code)
 
-    response = delete_experiment_local(ns2_exp_json_file)
+    response = delete_experiment(ns2_exp_json_file, rm=False)
     print("delete tfb_db exp = ", response.status_code)
 
-    response = delete_experiment_local(ns3_exp_json_file)
+    response = delete_experiment(ns3_exp_json_file, rm=False)
     print("delete namespace exp = ", response.status_code)
 
     #Install default metric profile
@@ -326,15 +326,15 @@ def test_list_recommendations_namespace_exps(cluster_type):
 
 
     # Delete namespace experiment
-    response = delete_experiment_local(ns1_exp_json_file)
+    response = delete_experiment(ns1_exp_json_file, rm=False)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
 
-    response = delete_experiment_local(ns2_exp_json_file)
+    response = delete_experiment(ns2_exp_json_file, rm=False)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
 
-    response = delete_experiment_local(ns3_exp_json_file)
+    response = delete_experiment(ns3_exp_json_file, rm=False)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
 

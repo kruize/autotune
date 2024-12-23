@@ -99,7 +99,7 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
     input_json_file = tmp_json_file
     form_kruize_url(cluster_type)
 
-    response = delete_experiment_local(input_json_file)
+    response = delete_experiment(input_json_file, rm=False)
     print("delete exp = ", response.status_code)
 
     # Create experiment using the specified json
@@ -112,7 +112,7 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    response = delete_experiment_local(input_json_file)
+    response = delete_experiment(input_json_file, rm=False)
     print("delete exp = ", response.status_code)
 
 
@@ -201,7 +201,7 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, expected_erro
     input_json_file = tmp_json_file
     form_kruize_url(cluster_type)
 
-    response = delete_experiment_local(input_json_file)
+    response = delete_experiment(input_json_file, rm=False)
     print("delete exp = ", response.status_code)
 
     # Create experiment using the specified json
@@ -214,7 +214,7 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, expected_erro
     assert data['status'] == ERROR_STATUS
     assert data['message'] == expected_error_msg
 
-    response = delete_experiment_local(input_json_file)
+    response = delete_experiment(input_json_file, rm=False)
     print("delete exp = ", response.status_code)
 
 
@@ -227,7 +227,7 @@ def test_create_multiple_namespace_exp(cluster_type):
     input_json_file = "../json_files/create_multiple_namespace_exp.json"
     form_kruize_url(cluster_type)
 
-    response = delete_experiment_local(input_json_file)
+    response = delete_experiment(input_json_file, rm=False)
     print("delete exp = ", response.status_code)
 
     # Create experiment using the specified json
@@ -241,5 +241,5 @@ def test_create_multiple_namespace_exp(cluster_type):
     # validate error message
     assert data['message'] == CREATE_EXP_BULK_ERROR_MSG
 
-    response = delete_experiment_local(input_json_file)
+    response = delete_experiment(input_json_file, rm=False)
     print("delete exp = ", response.status_code)
