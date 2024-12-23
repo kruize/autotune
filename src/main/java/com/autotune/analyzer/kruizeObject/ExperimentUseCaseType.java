@@ -39,12 +39,19 @@ public class ExperimentUseCaseType {
                 throw new Exception("Invalid Mode " + kruizeObject.getMode() + " for target cluster as Remote.");
             }
         } else if (kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
-            if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
-                setLocal_monitoring(true);
-            } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.EXPERIMENT)) {
-                setLocal_experiment(true);
-            } else {
-                throw new Exception("Invalid Mode " + kruizeObject.getMode() + " for target cluster as Local.");
+            switch (kruizeObject.getMode().toLowerCase()) {
+                case AnalyzerConstants.MONITOR:
+                case AnalyzerConstants.RECREATE:
+                case AnalyzerConstants.AUTO:
+                    setLocal_monitoring(true);
+                    break;
+
+                case AnalyzerConstants.EXPERIMENT:
+                    setLocal_experiment(true);
+                    break;
+
+                default:
+                    throw new Exception("Invalid Mode " + kruizeObject.getMode() + " for target cluster as Local.");
             }
         } else {
             throw new Exception("Invalid Target cluster type");

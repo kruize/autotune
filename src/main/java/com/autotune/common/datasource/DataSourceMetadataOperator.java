@@ -31,7 +31,10 @@ import java.net.URLEncoder;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 
@@ -66,10 +69,14 @@ public class DataSourceMetadataOperator {
      * @param startTime      Get metadata from starttime to endtime
      * @param endTime        Get metadata from starttime to endtime
      * @param steps          the interval between data points in a range query
-     *                                                                                                                                                                                                                                                   TODO - support multiple data sources
+     *                                                                                                                                                                                                                                                                         TODO - support multiple data sources
+     * @param includeResources
+     * @param excludeResources
      */
-    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
+    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
+                                                           long endTime, int steps, Map<String, String> includeResources,
+                                                           Map<String, String> excludeResources) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps, includeResources, excludeResources);
     }
 
     /**
@@ -111,8 +118,10 @@ public class DataSourceMetadataOperator {
      *                                                                                                                                                                                                                                                    TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
      *                                                                                                                                                                                                                                                           need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
-    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws Exception {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps);
+    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
+                                                           long endTime, int steps, Map<String, String> includeResources,
+                                                           Map<String, String> excludeResources) throws Exception {
+        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps, includeResources, excludeResources);
     }
 
     /**
@@ -149,10 +158,15 @@ public class DataSourceMetadataOperator {
      * @param startTime      Get metadata from starttime to endtime
      * @param endTime        Get metadata from starttime to endtime
      * @param steps          the interval between data points in a range query
+     * @param includeResources
+     * @param excludeResources
      * @return DataSourceMetadataInfo object with populated metadata fields
      * todo rename processQueriesAndFetchClusterMetadataInfo
      */
-    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo, String uniqueKey,
+                                                                                  long startTime, long endTime, int steps,
+                                                                                  Map<String, String> includeResources,
+                                                                                  Map<String, String> excludeResources) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
         /**
          * Get DataSourceOperatorImpl instance on runtime based on dataSource provider
@@ -168,11 +182,26 @@ public class DataSourceMetadataOperator {
          * creating a comprehensive DataSourceMetadataInfo object that is then added to a list.
          * TODO - Process cluster metadata using a custom query
          */
+        // Keys for the map
+        List<String> fields = Arrays.asList("namespace", "workload", "container");
+        // Map for storing queries
+        Map<String, String> queries = new HashMap<>();
+
+        // Populate filters for each field
+        fields.forEach(field -> {
+            String includeRegex = includeResources.getOrDefault(field + "Regex", "");
+            String excludeRegex = excludeResources.getOrDefault(field + "Regex", "");
+            String filter = constructDynamicFilter(field, includeRegex, excludeRegex);
+            String queryTemplate = getQueryTemplate(field); // Helper to map fields to PromQL queries
+            queries.put(field, String.format(queryTemplate, filter));
+        });
+
+        // Construct queries
+        String namespaceQuery = queries.get("namespace");
+        String workloadQuery = queries.get("workload");
+        String containerQuery = queries.get("container");
 
         String dataSourceName = dataSourceInfo.getName();
-        String namespaceQuery = PromQLDataSourceQueries.NAMESPACE_QUERY;
-        String workloadQuery = PromQLDataSourceQueries.WORKLOAD_QUERY;
-        String containerQuery = PromQLDataSourceQueries.CONTAINER_QUERY;
         if (null != uniqueKey && !uniqueKey.isEmpty()) {
             LOGGER.debug("uniquekey: {}", uniqueKey);
             namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
@@ -197,6 +226,7 @@ public class DataSourceMetadataOperator {
              * Value: DataSourceNamespace object corresponding to a namespace
              */
             HashMap<String, DataSourceNamespace> datasourceNamespaces = dataSourceDetailsHelper.getActiveNamespaces(namespacesDataResultArray);
+            LOGGER.debug("datasourceNamespaces: {}", datasourceNamespaces.keySet());
             dataSourceMetadataInfo = dataSourceDetailsHelper.createDataSourceMetadataInfoObject(dataSourceName, datasourceNamespaces);
 
             /**
@@ -242,6 +272,34 @@ public class DataSourceMetadataOperator {
 
         return null;
 
+    }
+
+    // Helper function to map fields to query templates
+    private String getQueryTemplate(String field) {
+        return switch (field) {
+            case "namespace" -> PromQLDataSourceQueries.NAMESPACE_QUERY;
+            case "workload" -> PromQLDataSourceQueries.WORKLOAD_QUERY;
+            case "container" -> PromQLDataSourceQueries.CONTAINER_QUERY;
+            default -> throw new IllegalArgumentException("Unknown field: " + field);
+        };
+    }
+
+    String constructDynamicFilter(String field, String includeRegex, String excludeRegex) {
+        StringBuilder filterBuilder = new StringBuilder();
+        if (includeRegex.isEmpty() && excludeRegex.isEmpty()) {
+            filterBuilder.append(String.format("%s!=''", field));
+        }
+        if (!includeRegex.isEmpty()) {
+            filterBuilder.append(String.format("%s=~\"%s\"", field, includeRegex));
+        }
+        if (!excludeRegex.isEmpty()) {
+            if (!filterBuilder.isEmpty()) {
+                filterBuilder.append(",");
+            }
+            filterBuilder.append(String.format("%s!~\"%s\"", field, excludeRegex));
+        }
+        LOGGER.info("filterBuilder: {}", filterBuilder);
+        return filterBuilder.toString();
     }
 
     private JsonArray fetchQueryResults(DataSourceInfo dataSourceInfo, String query, long startTime, long endTime, int steps) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {

@@ -91,32 +91,6 @@ public class HttpUtils
 		return response.toString();
 	}
 
-	public static void disableSSLVerification() {
-		TrustManager[] dummyTrustManager = new TrustManager[]{new X509TrustManager() {
-			public X509Certificate[] getAcceptedIssuers() {
-				return null;
-			}
-
-			public void checkClientTrusted(X509Certificate[] certs, String authType) { }
-
-			public void checkServerTrusted(X509Certificate[] certs, String authType) { }
-		}};
-
-		HostnameVerifier allHostsValid = (hostname, session) -> true;
-
-		SSLContext sslContext = null;
-		try {
-			sslContext = SSLContext.getInstance("SSL");
-			sslContext.init(null, dummyTrustManager, new java.security.SecureRandom());
-		} catch (NoSuchAlgorithmException | KeyManagementException e) {
-			e.printStackTrace();
-		}
-
-		assert sslContext != null;
-		HttpsURLConnection.setDefaultSSLSocketFactory(sslContext.getSocketFactory());
-		HttpsURLConnection.setDefaultHostnameVerifier(allHostsValid);
-	}
-
 	public static String postRequest(URL url, String content) {
 		try {
 			URLConnection connection = url.openConnection();

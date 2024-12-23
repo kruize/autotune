@@ -26,6 +26,7 @@ import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.Utils;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 
@@ -50,7 +51,10 @@ public final class KruizeObject implements ExperimentTypeAware {
     @SerializedName("datasource")
     private String datasource;
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
-    private String experimentType;
+    @JsonAdapter(ExperimentTypeUtil.ExperimentTypeSerializer.class)
+    private AnalyzerConstants.ExperimentType experimentType;
+    @SerializedName("default_updater")
+    private String defaultUpdater;
     private String namespace;               // TODO: Currently adding it at this level with an assumption that there is only one entry in k8s object needs to be changed
     private String mode;                    //Todo convert into Enum
     @SerializedName("target_cluster")
@@ -122,10 +126,10 @@ public final class KruizeObject implements ExperimentTypeAware {
      * Sets default terms for a KruizeObject.
      * This method initializes a map with predefined terms like "SHORT_TERM", "MEDIUM_TERM", and "LONG_TERM".
      * Each term is defined by a Terms object containing: Name of the term (e.g., "SHORT_TERM"), Duration (in days) to
-        be considered under that term, Threshold for the duration.
+     be considered under that term, Threshold for the duration.
      * Note: Currently, specific term names like "daily", "weekly", and "fortnightly" are not defined.
      * This method also requires implementing CustomResourceDefinition yaml for managing terms. This
-        functionality is not currently included.
+     functionality is not currently included.
      @param terms A map to store the default terms with term name as the key and Terms object as the value.
      @param kruizeObject The KruizeObject for which the default terms are being set.
      */
@@ -301,23 +305,21 @@ public final class KruizeObject implements ExperimentTypeAware {
         this.datasource = datasource;
     }
 
-    @Override
-    public String getExperimentType() {
+    public AnalyzerConstants.ExperimentType getExperimentType() {
         return experimentType;
     }
 
-    public void setExperimentType(String experimentType) {
+    public void setExperimentType(AnalyzerConstants.ExperimentType experimentType) {
         this.experimentType = experimentType;
     }
 
-    @Override
-    public boolean isNamespaceExperiment() {
-        return ExperimentTypeUtil.isNamespaceExperiment(experimentType);
+
+    public String getDefaultUpdater() {
+        return defaultUpdater;
     }
 
-    @Override
-    public boolean isContainerExperiment() {
-        return ExperimentTypeUtil.isContainerExperiment(experimentType);
+    public void setDefaultUpdater(String defaultUpdater) {
+        this.defaultUpdater = defaultUpdater;
     }
 
     @Override
@@ -346,5 +348,15 @@ public final class KruizeObject implements ExperimentTypeAware {
                 ", validationData=" + validation_data +
                 ", kubernetes_objects=" + kubernetes_objects +
                 '}';
+    }
+
+    @Override
+    public boolean isNamespaceExperiment() {
+        return ExperimentTypeUtil.isNamespaceExperiment(experimentType);
+    }
+
+    @Override
+    public boolean isContainerExperiment() {
+        return ExperimentTypeUtil.isContainerExperiment(experimentType);
     }
 }

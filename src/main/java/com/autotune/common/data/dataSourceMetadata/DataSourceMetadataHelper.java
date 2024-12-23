@@ -427,7 +427,7 @@ public class DataSourceMetadataHelper {
 
                 if (null == dataSourceNamespace) {
                     LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.INVALID_DATASOURCE_METADATA_NAMESPACE);
-                    return;
+                    continue;
                 }
 
                 // Iterate over workloads in namespaceWorkloadMap

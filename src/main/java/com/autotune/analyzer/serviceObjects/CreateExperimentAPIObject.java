@@ -23,6 +23,7 @@ import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -50,7 +51,8 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     @SerializedName(KruizeConstants.JSONKeys.DATASOURCE) //TODO: to be used in future
     private String datasource;
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
-    private String experimentType;
+    @JsonAdapter(ExperimentTypeUtil.ExperimentTypeSerializer.class)
+    private AnalyzerConstants.ExperimentType experimentType;
     private AnalyzerConstants.ExperimentStatus status;
     private String experiment_id;   // this id is UUID and getting set at createExperiment API
     private ValidationOutputData validationData;  // This object indicates if this API object is valid or invalid
@@ -151,23 +153,12 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
         this.datasource = datasource;
     }
 
-    @Override
-    public String getExperimentType() {
+    public AnalyzerConstants.ExperimentType getExperimentType() {
         return experimentType;
     }
 
-    public void setExperimentType(String experimentType) {
+    public void setExperimentType(AnalyzerConstants.ExperimentType experimentType) {
         this.experimentType = experimentType;
-    }
-
-    @Override
-    public boolean isNamespaceExperiment() {
-        return ExperimentTypeUtil.isNamespaceExperiment(experimentType);
-    }
-
-    @Override
-    public boolean isContainerExperiment() {
-        return ExperimentTypeUtil.isContainerExperiment(experimentType);
     }
 
     @Override
@@ -185,6 +176,16 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
                 ", experimentType=" + experimentType +
                 ", recommendationSettings=" + recommendationSettings +
                 '}';
+    }
+
+    @Override
+    public boolean isNamespaceExperiment() {
+        return ExperimentTypeUtil.isNamespaceExperiment(experimentType);
+    }
+
+    @Override
+    public boolean isContainerExperiment() {
+        return ExperimentTypeUtil.isContainerExperiment(experimentType);
     }
 }
 

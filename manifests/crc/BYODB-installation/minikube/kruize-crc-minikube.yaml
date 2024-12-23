@@ -33,7 +33,6 @@ data:
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
-      "local": "true",
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.monitoring.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",    
       "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",
@@ -92,7 +91,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.2
+          image: kruize/autotune_operator:0.3
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume

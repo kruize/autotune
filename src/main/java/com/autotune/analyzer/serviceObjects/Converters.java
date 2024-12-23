@@ -10,8 +10,6 @@ import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
@@ -23,6 +21,8 @@ import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -31,12 +31,9 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 
 public class Converters {
     private Converters() {
@@ -70,7 +67,7 @@ public class Converters {
                         // namespace recommendations experiment type
                         k8sObject = createNamespaceExperiment(kubernetesAPIObject);
                     }
-                    LOGGER.debug("Experiment Type: " + createExperimentAPIObject.getExperimentType());
+                    LOGGER.debug("Experiment Type: {}", createExperimentAPIObject.getExperimentType());
                     k8sObjectList.add(k8sObject);
                 }
                 kruizeObject.setKubernetes_objects(k8sObjectList);
@@ -145,86 +142,9 @@ public class Converters {
                     kubernetesAPIObject = new KubernetesAPIObject(k8sObject.getName(), k8sObject.getType(), k8sObject.getNamespace());
                     // namespace recommendations experiment type
                     if (kruizeObject.isNamespaceExperiment()) {
-                        NamespaceAPIObject namespaceAPIObject;
-                        NamespaceData clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceData(), NamespaceData.class);
-
-                        if (null != clonedNamespaceData) {
-                            HashMap<Timestamp, MappedRecommendationForTimestamp> namespaceRecommendations = clonedNamespaceData.getNamespaceRecommendations().getData();
-                            LOGGER.info("Namespace Recommendations: " + namespaceRecommendations.toString());
-                            clonedNamespaceData.getNamespaceRecommendations().setData(namespaceRecommendations);
-                            namespaceAPIObject = new NamespaceAPIObject(clonedNamespaceData.getNamespace_name(), clonedNamespaceData.getNamespaceRecommendations(), null);
-                            kubernetesAPIObject.setNamespaceAPIObject(namespaceAPIObject);
-                        }
+                        processNamespaceRecommendations(k8sObject, kubernetesAPIObject, checkForTimestamp, getLatest, monitoringEndTime);
                     }
-
-                    HashMap<String, ContainerData> containerDataMap = new HashMap<>();
-                    List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
-                    for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
-                        ContainerAPIObject containerAPIObject;
-                        // if a Time stamp is passed it holds the priority than latest
-                        if (checkForTimestamp) {
-                            // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
-                            ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
-                            if (null != clonedContainerData) {
-                                HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations
-                                        = clonedContainerData.getContainerRecommendations().getData();
-                                if (null != monitoringEndTime && recommendations.containsKey(monitoringEndTime)) {
-                                    List<Timestamp> tempList = new ArrayList<>();
-                                    for (Timestamp timestamp : recommendations.keySet()) {
-                                        if (!timestamp.equals(monitoringEndTime))
-                                            tempList.add(timestamp);
-                                    }
-                                    for (Timestamp timestamp : tempList) {
-                                        recommendations.remove(timestamp);
-                                    }
-                                    clonedContainerData.getContainerRecommendations().setData(recommendations);
-                                    containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
-                                            clonedContainerData.getContainer_image_name(),
-                                            clonedContainerData.getContainerRecommendations(),
-                                            null);
-                                    containerAPIObjects.add(containerAPIObject);
-                                }
-                            }
-                        } else if (getLatest) {
-                            // This step causes a performance degradation, need to be replaced with a better flow of creating SO's
-                            ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
-                            if (null != clonedContainerData) {
-                                HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations
-                                        = clonedContainerData.getContainerRecommendations().getData();
-                                Timestamp latestTimestamp = null;
-                                List<Timestamp> tempList = new ArrayList<>();
-                                for (Timestamp timestamp : recommendations.keySet()) {
-                                    if (null == latestTimestamp) {
-                                        latestTimestamp = timestamp;
-                                    } else {
-                                        if (timestamp.after(latestTimestamp)) {
-                                            tempList.add(latestTimestamp);
-                                            latestTimestamp = timestamp;
-                                        } else {
-                                            tempList.add(timestamp);
-                                        }
-                                    }
-                                }
-                                for (Timestamp timestamp : tempList) {
-                                    recommendations.remove(timestamp);
-                                }
-                                clonedContainerData.getContainerRecommendations().setData(recommendations);
-                                containerAPIObject = new ContainerAPIObject(clonedContainerData.getContainer_name(),
-                                        clonedContainerData.getContainer_image_name(),
-                                        clonedContainerData.getContainerRecommendations(),
-                                        null);
-                                containerAPIObjects.add(containerAPIObject);
-                            }
-                        } else {
-                            containerAPIObject = new ContainerAPIObject(containerData.getContainer_name(),
-                                    containerData.getContainer_image_name(),
-                                    containerData.getContainerRecommendations(),
-                                    null);
-                            containerAPIObjects.add(containerAPIObject);
-                            containerDataMap.put(containerData.getContainer_name(), containerData);
-                        }
-                    }
-                    kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
+                    processContainerRecommendations(k8sObject, kubernetesAPIObject, checkForTimestamp, getLatest, monitoringEndTime);
                     kubernetesAPIObjects.add(kubernetesAPIObject);
                 }
                 listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjects);
@@ -232,6 +152,87 @@ public class Converters {
                 e.printStackTrace();
             }
             return listRecommendationsAPIObject;
+        }
+
+        private static void processNamespaceRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
+                                                            boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
+            NamespaceData clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceData(), NamespaceData.class);
+            if (clonedNamespaceData != null) {
+                HashMap<Timestamp, MappedRecommendationForTimestamp> namespaceRecommendations = clonedNamespaceData.getNamespaceRecommendations().getData();
+
+                if (checkForTimestamp) {
+                    filterRecommendationsByTimestamp(namespaceRecommendations, monitoringEndTime);
+                } else if (getLatest) {
+                    filterRecommendationsByLatest(namespaceRecommendations);
+                }
+
+                NamespaceAPIObject namespaceAPIObject = new NamespaceAPIObject(
+                        clonedNamespaceData.getNamespace_name(),
+                        clonedNamespaceData.getNamespaceRecommendations(),
+                        null);
+                kubernetesAPIObject.setNamespaceAPIObject(namespaceAPIObject);
+            }
+        }
+
+        private static void processContainerRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
+                                                            boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
+            List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
+
+            for (ContainerData containerData : k8sObject.getContainerDataMap().values()) {
+                ContainerData clonedContainerData = Utils.getClone(containerData, ContainerData.class);
+
+                if (clonedContainerData != null) {
+                    HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations = clonedContainerData.getContainerRecommendations().getData();
+
+                    if (checkForTimestamp) {
+                        filterRecommendationsByTimestamp(recommendations, monitoringEndTime);
+                    } else if (getLatest) {
+                        filterRecommendationsByLatest(recommendations);
+                    }
+
+                    ContainerAPIObject containerAPIObject = new ContainerAPIObject(
+                            clonedContainerData.getContainer_name(),
+                            clonedContainerData.getContainer_image_name(),
+                            clonedContainerData.getContainerRecommendations(),
+                            null);
+                    containerAPIObjects.add(containerAPIObject);
+                } else {
+                    containerAPIObjects.add(new ContainerAPIObject(
+                            containerData.getContainer_name(),
+                            containerData.getContainer_image_name(),
+                            containerData.getContainerRecommendations(),
+                            null));
+                }
+            }
+
+            kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
+        }
+
+        private static void filterRecommendationsByTimestamp(HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations,
+                                                             Timestamp monitoringEndTime) {
+            if (monitoringEndTime != null && recommendations.containsKey(monitoringEndTime)) {
+                recommendations.keySet().removeIf(timestamp -> !timestamp.equals(monitoringEndTime));
+            }
+        }
+
+        private static void filterRecommendationsByLatest(HashMap<Timestamp, MappedRecommendationForTimestamp> recommendations) {
+            Timestamp latestTimestamp = null;
+            List<Timestamp> timestampsToRemove = new ArrayList<>();
+
+            for (Timestamp timestamp : recommendations.keySet()) {
+                if (latestTimestamp == null || timestamp.after(latestTimestamp)) {
+                    if (latestTimestamp != null) {
+                        timestampsToRemove.add(latestTimestamp);
+                    }
+                    latestTimestamp = timestamp;
+                } else {
+                    timestampsToRemove.add(timestamp);
+                }
+            }
+
+            for (Timestamp timestamp : timestampsToRemove) {
+                recommendations.remove(timestamp);
+            }
         }
 
         /**

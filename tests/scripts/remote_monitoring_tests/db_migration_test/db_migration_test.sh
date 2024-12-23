@@ -166,7 +166,8 @@ do
 
 	        reco_json_dir="${LOG_DIR}/reco_jsons"
         	mkdir -p ${reco_json_dir}
-	        curl -s http://${SERVER_IP_ADDR}/listRecommendations?experiment_name=${exp_name} > ${reco_json_dir}/${exp_name}_reco.json
+        	echo "curl -s http://${SERVER_IP_ADDR}/listRecommendations?experiment_name=${exp_name}&rm=true"
+	        curl -s "http://${SERVER_IP_ADDR}/listRecommendations?experiment_name=${exp_name}&rm=true" > ${reco_json_dir}/${exp_name}_reco.json
 
 		python3 validate_reco_json.py -f ${reco_json_dir}/${exp_name}_reco.json -e ${end_time}
 		if [ $? != 0 ]; then

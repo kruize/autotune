@@ -13,18 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.utils;
 
-/**
- * Interface to be implemented by classes with an experiment type.
- */
-public interface ExperimentTypeAware {
-    // Retrieves the experiment type associated with the implementing class.
-    AnalyzerConstants.ExperimentType getExperimentType();
+package com.autotune.analyzer.exceptions;
 
-    // checks if the experiment type is namespace
-    boolean isNamespaceExperiment();
+public class InvalidRecommendationUpdaterType extends Exception {
+    public InvalidRecommendationUpdaterType() {
+    }
 
-    // checks if the experiment type is container
-    boolean isContainerExperiment();
+    public InvalidRecommendationUpdaterType(String message) {
+        super(message);
+    }
 }

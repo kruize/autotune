@@ -150,10 +150,12 @@ def update_recommendations(experiment_name, startTime, endTime):
 
 # Description: This function obtains the recommendations from Kruize Autotune using listRecommendations API
 # Input Parameters: experiment name, flag indicating latest result and monitoring end time
-def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=None):
+def list_recommendations(experiment_name=None, latest=None, monitoring_end_time=None, rm=False):
     PARAMS = ""
     print("\nListing the recommendations...")
     url = URL + "/listRecommendations"
+    if rm:
+        url += "?rm=true"
     print("URL = ", url)
 
     if experiment_name == None:
@@ -227,7 +229,7 @@ def create_performance_profile(perf_profile_json_file):
 
 # Description: This function obtains the experiments from Kruize Autotune using listExperiments API
 # Input Parameters: None
-def list_experiments(results=None, recommendations=None, latest=None, experiment_name=None):
+def list_experiments(results=None, recommendations=None, latest=None, experiment_name=None, rm=False):
     print("\nListing the experiments...")
     query_params = {}
 
@@ -243,7 +245,11 @@ def list_experiments(results=None, recommendations=None, latest=None, experiment
     query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
 
     url = URL + "/listExperiments"
-    if query_string:
+    if rm:
+        url += "?rm=true"
+        if query_string:
+            url += "&" + query_string
+    else:
         url += "?" + query_string
     print("URL = ", url)
     response = requests.get(url)
@@ -391,6 +397,7 @@ def create_metric_profile(metric_profile_json_file):
     print(response.text)
     return response
 
+
 # Description: This function deletes the metric profile
 # Input Parameters: metric profile input json
 def delete_metric_profile(input_json_file, invalid_header=False):
@@ -447,6 +454,7 @@ def list_metric_profiles(name=None, verbose=None, logging=True):
         print("\n************************************************************")
     return response
 
+
 # Description: This function generates recommendation for the given experiment_name
 def generate_recommendations(experiment_name):
     print("\n************************************************************")
@@ -464,6 +472,7 @@ def generate_recommendations(experiment_name):
     print("\n************************************************************")
     return response
 
+
 def post_bulk_api(input_json_file):
     print("\n************************************************************")
     print("Sending POST request to URL: ", f"{URL}/bulk")
@@ -477,14 +486,15 @@ def post_bulk_api(input_json_file):
     print("Response JSON: ", response.json())
     return response
 
-def get_bulk_job_status(job_id,verbose=False):
+
+def get_bulk_job_status(job_id, verbose=False):
     print("\n************************************************************")
     url_basic = f"{URL}/bulk?job_id={job_id}"
     url_verbose = f"{URL}/bulk?job_id={job_id}&verbose={verbose}"
     getJobIDURL = url_basic
     if verbose:
         getJobIDURL = url_verbose
-    print("Sending GET request to URL ( verbose=",verbose," ): ", getJobIDURL)
+    print("Sending GET request to URL ( verbose=", verbose, " ): ", getJobIDURL)
     curl_command_verbose = f"curl -X GET '{getJobIDURL}'"
     print("Equivalent cURL command : ", curl_command_verbose)
     response = requests.get(url_verbose)

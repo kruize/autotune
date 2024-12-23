@@ -21,6 +21,7 @@ import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
+import com.autotune.analyzer.recommendations.updater.RecommendationUpdaterService;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -45,8 +46,8 @@ import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
-import org.eclipse.jetty.servlet.ServletContextHandler;
-import org.eclipse.jetty.servlet.ServletHolder;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletHolder;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -115,6 +116,7 @@ public class Autotune {
             InitializeDeployment.setup_deployment_info();
             // Configure AWS CloudWatch
             CloudWatchAppender.configureLoggerForCloudWatchLog();
+            LOGGER.info("ROS enabled : {}" ,KruizeDeploymentInfo.is_ros_enabled);
             // Read and execute the DDLs here
             executeDDLs(AnalyzerConstants.ROS_DDL_SQL);
             if (KruizeDeploymentInfo.local == true) {
@@ -132,6 +134,8 @@ public class Autotune {
                 checkAvailableDataSources();
                 // load available metric profiles from db
                 loadMetricProfilesFromDB();
+                // start updater service
+                startRecommendationUpdaterService();
 
             }
             // close the existing session factory before recreating
@@ -287,4 +291,8 @@ public class Autotune {
         LOGGER.info(DBConstants.DB_MESSAGES.DB_LIVELINESS_PROBE_SUCCESS);
     }
 
+    // starts the recommendation updater service
+    private static void startRecommendationUpdaterService() {
+        RecommendationUpdaterService.initiateUpdaterService();
+    }
 }

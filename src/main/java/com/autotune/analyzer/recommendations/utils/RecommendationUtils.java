@@ -371,5 +371,30 @@ public class RecommendationUtils {
 
         return null;
     }
+
+    /**
+     * This function converts the cpu and memory values to VPA desired format
+     */
+    public static String resource2str(String resource, double value) {
+        if (resource.equalsIgnoreCase(AnalyzerConstants.RecommendationItem.CPU.toString())) {
+            // cpu related conversions
+            if (value < 1) {
+                return (int) (value * 1000) + "m";
+            } else {
+                return String.valueOf(value);
+            }
+        } else {
+            // memory related conversions
+            if (value < 1024) {
+                return (int) value + "B";
+            } else if (value < 1024 * 1024) {
+                return (int) (value / 1024) + "k";
+            } else if (value < 1024 * 1024 * 1024) {
+                return (int) (value / 1024 / 1024) + "Mi";
+            } else {
+                return (int) (value / 1024 / 1024 / 1024) + "Gi";
+            }
+        }
+    }
 }
 
