@@ -26,7 +26,6 @@ This document describes the test plan for Kruize remote monitoring release 0.3
 * Concurrent RM and LM changes
 * Bulk API filtration feature 
 * Auto mode support in Kruize for VPA integration PoC
-* Jetty Server version upgrade
 
 
 ------
@@ -38,6 +37,7 @@ This document describes the test plan for Kruize remote monitoring release 0.3
 * `No data available` issue in GenereateRecommendations API
 * Bulk API test failures
 * Parallel requests issue with Bulk API
+* Jetty Server version upgrade
 
 ---
 
