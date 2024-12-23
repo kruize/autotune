@@ -150,17 +150,16 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     tfb_exp_json_file = "../json_files/create_tfb_exp.json"
     tfb_db_exp_json_file = "../json_files/create_tfb_db_exp.json"
 
-
-    response = delete_experiment_local(tfb_exp_json_file)
+    response = delete_experiment(tfb_exp_json_file, rm=False)
     print("delete tfb exp = ", response.status_code)
 
-    response = delete_experiment_local(tfb_db_exp_json_file)
+    response = delete_experiment(tfb_db_exp_json_file, rm=False)
     print("delete tfb_db exp = ", response.status_code)
 
-    response = delete_experiment_local(namespace_exp_json_file)
+    response = delete_experiment(namespace_exp_json_file, rm=False)
     print("delete namespace exp = ", response.status_code)
 
-    #Install default metric profile
+    # Install default metric profile
     if cluster_type == "minikube":
         metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring_norecordingrules.json'
 
@@ -292,17 +291,17 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     validate_local_monitoring_reco_json(namespace_exp_json[0], list_reco_json[0])
 
     # Delete tfb experiment
-    response = delete_experiment_local(tfb_exp_json_file)
+    response = delete_experiment(tfb_exp_json_file, rm=False)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
 
     # Delete tfb_db experiment
-    response = delete_experiment_local(tfb_db_exp_json_file)
+    response = delete_experiment(tfb_db_exp_json_file, rm=False)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
 
     # Delete namespace experiment
-    response = delete_experiment_local(namespace_exp_json_file)
+    response = delete_experiment(namespace_exp_json_file, rm=False)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
 
