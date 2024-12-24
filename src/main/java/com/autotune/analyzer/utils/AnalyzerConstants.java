@@ -615,6 +615,13 @@ public class AnalyzerConstants {
         public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
     }
 
+    public static final class CommonProfileMsgs {
+        public static final String METHOD_NAME = "MethodName = {}";
+        public static final String INVALID_METHOD_NAME = "Method name {} doesn't exist!";
+        public static final String MISSING_MANDATORY_PARAMETERS = "Missing mandatory parameters: %s ";
+        public static final String VALIDATION_ERROR_MSG = "Validation error message :{}";
+    }
+
     public static final class K8sObjectConstants {
         private K8sObjectConstants() {
 

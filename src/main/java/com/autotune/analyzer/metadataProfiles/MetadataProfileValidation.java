@@ -33,6 +33,9 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
+/**
+ *  This class validates MetadataProfile fields and object
+ */
 public class MetadataProfileValidation {
     private static final Logger LOGGER = LoggerFactory.getLogger(MetadataProfileValidation.class);
     private boolean success;
@@ -90,8 +93,8 @@ public class MetadataProfileValidation {
                     errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_METADATA);
                 }
                 // check if the metadata profile already exists
-                if (null != metadataProfilesMap.get(metadataProfile.getMetadata().get("name").asText())) {
-                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METADATA_PROFILE).append(metadataProfile.getMetadata().get("name").asText());
+                if (null != metadataProfilesMap.get(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText())) {
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METADATA_PROFILE).append(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText());
                     return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
                 }
 
@@ -129,12 +132,12 @@ public class MetadataProfileValidation {
                 mField -> {
                     String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                     try {
-                        LOGGER.debug("MethodName = {}",methodName);
+                        LOGGER.debug(AnalyzerConstants.CommonProfileMsgs.METHOD_NAME,methodName);
                         Method getNameMethod = metadataObj.getClass().getMethod(methodName);
                         if (null == getNameMethod.invoke(metadataObj) || getNameMethod.invoke(metadataObj).toString().isEmpty())
                             missingMandatoryFields.add(mField);
                     } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        LOGGER.error("Method name {} doesn't exist!", mField);
+                        LOGGER.error(AnalyzerConstants.CommonProfileMsgs.INVALID_METHOD_NAME, mField);
                     }
                 }
         );
@@ -148,7 +151,7 @@ public class MetadataProfileValidation {
                         missingMandatoryFields.add(mandatoryMetadataPerf);
                     }
                 } catch (Exception e) {
-                    LOGGER.error("Method name doesn't exist for: {}!", mandatoryMetadataPerf);
+                    LOGGER.error(AnalyzerConstants.CommonProfileMsgs.INVALID_METHOD_NAME, mandatoryMetadataPerf);
                 }
 
                 if (missingMandatoryFields.isEmpty()) {
@@ -156,14 +159,14 @@ public class MetadataProfileValidation {
                             mField -> {
                                 String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
                                 try {
-                                    LOGGER.debug("MethodName = {}", methodName);
+                                    LOGGER.debug(AnalyzerConstants.CommonProfileMsgs.METHOD_NAME, methodName);
                                     Method getNameMethod = metadataObj.getQueryVariables().get(0)
                                             .getClass().getMethod(methodName);
                                     if (getNameMethod.invoke(metadataObj.getQueryVariables().get(0)) == null)
                                         missingMandatoryFields.add(mField);
                                 } catch (NoSuchMethodException | IllegalAccessException |
                                          InvocationTargetException e) {
-                                    LOGGER.error("Method name {} doesn't exist!", mField);
+                                    LOGGER.error(AnalyzerConstants.CommonProfileMsgs.INVALID_METHOD_NAME, mField);
                                 }
 
                             });
@@ -172,11 +175,11 @@ public class MetadataProfileValidation {
                 }
 
                 if (!missingMandatoryFields.isEmpty()) {
-                    errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s ", missingMandatoryFields));
+                    errorMsg = errorMsg.concat(String.format(AnalyzerConstants.CommonProfileMsgs.MISSING_MANDATORY_PARAMETERS, missingMandatoryFields));
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(errorMsg);
                     validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                    LOGGER.error("Validation error message :{}", errorMsg);
+                    LOGGER.error(AnalyzerConstants.CommonProfileMsgs.VALIDATION_ERROR_MSG, errorMsg);
                 }
             } catch (Exception e) {
                 validationOutputData.setSuccess(false);
@@ -185,11 +188,11 @@ public class MetadataProfileValidation {
                 validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         } else {
-            errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s ", missingMandatoryFields));
+            errorMsg = errorMsg.concat(String.format(AnalyzerConstants.CommonProfileMsgs.MISSING_MANDATORY_PARAMETERS, missingMandatoryFields));
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage(errorMsg);
             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-            LOGGER.error("Validation error message :{}", errorMsg);
+            LOGGER.error(AnalyzerConstants.CommonProfileMsgs.VALIDATION_ERROR_MSG, errorMsg);
         }
 
         return validationOutputData;
@@ -240,6 +243,21 @@ public class MetadataProfileValidation {
                             .append(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED);
             }
         }
+    }
+
+    public boolean isSuccess() {
+        return success;
+    }
+
+    public void setSuccess(boolean success) {
+        this.success = success;
+    }
+    @Override
+    public String toString() {
+        return "MetadataProfileValidation{" +
+                "success=" + success +
+                ", errorMessage='" + errorMessage + '\'' +
+                '}';
     }
 
 }

@@ -910,4 +910,10 @@ public class KruizeConstants {
 
         }
     }
+
+    public static final class MetadataProfileConstants {
+        public static final String METADATA_PROFILE_VALIDATION_FAILURE = "MetadataProfile validation failed: ";
+        public static final String METADATA_PROFILE_VALIDATION_AND_ADD_FAILURE = "Validate and add metadata profile failed: {}";
+        public static final String ADD_METADATA_PROFILE = "Added MetadataProfile: {}";
+    }
 }

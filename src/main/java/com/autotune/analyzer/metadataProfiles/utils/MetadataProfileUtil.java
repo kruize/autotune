@@ -18,12 +18,16 @@ package com.autotune.analyzer.metadataProfiles.utils;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileValidation;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
 
+/**
+ *  Utils class for MetadataProfile
+ */
 public class MetadataProfileUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil.class);
     private MetadataProfileUtil() {
@@ -42,11 +46,13 @@ public class MetadataProfileUtil {
             if (validationOutputData.isSuccess()) {
                 addMetadataProfile(metadataProfileMapProfilesMap, metadataProfile);
             } else {
-                validationOutputData.setMessage("Validation failed: " + validationOutputData.getMessage());
+                validationOutputData.setMessage(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_FAILURE + validationOutputData.getMessage());
             }
         } catch (Exception e) {
-            LOGGER.error("Validate and add profile failed: {}", e.getMessage());
-            validationOutputData = new ValidationOutputData(false, "Validation failed: " + e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            LOGGER.error(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_AND_ADD_FAILURE, e.getMessage());
+            validationOutputData = new ValidationOutputData(false,
+                    KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_FAILURE + e.getMessage(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
     }
@@ -54,7 +60,7 @@ public class MetadataProfileUtil {
 
     public static void addMetadataProfile(Map<String, MetadataProfile> metadataProfileMap, MetadataProfile metadataProfile) {
         metadataProfileMap.put(metadataProfile.getMetadata().get("name").asText(), metadataProfile);
-        LOGGER.debug("Added MetadataProfile: {} ", metadataProfile.getMetadata().get("name"));
+        LOGGER.debug(KruizeConstants.MetadataProfileConstants.ADD_METADATA_PROFILE, metadataProfile.getMetadata().get("name"));
     }
 
 }
