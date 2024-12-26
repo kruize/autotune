@@ -524,6 +524,36 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
+     * Add MetadataProfile to database
+     *
+     * @param kruizeMetadataProfileEntry Metadata Profile Database object to be added
+     * @return validationOutputData contains the status of the DB insert operation
+     */
+    @Override
+    public ValidationOutputData addMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeMetadataProfileEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save metadata profile due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save metadata profile source due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
      * @param kruizeDataSourceEntry
      * @param validationOutputData
      * @return validationOutputData contains the status of the DB insert operation

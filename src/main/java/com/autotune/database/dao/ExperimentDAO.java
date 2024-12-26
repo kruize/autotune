@@ -37,6 +37,9 @@ public interface ExperimentDAO {
     // Add Metric Profile  to DB
     public ValidationOutputData addMetricProfileToDB(KruizeMetricProfileEntry kruizeMetricProfileEntry);
 
+    // Add Metadata Profile  to DB
+    public ValidationOutputData addMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry);
+
     // Add DataSource to DB
     ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry, ValidationOutputData validationOutputData);
 
@@ -94,6 +97,9 @@ public interface ExperimentDAO {
 
     // Load a single Metric Profile based on name
     List<KruizeMetricProfileEntry> loadMetricProfileByName(String metricProfileName) throws Exception;
+
+    // Load a single Metadata Profile based on name
+    List<KruizeLMMetadataProfileEntry> loadMetadataProfileByName(String metadataProfileName) throws Exception;
 
     // Delete metric profile for the specified metric profile name
     public ValidationOutputData deleteKruizeMetricProfileEntryByName(String metricProfileName);
