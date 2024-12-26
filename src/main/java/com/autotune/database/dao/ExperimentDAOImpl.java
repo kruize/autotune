@@ -25,6 +25,7 @@ import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
@@ -899,6 +900,26 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
+    /**
+     * Fetches all the Metadata Profile records from KruizeLMMetadataProfileEntry database table
+     *
+     * @return List of all KruizeLMMetadataProfileEntry database objects
+     * @throws Exception
+     */
+    @Override
+    public List<KruizeLMMetadataProfileEntry> loadAllMetadataProfiles() throws Exception {
+        String statusValue = "failure";
+
+        List<KruizeLMMetadataProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_METADATA_PROFILE, KruizeLMMetadataProfileEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Metadata Profile  due to {}", e.getMessage());
+            throw new Exception("Error while loading existing Metadata Profile from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
+
     @Override
     public List<KruizeLMExperimentEntry> loadLMExperimentByName(String experimentName) throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
@@ -1205,6 +1226,27 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to load Metric Profile {} due to {}", metricProfileName, e.getMessage());
             throw new Exception("Error while loading existing metric profile from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
+
+    /**
+     * Fetches Metadata Profile by name from KruizeLMMetadataProfileEntry database table
+     *
+     * @param metadataProfileName Metadata profile name
+     * @return List of KruizeLMMetadataProfileEntry objects
+     * @throws Exception
+     */
+    public List<KruizeLMMetadataProfileEntry> loadMetadataProfileByName(String metadataProfileName) throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadMetadataProfileName = Timer.start(MetricsConfig.meterRegistry());
+        List<KruizeLMMetadataProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_METADATA_PROFILE_BY_NAME, KruizeLMMetadataProfileEntry.class)
+                    .setParameter("name", metadataProfileName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Metadata Profile {} due to {}", metadataProfileName, e.getMessage());
+            throw new Exception("Error while loading existing metadata profile from database due to : " + e.getMessage());
         }
         return entries;
     }

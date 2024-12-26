@@ -6,6 +6,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 
 import java.sql.Timestamp;
@@ -64,6 +65,9 @@ public interface ExperimentDAO {
 
     // If Kruize restarts load all metric profiles
     List<KruizeMetricProfileEntry> loadAllMetricProfiles() throws Exception;
+
+    // If Kruize restarts load all metadata profiles
+    List<KruizeLMMetadataProfileEntry> loadAllMetadataProfiles() throws Exception;
 
     // Load a single experiment based on experimentName
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
