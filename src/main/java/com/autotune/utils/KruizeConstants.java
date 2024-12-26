@@ -89,6 +89,18 @@ public class KruizeConstants {
         public static final String METRIC_PROFILE_ADDED = "MetricProfile added to the collection successfully: ";
     }
 
+    public static final class MetadataProfileAPIMessages {
+        public static final String CREATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s created successfully.";
+        public static final String VIEW_METADATA_PROFILES_MSG = " View Metadata Profiles at /listMetadataProfiles";
+        public static final String LOAD_METADATA_PROFILE_FAILURE = "Failed to load saved metadata profile data: {}";
+        public static final String ADD_METADATA_PROFILE_TO_DB_WITH_VERSION = "Added Metadata Profile : {} into the DB with version: {}";
+        public static final String DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully.";
+        public static final String DELETE_METADATA_PROFILE_FROM_DB_SUCCESS_MSG = "Metadata profile deleted successfully from the DB.";
+
+        private MetadataProfileAPIMessages() {
+        }
+    }
+
     /**
      * Holds the constants of env vars and values to start Autotune in different Modes
      */

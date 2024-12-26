@@ -198,6 +198,23 @@ public class ExperimentDBService {
         }
     }
 
+    /**
+     * Loads All Metadata Profiles from database
+     *
+     * @param metadataProfileMap Metadata profile map to store the objects to be added
+     * @return ValidationOutputData object
+     */
+    public void loadAllMetadataProfiles(Map<String, MetadataProfile> metadataProfileMap) throws Exception {
+        List<KruizeLMMetadataProfileEntry> entries = experimentDAO.loadAllMetadataProfiles();
+        if (null != entries && !entries.isEmpty()) {
+            List<MetadataProfile> metadataProfiles = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileEntryToMetadataProfileObject(entries);
+            if (!metadataProfiles.isEmpty()) {
+                metadataProfiles.forEach(metadataProfile ->
+                        MetadataProfileUtil.addMetadataProfile(metadataProfileMap, metadataProfile));
+            }
+        }
+    }
+
     public boolean loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         KruizeObject kruizeObject = mainKruizeExperimentMap.get(experimentName);
@@ -385,6 +402,23 @@ public class ExperimentDBService {
             validationOutputData = this.experimentDAO.addMetricProfileToDB(kruizeMetricProfileEntry);
         } catch (Exception e) {
             LOGGER.error("Not able to save Metric Profile due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Adds Metadata Profile to kruizeLMMetadataProfileEntry
+     *
+     * @param metadataProfile Metadata profile object to be added
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData addMetadataProfileToDB(MetadataProfile metadataProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileObjToMetadataProfileDBObj(metadataProfile);
+            validationOutputData = this.experimentDAO.addMetadataProfileToDB(kruizeMetadataProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save Metadata Profile due to {}", e.getMessage());
         }
         return validationOutputData;
     }
