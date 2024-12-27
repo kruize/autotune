@@ -1,5 +1,6 @@
 package com.autotune.common.data.dataSourceMetadata;
 
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -9,6 +10,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Utility class for handling DataSourceMetadataInfo and related metadata.
@@ -445,5 +447,15 @@ public class DataSourceMetadataHelper {
         } catch (Exception e) {
             LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.CONTAINER_METADATA_UPDATE_ERROR + e.getMessage());
         }
+    }
+    public String getQueryFromProfile(MetadataProfile metadataProfile, String metricName) {
+        List<Metric> metrics = metadataProfile.getQueryVariables();
+        for (Metric metric : metrics) {
+            String name = metric.getName();
+            if (name.contains(metricName)) {
+                return metric.getAggregationFunctionsMap().get(KruizeConstants.JSONKeys.SUM).getQuery();
+            }
+        }
+        return null;
     }
 }

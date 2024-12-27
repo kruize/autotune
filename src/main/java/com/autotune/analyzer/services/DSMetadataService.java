@@ -118,6 +118,9 @@ public class DSMetadataService extends HttpServlet {
             if (validationOutputData.isSuccess()) {
 
                 String dataSourceName = metadataAPIObject.getDataSourceName();
+                String metadataProfileName = metadataAPIObject.getMetadataProfile();
+                String measurementDuration = metadataAPIObject.getMeasurementDurationMinutes();
+
                 // fetch the DatasourceInfo object based on datasource name
                 DataSourceInfo datasource;
                 try {
@@ -133,7 +136,8 @@ public class DSMetadataService extends HttpServlet {
                     return;
                 }
 
-                DataSourceMetadataInfo metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource,"",0,0,0, new HashMap<>(), new HashMap<>());
+                DataSourceMetadataInfo metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName,
+                        datasource,"",0, 0, 0, measurementDuration, new HashMap<>(), new HashMap<>());
 
                 // Validate imported metadataInfo object
                 DataSourceMetadataValidation validationObject = new DataSourceMetadataValidation();
@@ -195,9 +199,11 @@ public class DSMetadataService extends HttpServlet {
 
     }
 
+    //TODO - Add measurement_duration if required
     private List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.VERSION,
-            AnalyzerConstants.DATASOURCE_NAME
+            AnalyzerConstants.DATASOURCE_NAME,
+            AnalyzerConstants.METADATA_PROFILE
     ));
 
     public ValidationOutputData validateMandatoryFields(DSMetadataAPIObject metadataAPIObject) {
