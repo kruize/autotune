@@ -23,6 +23,10 @@ public class DSMetadataAPIObject {
     private String version;
     @SerializedName(KruizeConstants.JSONKeys.DATASOURCE_NAME)
     private String dataSourceName;
+    @SerializedName(KruizeConstants.JSONKeys.METADATA_PROFILE)
+    private String metadataProfileName;
+    @SerializedName(KruizeConstants.JSONKeys.MEASUREMENT_DURATION)
+    private String measurement_durationMinutes;
 
     public String getVersion() {
         return version;
@@ -36,4 +40,11 @@ public class DSMetadataAPIObject {
         return dataSourceName;
     }
 
+    public String getMetadataProfile() { return metadataProfileName; }
+
+    public void setMetadataProfile(String metadataProfileName) { this.metadataProfileName = metadataProfileName; }
+
+    public String getMeasurementDurationMinutes() { return measurement_durationMinutes; }
+
+    public void setMeasurementDurationMinutes(String measurement_durationMinutes) {this.measurement_durationMinutes = measurement_durationMinutes;}
 }

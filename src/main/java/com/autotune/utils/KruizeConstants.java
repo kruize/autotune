@@ -271,6 +271,7 @@ public class KruizeConstants {
         public static final String UUID = "UUID";
         public static final String DEVICE = "device";
         public static final String MODEL_NAME = "modelName";
+        public static final String METADATA_PROFILE = "metadataProfile";
 
         private JSONKeys() {
         }
