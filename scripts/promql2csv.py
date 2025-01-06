@@ -110,9 +110,7 @@ def get_metric_usage(container,pod,namespace,start_time, end_time, step):
 
 
 def run_prometheus_query(query, start_time, end_time):
-    cluster_type = "openshift"
     prometheus_url = None
-    server = "testkruize.lab.upshift.rdu2.redhat.com"
     TOKEN = 'TOKEN'
     if prometheus_url is None:
         if cluster_type == "openshift":
@@ -181,8 +179,8 @@ def gather_data(output_file, interval_minutes):
 
                     aligned_data = []
                     aligned_data.append({
-                            'interval_start': current_time.strftime('%Y-%m-%d %H:%M:%S.%f'),
-                            'interval_end': interval_end_time.strftime('%Y-%m-%d %H:%M:%S.%f'),
+                            'interval_start': current_time.strftime('%Y-%m-%dT%H:%M:%S.%f'),
+                            'interval_end': interval_end_time.strftime('%Y-%m-%dT%H:%M:%S.%f'),
                             'cluster_name': cluster_name,
                             'container_name': container_name,
                             'pod': pod_name,
@@ -239,6 +237,8 @@ def convert_step_to_minutes(step):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Kubernetes Metrics Collector")
+    parser.add_argument("--clustertype", type=str, default="openshift")
+    parser.add_argument("--server", type=str)
     parser.add_argument("--start", type=str, default=(datetime.now() - timedelta(days=15)).strftime("%Y-%m-%d %H:%M:%S"), help="Start time in YYYY-MM-DD HH:MM:%S format")
     parser.add_argument("--end", type=str, default=datetime.now().strftime("%Y-%m-%d %H:%M:%S"), help="End time in YYYY-MM-DD HH:MM:%S format")
     parser.add_argument("--step", type=str, default="15m")
@@ -247,7 +247,9 @@ if __name__ == "__main__":
     start_time = datetime.strptime(args.start, "%Y-%m-%d %H:%M:%S")
     end_time = datetime.strptime(args.end, "%Y-%m-%d %H:%M:%S")
     step = args.step
+    server = args.server
     cluster_name = "default"
+    cluster_type = args.clustertype
     interval_minutes = convert_step_to_minutes(step)
 
     gather_data(output_file="pod_metrics.csv", interval_minutes=interval_minutes)
