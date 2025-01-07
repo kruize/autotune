@@ -44,8 +44,8 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Push
         run: |
-          docker tag autotune_operator:pr_${{ env.PR_NUMBER }} kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
-          docker push kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
+          docker tag autotune_operator:pr_${{ env.PR_NUMBER }} quay.io/kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
+          docker push quay.io/kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
 
   deploy_crc:
     # The type of runner that the job will run on
