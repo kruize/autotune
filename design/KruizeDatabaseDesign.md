@@ -19,6 +19,8 @@ The Kruize Autotune project has the following entities:
 2. kruize_results
 3. kruize_recommendations
 4. kruize_performance_profiles
+5. kruize_jobs
+6. kruize_jobmetadata
 
 ## **kruize_experiments**
 
@@ -818,4 +820,44 @@ curl --location --request POST 'http://127.0.0.1:8080/createPerformanceProfile' 
 
 ```
 insert into kruize_performance_profiles; 
+```
+
+## **kruize_jobs**
+
+---
+
+This table stores job-level data, including information such as job status, start and end times, notification details, total and processed counts.
+```sql
+CREATE TABLE kruize_jobs (
+    job_id UUID NOT NULL,
+    end_time TIMESTAMP(6),
+    start_time TIMESTAMP(6),
+    notifications JSONB,
+    processed_count INTEGER,
+    status VARCHAR(255),
+    total_count INTEGER,
+    webhook VARCHAR(255),
+    PRIMARY KEY (job_id)
+);
+```
+
+## **kruize_jobmetadata**
+
+---
+This table stores metadata for individual experiments associated with a job. It uses hash-based partitioning on job_id for scalability and performance.
+```sql
+CREATE TABLE kruize_jobmetadata (
+    id BIGSERIAL NOT NULL,
+    experiment_name VARCHAR(255),
+    notification JSONB,
+    recommendation_notifications JSONB,
+    recommendation_status VARCHAR(255),
+    job_id UUID NOT NULL,
+    PRIMARY KEY (job_id, experiment_name)
+) PARTITION BY HASH (job_id);
+
+ALTER TABLE IF EXISTS kruize_jobmetadata
+    ADD CONSTRAINT bulkJobMetaDataConstraint
+    FOREIGN KEY (job_id) REFERENCES kruize_jobs;
+
 ```

@@ -42,6 +42,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
+import static com.autotune.operator.KruizeDeploymentInfo.cacheJobInMemory;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 
 /**
@@ -153,7 +154,8 @@ public class BulkService extends HttpServlet {
             // Generate a unique jobID
             String jobID = UUID.randomUUID().toString();
             BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now());
-            jobStatusMap.put(jobID, jobStatus);
+            if(cacheJobInMemory)
+                jobStatusMap.put(jobID, jobStatus);
             // Submit the job to be processed asynchronously
             executorService.submit(new BulkJobManager(jobID, jobStatus, payload));
 
