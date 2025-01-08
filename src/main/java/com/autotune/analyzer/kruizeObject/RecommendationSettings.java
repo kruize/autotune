@@ -17,6 +17,8 @@ package com.autotune.analyzer.kruizeObject;
 
 public class RecommendationSettings {
     private Double threshold;
+    private ModelSettings modelSettings;
+    private TermSettings termSettings;
 
     public Double getThreshold() {
         return threshold;
@@ -26,10 +28,28 @@ public class RecommendationSettings {
         this.threshold = threshold;
     }
 
+    public ModelSettings getModelSettings() {
+        return modelSettings;
+    }
+
+    public void setModelSettings(ModelSettings modelSettings) {
+        this.modelSettings = modelSettings;
+    }
+
+    public TermSettings getTermSettings() {
+        return termSettings;
+    }
+
+    public void setTermSettings(TermSettings termSettings) {
+        this.termSettings = termSettings;
+    }
+
     @Override
     public String toString() {
         return "RecommendationSettings{" +
                 "threshold=" + threshold +
+                ", modelSettings=" + modelSettings +
+                ", termSettings=" + termSettings +
                 '}';
     }
 }
