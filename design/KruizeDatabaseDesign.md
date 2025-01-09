@@ -20,7 +20,6 @@ The Kruize Autotune project has the following entities:
 3. kruize_recommendations
 4. kruize_performance_profiles
 5. kruize_jobs
-6. kruize_jobmetadata
 
 ## **kruize_experiments**
 
