@@ -3,13 +3,12 @@ package com.autotune.database.table.lm;
 import jakarta.persistence.*;
 
 import java.sql.Timestamp;
-import java.util.List;
 import java.util.UUID;
 
 
 @Entity
-@Table(name = "kruize_jobs")
-public class Jobs {
+@Table(name = "kruize_bulkjobs")
+public class BulkJob {
     @Id
     @Column(name = "job_id")
     private UUID jobId;
@@ -27,9 +26,8 @@ public class Jobs {
     @Column(columnDefinition = "jsonb")
     private String notifications; // Stored as JSON string
 
-    @OneToMany(mappedBy = "job", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-    @Column(name = "meta_data")
-    private List<JobMetaData> jobMetaData;
+    @Column(columnDefinition = "jsonb")
+    private String experiments; // JSONB field for experiments data
 
     // Getters and Setters
 }

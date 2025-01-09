@@ -822,17 +822,19 @@ curl --location --request POST 'http://127.0.0.1:8080/createPerformanceProfile' 
 insert into kruize_performance_profiles; 
 ```
 
-## **kruize_jobs**
+## **kruize_bulkjobs**
 
 ---
 
-This table stores job-level data, including information such as job status, start and end times, notification details, total and processed counts.
+This table stores job-level data, including information such as job status, start and end times, notification details, experiments details total and processed counts.
+
 ```sql
-CREATE TABLE kruize_jobs (
+CREATE TABLE kruize_bulkjobs (
     job_id UUID NOT NULL,
     end_time TIMESTAMP(6),
     start_time TIMESTAMP(6),
     notifications JSONB,
+    experiments JSONB,
     processed_count INTEGER,
     status VARCHAR(255),
     total_count INTEGER,
@@ -840,24 +842,55 @@ CREATE TABLE kruize_jobs (
     PRIMARY KEY (job_id)
 );
 ```
+Sample data
+```json
+{
+    "status": "COMPLETED",
+    "total_experiments": 686,
+    "processed_experiments": 686,
+    "notifications": null,
+    "experiments": {
+        "prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-28902795(job)|collect-profiles": {
+            "notification": null,
+            "recommendations": {
+                "status": "PROCESSED",
+                "notifications": null
+            }
+        },
+        "prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-28908435(job)|collect-profiles": {
+            "notification": null,
+            "recommendations": {
+                "status": "PROCESSED",
+                "notifications": null
+            }
+        },
+        "prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-28904820(job)|collect-profiles": {
+            "notification": null,
+            "recommendations": {
+                "status": "PROCESSED",
+                "notifications": null
+            }
+        }},
+    "webhook": null,
+    "job_id": "3d14daf3-0f27-4848-8f5e-d9e890c5730e",
+    "job_start_time": "2024-12-19T06:28:11.536Z",
+    "job_end_time": "2024-12-19T06:30:27.764Z"
+}
+```
+When handling an "experiments" column with a large JSON field being updated by multiple threads, the primary considerations are ensuring concurrency, minimizing contention, and optimizing performance. This can be achieved by:
 
-## **kruize_jobmetadata**
+Optimizing Updates:
+Partial Updates:
+    Update only the specific fields within the JSON, rather than replacing the entire document. The jsonb_set() function can be used for partial updates.
+Batch Updates: 
+    Group multiple updates into a single transaction to reduce overhead and minimize contention.
 
----
-This table stores metadata for individual experiments associated with a job. It uses hash-based partitioning on job_id for scalability and performance.
+Note: This approach is particularly relevant to PostgreSQL databases.
+
+**Example:**
+Let's say we want to update a part of the experiments field, for example, changing the value of the recommendations.status field of a specific experiment.
 ```sql
-CREATE TABLE kruize_jobmetadata (
-    id BIGSERIAL NOT NULL,
-    experiment_name VARCHAR(255),
-    notification JSONB,
-    recommendation_notifications JSONB,
-    recommendation_status VARCHAR(255),
-    job_id UUID NOT NULL,
-    PRIMARY KEY (job_id, experiment_name)
-) PARTITION BY HASH (job_id);
-
-ALTER TABLE IF EXISTS kruize_jobmetadata
-    ADD CONSTRAINT bulkJobMetaDataConstraint
-    FOREIGN KEY (job_id) REFERENCES kruize_jobs;
-
+UPDATE kruize_bulkjobs
+SET experiments = jsonb_set(experiments, '{prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-28902795(job)|collect-profiles,recommendations,status}', '"NEW_STATUS"')
+WHERE job_id = '3d14daf3-0f27-4848-8f5e-d9e890c5730e';
 ```
