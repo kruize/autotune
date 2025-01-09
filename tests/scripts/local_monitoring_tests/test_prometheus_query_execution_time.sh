@@ -94,166 +94,38 @@ individual_queries_by_pod=(
 )
 
 grouped_queries_by_owner_workload=(
-    [cpu_request_avg]='sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-     * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-     * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-    ))'
-    [cpu_request_sum]='avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-      * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-      * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-    ))'
-    [cpu_request_max]='max by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-      * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-      * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-    ))'
-    [cpu_request_min]='min by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-      * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-      * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-    ))'
-    [cpu_limits_avg]='avg by(container, namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-       * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-       * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-    ))'
-    [cpu_limits_sum]='sum by(container, namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-        * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-        * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-    ))'
-    [cpu_limits_max]='max by(container, namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-       * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-       * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-    ))'
-    [cpu_limits_min]='min by(container, namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-     * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-     * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-    ))'
-    [cpu_usage_avg]='avg_over_time(
-    avg by(namespace,container,workload,workload_type,owner_kind) (
-      (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"})
-     * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-     * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-    )[15m:])'
-    [cpu_usage_min]='min_over_time(
-      min by(namespace,container,workload,workload_type,owner_kind) (
-        (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"})
-       * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-       * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-     )[15m:] )'
-    [cpu_usage_max]='max_over_time(
-      max by(namespace,container,workload,workload_type,owner_kind) (
-        (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"})
-       * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-       * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-     )[15m:] )'
-    [cpu_usage_sum]='avg_over_time(
-      sum by(namespace,container,workload,workload_type,owner_kind) (
-        (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"})
-       * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-       * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-     )[15m:] )'
-    [cpu_throttle_avg]='avg_over_time(
-      avg by(namespace,container,workload,workload_type,owner_kind) (
-        (rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}[15m]) )
-       * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-       * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-     )[15m:] )'
-    [cpu_throttle_max]='max_over_time(
-      max by(namespace,container,workload,workload_type,owner_kind) (
-         (rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}[15m]) )
-         * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-         * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      )[15m:] )'
-    [cpu_throttle_min]='min_over_time(
-      min by(namespace,container,workload,workload_type,owner_kind) (
-        (rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}[15m]) )
-       * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-       * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-    )[15m:] )'
-    [cpu_throttle_sum]='avg_over_time(
-      sum by(namespace,container,workload,workload_type,owner_kind) (
-        (rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}[15m]) )
-       * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-       * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-    )[15m:] )'
-    [memory_request_avg]='avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-     * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-     * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-     ))'
-     [memory_request_sum]='sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-      * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-      * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      ))'
-     [memory_request_max]='max by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-      * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-      * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      ))'
-      [memory_request_min]='min by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-      * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-      * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      ))'
-     [memory_limits_avg]='avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-       * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-       * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-     ))'
-     [memory_limits_sum]='sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-      * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-      * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      ))'
-      [memory_limits_max]='max by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-         * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-         * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      ))'
-      [memory_limits_min]='min by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-         * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-         * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      ))'
-      [memory_usage_avg]='avg_over_time(
-        avg by(namespace,container,workload,workload_type,owner_kind) (
-          container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-         * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-         * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      )[15m:] )'
-      [memory_usage_min]='min_over_time(
-        min by(namespace,container,workload,workload_type,owner_kind) (
-          container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-         * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-         * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      )[15m:] )'
-      [memory_usage_max]='max_over_time(
-        max by(namespace,container,workload,workload_type,owner_kind) (
-          container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-         * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-         * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      )[15m:])'
-      [memory_usage_sum]='avg_over_time(
-         sum by(namespace,container,workload,workload_type,owner_kind) (
-           container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-           * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-           * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      )[15m:] )'
-      [memory_rss_avg]='avg_over_time(
-        avg by(namespace,container,workload,workload_type,owner_kind) (
-          container_memory_rss{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-         * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-         * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      )[15m:] )'
-      [memory_rss_min]='min_over_time(
-        min by(namespace,container,workload,workload_type,owner_kind) (
-          container_memory_rss{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-         * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-         * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      )[15m:] )'
-      [memory_rss_max]='max_over_time(
-        max by(namespace,container,workload,workload_type,owner_kind) (
-          container_memory_rss{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-          * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-          * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      )[15m:] )'
-      [memory_rss_sum]='avg_over_time(
-        sum by(namespace,container,workload,workload_type,owner_kind) (
-          container_memory_rss{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}
-         * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))
-         * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))
-      )[15m:] )'
+    [cpu_request_avg]='sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}* on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))* on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [cpu_request_sum]='avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}* on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))* on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [cpu_request_max]='max by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}* on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))* on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [cpu_request_min]='min by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}* on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))* on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [cpu_limits_avg]='avg by(container, namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}* on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))* on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [cpu_limits_sum]='sum by(container, namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}* on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))* on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [cpu_limits_max]='max by(container, namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"}* on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [cpu_limits_min]='min by(container, namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [cpu_usage_avg]='avg_over_time(avg by(namespace,container,workload,workload_type,owner_kind) ((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
+    [cpu_usage_min]='min_over_time(min by(namespace,container,workload,workload_type,owner_kind) ((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
+    [cpu_usage_max]='max_over_time(max by(namespace,container,workload,workload_type,owner_kind) ((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:] )'
+    [cpu_usage_sum]='avg_over_time(sum by(namespace,container,workload,workload_type,owner_kind) ((node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:] )'
+    [cpu_throttle_avg]='avg_over_time(avg by(namespace,container,workload,workload_type,owner_kind) ((rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}[15m]) ) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:] )'
+    [cpu_throttle_max]='max_over_time(max by(namespace,container,workload,workload_type,owner_kind) ((rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}[15m])) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))* on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
+    [cpu_throttle_min]='min_over_time(min by(namespace,container,workload,workload_type,owner_kind) ((rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}[15m]) ) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
+    [cpu_throttle_sum]='avg_over_time(sum by(namespace,container,workload,workload_type,owner_kind) ((rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"}[15m])) * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:] )'
+    [memory_request_avg]='avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"}* on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [memory_request_sum]='sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [memory_request_max]='max by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m]))* on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [memory_request_min]='min by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [memory_limits_avg]='avg by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [memory_limits_sum]='sum by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [memory_limits_max]='max by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [memory_limits_min]='min by(container,namespace,workload,workload_type,owner_kind) ((kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m]))))'
+    [memory_usage_avg]='avg_over_time(avg by(namespace,container,workload,workload_type,owner_kind) (container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
+    [memory_usage_min]='min_over_time(min by(namespace,container,workload,workload_type,owner_kind) (container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
+    [memory_usage_max]='max_over_time(max by(namespace,container,workload,workload_type,owner_kind) (container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
+    [memory_usage_sum]='avg_over_time(sum by(namespace,container,workload,workload_type,owner_kind) (container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
+    [memory_rss_avg]='avg_over_time(avg by(namespace,container,workload,workload_type,owner_kind) (container_memory_rss{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
+    [memory_rss_min]='min_over_time(min by(namespace,container,workload,workload_type,owner_kind) (container_memory_rss{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
+    [memory_rss_max]='max_over_time(max by(namespace,container,workload,workload_type,owner_kind) (container_memory_rss{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
+    [memory_rss_sum]='avg_over_time(sum by(namespace,container,workload,workload_type,owner_kind) (container_memory_rss{container!="", container!="POD", pod!="", namespace="$NAMESPACE",container="$CONTAINER_NAME"} * on(pod) group_left(workload, workload_type) max by (pod, workload, workload_type) (max_over_time(namespace_workload_pod:kube_pod_owner:relabel{pod!=""}[15m])) * on(pod) group_left(owner_kind) max by (pod, owner_kind) (max_over_time(kube_pod_owner{pod!=""}[15m])))[15m:])'
 )
 
 metadata_queries=(
@@ -342,7 +214,8 @@ measure_query_time() {
             --data-urlencode "end=${end_timestamp}" \
             --data-urlencode "step=900" \
             "${PROMETHEUS_URL}/api/v1/query_range")
-    echo "$query" >> "${RESPONSE_LOG_FILE}"
+
+    echo "Query: $query" >> "${RESPONSE_LOG_FILE}"
     echo "$response" >> "$RESPONSE_LOG_FILE"
 
     end_time=$(date +%s.%N)
@@ -496,6 +369,13 @@ if [ ${ALL_QUERIES} -eq 1 ]; then
 
           for key in "${!current_queries[@]}"; do
             if [[ $query_name == "grouped_queriesByDuration" ]]; then
+              # Calculate the difference in seconds
+              TIME_DIFF=$((END_TIME - START_TIME))
+
+              # Convert the difference from seconds to days
+              DIFF_IN_DAYS=$((TIME_DIFF / 86400))
+              echo "Dividing the ${DIFF_IN_DAYS} days time range into ${DURATION_PARTITIONS} partitions, each with ${DURATION_IN_DAYS} days duration"
+
               run_query_across_duration_windows "${current_queries[$key]}" "$NAMESPACE" "$CONTAINER" "$START_TIME" "$END_TIME" "$key" "$DURATION_IN_DAYS" "$DURATION_PARTITIONS"
             else
               measure_query_time "${current_queries[$key]}" "$NAMESPACE" "$CONTAINER" "$START_TIME" "$END_TIME" "$key"
@@ -524,6 +404,11 @@ else
 
   declare -n query_set=$queries
   if [[ "$QUERY_SET" == "grouped_queriesByDuration" ]]; then
+      TIME_DIFF=$((END_TIME - START_TIME))
+
+      # Convert the difference from seconds to days
+      DIFF_IN_DAYS=$((TIME_DIFF / 86400))
+      echo "Dividing the ${DIFF_IN_DAYS} days time range into ${DURATION_PARTITIONS} partitions, each with ${DURATION_IN_DAYS} days duration"
       for key in "${!query_set[@]}"; do
               run_query_across_duration_windows "${query_set[$key]}" "$NAMESPACE" "$CONTAINER" "$START_TIME" "$END_TIME" "$key" "$DURATION_IN_DAYS" "$DURATION_PARTITIONS"
       done
