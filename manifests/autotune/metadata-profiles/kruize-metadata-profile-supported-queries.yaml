@@ -4,6 +4,7 @@ metadata:
   name: "cluster-metadata-local-monitoring"
 profile_version: 1.0
 k8s_type: openshift
+datasource: prometheus
 query_variables:
 
 # list of namespaces across cluster

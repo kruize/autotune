@@ -38,6 +38,9 @@ spec:
             k8s_type:
               description: 'minikube or openshift'
               type: string
+            datasource:
+              description: 'datasource to import metadata from for eg. Prometheus, Thanos, Datadog etc'
+              type: string
             query_variables:
               description: 'Query variables to be used'
               type: array

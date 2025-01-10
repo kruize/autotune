@@ -6,6 +6,7 @@
   },
   "profile_version": 1,
   "k8s_type": "openshift",
+  "datasource": "prometheus",
   "query_variables": [
     {
       "name": "namespacesAcrossCluster",

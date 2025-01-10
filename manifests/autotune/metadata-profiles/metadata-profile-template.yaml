@@ -15,6 +15,11 @@ profile_version: 1.0
 # Eg. manifests/configmaps/openshift-config.yaml
 k8s_type: openshift
 
+# Name of the datasource to import the metadata from
+# By default Prometheus datasource is connected to Kruize during initialization
+# MANDATORY
+datasource: prometheus
+
 # Describe the query variables to be used
 # MANDATORY
 query_variables:
@@ -23,7 +28,6 @@ query_variables:
 # MANDATORY
 - name: namespacesAcrossCluster
   # datasource of the query
-  # MANDATORY
   datasource: prometheus
   # value_type. Supported are "double" or "integer".
   # MANDATORY
