@@ -47,12 +47,12 @@ public class MetadataProfileValidation {
             AnalyzerConstants.API_VERSION,
             AnalyzerConstants.KIND,
             AnalyzerConstants.AutotuneObjectConstants.METADATA,
+            AnalyzerConstants.AutotuneObjectConstants.DATASOURCE,
             AnalyzerConstants.MetadataProfileConstants.QUERY_VARIABLES
     ));
 
     private final List<String> mandatoryQueryVariables = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.AutotuneObjectConstants.NAME,
-            AnalyzerConstants.AutotuneObjectConstants.DATASOURCE,
             AnalyzerConstants.MetadataProfileConstants.VALUE_TYPE
     ));
 
