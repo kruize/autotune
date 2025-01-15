@@ -6,7 +6,7 @@
 
     <groupId>org.autotune</groupId>
     <artifactId>autotune</artifactId>
-    <version>0.2</version>
+    <version>0.3</version>
     <properties>
         <fabric8-version>7.0.0</fabric8-version>
         <org-json-version>20240303</org-json-version>
