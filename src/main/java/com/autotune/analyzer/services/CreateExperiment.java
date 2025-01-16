@@ -181,7 +181,6 @@ public class CreateExperiment extends HttpServlet {
             } else {
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                     try {
-                        LOGGER.info("Hello: " + ko.getTargetCluster());
                         if (is_ros_enabled && AnalyzerConstants.REMOTE.equalsIgnoreCase(ko.getTargetCluster())) {
                             new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
                         } else {
