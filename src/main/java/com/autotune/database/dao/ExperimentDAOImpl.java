@@ -623,10 +623,10 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
-     * Delete an experiment with the name experimentName
+     * Delete an experiment with the name experimentName for local monitoring use case
      * This deletes the experiment from all three tables
-     * kruize_experiments, kruize_results and kruize_recommendations
-     * Delete from kruize_results and kruize_recommendations only if the delete from kruize_experiments succeeds.
+     * kruize_lm_experiments, kruize_results and kruize_lm_recommendations
+     * Delete from kruize_results and kruize_lm_recommendations only if the delete from kruize_lm_experiments succeeds.
      *
      * @param experimentName
      * @return
