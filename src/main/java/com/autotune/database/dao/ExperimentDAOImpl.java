@@ -632,6 +632,55 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * @return
      */
     @Override
+    public ValidationOutputData deleteKruizeLMExperimentEntryByName(String experimentName) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(DELETE_FROM_LM_EXPERIMENTS_BY_EXP_NAME, null);
+                query.setParameter("experimentName", experimentName);
+                int deletedCount = query.executeUpdate();
+                if (deletedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage("KruizeExperimentEntry not found with experiment name: " + experimentName);
+                } else {
+                    // Remove the experiment from the Results table
+                    Query kruizeResultsEntryquery = session.createQuery(DELETE_FROM_RESULTS_BY_EXP_NAME, null);
+                    kruizeResultsEntryquery.setParameter("experimentName", experimentName);
+                    kruizeResultsEntryquery.executeUpdate();
+
+                    // Remove the experiment from the Recommendations table
+                    Query kruizeRecommendationEntryquery = session.createQuery(DELETE_FROM_LM_RECOMMENDATIONS_BY_EXP_NAME, null);
+                    kruizeRecommendationEntryquery.setParameter("experimentName", experimentName);
+                    kruizeRecommendationEntryquery.executeUpdate();
+                    validationOutputData.setSuccess(true);
+                }
+                tx.commit();
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to delete experiment {} due to {}", experimentName, e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to delete experiment {} due to {}", experimentName, e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Delete an experiment with the name experimentName
+     * This deletes the experiment from all three tables
+     * kruize_experiments, kruize_results and kruize_recommendations
+     * Delete from kruize_results and kruize_recommendations only if the delete from kruize_experiments succeeds.
+     *
+     * @param experimentName
+     * @return
+     */
+    @Override
     public ValidationOutputData deleteKruizeExperimentEntryByName(String experimentName) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         Transaction tx = null;

@@ -53,6 +53,7 @@ import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.operator.KruizeDeploymentInfo.is_ros_enabled;
 
 /**
  * REST API to create experiments to Analyser for monitoring metrics.
@@ -180,7 +181,12 @@ public class CreateExperiment extends HttpServlet {
             } else {
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                     try {
-                        new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                        LOGGER.info("Hello: " + ko.getTargetCluster());
+                        if (is_ros_enabled && AnalyzerConstants.REMOTE.equalsIgnoreCase(ko.getTargetCluster())) {
+                            new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                        } else {
+                            new ExperimentDBService().loadLMExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                        }
                     } catch (Exception e) {
                         LOGGER.error("Loading saved experiment {} failed: {} ", ko.getExperimentName(), e.getMessage());
                     }
@@ -189,7 +195,12 @@ public class CreateExperiment extends HttpServlet {
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                     String expName = ko.getExperimentName();
                     if (!mKruizeExperimentMap.isEmpty() && mKruizeExperimentMap.containsKey(expName)) {
-                        ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
+                        ValidationOutputData validationOutputData = null;
+                        if (is_ros_enabled && AnalyzerConstants.REMOTE.equalsIgnoreCase(ko.getTargetCluster())) {
+                            validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
+                        } else {
+                            validationOutputData = new ExperimentDAOImpl().deleteKruizeLMExperimentEntryByName(expName);
+                        }
                         if (validationOutputData.isSuccess()) {
                             mKruizeExperimentMap.remove(ko.getExperimentName());
                         } else {

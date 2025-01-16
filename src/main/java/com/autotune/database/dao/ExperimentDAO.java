@@ -45,6 +45,9 @@ public interface ExperimentDAO {
     // Delete experiment
     public ValidationOutputData deleteKruizeExperimentEntryByName(String experimentName);
 
+    // Delete LM experiment
+    public ValidationOutputData deleteKruizeLMExperimentEntryByName(String experimentName);
+
     // If Kruize object restarts load all experiment which are in inprogress
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception;
 
