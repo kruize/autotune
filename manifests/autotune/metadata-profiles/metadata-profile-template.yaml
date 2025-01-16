@@ -49,7 +49,7 @@ query_variables:
     - function: sum
       # query
       # MANDATORY
-      query: 'sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=""}[$MEASUREMENT_DURATION_IN_MIN$d]))'
+      query: 'sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=""}[$MEASUREMENT_DURATION_IN_HOUR$h]))'
 
       # Any specific versions that this query is tied to
       # OPTIONAL
@@ -63,4 +63,4 @@ query_variables:
   # sum of the pod ownership metrics, grouped by namespace, workload, and workload_type, filtering out empty workloads.
   aggregation_functions:
     - function: sum
-      query: 'sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=""}[$MEASUREMENT_DURATION_IN_MIN$d]))'
+      query: 'sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=""}[$MEASUREMENT_DURATION_IN_HOUR$h]))'
