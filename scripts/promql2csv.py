@@ -39,7 +39,7 @@ def get_pod_info(start_time, end_time):
 
 def get_pod_owners(container,pod,namespace):
     owners_query = f"""
-    (max_over_time(kube_pod_container_info{{container='{container}', container!='POD'}}[{step}])) * on(pod, namespace) group_left(owner_kind, owner_name) max by(pod, namespace, owner_kind, owner_name) (max_over_time(kube_pod_owner{{container='{container}', container!='POD', pod='{pod}', namespace='{namespace}'}}[{step}]))
+    (max_over_time(kube_pod_container_info{{container='{container}', container!='POD'}}[{step}])) * on(pod, namespace) group_left(owner_kind, owner_name) max by(pod, namespace, owner_kind, owner_name) (max_over_time(kube_pod_owner{{pod='{pod}', namespace='{namespace}'}}[{step}]))
     """
     result = run_prometheus_query(owners_query, start_time, end_time)
 
