@@ -137,13 +137,10 @@ def run_prometheus_query(query, start_time, end_time):
 
 # Function to run the queries and gather data
 def gather_data(output_file, interval_minutes):
-    current_time = start_time
-    #datetime.now()
-    #end_time = current_time + timedelta(hours=1) #days=total_duration_days)
+    current_time = end_time
 
     # Open a CSV file to append data
     with open(output_file, 'w', newline='') as csvfile, open("promql2csv.log", 'w') as log_file:
-#  with open(output_file, 'w', newline='') as csvfile:
         fieldnames = [
             "interval_start", "interval_end", "cluster_name", "container_name","pod", "owner_name", "owner_kind", "workload", "workload_type", "namespace", "image_name", "node", "cpu_request_container_avg", "cpu_request_container_sum", "cpu_limit_container_avg", "cpu_limit_container_sum", "cpu_usage_container_avg", "cpu_usage_container_min", "cpu_usage_container_max", "cpu_usage_container_sum", "cpu_throttle_container_avg", "cpu_throttle_container_max", "cpu_throttle_container_sum", "cpu_throttle_container_min", "memory_request_container_avg", "memory_request_container_sum", "memory_limit_container_avg", "memory_limit_container_sum", "memory_usage_container_avg", "memory_usage_container_min", "memory_usage_container_max", "memory_usage_container_sum", "memory_rss_usage_container_avg", "memory_rss_usage_container_min", "memory_rss_usage_container_max", "memory_rss_usage_container_sum"
         ]
@@ -151,15 +148,15 @@ def gather_data(output_file, interval_minutes):
         writer.writeheader()
         log_file.write("Collecting the metrics for...\n")
 
-        while current_time < end_time:
+        while current_time >= start_time:
             try:
-                print(f"Querying data from {current_time} to {current_time + timedelta(minutes=interval_minutes)}")
+                print(f"Querying data from {current_time - timedelta(minutes=interval_minutes)} to {current_time}")
 
-                for pod_info in get_pod_info(current_time, current_time + timedelta(minutes=interval_minutes)):
+                for pod_info in get_pod_info(current_time - timedelta(minutes=interval_minutes), current_time):
                     log_file.write(f"Timestamp: {current_time}, Pod: {pod_info['pod']} , Namespace: {pod_info['namespace']} , Container: {pod_info['container']}\n")
                     log_file.flush()
 
-                    interval_end_time = current_time + timedelta(minutes=interval_minutes)
+                    interval_start_time = current_time - timedelta(minutes=interval_minutes)
                     pod_name = pod_info['pod']
                     container_name = pod_info['container']
                     namespace = pod_info['namespace']
@@ -175,12 +172,12 @@ def gather_data(output_file, interval_minutes):
                     workload_type = workloads.get('workload_type', '')
                     workload = workloads.get('workload', '')
 
-                    metrics_data = get_metric_usage(container_name, pod_name, namespace, current_time, current_time + timedelta(minutes=interval_minutes), step)
+                    metrics_data = get_metric_usage(container_name, pod_name, namespace, current_time - timedelta(minutes=interval_minutes), current_time, step)
 
                     aligned_data = []
                     aligned_data.append({
-                            'interval_start': current_time.strftime('%Y-%m-%dT%H:%M:%S.%f'),
-                            'interval_end': interval_end_time.strftime('%Y-%m-%dT%H:%M:%S.%f'),
+                            'interval_start': interval_start_time.strftime('%Y-%m-%dT%H:%M:%S.%f'),
+                            'interval_end': current_time.strftime('%Y-%m-%dT%H:%M:%S.%f'),
                             'cluster_name': cluster_name,
                             'container_name': container_name,
                             'pod': pod_name,
@@ -219,7 +216,7 @@ def gather_data(output_file, interval_minutes):
             except Exception as e:
                 print(f"Error during processing: {e}")
 
-            current_time += timedelta(minutes=interval_minutes)
+            current_time -= timedelta(minutes=interval_minutes)
 
 def convert_step_to_minutes(step):
     unit = step[-1]
