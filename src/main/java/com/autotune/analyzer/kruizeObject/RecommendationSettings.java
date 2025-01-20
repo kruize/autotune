@@ -15,11 +15,34 @@
  *******************************************************************************/
 package com.autotune.analyzer.kruizeObject;
 
+import com.autotune.utils.KruizeConstants;
+
+import java.util.HashMap;
+
 public class RecommendationSettings {
     private Double threshold;
 
+    /**
+     * A map to store the custom minimum duration (in minutes) provided by user for recommendation terms
+     * The keys represent the recommendation terms (e.g., "short_term"), and the values are the corresponding minimum durations in minutes.
+     */
+    private HashMap<String, Double> minDurationInMins;
+
     public Double getThreshold() {
         return threshold;
+    }
+
+    public HashMap<String, Double> getMinDurationInMins() {
+        return minDurationInMins;
+    }
+
+    public void setMinDurationInMins(HashMap<String, Double> minDurationInMins) {
+        this.minDurationInMins = minDurationInMins;
+    }
+
+    // converts minimum duration required for terms in minutes to days
+    public double getThresholdForTerm(String term) {
+        return minDurationInMins.get(term) / (KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR);
     }
 
     public void setThreshold(Double threshold) {
