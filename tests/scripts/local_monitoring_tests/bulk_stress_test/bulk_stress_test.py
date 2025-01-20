@@ -40,24 +40,77 @@ def setup_logger(name, log_file, level=logging.INFO):
 
     return logger
 
-def invoke_bulk(worker_number, delay):
-    try:
-        if test == "time_range_rampup" or test == "no_config_rampup":
-            time.sleep(delay)
+def fetch_recommendations(job_status_json):
+    logger.info("Fetching processed experiments...")
+    exp_list = list(job_status_json["experiments"].keys())
 
+    logger.info("List of processed experiments")
+    logger.info("**************************************************")
+    logger.info(exp_list)
+    logger.info("**************************************************")
+
+    # List recommendations for the experiments for which recommendations are available
+    recommendations_json_arr = []
+
+    if exp_list:
+        list_reco_failures = 0
+        for exp_name in exp_list:
+            logger.info(f"Fetching recommendations for {exp_name}...")
+            list_reco_response = list_recommendations(exp_name)
+            if list_reco_response.status_code != 200:
+                list_reco_failures = list_reco_failures + 1
+                logger.info(f"List recommendations failed for the experiment - {exp_name}!")
+                reco = list_reco_response.json()
+                logger.info(reco)
+                continue
+            else:
+                logger.info(f"Fetched recommendations for {exp_name} - Done")
+
+            reco = list_reco_response.json()
+            recommendations_json_arr.append(reco)
+
+            # Dump the recommendations into a json file
+            reco_dir = results_dir + "/recommendation_jsons"
+            os.makedirs(reco_dir, exist_ok=True)
+            reco_file = reco_dir + "/recommendations" + str(worker_number) + ".json"
+            with open(reco_file, 'w') as f:
+                json.dump(recommendations_json_arr, f, indent=4)
+
+        if list_reco_failures != 0:
+            logger.info(
+                f"List recommendations failed for some of the experiments, check the log {log_file} for details!")
+            return -1
+        else:
+            return 0
+    else:
+        logger.error("Something went wrong! There are no experiments with recommendations!")
+        return -1
+
+def invoke_bulk(worker_number, start_time=None, end_time=None):
+    try:
         stress_log_dir = results_dir + "/stress_logs"
         os.makedirs(stress_log_dir, exist_ok=True)
 
         log_file = f"{stress_log_dir}/worker_{worker_number}.log"
         logger = setup_logger(f"logger_{worker_number}", log_file)
 
-        if test == "time_range" or test == "time_range_rampup":
+        # Update the bulk json with start & end time
+        logger.info(f"worker number = {worker_number}")
+        logger.info(f"start time = {start_time}")
+        logger.info(f"end time = {end_time}")
+
+        if test == "time_range" or test == "time_range_split":
             bulk_json_file = "../json_files/bulk_input_timerange.json"
-        elif test == "no_config" or test == "no_config_rampup":
+            json_file = open(bulk_json_file, "r")
+            bulk_json = json.loads(json_file.read())
+
+            bulk_json['time_range']['start'] = start_time
+            bulk_json['time_range']['end'] = end_time
+        elif test == "no_config":
             bulk_json_file = "../json_files/bulk_input.json"
 
-        json_file = open(bulk_json_file, "r")
-        bulk_json = json.loads(json_file.read())
+            json_file = open(bulk_json_file, "r")
+            bulk_json = json.loads(json_file.read())
 
         if prometheus == 1:
             logger.info("Datasource - prometheus-1")
@@ -84,7 +137,7 @@ def invoke_bulk(worker_number, delay):
         job_status = job_status_json['status']
 
         while job_status != "COMPLETED":
-                bulk_job_response = get_bulk_job_status(job_id, verbose)
+                bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
                 job_status_json = bulk_job_response.json()
                 job_status = job_status_json['status']
                 if job_status == "FAILED":
@@ -105,50 +158,8 @@ def invoke_bulk(worker_number, delay):
 
        # Fetch the list of experiments for which recommendations are available
         if job_status != "FAILED":
-            logger.info("Fetching processed experiments...")
-            exp_list = list(job_status_json["experiments"].keys())
-
-            logger.info("List of processed experiments")
-            logger.info("**************************************************")
-            logger.info(exp_list)
-            logger.info("**************************************************")
-
-            # List recommendations for the experiments for which recommendations are available
-            recommendations_json_arr = []
-
-            if exp_list:
-                list_reco_failures = 0
-                for exp_name in exp_list:
-
-                    logger.info(f"Fetching recommendations for {exp_name}...")
-                    list_reco_response = list_recommendations(exp_name)
-                    if list_reco_response.status_code != 200:
-                        list_reco_failures = list_reco_failures + 1
-                        logger.info(f"List recommendations failed for the experiment - {exp_name}!")
-                        reco = list_reco_response.json()
-                        logger.info(reco)
-                        continue
-                    else:
-                        logger.info(f"Fetched recommendations for {exp_name} - Done")
-
-                    reco = list_reco_response.json()
-                    recommendations_json_arr.append(reco)
-
-                # Dump the recommendations into a json file
-                reco_dir = results_dir + "/recommendation_jsons"
-                os.makedirs(reco_dir, exist_ok=True)
-                reco_file = reco_dir + "/recommendations" + str(worker_number) + ".json"
-                with open(reco_file, 'w') as f:
-                    json.dump(recommendations_json_arr, f, indent=4)
-
-                if list_reco_failures != 0:
-                    logger.info(f"List recommendations failed for some of the experiments, check the log {log_file} for details!")
-                    return -1
-                else:
-                    return 0
-            else:
-                logger.error("Something went wrong! There are no experiments with recommendations!")
-                return -1
+            status = fetch_recommendations(job_status_json)
+            return status
         else:
             logger.info(f"Check {job_file} for job status")
             return -1
@@ -156,10 +167,8 @@ def invoke_bulk(worker_number, delay):
         return {'error': str(e)}
 
 
-def invoke_bulk_with_time_range(worker_number, start_time, end_time, delay):
+def invoke_bulk_with_time_range(worker_number, start_time, end_time):
     try:
-        #time.sleep(delay)
-
         stress_log_dir = results_dir + "/stress_logs"
         os.makedirs(stress_log_dir, exist_ok=True)
 
@@ -202,9 +211,8 @@ def invoke_bulk_with_time_range(worker_number, start_time, end_time, delay):
 
         # Loop until job status is COMPLETED
         job_status = job_status_json['status']
-        print(job_status)
         while job_status != "COMPLETED":
-                bulk_job_response = get_bulk_job_status(job_id, verbose)
+                bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
                 job_status_json = bulk_job_response.json()
                 job_status = job_status_json['status']
                 if job_status == "FAILED":
@@ -225,51 +233,8 @@ def invoke_bulk_with_time_range(worker_number, start_time, end_time, delay):
 
         # Fetch the list of experiments for which recommendations are available
         if job_status != "FAILED":
-            logger.info("Fetching processed experiments...")
-            exp_list = list(job_status_json["experiments"].keys())
-
-            logger.info("List of processed experiments")
-            logger.info("**************************************************")
-            logger.info(exp_list)
-            logger.info("**************************************************")
-
-            # List recommendations for the experiments for which recommendations are available
-            recommendations_json_arr = []
-
-            if exp_list:
-                list_reco_failures = 0
-                for exp_name in exp_list:
-
-                    logger.info(f"Fetching recommendations for {exp_name}...")
-                    list_reco_response = list_recommendations(exp_name)
-                    if list_reco_response.status_code != 200:
-                        list_reco_failures = list_reco_failures + 1
-                        logger.info(f"List recommendations failed for the experiment - {exp_name}!")
-                        reco = list_reco_response.json()
-                        logger.info(reco)
-                        continue
-                    else:
-                        logger.info(f"Fetched recommendations for {exp_name} - Done")
-
-                    reco = list_reco_response.json()
-                    recommendations_json_arr.append(reco)
-
-                # Dump the recommendations into a json file
-                reco_dir = results_dir + "/recommendation_jsons"
-                os.makedirs(reco_dir, exist_ok=True)
-                reco_file = reco_dir + "/recommendations" + str(worker_number) + ".json"
-                with open(reco_file, 'w') as f:
-                    json.dump(recommendations_json_arr, f, indent=4)
-
-                if list_reco_failures != 0:
-                    logger.info(
-                        f"List recommendations failed for some of the experiments, check the log {log_file} for details!")
-                    return -1
-                else:
-                    return 0
-            else:
-                logger.error("Something went wrong! There are no experiments with recommendations!")
-                return -1
+            status = fetch_recommendations(job_status_json)
+            return status
         else:
             logger.info(f"Check {job_file} for job status")
             return -1
@@ -278,10 +243,16 @@ def invoke_bulk_with_time_range(worker_number, start_time, end_time, delay):
 
 def parallel_requests_to_bulk():
     results = []
+
+    current_start_time = datetime.strptime(initial_end_time, '%Y-%m-%dT%H:%M:%S.%fZ') - timedelta(hours=interval_hours)
+    current_end_time = datetime.strptime(initial_end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
+
+    current_start_time = current_start_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+    current_end_time = current_end_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all the tasks to the executor
         futures = [
-            executor.submit(invoke_bulk, worker_number, delay=worker_number * rampup_interval_seconds)
+            executor.submit(invoke_bulk, worker_number, current_start_time, current_end_time) if test == "time_range" else executor.submit(invoke, worker_number)
             for worker_number in range(1, max_workers+1)
         ]
         
@@ -292,7 +263,6 @@ def parallel_requests_to_bulk():
                 results.append(result)
             except Exception as e:
                 results.append({'error': str(e)})
-    
     return results
 
 def parallel_requests_with_time_range_split(max_workers):
@@ -320,7 +290,7 @@ def parallel_requests_with_time_range_split(max_workers):
                 current_start_time = current_start_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
                 current_end_time = current_end_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
-                executor.submit(invoke_bulk_with_time_range, worker_number, current_start_time, current_end_time, delay=worker_number * rampup_interval_seconds)
+                executor.submit(invoke_bulk, worker_number, current_start_time, current_end_time)
 
                 current_end_time = current_start_time
 
@@ -342,7 +312,6 @@ if __name__ == '__main__':
     initial_end_time = ""
     interval_hours = 6
     test = ""
-    rampup_interval_seconds = 2
     prometheus = 0
 
     parser = argparse.ArgumentParser()
@@ -403,9 +372,6 @@ if __name__ == '__main__':
     start_time = time.time()
 
     if test == "time_range" or test == "no_config":
-        rampup_interval_seconds = 0
-
-    if test == "time_range" or test == "no_config" or test == "time_range_rampup" or test == "no_config_rampup":
         responses = parallel_requests_to_bulk()
 
     if test == "time_range_split":

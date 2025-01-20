@@ -44,7 +44,7 @@ KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-w No. of workers (default - 5)] [-t interval hours (default - 2)] [-s Initial start date (default - 2024-12-18T06:20:00.000Z)]"
+	echo "Usage: [-i Kruize image] [-w No. of workers (default - 5)] [-t interval hours (default - 2)] [-s End date of tsdb block (default - 2024-12-18T06:20:00.000Z)]"
 	echo "[-a kruize replicas (default - 3)][-r <resultsdir path>] [--skipsetup skip kruize setup] [ -z to test with prometheus datasource]"
 	echo "[--test Specify the test to be run (default - time_range)] [--url Datasource url (default - ${ds_url}]"
 	exit 1
