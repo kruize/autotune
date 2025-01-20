@@ -14,6 +14,9 @@ PROMETHEUS_URL="https://${PROMETHEUS_ROUTE}"
 echo $PROMETHEUS_URL
 
 export TOKEN=$(oc whoami --show-token)
+export STEP=900
+#15d=1296000s
+export STEP_15DAYS=1296000
 
 declare -A default_queries
 declare -A individual_queries_by_pod
@@ -129,13 +132,13 @@ grouped_queries_by_owner_workload=(
 )
 
 metadata_queries=(
-  [namespaces_across_cluster]='sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=""}[15m]))'
-  [workloads_across_cluster]='sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=""}[15m]))'
-  [containers_across_cluster]='sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=""}[15m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=""}[15m]))'
+  [namespaces_across_cluster]='sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=""}[15d]))'
+  [workloads_across_cluster]='sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=""}[15d]))'
+  [containers_across_cluster]='sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=""}[15d]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=""}[15d]))'
 )
 
 declare -n grouped_queriesByDuration="grouped_queries_by_owner_workload"
-queries_collection=( default_queries individual_queries_by_pod grouped_queries_by_owner_workload metadata_queries grouped_queriesByDuration )
+queries_collection=( default_queries individual_queries_by_pod grouped_queries_by_owner_workload grouped_queriesByDuration metadata_queries )
 
 # Function to return the correct query set as an array reference
 get_queries() {
@@ -206,13 +209,20 @@ measure_query_time() {
     query=${query//\$NAMESPACE/$namespace}
     query=${query//\$CONTAINER_NAME/$container}
 
+    local step
+    if echo "$query" | grep -q "15d"; then
+      step=${STEP_15DAYS}
+    else
+      step=${STEP}
+    fi
+
     start_time=$(date +%s.%N)
 
     response=$(curl -G -kH "Authorization: Bearer ${TOKEN}" \
             --data-urlencode "query=${query}" \
             --data-urlencode "start=${start_timestamp}" \
             --data-urlencode "end=${end_timestamp}" \
-            --data-urlencode "step=900" \
+            --data-urlencode "step=${step}" \
             "${PROMETHEUS_URL}/api/v1/query_range")
 
     echo "Query: $query" >> "${RESPONSE_LOG_FILE}"
@@ -272,11 +282,107 @@ fetch_namespace_and_container(){
 
 # Function to capture resource metrics (CPU and memory) of Prometheus pods
 capture_prometheus_resource_metrics() {
-    echo -e "\n===== Prometheus Pod Resource Metrics (CPU & Memory) =====" >> "$RESPONSE_LOG_FILE"
+    local response_log_file=$1
+    echo -e "\n===== Prometheus Pod Resource Metrics (CPU & Memory) =====" >> "$response_log_file"
     # Get resource usage for Prometheus pods in the given namespace
-    kubectl top pod -n "$PROMETHEUS_NAMESPACE" | grep "prometheus" >> "$RESPONSE_LOG_FILE"
-    echo -e "=========================================================\n" >> "$RESPONSE_LOG_FILE"
+    kubectl top pod -n "$PROMETHEUS_NAMESPACE" | grep "prometheus" >> "$response_log_file"
+    echo -e "=========================================================\n" >> "$response_log_file"
 }
+
+# Declare associative arrays for summing total time for each query type
+declare -A total_time_default_sum
+declare -A total_time_individual_sum
+declare -A total_time_grouped_sum
+declare -A total_time_grouped_duration_sum
+
+# Declare arrays for tracking start_time and end_time
+declare -A start_time_sum
+declare -A end_time_sum
+
+sum_float() {
+    echo "$1 $2" | awk '{printf "%.9f", $1 + $2}'
+}
+
+process_file() {
+    local file=$1
+    local query_type=$2
+
+    # Read the CSV file line by line (skipping the header)
+    while IFS=';' read -r status time_taken start_time end_time namespace container metric_name query; do
+        # Create a unique key based on status, namespace, container, and metric_name
+        key="$status,$namespace,$container,$metric_name"
+
+        # Sum the time based on the query type
+        case "$query_type" in
+            default_queries)
+                total_time_default_sum[$key]="$time_taken"
+                ;;
+            individual_queries_by_pod)
+                total_time_individual_sum[$key]="$time_taken"
+                ;;
+            grouped_queries_by_owner_workload)
+                total_time_grouped_sum[$key]="$time_taken"
+                ;;
+            grouped_queriesByDuration)
+                if [ -z "${total_time_grouped_duration_sum[$key]}" ]; then
+                    total_time_grouped_duration_sum[$key]=0
+                fi
+
+                total_time_grouped_duration_sum[$key]=$(sum_float "${total_time_grouped_duration_sum[$key]}" "$time_taken")
+        esac
+
+        # Track start_time and end_time for each key
+        if [[ -z "${start_time_sum[$key]}" || "${start_time_sum[$key]}" -gt "$start_time" ]]; then
+            start_time_sum[$key]=$start_time
+        fi
+
+        if [[ -z "${end_time_sum[$key]}" || "${end_time_sum[$key]}" -lt "$end_time" ]]; then
+            end_time_sum[$key]=$end_time
+        fi
+
+    done < <(tail -n +2 "$file")
+}
+
+# Function to generate the output file
+common_function() {
+    output_file1="metric_time_for_all_queries.csv"
+    output_file2="total_time_for_all_queries.csv"
+    total_time_default=0
+    total_time_individual=0
+    total_time_grouped=0
+    total_time_grouped_by_duration=0
+
+
+    # Output headers to the CSV file
+    echo "status;time_default_queries;time_individual_queries;time_grouped_queries;time_grouped_queriesByDuration;start_time;end_time;namespace;container;metric_name" > "$output_file1"
+    echo "status;total_time_default_queries;total_time_individual_queries;total_time_grouped_queries;total_time_grouped_queriesByDuration;start_time;end_time;namespace;container" > "$output_file2"
+
+    for key in "${!total_time_default_sum[@]}"; do
+        # Extract the individual row data for each query type
+        time_default=${total_time_default_sum[$key]}
+        total_time_default=$(sum_float "${total_time_default}" "$time_default")
+
+        time_individual=${total_time_individual_sum[$key]}
+        total_time_individual=$(sum_float "${vtotal_time_individual}" "$time_individual")
+
+        time_grouped=${total_time_grouped_sum[$key]}
+        total_time_grouped=$(sum_float "${total_time_grouped}" "$time_grouped")
+
+        time_grouped_duration=${total_time_grouped_duration_sum[$key]}
+        total_time_grouped_by_duration=$(sum_float "${total_time_grouped_by_duration}" "$time_grouped_duration")
+
+        start_time=${start_time_sum[$key]:-0}
+        end_time=${end_time_sum[$key]:-0}
+
+        IFS=',' read -r status namespace container metric_name <<< "$key"
+
+        # Write the combined row to the output file
+        echo "$status;$time_default;$time_individual;$time_grouped;$time_grouped_duration;$start_time;$end_time;$namespace;$container;$metric_name" >> "$output_file1"
+    done
+
+    echo "$status;$total_time_default;$total_time_individual;$total_time_grouped;$total_time_grouped_by_duration;$start_time;$end_time;$namespace;$container" >> "$output_file2"
+}
+
 
 DEFAULT_END_TIME=$(date +%s)
 DEFAULT_START_TIME=$(date -d "15 days ago" +%s)
@@ -384,8 +490,12 @@ if [ ${ALL_QUERIES} -eq 1 ]; then
 
           echo "Results have been written to $OUTPUT_FILE"
           echo "Query output have been written to $RESPONSE_LOG_FILE"
-          capture_prometheus_resource_metrics
+          capture_prometheus_resource_metrics "$RESPONSE_LOG_FILE"
+          process_file "$OUTPUT_FILE" $query_name
+
   done
+
+  common_function
 else
   queries=()  # Declare an empty array to store the returned queries
 
@@ -420,7 +530,7 @@ else
 
   echo "Results have been written to $OUTPUT_FILE"
   echo "Query output have been written to $RESPONSE_LOG_FILE"
-  capture_prometheus_resource_metrics
+  capture_prometheus_resource_metrics "$RESPONSE_LOG_FILE"
 fi
 
 exit 0
