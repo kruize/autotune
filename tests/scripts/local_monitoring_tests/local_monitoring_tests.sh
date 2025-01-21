@@ -43,7 +43,7 @@ function local_monitoring_tests() {
 	target="crc"
 	metric_profile_json="${METRIC_PROFILE_DIR}/resource_optimization_local_monitoring.json"
 
-	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e")
+	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e" "kafka")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -72,8 +72,8 @@ function local_monitoring_tests() {
 
 		sleep 60
 
-    # create performance profile
-    create_metric_profile ${metric_profile_json}
+    		# create performance profile
+		create_metric_profile ${metric_profile_json}
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi
@@ -116,6 +116,20 @@ function local_monitoring_tests() {
 		echo " " | tee -a ${LOG}
 		echo "Test description: ${local_monitoring_test_description[$test]}" | tee -a ${LOG}
 		echo " " | tee -a ${LOG}
+
+		if [ "${test}" == "kafka" ]; then
+			echo "Setting up kafka..."
+			setup_log="${TEST_DIR}/setup_kafka.log"
+			echo ". ${LOCAL_MONITORING_TEST_DIR}/../helpers/setup_kafka.sh ${TEST_DIR} > ${setup_log} 2>&1"
+			. ${LOCAL_MONITORING_TEST_DIR}/../helpers/setup_kafka.sh "${TEST_DIR}" > ${setup_log} 2>&1
+			if [ $? -ne 0 ]; then
+				echo "Setting up kafka...Failed!"
+				echo "Check ${setup_log} for details!"
+				exit 1
+			else			
+				echo "Setting up kafka...Done"
+			fi
+		fi
 
 		pushd ${LOCAL_MONITORING_TEST_DIR}/rest_apis > /dev/null
 			echo "pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type}"
