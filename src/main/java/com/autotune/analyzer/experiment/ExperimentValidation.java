@@ -157,13 +157,6 @@ public class ExperimentValidation {
                             }
                         }
                     }
-                    if (kruizeObject.isNamespaceExperiment()) {
-                        if (AnalyzerConstants.AUTO.equalsIgnoreCase(mode) || AnalyzerConstants.RECREATE.equalsIgnoreCase(mode)) {
-                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODE_FOR_NAMESPACE_EXP;
-                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                            proceed = false;
-                        }
-                    }
                 } else {
                     errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_EXPERIMENT)).concat(expName);
                     validationOutputData.setErrorCode(HttpServletResponse.SC_CONFLICT);
