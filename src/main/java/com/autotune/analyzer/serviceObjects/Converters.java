@@ -84,6 +84,8 @@ public class Converters {
                 TermSettings termSettings = createExperimentAPIObject.getRecommendationSettings().getTermSettings();
                 RecommendationSettings recommendationSettings = new RecommendationSettings();
                 recommendationSettings.setTermSettings(termSettings);
+                ModelSettings modelSettings = createExperimentAPIObject.getRecommendationSettings().getModelSettings();
+                recommendationSettings.setModelSettings(modelSettings);
                 kruizeObject.setRecommendation_settings(recommendationSettings);
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());

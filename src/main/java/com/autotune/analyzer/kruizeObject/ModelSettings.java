@@ -6,6 +6,8 @@ public class ModelSettings {
 
     private List<String> models;
 
+    public ModelSettings() {}
+
     public List<String> getModels() {
         return models;
     }
