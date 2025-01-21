@@ -29,7 +29,6 @@ import com.autotune.utils.Utils;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
-import org.apache.logging.log4j.spi.LoggerRegistry;
 
 import java.util.HashMap;
 import java.util.List;
