@@ -174,7 +174,8 @@ public class AnalyzerErrorConstants {
             public static final String CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP = "Can not specify container data for namespace experiment";
             public static final String NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP = "Can not specify namespace data for container experiment";
             public static final String NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE = "Namespace experiment type is not supported for remote monitoring use case.";
-            public static final String INVALID_MODE_FOR_NAMESPACE_EXP = "auto or recreate mode is not supported for namespace experiment.";
+            public static final String INVALID_MODE_FOR_NAMESPACE_EXP = "Auto or recreate mode is not supported for namespace experiment.";
+            public static final String INVALID_OBJECT_TYPE_FOR_AUTO_EXP = "Kubernetes object type is not supported for auto or recreate mode.";
 
             private CreateExperimentAPI() {
 
