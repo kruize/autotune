@@ -29,6 +29,7 @@ import com.autotune.utils.Utils;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
+import org.apache.logging.log4j.spi.LoggerRegistry;
 
 import java.util.HashMap;
 import java.util.List;
@@ -136,33 +137,19 @@ public final class KruizeObject implements ExperimentTypeAware {
     public static void setDefaultTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
         // TODO: define term names like daily, weekly, fortnightly etc
         // TODO: add CRD for terms
-        HashMap<String, Double> minDuration = new HashMap<>();
-
-        if (null != kruizeObject.getRecommendation_settings().getMinDurationInMins()) {
-            minDuration = kruizeObject.getRecommendation_settings().getMinDurationInMins();
-        }
-
-        double shortTermThreshold = minDuration.containsKey(KruizeConstants.JSONKeys.SHORT_TERM)
-                ? kruizeObject.getRecommendation_settings().getThresholdForTerm(KruizeConstants.JSONKeys.SHORT_TERM)
-                : KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD;
-
-        double mediumTermThreshold = minDuration.containsKey(KruizeConstants.JSONKeys.MEDIUM_TERM)
-                ? kruizeObject.getRecommendation_settings().getThresholdForTerm(KruizeConstants.JSONKeys.MEDIUM_TERM)
-                : KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD;
-
-        double longTermThreshold = minDuration.containsKey(KruizeConstants.JSONKeys.LONG_TERM)
-                ? kruizeObject.getRecommendation_settings().getThresholdForTerm(KruizeConstants.JSONKeys.LONG_TERM)
-                : KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD;
 
         terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM,
                 KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
-                shortTermThreshold, 4, 0.25));
+                getTermThresholdInDays(KruizeConstants.JSONKeys.SHORT_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
+                4, 0.25));
         terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM,
                 KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
-                mediumTermThreshold, 7, 1));
+                getTermThresholdInDays(KruizeConstants.JSONKeys.MEDIUM_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
+                7, 1));
         terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM,
                 KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
-                longTermThreshold, 15, 1));
+                getTermThresholdInDays(KruizeConstants.JSONKeys.LONG_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
+                15, 1));
 
         kruizeObject.setTerms(terms);
     }
@@ -376,5 +363,24 @@ public final class KruizeObject implements ExperimentTypeAware {
     @Override
     public boolean isContainerExperiment() {
         return ExperimentTypeUtil.isContainerExperiment(experimentType);
+    }
+
+    private static double getTermThresholdInDays(String term, Double measurement_duration) {
+        double minDataPoints = 2;
+
+        switch (term) {
+            case KruizeConstants.JSONKeys.SHORT_TERM:
+                minDataPoints = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_MIN_DATAPOINTS;
+                break;
+            case KruizeConstants.JSONKeys.MEDIUM_TERM:
+                minDataPoints = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_MIN_DATAPOINTS;
+                break;
+            case KruizeConstants.JSONKeys.LONG_TERM:
+                minDataPoints = KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_MIN_DATAPOINTS;
+                break;
+        }
+
+        return ((double) measurement_duration * minDataPoints
+                / (KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR));
     }
 }
