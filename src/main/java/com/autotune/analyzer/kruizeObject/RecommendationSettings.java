@@ -15,10 +15,17 @@
  *******************************************************************************/
 package com.autotune.analyzer.kruizeObject;
 
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
+
 public class RecommendationSettings {
     private Double threshold;
+    @SerializedName(KruizeConstants.JSONKeys.MODEL_SETTINGS)
     private ModelSettings modelSettings;
+    @SerializedName(KruizeConstants.JSONKeys.TERM_SETTINGS)
     private TermSettings termSettings;
+
+    public RecommendationSettings(){}
 
     public Double getThreshold() {
         return threshold;
