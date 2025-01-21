@@ -140,6 +140,24 @@ public class ExperimentValidation {
                             proceed = true;
                         }
                     }
+                    // validate mode and experiment type
+                    if (AnalyzerConstants.AUTO.equalsIgnoreCase(mode) || AnalyzerConstants.RECREATE.equalsIgnoreCase(mode)) {
+                        if (kruizeObject.isNamespaceExperiment()) {
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODE_FOR_NAMESPACE_EXP;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            proceed = false;
+                        } else {
+                            // verifying kubernetes object type for container experiment
+                            List<K8sObject> k8sObjects = kruizeObject.getKubernetes_objects();
+                            for (K8sObject k8sObject : k8sObjects) {
+                                if (!AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT.equalsIgnoreCase(k8sObject.getType())) {
+                                    errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_OBJECT_TYPE_FOR_AUTO_EXP;
+                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                    proceed = false;
+                                }
+                            }
+                        }
+                    }
                 } else {
                     errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_EXPERIMENT)).concat(expName);
                     validationOutputData.setErrorCode(HttpServletResponse.SC_CONFLICT);
