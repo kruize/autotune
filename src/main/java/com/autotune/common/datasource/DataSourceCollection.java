@@ -20,17 +20,15 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.exceptions.datasource.*;
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URL;
-import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -95,16 +93,17 @@ public class DataSourceCollection {
     public void addDataSource(DataSourceInfo datasource) throws DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DataSourceNotServiceable, UnsupportedDataSourceProvider {
         final String name = datasource.getName();
         final String provider = datasource.getProvider();
+        final String url = String.valueOf(datasource.getUrl());
         ValidationOutputData addedToDB = null;
 
-        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE, name);
+        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.ADDING_DATASOURCE, name, url);
 
 
         if (dataSourceCollection.containsKey(name)) {
             throw new DataSourceAlreadyExist(DATASOURCE_ALREADY_EXIST);
         }
 
-        if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
+        if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS) || provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.THANOS)) {
             LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY, name);
             DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
             if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
@@ -140,15 +139,12 @@ public class DataSourceCollection {
      * @param configFileName name of the config file mounted
      */
     public void addDataSourcesFromConfigFile(String configFileName) throws UnsupportedDataSourceProvider, DataSourceNotServiceable, DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-
-        String configFile = System.getenv(configFileName);
-        JSONObject configObject;
-        ValidationOutputData addedToDB;
-
-        InputStream is = new FileInputStream(configFile);
-        String jsonTxt = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-        configObject = new JSONObject(jsonTxt);
-        JSONArray dataSourceArr = configObject.getJSONArray(KruizeConstants.DataSourceConstants.KRUIZE_DATASOURCE);
+        JSONArray dataSourceArr = null;
+        try {
+            dataSourceArr = new JSONArray(KruizeDeploymentInfo.datasource_via_env);
+        } catch (Exception e) {
+            LOGGER.error("Datasource configuration failed due to : {}", e.getMessage());
+        }
 
         for (Object dataSourceObj : dataSourceArr) {
             JSONObject dataSourceObject = (JSONObject) dataSourceObj;
@@ -172,7 +168,7 @@ public class DataSourceCollection {
                     DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
                     if (op.isServiceable(dataSourceInfo) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
                         // update the authentication details in the DB
-                        addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(dataSourceInfo.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);
+                        ValidationOutputData addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(dataSourceInfo.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);
                         if (addedToDB.isSuccess()) {
                             LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_AUTH_UPDATED_DB);
                         } else {
@@ -214,7 +210,7 @@ public class DataSourceCollection {
             // create the corresponding authentication object
             authConfig = AuthenticationConfig.createAuthenticationConfigObject(authenticationObj);
         } catch (Exception e) {
-            LOGGER.warn("Auth details are missing for datasource: {}", name);
+            LOGGER.warn("Auth details are missing for datasource: {} due to {}", name, e.getMessage());
             authConfig = AuthenticationConfig.noAuth();
         }
         return authConfig;
@@ -255,7 +251,7 @@ public class DataSourceCollection {
      * deletes the datasource from the Hashmap
      *
      * @param name String containing the name of the datasource to be deleted
-     *                                                                                     TODO: add db related operations
+     *                                                                                                 TODO: add db related operations
      */
     public void deleteDataSource(String name) throws DataSourceMissingRequiredFiled, DataSourceDoesNotExist {
 
@@ -275,7 +271,7 @@ public class DataSourceCollection {
      *
      * @param name          String containing the name of the datasource to be updated
      * @param newDataSource DataSourceInfo object with updated values
-     *                                                                                                                                                    TODO: add db related operations
+     *                                                                                                                                                                         TODO: add db related operations
      */
     public void updateDataSource(String name, DataSourceInfo newDataSource) throws UnsupportedDataSourceProvider, DataSourceNotServiceable, DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DataSourceDoesNotExist {
 

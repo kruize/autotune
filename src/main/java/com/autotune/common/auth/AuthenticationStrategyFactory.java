@@ -15,7 +15,8 @@ public class AuthenticationStrategyFactory {
                 return new BasicAuthenticationStrategy(username, password);
             case BEARER:
                 String tokenFilePath = ((BearerTokenCredentials) authConfig.getCredentials()).getTokenFilePath();
-                return new BearerAuthenticationStrategy(tokenFilePath);
+                String token = ((BearerTokenCredentials) authConfig.getCredentials()).getToken();
+                return new BearerAuthenticationStrategy(tokenFilePath,token);
             case API_KEY:
                 String apiKey = ((ApiKeyCredentials) authConfig.getCredentials()).getApiKey();
                 return new APIKeyAuthenticationStrategy(apiKey);
