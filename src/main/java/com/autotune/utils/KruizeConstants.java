@@ -730,6 +730,14 @@ public class KruizeConstants {
                 public static final int MEDIUM_TERM_DURATION_DAYS_THRESHOLD = 2;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
                 public static final int LONG_TERM_DURATION_DAYS_THRESHOLD = 8;
+                // Represents the minimum number of data points required for different term thresholds.
+                // Minimum data points are calculated based on the above threshold in days and a 15-minute measurement duration.
+                // If the short-term threshold is 30 minutes and the measurement duration is 15 minutes
+                // then the minimum data points = 30 / 15 = 2
+                public static final int SHORT_TERM_MIN_DATAPOINTS = 2;
+                public static final int MEDIUM_TERM_MIN_DATAPOINTS = 192;
+                public static final int LONG_TERM_MIN_DATAPOINTS = 768;
+
 
                 private DurationAmount() {
 
