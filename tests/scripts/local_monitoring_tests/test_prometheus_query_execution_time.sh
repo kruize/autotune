@@ -171,8 +171,8 @@ get_queries() {
 # Each query is sequentially executed dividing the 15days duration into three, 5 days window
 run_query_across_duration_windows() {
     local query="$1"
-    local namespace="$NAMESPACE"
-    local container="$CONTAINER"
+    local namespace="$2"
+    local container="$3"
     local start_timestamp="$4"
     local end_timestamp="$5"
     local metric_name="$6"
@@ -230,16 +230,16 @@ measure_query_time() {
 
     end_time=$(date +%s.%N)
 
-    time_taken=$(echo "$end_time - $start_time" | bc)
+    time_taken=$(echo "$end_time $start_time" | awk '{print $1 - $2}')
 
     status=$(echo "$response" | jq -r '.status')
 
      if [[ "$status" == "success" ]]; then
-        echo "Success; ${time_taken}; ${start_timestamp}; ${end_timestamp}; ${namespace}; ${container}; ${query_name}; ${query}" >> "$OUTPUT_FILE"
+        echo "Success;${time_taken};${start_timestamp};${end_timestamp};${namespace};${container};${query_name};${query}" >> "$OUTPUT_FILE"
      else
         error_type=$(echo "$response" | jq -r '.errorType')
         error_message=$(echo "$response" | jq -r '.error')
-        echo "Failed | ErrorType: $error_type | Error: $error_message; ${time_taken}; ${start_timestamp}; ${end_timestamp}; ${namespace}; ${container}; ${query}" >> "$OUTPUT_FILE"
+        echo "Failed | ErrorType: $error_type | Error: $error_message;${time_taken};${start_timestamp};${end_timestamp};${namespace};${container};${query}" >> "$OUTPUT_FILE"
      fi
 }
 
@@ -308,9 +308,9 @@ process_file() {
     local query_type=$2
 
     # Read the CSV file line by line (skipping the header)
-    while IFS=';' read -r status time_taken start_time end_time namespace container metric_name query; do
+    while IFS=';' read -r status time_taken start_time end_time local_namespace local_container metric_name query; do
         # Create a unique key based on status, namespace, container, and metric_name
-        key="$status,$namespace,$container,$metric_name"
+        key="$status,$local_namespace,$local_container,$metric_name"
 
         # Sum the time based on the query type
         case "$query_type" in
@@ -345,8 +345,10 @@ process_file() {
 
 # Function to generate the output file
 common_function() {
-    output_file1="metric_time_for_all_queries.csv"
-    output_file2="total_time_for_all_queries.csv"
+    local namespace=$1
+    local container=$2
+    local output_file1=$3
+    local output_file2=$4
     total_time_default=0
     total_time_individual=0
     total_time_grouped=0
@@ -355,15 +357,26 @@ common_function() {
 
     # Output headers to the CSV file
     echo "status;time_default_queries;time_individual_queries;time_grouped_queries;time_grouped_queriesByDuration;start_time;end_time;namespace;container;metric_name" > "$output_file1"
-    echo "status;total_time_default_queries;total_time_individual_queries;total_time_grouped_queries;total_time_grouped_queriesByDuration;start_time;end_time;namespace;container" > "$output_file2"
+
+    if [ -z "$(cat "$output_file2")" ]; then
+        echo "status;total_time_default_queries;total_time_individual_queries;total_time_grouped_queries;total_time_grouped_queriesByDuration;start_time;end_time;namespace;container" > "$output_file2"
+    fi
 
     for key in "${!total_time_default_sum[@]}"; do
+
+        IFS=',' read -r status target_namespace target_container metric_name <<< "$key"
+
+        # Check if the key matches the target status and namespace
+        if [ "$namespace" != "$target_namespace" ] || [ "$container" != "$target_container" ]; then
+            continue;
+        fi
+
         # Extract the individual row data for each query type
         time_default=${total_time_default_sum[$key]}
         total_time_default=$(sum_float "${total_time_default}" "$time_default")
 
         time_individual=${total_time_individual_sum[$key]}
-        total_time_individual=$(sum_float "${vtotal_time_individual}" "$time_individual")
+        total_time_individual=$(sum_float "${total_time_individual}" "$time_individual")
 
         time_grouped=${total_time_grouped_sum[$key]}
         total_time_grouped=$(sum_float "${total_time_grouped}" "$time_grouped")
@@ -374,10 +387,10 @@ common_function() {
         start_time=${start_time_sum[$key]:-0}
         end_time=${end_time_sum[$key]:-0}
 
-        IFS=',' read -r status namespace container metric_name <<< "$key"
+        IFS=',' read -r status target_namespace target_container metric_name <<< "$key"
 
         # Write the combined row to the output file
-        echo "$status;$time_default;$time_individual;$time_grouped;$time_grouped_duration;$start_time;$end_time;$namespace;$container;$metric_name" >> "$output_file1"
+        echo "$status;$time_default;$time_individual;$time_grouped;$time_grouped_duration;$start_time;$end_time;$target_namespace;$target_container;$metric_name" >> "$output_file1"
     done
 
     echo "$status;$total_time_default;$total_time_individual;$total_time_grouped;$total_time_grouped_by_duration;$start_time;$end_time;$namespace;$container" >> "$output_file2"
@@ -389,6 +402,7 @@ DEFAULT_START_TIME=$(date -d "15 days ago" +%s)
 ALL_QUERIES=0
 DEFAULT_DURATION_IN_DAYS=5
 DEFAULT_PARTITIONS=3
+ALL_NAMESPACES_CONTAINERS=0
 
 function usage() {
 	echo "Usage: $0 [-n namespace] [-c container-name] [-q query_set] [-s start_timestamp] [-e end_timestamp] [-d duration in days] [-p no. of partitions] [-a all query sets]"
@@ -406,7 +420,7 @@ function usage() {
 }
 
 # Parse command-line arguments
-while getopts ":n:c:q:s:e:d:p:a" opt; do
+while getopts ":n:c:q:s:e:d:p:aA" opt; do
   case "${opt}" in
     n)
       NAMESPACE="$OPTARG"
@@ -432,6 +446,9 @@ while getopts ":n:c:q:s:e:d:p:a" opt; do
     p)
       DURATION_PARTITIONS="$OPTARG"
       ;;
+    A)
+      ALL_NAMESPACES_CONTAINERS=1
+      ;;
     *)
       usage
       ;;
@@ -444,7 +461,87 @@ END_TIME=${END_TIME:-$DEFAULT_END_TIME}
 DURATION_IN_DAYS=${DURATION_IN_DAYS:-$DEFAULT_DURATION_IN_DAYS}
 DURATION_PARTITIONS=${DURATION_PARTITIONS:-$DEFAULT_PARTITIONS}
 
-if [ -z "${NAMESPACE}" ] && [ -z "${CONTAINER}" ]; then
+# Function to fetch namespaces using Prometheus
+fetch_namespaces() {
+    local start_timestamp="$1"
+    local end_timestamp="$2"
+    # Prometheus query to fetch unique namespaces
+    local query="count by (namespace) (kube_pod_container_info)"
+
+    # Fetch namespaces from Prometheus
+    response=$(curl -G -kH "Authorization: Bearer ${TOKEN}" \
+                --data-urlencode "query=${query}" \
+                --data-urlencode "start=${start_timestamp}" \
+                --data-urlencode "end=${end_timestamp}" \
+                --data-urlencode "step=900" \
+                "${PROMETHEUS_URL}/api/v1/query_range")
+    # Parse response and extract namespaces
+    echo "$response" | jq -r '.data.result[].metric.namespace'
+}
+
+# Function to fetch containers for a specific namespace using Prometheus
+fetch_containers_for_namespace() {
+    local namespace="$1"
+    local start_timestamp="$2"
+    local end_timestamp="$3"
+
+    # Prometheus query to fetch containers in a namespace
+    local query="count by (container) (kube_pod_container_info{namespace='${namespace}'})"
+
+    # Fetch containers from Prometheus
+        response=$(curl -G -kH "Authorization: Bearer ${TOKEN}" \
+                    --data-urlencode "query=${query}" \
+                    --data-urlencode "start=${start_timestamp}" \
+                    --data-urlencode "end=${end_timestamp}" \
+                    --data-urlencode "step=900" \
+                    "${PROMETHEUS_URL}/api/v1/query_range")
+
+    # Parse response and extract container names
+    echo "$response" | jq -r '.data.result[].metric.container'
+}
+
+run_all_queries() {
+  local namespace=$1
+  local container=$2
+
+  for i in "${!queries_collection[@]}"; do
+    query_name=${queries_collection[i]}
+    declare -n current_queries="${queries_collection[i]}"
+
+    # Output file to store the results
+    OUTPUT_FILE="prometheus_${query_name}_${namespace}_${container}_stats.csv"
+    RESPONSE_LOG_FILE="${query_name}_${namespace}_${container}_response.log"
+
+    # Clear the output file before starting
+    > "$OUTPUT_FILE"
+    > "$RESPONSE_LOG_FILE"
+
+    echo "status;time_taken(s);start_time;end_time;namespace;container;metric_name;query" > "$OUTPUT_FILE"
+
+    for key in "${!current_queries[@]}"; do
+      if [[ $query_name == "grouped_queriesByDuration" ]]; then
+        # Calculate the difference in seconds
+        TIME_DIFF=$((END_TIME - START_TIME))
+
+        # Convert the difference from seconds to days
+        DIFF_IN_DAYS=$((TIME_DIFF / 86400))
+        echo "Dividing the ${DIFF_IN_DAYS} days time range into ${DURATION_PARTITIONS} partitions, each with ${DURATION_IN_DAYS} days duration"
+
+        run_query_across_duration_windows "${current_queries[$key]}" "$namespace" "$container" "$START_TIME" "$END_TIME" "$key" "$DURATION_IN_DAYS" "$DURATION_PARTITIONS"
+      else
+        measure_query_time "${current_queries[$key]}" "$namespace" "$container" "$START_TIME" "$END_TIME" "$key"
+      fi
+    done
+
+    echo "Results have been written to $OUTPUT_FILE"
+    echo "Query output have been written to $RESPONSE_LOG_FILE"
+    capture_prometheus_resource_metrics "$RESPONSE_LOG_FILE"
+    process_file "$OUTPUT_FILE" "$query_name"
+  done
+
+}
+
+if [ -z "${NAMESPACE}" ] && [ -z "${CONTAINER}" ] && [ "${ALL_NAMESPACES_CONTAINERS}" -eq 0 ]; then
   echo "Finding a long running container"
   result=($(fetch_namespace_and_container "$START_TIME" "$END_TIME"))
 
@@ -457,45 +554,34 @@ if [ -z "${NAMESPACE}" ] && [ -z "${CONTAINER}" ]; then
   echo "Container: $CONTAINER"
 fi
 
+TOTAL_TIME_FOR_ALL_CONTAINERS="total_time_for_all_queries.csv"
+
 if [ ${ALL_QUERIES} -eq 1 ]; then
-  for i in "${!queries_collection[@]}"; do
-          query_name=${queries_collection[i]}
-          declare -n current_queries="${queries_collection[i]}"
-          echo $query_name
 
-          # Output file to store the results
-          OUTPUT_FILE="prometheus_${query_name}_${NAMESPACE}_${CONTAINER}_stats.csv"
-          RESPONSE_LOG_FILE="${query_name}_${NAMESPACE}_${CONTAINER}_response.log"
+  METRIC_TIME_FILE="metric_time_for_all_queries_${NAMESPACE}_${CONTAINER}.csv"
 
-          # Clear the output file before starting
-          > "$OUTPUT_FILE"
-          > "$RESPONSE_LOG_FILE"
+  run_all_queries "$NAMESPACE" "$CONTAINER"
+  common_function "$NAMESPACE" "$CONTAINER" "$METRIC_TIME_FILE" "$TOTAL_TIME_FOR_ALL_CONTAINERS"
 
-          echo "status; time_taken(s); start_time; end_time; namespace; container; metric_name; query" > "$OUTPUT_FILE"
+  echo "Time taken for each metric by all queries for namespace -$NAMESPACE and container -$CONTAINER have been written to $METRIC_TIME_FILE"
+  echo "Total time taken for all the queries have been written to $TOTAL_TIME_FOR_ALL_CONTAINERS"
+elif [ ${ALL_NAMESPACES_CONTAINERS} -eq 1 ]; then
 
-          for key in "${!current_queries[@]}"; do
-            if [[ $query_name == "grouped_queriesByDuration" ]]; then
-              # Calculate the difference in seconds
-              TIME_DIFF=$((END_TIME - START_TIME))
+  namespaces=$(fetch_namespaces "$START_TIME" "$END_TIME")
 
-              # Convert the difference from seconds to days
-              DIFF_IN_DAYS=$((TIME_DIFF / 86400))
-              echo "Dividing the ${DIFF_IN_DAYS} days time range into ${DURATION_PARTITIONS} partitions, each with ${DURATION_IN_DAYS} days duration"
+  for namespace in $namespaces; do
+      containers=$(fetch_containers_for_namespace "$namespace" "$START_TIME" "$END_TIME")
 
-              run_query_across_duration_windows "${current_queries[$key]}" "$NAMESPACE" "$CONTAINER" "$START_TIME" "$END_TIME" "$key" "$DURATION_IN_DAYS" "$DURATION_PARTITIONS"
-            else
-              measure_query_time "${current_queries[$key]}" "$NAMESPACE" "$CONTAINER" "$START_TIME" "$END_TIME" "$key"
-            fi
-          done
+      for container in ${containers[@]}; do
+          METRIC_TIME_FILE="metric_time_for_all_queries_${namespace}_${container}.csv"
 
-          echo "Results have been written to $OUTPUT_FILE"
-          echo "Query output have been written to $RESPONSE_LOG_FILE"
-          capture_prometheus_resource_metrics "$RESPONSE_LOG_FILE"
-          process_file "$OUTPUT_FILE" $query_name
+          run_all_queries "$namespace" "$container"
+          common_function "$namespace" "$container" "$METRIC_TIME_FILE" "$TOTAL_TIME_FOR_ALL_CONTAINERS"
 
+          echo "Time taken for each metric by all queries for namespace -$namespace and container -$container have been written to $METRIC_TIME_FILE"
+      done
   done
-
-  common_function
+  echo "Total time taken for all the queries have been written to $TOTAL_TIME_FOR_ALL_CONTAINERS"
 else
   queries=()  # Declare an empty array to store the returned queries
 
@@ -510,7 +596,7 @@ else
   > "$OUTPUT_FILE"
   > "$RESPONSE_LOG_FILE"
 
-  echo "status; time_taken(s); start_time; end_time; namespace; container; metric_name; query" > "$OUTPUT_FILE"
+  echo "status;time_taken(s);start_time;end_time;namespace;container;metric_name;query" > "$OUTPUT_FILE"
 
   declare -n query_set=$queries
   if [[ "$QUERY_SET" == "grouped_queriesByDuration" ]]; then
