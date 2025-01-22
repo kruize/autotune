@@ -252,7 +252,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
                     TermRecommendations termRecommendations = value.getShortTermRecommendations();
                     HashMap<AnalyzerConstants.ResourceSetting,
                             HashMap<AnalyzerConstants.RecommendationItem,
-                                    RecommendationConfigItem>> recommendationsConfig = termRecommendations.getCostRecommendations().getConfig();
+                                    RecommendationConfigItem>> recommendationsConfig = termRecommendations.getPerformanceRecommendations().getConfig();
 
                     Double cpuRecommendationValue = recommendationsConfig.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.CPU).getAmount();
                     Double memoryRecommendationValue = recommendationsConfig.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.MEMORY).getAmount();
