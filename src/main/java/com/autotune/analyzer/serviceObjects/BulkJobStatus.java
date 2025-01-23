@@ -38,73 +38,13 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationCon
 @JsonFilter("jobFilter")
 public class BulkJobStatus {
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkJobStatus.class);
-    @JsonProperty(JOB_ID)
-    private String jobID;
-    private String status;
-    private int total_experiments;
-    private AtomicInteger processed_experiments;  //todo : If the primary operations are increments or simple atomic updates, use AtomicInteger. It is designed for lock-free thread-safe access
-    @JsonProperty("job_start_time")
-    private String startTime; // Change to String to store formatted time
-    @JsonProperty("job_end_time")
-    private String endTime;   // Change to String to store formatted time
-    private Map<String, Notification> notifications;
+    private Summary summary;
+    // Change to String to store formatted time
     private Map<String, Experiment> experiments = Collections.synchronizedMap(new HashMap<>());
     private Webhook webhook;
 
     public BulkJobStatus(String jobID, String status, Instant startTime) {
-        this.jobID = jobID;
-        this.status = status;
-        setStartTime(startTime);
-        this.processed_experiments = new AtomicInteger(0);
-    }
-
-
-    // Method to set a notification in the map
-    public void setNotification(String key, Notification notification) {
-        if (this.notifications == null) {
-            this.notifications = new HashMap<>(); // Initialize if null
-        }
-        this.notifications.put(key, notification);
-    }
-
-    public String getJobID() {
-        return jobID;
-    }
-
-    public void setJobID(String jobID) {
-        this.jobID = jobID;
-    }
-
-    public String getStartTime() {
-        return startTime;
-    }
-
-    public void setStartTime(String startTime) {
-        this.startTime = startTime;
-    }
-
-    public void setStartTime(Instant startTime) {
-        this.startTime = formatInstantAsUTCString(startTime);
-    }
-
-    public String getEndTime() {
-        return endTime;
-    }
-
-    public void setEndTime(String endTime) {
-        this.endTime = endTime;
-    }
-
-    public void setEndTime(Instant endTime) {
-        this.endTime = formatInstantAsUTCString(endTime);
-    }
-
-    public Map<String, Notification> getNotifications() {
-        return notifications;
-    }
-
-    public void setNotifications(Map<String, Notification> notifications) {
-        this.notifications = notifications;
+        this.summary = new Summary(jobID, status, startTime);
     }
 
     public Map<String, Experiment> getExperiments() {
@@ -123,40 +63,12 @@ public class BulkJobStatus {
         this.webhook = webhook;
     }
 
-    // Method to add a new experiment with "unprocessed" status and null notification
-    public synchronized Experiment addExperiment(String experimentName) {
-        Experiment experiment = new Experiment(experimentName);
-        experiments.put(experimentName, experiment);
-        return experiment;
+    public Summary getSummary() {
+        return summary;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
-    public int getTotal_experiments() {
-        return total_experiments;
-    }
-
-    public void setTotal_experiments(int total_experiments) {
-        this.total_experiments = total_experiments;
-    }
-
-
-    public void incrementProcessed_experiments() {
-        this.processed_experiments.incrementAndGet();
-    }
-
-    public AtomicInteger getProcessed_experiments() {
-        return processed_experiments;
-    }
-
-    public void setProcessed_experiments(int count) {
-        this.processed_experiments.set(count);
+    public void setSummary(Summary summary) {
+        this.summary = summary;
     }
 
     // Utility function to format Instant into the required UTC format
@@ -168,6 +80,12 @@ public class BulkJobStatus {
         return formatter.format(instant);
     }
 
+    // Method to add a new experiment with "unprocessed" status and null notification
+    public synchronized Experiment addExperiment(String experimentName) {
+        Experiment experiment = new Experiment(experimentName);
+        experiments.put(experimentName, experiment);
+        return experiment;
+    }
 
     public static enum NotificationType {
         ERROR("error"),
@@ -182,6 +100,112 @@ public class BulkJobStatus {
 
         public String getType() {
             return type;
+        }
+    }
+
+    public static class Summary {
+        @JsonProperty(JOB_ID)
+        private String jobID;
+        private String status;
+        private int total_experiments;
+        private AtomicInteger processed_experiments;  //todo : If the primary operations are increments or simple atomic updates, use AtomicInteger. It is designed for lock-free thread-safe access
+        @JsonProperty("job_start_time")
+        private String startTime; // Change to String to store formatted time
+        @JsonProperty("job_end_time")
+        private String endTime;
+        // Change to String to store formatted time
+        private Map<String, Notification> notifications;
+
+        public Summary(String jobID, String status, Instant startTime) {
+            this.jobID = jobID;
+            this.status = status;
+            setStartTime(startTime);
+            this.processed_experiments = new AtomicInteger(0);
+        }
+
+        public String getJobID() {
+            return jobID;
+        }
+
+        public void setJobID(String jobID) {
+            this.jobID = jobID;
+        }
+
+        public String getStartTime() {
+            return startTime;
+        }
+
+        public void setStartTime(String startTime) {
+            this.startTime = startTime;
+        }
+
+        public void setStartTime(Instant startTime) {
+            this.startTime = formatInstantAsUTCString(startTime);
+        }
+
+        public String getEndTime() {
+            return endTime;
+        }
+
+        public void setEndTime(String endTime) {
+            this.endTime = endTime;
+        }
+
+        public void setEndTime(Instant endTime) {
+            this.endTime = formatInstantAsUTCString(endTime);
+        }
+
+        public String getStatus() {
+            return status;
+        }
+
+        public void setStatus(String status) {
+            this.status = status;
+        }
+
+        public void incrementProcessed_experiments() {
+            this.processed_experiments.incrementAndGet();
+        }
+
+        public AtomicInteger getProcessed_experiments() {
+            return processed_experiments;
+        }
+
+        public void setProcessed_experiments(int count) {
+            this.processed_experiments.set(count);
+        }
+
+        public int getTotal_experiments() {
+            return total_experiments;
+        }
+
+        public void setTotal_experiments(int total_experiments) {
+            this.total_experiments = total_experiments;
+        }
+
+        // Utility function to format Instant into the required UTC format
+        private String formatInstantAsUTCString(Instant instant) {
+            DateTimeFormatter formatter = DateTimeFormatter
+                    .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                    .withZone(ZoneOffset.UTC);  // Ensure it's in UTC
+
+            return formatter.format(instant);
+        }
+
+        // Method to set a notification in the map
+        public void setNotification(String key, Notification notification) {
+            if (this.notifications == null) {
+                this.notifications = new HashMap<>(); // Initialize if null
+            }
+            this.notifications.put(key, notification);
+        }
+
+        public Map<String, Notification> getNotifications() {
+            return notifications;
+        }
+
+        public void setNotifications(Map<String, Notification> notifications) {
+            this.notifications = notifications;
         }
     }
 
