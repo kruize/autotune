@@ -29,15 +29,25 @@ d = duration for equally dividing the time range for eg. dividing 15 days into 5
 p = partitions in time range for eg. dividing 15 days into 5 days duration with 3 partitions
 a = Flag to run all the query sets to capture the time taken
 
-Note: once query set/sets are executed output will be stored in 
+Note: once the query set/sets are executed output will be stored in 
 1. prometheus_${QUERY_SET}_${NAMESPACE}_${CONTAINER}_stats.csv - capturing status time taken, start and end time, namespace, container, metric_name and query 
 2. ${QUERY_SET}_${NAMESPACE}_${CONTAINER}_response.log - logs the query and query output
+
+In case of running all query sets for all namespaces and containers - along with the respective query set data, consolidated output data will be stored in
+1. metric_time_for_all_queries_${NAMESPACE}_${CONTAINER}.csv - this file will contain time taken by each metric for all the query sets for a given namespace and container 
+2. total_time_for_all_queries.csv - this file captures total time taken by each query set for all the namespaces and containers
 ```
 
 To capture time taken to run all the query sets,
 
 ```
 <KRUIZE_REPO>/tests/scripts/local_monitoring_tests -a 
+```
+
+To capture time taken to run all the query sets for all the namespaces and containers present in the cluster
+
+```
+<KRUIZE_REPO>/tests/scripts/local_monitoring_tests -A 
 ```
 
 To capture time taken to run the individual query set for "default" namespace and "app-container" container,

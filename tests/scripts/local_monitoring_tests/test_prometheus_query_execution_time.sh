@@ -414,6 +414,7 @@ function usage() {
 	echo "d = duration for equally dividing the time range for eg. dividing 15 days into 5 days duration and executing the grouped_queries"
 	echo "p = partitions in time range for eg. dividing 15 days into 5 days duration with 3 partitions"
 	echo "a = Flag to run all the query sets to capture the time taken"
+	echo "A = Flag to run all the query sets for all the namespaces and containers present in the cluster"
 	echo "h = help"
 
 	exit 1
@@ -508,6 +509,7 @@ run_all_queries() {
     query_name=${queries_collection[i]}
     declare -n current_queries="${queries_collection[i]}"
 
+    echo $query_name
     # Output file to store the results
     OUTPUT_FILE="prometheus_${query_name}_${namespace}_${container}_stats.csv"
     RESPONSE_LOG_FILE="${query_name}_${namespace}_${container}_response.log"
@@ -587,6 +589,7 @@ else
 
   # Get the query set
   get_queries "$QUERY_SET" queries
+  echo "Running $QUERY_SET query set"
 
   # Output file to store the results
   OUTPUT_FILE="prometheus_${QUERY_SET}_${NAMESPACE}_${CONTAINER}_stats.csv"
