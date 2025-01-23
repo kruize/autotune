@@ -50,50 +50,6 @@ roleRef:
   kind: ClusterRole
   name: kruize-recommendation-updater
 ---
-# Strimzi Kafka Cluster
-apiVersion: kafka.strimzi.io/v1beta2
-kind: Kafka
-metadata:
-  name: my-cluster
-  namespace: monitoring
-spec:
-  kafka:
-    version: 3.9.0
-    replicas: 3
-    listeners:
-      - name: plain
-        port: 9092
-        type: internal
-        tls: false
-      - name: tls
-        port: 9093
-        type: internal
-        tls: true
-    storage:
-      type: ephemeral
-  zookeeper:
-    replicas: 3
-    storage:
-      type: ephemeral
-  entityOperator:
-    topicOperator: {}
-    userOperator: {}
-
----
-# Kafka Topic
-apiVersion: kafka.strimzi.io/v1beta2
-kind: KafkaTopic
-metadata:
-  name: recommendations
-  namespace: monitoring
-  labels:
-    strimzi.io/cluster: my-cluster
-spec:
-  partitions: 3
-  replicas: 3
-  config:
-    retention.ms: 7200000
----
 apiVersion: v1
 kind: PersistentVolume
 metadata:
@@ -213,6 +169,8 @@ data:
       "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",
       "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
       "bulkapilimit" : 1000,
+      "isKafkaEnabled" : "true",
+      "kafkaBootstrapServers" : "kruize-kafka-cluster-kafka-bootstrap.monitoring.svc.cluster.local:9092",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -293,8 +251,6 @@ spec:
               value: "/etc/config/kruizeconfigjson"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=80"
-            - name: KAFKA_BOOTSTRAP_SERVERS
-              value: "my-cluster-kafka-bootstrap.monitoring.svc.cluster.local:9092"
           ports:
             - name: kruize-port
               containerPort: 8080

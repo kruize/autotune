@@ -186,22 +186,12 @@ function minikube_terminate() {
 # Deploy kruize in remote monitoring mode
 function minikube_crc_start() {
 	echo
-	echo "###   Installing Kafka for minikube"
+	echo "###   Installing kruize for minikube"
 	echo
 	# If autotune_ns was not set by the user
 	if [ -z "$autotune_ns" ]; then
 		autotune_ns="monitoring"
 	fi
-
-	kubectl -n "${autotune_ns}" apply -f https://strimzi.io/install/latest?namespace=monitoring
-	echo
-  echo "###   Verifying Strimzi CRDs installation..."
-  echo
-  verify_kafka_CRDs
-
-	echo
-	echo "###   Installing kruize for minikube"
-	echo
 	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
 
 	kruize_crc_start
@@ -215,37 +205,7 @@ function minikube_crc_terminate() {
 	kubectl_cmd="kubectl -n ${autotune_ns}"
 	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
 
-	echo -n "###   Removing Kafka for minikube"
-	${kubectl_cmd} delete $(${kubectl_cmd} get strimzi -o name)
-	${kubectl_cmd} delete pvc -l strimzi.io/name=my-cluster-kafka
-	${kubectl_cmd} delete -f 'https://strimzi.io/install/latest?namespace=monitoring'
-
 	echo -n "###   Removing Kruize for minikube"
 	echo
 	${kubectl_cmd} delete -f ${CRC_MANIFEST_FILE} 2>/dev/null
-}
-
-function verify_kafka_CRDs() {
-  CRDS=("kafkas.kafka.strimzi.io" "kafkatopics.kafka.strimzi.io")
-  MAX_RETRIES=10
-  RETRY_INTERVAL=5
-
-  for CRD in "${CRDS[@]}"; do
-    COUNT=0
-    while true; do
-      if kubectl get crd "$CRD" &> /dev/null; then
-        echo "CRD $CRD is installed."
-        break
-      fi
-
-      COUNT=$((COUNT + 1))
-      if [ $COUNT -ge $MAX_RETRIES ]; then
-        echo "CRD $CRD failed to install after $MAX_RETRIES attempts. Exiting."
-        exit 1
-      fi
-
-      echo "Waiting for CRD $CRD to be installed... (Retry $COUNT/$MAX_RETRIES)"
-      sleep $RETRY_INTERVAL
-    done
-  done
 }

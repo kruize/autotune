@@ -35,6 +35,8 @@ import org.apache.http.conn.ConnectTimeoutException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.autotune.utils.kafka.KruizeKafkaProducer;
+import org.apache.kafka.clients.producer.KafkaProducer;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -57,6 +59,7 @@ import java.util.stream.Collectors;
 import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.*;
+import static com.autotune.utils.kafka.KruizeKafkaProducer.getProducerProperties;
 
 
 /**
@@ -90,11 +93,16 @@ public class BulkJobManager implements Runnable {
     private String jobID;
     private BulkInput bulkInput;
     private BulkJobStatus jobData;
+    private BulkJobStatus processedJobData;
+    private BulkJobStatus failedJobData;
+    private final ExecutorService kafkaExecutorService = Executors.newFixedThreadPool(3);
 
-    public BulkJobManager(String jobID, BulkJobStatus jobData, BulkInput payload) {
+    public BulkJobManager(String jobID, BulkJobStatus jobData, BulkJobStatus processedJobStatus, BulkJobStatus failedJobStatus, BulkInput payload) {
         this.jobID = jobID;
         this.jobData = jobData;
         this.bulkInput = payload;
+        this.processedJobData = processedJobStatus;
+        this.failedJobData = failedJobStatus;
     }
 
     public static List<String> appendExperiments(List<String> allExperiments, String experimentName) {
@@ -218,6 +226,14 @@ public class BulkJobManager implements Runnable {
                                                     LOGGER.debug("API Response code: {}", recommendationResponseCode);
                                                     if (recommendationResponseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
                                                         experiment.getRecommendations().setStatus(NotificationConstants.Status.PROCESSED);
+                                                        // TODO: check if kafka-flag is enabled and initiate the kafka polling here
+                                                        if(KruizeDeploymentInfo.is_kafka_enabled) {
+//                                                            // Submit Kafka producer task to the thread pool
+//                                                            TODO: to be updated to get the correct JSON data
+//                                                            String processedJobDataJson = new Gson().toJson(processedJobData);
+                                                            String processedJobDataJson = "{\"experiments\":{\"Thanos|default|monitoring|kruize(deployment)|kruize\":{\"api\":{\"create\":{\"response\":{\"message\":\"Experiment registered successfully with Autotune. View registered experiments at /listExperiments\",\"httpcode\":201,\"documentationLink\":\"\",\"status\":\"SUCCESS\"}},\"recommendations\":{\"response\":[{\"cluster_name\":\"cluster-one-division-bell\",\"kubernetes_objects\":[{\"type\":\"deployment\",\"name\":\"tfb-qrh-deployment_5\",\"namespace\":\"default_5\",\"containers\":[{\"container_image_name\":\"kruize/tfb-qrh:1.13.2.F_et17\",\"container_name\":\"tfb-server-1\",\"recommendations\":{\"version\":\"1.0\",\"notifications\":{\"111000\":{\"type\":\"info\",\"message\":\"Recommendations Are Available\",\"code\":111000}},\"data\":{\"2023-04-02T13:30:00.680Z\":{\"notifications\":{\"111101\":{\"type\":\"info\",\"message\":\"Short Term Recommendations Available\",\"code\":111101}},\"monitoring_end_time\":\"2023-04-02T13:30:00.680Z\",\"current\":{\"limits\":{\"memory\":{\"amount\":100,\"format\":\"MiB\"},\"cpu\":{\"amount\":0.5,\"format\":\"cores\"}},\"requests\":{\"memory\":{\"amount\":50.21,\"format\":\"MiB\"},\"cpu\":{\"amount\":5.37,\"format\":\"cores\"}}},\"recommendation_terms\":{\"short_term\":{\"duration_in_hours\":24,\"notifications\":{\"112101\":{\"type\":\"info\",\"message\":\"Cost Recommendations Available\",\"code\":112101},\"112102\":{\"type\":\"info\",\"message\":\"Performance Recommendations Available\",\"code\":112102}},\"monitoring_start_time\":\"2023-04-01T12:00:00.000Z\",\"recommendation_engines\":{\"cost\":{\"pods_count\":7,\"confidence_level\":0,\"config\":{\"limits\":{\"memory\":{\"amount\":238.2,\"format\":\"MiB\"},\"cpu\":{\"amount\":0.9299999999999999,\"format\":\"cores\"}},\"requests\":{\"memory\":{\"amount\":238.2,\"format\":\"MiB\"},\"cpu\":{\"amount\":0.9299999999999999,\"format\":\"cores\"}}},\"variation\":{\"limits\":{\"memory\":{\"amount\":138.2,\"format\":\"MiB\"},\"cpu\":{\"amount\":-4.44,\"format\":\"cores\"}},\"requests\":{\"memory\":{\"amount\":187.98999999999998,\"format\":\"MiB\"},\"cpu\":{\"amount\":-4.44,\"format\":\"cores\"}}},\"notifications\":{}},\"performance\":{\"pods_count\":27,\"confidence_level\":0,\"config\":{\"limits\":{\"memory\":{\"amount\":238.2,\"format\":\"MiB\"},\"cpu\":{\"amount\":0.9299999999999999,\"format\":\"cores\"}},\"requests\":{\"memory\":{\"amount\":238.2,\"format\":\"MiB\"},\"cpu\":{\"amount\":0.9299999999999999,\"format\":\"cores\"}}},\"variation\":{\"limits\":{\"memory\":{\"amount\":138.2,\"format\":\"MiB\"},\"cpu\":{\"amount\":-4.44,\"format\":\"cores\"}},\"requests\":{\"memory\":{\"amount\":187.98999999999998,\"format\":\"MiB\"},\"cpu\":{\"amount\":-4.44,\"format\":\"cores\"}}},\"notifications\":{}}}},\"medium_term\":{\"duration_in_hours\":33.8,\"notifications\":{\"120001\":{\"type\":\"info\",\"message\":\"There is not enough data available to generate a recommendation.\",\"code\":120001}}},\"long_term\":{\"duration_in_hours\":33.8,\"notifications\":{\"120001\":{\"type\":\"info\",\"message\":\"There is not enough data available to generate a recommendation.\",\"code\":120001}}}}}}}},{\"container_image_name\":\"kruize/tfb-db:1.15\",\"container_name\":\"tfb-server-0\",\"recommendations\":{\"version\":\"1.0\",\"notifications\":{\"120001\":{\"type\":\"info\",\"message\":\"There is not enough data available to generate a recommendation.\",\"code\":120001}},\"data\":{}}}]}],\"version\":\"v2.0\",\"experiment_name\":\"temp_1\"}]}},\"status\":\"PROCESSED / UNPROCESSED / FAILED / DELIVERED\",\"status_history\":[{\"status\":\"UNPROCESSED\",\"timestamp\":\"2025-01-21T12:00:00Z\"},{\"status\":\"PROCESSED\",\"timestamp\":\"2025-01-21T14:30:00Z\"},{\"status\":\"FAILED\",\"timestamp\":\"2025-01-21T15:00:00Z\"},{\"status\":\"DELIVERED\",\"timestamp\":\"2025-01-21T16:00:00Z\"}]}}}";
+                                                            initiateKafkaCall(KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS_TOPIC, processedJobDataJson);
+                                                        }
                                                     } else {
                                                         experiment.getRecommendations().setStatus(NotificationConstants.Status.FAILED);
                                                         experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, recommendationResponseCode.getResponseBody().toString(), recommendationResponseCode.getStatusCode()));
@@ -231,6 +247,9 @@ public class BulkJobManager implements Runnable {
                                                     synchronized (jobData) {
                                                         if (jobData.getTotal_experiments() == jobData.getProcessed_experiments().get()) {
                                                             setFinalJobStatus(COMPLETED, null, null, finalDatasource);
+                                                            //TODO: to be updated to get the correct JSON data
+                                                            String finalJSON = "{\"summary\":{\"status\":\"COMPLETED\",\"total_experiments\":23,\"processed_experiments\":23,\"job_id\":\"54905959-77d4-42ba-8e06-90bb97b823b9\",\"job_start_time\":\"2024-10-10T06:07:09.066Z\",\"job_end_time\":\"2024-10-10T06:07:17.471Z\"}}";
+                                                            initiateKafkaCall(KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC, finalJSON);
                                                         }
                                                     }
                                                 }
@@ -299,6 +318,40 @@ public class BulkJobManager implements Runnable {
             }
             MetricsConfig.activeJobs.decrementAndGet();
         }
+    }
+
+    private void initiateKafkaCall(String topic, String jobDataJson) {
+
+        // Kafka producer instance (shared across threads)
+        KafkaProducer<String, String> producer = new KafkaProducer<>(getProducerProperties());
+        // Simulate incoming requests
+        while (true) {
+            String messageId = "msg-" + System.currentTimeMillis();
+            switch (topic) {
+                case "KAFKA_RECOMMENDATION_TOPIC":
+                    kafkaExecutorService.submit(new KruizeKafkaProducer.ValidRecommendationMessageProducer(producer, messageId, jobDataJson));
+                    break;
+                case "KAFKA_ERROR_TOPIC":
+                    kafkaExecutorService.submit(new KruizeKafkaProducer.ErrorMessageProducer(producer, messageId, jobDataJson));
+                    break;
+                case "KAFKA_BULK_TOPIC":
+                    kafkaExecutorService.submit(new KruizeKafkaProducer.SummaryResponseMessageProducer(producer, messageId, "SUCCESS", jobDataJson)); //TODO: update the status here
+                    break;
+            }
+            try {
+                Thread.sleep(1000); // Simulate a delay for incoming requests
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            }
+        }
+
+        // Shutdown kafka executor service
+        kafkaExecutorService.shutdown();
+
+        // Close the producer
+        Runtime.getRuntime().addShutdownHook(new Thread(producer::close));
+
     }
 
     public void setFinalJobStatus(String status, String notificationKey, BulkJobStatus.Notification notification, DataSourceInfo finalDatasource) {

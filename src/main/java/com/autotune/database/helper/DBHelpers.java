@@ -1124,18 +1124,22 @@ public class DBHelpers {
                     try {
                         DataSourceInfo dataSourceInfo;
                         AuthenticationConfig authConfig = null;
+                        JSONObject authJson = null;
                         if (kruizeDataSource.getKruizeAuthenticationEntry() != null) {
                             try {
                                 JsonNode credentialsNode = kruizeDataSource.getKruizeAuthenticationEntry().getCredentials();
                                 String authType = kruizeDataSource.getKruizeAuthenticationEntry().getAuthenticationType();
                                 // Parse the JsonNode credentials into a JSONObject
-                                JSONObject credentialsJson = new JSONObject(credentialsNode.toString());
-                                JSONObject authJson = new JSONObject()
-                                        .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TYPE, authType)
-                                        .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_CREDENTIALS, credentialsJson);
+                                if (!credentialsNode.toString().equalsIgnoreCase(AnalyzerConstants.NULL)) {
+                                    JSONObject credentialsJson = new JSONObject(credentialsNode.toString());
+                                    authJson = new JSONObject()
+                                            .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TYPE, authType)
+                                            .put(KruizeConstants.AuthenticationConstants.AUTHENTICATION_CREDENTIALS, credentialsJson);
+                                }
                                 authConfig = AuthenticationConfig.createAuthenticationConfigObject(authJson);
                             } catch (Exception e) {
-                                LOGGER.debug("GSON failed to convert the DB Json object in convertKruizeDataSourceToDataSourceObject");
+                                e.printStackTrace();
+                                LOGGER.error("GSON failed to convert the DB Json object in convertKruizeDataSourceToDataSourceObject");
                             }
                         }
                         if (kruizeDataSource.getServiceName().isEmpty() && null != kruizeDataSource.getUrl()) {

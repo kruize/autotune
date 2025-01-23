@@ -19,7 +19,6 @@ import com.autotune.analyzer.serviceObjects.BulkInput;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.workerimpl.BulkJobManager;
 import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.kafka.KafkaProducerTask;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
@@ -54,9 +53,6 @@ public class BulkService extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkService.class);
     private static Map<String, BulkJobStatus> jobStatusMap = new ConcurrentHashMap<>();
     private ExecutorService executorService = Executors.newFixedThreadPool(10);
-    private final ExecutorService kafkaExecutorService = Executors.newFixedThreadPool(2);
-    private final String bootstrapServers = System.getenv("KAFKA_BOOTSTRAP_SERVERS");
-    String topic = "recommendations";
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -158,20 +154,19 @@ public class BulkService extends HttpServlet {
             String jobID = UUID.randomUUID().toString();
 
             BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now());
+            BulkJobStatus processedJobStatus = new BulkJobStatus(jobID, NotificationConstants.Status.PROCESSED.getStatus(), Instant.now());
+            BulkJobStatus failedJobStatus = new BulkJobStatus(jobID, NotificationConstants.Status.FAILED.getStatus(), Instant.now());
             jobStatusMap.put(jobID, jobStatus);
             // Submit the job to be processed asynchronously
-            executorService.submit(new BulkJobManager(jobID, jobStatus, payload));
+            executorService.submit(new BulkJobManager(jobID, jobStatus, processedJobStatus, failedJobStatus, payload));
 
             // Just sending a simple success response back
             // Return the jobID to the user
             JSONObject jsonObject = new JSONObject();
             jsonObject.put(JOB_ID, jobID);
 
-            // Submit Kafka producer task to the thread pool
-            kafkaExecutorService.execute(new KafkaProducerTask(bootstrapServers, topic, jobID, jsonObject.toString()));
-
-            // TODO: Submit Kafka consumer task to the thread pool
-//            kafkaExecutorService.execute(new KafkaConsumerTask(bootstrapServers, topic));
+            // TODO: Submit Kafka consumer task to the thread pool (This will be done in the subsequent release)
+            //  kafkaExecutorService.execute(new KafkaConsumerTask(bootstrapServers, topic));
 
             response.getWriter().write(jsonObject.toString());
             statusValue = "success";
