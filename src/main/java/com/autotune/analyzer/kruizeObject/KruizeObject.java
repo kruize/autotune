@@ -17,8 +17,6 @@ package com.autotune.analyzer.kruizeObject;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.recommendations.term.Terms;
-import com.autotune.analyzer.serviceObjects.Converters;
-import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.ExperimentTypeAware;
 import com.autotune.analyzer.utils.ExperimentTypeUtil;
@@ -28,14 +26,10 @@ import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.Utils;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -140,39 +134,50 @@ public final class KruizeObject implements ExperimentTypeAware {
      @param terms A map to store the default terms with term name as the key and Terms object as the value.
      @param kruizeObject The KruizeObject for which the default terms are being set.
      */
-    // take this from json and put value here step 2
+
     public static void setDefaultTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
         // TODO: define term names like daily, weekly, fortnightly etc
         // TODO: add CRD for terms
 
-        // TODO : fixx this part from json objecttt figure out this
-        terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
-                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
-                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD, 4, 0.25));
-        // need to discuss how will these value change based on change in term
-        terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM, KruizeConstants
-                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants
-                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD, 7, 1));
-        terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM, KruizeConstants
-                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants
-                .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD, 15, 1));
+        if(kruizeObject.getTarget_cluster() == AnalyzerConstants.REMOTE) {
+            // for remote monitoring use case
+            terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
+                    .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
+                    .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD, 4, 0.25));
+            terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM, KruizeConstants
+                    .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants
+                    .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD, 7, 1));
+            terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM, KruizeConstants
+                    .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants
+                    .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD, 15, 1));
 
-        kruizeObject.setTerms(terms);
+        }
+        else {
+            // for local monitoring use case
+            // Default is Short Term
+            terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
+                    .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
+                    .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD, 4, 0.25));
+
+            kruizeObject.setTerms(terms);
+        }
     }
 
 
     public static void setCustomTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
         // TODO: define term names like daily, weekly, fortnightly etc
         // TODO: add CRD for terms
-        // TODO : fixx this part from json objecttt figure out this
 
-        terms.put(kruizeObject.getRecommendation_settings().getTermSettings().getTerms().get(0) + "_term", new Terms(kruizeObject.getRecommendation_settings().getTermSettings().getTerms().get(0) + "_term"
-                , kruizeObject.getRecommendation_settings().getTermSettings().getTermDurations().get(kruizeObject.getRecommendation_settings().getTermSettings().getTerms().get(0)),
-                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD,
-                4, 0.25));
-        // need to discuss how will these value change based on change in term
+        if( kruizeObject.getRecommendation_settings().getTermSettings() != null ) {
+            String termKey = kruizeObject.getRecommendation_settings().getTermSettings().getTerms().get(0);
+            TermDetails termDetails = kruizeObject.getRecommendation_settings().getTermSettings().getTermDetails().get(termKey);
 
-        kruizeObject.setTerms(terms);
+
+            terms.put(termKey + "_term", new Terms(termKey + "_term", termDetails.getDurationInDays(), termDetails.getDurationThreshold(),
+                    termDetails.getPlotsDatapoint(), termDetails.getPlotsDatapointDeltaInDays()));
+
+            kruizeObject.setTerms(terms);
+        }
     }
 
     public String getExperimentName() {

@@ -68,15 +68,13 @@ public class RecommendationEngine {
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
     private String modelName;
-//    private ModelName modelName = kruizeObject.getRecommendationSettings().getModelSettings().getModels();
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
         this.experimentName = experimentName;
         this.intervalEndTimeStr = intervalEndTimeStr;
         this.intervalStartTimeStr = intervalStartTimeStr;
-//        this.modelName = modelName;
-//        this.init(modelName);
+
     }
 
     private static int getNumPods(Map<Timestamp, IntervalResults> filteredResultsMap) {
@@ -126,23 +124,28 @@ public class RecommendationEngine {
         return (int) Math.ceil(max_pods_cpu);
     }
 
-    private void LoadRecommendationModel(String modelName) {
-        // Add new models
+    private void LoadRecommendationModelForRemoteMonitoring() {
         recommendationModels = new ArrayList<>();
         // Create Cost based model
-        /// TODO: add if else pick models for the  get func we created -- first change
+        CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
+        registerModel(costBasedRecommendationModel);
+        // Create Performance based model
+        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+        registerModel(performanceBasedRecommendationModel);
+    }
+
+    private void LoadRecommendationModelForLocalMonitoring(String modelName) {
+        // Add new models
+        recommendationModels = new ArrayList<>();
+
         if("cost".equalsIgnoreCase(modelName)) {
+            // Create Cost based model
             CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
-            // TODO: Create profile based model
             registerModel(costBasedRecommendationModel);
-        } else if ("performance".equalsIgnoreCase(modelName)) {
-            // Create Performance based model
-            PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
-            registerModel(performanceBasedRecommendationModel);
-        } else {
-            CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
-            // TODO: Create profile based model
-            registerModel(costBasedRecommendationModel);
+        }
+        /// TODO: add an if else statement for handling custom model
+        else {
+            // Default condition : if nothing is specified by the user
             // Create Performance based model
             PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
             registerModel(performanceBasedRecommendationModel);
@@ -192,10 +195,6 @@ public class RecommendationEngine {
 
     public Timestamp getInterval_end_time() {
         return interval_end_time;
-    }
-
-    public String getIntervalEndTimeStr() {
-        return intervalEndTimeStr;
     }
 
     public void setInterval_end_time(Timestamp interval_end_time) {
@@ -313,18 +312,38 @@ public class RecommendationEngine {
         // continue to generate recommendation when kruizeObject is successfully created
         try {
             // set the default terms if the terms aren't provided by the user
-            if (kruizeObject.getTerms() == null)
-                KruizeObject.setDefaultTerms(terms, kruizeObject);
+            if(kruizeObject.getTerms() == null) {
+                if (null == kruizeObject.getRecommendation_settings().getTermSettings()) {
+                    KruizeObject.setDefaultTerms(terms, kruizeObject);
+                } else {
+                    // set custom terms as provided by the user
+                    KruizeObject.setCustomTerms(terms, kruizeObject);
+                }
+            }
             // set the performance profile
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
-            // set custom terms
-            KruizeObject.setCustomTerms(terms, kruizeObject);
+
             // get the datasource
             // TODO: If no data source given use KruizeDeploymentInfo.monitoring_agent / default datasource
             String dataSource = kruizeObject.getDataSource();
 
-            setModelName(kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0));
-            LoadRecommendationModel(modelName);
+            // call different models for different use cases
+            if( kruizeObject.getTarget_cluster() == AnalyzerConstants.REMOTE){
+                // remote monitoring use case
+                LoadRecommendationModelForRemoteMonitoring();
+            }
+            else {
+                // local monitoring use case
+                if(kruizeObject.getRecommendation_settings().getModelSettings() != null) {
+                    // if user has specified model, run that
+                    setModelName(kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0));
+                    LoadRecommendationModelForLocalMonitoring(modelName);
+                }
+                else{
+                    // default local monitoring model is performance
+                    LoadRecommendationModelForLocalMonitoring(KruizeConstants.JSONKeys.PERFORMANCE);
+                }
+            }
 
             LOGGER.debug(String.format(KruizeConstants.APIMessages.EXPERIMENT_DATASOURCE, kruizeObject.getExperimentName(), dataSource));
 
