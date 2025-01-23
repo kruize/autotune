@@ -46,14 +46,14 @@ query_variables:
   # Eg. "avg", "sum", "max", "min"
   aggregation_functions:
     # MANDATORY
-    - function: sum
-      # query
-      # MANDATORY
-      query: 'sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=""}[$MEASUREMENT_DURATION_IN_HOUR$h]))'
+  - function: sum
+    # query
+    # MANDATORY
+    query: 'sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=""}[$MEASUREMENT_DURATION_IN_MIN$m]))'
 
-      # Any specific versions that this query is tied to
-      # OPTIONAL
-      version: ">4.9"
+    # Any specific versions that this query is tied to
+    # OPTIONAL
+    version: ">4.9"
 
 # list of all the workloads present in the cluster
 - name: workloadsAcrossCluster
@@ -62,5 +62,5 @@ query_variables:
   kubernetes_object: "container"
   # sum of the pod ownership metrics, grouped by namespace, workload, and workload_type, filtering out empty workloads.
   aggregation_functions:
-    - function: sum
-      query: 'sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=""}[$MEASUREMENT_DURATION_IN_HOUR$h]))'
+  - function: sum
+    query: 'sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=""}[$MEASUREMENT_DURATION_IN_MIN$m]))'
