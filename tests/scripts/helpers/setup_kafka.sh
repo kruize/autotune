@@ -92,6 +92,4 @@ for topic in "${topics[@]}"; do
 done
 
 cd ..
-exit 0
 echo "Kafka setup complete!"
-

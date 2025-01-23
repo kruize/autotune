@@ -30,8 +30,7 @@ sleep 5
 #KAFKA_PID=$(ps aux | grep '[k]afka-server-start.sh' | awk '{print $2}')
 KAFKA_PID=$(ps aux | grep 'kafka.Kafka' | grep -v 'grep' | awk '{print $2}')
 if [ ! -z "$KAFKA_PID" ]; then
-  echo "Stopping Kafka server (PID: $KAFKA_PID)..."
-  kill -9 $KAFKA_PID
+  echo "Kafka server not stopped"
 else
   echo "Kafka server stopped"
 fi
@@ -40,8 +39,7 @@ fi
 #ZOOKEEPER_PID=$(ps aux | grep '[z]ookeeper-server-start.sh' | awk '{print $2}')
 ZOOKEEPER_PID=$(ps aux | grep 'org.apache.zookeeper.server.quorum.QuorumPeerMain' | grep -v 'grep' | awk '{print $2}')
 if [ ! -z "$ZOOKEEPER_PID" ]; then
-  echo "Stopping Zookeeper server (PID: $ZOOKEEPER_PID)..."
-  kill -9 $ZOOKEEPER_PID
+  echo "zookeeper server not stopped"
 else
   echo "zookeeper server stopped"
 fi
@@ -50,4 +48,3 @@ echo "Cleaning up Kafka dir..."
 rm -rf "${KAFKA_DIR}"
 rm "${ZOOKEEPER_LOG}"
 rm "${KAFKA_SERVER_LOG}"
-
