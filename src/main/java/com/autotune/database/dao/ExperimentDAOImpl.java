@@ -532,6 +532,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public ValidationOutputData addMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerAddMetadataProfileDB = Timer.start(MetricsConfig.meterRegistry());
         Transaction tx = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
@@ -549,7 +551,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to save metadata profile source due to {}", e.getMessage());
             validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerAddMetadataProfileDB) {
+                MetricsConfig.timerAddMetadataProfileDB = MetricsConfig.timerBAddMetadataProfileDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerAddMetadataProfileDB.stop(MetricsConfig.timerAddMetadataProfileDB);
+            }
         }
+
         return validationOutputData;
     }
 
@@ -939,6 +947,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public List<KruizeLMMetadataProfileEntry> loadAllMetadataProfiles() throws Exception {
         String statusValue = "failure";
+        Timer.Sample timerLoadAllMetadataProfiles = Timer.start(MetricsConfig.meterRegistry());
 
         List<KruizeLMMetadataProfileEntry> entries = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
@@ -946,6 +955,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to load Metadata Profile  due to {}", e.getMessage());
             throw new Exception("Error while loading existing Metadata Profile from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadAllMetadataProfiles) {
+                MetricsConfig.timerLoadAllMetadataProfiles = MetricsConfig.timerBLoadAllMetadataProfiles.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadAllMetadataProfiles.stop(MetricsConfig.timerLoadAllMetadataProfiles);
+            }
         }
         return entries;
     }
@@ -1277,6 +1291,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to load Metadata Profile {} due to {}", metadataProfileName, e.getMessage());
             throw new Exception("Error while loading existing metadata profile from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadMetadataProfileName) {
+                MetricsConfig.timerLoadMetadataProfileName = MetricsConfig.timerBLoadMetadataProfileName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadMetadataProfileName.stop(MetricsConfig.timerLoadMetadataProfileName);
+            }
         }
         return entries;
     }

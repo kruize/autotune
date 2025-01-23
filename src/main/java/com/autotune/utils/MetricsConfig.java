@@ -21,6 +21,7 @@ public class MetricsConfig {
     public static Timer timerLoadAllRec, timerLoadAllExp, timerLoadAllResults;
     public static Timer timerAddRecDB, timerAddResultsDB, timerAddExpDB, timerAddBulkResultsDB;
     public static Timer timerAddPerfProfileDB, timerLoadPerfProfileName, timerLoadAllPerfProfiles;
+    public static Timer timerAddMetadataProfileDB, timerLoadMetadataProfileName, timerLoadAllMetadataProfiles;
     public static Timer timerImportMetadata, timerGetMetadata;
     public static Timer timerJobStatus, timerCreateBulkJob, timerGetExpMap, timerCreateBulkExp, timerGenerateBulkRec, timerRunJob;
     public static Counter timerKruizeNotifications , timerBulkJobs;
@@ -35,6 +36,7 @@ public class MetricsConfig {
     public static Timer.Builder timerBListDS, timerBImportDSMetadata, timerBListDSMetadata;
     public static Timer.Builder timerBImportMetadata, timerBGetMetadata;
     public static Timer.Builder timerBJobStatus, timerBCreateBulkJob, timerBGetExpMap, timerBCreateBulkExp, timerBGenerateBulkRec, timerBRunJob;
+    public static Timer.Builder timerBAddMetadataProfileDB, timerBLoadMetadataProfileName, timerBLoadAllMetadataProfiles;
     private static MetricsConfig INSTANCE;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
     public String DB_METRIC_DESC = "Time taken for KruizeDB methods";
@@ -81,6 +83,10 @@ public class MetricsConfig {
         timerBRunJob = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "bulk").tag("method", "runBulkJob");
         timerBBulkRunJobs = Gauge.builder("kruizeAPI_active_jobs_count", activeJobs, AtomicInteger::get).description("No.of bulk jobs running").tags("api", "bulk", "method", "runBulkJob" , "status", "running");
         timerBBulkRunJobs.register(meterRegistry);
+
+        timerBAddMetadataProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addMetadataProfileToDB");
+        timerBLoadMetadataProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadMetadataProfileByName");
+        timerBLoadAllMetadataProfiles = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllMetadataProfiles");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);
