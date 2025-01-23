@@ -171,12 +171,12 @@ jobs:
         if: always()
         run: |
           echo "Capturing ffdc logs"
-          ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}/kruize_build_crc_lm_test_results
+          ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}/kruize_test_results
       - name: Archive results
         if: always()
         run: |
           cd ${GITHUB_WORKSPACE}
-          tar cvf kruize_build_crc_lm_test_results.tar kruize_build_crc_lm_test_results
+          tar cvf kruize_build_crc_lm_test_results.tar kruize_test_results
 
       - name: Upload results
         if: always()
@@ -222,13 +222,13 @@ jobs:
       - name: Capture ffdc logs
         if: always()
         run: |
-          ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}/kruize_local_monitoring_test_results
+          ./scripts/ffdc.sh -m crc -d ${GITHUB_WORKSPACE}/kruize_test_results
 
       - name: Archive results
         if: always()
         run: |
           cd ${GITHUB_WORKSPACE}
-          tar cvf kruize_local_monitoring_test_results.tar kruize_local_monitoring_test_results
+          tar cvf kruize_local_monitoring_test_results.tar kruize_test_results
 
       - name: Upload results
         if: always()
