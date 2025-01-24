@@ -1,14 +1,16 @@
 package com.autotune.common.datasource;
 
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.common.data.dataSourceMetadata.DataSourceCluster;
 import com.autotune.common.data.dataSourceMetadata.DataSource;
+import com.autotune.common.data.dataSourceMetadata.DataSourceCluster;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * DataSourceMetadataValidation class validates the structure and mandatory fields of a DataSourceMetadataInfo object
@@ -48,13 +50,13 @@ public class DataSourceMetadataValidation {
     public void validate(DataSourceMetadataInfo dataSourceMetadataInfo) {
         List<String> missingMandatoryFields = new ArrayList<>();
         try {
-            if (null == dataSourceMetadataInfo || null == dataSourceMetadataInfo.getDataSourceHashMap()) {
+            if (null == dataSourceMetadataInfo || null == dataSourceMetadataInfo.getDatasources()) {
                 String errorMsg = AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_CONNECTION_FAILED;
                 markFailed(errorMsg);
                 return;
             }
 
-            for (Map.Entry<String, DataSource> entry : dataSourceMetadataInfo.getDataSourceHashMap().entrySet()) {
+            for (Map.Entry<String, DataSource> entry : dataSourceMetadataInfo.getDatasources().entrySet()) {
                 DataSource dataSource = entry.getValue();
                 if (null == dataSource.getDataSourceName()) {
                     missingMandatoryFields.add(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCE_NAME);
@@ -81,14 +83,14 @@ public class DataSourceMetadataValidation {
     /**
      * Validates the given DataSource object for mandatory fields like "clusters" and "cluster_name".
      *
-     * @param dataSource the DataSource object to validate.
+     * @param dataSource             the DataSource object to validate.
      * @param missingMandatoryFields the list to which any missing fields will be added.
      */
     private void validateDataSourceCluster(DataSource dataSource, List<String> missingMandatoryFields) {
-        if (null == dataSource.getDataSourceClusterHashMap()) {
+        if (null == dataSource.getClusters()) {
             missingMandatoryFields.add(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS);
         } else {
-            for (Map.Entry<String, DataSourceCluster> entry : dataSource.getDataSourceClusterHashMap().entrySet()) {
+            for (Map.Entry<String, DataSourceCluster> entry : dataSource.getClusters().entrySet()) {
                 DataSourceCluster dataSourceCluster = entry.getValue();
                 if (null == dataSourceCluster.getDataSourceClusterName()) {
                     missingMandatoryFields.add(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTER_NAME);

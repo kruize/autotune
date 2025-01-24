@@ -1,7 +1,5 @@
 package com.autotune.common.data.dataSourceMetadata;
 
-import com.autotune.utils.KruizeConstants;
-import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,26 +17,28 @@ public class DataSourceMetadataInfo {
      * Key: Data Source name
      * Value: Associated DataSource object
      */
-    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCES)
-    private HashMap<String, DataSource> dataSourceHashMap;
+    //@SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCES)
+    //@JsonProperty(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCES)
+    private HashMap<String, DataSource> datasources;
 
-    public DataSourceMetadataInfo(HashMap<String, DataSource> dataSourceHashMap) {
-        this.dataSourceHashMap = dataSourceHashMap;
+    public DataSourceMetadataInfo(HashMap<String, DataSource> datasources) {
+        this.datasources = datasources;
     }
 
-    public HashMap<String, DataSource> getDataSourceHashMap() {
-        return dataSourceHashMap;
+    public HashMap<String, DataSource> getDatasources() {
+        return datasources;
     }
 
-    public void setDataSourceHashMap(HashMap<String, DataSource> dataSourceHashMap) {
-        if (null == dataSourceHashMap) {
+    public void setDatasources(HashMap<String, DataSource> datasources) {
+        if (null == datasources) {
             LOGGER.debug("No data sources found");
         }
-        this.dataSourceHashMap = dataSourceHashMap;
+        this.datasources = datasources;
     }
+
     public DataSource getDataSourceObject(String dataSourceName) {
-        if (null != dataSourceHashMap && dataSourceHashMap.containsKey(dataSourceName)) {
-            return dataSourceHashMap.get(dataSourceName);
+        if (null != datasources && datasources.containsKey(dataSourceName)) {
+            return datasources.get(dataSourceName);
         }
         return null;
     }
@@ -46,7 +46,7 @@ public class DataSourceMetadataInfo {
     @Override
     public String toString() {
         return "DataSourceMetadataInfo{" +
-                "datasources=" + dataSourceHashMap +
+                "datasources=" + datasources +
                 '}';
     }
 }

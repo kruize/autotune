@@ -160,6 +160,8 @@ public class BulkJobManager implements Runnable {
                 if (null == metadataInfo) {
                     setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
                 } else {
+
+                    jobData.setMetadata(metadataInfo);
                     Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
                     jobData.getSummary().setTotal_experiments(createExperimentAPIObjectMap.size());
                     jobData.getSummary().setProcessed_experiments(0);
@@ -339,16 +341,16 @@ public class BulkJobManager implements Runnable {
         Timer.Sample timerGetExpMap = Timer.start(MetricsConfig.meterRegistry());
         try {
             Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = new HashMap<>();
-            Collection<DataSource> dataSourceCollection = metadataInfo.getDataSourceHashMap().values();
+            Collection<DataSource> dataSourceCollection = metadataInfo.getDatasources().values();
             for (DataSource ds : dataSourceCollection) {
-                HashMap<String, DataSourceCluster> clusterHashMap = ds.getDataSourceClusterHashMap();
+                HashMap<String, DataSourceCluster> clusterHashMap = ds.getClusters();
                 for (DataSourceCluster dsc : clusterHashMap.values()) {
-                    HashMap<String, DataSourceNamespace> namespaceHashMap = dsc.getDataSourceNamespaceHashMap();
+                    HashMap<String, DataSourceNamespace> namespaceHashMap = dsc.getNamespaces();
                     for (DataSourceNamespace namespace : namespaceHashMap.values()) {
-                        HashMap<String, DataSourceWorkload> dataSourceWorkloadHashMap = namespace.getDataSourceWorkloadHashMap();
+                        HashMap<String, DataSourceWorkload> dataSourceWorkloadHashMap = namespace.getWorkloads();
                         if (dataSourceWorkloadHashMap != null) {
                             for (DataSourceWorkload dsw : dataSourceWorkloadHashMap.values()) {
-                                HashMap<String, DataSourceContainer> dataSourceContainerHashMap = dsw.getDataSourceContainerHashMap();
+                                HashMap<String, DataSourceContainer> dataSourceContainerHashMap = dsw.getContainers();
                                 if (dataSourceContainerHashMap != null) {
                                     for (DataSourceContainer dc : dataSourceContainerHashMap.values()) {
                                         // Experiment name - dynamically constructed
@@ -459,12 +461,12 @@ public class BulkJobManager implements Runnable {
         createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());
         List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
         KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
-        ContainerAPIObject cao = new ContainerAPIObject(dc.getDataSourceContainerName(),
-                dc.getDataSourceContainerImageName(), null, null);
+        ContainerAPIObject cao = new ContainerAPIObject(dc.getContainerName(),
+                dc.getContainerImageName(), null, null);
         kubernetesAPIObject.setContainerAPIObjects(Arrays.asList(cao));
-        kubernetesAPIObject.setName(dsw.getDataSourceWorkloadName());
-        kubernetesAPIObject.setType(dsw.getDataSourceWorkloadType());
-        kubernetesAPIObject.setNamespace(namespace.getDataSourceNamespaceName());
+        kubernetesAPIObject.setName(dsw.getWorkloadName());
+        kubernetesAPIObject.setType(dsw.getWorkloadType());
+        kubernetesAPIObject.setNamespace(namespace.getNamespace());
         kubernetesAPIObjectList.add(kubernetesAPIObject);
         createExperimentAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
         RecommendationSettings rs = new RecommendationSettings();
@@ -495,10 +497,10 @@ public class BulkJobManager implements Runnable {
 
         String datasource = this.bulkInput.getDatasource();
         String clusterName = dataSourceCluster.getDataSourceClusterName();
-        String namespace = dataSourceNamespace.getDataSourceNamespaceName();
-        String workloadName = dataSourceWorkload.getDataSourceWorkloadName();
-        String workloadType = dataSourceWorkload.getDataSourceWorkloadType();
-        String containerName = dataSourceContainer.getDataSourceContainerName();
+        String namespace = dataSourceNamespace.getNamespace();
+        String workloadName = dataSourceWorkload.getWorkloadName();
+        String workloadType = dataSourceWorkload.getWorkloadType();
+        String containerName = dataSourceContainer.getContainerName();
 
         String experimentName = KruizeDeploymentInfo.experiment_name_format
                 .replace("%datasource%", datasource)

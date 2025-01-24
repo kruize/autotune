@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -42,6 +43,7 @@ public class BulkJobStatus {
     // Change to String to store formatted time
     private Map<String, Experiment> experiments = Collections.synchronizedMap(new HashMap<>());
     private Webhook webhook;
+    private DataSourceMetadataInfo metadata;
 
     public BulkJobStatus(String jobID, String status, Instant startTime) {
         this.summary = new Summary(jobID, status, startTime);
@@ -85,6 +87,14 @@ public class BulkJobStatus {
         Experiment experiment = new Experiment(experimentName);
         experiments.put(experimentName, experiment);
         return experiment;
+    }
+
+    public DataSourceMetadataInfo getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(DataSourceMetadataInfo metadata) {
+        this.metadata = metadata;
     }
 
     public static enum NotificationType {
@@ -327,5 +337,4 @@ public class BulkJobStatus {
             this.notifications = notifications;
         }
     }
-
 }
