@@ -1385,7 +1385,7 @@ def clone_repo(repo_url, target_dir=None):
 
 
 #  Install Benchmarks
-def benchmarks_install(namespace="default", manifests="default_manifests"):
+def benchmarks_install(namespace="default", manifests="default_manifests", name="techempower"):
 
     # Change to the benchmarks directory
     try:
@@ -1393,13 +1393,16 @@ def benchmarks_install(namespace="default", manifests="default_manifests"):
     except Exception as e:
         print(f"ERROR: Could not change to 'benchmarks' directory: {e}")
 
-    print("Installing TechEmpower (Quarkus REST EASY) benchmark into cluster")
+    print("Installing {name} benchmark into cluster")
 
     # Change to the techempower directory
     try:
-        os.chdir("techempower")
+        if name == "sysbench":
+            os.chdir("sysbench")
+        else:
+            os.chdir("techempower")
     except Exception as e:
-        print(f"ERROR: Could not change to 'techempower' directory: {e}")
+        print(f"ERROR: Could not change to {name} directory: {e}")
 
 
     # Apply the Kubernetes manifests
