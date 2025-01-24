@@ -335,6 +335,7 @@ public class AnalyzerConstants {
         public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
         public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
         public static final String FUNCTION_VARIABLE = "function_variable: ";
+        public static final String QUERY_VARIABLE = "query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
 
         private AutotuneObjectConstants() {
@@ -597,6 +598,28 @@ public class AnalyzerConstants {
                 RESOURCE_OPT_OPENSHIFT_PROFILE, "ResourceOptimizationOpenshiftImpl",
                 RESOURCE_OPT_LOCAL_MON_PROFILE, "ResourceOptimizationOpenshiftImpl"
         );
+    }
+
+    public static final class MetadataProfileConstants {
+
+        public static final String QUERY_VARIABLES = "queryVariables";
+        public static final String METADATA_PROFILE_NAME = "name";
+        public static final String K8S_TYPE = "k8s_type";
+        public static final String METADATA_PROFILE_MAP = "metadataProfileMap";
+        public static final String VALUE_TYPE = "valueType";
+        public static final String DEFAULT_API_VERSION = "recommender.com/v1";
+        public static final String DEFAULT_KIND = "KruizeMetadataProfile";
+        public static final String DEFAULT_PROFILE = "default";
+        public static final String METADATA_PROFILE = "metadataProfile";
+        public static final String METADATA_PROFILE_PLURALS = "kruizemetadataprofiles";
+        public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
+    }
+
+    public static final class CommonProfileMsgs {
+        public static final String METHOD_NAME = "MethodName = {}";
+        public static final String INVALID_METHOD_NAME = "Method name {} doesn't exist!";
+        public static final String MISSING_MANDATORY_PARAMETERS = "Missing mandatory parameters: %s ";
+        public static final String VALIDATION_ERROR_MSG = "Validation error message :{}";
     }
 
     public static final class K8sObjectConstants {
