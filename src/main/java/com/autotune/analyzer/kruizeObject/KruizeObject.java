@@ -33,6 +33,7 @@ import io.fabric8.kubernetes.api.model.ObjectReference;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 
 /**
@@ -139,7 +140,7 @@ public final class KruizeObject implements ExperimentTypeAware {
         // TODO: define term names like daily, weekly, fortnightly etc
         // TODO: add CRD for terms
 
-        if(kruizeObject.getTarget_cluster() == AnalyzerConstants.REMOTE) {
+        if(kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
             // for remote monitoring use case
             terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
                     .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
@@ -150,7 +151,7 @@ public final class KruizeObject implements ExperimentTypeAware {
             terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM, KruizeConstants
                     .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants
                     .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD, 15, 1));
-
+            kruizeObject.setTerms(terms);
         }
         else {
             // for local monitoring use case
