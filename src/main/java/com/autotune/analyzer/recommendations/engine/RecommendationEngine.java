@@ -328,7 +328,7 @@ public class RecommendationEngine {
             String dataSource = kruizeObject.getDataSource();
 
             // call different models for different use cases
-            if( kruizeObject.getTarget_cluster() == AnalyzerConstants.REMOTE){
+            if( kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)){
                 // remote monitoring use case
                 LoadRecommendationModelForRemoteMonitoring();
             }
