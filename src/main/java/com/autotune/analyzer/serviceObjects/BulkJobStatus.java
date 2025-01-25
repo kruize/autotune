@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonFilter;
@@ -25,9 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
@@ -45,8 +44,18 @@ public class BulkJobStatus {
     private Webhook webhook;
     private DataSourceMetadataInfo metadata;
 
+
     public BulkJobStatus(String jobID, String status, Instant startTime) {
         this.summary = new Summary(jobID, status, startTime);
+    }
+
+    // Utility function to format Instant into the required UTC format
+    private static String formatInstantAsUTCString(Instant instant) {
+        DateTimeFormatter formatter = DateTimeFormatter
+                .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                .withZone(ZoneOffset.UTC);  // Ensure it's in UTC
+
+        return formatter.format(instant);
     }
 
     public Map<String, Experiment> getExperiments() {
@@ -71,15 +80,6 @@ public class BulkJobStatus {
 
     public void setSummary(Summary summary) {
         this.summary = summary;
-    }
-
-    // Utility function to format Instant into the required UTC format
-    private String formatInstantAsUTCString(Instant instant) {
-        DateTimeFormatter formatter = DateTimeFormatter
-                .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
-                .withZone(ZoneOffset.UTC);  // Ensure it's in UTC
-
-        return formatter.format(instant);
     }
 
     // Method to add a new experiment with "unprocessed" status and null notification
@@ -219,61 +219,147 @@ public class BulkJobStatus {
         }
     }
 
-    public static class Experiment {
-        private String name;
-        private Notification notification; // Empty by default
-        private Recommendation recommendations;
+    public static class API_Response {
+        private CreateAPIResponse create = new CreateAPIResponse();
+        private GenerateAPIResponse recommendations = new GenerateAPIResponse();
 
-        public Experiment(String name) {
-            this.name = name;
-            this.notification = null; // Start with null notification
-            this.recommendations = new Recommendation(UNPROCESSED); // Start with unprocessed status
+        public CreateAPIResponse getCreate() {
+            return create;
         }
 
-        // Getters and setters
-        public Recommendation getRecommendations() {
+        public void setCreate(CreateAPIResponse create) {
+            this.create = create;
+        }
+
+        public GenerateAPIResponse getRecommendations() {
             return recommendations;
         }
 
-        public void setRecommendations(Recommendation recommendations) {
+        public void setRecommendations(GenerateAPIResponse recommendations) {
             this.recommendations = recommendations;
-        }
-
-        public Notification getNotification() {
-            return notification;
-        }
-
-        public void setNotification(Notification notification) {
-            this.notification = notification;
         }
     }
 
-    public static class Recommendation {
-        private KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status status;
-        private Notification notifications; // Notifications can hold multiple entries
+    public static class CreateAPIResponse {
+        private KruizeResponse response;
 
-        public Recommendation(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status status) {
-            this.status = status;
+        public KruizeResponse getResponse() {
+            return response;
         }
 
-        // Getters and setters
+        public void setResponse(KruizeResponse response) {
+            this.response = response;
+        }
+    }
+
+    public static class GenerateAPIResponse {
+
+        Object response = null;
+
+        public GenerateAPIResponse() {
+        }
+
+        public GenerateAPIResponse(Object response) {
+            if (response instanceof List) {
+                this.response = Optional.of((List<ListRecommendationsAPIObject>) response);
+            }
+            if (response instanceof KruizeResponse) {
+                this.response = Optional.of((KruizeResponse) response);
+            }
+
+        }
+
+        public static Optional<List<ListRecommendationsAPIObject>> handleListResponse(Object response) {
+            if (response instanceof List) {
+                return Optional.of((List<ListRecommendationsAPIObject>) response);
+            }
+            return Optional.empty();
+        }
+
+        public static Optional<KruizeResponse> handleKruizeResponse(Object response) {
+            if (response instanceof KruizeResponse) {
+                return Optional.of((KruizeResponse) response);
+            }
+            return Optional.empty();
+        }
+
+        public Object getResponse() {
+            return response;
+        }
+
+        public void setResponse(Object response) {
+            this.response = response;
+        }
+
+
+    }
+
+    public static class Experiment {
+
+        private String name;
+        private KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status status;
+        private API_Response apis = new API_Response();
+        private List<StatusHistory> status_history = new ArrayList<>();
+
+        public Experiment(String name) {
+            this.name = name;
+            this.status = UNPROCESSED; // Start with unprocessed status
+            status_history.add(new StatusHistory(UNPROCESSED, Instant.now()));
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public void setName(String name) {
+            this.name = name;
+        }
+
+        public API_Response getApis() {
+            return apis;
+        }
+
+        public void setApis(API_Response apis) {
+            this.apis = apis;
+        }
 
         public KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status getStatus() {
             return status;
         }
 
         public void setStatus(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status status) {
+            status_history.add(new StatusHistory(status, Instant.now()));
             this.status = status;
         }
 
-        public Notification getNotifications() {
-            return notifications;
+        public List<StatusHistory> getStatus_history() {
+            return status_history;
         }
 
-        public void setNotifications(Notification notifications) {
-            this.notifications = notifications;
+        public void setStatus_history(List<StatusHistory> status_history) {
+            this.status_history = status_history;
         }
     }
+
+    public static class StatusHistory {
+        private KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status status;
+        private String timestamp;
+
+        public StatusHistory(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status status, Instant timestamp) {
+            this.status = status;
+            this.timestamp = formatInstantAsUTCString(timestamp);
+        }
+
+        public KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status getStatus() {
+            return status;
+        }
+
+        public String getTimestamp() {
+            return timestamp;
+        }
+
+    }
+
 
     public static class Notification {
         private NotificationType type;
