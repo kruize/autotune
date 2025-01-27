@@ -246,7 +246,7 @@ public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
             } else {
                 for (MappedRecommendationForTimestamp value : recommendationData.values()) {
                     /*
-                     * Fetching Short Term Cost Recommendations By Default
+                     * The short-term performance recommendations is currently the default for VPA and is hardcoded.
                      * TODO:// Implement functionality to choose the desired term and model
                      **/
                     TermRecommendations termRecommendations = value.getShortTermRecommendations();
