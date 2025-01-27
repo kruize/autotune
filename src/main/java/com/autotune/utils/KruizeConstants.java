@@ -935,5 +935,11 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_VALIDATION_FAILURE = "MetadataProfile validation failed: ";
         public static final String METADATA_PROFILE_VALIDATION_AND_ADD_FAILURE = "Validate and add metadata profile failed: {}";
         public static final String ADD_METADATA_PROFILE = "Added MetadataProfile: {}";
+        public static final String CHECKING_AVAILABLE_METADATA_PROFILE_FROM_DB = "Checking available metadata profiles from database: ";
+        public static final String NO_METADATA_PROFILE_FOUND_IN_DB = "No metadata profile found in database.";
+        public static final String METADATA_PROFILE_FOUND = "MetadataProfile found: ";
+        public static final String ADDING_METADATA_PROFILE = "Trying to add the metadata profile to collection: ";
+        public static final String METADATA_PROFILE_ALREADY_EXISTS = "MetadataProfile already exists: ";
+        public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: ";
     }
 }

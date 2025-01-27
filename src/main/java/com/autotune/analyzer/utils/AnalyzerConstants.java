@@ -337,6 +337,7 @@ public class AnalyzerConstants {
         public static final String FUNCTION_VARIABLE = "function_variable: ";
         public static final String QUERY_VARIABLE = "query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
+        public static final String QUERY_VARIABLES = "query_variables";
 
         private AutotuneObjectConstants() {
         }
@@ -605,6 +606,7 @@ public class AnalyzerConstants {
         public static final String QUERY_VARIABLES = "queryVariables";
         public static final String METADATA_PROFILE_NAME = "name";
         public static final String K8S_TYPE = "k8s_type";
+        public static final String DATASOURCE = "datasource";
         public static final String METADATA_PROFILE_MAP = "metadataProfileMap";
         public static final String VALUE_TYPE = "valueType";
         public static final String DEFAULT_API_VERSION = "recommender.com/v1";
