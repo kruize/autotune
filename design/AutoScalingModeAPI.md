@@ -1,7 +1,7 @@
-# Update Mode APIs
+# Auto Scaling Mode APIs
 
 This document will help you quickly get started with the 
-auto-update feature enabled by integrating Kruize with Kubernetes' 
+autoscaling feature enabled by integrating Kruize with Kubernetes' 
 Vertical Pod Autoscaler (VPA) and Instaslice. 
 
 By leveraging Kruize APIs, you can streamline resource optimization 
@@ -42,7 +42,8 @@ This interval determines the frequency of updates to optimize resource recommend
 
 ### Create Experiment API
 
-This is quick guide instructions to create experiments using input JSON as follows. 
+This is quick guide instructions to create experiments using input JSON as follows.
+This API and JSON format are applicable to both currently available autoscaling modes: `auto` and `recreate`.
 
 **Request**
 `POST /createExperiment`
