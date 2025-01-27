@@ -5,6 +5,7 @@ import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
@@ -402,12 +403,13 @@ public class Converters {
 
                 Double profileVersion = jsonObject.has(AnalyzerConstants.PROFILE_VERSION) ? jsonObject.getDouble(AnalyzerConstants.PROFILE_VERSION) : null;
                 String k8sType = jsonObject.has(AnalyzerConstants.MetadataProfileConstants.K8S_TYPE) ? jsonObject.getString(AnalyzerConstants.MetadataProfileConstants.K8S_TYPE) : null;
+                String datasource = jsonObject.has(AnalyzerConstants.MetadataProfileConstants.DATASOURCE) ? jsonObject.getString(AnalyzerConstants.MetadataProfileConstants.DATASOURCE) : null;
                 JSONArray queryVariableArray = jsonObject.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.QUERY_VARIABLES);
                 ArrayList<Metric> queryVariablesList = new ArrayList<>();
                 for (Object object : queryVariableArray) {
                     JSONObject functionVarObj = (JSONObject) object;
                     String name = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
-                    String datasource = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE);
+                    datasource = functionVarObj.has(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE) ? functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE) : datasource;
                     String query = functionVarObj.has(AnalyzerConstants.AutotuneObjectConstants.QUERY) ? functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.QUERY) : null;
                     String valueType = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
                     String kubeObject = functionVarObj.has(AnalyzerConstants.KUBERNETES_OBJECT) ? functionVarObj.getString(AnalyzerConstants.KUBERNETES_OBJECT) : null;
@@ -426,7 +428,7 @@ public class Converters {
                     queryVariablesList.add(metric);
                 }
 
-                metadataProfile = new MetadataProfile(apiVersion, kind, metadata, profileVersion, k8sType, queryVariablesList);
+                metadataProfile = new MetadataProfile(apiVersion, kind, metadata, profileVersion, k8sType, datasource, queryVariablesList);
             }
             return metadataProfile;
         }

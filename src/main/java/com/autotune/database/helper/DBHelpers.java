@@ -21,6 +21,7 @@ import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
@@ -42,6 +43,7 @@ import com.autotune.common.datasource.DataSourceMetadataOperator;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
@@ -1448,7 +1450,7 @@ public class DBHelpers {
                         }
 
                         MetadataProfile metadataProfile = new MetadataProfile(
-                                entry.getApi_version(), entry.getKind(), metadata, entry.getProfile_version(), entry.getK8s_type(), queryVariablesList);
+                                entry.getApi_version(), entry.getKind(), metadata, entry.getProfile_version(), entry.getK8s_type(), entry.getDatasource(), queryVariablesList);
                         metadataProfiles.add(metadataProfile);
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while reading from MetadataProfile DB object due to : {}", e.getMessage());
@@ -1472,11 +1474,12 @@ public class DBHelpers {
             public static KruizeLMMetadataProfileEntry convertMetadataProfileObjToMetadataProfileDBObj(MetadataProfile metadataProfile) {
                 KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry = null;
                 try {
-                    kruizeMetadataProfileEntry = new KruizeMetadataProfileEntry();
+                    kruizeMetadataProfileEntry = new KruizeLMMetadataProfileEntry();
                     kruizeMetadataProfileEntry.setApi_version(metadataProfile.getApiVersion());
                     kruizeMetadataProfileEntry.setKind(metadataProfile.getKind());
                     kruizeMetadataProfileEntry.setProfile_version(metadataProfile.getProfile_version());
                     kruizeMetadataProfileEntry.setK8s_type(metadataProfile.getK8s_type());
+                    kruizeMetadataProfileEntry.setDatasource(metadataProfile.getDatasource());
 
                     ObjectMapper objectMapper = new ObjectMapper();
 
