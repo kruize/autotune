@@ -342,6 +342,7 @@ public class KruizeConstants {
 
     public static class SupportedDatasources {
         public static final String PROMETHEUS = "prometheus";
+        public static final String THANOS = "thanos";
 
         private SupportedDatasources() {
         }
@@ -422,7 +423,7 @@ public class KruizeConstants {
         }
 
         public static class DataSourceInfoMsgs {
-            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: {}";
+            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: {} - {}";
             public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: {}";
             public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
             public static final String CHECKING_AVAILABLE_DATASOURCE_FROM_DB = "Checking available datasources from database:";
@@ -711,6 +712,7 @@ public class KruizeConstants {
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
         public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
         public static final String IS_ROS_ENABLED = "isROSEnabled";
+        public static final String DATASOURCE_VIA_ENV = "datasource";
     }
 
     public static final class RecommendationEngineConstants {
@@ -791,6 +793,7 @@ public class KruizeConstants {
         public static final String AUTHENTICATION_USERNAME = "username";
         public static final String AUTHENTICATION_PASSWORD = "password";
         public static final String AUTHENTICATION_TOKEN_FILE = "tokenFilePath";
+        public static final String AUTHENTICATION_TOKEN = "token";
         public static final String AUTHENTICATION_API_KEY = "apiKey";
         public static final String AUTHENTICATION_HEADER_NAME = "header";
         public static final String AUTHENTICATION_TOKEN_ENDPOINT = "tokenEndpoint";
