@@ -182,10 +182,14 @@ public class DataSourceCollection {
                     return;
                 }
             } else {
-                String provider = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_PROVIDER);
-                String serviceName = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
-                String namespace = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
-                String dataSourceURL = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
+                String provider = dataSourceObject.optString(KruizeConstants.DataSourceConstants.DATASOURCE_PROVIDER);
+                LOGGER.info(provider);
+                String serviceName = dataSourceObject.optString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
+                LOGGER.info(serviceName);
+                String namespace = dataSourceObject.optString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAMESPACE);
+                LOGGER.info(namespace);
+                String dataSourceURL = dataSourceObject.optString(KruizeConstants.DataSourceConstants.DATASOURCE_URL);
+                LOGGER.info(dataSourceURL);
                 AuthenticationConfig authConfig = getAuthenticationDetails(dataSourceObject, name);
 
                 // Validate input
@@ -251,7 +255,7 @@ public class DataSourceCollection {
      * deletes the datasource from the Hashmap
      *
      * @param name String containing the name of the datasource to be deleted
-     *                                                                                                 TODO: add db related operations
+     *                                                                                                                                                                                                             TODO: add db related operations
      */
     public void deleteDataSource(String name) throws DataSourceMissingRequiredFiled, DataSourceDoesNotExist {
 
@@ -271,7 +275,7 @@ public class DataSourceCollection {
      *
      * @param name          String containing the name of the datasource to be updated
      * @param newDataSource DataSourceInfo object with updated values
-     *                                                                                                                                                                         TODO: add db related operations
+     *                                                                                                                                                                                                                                                                                                                                                                      TODO: add db related operations
      */
     public void updateDataSource(String name, DataSourceInfo newDataSource) throws UnsupportedDataSourceProvider, DataSourceNotServiceable, DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DataSourceDoesNotExist {
 
