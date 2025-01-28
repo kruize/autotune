@@ -43,7 +43,7 @@ function local_monitoring_tests() {
 	target="crc"
 	metric_profile_json="${METRIC_PROFILE_DIR}/resource_optimization_local_monitoring.json"
 
-	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e")
+	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e" "kafka")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -72,17 +72,42 @@ function local_monitoring_tests() {
 
 		sleep 60
 
-    # create performance profile
-    create_metric_profile ${metric_profile_json}
+    		# create performance profile
+		create_metric_profile ${metric_profile_json}
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi
 
+	kafka_test=0
 	# If testcase is not specified run all tests
 	if [ -z "${testcase}" ]; then
 		testtorun=("${local_monitoring_tests[@]}")
+		kafka_test=1
 	else
 		testtorun=${testcase}
+		if [ "${testtorun}" == "kafka" ]; then
+			kafka_test=1
+		fi
+	fi
+
+	KAFKA_SETUP="${HOME}/kafka_setup"
+	if [ "${kafka_test}" == "1" ]; then
+		echo "Setting up kafka..."
+		mkdir -p "${KAFKA_SETUP}"
+		setup_log="${TEST_SUITE_DIR}/setup_kafka.log"
+		echo ". ${LOCAL_MONITORING_TEST_DIR}/../helpers/setup_kafka.sh ${KAFKA_SETUP} > ${setup_log} 2>&1"
+		. ${LOCAL_MONITORING_TEST_DIR}/../helpers/setup_kafka.sh "${KAFKA_SETUP}" > ${setup_log} 2>&1
+		if [ $? -ne 0 ]; then
+			echo "Setting up kafka...Failed!"
+			cp "${KAFKA_SETUP}/zookeeper.log" "${TEST_SUITE_DIR}"
+			cp "${KAFKA_SETUP}/kafka_server.log" "${TEST_SUITE_DIR}"
+			echo "Check ${setup_log} for details!"
+			exit 1
+		else
+			echo "Setting up kafka...Done"
+			cp "${KAFKA_SETUP}/zookeeper.log" "${TEST_SUITE_DIR}"
+			cp "${KAFKA_SETUP}/kafka_server.log" "${TEST_SUITE_DIR}"
+		fi
 	fi
 
 	# create the result directory for given testsuite
@@ -151,6 +176,22 @@ function local_monitoring_tests() {
 		FAILED_TEST_SUITE+=(${FUNCNAME})
 	fi
 
+	if [ "${kafka_test}" == "1" ]; then
+		echo "Cleaning up kafka..."
+		mkdir -p "${KAFKA_SETUP}"
+		if [ $? -ne 0 ]; then
+			cleanup_log="${KAFKA_SETUP}/cleanup_kafka.log"
+			echo ". ${LOCAL_MONITORING_TEST_DIR}/../helpers/cleanup_kafka.sh ${KAFKA_SETUP} > ${cleanup_log} 2>&1"
+			. ${LOCAL_MONITORING_TEST_DIR}/../helpers/cleanup_kafka.sh "${KAFKA_SETUP}" > ${cleanup_log} 2>&1
+			if [ $? -ne 0 ]; then
+				echo "Cleaning up kafka...Failed!"
+				echo "Check ${cleanup_log} for details!"
+				exit 1
+			else
+				echo "Cleaning up kafka...Done"
+			fi
+		fi
+	fi
 	end_time=$(get_date)
 	elapsed_time=$(time_diff "${start_time}" "${end_time}")
 
