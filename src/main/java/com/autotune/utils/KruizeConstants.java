@@ -947,4 +947,14 @@ public class KruizeConstants {
         }
 
     }
+
+    public static final class MetadataProfileAPIMessages {
+        public static final String CREATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s created successfully.";
+        public static final String VIEW_METADATA_PROFILES_MSG = " View Metadata Profiles at /listMetadataProfiles";
+        public static final String LOAD_METADATA_PROFILE_FAILURE = "Failed to load saved metadata profile data: {}";
+        public static final String ADD_METADATA_PROFILE_TO_DB_WITH_VERSION = "Added Metadata Profile : {} into the DB with version: {}";
+
+        private MetadataProfileAPIMessages() {
+        }
+    }
 }

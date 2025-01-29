@@ -337,6 +337,7 @@ public class AnalyzerConstants {
         public static final String FUNCTION_VARIABLE = "function_variable: ";
         public static final String QUERY_VARIABLE = "query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
+        public static final String QUERY_VARIABLES = "query_variables: ";
 
         private AutotuneObjectConstants() {
         }
@@ -613,6 +614,7 @@ public class AnalyzerConstants {
         public static final String METADATA_PROFILE = "metadataProfile";
         public static final String METADATA_PROFILE_PLURALS = "kruizemetadataprofiles";
         public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
+        public static final String DATASOURCE = "datasource";
     }
 
     public static final class CommonProfileMsgs {
