@@ -44,11 +44,13 @@ public class MetadataProfile {
     @SerializedName("k8s_type")
     private String k8s_type;
 
+    private String datasource;
+
     @SerializedName("query_variables")
     private ArrayList<Metric> metrics;
 
     public MetadataProfile(String apiVersion, String kind, JsonNode metadata,
-                           double profile_version, String k8s_type, ArrayList<Metric> metrics) {
+                           double profile_version, String k8s_type, String datasource, ArrayList<Metric> metrics) {
 
         this.apiVersion = apiVersion;
         this.kind = kind;
@@ -56,6 +58,7 @@ public class MetadataProfile {
         this.name = metadata.get("name").asText();
         this.profile_version = profile_version;
         this.k8s_type = k8s_type;
+        this.datasource = datasource;
         this.metrics = metrics;
     }
 
@@ -83,6 +86,8 @@ public class MetadataProfile {
         return k8s_type;
     }
 
+    public String getDatasource() { return datasource; }
+
     public ArrayList<Metric> getQueryVariables() {
         return new ArrayList<>(metrics);
     }
@@ -96,6 +101,7 @@ public class MetadataProfile {
                 ", name='" + name + '\'' +
                 ", profile_version=" + profile_version +
                 ", k8s_type='" + k8s_type + '\'' +
+                ", datasource=' " + datasource + '\'' +
                 ", query_variables=" + metrics +
                 '}';
     }

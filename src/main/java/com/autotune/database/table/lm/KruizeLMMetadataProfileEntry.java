@@ -46,6 +46,7 @@ public class KruizeLMMetadataProfileEntry {
     private String name;
     private double profile_version;
     private String k8s_type;
+    private String datasource;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode query_variables;
 
@@ -96,6 +97,10 @@ public class KruizeLMMetadataProfileEntry {
     public void setK8s_type(String k8s_type) {
         this.k8s_type = k8s_type;
     }
+
+    public String getDatasource() { return datasource; }
+
+    public void setDatasource(String datasource) { this.datasource = datasource; }
 
     public JsonNode getQuery_variables() {
         return query_variables;
