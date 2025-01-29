@@ -1,6 +1,7 @@
 package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.exceptions.FetchMetricsError;
+import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
@@ -317,7 +318,11 @@ public class RecommendationEngine {
                     KruizeObject.setDefaultTerms(terms, kruizeObject);
                 } else {
                     // set custom terms as provided by the user
-                    KruizeObject.setCustomTerms(terms, kruizeObject);
+                    try {
+                        KruizeObject.setCustomTerms(terms, kruizeObject);
+                    } catch (InvalidTermException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
             }
             // set the performance profile

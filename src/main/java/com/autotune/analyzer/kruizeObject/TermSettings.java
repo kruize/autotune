@@ -7,8 +7,6 @@ import java.util.Map;
 
 public class TermSettings {
     private List<String> terms;
-    @SerializedName("term_details")
-    private Map<String, TermDetails> termDetails;
 
     public TermSettings() {}
 
@@ -20,19 +18,10 @@ public class TermSettings {
         this.terms = terms;
     }
 
-    public Map<String, TermDetails> getTermDetails() {
-        return termDetails;
-    }
-
-    public void setTermDetails(Map<String, TermDetails> termDetails) {
-        this.termDetails = termDetails;
-    }
-
     @Override
     public String toString() {
         return "TermSettings{" +
-                "terms=" + terms + 
-                ", termDetails=" + termDetails +
+                "terms=" + terms +
                 '}';
     }
 }
