@@ -21,6 +21,7 @@ import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
@@ -31,6 +32,7 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.data.dataSourceMetadata.*;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.NamespaceData;
@@ -41,6 +43,7 @@ import com.autotune.common.datasource.DataSourceMetadataOperator;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
@@ -1420,6 +1423,85 @@ public class DBHelpers {
                     e.printStackTrace();
                 }
                 return kruizeAuthenticationEntry;
+            }
+
+            /**
+             * Converts List of KruizeLMMetadataProfileEntry DB objects to List of MetadataProfile objects
+             *
+             * @param kruizeMetadataProfileEntryList List of KruizeLMMetadataProfileEntry DB objects
+             * @return List of MetadataProfile objects
+             */
+            public static List<MetadataProfile> convertMetadataProfileEntryToMetadataProfileObject(List<KruizeLMMetadataProfileEntry> kruizeMetadataProfileEntryList) throws Exception {
+                List<MetadataProfile> metadataProfiles = new ArrayList<>();
+                int failureThreshHold = kruizeMetadataProfileEntryList.size();
+                int failureCount = 0;
+                for (KruizeLMMetadataProfileEntry entry : kruizeMetadataProfileEntryList) {
+                    try {
+                        JsonNode metadata = entry.getMetadata();
+                        JsonNode query_variables = entry.getQuery_variables();
+                        ArrayList<Metric> queryVariablesList = new ArrayList<>();
+
+                        if (query_variables.isArray()) {
+                            for (JsonNode node : query_variables) {
+                                String metric_rawJson = node.toString();
+                                Metric metric = new Gson().fromJson(metric_rawJson, Metric.class);
+                                queryVariablesList.add(metric);
+                            }
+                        }
+
+                        MetadataProfile metadataProfile = new MetadataProfile(
+                                entry.getApi_version(), entry.getKind(), metadata, entry.getProfile_version(), entry.getK8s_type(), entry.getDatasource(), queryVariablesList);
+                        metadataProfiles.add(metadataProfile);
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while reading from MetadataProfile DB object due to : {}", e.getMessage());
+                        LOGGER.error(entry.toString());
+                        failureCount++;
+                    }
+                }
+                if (failureThreshHold > 0 && failureCount == failureThreshHold) {
+                    throw new Exception("None of the Metadata Profiles loaded from DB.");
+                }
+
+                return metadataProfiles;
+            }
+
+            /**
+             * Converts MetadataProfile object to KruizeLMMetadataProfileEntry object
+             *
+             * @param metadataProfile MetadataProfile object
+             * @return KruizeLMMetadataProfileEntry objects
+             */
+            public static KruizeLMMetadataProfileEntry convertMetadataProfileObjToMetadataProfileDBObj(MetadataProfile metadataProfile) {
+                KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry = null;
+                try {
+                    kruizeMetadataProfileEntry = new KruizeLMMetadataProfileEntry();
+                    kruizeMetadataProfileEntry.setApi_version(metadataProfile.getApiVersion());
+                    kruizeMetadataProfileEntry.setKind(metadataProfile.getKind());
+                    kruizeMetadataProfileEntry.setProfile_version(metadataProfile.getProfile_version());
+                    kruizeMetadataProfileEntry.setK8s_type(metadataProfile.getK8s_type());
+                    kruizeMetadataProfileEntry.setDatasource(metadataProfile.getDatasource());
+
+                    ObjectMapper objectMapper = new ObjectMapper();
+
+                    try {
+                        JsonNode metadataNode = objectMapper.readTree(metadataProfile.getMetadata().toString());
+                        kruizeMetadataProfileEntry.setMetadata(metadataNode);
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating metadataProfile due to : " + e.getMessage());
+                    }
+                    kruizeMetadataProfileEntry.setName(metadataProfile.getMetadata().get("name").asText());
+
+                    try {
+                        kruizeMetadataProfileEntry.setQuery_variables(
+                                objectMapper.readTree(new Gson().toJson(metadataProfile.getQueryVariables())));
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating query_variables data due to : " + e.getMessage());
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error occurred while converting MetadataProfile Object to MetadataProfile table due to {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeMetadataProfileEntry;
             }
         }
 
