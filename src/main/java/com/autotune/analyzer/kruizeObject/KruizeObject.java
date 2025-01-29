@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.kruizeObject;
 
+import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -165,19 +166,42 @@ public final class KruizeObject implements ExperimentTypeAware {
     }
 
 
-    public static void setCustomTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
+    public static void setCustomTerms(Map<String, Terms> terms, KruizeObject kruizeObject) throws InvalidTermException {
         // TODO: define term names like daily, weekly, fortnightly etc
         // TODO: add CRD for terms
 
-        if( kruizeObject.getRecommendation_settings().getTermSettings() != null ) {
-            String termKey = kruizeObject.getRecommendation_settings().getTermSettings().getTerms().get(0);
-            TermDetails termDetails = kruizeObject.getRecommendation_settings().getTermSettings().getTermDetails().get(termKey);
 
+        if(  kruizeObject.getRecommendation_settings() != null &&
+                kruizeObject.getRecommendation_settings().getTermSettings() != null )
+        {
 
-            terms.put(termKey + "_term", new Terms(termKey + "_term", termDetails.getDurationInDays(), termDetails.getDurationThreshold(),
-                    termDetails.getPlotsDatapoint(), termDetails.getPlotsDatapointDeltaInDays()));
+            String userInputTerm = String.valueOf(kruizeObject.getRecommendation_settings().getTermSettings().getTerms().get(0));
 
+            if( "short".equalsIgnoreCase(userInputTerm)){
+                terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
+                        .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
+                        .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD, 4, 0.25));
+            }
+            else if ( "medium".equalsIgnoreCase(userInputTerm)) {
+                terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM, KruizeConstants
+                        .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants
+                        .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD, 7, 1));
+            }
+            else if ( "long".equalsIgnoreCase(userInputTerm)) {
+                terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM, KruizeConstants
+                        .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants
+                        .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD, 15, 1));
+
+            }
+           else{
+               // Term name is invalid
+               throw new InvalidTermException(userInputTerm + " is not supported, use short, medium or long term");
+           }
             kruizeObject.setTerms(terms);
+        }
+        else {
+            // Handle the case where termSettings is null
+            throw new InvalidTermException("Term settings are not defined in the recommendation settings.");
         }
     }
 
