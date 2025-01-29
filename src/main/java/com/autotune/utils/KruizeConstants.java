@@ -713,6 +713,8 @@ public class KruizeConstants {
         public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
         public static final String IS_ROS_ENABLED = "isROSEnabled";
         public static final String DATASOURCE_VIA_ENV = "datasource";
+        public static final String IS_KAFKA_ENABLED = "isKafkaEnabled";
+        public static final String KAFKA_BOOTSTRAP_SERVERS = "kafkaBootstrapServers";
     }
 
     public static final class RecommendationEngineConstants {
@@ -926,5 +928,15 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_VALIDATION_FAILURE = "MetadataProfile validation failed: ";
         public static final String METADATA_PROFILE_VALIDATION_AND_ADD_FAILURE = "Validate and add metadata profile failed: {}";
         public static final String ADD_METADATA_PROFILE = "Added MetadataProfile: {}";
+    }
+
+    public static final class KAFKA_CONSTANTS {
+        public static final String RECOMMENDATIONS_TOPIC = "recommendations-topic";
+        public static final String ERROR_TOPIC = "error-topic";
+        public static final String SUMMARY_TOPIC = "summary-topic";
+
+        public static final String SUMMARY = "summary";
+        public static final String EXPERIMENTS = "experiments";
+        public static final String RECOMMENDATIONS = "recommendations";
     }
 }

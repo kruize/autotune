@@ -91,6 +91,10 @@ public class KruizeDeploymentInfo {
     private static KubeEventLogger kubeEventLogger;
     public static Boolean is_ros_enabled = false;
     public static String datasource_via_env = null;
+    public static Boolean is_kafka_enabled = false;
+    public static String kafka_bootstrap_servers = null;
+    public static String kafka_topic_inbound = System.getenv("INGRESS_KAFKA_TOPIC");
+    public static String kafka_group_id = System.getenv("KAFKA_CONSUMER_GROUP_ID");
 
 
     private KruizeDeploymentInfo() {

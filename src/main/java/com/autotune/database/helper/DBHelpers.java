@@ -286,12 +286,12 @@ public class DBHelpers {
         String dataSourceName = kruizeMetadata.getDataSourceName();
 
         // Check if the data source already exists
-        if (dataSourceMetadataInfo.getDataSourceHashMap().containsKey(dataSourceName)) {
-            return dataSourceMetadataInfo.getDataSourceHashMap().get(dataSourceName);
+        if (dataSourceMetadataInfo.getDatasources().containsKey(dataSourceName)) {
+            return dataSourceMetadataInfo.getDatasources().get(dataSourceName);
         }
 
         DataSource dataSource = new DataSource(dataSourceName, new HashMap<>());
-        dataSourceMetadataInfo.getDataSourceHashMap().put(dataSourceName, dataSource);
+        dataSourceMetadataInfo.getDatasources().put(dataSourceName, dataSource);
 
         return dataSource;
     }
@@ -307,12 +307,12 @@ public class DBHelpers {
         String clusterName = kruizeMetadata.getClusterName();
 
         // Check if the cluster already exists in the DataSource
-        if (dataSource.getDataSourceClusterHashMap().containsKey(clusterName)) {
-            return dataSource.getDataSourceClusterHashMap().get(clusterName);
+        if (dataSource.getClusters().containsKey(clusterName)) {
+            return dataSource.getClusters().get(clusterName);
         }
 
         DataSourceCluster dataSourceCluster = new DataSourceCluster(clusterName, new HashMap<>());
-        dataSource.getDataSourceClusterHashMap().put(clusterName, dataSourceCluster);
+        dataSource.getClusters().put(clusterName, dataSourceCluster);
 
         return dataSourceCluster;
     }
@@ -328,12 +328,12 @@ public class DBHelpers {
         String namespaceName = kruizeMetadata.getNamespace();
 
         // Check if the namespace already exists in the DataSourceCluster
-        if (dataSourceCluster.getDataSourceNamespaceHashMap().containsKey(namespaceName)) {
-            return dataSourceCluster.getDataSourceNamespaceHashMap().get(namespaceName);
+        if (dataSourceCluster.getNamespaces().containsKey(namespaceName)) {
+            return dataSourceCluster.getNamespaces().get(namespaceName);
         }
 
         DataSourceNamespace dataSourceNamespace = new DataSourceNamespace(namespaceName, new HashMap<>());
-        dataSourceCluster.getDataSourceNamespaceHashMap().put(namespaceName, dataSourceNamespace);
+        dataSourceCluster.getNamespaces().put(namespaceName, dataSourceNamespace);
 
         return dataSourceNamespace;
     }
@@ -353,12 +353,12 @@ public class DBHelpers {
         }
 
         // Check if the workload already exists in the DataSourceNamespace
-        if (dataSourceNamespace.getDataSourceWorkloadHashMap().containsKey(workloadName)) {
-            return dataSourceNamespace.getDataSourceWorkloadHashMap().get(workloadName);
+        if (dataSourceNamespace.getWorkloads().containsKey(workloadName)) {
+            return dataSourceNamespace.getWorkloads().get(workloadName);
         }
 
         DataSourceWorkload dataSourceWorkload = new DataSourceWorkload(workloadName, kruizeMetadata.getWorkloadType(), new HashMap<>());
-        dataSourceNamespace.getDataSourceWorkloadHashMap().put(workloadName, dataSourceWorkload);
+        dataSourceNamespace.getWorkloads().put(workloadName, dataSourceWorkload);
 
         return dataSourceWorkload;
     }
@@ -378,12 +378,12 @@ public class DBHelpers {
         }
 
         // Check if the container already exists in the DataSourceWorkload
-        if (dataSourceWorkload.getDataSourceContainerHashMap().containsKey(containerName)) {
-            return dataSourceWorkload.getDataSourceContainerHashMap().get(containerName);
+        if (dataSourceWorkload.getContainers().containsKey(containerName)) {
+            return dataSourceWorkload.getContainers().get(containerName);
         }
 
         DataSourceContainer dataSourceContainer = new DataSourceContainer(containerName, kruizeMetadata.getContainerImageName());
-        dataSourceWorkload.getDataSourceContainerHashMap().put(containerName, dataSourceContainer);
+        dataSourceWorkload.getContainers().put(containerName, dataSourceContainer);
 
         return dataSourceContainer;
     }
@@ -1205,20 +1205,20 @@ public class DBHelpers {
                         DataSourceContainer dataSourceContainer = getOrCreateDataSourceContainerFromDB(kruizeMetadata, dataSourceWorkload);
 
                         // Update DataSourceMetadataInfo with the DataSource, DataSourceCluster, DataSourceNamespace, DataSourceWorkload, and DataSourceContainer
-                        dataSourceMetadataInfo.getDataSourceHashMap().put(kruizeMetadata.getDataSourceName(), dataSource);
-                        dataSource.getDataSourceClusterHashMap().put(kruizeMetadata.getClusterName(), dataSourceCluster);
-                        dataSourceCluster.getDataSourceNamespaceHashMap().put(kruizeMetadata.getNamespace(), dataSourceNamespace);
+                        dataSourceMetadataInfo.getDatasources().put(kruizeMetadata.getDataSourceName(), dataSource);
+                        dataSource.getClusters().put(kruizeMetadata.getClusterName(), dataSourceCluster);
+                        dataSourceCluster.getNamespaces().put(kruizeMetadata.getNamespace(), dataSourceNamespace);
                         if (null == dataSourceWorkload) {
-                            dataSourceNamespace.setDataSourceWorkloadHashMap(null);
+                            dataSourceNamespace.setWorkloads(null);
                             continue;
                         }
-                        dataSourceNamespace.getDataSourceWorkloadHashMap().put(kruizeMetadata.getWorkloadName(), dataSourceWorkload);
+                        dataSourceNamespace.getWorkloads().put(kruizeMetadata.getWorkloadName(), dataSourceWorkload);
 
                         if (null == dataSourceContainer) {
-                            dataSourceWorkload.setDataSourceContainerHashMap(null);
+                            dataSourceWorkload.setContainers(null);
                             continue;
                         }
-                        dataSourceWorkload.getDataSourceContainerHashMap().put(kruizeMetadata.getContainerName(), dataSourceContainer);
+                        dataSourceWorkload.getContainers().put(kruizeMetadata.getContainerName(), dataSourceContainer);
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while converting to dataSourceMetadataInfo from DB object : {}", e.getMessage());
                         LOGGER.error(e.getMessage());
@@ -1251,13 +1251,13 @@ public class DBHelpers {
                     try {
                         DataSource dataSource = getOrCreateDataSourceFromDB(kruizeMetadata, dataSourceMetadataInfo);
                         DataSourceCluster dataSourceCluster = getOrCreateDataSourceClusterFromDB(kruizeMetadata, dataSource);
-                        dataSourceCluster.setDataSourceNamespaceHashMap(null);
+                        dataSourceCluster.setNamespaces(null);
 
                         // Update DataSourceMetadataInfo with the DataSource and DataSourceCluster
-                        dataSourceMetadataInfo.getDataSourceHashMap()
+                        dataSourceMetadataInfo.getDatasources()
                                 .put(kruizeMetadata.getDataSourceName(), dataSource);
 
-                        dataSource.getDataSourceClusterHashMap()
+                        dataSource.getClusters()
                                 .put(kruizeMetadata.getClusterName(), dataSourceCluster);
 
                     } catch (Exception e) {
@@ -1294,16 +1294,16 @@ public class DBHelpers {
                         DataSource dataSource = getOrCreateDataSourceFromDB(kruizeMetadata, dataSourceMetadataInfo);
                         DataSourceCluster dataSourceCluster = getOrCreateDataSourceClusterFromDB(kruizeMetadata, dataSource);
                         DataSourceNamespace dataSourceNamespace = getOrCreateDataSourceNamespaceFromDB(kruizeMetadata, dataSourceCluster);
-                        dataSourceNamespace.setDataSourceWorkloadHashMap(null);
+                        dataSourceNamespace.setWorkloads(null);
 
                         // Update DataSourceMetadataInfo with the DataSource and DataSourceCluster
-                        dataSourceMetadataInfo.getDataSourceHashMap()
+                        dataSourceMetadataInfo.getDatasources()
                                 .put(kruizeMetadata.getDataSourceName(), dataSource);
 
-                        dataSource.getDataSourceClusterHashMap()
+                        dataSource.getClusters()
                                 .put(kruizeMetadata.getClusterName(), dataSourceCluster);
 
-                        dataSourceCluster.getDataSourceNamespaceHashMap()
+                        dataSourceCluster.getNamespaces()
                                 .put(kruizeMetadata.getNamespace(), dataSourceNamespace);
 
                     } catch (Exception e) {
@@ -1330,16 +1330,16 @@ public class DBHelpers {
                 List<KruizeDSMetadataEntry> kruizeMetadataList = new ArrayList<>();
                 try {
 
-                    for (DataSource dataSource : dataSourceMetadataInfo.getDataSourceHashMap().values()) {
+                    for (DataSource dataSource : dataSourceMetadataInfo.getDatasources().values()) {
                         String dataSourceName = dataSource.getDataSourceName();
 
-                        for (DataSourceCluster dataSourceCluster : dataSource.getDataSourceClusterHashMap().values()) {
+                        for (DataSourceCluster dataSourceCluster : dataSource.getClusters().values()) {
                             String dataSourceClusterName = dataSourceCluster.getDataSourceClusterName();
 
-                            for (DataSourceNamespace dataSourceNamespace : dataSourceCluster.getDataSourceNamespaceHashMap().values()) {
-                                String namespaceName = dataSourceNamespace.getDataSourceNamespaceName();
+                            for (DataSourceNamespace dataSourceNamespace : dataSourceCluster.getNamespaces().values()) {
+                                String namespaceName = dataSourceNamespace.getNamespace();
 
-                                if (null == dataSourceNamespace.getDataSourceWorkloadHashMap()) {
+                                if (null == dataSourceNamespace.getWorkloads()) {
                                     KruizeDSMetadataEntry kruizeMetadata = new KruizeDSMetadataEntry();
                                     kruizeMetadata.setVersion(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoConstants.version);
                                     kruizeMetadata.setDataSourceName(dataSourceName);
@@ -1353,17 +1353,17 @@ public class DBHelpers {
                                     continue;
                                 }
 
-                                for (DataSourceWorkload dataSourceWorkload : dataSourceNamespace.getDataSourceWorkloadHashMap().values()) {
+                                for (DataSourceWorkload dataSourceWorkload : dataSourceNamespace.getWorkloads().values()) {
                                     // handles 'job' workload type with no containers
-                                    if (null == dataSourceWorkload.getDataSourceContainerHashMap()) {
+                                    if (null == dataSourceWorkload.getContainers()) {
                                         KruizeDSMetadataEntry kruizeMetadata = new KruizeDSMetadataEntry();
                                         kruizeMetadata.setVersion(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoConstants.version);
 
                                         kruizeMetadata.setDataSourceName(dataSourceName);
                                         kruizeMetadata.setClusterName(dataSourceClusterName);
                                         kruizeMetadata.setNamespace(namespaceName);
-                                        kruizeMetadata.setWorkloadType(dataSourceWorkload.getDataSourceWorkloadType());
-                                        kruizeMetadata.setWorkloadName(dataSourceWorkload.getDataSourceWorkloadName());
+                                        kruizeMetadata.setWorkloadType(dataSourceWorkload.getWorkloadType());
+                                        kruizeMetadata.setWorkloadName(dataSourceWorkload.getWorkloadName());
 
                                         kruizeMetadata.setContainerName(null);
                                         kruizeMetadata.setContainerImageName(null);
@@ -1372,18 +1372,18 @@ public class DBHelpers {
                                         continue;
                                     }
 
-                                    for (DataSourceContainer dataSourceContainer : dataSourceWorkload.getDataSourceContainerHashMap().values()) {
+                                    for (DataSourceContainer dataSourceContainer : dataSourceWorkload.getContainers().values()) {
                                         KruizeDSMetadataEntry kruizeMetadata = new KruizeDSMetadataEntry();
                                         kruizeMetadata.setVersion(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoConstants.version);
 
                                         kruizeMetadata.setDataSourceName(dataSourceName);
                                         kruizeMetadata.setClusterName(dataSourceClusterName);
                                         kruizeMetadata.setNamespace(namespaceName);
-                                        kruizeMetadata.setWorkloadType(dataSourceWorkload.getDataSourceWorkloadType());
-                                        kruizeMetadata.setWorkloadName(dataSourceWorkload.getDataSourceWorkloadName());
+                                        kruizeMetadata.setWorkloadType(dataSourceWorkload.getWorkloadType());
+                                        kruizeMetadata.setWorkloadName(dataSourceWorkload.getWorkloadName());
 
-                                        kruizeMetadata.setContainerName(dataSourceContainer.getDataSourceContainerName());
-                                        kruizeMetadata.setContainerImageName(dataSourceContainer.getDataSourceContainerImageName());
+                                        kruizeMetadata.setContainerName(dataSourceContainer.getContainerName());
+                                        kruizeMetadata.setContainerImageName(dataSourceContainer.getContainerImageName());
 
                                         kruizeMetadataList.add(kruizeMetadata);
                                     }
