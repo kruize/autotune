@@ -1457,13 +1457,13 @@ public class DBHelpers {
                                 entry.getApi_version(), entry.getKind(), metadata, entry.getProfile_version(), entry.getK8s_type(), entry.getDatasource(), queryVariablesList);
                         metadataProfiles.add(metadataProfile);
                     } catch (Exception e) {
-                        LOGGER.error("Error occurred while reading from MetadataProfile DB object due to : {}", e.getMessage());
+                        LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.CONVERTING_METADATA_PROFILE_DB_OBJECT_ERROR, e.getMessage());
                         LOGGER.error(entry.toString());
                         failureCount++;
                     }
                 }
                 if (failureThreshHold > 0 && failureCount == failureThreshHold) {
-                    throw new Exception("None of the Metadata Profiles loaded from DB.");
+                    throw new Exception(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.LOAD_METADATA_PROFILES_FROM_DB_FAILURE);
                 }
 
                 return metadataProfiles;
@@ -1491,18 +1491,18 @@ public class DBHelpers {
                         JsonNode metadataNode = objectMapper.readTree(metadataProfile.getMetadata().toString());
                         kruizeMetadataProfileEntry.setMetadata(metadataNode);
                     } catch (JsonProcessingException e) {
-                        throw new Exception("Error while creating metadataProfile due to : " + e.getMessage());
+                        throw new Exception(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.PROCESS_METADATA_PROFILE_OBJECT_ERROR + e.getMessage());
                     }
-                    kruizeMetadataProfileEntry.setName(metadataProfile.getMetadata().get("name").asText());
+                    kruizeMetadataProfileEntry.setName(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText());
 
                     try {
                         kruizeMetadataProfileEntry.setQuery_variables(
                                 objectMapper.readTree(new Gson().toJson(metadataProfile.getQueryVariables())));
                     } catch (JsonProcessingException e) {
-                        throw new Exception("Error while creating query_variables data due to : " + e.getMessage());
+                        throw new Exception(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.PROCESS_QUERY_VARIABLES_ERROR + e.getMessage());
                     }
                 } catch (Exception e) {
-                    LOGGER.error("Error occurred while converting MetadataProfile Object to MetadataProfile table due to {}", e.getMessage());
+                    LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.CONVERT_METADATA_PROFILE_TO_DB_OBJECT_FAILURE, e.getMessage());
                     e.printStackTrace();
                 }
                 return kruizeMetadataProfileEntry;
