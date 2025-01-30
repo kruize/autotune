@@ -428,6 +428,7 @@ public class DBHelpers {
                     kruizeLMExperimentEntry.setCluster_name(apiObject.getClusterName());
                     kruizeLMExperimentEntry.setMode(apiObject.getMode());
                     kruizeLMExperimentEntry.setPerformance_profile(apiObject.getPerformanceProfile());
+                    kruizeLMExperimentEntry.setMetadata_profile(apiObject.getMetadataProfile());
                     kruizeLMExperimentEntry.setVersion(apiObject.getApiVersion());
                     kruizeLMExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
                     kruizeLMExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
