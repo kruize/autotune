@@ -148,7 +148,7 @@ def gather_data(output_file, interval_minutes):
         writer.writeheader()
         log_file.write("Collecting the metrics for...\n")
 
-        while current_time >= start_time:
+        while current_time > start_time:
             try:
                 print(f"Querying data from {current_time - timedelta(minutes=interval_minutes)} to {current_time}")
 
