@@ -77,6 +77,7 @@ public class Converters {
                 kruizeObject.setClusterName(createExperimentAPIObject.getClusterName());
                 kruizeObject.setMode(createExperimentAPIObject.getMode());
                 kruizeObject.setPerformanceProfile(createExperimentAPIObject.getPerformanceProfile());
+                kruizeObject.setMetadataProfile(createExperimentAPIObject.getMetadataProfile());
                 kruizeObject.setDataSource(createExperimentAPIObject.getDatasource());
                 kruizeObject.setExperimentType(createExperimentAPIObject.getExperimentType());
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
