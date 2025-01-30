@@ -40,6 +40,7 @@ import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
+import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -422,7 +423,7 @@ public class ExperimentDBService {
             KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileObjToMetadataProfileDBObj(metadataProfile);
             validationOutputData = this.experimentDAO.addMetadataProfileToDB(kruizeMetadataProfileEntry);
         } catch (Exception e) {
-            LOGGER.error("Not able to save Metadata Profile due to {}", e.getMessage());
+            LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.ADD_METADATA_PROFILE_TO_DB_ERROR, e.getMessage());
         }
         return validationOutputData;
     }
