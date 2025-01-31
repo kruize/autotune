@@ -1,7 +1,6 @@
 package com.autotune.common.data.dataSourceMetadata;
 
 import com.autotune.utils.KruizeConstants;
-import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,39 +12,37 @@ import java.util.HashMap;
  */
 public class DataSourceNamespace {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceNamespace.class);
-    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.NAMESPACE)
     private String namespace;
 
     /**
      * Key: Workload name
      * Value: Associated DataSourceWorkload object
      */
-    @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.WORKLOADS)
-    private HashMap<String, DataSourceWorkload> workloadHashMap;
+    private HashMap<String, DataSourceWorkload> workloads;
 
-    public DataSourceNamespace(String namespace, HashMap<String, DataSourceWorkload> workloadHashMap) {
+    public DataSourceNamespace(String namespace, HashMap<String, DataSourceWorkload> workloads) {
         this.namespace = namespace;
-        this.workloadHashMap = workloadHashMap;
+        this.workloads = workloads;
     }
 
-    public String getDataSourceNamespaceName() {
+    public String getNamespace() {
         return namespace;
     }
 
-    public HashMap<String, DataSourceWorkload> getDataSourceWorkloadHashMap() {
-        return workloadHashMap;
+    public HashMap<String, DataSourceWorkload> getWorkloads() {
+        return workloads;
     }
 
-    public void setDataSourceWorkloadHashMap(HashMap<String, DataSourceWorkload> workloadHashMap) {
+    public void setWorkloads(HashMap<String, DataSourceWorkload> workloadHashMap) {
         if (null == workloadHashMap) {
             LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.SET_WORKLOAD_MAP_ERROR + "{}", namespace);
         }
-        this.workloadHashMap = workloadHashMap;
+        this.workloads = workloadHashMap;
     }
 
     public DataSourceWorkload getDataSourceWorkloadObject(String workloadName) {
-        if (null != workloadHashMap && workloadHashMap.containsKey(workloadName)) {
-            return workloadHashMap.get(workloadName);
+        if (null != workloads && workloads.containsKey(workloadName)) {
+            return workloads.get(workloadName);
         }
 
         return null;
@@ -55,7 +52,7 @@ public class DataSourceNamespace {
     public String toString() {
         return "DataSourceNamespace{" +
                 "namespace='" + namespace + '\'' +
-                ", workloads=" + workloadHashMap +
+                ", workloads=" + workloads +
                 '}';
     }
 }
