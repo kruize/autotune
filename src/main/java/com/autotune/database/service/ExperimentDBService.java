@@ -594,6 +594,28 @@ public class ExperimentDBService {
         }
     }
 
+    /**
+     * Fetches Metadata Profile by name from kruizeMetadataProfileEntry
+     *
+     * @param metadataProfileMap  Map to store metadata profile loaded from the database
+     * @param metadataProfileName Metadata profile name to be fetched
+     * @return ValidationOutputData object
+     */
+    public void loadMetadataProfileFromDBByName(Map<String, MetadataProfile> metadataProfileMap, String metadataProfileName) throws Exception {
+        List<KruizeLMMetadataProfileEntry> entries = experimentDAO.loadMetadataProfileByName(metadataProfileName);
+        if (null != entries && !entries.isEmpty()) {
+            List<MetadataProfile> metadataProfiles = DBHelpers.Converters.KruizeObjectConverters
+                    .convertMetadataProfileEntryToMetadataProfileObject(entries);
+            if (!metadataProfiles.isEmpty()) {
+                for (MetadataProfile metadataProfile : metadataProfiles) {
+                    if (null != metadataProfile) {
+                        MetadataProfileUtil.addMetadataProfile(metadataProfileMap, metadataProfile);
+                    }
+                }
+            }
+        }
+    }
+
     public void loadAllExperimentsAndRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
 
         loadAllExperiments(mainKruizeExperimentMap);
