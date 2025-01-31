@@ -1,6 +1,7 @@
 package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.exceptions.FetchMetricsError;
+import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
@@ -68,7 +69,7 @@ public class RecommendationEngine {
     private Map<String, Terms> terms;
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
-    private String modelName;
+    private List<String> modelName;
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
@@ -125,7 +126,8 @@ public class RecommendationEngine {
         return (int) Math.ceil(max_pods_cpu);
     }
 
-    private void LoadRecommendationModelForRemoteMonitoring() {
+    private void DefaultLoadRecommendationModel() {
+        // create both cost and performance model by default
         recommendationModels = new ArrayList<>();
         // Create Cost based model
         CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
@@ -135,23 +137,33 @@ public class RecommendationEngine {
         registerModel(performanceBasedRecommendationModel);
     }
 
-    private void LoadRecommendationModelForLocalMonitoring(String modelName) {
+    private void DefaultLoadRecommendationModelForAutoAndRecreate() {
+        // create performance model by default
+        recommendationModels = new ArrayList<>();
+        // Create Performance based model
+        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+        registerModel(performanceBasedRecommendationModel);
+    }
+
+    private void CustomLoadRecommendationModel(List<String> modelName) throws InvalidModelException {
         // Add new models
         recommendationModels = new ArrayList<>();
-
-        if("cost".equalsIgnoreCase(modelName)) {
-            // Create Cost based model
-            CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
-            registerModel(costBasedRecommendationModel);
+        for(String model : modelName){
+            if("cost".equalsIgnoreCase(model)) {
+                // Create Cost based model
+                CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
+                registerModel(costBasedRecommendationModel);
+            }
+            else if("performance".equalsIgnoreCase(model)){
+                // Create Performance based model
+                PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+                registerModel(performanceBasedRecommendationModel);
+            }
+            else {
+                // user input does not matches standard models
+                throw new InvalidModelException(modelName + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+            }
         }
-        /// TODO: add an if else statement for handling custom model
-        else {
-            // Default condition : if nothing is specified by the user
-            // Create Performance based model
-            PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
-            registerModel(performanceBasedRecommendationModel);
-        }
-        // TODO: Add profile based once recommendation algos are available
     }
 
     private void registerModel(RecommendationModel recommendationModel) {
@@ -186,11 +198,11 @@ public class RecommendationEngine {
         this.experimentName = experimentName;
     }
 
-    public String getModelName() {
+    public List<String> getModelName() {
         return modelName;
     }
 
-    public void setModelName(String modelName) {
+    public void setModelName(List<String> modelName) {
         this.modelName = modelName;
     }
 
@@ -312,19 +324,56 @@ public class RecommendationEngine {
         mainKruizeExperimentMAP.put(kruizeObject.getExperimentName(), kruizeObject);
         // continue to generate recommendation when kruizeObject is successfully created
         try {
-            // set the default terms if the terms aren't provided by the user
-            if(kruizeObject.getTerms() == null) {
-                if (null == kruizeObject.getRecommendation_settings().getTermSettings()) {
-                    KruizeObject.setDefaultTerms(terms, kruizeObject);
-                } else {
-                    // set custom terms as provided by the user
-                    try {
-                        KruizeObject.setCustomTerms(terms, kruizeObject);
-                    } catch (InvalidTermException e) {
-                        throw new RuntimeException(e);
+            // term settings for different use cases
+            if( kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
+                // monitoring mode
+                if(kruizeObject.getRecommendation_settings() == null ||
+                kruizeObject.getRecommendation_settings().getTermSettings() == null ||
+                kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null){
+                    // default for monitoring
+                    KruizeObject.setDefaultTerms(terms,kruizeObject);
+                }
+                else{
+                    // Process terms
+                    KruizeObject.setCustomTerms(terms, kruizeObject);
+                }
+
+            }
+            else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
+                // auto or recreate mode
+                if(kruizeObject.getRecommendation_settings() == null ||
+                        kruizeObject.getRecommendation_settings().getTermSettings() == null ||
+                        kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null){
+
+                    // default for monitoring
+                    KruizeObject.setDefaultTermsForAutoAndRecreate(terms, kruizeObject);
+                }
+                else{
+                    // terms for auto recreate
+                    // verify if single
+                    if(kruizeObject.getRecommendation_settings().getTermSettings().getTerms().size() == 1) {
+                        // call for that one term
+                       KruizeObject.setCustomTerms(terms, kruizeObject);
+                    }
+                    else{
+                        // multiple terms throw error
+                        throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_TERMS_UNSUPPORTED);
                     }
                 }
             }
+
+//                if(kruizeObject.getTerms() == null) {
+//                if (null == kruizeObject.getRecommendation_settings().getTermSettings()) {
+//                    KruizeObject.setDefaultTerms(terms, kruizeObject);
+//                } else {
+//                    // set custom terms as provided by the user
+//
+//                        KruizeObject.setCustomTerms(terms, kruizeObject);
+//
+//                }
+//            }
+
+
             // set the performance profile
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
 
@@ -333,20 +382,68 @@ public class RecommendationEngine {
             String dataSource = kruizeObject.getDataSource();
 
             // call different models for different use cases
-            if( kruizeObject.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)){
-                // remote monitoring use case
-                LoadRecommendationModelForRemoteMonitoring();
-            }
-            else {
-                // local monitoring use case
-                if(kruizeObject.getRecommendation_settings().getModelSettings() != null) {
-                    // if user has specified model, run that
-                    setModelName(kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0));
-                    LoadRecommendationModelForLocalMonitoring(modelName);
+            if( kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)){
+                // can be local or remote monitoring use case
+                if(kruizeObject.getRecommendation_settings() == null){
+                    // recommendation setting are null -> use default values
+                    // both cost and perf model to be called
+                    DefaultLoadRecommendationModel();
                 }
                 else{
-                    // default local monitoring model is performance
-                    LoadRecommendationModelForLocalMonitoring(KruizeConstants.JSONKeys.PERFORMANCE);
+                    // recommendation setting are present --> check for model settings
+                    if(kruizeObject.getRecommendation_settings().getModelSettings() == null){
+                        // model settings are not present
+                        DefaultLoadRecommendationModel();
+                    }
+                    else {
+                        // model settings are present
+                        // for what ever model settings are present do as directed.
+                        List<String> models = kruizeObject.getRecommendation_settings().getModelSettings().getModels();
+                        if(models == null ){
+                            // models are not there
+                            DefaultLoadRecommendationModel();
+                        }
+                        else{
+                            // models present
+                            setModelName(models);
+                            CustomLoadRecommendationModel(modelName);
+                        }
+
+                    }
+                }
+
+            }
+            else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)){
+                // auto or recreate mode
+                if(kruizeObject.getRecommendation_settings() == null){
+                    // recommendation setting are null -> use default values
+                    // perf model to be called
+                    DefaultLoadRecommendationModelForAutoAndRecreate();
+                }
+                else{
+                    // recommendation setting are present --> check for model settings
+                    if(kruizeObject.getRecommendation_settings().getModelSettings() == null){
+                        // model settings are not present
+                        DefaultLoadRecommendationModelForAutoAndRecreate();
+                    }
+                    else {
+                        // model settings are present
+                        // for what ever model settings are present do as directed.
+                        // check for single model
+                        if(kruizeObject.getRecommendation_settings().getModelSettings().getModels() != null &&
+                                kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
+                            // call for that one model
+//                            String model = kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0);
+                            CustomLoadRecommendationModel(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
+                        }
+                        else{
+                            // multiple model throw error
+                            throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED);
+                        }
+
+
+                    }
+
                 }
             }
 
@@ -389,7 +486,7 @@ public class RecommendationEngine {
                         experimentName, interval_start_time, interval_end_time));
                 kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
             }
-        } catch (Exception | FetchMetricsError e) {
+        } catch (Exception | FetchMetricsError | InvalidModelException | InvalidTermException e) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_EXCEPTION,
                     experimentName, interval_end_time, e.getMessage()));
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
