@@ -337,7 +337,7 @@ public class AnalyzerConstants {
         public static final String FUNCTION_VARIABLE = "function_variable: ";
         public static final String QUERY_VARIABLE = "query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
-        public static final String QUERY_VARIABLES = "query_variables: ";
+        public static final String QUERY_VARIABLES = "query_variables";
 
         private AutotuneObjectConstants() {
         }
