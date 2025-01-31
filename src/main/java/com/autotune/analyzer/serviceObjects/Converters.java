@@ -389,46 +389,50 @@ public class Converters {
             return metricProfile;
         }
 
-        public static MetadataProfile convertInputJSONToCreateMetadataProfile(String inputData) throws InvalidValueException, Exception {
+        public static MetadataProfile convertInputJSONToCreateMetadataProfile(String inputData) {
             MetadataProfile metadataProfile = null;
-            if (inputData != null) {
-                JSONObject jsonObject = new JSONObject(inputData);
-                String apiVersion = jsonObject.getString(AnalyzerConstants.API_VERSION);
-                String kind = jsonObject.getString(AnalyzerConstants.KIND);
+            try {
+                if (inputData != null) {
+                    JSONObject jsonObject = new JSONObject(inputData);
+                    String apiVersion = jsonObject.getString(AnalyzerConstants.API_VERSION);
+                    String kind = jsonObject.getString(AnalyzerConstants.KIND);
 
-                JSONObject metadataObject = jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
-                ObjectMapper objectMapper = new ObjectMapper();
-                ObjectNode metadata = objectMapper.readValue(metadataObject.toString(), ObjectNode.class);
-                metadata.put("name", metadataObject.getString("name"));
+                    JSONObject metadataObject = jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    ObjectNode metadata = objectMapper.readValue(metadataObject.toString(), ObjectNode.class);
+                    metadata.put(AnalyzerConstants.AutotuneObjectConstants.NAME, metadataObject.getString(AnalyzerConstants.AutotuneObjectConstants.NAME));
 
-                Double profileVersion = jsonObject.has(AnalyzerConstants.PROFILE_VERSION) ? jsonObject.getDouble(AnalyzerConstants.PROFILE_VERSION) : null;
-                String k8sType = jsonObject.has(AnalyzerConstants.MetadataProfileConstants.K8S_TYPE) ? jsonObject.getString(AnalyzerConstants.MetadataProfileConstants.K8S_TYPE) : null;
-                String datasource = jsonObject.has(AnalyzerConstants.MetadataProfileConstants.DATASOURCE) ? jsonObject.getString(AnalyzerConstants.MetadataProfileConstants.DATASOURCE) : null;
-                JSONArray queryVariableArray = jsonObject.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.QUERY_VARIABLES);
-                ArrayList<Metric> queryVariablesList = new ArrayList<>();
-                for (Object object : queryVariableArray) {
-                    JSONObject functionVarObj = (JSONObject) object;
-                    String name = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
-                    datasource = functionVarObj.has(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE) ? functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE) : datasource;
-                    String query = functionVarObj.has(AnalyzerConstants.AutotuneObjectConstants.QUERY) ? functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.QUERY) : null;
-                    String valueType = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
-                    String kubeObject = functionVarObj.has(AnalyzerConstants.KUBERNETES_OBJECT) ? functionVarObj.getString(AnalyzerConstants.KUBERNETES_OBJECT) : null;
-                    Metric metric = new Metric(name, query, datasource, valueType, kubeObject);
-                    JSONArray aggrFunctionArray = functionVarObj.has(AnalyzerConstants.AGGREGATION_FUNCTIONS) ? functionVarObj.getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS) : null;
-                    HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
-                    for (Object innerObject : aggrFunctionArray) {
-                        JSONObject aggrFuncJsonObject = (JSONObject) innerObject;
-                        String function = aggrFuncJsonObject.getString(AnalyzerConstants.FUNCTION);
-                        String aggrFuncQuery = aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.QUERY);
-                        String version = aggrFuncJsonObject.has(KruizeConstants.JSONKeys.VERSION) ? aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.VERSION) : null;
-                        AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version);
-                        aggregationFunctionsMap.put(function, aggregationFunctions);
+                    Double profileVersion = jsonObject.has(AnalyzerConstants.PROFILE_VERSION) ? jsonObject.getDouble(AnalyzerConstants.PROFILE_VERSION) : null;
+                    String k8sType = jsonObject.has(AnalyzerConstants.MetadataProfileConstants.K8S_TYPE) ? jsonObject.getString(AnalyzerConstants.MetadataProfileConstants.K8S_TYPE) : null;
+                    String datasource = jsonObject.has(AnalyzerConstants.MetadataProfileConstants.DATASOURCE) ? jsonObject.getString(AnalyzerConstants.MetadataProfileConstants.DATASOURCE) : null;
+                    JSONArray queryVariableArray = jsonObject.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.QUERY_VARIABLES);
+                    ArrayList<Metric> queryVariablesList = new ArrayList<>();
+                    for (Object object : queryVariableArray) {
+                        JSONObject functionVarObj = (JSONObject) object;
+                        String name = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
+                        datasource = functionVarObj.has(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE) ? functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE) : datasource;
+                        String query = functionVarObj.has(AnalyzerConstants.AutotuneObjectConstants.QUERY) ? functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.QUERY) : null;
+                        String valueType = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
+                        String kubeObject = functionVarObj.has(AnalyzerConstants.KUBERNETES_OBJECT) ? functionVarObj.getString(AnalyzerConstants.KUBERNETES_OBJECT) : null;
+                        Metric metric = new Metric(name, query, datasource, valueType, kubeObject);
+                        JSONArray aggrFunctionArray = functionVarObj.has(AnalyzerConstants.AGGREGATION_FUNCTIONS) ? functionVarObj.getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS) : null;
+                        HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
+                        for (Object innerObject : aggrFunctionArray) {
+                            JSONObject aggrFuncJsonObject = (JSONObject) innerObject;
+                            String function = aggrFuncJsonObject.getString(AnalyzerConstants.FUNCTION);
+                            String aggrFuncQuery = aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.QUERY);
+                            String version = aggrFuncJsonObject.has(KruizeConstants.JSONKeys.VERSION) ? aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.VERSION) : null;
+                            AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version);
+                            aggregationFunctionsMap.put(function, aggregationFunctions);
+                        }
+                        metric.setAggregationFunctionsMap(aggregationFunctionsMap);
+                        queryVariablesList.add(metric);
                     }
-                    metric.setAggregationFunctionsMap(aggregationFunctionsMap);
-                    queryVariablesList.add(metric);
-                }
 
-                metadataProfile = new MetadataProfile(apiVersion, kind, metadata, profileVersion, k8sType, datasource, queryVariablesList);
+                    metadataProfile = new MetadataProfile(apiVersion, kind, metadata, profileVersion, k8sType, datasource, queryVariablesList);
+                }
+            } catch (Exception e) {
+                LOGGER.error(KruizeConstants.MetadataProfileConstants.CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE, e.getMessage());
             }
             return metadataProfile;
         }

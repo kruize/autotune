@@ -285,6 +285,8 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_METADATA_PROFILE_NAME_MSG = "Given metadata profile name - %s either does not exist or is not valid";
             public static final String NO_METADATA_PROFILES_EXCPTN = "No metadata profile";
             public static final String NO_METADATA_PROFILES = "No metadata profiles found!";
+            public static final String LOAD_METADATA_PROFILE_ERROR = "Failed to load saved metadata profile data due to: {} ";
+            public static final String LOAD_ALL_METADATA_PROFILES_ERROR = "Failed to load all the metadata profiles data due to: {} ";
         }
     }
 
