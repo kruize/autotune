@@ -87,10 +87,10 @@ public class MetadataProfileService extends HttpServlet{
             if (validationOutputData.isSuccess()) {
                 ValidationOutputData addedToDB = new ExperimentDBService().addMetadataProfileToDB(metadataProfile);
                 if (addedToDB.isSuccess()) {
-                    metadataProfilesMap.put(String.valueOf(metadataProfile.getMetadata().get("name")), metadataProfile);
+                    metadataProfilesMap.put(String.valueOf(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME)), metadataProfile);
                     getServletContext().setAttribute(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_MAP, metadataProfilesMap);
                     LOGGER.debug(KruizeConstants.MetadataProfileAPIMessages.ADD_METADATA_PROFILE_TO_DB_WITH_VERSION,
-                            metadataProfile.getMetadata().get("name").asText(), metadataProfile.getProfile_version());
+                            metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText(), metadataProfile.getProfile_version());
                     // Store metadata profile in-memory collection
                     MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
                     metadataProfileCollection.addMetadataProfile(metadataProfile);
@@ -102,9 +102,7 @@ public class MetadataProfileService extends HttpServlet{
             } else
                 sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
         } catch (Exception e) {
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Validation failed: " + e.getMessage());
-        } catch (InvalidValueException e) {
-            throw new RuntimeException(e);
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_FAILURE + e.getMessage());
         }
     }
 
@@ -204,7 +202,7 @@ public class MetadataProfileService extends HttpServlet{
                 );
             }
         } catch (Exception e) {
-            LOGGER.error(KruizeConstants.MetadataProfileAPIMessages.LOAD_METADATA_PROFILE_FAILURE, e.getMessage());
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.ListMetadataProfileAPI.LOAD_METADATA_PROFILE_ERROR, e.getMessage());
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
@@ -273,7 +271,7 @@ public class MetadataProfileService extends HttpServlet{
                 metadataProfilesMap.put(metadataProfileName, metadataProfile);
             }
         } catch (Exception e) {
-            LOGGER.error("Failed to load saved metadata profile data: {} ", e.getMessage());
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.ListMetadataProfileAPI.LOAD_METADATA_PROFILE_ERROR, e.getMessage());
         }
     }
 
@@ -282,7 +280,7 @@ public class MetadataProfileService extends HttpServlet{
             MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
             metadataProfilesMap.putAll(metadataProfileCollection.getMetadataProfileCollection());
         } catch (Exception e) {
-            LOGGER.error("Failed to load all the metadata profiles data: {} ", e.getMessage());
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.ListMetadataProfileAPI.LOAD_ALL_METADATA_PROFILES_ERROR, e.getMessage());
         }
     }
 
