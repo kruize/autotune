@@ -91,7 +91,7 @@ public class DataSourceMetadataOperator {
                 return null;
             }
             String dataSourceName = dataSourceInfo.getName();
-            HashMap<String, DataSource> dataSourceHashMap = dataSourceMetadataInfo.getDataSourceHashMap();
+            HashMap<String, DataSource> dataSourceHashMap = dataSourceMetadataInfo.getDatasources();
 
             if (null == dataSourceHashMap || !dataSourceHashMap.containsKey(dataSourceName)) {
                 LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_DATASOURCE_NOT_AVAILABLE + "{}", dataSourceName);
@@ -137,7 +137,7 @@ public class DataSourceMetadataOperator {
                 return;
             }
             String dataSourceName = dataSourceInfo.getName();
-            HashMap<String, DataSource> dataSourceHashMap = dataSourceMetadataInfo.getDataSourceHashMap();
+            HashMap<String, DataSource> dataSourceHashMap = dataSourceMetadataInfo.getDatasources();
 
             if (null == dataSourceHashMap || !dataSourceHashMap.containsKey(dataSourceName)) {
                 LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_DATASOURCE_NOT_AVAILABLE + "{}", dataSourceName);
