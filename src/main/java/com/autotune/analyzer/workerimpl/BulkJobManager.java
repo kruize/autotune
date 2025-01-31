@@ -161,9 +161,9 @@ public class BulkJobManager implements Runnable {
                     setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
                 } else {
                     Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
-                    jobData.setTotal_experiments(createExperimentAPIObjectMap.size());
-                    jobData.setProcessed_experiments(0);
-                    if (jobData.getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
+                    jobData.getSummary().setTotal_experiments(createExperimentAPIObjectMap.size());
+                    jobData.getSummary().setProcessed_experiments(0);
+                    if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
                         setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO, datasource);
                     } else {
                         ExecutorService createExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
@@ -188,18 +188,18 @@ public class BulkJobManager implements Runnable {
                                             } else if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
                                                 experiment_exists = true;
                                             } else {
-                                                experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, responseCode.getResponseBody().toString(), responseCode.getStatusCode()));
+
                                             }
                                         } catch (Exception e) {
                                             e.printStackTrace();
-                                            experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_BAD_REQUEST));
+
                                         } finally {
                                             if (!experiment_exists) {
-                                                LOGGER.info("Processing experiment {}", jobData.getProcessed_experiments());
-                                                jobData.incrementProcessed_experiments();
+                                                LOGGER.info("Processing experiment {}", jobData.getSummary().getProcessed_experiments());
+                                                jobData.getSummary().incrementProcessed_experiments();
                                             }
                                             synchronized (jobData) {
-                                                if (jobData.getTotal_experiments() == jobData.getProcessed_experiments().get()) {
+                                                if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
                                                     setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                                 }
                                             }
@@ -217,19 +217,18 @@ public class BulkJobManager implements Runnable {
                                                     recommendationResponseCode = recommendationApiClient.callKruizeAPI(null);
                                                     LOGGER.debug("API Response code: {}", recommendationResponseCode);
                                                     if (recommendationResponseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
-                                                        experiment.getRecommendations().setStatus(NotificationConstants.Status.PROCESSED);
+                                                        experiment.setStatus(NotificationConstants.Status.PROCESSED);
                                                     } else {
-                                                        experiment.getRecommendations().setStatus(NotificationConstants.Status.FAILED);
-                                                        experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, recommendationResponseCode.getResponseBody().toString(), recommendationResponseCode.getStatusCode()));
+                                                        experiment.setStatus(NotificationConstants.Status.FAILED);
+
                                                     }
                                                 } catch (Exception e) {
                                                     e.printStackTrace();
-                                                    experiment.getRecommendations().setStatus(NotificationConstants.Status.FAILED);
-                                                    experiment.getRecommendations().setNotifications(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
+                                                    experiment.setStatus(NotificationConstants.Status.FAILED);
                                                 } finally {
-                                                    jobData.incrementProcessed_experiments();
+                                                    jobData.getSummary().incrementProcessed_experiments();
                                                     synchronized (jobData) {
-                                                        if (jobData.getTotal_experiments() == jobData.getProcessed_experiments().get()) {
+                                                        if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
                                                             setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                                         }
                                                     }
@@ -238,9 +237,8 @@ public class BulkJobManager implements Runnable {
                                         }
                                     } catch (Exception e) {
                                         e.printStackTrace();
-                                        experiment.setNotification(new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR));
-                                        jobData.incrementProcessed_experiments();
-                                        if (jobData.getTotal_experiments() == jobData.getProcessed_experiments().get()) {
+                                        jobData.getSummary().incrementProcessed_experiments();
+                                        if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
                                             setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                         }
                                     }
@@ -269,7 +267,7 @@ public class BulkJobManager implements Runnable {
                                 }
                             }
 
-                            if (jobData.getTotal_experiments() == jobData.getProcessed_experiments().get()) {
+                            if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
                                 statusValue = "success";
                             }
                         }
@@ -302,10 +300,10 @@ public class BulkJobManager implements Runnable {
     }
 
     public void setFinalJobStatus(String status, String notificationKey, BulkJobStatus.Notification notification, DataSourceInfo finalDatasource) {
-        jobData.setStatus(status);
-        jobData.setEndTime(Instant.now());
+        jobData.getSummary().setStatus(status);
+        jobData.getSummary().setEndTime(Instant.now());
         if (null != notification)
-            jobData.setNotification(notificationKey, notification);
+            jobData.getSummary().setNotification(notificationKey, notification);
         GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
         if (null != bulkInput.getWebhook() && null != bulkInput.getWebhook().getUrl()) {
             apiClient.setBaseURL(bulkInput.getWebhook().getUrl());
