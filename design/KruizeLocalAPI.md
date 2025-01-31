@@ -2573,12 +2573,12 @@ If no experiment type is specified, it will default to `container`.
 **Request with `model_settings` and `term_settings` field**
 
 Under `recommendation_settings`, the `model_settings` and `term_settings` field is optional 
-and allows you to specify custom model and term details. Currently, it supports configurations 
-for a single model and a single term. Model can be set to either cost or performance while 
-Term is user-customizable to suit specific needs.
+and allows you to specify model and term details. Currently, it supports configurations 
+for a single model and a single term. Model can be set to either cost or performance and
+term can be set to short, medium or long term.
 
-If no model or term settings are specified, then it will default to `performance`
-and `short` term.
+If mode is set to auto or recreate and the above settings are not mentioned then it will
+default to `performance` and `short` term.
 
 <details>
   <summary><b>Example Request with custom model_settings and term_settings </b></summary>
@@ -2620,15 +2620,7 @@ and `short` term.
         "models": ["cost"]
       },
       "term_settings": {
-        "terms": ["short"],
-        "term_details": {
-          "short": {
-            "duration_in_days": 2 ,
-            "duration_threshold": 1,
-            "plots_datapoint": 4,
-            "plots_datapoint_delta_in_days": 0.25
-          }
-        }
+        "terms": ["short"]
       }
     },
     "datasource": "prometheus-1"
