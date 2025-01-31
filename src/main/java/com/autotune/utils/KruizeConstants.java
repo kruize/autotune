@@ -926,5 +926,25 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_VALIDATION_FAILURE = "MetadataProfile validation failed: ";
         public static final String METADATA_PROFILE_VALIDATION_AND_ADD_FAILURE = "Validate and add metadata profile failed: {}";
         public static final String ADD_METADATA_PROFILE = "Added MetadataProfile: {}";
+        public static final String CHECKING_AVAILABLE_METADATA_PROFILE_FROM_DB = "Checking available metadata profiles from database: ";
+        public static final String NO_METADATA_PROFILE_FOUND_IN_DB = "No metadata profile found in database.";
+        public static final String METADATA_PROFILE_FOUND = "MetadataProfile found: ";
+        public static final String ADDING_METADATA_PROFILE = "Trying to add the metadata profile to collection: ";
+        public static final String METADATA_PROFILE_ALREADY_EXISTS = "MetadataProfile already exists: ";
+        public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: ";
+
+        public static class MetadataProfileErrorMsgs {
+
+            public static final String ADD_METADATA_PROFILE_TO_DB_ERROR = "Failed to add Metadata Profile due to {}";
+            public static final String LOAD_METADATA_PROFILES_FROM_DB_FAILURE = "None of the Metadata Profiles loaded from DB.";
+            public static final String CONVERTING_METADATA_PROFILE_DB_OBJECT_ERROR = "Error occurred while reading from MetadataProfile DB object due to : {}";
+            public static final String PROCESS_METADATA_PROFILE_OBJECT_ERROR = "Failed to process metadata of metadataProfile object due to : {}";
+            public static final String PROCESS_QUERY_VARIABLES_ERROR = "Error occurred while processing query_variables data due to : {}";
+            public static final String CONVERT_METADATA_PROFILE_TO_DB_OBJECT_FAILURE = "Failed to convert MetadataProfile Object to MetadataProfile DB object due to {}";
+
+            private MetadataProfileErrorMsgs() {
+            }
+        }
+
     }
 }
