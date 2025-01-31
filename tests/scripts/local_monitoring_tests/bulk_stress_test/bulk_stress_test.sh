@@ -86,6 +86,8 @@ function kruize_local_thanos_patch() {
 	sed -i 's/"serviceName": "prometheus-k8s"/"serviceName": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
         sed -i 's/"namespace": "openshift-monitoring"/"namespace": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	sed -i 's#"url": ""#"url": "'"${ds_url}"'"#' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+        
+	sed -i 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9]\+/"bulkapilimit" : 10000/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 
 	sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
@@ -161,13 +163,16 @@ if [ ${skip_setup} -eq 0 ]; then
 	echo "$KRUIZE_REPO"
 	pushd "${KRUIZE_REPO}" > /dev/null
 		# Update datasource
+		CRC_DIR="./manifests/crc/default-db-included-installation"
+	        KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+	        KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT_ORIG="${CRC_DIR}/openshift/kruize-crc-openshift.yaml.orig"
+		cp "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT_ORIG}"
 		if [ ${prometheus_ds} == 0 ]; then
-			CRC_DIR="./manifests/crc/default-db-included-installation"
-		        KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
-		        KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT_ORIG="${CRC_DIR}/openshift/kruize-crc-openshift.yaml.orig"
-			cp "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT_ORIG}"
-
 			kruize_local_thanos_patch
+		else
+			sed -i 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9]\+/"bulkapilimit" : 10000/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+                        sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+			sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 		fi
 
         	echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
@@ -188,10 +193,8 @@ if [ ${skip_setup} -eq 0 ]; then
 		kubectl get pods -n ${NAMESPACE} | tee -a ${LOG}
 
 		oc expose svc/kruize -n ${NAMESPACE}
-		if [ ${prometheus_ds} == 0 ]; then
-			cp "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT_ORIG}" "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
-			rm "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT_ORIG}"
-		fi
+		cp "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT_ORIG}" "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+		rm "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT_ORIG}"
 
 	popd > /dev/null
 	echo "Setting up kruize...Done" | tee -a ${LOG}

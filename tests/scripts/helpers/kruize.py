@@ -18,7 +18,6 @@ import json
 import requests
 import subprocess
 
-
 def get_kruize_url():
     return URL
 
@@ -503,35 +502,35 @@ def post_bulk_api(input_json_file, logger=None):
     return response
 
 
-def get_bulk_job_status(job_id,verbose=False,logger=None):
+def get_bulk_job_status(job_id,include=None,logger=None):
     if logger:
         logger.info("\n************************************************************")
     else:
         print("\n************************************************************")
     
     url_basic = f"{URL}/bulk?job_id={job_id}"
-    url_verbose = f"{URL}/bulk?job_id={job_id}&verbose={verbose}"
+    url_include = f"{URL}/bulk?job_id={job_id}&include={include}"
     getJobIDURL = url_basic
-    if verbose:
-        getJobIDURL = url_verbose
+    if include:
+        getJobIDURL = url_include
 
     if logger:
-        logger.info(f"Sending GET request to URL ( verbose={verbose} ): {getJobIDURL}")
+        logger.info(f"Sending GET request to URL ( include={include} ): {getJobIDURL}")
     else:
-        print("Sending GET request to URL ( verbose=",verbose," ): ", getJobIDURL)
+        print("Sending GET request to URL ( include=",include," ): ", getJobIDURL)
 
-    curl_command_verbose = f"curl -X GET '{getJobIDURL}'"
-
-    if logger:
-        logger.info(f"Equivalent cURL command : {curl_command_verbose}")
-    else:
-        print("Equivalent cURL command : ", curl_command_verbose)
-    response = requests.get(url_verbose)
+    curl_command_include = f"curl -X GET '{getJobIDURL}'"
 
     if logger:
-        logger.info(f"Verbose GET Response Status Code: {response.status_code}")
-        logger.info(f"Verbose GET Response JSON: {response.json()}")
+        logger.info(f"Equivalent cURL command : {curl_command_include}")
     else:
-        print("Verbose GET Response Status Code: ", response.status_code)
-        print("Verbose GET Response JSON: ", response.json())
+        print("Equivalent cURL command : ", curl_command_include)
+    response = requests.get(url_include)
+
+    if logger:
+        logger.info(f"Include GET Response Status Code: {response.status_code}")
+        #logger.info(f"Include GET Response JSON: {response.json()}")
+    else:
+        print("Include GET Response Status Code: ", response.status_code)
+        print("Include GET Response JSON: ", response.json())
     return response

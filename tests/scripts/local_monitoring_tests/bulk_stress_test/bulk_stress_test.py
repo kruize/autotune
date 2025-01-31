@@ -40,7 +40,45 @@ def setup_logger(name, log_file, level=logging.INFO):
 
     return logger
 
-def fetch_recommendations(job_status_json):
+def fetch_bulk_recommendations(job_status_json, logger):
+    logger.info("Fetching processed experiments...")
+    exp_list = list(job_status_json["experiments"].keys())
+
+    logger.info("List of processed experiments")
+    logger.info("**************************************************")
+    logger.info(exp_list)
+    logger.info("**************************************************")
+
+    # List recommendations for the experiments for which recommendations are available
+    if exp_list:
+        reco_failures = 0
+        for exp_name in exp_list:
+            logger.info(f"Fetching recommendations for {exp_name}...")
+            reco_response = job_status_json['experiments'][exp_name]['apis']['recommendations']['response']
+            recommendations = reco_response[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
+            reco_available_msg = recommendations['notifications']['111000']['message']
+            logger.info(reco_available_msg)
+
+            if reco_available_msg != "Recommendations Are Available":
+                reco_failures = reco_failures + 1
+                logger.info(f"Bulk recommendations failed for the experiment - {exp_name}!")
+                logger.info(reco_response)
+                continue
+            else:
+                logger.info(f"Fetched recommendations for {exp_name} - Done")
+
+        if reco_failures != 0:
+            logger.info(
+                f"Bulk recommendations failed for some of the experiments, check the log {log_file} for details!")
+            return -1
+        else:
+            return 0
+    else:
+        logger.error("Something went wrong! There are no experiments with recommendations!")
+        return -1
+
+
+def fetch_recommendations(job_status_json, worker_number, logger):
     logger.info("Fetching processed experiments...")
     exp_list = list(job_status_json["experiments"].keys())
 
@@ -86,6 +124,47 @@ def fetch_recommendations(job_status_json):
         logger.error("Something went wrong! There are no experiments with recommendations!")
         return -1
 
+def fetch_bulk_job_status(job_id, worker_number, logger):
+    # Get the bulk job status using the job id
+    include = "summary,experiments"
+    bulk_job_response = get_bulk_job_status(job_id, include, logger)
+    job_status_json = bulk_job_response.json()
+
+    # Loop until job status is COMPLETED
+    job_status = job_status_json['summary']['status']
+
+    while job_status != "COMPLETED":
+        bulk_job_response = get_bulk_job_status(job_id, include, logger)
+        job_status_json = bulk_job_response.json()
+        job_status = job_status_json['summary']['status']
+        total_exps = job_status_json['summary']['total_experiments']
+        processed_exps = job_status_json['summary']['processed_experiments']
+        logger.info(f"Total_experiments / Processed experiments - {total_exps} / {processed_exps}")
+        if job_status == "FAILED":
+            logger.info("Job FAILED!")
+            break
+        sleep(5)
+
+    logger.info(f"worker number - {worker_number} job id - {job_id} job status - {job_status}")
+
+    # Dump the job status json into a file
+    job_status_dir = results_dir + "/job_status_jsons"
+    os.makedirs(job_status_dir, exist_ok=True)
+
+    job_file = job_status_dir + "/job_status" + str(worker_number) + ".json"
+    logger.info(f"Storing job status in {job_file}")
+    with open(job_file, 'w') as f:
+        json.dump(job_status_json, f, indent=4)
+
+    # Fetch the list of experiments for which recommendations are available
+    if job_status != "FAILED":
+        #status = fetch_bulk_recommendations(job_status_json, worker_number, logger)
+        status = fetch_bulk_recommendations(job_status_json, logger)
+        return status
+    else:
+        logger.info(f"Check {job_file} for job status")
+        return -1
+
 def invoke_bulk(worker_number, start_time=None, end_time=None):
     try:
         stress_log_dir = results_dir + "/stress_logs"
@@ -129,40 +208,8 @@ def invoke_bulk(worker_number, start_time=None, end_time=None):
         logger.info(f"worker number - {worker_number} job id - {job_id}")
 
         # Get the bulk job status using the job id
-        verbose = "true"
-        bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
-        job_status_json = bulk_job_response.json()
-
-        # Loop until job status is COMPLETED
-        job_status = job_status_json['status']
-
-        while job_status != "COMPLETED":
-                bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
-                job_status_json = bulk_job_response.json()
-                job_status = job_status_json['status']
-                if job_status == "FAILED":
-                    logger.info("Job FAILED!")
-                    break
-                sleep(5)
-
-        logger.info(f"worker number - {worker_number} job id - {job_id} job status - {job_status}")
-
-        # Dump the job status json into a file
-        job_status_dir = results_dir + "/job_status_jsons"
-        os.makedirs(job_status_dir, exist_ok=True)
-
-        job_file = job_status_dir + "/job_status" + str(worker_number) + ".json"
-        logger.info(f"Storing job status in {job_file}")
-        with open(job_file, 'w') as f:
-            json.dump(job_status_json, f, indent=4)
-
-       # Fetch the list of experiments for which recommendations are available
-        if job_status != "FAILED":
-            status = fetch_recommendations(job_status_json)
-            return status
-        else:
-            logger.info(f"Check {job_file} for job status")
-            return -1
+        return_status = fetch_bulk_job_status(job_id, worker_number, logger)
+        return return_status
     except Exception as e:
         return {'error': str(e)}
 
@@ -205,39 +252,8 @@ def invoke_bulk_with_time_range(worker_number, start_time, end_time):
         logger.info(f"worker number - {worker_number} job id - {job_id}")
 
         # Get the bulk job status using the job id
-        verbose = "true"
-        bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
-        job_status_json = bulk_job_response.json()
-
-        # Loop until job status is COMPLETED
-        job_status = job_status_json['status']
-        while job_status != "COMPLETED":
-                bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
-                job_status_json = bulk_job_response.json()
-                job_status = job_status_json['status']
-                if job_status == "FAILED":
-                    logger.info("Job FAILED!")
-                    break
-                sleep(5)
-
-        logger.info(f"worker number - {worker_number} job id - {job_id} job status - {job_status}")
-
-        # Dump the job status json into a file
-        job_status_dir = results_dir + "/job_status_jsons"
-        os.makedirs(job_status_dir, exist_ok=True)
-
-        job_file = job_status_dir + "/job_status" + str(worker_number) + ".json"
-        logger.info(f"Storing job status in {job_file}")
-        with open(job_file, 'w') as f:
-            json.dump(job_status_json, f, indent=4)
-
-        # Fetch the list of experiments for which recommendations are available
-        if job_status != "FAILED":
-            status = fetch_recommendations(job_status_json)
-            return status
-        else:
-            logger.info(f"Check {job_file} for job status")
-            return -1
+        return_status = fetch_bulk_job_status(job_id, worker_number, logger)
+        return return_status
     except Exception as e:
         return {'error': str(e)}
 
