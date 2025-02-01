@@ -35,8 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -72,6 +71,22 @@ public class BulkService extends HttpServlet {
         try {
             String jobID = req.getParameter(JOB_ID);
             String verboseParam = req.getParameter(VERBOSE);
+            // Read query parameters
+            String includeParams = req.getParameter("include");
+            String excludeParams = req.getParameter("exclude");
+            String experiment_name = req.getParameter("experiment_name");
+
+            LOGGER.info(" include fields: {}", includeParams);
+            LOGGER.info(" exclude fields: {}", excludeParams);
+
+            // Parse the include and exclude parameters into lists
+            Set<String> includeFields = includeParams != null ? new HashSet<>(Arrays.asList(includeParams.split(","))) : new HashSet<>(Arrays.asList("summary"));
+            Set<String> excludeFields = excludeParams != null ? new HashSet<>(Arrays.asList(excludeParams.split(","))) : Collections.emptySet();
+
+            LOGGER.info(" include fields: {}", includeFields);
+            LOGGER.info(" exclude fields: {}", excludeFields);
+            LOGGER.info(" experiment_name: {}", experiment_name);
+
             // If the parameter is not provided (null), default it to false
             boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
             BulkJobStatus jobDetails;
@@ -86,7 +101,7 @@ public class BulkService extends HttpServlet {
                 return;
             }
             jobDetails = jobStatusMap.get(jobID);
-            LOGGER.info("Job Status: " + jobDetails.getStatus());
+            LOGGER.info("Job Status: " + jobDetails.getSummary().getStatus());
             resp.setContentType(JSON_CONTENT_TYPE);
             resp.setCharacterEncoding(CHARACTER_ENCODING);
             SimpleFilterProvider filters = new SimpleFilterProvider();
@@ -101,19 +116,9 @@ public class BulkService extends HttpServlet {
             } else {
                 try {
                     resp.setStatus(HttpServletResponse.SC_OK);
-                    // Return the JSON representation of the JobStatus object
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    if (!verbose) {
-                        filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAllExcept("experiments"));
-                    } else {
-                        filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAll());
-                    }
-                    objectMapper.setFilterProvider(filters);
-                    String jsonResponse = "";
-                    synchronized (jobDetails) {
-                        jsonResponse = objectMapper.writeValueAsString(jobDetails);
-                    }
-                    resp.getWriter().write(jsonResponse);
+                    // Filter JSON
+                    String filteredJson = filterJson(jobDetails, includeFields, excludeFields, experiment_name);
+                    resp.getWriter().write(filteredJson);
                     statusValue = "success";
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -152,10 +157,10 @@ public class BulkService extends HttpServlet {
 
             // Generate a unique jobID
             String jobID = UUID.randomUUID().toString();
-            BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now());
+            BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now(), payload);
             jobStatusMap.put(jobID, jobStatus);
             // Submit the job to be processed asynchronously
-            executorService.submit(new BulkJobManager(jobID, jobStatus, payload));
+            executorService.submit(new BulkJobManager(jobID, jobStatus, payload));      //TOdo remove payload as it is part of jobStatus object
 
             // Just sending a simple success response back
             // Return the jobID to the user
@@ -185,5 +190,56 @@ public class BulkService extends HttpServlet {
             if (null == errorMsg) errorMsg = e.getMessage();
         }
         response.sendError(httpStatusCode, errorMsg);
+    }
+
+
+    public String filterJson(BulkJobStatus jsonInput, Set<String> includeFields, Set<String> excludeFields, String experiment_name) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        // Include or exclude fields
+        SimpleFilterProvider filters = new SimpleFilterProvider();
+        jsonInput.copyByPattern(experiment_name);
+        if (!includeFields.isEmpty()) {
+            LOGGER.debug("includeFields : {}", includeFields);
+            Set<String> jobFields = new HashSet<>();
+            for (String field : includeFields) {
+                if (field.startsWith("summary")) {
+                    jobFields.add("summary");
+                    if (field.startsWith("summary|")) {
+                        Set<String> summaryFields = new HashSet<>();
+                        for (String s : field.split("\\|")) {
+                            summaryFields.add(s);
+                        }
+                        filters.addFilter("summaryFilter", SimpleBeanPropertyFilter.filterOutAllExcept(summaryFields));
+                    } else {
+                        filters.addFilter("summaryFilter", SimpleBeanPropertyFilter.serializeAll());
+                    }
+                } else if (field.startsWith("experiments")) {
+                    jobFields.add("experiments");
+                    if (field.startsWith("experiments|")) {
+                        Set<String> experimentFields = new HashSet<>();
+                        for (String s : field.split("\\|")) {
+                            experimentFields.add(s);
+                        }
+                        filters.addFilter("experimentFilter", SimpleBeanPropertyFilter.filterOutAllExcept(experimentFields));
+                    } else {
+                        filters.addFilter("experimentFilter", SimpleBeanPropertyFilter.serializeAll());
+                    }
+                } else {
+                    jobFields.add(field);
+                }
+            }
+            filters.addFilter("jobFilter", SimpleBeanPropertyFilter.filterOutAllExcept(jobFields));
+        } else if (!excludeFields.isEmpty()) {
+            LOGGER.debug("excludeFields : {}", excludeFields);
+            filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAllExcept(excludeFields));
+        }
+
+        // Assuming the input JSON has a filter identifier like @JsonFilter("dynamicFilter")
+        mapper.setFilterProvider(filters);
+        synchronized (jsonInput) {
+
+            return mapper.writeValueAsString(jsonInput);
+        }
+
     }
 }
