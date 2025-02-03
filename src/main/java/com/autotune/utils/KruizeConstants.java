@@ -342,6 +342,7 @@ public class KruizeConstants {
 
     public static class SupportedDatasources {
         public static final String PROMETHEUS = "prometheus";
+        public static final String THANOS = "thanos";
 
         private SupportedDatasources() {
         }
@@ -422,7 +423,7 @@ public class KruizeConstants {
         }
 
         public static class DataSourceInfoMsgs {
-            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: {}";
+            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: {} - {}";
             public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: {}";
             public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
             public static final String CHECKING_AVAILABLE_DATASOURCE_FROM_DB = "Checking available datasources from database:";
@@ -711,6 +712,7 @@ public class KruizeConstants {
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
         public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
         public static final String IS_ROS_ENABLED = "isROSEnabled";
+        public static final String DATASOURCE_VIA_ENV = "datasource";
     }
 
     public static final class RecommendationEngineConstants {
@@ -730,6 +732,14 @@ public class KruizeConstants {
                 public static final int MEDIUM_TERM_DURATION_DAYS_THRESHOLD = 2;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
                 public static final int LONG_TERM_DURATION_DAYS_THRESHOLD = 8;
+                // Represents the minimum number of data points required for different term thresholds.
+                // Minimum data points are calculated based on the above threshold in days and a 15-minute measurement duration.
+                // If the short-term threshold is 30 minutes and the measurement duration is 15 minutes
+                // then the minimum data points = 30 / 15 = 2
+                public static final int SHORT_TERM_MIN_DATAPOINTS = 2;
+                public static final int MEDIUM_TERM_MIN_DATAPOINTS = 192;
+                public static final int LONG_TERM_MIN_DATAPOINTS = 768;
+
 
                 private DurationAmount() {
 
@@ -783,6 +793,7 @@ public class KruizeConstants {
         public static final String AUTHENTICATION_USERNAME = "username";
         public static final String AUTHENTICATION_PASSWORD = "password";
         public static final String AUTHENTICATION_TOKEN_FILE = "tokenFilePath";
+        public static final String AUTHENTICATION_TOKEN = "token";
         public static final String AUTHENTICATION_API_KEY = "apiKey";
         public static final String AUTHENTICATION_HEADER_NAME = "header";
         public static final String AUTHENTICATION_TOKEN_ENDPOINT = "tokenEndpoint";
@@ -909,5 +920,31 @@ public class KruizeConstants {
 
 
         }
+    }
+
+    public static final class MetadataProfileConstants {
+        public static final String METADATA_PROFILE_VALIDATION_FAILURE = "MetadataProfile validation failed: ";
+        public static final String METADATA_PROFILE_VALIDATION_AND_ADD_FAILURE = "Validate and add metadata profile failed: {}";
+        public static final String ADD_METADATA_PROFILE = "Added MetadataProfile: {}";
+        public static final String CHECKING_AVAILABLE_METADATA_PROFILE_FROM_DB = "Checking available metadata profiles from database: ";
+        public static final String NO_METADATA_PROFILE_FOUND_IN_DB = "No metadata profile found in database.";
+        public static final String METADATA_PROFILE_FOUND = "MetadataProfile found: ";
+        public static final String ADDING_METADATA_PROFILE = "Trying to add the metadata profile to collection: ";
+        public static final String METADATA_PROFILE_ALREADY_EXISTS = "MetadataProfile already exists: ";
+        public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: ";
+
+        public static class MetadataProfileErrorMsgs {
+
+            public static final String ADD_METADATA_PROFILE_TO_DB_ERROR = "Failed to add Metadata Profile due to {}";
+            public static final String LOAD_METADATA_PROFILES_FROM_DB_FAILURE = "None of the Metadata Profiles loaded from DB.";
+            public static final String CONVERTING_METADATA_PROFILE_DB_OBJECT_ERROR = "Error occurred while reading from MetadataProfile DB object due to : {}";
+            public static final String PROCESS_METADATA_PROFILE_OBJECT_ERROR = "Failed to process metadata of metadataProfile object due to : {}";
+            public static final String PROCESS_QUERY_VARIABLES_ERROR = "Error occurred while processing query_variables data due to : {}";
+            public static final String CONVERT_METADATA_PROFILE_TO_DB_OBJECT_FAILURE = "Failed to convert MetadataProfile Object to MetadataProfile DB object due to {}";
+
+            private MetadataProfileErrorMsgs() {
+            }
+        }
+
     }
 }

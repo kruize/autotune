@@ -28,7 +28,9 @@ progress of the job.
 {
   "filter": {
     "exclude": {
-      "namespace": ["openshift-.*"],
+      "namespace": [
+        "openshift-.*"
+      ],
       "workload": [],
       "containers": [],
       "labels": {
@@ -38,7 +40,9 @@ progress of the job.
       }
     },
     "include": {
-      "namespace": ["openshift-tuning"],
+      "namespace": [
+        "openshift-tuning"
+      ],
       "workload": [],
       "containers": [],
       "labels": {
@@ -58,7 +62,7 @@ progress of the job.
     "namespace"
   ],
   "webhook": {
-    "url" : "http://127.0.0.1:8080/webhook"
+    "url": "http://127.0.0.1:8080/webhook"
   }
 }
 ```
@@ -96,6 +100,7 @@ progress of the job.
   "job_id": "123e4567-e89b-12d3-a456-426614174000"
 }
 ```
+
 ### Different payload parameters examples
 
 #### 1. **Request Payload with `time_range` specified:**
@@ -351,7 +356,6 @@ resource optimization in Kubernetes environments. Below is a breakdown of the JS
   Kubernetes cluster.
 - Comprehensive configuration details and an example are available at the
   following [link](https://github.com/kruize/autotune/blob/cce96ae68876d6ed2afe505bab04efd1567c8239/manifests/crc/default-db-included-installation/openshift/kruize-crc-openshift.yaml#L133).
-
 ```yaml
 apiVersion: v1
 kind: ConfigMap
@@ -378,6 +382,27 @@ data:
       ]
     }
 ```
+- We can also configure same using environment variable
+    - examples
+    ```shell
+        export datasource='[{ \"name\": \"prometheus-prod\",\"provider\": \"prometheus\",\"serviceName\": \"\",\"namespace\": \"ros-prod\",\"url\": \"http://0.0.0.0:8080\",\"authentication\": {\"type\": \"bearer\",\"credentials\": {\"token\" : \"token_key\"}}}]'
+    ```
+  or
+    ```shell
+        export datasource='[{ \"name\": \"prometheus-prod\",\"provider\": \"prometheus\",\"serviceName\": \"\",\"namespace\": \"ros-prod\",\"url\": \"http://0.0.0.0:8080\",\"authentication\": {\"type\": \"bearer\",\"credentials\": {\"token\" : \"token_key\"}}}]'
+    ```
+
+## Bulk Internal API's
+The Bulk API internally invokes multiple APIs, such as createExperiment and generateRecommendations. 
+These APIs can be configured using environment variables with the following default format:
+    http://<appname>.<namespace>.svc.cluster.local:<appnamePort>/generateRecommendations?experiment_name=%s
+    http://<appname>.<namespace>.svc.cluster.local:<appnamePort>/createExperiment
+example
+```shell
+"recommendationsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/generateRecommendations?experiment_name=%s"
+"experimentsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/createExperiment"
+```
+
 
 ## Limits
 

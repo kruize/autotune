@@ -37,14 +37,15 @@ jobs:
           ./build.sh -i autotune_operator:pr_${{ env.PR_NUMBER }} -o autotune_optuna:pr_${{ env.PR_NUMBER }}
           docker images | grep autotune
       - name: docker login
-        uses: docker/login-action@v2
+        uses: docker/login-action@v3
         with:
+          registry: quay.io
           username: ${{ secrets.DOCKER_USER }}
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Push
         run: |
-          docker tag autotune_operator:pr_${{ env.PR_NUMBER }} kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
-          docker push kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
+          docker tag autotune_operator:pr_${{ env.PR_NUMBER }} quay.io/kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
+          docker push quay.io/kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
 
   deploy_crc:
     # The type of runner that the job will run on

@@ -83,13 +83,21 @@ class BasicAuthCredentials extends Credentials {
 
 class BearerTokenCredentials extends Credentials {
     private String tokenFilePath;
-
+    private String token;
     public String getTokenFilePath() {
         return tokenFilePath;
     }
 
+    public String getToken() {
+        return token;
+    }
+
     public void setTokenFilePath(String tokenFilePath) {
         this.tokenFilePath = tokenFilePath;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     @Override
