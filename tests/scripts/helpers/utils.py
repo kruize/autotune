@@ -1623,7 +1623,7 @@ def validate_job_status(job_id, base_url, caplog):
 def get_metadata_profile_dir():
     # Get the current directory
     current_directory = Path(__file__).resolve().parent
-    # Navigate up 3 levels and build the path to the 'manifests/app/adreess' directory
+    # Navigate up 3 levels
     base_dir = current_directory.parents[2]  # (index 2 because it's zero-based)
     metadata_profile_dir = base_dir / 'manifests' / 'autotune' / 'metadata-profiles'
 
