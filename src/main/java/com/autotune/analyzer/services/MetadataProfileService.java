@@ -123,9 +123,7 @@ public class MetadataProfileService extends HttpServlet{
 
         ConcurrentHashMap<String, MetadataProfile> metadataProfilesMap = new ConcurrentHashMap<>();
         String metadataProfileName = request.getParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME);
-        String verbose = request.getParameter(AnalyzerConstants.ServiceConstants.VERBOSE);
-        String internalVerbose = "false";
-        boolean error = false;
+        boolean verbose = Boolean.parseBoolean(request.getParameter(AnalyzerConstants.ServiceConstants.VERBOSE));
 
         // validate Query params
         Set<String> invalidParams = new HashSet<>();
@@ -138,21 +136,12 @@ public class MetadataProfileService extends HttpServlet{
         // Fetch metadata profiles based on the query parameters using the in-memory storage collection
         try {
             if (invalidParams.isEmpty()) {
-                if (null != verbose) {
-                    internalVerbose = verbose;
-                }
 
                 try {
-                    if (null != metadataProfileName && !metadataProfileName.isEmpty()) {
-                        internalVerbose = "true";
-                        loadMetadataProfilesFromCollection(metadataProfilesMap, metadataProfileName);
-                    } else {
-                        loadAllMetadataProfilesFromCollection(metadataProfilesMap);
-                    }
+                    loadMetadataProfilesFromCollection(metadataProfilesMap, metadataProfileName);
 
                     // Check if metadata profile exists
-                    if (metadataProfileName != null && !metadataProfilesMap.containsKey(metadataProfileName)) {
-                        error = true;
+                    if (null != metadataProfileName && !metadataProfilesMap.containsKey(metadataProfileName)) {
                         sendErrorResponse(
                                 response,
                                 new Exception(AnalyzerErrorConstants.APIErrors.ListMetadataProfileAPI.INVALID_METADATA_PROFILE_NAME_EXCPTN),
@@ -160,36 +149,33 @@ public class MetadataProfileService extends HttpServlet{
                                 String.format(AnalyzerErrorConstants.APIErrors.ListMetadataProfileAPI.INVALID_METADATA_PROFILE_NAME_MSG, metadataProfileName)
                         );
                     } else if (null == metadataProfileName && metadataProfilesMap.isEmpty()) {
-                        error = true;
                         sendErrorResponse(
                                 response,
                                 new Exception(AnalyzerErrorConstants.APIErrors.ListMetadataProfileAPI.NO_METADATA_PROFILES_EXCPTN),
                                 HttpServletResponse.SC_BAD_REQUEST,
                                 AnalyzerErrorConstants.APIErrors.ListMetadataProfileAPI.NO_METADATA_PROFILES
                         );
-                    }
-
-                    if (!error) {
+                    } else {
                         Collection<MetadataProfile> values = metadataProfilesMap.values();
                         // create Gson Object
                         Gson gsonObj = createGsonObject();
 
-                        if (internalVerbose.equals("false")) {
+                        if(null != metadataProfileName || verbose) {
+                            gsonStr = gsonObj.toJson(values);
+                        } else {
                             Collection<JsonObject> filteredValues = new ArrayList<>();
                             for(MetadataProfile metadataProfile : values) {
                                 JsonObject jsonObject = new JsonObject();
-                                jsonObject.addProperty("name", metadataProfile.getMetadata().get("name").asText());
+                                jsonObject.addProperty(KruizeConstants.JSONKeys.NAME, metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText());
                                 filteredValues.add(jsonObject);
                             }
                             gsonStr = gsonObj.toJson(filteredValues);
-                        } else {
-                            gsonStr = gsonObj.toJson(values);
                         }
                         response.getWriter().println(gsonStr);
                         response.getWriter().close();
                     }
                 } catch (Exception e) {
-                    LOGGER.error("Exception: {}", e.getMessage());
+                    LOGGER.error(AnalyzerErrorConstants.APIErrors.ListMetadataProfileAPI.LOAD_METADATA_PROFILE_ERROR, e.getMessage());
                     e.printStackTrace();
                     sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
                 }
@@ -238,7 +224,7 @@ public class MetadataProfileService extends HttpServlet{
                 new Gson().toJson(
                         new MetadataProfileResponse(message +
                                 KruizeConstants.MetadataProfileAPIMessages.VIEW_METADATA_PROFILES_MSG,
-                                HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                                HttpServletResponse.SC_CREATED, "", KruizeConstants.APIMessages.SUCCESS)
                 )
         );
         out.flush();
@@ -269,19 +255,13 @@ public class MetadataProfileService extends HttpServlet{
             if (null != metadataProfileName && !metadataProfileName.isEmpty()) {
                 MetadataProfile metadataProfile = metadataProfileCollection.getMetadataProfileCollection().get(metadataProfileName);
                 metadataProfilesMap.put(metadataProfileName, metadataProfile);
+            } else {
+                metadataProfilesMap.putAll(metadataProfileCollection.getMetadataProfileCollection());
             }
         } catch (Exception e) {
             LOGGER.error(AnalyzerErrorConstants.APIErrors.ListMetadataProfileAPI.LOAD_METADATA_PROFILE_ERROR, e.getMessage());
         }
-    }
 
-    private void loadAllMetadataProfilesFromCollection(Map<String, MetadataProfile> metadataProfilesMap) {
-        try {
-            MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
-            metadataProfilesMap.putAll(metadataProfileCollection.getMetadataProfileCollection());
-        } catch (Exception e) {
-            LOGGER.error(AnalyzerErrorConstants.APIErrors.ListMetadataProfileAPI.LOAD_ALL_METADATA_PROFILES_ERROR, e.getMessage());
-        }
     }
 
     private Gson createGsonObject() {
@@ -301,8 +281,8 @@ public class MetadataProfileService extends HttpServlet{
                             JsonObject metadataJson = new JsonObject();
 
                             // Extract the "name" field directly if it exists
-                            if (objectNode.has("name")) {
-                                metadataJson.addProperty("name", objectNode.get("name").asText());
+                            if (objectNode.has(KruizeConstants.JSONKeys.NAME)) {
+                                metadataJson.addProperty(KruizeConstants.JSONKeys.NAME, objectNode.get(KruizeConstants.JSONKeys.NAME).asText());
                             }
 
                             return metadataJson;
@@ -314,11 +294,11 @@ public class MetadataProfileService extends HttpServlet{
                     @Override
                     public boolean shouldSkipField(FieldAttributes f) {
                         return f.getDeclaringClass() == Metric.class && (
-                                f.getName().equals("trialSummaryResult")
-                                        || f.getName().equals("cycleDataMap")
+                                f.getName().equals(AnalyzerConstants.TRIAL_RESULT_SUMMARY)
+                                        || f.getName().equals(AnalyzerConstants.CYCLE_DATA_MAP)
                         ) ||
                                 f.getDeclaringClass() == ContainerData.class && (
-                                        f.getName().equalsIgnoreCase("metrics")
+                                        f.getName().equalsIgnoreCase(AnalyzerConstants.METRICS)
                                 );
                     }
 
