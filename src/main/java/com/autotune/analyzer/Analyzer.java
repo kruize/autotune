@@ -16,6 +16,7 @@
 package com.autotune.analyzer;
 
 import com.autotune.analyzer.experiment.Experimentator;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileDeployment;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.services.*;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -32,6 +33,9 @@ public class Analyzer {
         try {
             addServlets(contextHandler);
             PerformanceProfilesDeployment.getPerformanceProfiles(); //  Performance profile should be called first
+            if (KruizeDeploymentInfo.local) {
+                MetadataProfileDeployment.getMetadataProfiles();
+            }
             KruizeOperator.getKruizeObjects(kruizeOperator);
         } catch (Exception e) {
             e.printStackTrace();
