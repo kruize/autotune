@@ -430,11 +430,13 @@ public class KruizeConstants {
             public static final String NO_DATASOURCE_FOUND_IN_DB = "No datasource found in database.";
             public static final String CHECK_DATASOURCE_UPDATES = "Datasource {} already exists, Checking for updates...";
             public static final String DATASOURCE_AUTH_CHANGED = "Authentication details for datasource {} have changed. Checking if the datasource is serviceable with the new config...";
-            public static final String DATASOURCE_AUTH_UNCHANGED= "No changes detected in the authentication details for datasource {}";
+            public static final String DATASOURCE_AUTH_UNCHANGED = "No changes detected in the authentication details for datasource {}";
+
             private DataSourceInfoMsgs() {
             }
 
         }
+
         public static class DataSourceSuccessMsgs {
 
             public static final String DATASOURCE_ADDED = "Datasource added to the collection successfully.";
@@ -823,6 +825,12 @@ public class KruizeConstants {
         public static final String END_TIME = "end_time";
         public static final String STEPS = "steps";
         public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
+        public static final String SUMMARY = "summary";
+        public static final String SUMMARY_FILTER = "summaryFilter";
+        public static final String EXPERIMENTS = "experiments";
+        public static final String EXPERIMENTS_FILTER = "experimentFilter";
+        public static final String JOB_FILTER = "jobFilter";
+
 
         // TODO : Bulk API Create Experiments defaults
         public static final CreateExperimentConfigBean CREATE_EXPERIMENT_CONFIG_BEAN;
