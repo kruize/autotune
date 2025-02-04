@@ -417,7 +417,7 @@ public class Converters {
                     String valueType = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
                     String kubeObject = functionVarObj.has(AnalyzerConstants.KUBERNETES_OBJECT) ? functionVarObj.getString(AnalyzerConstants.KUBERNETES_OBJECT) : null;
                     Metric metric = new Metric(name, query, datasource, valueType, kubeObject);
-                    JSONArray aggrFunctionArray = functionVarObj.has(AnalyzerConstants.AGGREGATION_FUNCTIONS) ? functionVarObj.getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS) : null;
+                    JSONArray aggrFunctionArray = functionVarObj.getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS);
                     HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
                     for (Object innerObject : aggrFunctionArray) {
                         JSONObject aggrFuncJsonObject = (JSONObject) innerObject;
