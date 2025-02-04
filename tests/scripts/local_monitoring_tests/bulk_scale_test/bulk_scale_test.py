@@ -41,23 +41,117 @@ def setup_logger(name, log_file, level=logging.INFO):
 
     return logger
 
-def invoke_bulk_with_time_range_labels(worker_number, resultsdir, bulk_json, delay):
+def update_bulk_config(org_id, cluster_id, current_start_time, current_end_time):
+    org_value = "org-" + str(org_id)
+    cluster_value = "eu-" + str(org_id) + "-" + str(cluster_id)
+
+    new_labels = {
+        "org_id": org_value,
+        "cluster_id": cluster_value
+    }
+
+    # Update time range in the bulk input json
+    bulk_json_file = "../json_files/bulk_input_timerange.json"
+
+    json_file = open(bulk_json_file, "r")
+    bulk_json = json.loads(json_file.read())
+
+    bulk_json['time_range']['start'] = current_start_time
+    bulk_json['time_range']['end'] = current_end_time
+    bulk_json['filter']['include']['labels'].update(new_labels)
+
+    return bulk_json
+
+def fetch_bulk_recommendations(job_status_json, logger):
+    logger.info("Fetching processed experiments...")
+    exp_list = list(job_status_json["experiments"].keys())
+
+    logger.info("List of processed experiments")
+    logger.info("**************************************************")
+    logger.info(exp_list)
+    logger.info("**************************************************")
+
+    # List recommendations for the experiments for which recommendations are available
+    if exp_list:
+        reco_failures = 0
+        for exp_name in exp_list:
+            logger.info(f"Fetching recommendations for {exp_name}...")
+            reco_response = job_status_json['experiments'][exp_name]['apis']['recommendations']['response']
+            recommendations = reco_response[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
+            reco_available_msg = recommendations['notifications']['111000']['message']
+            logger.info(reco_available_msg)
+
+            if reco_available_msg != "Recommendations Are Available":
+                reco_failures = reco_failures + 1
+                logger.info(f"Bulk recommendations failed for the experiment - {exp_name}!")
+                logger.info(reco_response)
+                continue
+            else:
+                logger.info(f"Fetched recommendations for {exp_name} - Done")
+
+        if reco_failures != 0:
+            logger.info(
+                f"Bulk recommendations failed for some of the experiments, check the log {log_file} for details!")
+            return -1
+        else:
+            return 0
+    else:
+        logger.error("Something went wrong! There are no experiments with recommendations!")
+        return -1
+
+def fetch_bulk_job_status(job_id, worker_number, logger):
+    # Get the bulk job status using the job id
+    include = "summary,experiments"
+    bulk_job_response = get_bulk_job_status(job_id, include, logger)
+    job_status_json = bulk_job_response.json()
+
+    # Loop until job status is COMPLETED
+    job_status = job_status_json['summary']['status']
+
+    while job_status != "COMPLETED":
+        bulk_job_response = get_bulk_job_status(job_id, include, logger)
+        job_status_json = bulk_job_response.json()
+        job_status = job_status_json['summary']['status']
+        total_exps = job_status_json['summary']['total_experiments']
+        processed_exps = job_status_json['summary']['processed_experiments']
+        logger.info(f"Total_experiments / Processed experiments - {total_exps} / {processed_exps}")
+        if job_status == "FAILED":
+            logger.info("Job FAILED!")
+            break
+        sleep(5)
+
+    logger.info(f"worker number - {worker_number} job id - {job_id} job status - {job_status}")
+
+    # Dump the job status json into a file
+    job_status_dir = results_dir + "/job_status_jsons"
+    os.makedirs(job_status_dir, exist_ok=True)
+
+    job_file = job_status_dir + "/job_status" + str(worker_number) + ".json"
+    logger.info(f"Storing job status in {job_file}")
+    with open(job_file, 'w') as f:
+        json.dump(job_status_json, f, indent=4)
+
+    # Fetch the list of experiments for which recommendations are available
+    if job_status != "FAILED":
+        status = fetch_bulk_recommendations(job_status_json, logger)
+        return status
+    else:
+        logger.info(f"Check {job_file} for job status")
+        return -1
+
+def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_start_time, current_end_time):
     try:
-        #time.sleep(delay)
+
         scale_log_dir = resultsdir + "/scale_logs"
         os.makedirs(scale_log_dir, exist_ok=True)
 
-        org_id = bulk_json['filter']['include']['labels']['org_id']
-        cluster_id = bulk_json['filter']['include']['labels']['cluster_id']
+        bulk_json = update_bulk_config(org_id, cluster_id, current_start_time, current_end_time)
 
-        log_id = str(worker_number) + "-" + org_id + "-" + cluster_id
-
+        log_id = str(org_id) + "-" + str(cluster_id)
         log_file = f"{scale_log_dir}/worker_{log_id}.log"
 
         logger = setup_logger(f"logger_{log_id}", log_file)
         logger.info(f"log id = {log_id}")
-
-        logger.info(f"worker number = {worker_number}")
 
         # Invoke the bulk service
         logger.info("Invoking bulk service with bulk json")
@@ -67,90 +161,15 @@ def invoke_bulk_with_time_range_labels(worker_number, resultsdir, bulk_json, del
         job_id_json = bulk_response.json()
 
         job_id = job_id_json['job_id']
-        logger.info(f"worker number - {worker_number} job id - {job_id}")
 
         # Get the bulk job status using the job id
-        verbose = "true"
-        bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
-        job_status_json = bulk_job_response.json()
+        return_status = fetch_bulk_job_status(job_id, log_id, logger)
+        return return_status
 
-        # Loop until job status is COMPLETED
-        job_status = job_status_json['status']
-
-        while job_status != "COMPLETED":
-                bulk_job_response = get_bulk_job_status(job_id, verbose, logger)
-                job_status_json = bulk_job_response.json()
-                job_status = job_status_json['status']
-                if job_status == "FAILED":
-                    logger.info("Job FAILED!")
-                    break
-                sleep(5)
-
-        logger.info(f"worker number - {worker_number} job id - {job_id} job status - {job_status}")
-
-        # Dump the job status json into a file
-        job_status_dir = results_dir + "/job_status_jsons"
-        os.makedirs(job_status_dir, exist_ok=True)
-
-        job_file = job_status_dir + "/job_status" + log_id + ".json"
-        logger.info(f"Storing job status in {job_file}")
-        with open(job_file, 'w') as f:
-            json.dump(job_status_json, f, indent=4)
-
-        # Fetch the list of experiments for which recommendations are available
-        if job_status != "FAILED":
-            logger.info("Fetching processed experiments...")
-            exp_list = list(job_status_json["experiments"].keys())
-
-            logger.info("List of processed experiments")
-            logger.info("**************************************************")
-            logger.info(exp_list)
-            logger.info("**************************************************")
-
-            # List recommendations for the experiments for which recommendations are available
-            recommendations_json_arr = []
-
-            if exp_list:
-                list_reco_failures = 0
-                for exp_name in exp_list:
-
-                    logger.info(f"Fetching recommendations for {exp_name}...")
-                    list_reco_response = list_recommendations(exp_name)
-                    if list_reco_response.status_code != 200:
-                        list_reco_failures = list_reco_failures + 1
-                        logger.info(f"List recommendations failed for the experiment - {exp_name}!")
-                        reco = list_reco_response.json()
-                        logger.info(reco)
-                        continue
-                    else:
-                        logger.info(f"Fetched recommendations for {exp_name} - Done")
-
-                    reco = list_reco_response.json()
-                    recommendations_json_arr.append(reco)
-
-                # Dump the recommendations into a json file
-                reco_dir = results_dir + "/recommendation_jsons"
-                os.makedirs(reco_dir, exist_ok=True)
-                reco_file = reco_dir + "/recommendations" + log_id + ".json"
-                with open(reco_file, 'w') as f:
-                    json.dump(recommendations_json_arr, f, indent=4)
-
-                if list_reco_failures != 0:
-                    logger.info(
-                        f"List recommendations failed for some of the experiments, check the log {log_file} for details!")
-                    return -1
-                else:
-                    return 0
-            else:
-                logger.error("Something went wrong! There are no experiments with recommendations!")
-                return -1
-        else:
-            logger.info(f"Check {job_file} for job status")
-            return -1
     except Exception as e:
         return {'error': str(e)}
 
-def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, interval_hours, days_of_res, org_ids, cluster_ids, interval_seconds):
+def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, interval_hours, days_of_res, org_ids, cluster_ids):
     results = []
 
     print(f"initial_end_time - {initial_end_time}")
@@ -178,34 +197,23 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
         current_start_time = current_start_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
         current_end_time = current_end_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
-        for org_id in range(1, org_ids + 1):
-            for cluster_id in range(1, cluster_ids + 1):
-                org_value = "org-" + str(org_id)
-                cluster_value = "eu-" + str(org_id) + "-" + str(cluster_id)
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all the tasks to the executor
+            futures = []
 
-                new_labels = {
-                    "org_id": org_value,
-                    "cluster_id": cluster_value
-                }
+            futures = [
+                executor.submit(invoke_bulk_with_time_range_labels, resultsdir, org_id, cluster_id, current_start_time, current_end_time)
+                for org_id in range(1, org_ids + 1)
+                for cluster_id in range(1, cluster_ids + 1)
+            ]
 
-                bulk_json = bulk_input_json
-                bulk_json['time_range']['start'] = current_start_time
-                bulk_json['time_range']['end'] = current_end_time
-                bulk_json['filter']['include']['labels'].update(new_labels)
-
-                with ThreadPoolExecutor(max_workers=max_workers) as executor:
-                    # Submit all the tasks to the executor
-                    futures = []
-                    for worker_number in range(1, max_workers+1):
-                        executor.submit(invoke_bulk_with_time_range_labels, worker_number, resultsdir, bulk_json, delay=worker_number * interval_seconds)
-
-                    # Process the results as they complete
-                    for future in as_completed(futures):
-                        try:
-                            result = future.result()
-                            results.append(result)
-                        except Exception as e:
-                            results.append({'error': str(e)})
+            # Process the results as they complete
+            for future in as_completed(futures):
+                try:
+                    result = future.result()
+                    results.append(result)
+                except Exception as e:
+                    results.append({'error': str(e)})
 
         current_end_time = current_start_time
 
@@ -213,19 +221,19 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
 
 if __name__ == '__main__':
     cluster_type = "openshift"
-    max_workers = 1
+    max_workers = 10
     days_of_res = 1
     results_dir = "."
     initial_end_date = "2024-12-10T11:50:00.001Z"
     interval_hours = 6
     org_ids = 10
     cluster_ids = 10
-    rampup_interval_seconds = 2
 
     parser = argparse.ArgumentParser()
 
     # add the named arguments
-    parser.add_argument('--workers', type=str, help='specify the number of workers')
+    parser.add_argument('--workers', type=str, help='specify the number of parallel workers')
+    parser.add_argument('--days_of_res', type=str, help='specify the number of days of results')
     parser.add_argument('--enddate', type=str, help='Specify end date and time of the tsdb block in "%Y-%m-%dT%H:%M:%S.%fZ" format.')
     parser.add_argument('--interval', type=str, help='specify the interval hours')
     parser.add_argument('--resultsdir', type=str, help='specify the results dir')
@@ -237,6 +245,9 @@ if __name__ == '__main__':
 
     if args.workers:
         max_workers = int(args.workers)
+
+    if args.days_of_res:
+        days_of_res = int(args.days_of_res)
 
     if args.enddate:
         initial_end_date = args.enddate
@@ -251,7 +262,7 @@ if __name__ == '__main__':
         org_ids = int(args.org_ids)
 
     if args.cluster_ids:
-        org_ids = int(args.cluster_ids)
+        cluster_ids = int(args.cluster_ids)
 
     form_kruize_url(cluster_type)
 
@@ -272,7 +283,7 @@ if __name__ == '__main__':
 
     start_time = time.time()
     print(f"initial_end_date to parallel requests - {initial_end_date}")
-    responses = parallel_requests_with_labels(max_workers, results_dir, initial_end_date, interval_hours, days_of_res, org_ids, cluster_ids, rampup_interval_seconds)
+    responses = parallel_requests_with_labels(max_workers, results_dir, initial_end_date, interval_hours, days_of_res, org_ids, cluster_ids)
 
     # Print the results
     for i, response in enumerate(responses):
