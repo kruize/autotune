@@ -521,8 +521,8 @@ public class KruizeOperator {
 
             double profile_version = AnalyzerConstants.DEFAULT_PROFILE_VERSION;
             String k8s_type = AnalyzerConstants.DEFAULT_K8S_TYPE;
-            //TODO add datasource
-            metadataProfile = new MetadataProfile(apiVersion, kind, metadataNode, profile_version, k8s_type, queryVariables);
+
+            metadataProfile = new MetadataProfile(apiVersion, kind, metadataNode, profile_version, k8s_type, datasource, queryVariables);
 
             if (null != metadataProfile) {
                 ValidationOutputData validationOutputData = MetadataProfileUtil.validateAndAddMetadataProfile(MetadataProfileDeployment.metadataProfilesMap, metadataProfile);
