@@ -613,6 +613,7 @@ public class AnalyzerConstants {
         public static final String METADATA_PROFILE = "metadataProfile";
         public static final String METADATA_PROFILE_PLURALS = "kruizemetadataprofiles";
         public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
+        public static final String DEFAULT_DATASOURCE = "prometheus";
     }
 
     public static final class CommonProfileMsgs {
