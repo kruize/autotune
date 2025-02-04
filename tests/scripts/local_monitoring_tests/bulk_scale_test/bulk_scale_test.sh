@@ -29,7 +29,8 @@ APP_NAME=kruize
 CLUSTER_TYPE=openshift
 
 NAMESPACE=openshift-tuning
-num_workers=5
+workers=5
+days_of_res=15
 interval_hours=6
 initial_end_date="2024-12-10T11:50:00.000Z"
 org_ids=10
@@ -40,14 +41,13 @@ prometheus_ds=0
 replicas=3
 
 ds_url="http://thanos-query-frontend.thanos-bench.svc.cluster.local:9090/"
-#ds_url="http://thanos-query-frontend-example-query-thanos-operator-system.apps.kruize-scalelab.h0b5.p1.openshiftapps.com"
 
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-w No. of workers (default - 5)] [-t interval hours (default - 2)] [-s Initial end date of tsdb block (default - 2024-11-11T00:00:00.000Z)]"
+	echo "Usage: [-i Kruize image] [-w No. of parallel workers (default - 10)] [-d No. of days of res (default - 15)] [-t interval hours (default - 2)] [-s Initial end date of tsdb block (default - 2024-11-11T00:00:00.000Z)]"
 	echo "[-a kruize replicas (default - 3)][-r <resultsdir path>] [--skipsetup skip kruize setup] [ -z to test with prometheus datasource]"
 	echo "[--url Datasource url (default - ${ds_url}] [-o No. of orgs (default - 10)] [-c No. of clusters / org (default - 10)]"
 	exit 1
@@ -85,10 +85,6 @@ function kruize_local_thanos_patch() {
         KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
 
 	sed -i 's/"name": "prometheus-1"/"name": "thanos"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-
-	#sed -i 's/"serviceName": ""/"serviceName": "thanos-query-frontend"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	#sed -i 's/"namespace": ""/"namespace": "thanos-bench"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-
 	sed -i 's/"serviceName": "prometheus-k8s"/"serviceName": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
         sed -i 's/"namespace": "openshift-monitoring"/"namespace": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	sed -i 's#"url": ""#"url": "'"${ds_url}"'"#' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
@@ -98,7 +94,7 @@ function kruize_local_thanos_patch() {
 }
 
 
-while getopts r:i:w:s:t:a:o:c:zh:-: gopts
+while getopts r:i:d:s:t:a:o:c:zh:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -121,8 +117,11 @@ do
 	i)
 		KRUIZE_IMAGE="${OPTARG}"		
 		;;
-	w)
-		num_workers="${OPTARG}"		
+  w)
+		workers="${OPTARG}"
+		;;
+	d)
+		days_of_res="${OPTARG}"
 		;;
 	s)
 		initial_end_date="${OPTARG}"
@@ -213,7 +212,7 @@ export PYTHONUNBUFFERED=1
 echo ""
 echo "Running scale test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 echo ""
-python3 bulk_scale_test.py --org_ids ${org_ids} --cluster_ids ${cluster_ids} --workers ${num_workers} --enddate ${initial_end_date} --interval ${interval_hours} --resultsdir ${LOG_DIR} | tee -a ${LOG}
+python3 bulk_scale_test.py --workers ${workers} --org_ids ${org_ids} --cluster_ids ${cluster_ids} --days_of_res ${days_of_res} --enddate ${initial_end_date} --interval ${interval_hours} --resultsdir ${LOG_DIR} | tee -a ${LOG}
 
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
