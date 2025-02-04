@@ -6,7 +6,7 @@ Documentation still in progress stay tuned.
 ## CreateMetadataProfile
 
 This is quick guide instructions to create metadata profile using input JSON as follows. For a more detailed guide,
-and the list of metadata queries supported by Kruize refer [Create Metadata Profile](/design/MetadataProfile.md)
+and the list of metadata queries supported by Kruize refer [Metadata Profile](/design/MetadataProfile.md)
 
 #### Note: Queries to fetch namespace, workload and container metadata are required to import cluster metadata
 
@@ -252,7 +252,7 @@ Returns list of all the metadata profile created with all the metadata queries
     "apiVersion": "recommender.com/v1",
     "kind": "KruizeMetadataProfile",
     "metadata": {
-      "name": "cluster-metadata-local-monitoring"
+      "name": "bulk-cluster-metadata-local-monitoring"
     },
     "profile_version": 1,
     "k8s_type": "openshift",

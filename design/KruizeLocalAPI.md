@@ -2379,7 +2379,7 @@ Returns list of all the metadata profile created with all the metadata queries
     "apiVersion": "recommender.com/v1",
     "kind": "KruizeMetadataProfile",
     "metadata": {
-      "name": "cluster-metadata-local-monitoring"
+      "name": "bulk-cluster-metadata-local-monitoring"
     },
     "profile_version": 1,
     "k8s_type": "openshift",
