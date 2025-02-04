@@ -17,6 +17,7 @@ import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.k8sObjects.K8sObject;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -78,7 +79,6 @@ public class Converters {
                 kruizeObject.setClusterName(createExperimentAPIObject.getClusterName());
                 kruizeObject.setMode(createExperimentAPIObject.getMode());
                 kruizeObject.setPerformanceProfile(createExperimentAPIObject.getPerformanceProfile());
-                kruizeObject.setMetadataProfile(createExperimentAPIObject.getMetadataProfile());
                 kruizeObject.setDataSource(createExperimentAPIObject.getDatasource());
                 kruizeObject.setExperimentType(createExperimentAPIObject.getExperimentType());
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
@@ -100,6 +100,10 @@ public class Converters {
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
                 kruizeObject.setExperiment_usecase_type(new ExperimentUseCaseType(kruizeObject));
+                String target_cluster = createExperimentAPIObject.getTargetCluster();
+                if(KruizeDeploymentInfo.local && target_cluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
+                    kruizeObject.setMetadataProfile(createExperimentAPIObject.getMetadataProfile());
+                }
                 if (null != createExperimentAPIObject.getValidationData()) {
                     //Validation already done and it is getting loaded back from db
                     kruizeObject.setValidation_data(createExperimentAPIObject.getValidationData());

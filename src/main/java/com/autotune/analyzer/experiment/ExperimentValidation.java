@@ -16,6 +16,7 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -48,6 +49,8 @@ public class ExperimentValidation {
     private String errorMessage;
     private Map<String, KruizeObject> mainKruizeExperimentMAP;
     private Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
+    private Map<String, MetadataProfile> metadataProfilesMap = new HashMap<>();
+
     //Mandatory fields
     private List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.NAME,
@@ -140,6 +143,31 @@ public class ExperimentValidation {
                             proceed = true;
                         }
                     }
+
+                    if(KruizeDeploymentInfo.local && target_cluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
+                        if (null != kruizeObject.getMetadataProfile()) {
+                            String metadataProfileName = kruizeObject.getMetadataProfile();
+                            // fetch the Metadata Profile from the DB
+                            try {
+                                new ExperimentDBService().loadMetadataProfileFromDBByName(metadataProfilesMap, metadataProfileName);
+                            } catch (Exception e) {
+                                LOGGER.error("Loading saved Metadata Profile {} failed: {} ", metadataProfileName, e.getMessage());
+                            }
+
+                            if (null == metadataProfilesMap.get(kruizeObject.getMetadataProfile())) {
+                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + kruizeObject.getMetadataProfile();
+                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                proceed = false;
+                            } else {
+                                proceed = true;
+                            }
+                        } else {
+                            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            proceed = false;
+                        }
+                    }
+
                     // validate mode and experiment type
                     if (AnalyzerConstants.AUTO.equalsIgnoreCase(mode) || AnalyzerConstants.RECREATE.equalsIgnoreCase(mode)) {
                         if (kruizeObject.isNamespaceExperiment()) {
