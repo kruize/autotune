@@ -35,8 +35,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -72,6 +71,22 @@ public class BulkService extends HttpServlet {
         try {
             String jobID = req.getParameter(JOB_ID);
             String verboseParam = req.getParameter(VERBOSE);
+            // Read query parameters
+            String includeParams = req.getParameter("include");
+            String excludeParams = req.getParameter("exclude");
+            String experiment_name = req.getParameter("experiment_name");
+
+            LOGGER.debug(" include fields: {}", includeParams);
+            LOGGER.debug(" exclude fields: {}", excludeParams);
+
+            // Parse the include and exclude parameters into lists
+            Set<String> includeFields = includeParams != null ? new HashSet<>(Arrays.asList(includeParams.split(","))) : new HashSet<>(Arrays.asList("summary"));
+            Set<String> excludeFields = excludeParams != null ? new HashSet<>(Arrays.asList(excludeParams.split(","))) : Collections.emptySet();
+
+            LOGGER.debug(" include fields: {}", includeFields);
+            LOGGER.debug(" exclude fields: {}", excludeFields);
+            LOGGER.debug(" experiment_name: {}", experiment_name);
+
             // If the parameter is not provided (null), default it to false
             boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
             BulkJobStatus jobDetails;
@@ -101,19 +116,9 @@ public class BulkService extends HttpServlet {
             } else {
                 try {
                     resp.setStatus(HttpServletResponse.SC_OK);
-                    // Return the JSON representation of the JobStatus object
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    if (!verbose) {
-                        filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAllExcept("experiments"));
-                    } else {
-                        filters.addFilter("jobFilter", SimpleBeanPropertyFilter.serializeAll());
-                    }
-                    objectMapper.setFilterProvider(filters);
-                    String jsonResponse = "";
-                    synchronized (jobDetails) {
-                        jsonResponse = objectMapper.writeValueAsString(jobDetails);
-                    }
-                    resp.getWriter().write(jsonResponse);
+                    // Filter JSON
+                    String filteredJson = filterJson(jobDetails, includeFields, excludeFields, experiment_name);
+                    resp.getWriter().write(filteredJson);
                     statusValue = "success";
                 } catch (Exception e) {
                     e.printStackTrace();
@@ -185,5 +190,68 @@ public class BulkService extends HttpServlet {
             if (null == errorMsg) errorMsg = e.getMessage();
         }
         response.sendError(httpStatusCode, errorMsg);
+    }
+
+    /**
+     * Filters the JSON representation of a BulkJobStatus object based on the specified include and exclude fields.
+     *
+     * <p>This method applies dynamic filtering to the JSON output, allowing selective inclusion or exclusion
+     * of specific fields within the JSON structure. It supports hierarchical filtering for summary and experiment fields.</p>
+     *
+     * @param jsonInput       The BulkJobStatus object to be filtered and serialized to JSON.
+     * @param includeFields   A set of fields to be included in the JSON output. If specified, only these fields will be included.
+     *                        Fields can be prefixed with "SUMMARY|" or "EXPERIMENTS|" to filter nested fields.
+     * @param excludeFields   A set of fields to be excluded from the JSON output. If includeFields is empty, exclusion will be applied.
+     * @param experiment_name The experiment name, used for copying relevant data in jsonInput.
+     * @return A JSON string representation of the filtered BulkJobStatus object.
+     * @throws Exception If there is an error during JSON processing.
+     */
+    public String filterJson(BulkJobStatus jsonInput, Set<String> includeFields, Set<String> excludeFields, String experiment_name) throws Exception {
+        ObjectMapper mapper = new ObjectMapper();
+        // Include or exclude fields
+        SimpleFilterProvider filters = new SimpleFilterProvider();
+        jsonInput.copyByPattern(experiment_name);
+        if (!includeFields.isEmpty()) {
+            LOGGER.debug("includeFields : {}", includeFields);
+            Set<String> jobFields = new HashSet<>();
+            for (String field : includeFields) {
+                if (field.startsWith(SUMMARY)) {
+                    jobFields.add(SUMMARY);
+                    if (field.startsWith(SUMMARY + "|")) {
+                        Set<String> summaryFields = new HashSet<>();
+                        for (String s : field.split("\\|")) {
+                            summaryFields.add(s);
+                        }
+                        filters.addFilter(SUMMARY_FILTER, SimpleBeanPropertyFilter.filterOutAllExcept(summaryFields));
+                    } else {
+                        filters.addFilter(SUMMARY_FILTER, SimpleBeanPropertyFilter.serializeAll());
+                    }
+                } else if (field.startsWith(EXPERIMENTS)) {
+                    jobFields.add(EXPERIMENTS);
+                    if (field.startsWith(EXPERIMENTS + "|")) {
+                        Set<String> experimentFields = new HashSet<>();
+                        for (String s : field.split("\\|")) {
+                            experimentFields.add(s);
+                        }
+                        filters.addFilter(EXPERIMENTS_FILTER, SimpleBeanPropertyFilter.filterOutAllExcept(experimentFields));
+                    } else {
+                        filters.addFilter(EXPERIMENTS_FILTER, SimpleBeanPropertyFilter.serializeAll());
+                    }
+                } else {
+                    jobFields.add(field);
+                }
+            }
+            filters.addFilter(JOB_FILTER, SimpleBeanPropertyFilter.filterOutAllExcept(jobFields));
+        } else if (!excludeFields.isEmpty()) {
+            LOGGER.debug("excludeFields : {}", excludeFields);
+            filters.addFilter(JOB_FILTER, SimpleBeanPropertyFilter.serializeAllExcept(excludeFields));
+        }
+
+        // Assuming the input JSON has a filter identifier like @JsonFilter("dynamicFilter")
+        mapper.setFilterProvider(filters);
+        synchronized (jsonInput) {
+            return mapper.writeValueAsString(jsonInput);
+        }
+
     }
 }
