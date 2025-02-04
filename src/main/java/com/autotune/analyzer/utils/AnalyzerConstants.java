@@ -94,6 +94,9 @@ public class AnalyzerConstants {
     public static final String KRUIZE_LOCAL_DDL_SQL = "kruize_local_ddl.sql";
     public static final String VERSION = "version";
     public static final String DATASOURCE_NAME = "dataSourceName";
+    public static final String TRIAL_RESULT_SUMMARY = "trialSummaryResult";
+    public static final String CYCLE_DATA_MAP = "cycleDataMap";
+    public static final String METRICS = "metrics";
 
 
     private AnalyzerConstants() {
