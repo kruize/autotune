@@ -1,5 +1,6 @@
 package com.autotune.analyzer.recommendations.engine;
 
+import com.autotune.analyzer.autoscaler.instaslice.InstasliceHelper;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
@@ -20,7 +21,6 @@ import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.analyzer.utils.InstasliceHelper;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.*;
 import com.autotune.common.data.result.ContainerData;
