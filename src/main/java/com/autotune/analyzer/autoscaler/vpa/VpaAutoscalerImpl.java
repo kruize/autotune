@@ -14,13 +14,13 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.recommendations.autoscaler.vpa;
+package com.autotune.analyzer.autoscaler.vpa;
 
 import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
 import com.autotune.analyzer.exceptions.UnableToCreateVPAException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
-import com.autotune.analyzer.recommendations.autoscaler.AutoscalerImpl;
+import com.autotune.analyzer.autoscaler.AutoscalerImpl;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
