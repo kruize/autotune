@@ -2227,7 +2227,7 @@ public class RecommendationEngine {
                                                 metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
                                                 metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
                                                 metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
-                                                true);
+                                                null, true, false);
 
                                         JsonArray valuesArray = resultObject.getAsJsonArray(KruizeConstants.DataSourceConstants
                                                 .DataSourceQueryJSONKeys.VALUES);
