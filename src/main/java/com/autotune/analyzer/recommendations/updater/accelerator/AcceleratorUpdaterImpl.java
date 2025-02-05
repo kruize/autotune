@@ -1,17 +1,16 @@
 package com.autotune.analyzer.recommendations.updater.accelerator;
 
+import com.autotune.analyzer.autoscaler.AutoscalerImpl;
+import com.autotune.analyzer.autoscaler.settings.AutoscalingSettings;
 import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
-import com.autotune.analyzer.recommendations.updater.RecommendationUpdaterImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.utils.CommonUtils;
-import com.autotune.settings.CentralSettings;
-import com.autotune.settings.SettingsUpdater;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -26,7 +25,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AcceleratorUpdaterImpl extends RecommendationUpdaterImpl {
+public class AcceleratorUpdaterImpl extends AutoscalerImpl {
     private static final Logger LOGGER = LoggerFactory.getLogger(AcceleratorUpdaterImpl.class);
     private static AcceleratorUpdaterImpl acceleratorUpdater;
     private KubernetesClient kubernetesClient;
@@ -49,9 +48,8 @@ public class AcceleratorUpdaterImpl extends RecommendationUpdaterImpl {
 
     @Override
     public boolean isUpdaterInstalled() {
-        CentralSettings centralSettings = CentralSettings.getInstance();
-        SettingsUpdater.checkIfInstasliceIsAvailable(centralSettings);
-        return centralSettings.isAllowGPUResourceUpdates();
+        AutoscalingSettings.getInstance().checkIfInstasliceIsAvailable();
+        return AutoscalingSettings.getInstance().isAllowGPUResourceUpdates();
     }
 
     @Override
@@ -81,7 +79,6 @@ public class AcceleratorUpdaterImpl extends RecommendationUpdaterImpl {
 
                 Map<Timestamp, MappedRecommendationForTimestamp> timestampMap = containerData.getContainerRecommendations().getData();
                 if (null == timestampMap || timestampMap.isEmpty()) {
-                    System.out.println("Timestamp map is empty");
                     continue;
                 }
 
@@ -94,7 +91,6 @@ public class AcceleratorUpdaterImpl extends RecommendationUpdaterImpl {
 
                 MappedRecommendationForTimestamp latestRecommendation = latestEntry.getValue();
                 if (null == latestRecommendation) {
-                    System.out.println("latest recommendation is null");
                     continue;
                 }
 
@@ -146,7 +142,6 @@ public class AcceleratorUpdaterImpl extends RecommendationUpdaterImpl {
                 if (!updatedLimits.isEmpty())
                     updatedRec.put(AnalyzerConstants.ResourceSetting.limits, updatedLimits);
 
-                System.out.println("Calling updater");
                 updateOrRevertResources(containerName, namespace, workloadName, "job",
                         updatedRec);
             }
@@ -163,7 +158,6 @@ public class AcceleratorUpdaterImpl extends RecommendationUpdaterImpl {
                                                        HashMap<AnalyzerConstants.RecommendationItem,
                                                                RecommendationConfigItem>> recommendations )  {
 
-        System.out.println("Updating Resources");
         Map<String, Map<String, Quantity>> originalResourcesRequests = new HashMap<>();
         Map<String, Map<String, Quantity>> originalResourcesLimits = new HashMap<>();
 
@@ -186,14 +180,10 @@ public class AcceleratorUpdaterImpl extends RecommendationUpdaterImpl {
                         Map<String, Quantity> limitsMap = new HashMap<>();
 
                         for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry : requestRecommendation.entrySet()) {
-                            System.out.println("Recommendation: " + entry.getKey().toString());
-                            System.out.println("Quantity: " + entry.getValue().getAmount().intValue() + " | Format: entry.getValue().getFormat()");
                             requestMap.put(entry.getKey().toString(), new Quantity(String.valueOf(entry.getValue().getAmount().intValue()), entry.getValue().getFormat()));
                         }
 
                         for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry : limitsRecommendation.entrySet()) {
-                            System.out.println("Recommendation: " + entry.getKey().toString());
-                            System.out.println("Quantity: " + entry.getValue().getAmount().intValue() + " | Format: entry.getValue().getFormat()");
                             if (entry.getKey().toString().contains("nvidia")) {
                                 limitsMap.put(entry.getKey().toString(), new Quantity(String.valueOf(entry.getValue().getAmount().intValue())));
                             } else {
@@ -250,10 +240,8 @@ public class AcceleratorUpdaterImpl extends RecommendationUpdaterImpl {
                     });
                 });
             } else if (koType.equalsIgnoreCase("job")) {
-                System.out.println("inside job edit");
                 Job existingJob = kubernetesClient.batch().jobs().inNamespace(namespace).withName(workloadName).get();
                 if (existingJob == null) {
-                    System.out.println("Job not found!");
                     return;
                 }
                 PodTemplateSpec podTemplate = existingJob.getSpec().getTemplate();
@@ -271,14 +259,10 @@ public class AcceleratorUpdaterImpl extends RecommendationUpdaterImpl {
                         Map<String, Quantity> limitsMap = new HashMap<>();
 
                         for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry : requestRecommendation.entrySet()) {
-                            System.out.println("Recommendation: " + entry.getKey().toString());
-                            System.out.println("Quantity: " + entry.getValue().getAmount().intValue() + " | Format:" + entry.getValue().getFormat());
                             requestMap.put(entry.getKey().toString(), new Quantity(String.valueOf(entry.getValue().getAmount().intValue()), entry.getValue().getFormat()));
                         }
 
                         for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry : limitsRecommendation.entrySet()) {
-                            System.out.println("Recommendation: " + entry.getKey().toString());
-                            System.out.println("Quantity: " + entry.getValue().getAmount().intValue() + " | Format:" + entry.getValue().getFormat());
                             if (entry.getKey().toString().contains("nvidia")) {
                                 limitsMap.put(entry.getKey().toString(), new Quantity(String.valueOf(entry.getValue().getAmount().intValue())));
                             } else {
