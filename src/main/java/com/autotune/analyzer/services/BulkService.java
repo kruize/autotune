@@ -86,7 +86,7 @@ public class BulkService extends HttpServlet {
                 return;
             }
             jobDetails = jobStatusMap.get(jobID);
-            LOGGER.info("Job Status: " + jobDetails.getStatus());
+            LOGGER.info("Job Status: " + jobDetails.getSummary().getStatus());
             resp.setContentType(JSON_CONTENT_TYPE);
             resp.setCharacterEncoding(CHARACTER_ENCODING);
             SimpleFilterProvider filters = new SimpleFilterProvider();
@@ -152,10 +152,10 @@ public class BulkService extends HttpServlet {
 
             // Generate a unique jobID
             String jobID = UUID.randomUUID().toString();
-            BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now());
+            BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now(), payload);
             jobStatusMap.put(jobID, jobStatus);
             // Submit the job to be processed asynchronously
-            executorService.submit(new BulkJobManager(jobID, jobStatus, payload));
+            executorService.submit(new BulkJobManager(jobID, jobStatus, payload));      //TOdo remove payload as it is part of jobStatus object
 
             // Just sending a simple success response back
             // Return the jobID to the user
