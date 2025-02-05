@@ -101,7 +101,7 @@ public class BulkService extends HttpServlet {
                 return;
             }
             jobDetails = jobStatusMap.get(jobID);
-            LOGGER.info("Job Status: " + jobDetails.getSummary().getStatus());
+            LOGGER.info("Job Status: {}" + jobDetails.getSummary().getStatus());
             resp.setContentType(JSON_CONTENT_TYPE);
             resp.setCharacterEncoding(CHARACTER_ENCODING);
             SimpleFilterProvider filters = new SimpleFilterProvider();
