@@ -1,4 +1,4 @@
-package com.autotune.analyzer.recommendations.autoscaler.settings;
+package com.autotune.analyzer.autoscaler.settings;
 
 import io.fabric8.kubernetes.api.model.apps.DaemonSet;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;

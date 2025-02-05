@@ -1,4 +1,4 @@
-package com.autotune.analyzer.recommendations.autoscaler.instaslice;
+package com.autotune.analyzer.autoscaler.instaslice;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
