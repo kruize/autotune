@@ -18,7 +18,7 @@ package com.autotune.analyzer.autoscaler;
 
 import com.autotune.analyzer.autoscaler.vpa.VpaAutoscalerImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.recommendations.updater.accelerator.AcceleratorUpdaterImpl;
+import com.autotune.analyzer.autoscaler.accelerator.AcceleratorAutoscalerImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.database.service.ExperimentDBService;
@@ -59,7 +59,7 @@ public class AutoscalerService {
                         }
 
                         if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.ACCELERATOR)) {
-                            AcceleratorUpdaterImpl acceleratorUpdater = AcceleratorUpdaterImpl.getInstance();
+                            AcceleratorAutoscalerImpl acceleratorUpdater = AcceleratorAutoscalerImpl.getInstance();
                             acceleratorUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
                         }
                     }

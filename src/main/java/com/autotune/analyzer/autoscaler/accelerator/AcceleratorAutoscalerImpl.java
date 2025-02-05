@@ -1,4 +1,4 @@
-package com.autotune.analyzer.recommendations.updater.accelerator;
+package com.autotune.analyzer.autoscaler.accelerator;
 
 import com.autotune.analyzer.autoscaler.AutoscalerImpl;
 import com.autotune.analyzer.autoscaler.settings.AutoscalingSettings;
@@ -25,22 +25,22 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class AcceleratorUpdaterImpl extends AutoscalerImpl {
-    private static final Logger LOGGER = LoggerFactory.getLogger(AcceleratorUpdaterImpl.class);
-    private static AcceleratorUpdaterImpl acceleratorUpdater;
+public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
+    private static final Logger LOGGER = LoggerFactory.getLogger(AcceleratorAutoscalerImpl.class);
+    private static AcceleratorAutoscalerImpl acceleratorUpdater;
     private KubernetesClient kubernetesClient;
 
-    private AcceleratorUpdaterImpl() {
+    private AcceleratorAutoscalerImpl() {
         this.kubernetesClient = new DefaultKubernetesClient();
     }
 
-    public static AcceleratorUpdaterImpl getInstance() {
+    public static AcceleratorAutoscalerImpl getInstance() {
         if (null != acceleratorUpdater) {
             return acceleratorUpdater;
         }
-        synchronized (AcceleratorUpdaterImpl.class) {
+        synchronized (AcceleratorAutoscalerImpl.class) {
             if (null == acceleratorUpdater) {
-                acceleratorUpdater = new AcceleratorUpdaterImpl();
+                acceleratorUpdater = new AcceleratorAutoscalerImpl();
             }
         }
         return acceleratorUpdater;
