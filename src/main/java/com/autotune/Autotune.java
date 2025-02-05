@@ -23,6 +23,7 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.recommendations.autoscaler.AutoscalerService;
+import com.autotune.analyzer.recommendations.autoscaler.settings.AutoscalingSettings;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -36,7 +37,6 @@ import com.autotune.operator.InitializeDeployment;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
-import com.autotune.analyzer.recommendations.autoscaler.settings.SettingsUpdater;
 import com.autotune.utils.CloudWatchAppender;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
@@ -178,7 +178,7 @@ public class Autotune {
         }
 
         // Check the settings initially while starting
-        SettingsUpdater.initialiseAutoscalingSettings();
+        AutoscalingSettings.getInstance().initialiseAutoscalingSettings();
 
         try {
             String startAutotune = System.getenv("START_AUTOTUNE");
