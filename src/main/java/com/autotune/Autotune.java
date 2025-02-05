@@ -36,7 +36,7 @@ import com.autotune.operator.InitializeDeployment;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.service.HealthService;
 import com.autotune.service.InitiateListener;
-import com.autotune.settings.SettingsUpdater;
+import com.autotune.analyzer.recommendations.updater.settings.SettingsUpdater;
 import com.autotune.utils.CloudWatchAppender;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
@@ -178,7 +178,7 @@ public class Autotune {
         }
 
         // Check the settings initially while starting
-        SettingsUpdater.initialiseCentralSettings();
+        SettingsUpdater.initialiseAutoscalerSettings();
 
         try {
             String startAutotune = System.getenv("START_AUTOTUNE");

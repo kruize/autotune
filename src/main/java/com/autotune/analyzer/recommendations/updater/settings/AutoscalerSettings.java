@@ -1,24 +1,24 @@
-package com.autotune.settings;
+package com.autotune.analyzer.recommendations.updater.settings;
 
-public class CentralSettings {
-    private static volatile CentralSettings centralSettings;
+public class AutoscalerSettings {
+    private static volatile AutoscalerSettings autoscalerSettings;
     private boolean allowGPUResourceUpdates;
     private boolean koEditPermissionsAvailable;
 
-    private CentralSettings() {
+    private AutoscalerSettings() {
         this.allowGPUResourceUpdates = false;
         this.koEditPermissionsAvailable = false;
     }
 
-    public static CentralSettings getInstance() {
-        if (centralSettings == null) {
-            synchronized (CentralSettings.class) {
-                if (centralSettings == null) {
-                    centralSettings = new CentralSettings();
+    public static AutoscalerSettings getInstance() {
+        if (autoscalerSettings == null) {
+            synchronized (AutoscalerSettings.class) {
+                if (autoscalerSettings == null) {
+                    autoscalerSettings = new AutoscalerSettings();
                 }
             }
         }
-        return centralSettings;
+        return autoscalerSettings;
     }
 
     public boolean isAllowGPUResourceUpdates() {
