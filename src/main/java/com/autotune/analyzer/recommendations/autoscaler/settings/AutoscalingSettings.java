@@ -1,4 +1,4 @@
-package com.autotune.analyzer.recommendations.updater.settings;
+package com.autotune.analyzer.recommendations.autoscaler.settings;
 
 public class AutoscalingSettings {
     private static volatile AutoscalingSettings autoscalingSettings;

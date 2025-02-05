@@ -14,14 +14,14 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.recommendations.updater;
+package com.autotune.analyzer.recommendations.autoscaler;
 
 import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidRecommendationUpdaterType;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
-import com.autotune.analyzer.recommendations.updater.vpa.VpaUpdaterImpl;
+import com.autotune.analyzer.recommendations.autoscaler.vpa.VpaUpdaterImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;

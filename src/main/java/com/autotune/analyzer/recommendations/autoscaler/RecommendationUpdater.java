@@ -14,7 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.recommendations.updater;
+package com.autotune.analyzer.recommendations.autoscaler;
 
 import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
 import com.autotune.analyzer.exceptions.InvalidRecommendationUpdaterType;
