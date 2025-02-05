@@ -14,21 +14,17 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.recommendations.updater;
+package com.autotune.analyzer.autoscaler;
 
-import com.autotune.analyzer.experiment.ExperimentInterface;
-import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
+import com.autotune.analyzer.autoscaler.vpa.VpaAutoscalerImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.recommendations.updater.vpa.VpaUpdaterImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.database.service.ExperimentDBService;
-import com.autotune.database.table.KruizeExperimentEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
@@ -36,36 +32,36 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class RecommendationUpdaterService {
+public class AutoscalerService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationUpdaterService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AutoscalerService.class);
 
-    public static void initiateUpdaterService() {
+    public static void initiateAutoscalerService() {
         try {
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
-            LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.STARTING_SERVICE);
+            LOGGER.info(AnalyzerConstants.AutoscalerConstants.InfoMsgs.STARTING_SERVICE);
             executorService.scheduleAtFixedRate(() -> {
                 try {
-                    RecommendationUpdaterImpl updater = new RecommendationUpdaterImpl();
+                    AutoscalerImpl autoscaler = new AutoscalerImpl();
                     Map<String, KruizeObject> experiments = getAutoModeExperiments();
                     for (Map.Entry<String, KruizeObject> experiment : experiments.entrySet()) {
-                        KruizeObject kruizeObject = updater.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
+                        KruizeObject kruizeObject = autoscaler.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
                         // TODO:// add default updater in kruizeObject and check if GPU recommendations are present
                         if (kruizeObject.getDefaultUpdater() == null) {
-                             kruizeObject.setDefaultUpdater(AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA);
+                             kruizeObject.setDefaultUpdater(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA);
                         }
 
-                        if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA)) {
-                            VpaUpdaterImpl vpaUpdater = VpaUpdaterImpl.getInstance();
+                        if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA)) {
+                            VpaAutoscalerImpl vpaUpdater = VpaAutoscalerImpl.getInstance();
                             vpaUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
                         }
                     }
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
                 }
-            }, AnalyzerConstants.RecommendationUpdaterConstants.DEFAULT_INITIAL_DELAY,
-                    AnalyzerConstants.RecommendationUpdaterConstants.DEFAULT_SLEEP_INTERVAL,
+            }, AnalyzerConstants.AutoscalerConstants.DEFAULT_INITIAL_DELAY,
+                    AnalyzerConstants.AutoscalerConstants.DEFAULT_SLEEP_INTERVAL,
                     TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDTAER_SERVICE_START_ERROR + e.getMessage());
@@ -74,7 +70,7 @@ public class RecommendationUpdaterService {
 
     private static Map<String, KruizeObject> getAutoModeExperiments() {
         try {
-            LOGGER.debug(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_AUTO_EXP);
+            LOGGER.debug(AnalyzerConstants.AutoscalerConstants.InfoMsgs.CHECKING_AUTO_EXP);
             Map<String, KruizeObject> mainKruizeExperimentMap = new ConcurrentHashMap<>();
             new ExperimentDBService().loadAllLMExperiments(mainKruizeExperimentMap);
             // filter map to only include entries where mode is auto or recreate
