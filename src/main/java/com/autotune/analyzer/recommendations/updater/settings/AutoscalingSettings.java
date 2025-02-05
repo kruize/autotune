@@ -1,24 +1,24 @@
 package com.autotune.analyzer.recommendations.updater.settings;
 
-public class AutoscalerSettings {
-    private static volatile AutoscalerSettings autoscalerSettings;
+public class AutoscalingSettings {
+    private static volatile AutoscalingSettings autoscalingSettings;
     private boolean allowGPUResourceUpdates;
     private boolean koEditPermissionsAvailable;
 
-    private AutoscalerSettings() {
+    private AutoscalingSettings() {
         this.allowGPUResourceUpdates = false;
         this.koEditPermissionsAvailable = false;
     }
 
-    public static AutoscalerSettings getInstance() {
-        if (autoscalerSettings == null) {
-            synchronized (AutoscalerSettings.class) {
-                if (autoscalerSettings == null) {
-                    autoscalerSettings = new AutoscalerSettings();
+    public static AutoscalingSettings getInstance() {
+        if (autoscalingSettings == null) {
+            synchronized (AutoscalingSettings.class) {
+                if (autoscalingSettings == null) {
+                    autoscalingSettings = new AutoscalingSettings();
                 }
             }
         }
-        return autoscalerSettings;
+        return autoscalingSettings;
     }
 
     public boolean isAllowGPUResourceUpdates() {
