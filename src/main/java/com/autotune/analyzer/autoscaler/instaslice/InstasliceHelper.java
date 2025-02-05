@@ -121,7 +121,6 @@ public class InstasliceHelper {
                         if (allocationMap.get("namespace").toString().equalsIgnoreCase(workloadNamespace)
                                 && allocationMap.get("podName").toString().startsWith(workloadName)) {
                             profile.set(allocationMap.get("profile").toString());
-                            System.out.println(allocationMap.get("profile"));
                         }
                     }
 
