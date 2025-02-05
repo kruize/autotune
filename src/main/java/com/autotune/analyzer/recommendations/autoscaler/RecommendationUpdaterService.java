@@ -14,21 +14,17 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.recommendations.updater;
+package com.autotune.analyzer.recommendations.autoscaler;
 
-import com.autotune.analyzer.experiment.ExperimentInterface;
-import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.recommendations.updater.vpa.VpaUpdaterImpl;
+import com.autotune.analyzer.recommendations.autoscaler.vpa.VpaUpdaterImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.database.service.ExperimentDBService;
-import com.autotune.database.table.KruizeExperimentEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
