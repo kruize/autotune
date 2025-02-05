@@ -7,24 +7,24 @@ import io.fabric8.kubernetes.client.KubernetesClient;
 import java.util.List;
 
 public class SettingsUpdater {
-    public static void checkIfInstasliceIsAvailable(AutoscalerSettings autoscalerSettings) {
+    public static void checkIfInstasliceIsAvailable(AutoscalingSettings autoscalingSettings) {
         try (KubernetesClient client = new DefaultKubernetesClient()) {
             List<DaemonSet> daemonSets = client.apps().daemonSets().inAnyNamespace().list().getItems();
             List<DaemonSet> matchingDaemonSets = daemonSets.stream()
                     .filter(ds -> ds.getMetadata().getName().contains("instaslice"))
                     .toList();
-            autoscalerSettings.setAllowGPUResourceUpdates(!matchingDaemonSets.isEmpty());
+            autoscalingSettings.setAllowGPUResourceUpdates(!matchingDaemonSets.isEmpty());
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
-    public static void initialiseAutoscalerSettings() {
-        AutoscalerSettings autoscalerSettings = AutoscalerSettings.getInstance();
+    public static void initialiseAutoscalingSettings() {
+        AutoscalingSettings autoscalingSettings = AutoscalingSettings.getInstance();
 
         /**
          * Uncomment the below line in MVP to check for instaslice installation
          */
-         checkIfInstasliceIsAvailable(autoscalerSettings);
+         checkIfInstasliceIsAvailable(autoscalingSettings);
 
         /**
          * The setters below should be replaced with appropriate functions
@@ -32,6 +32,6 @@ public class SettingsUpdater {
          *
          * Hardcoding it for now
          */
-        autoscalerSettings.setKoEditPermissionsAvailable(true);
+        autoscalingSettings.setKoEditPermissionsAvailable(true);
     }
 }

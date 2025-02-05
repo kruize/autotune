@@ -178,7 +178,7 @@ public class Autotune {
         }
 
         // Check the settings initially while starting
-        SettingsUpdater.initialiseAutoscalerSettings();
+        SettingsUpdater.initialiseAutoscalingSettings();
 
         try {
             String startAutotune = System.getenv("START_AUTOTUNE");
