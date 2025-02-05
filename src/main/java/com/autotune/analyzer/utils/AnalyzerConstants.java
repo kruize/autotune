@@ -703,8 +703,8 @@ public class AnalyzerConstants {
         }
     }
 
-    public static final class RecommendationUpdaterConstants {
-        private RecommendationUpdaterConstants() {
+    public static final class AutoscalerConstants {
+        private AutoscalerConstants() {
 
         }
 
@@ -747,6 +747,8 @@ public class AnalyzerConstants {
             public static final String CREATED_VPA = "Created VPA with name: %s";
             public static final String STARTING_SERVICE = "Starting recommendation updater.";
             public static final String CHECKING_AUTO_EXP = "Searching for experiments with auto or recreate mode.";
+            public static final String FOUND_INSTASLICE = "Found Instaslice: {}";
+            public static final String NO_INSTASLICE_OBJECTS = "No Instaslice objects found in namespace: {}";
             private InfoMsgs() {
 
             }

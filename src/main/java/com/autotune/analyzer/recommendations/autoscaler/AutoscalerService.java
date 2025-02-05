@@ -40,7 +40,7 @@ public class AutoscalerService {
         try {
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
-            LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.STARTING_SERVICE);
+            LOGGER.info(AnalyzerConstants.AutoscalerConstants.InfoMsgs.STARTING_SERVICE);
             executorService.scheduleAtFixedRate(() -> {
                 try {
                     AutoscalerImpl autoscaler = new AutoscalerImpl();
@@ -49,10 +49,10 @@ public class AutoscalerService {
                         KruizeObject kruizeObject = autoscaler.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
                         // TODO:// add default updater in kruizeObject and check if GPU recommendations are present
                         if (kruizeObject.getDefaultUpdater() == null) {
-                             kruizeObject.setDefaultUpdater(AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA);
+                             kruizeObject.setDefaultUpdater(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA);
                         }
 
-                        if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA)) {
+                        if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA)) {
                             VpaAutoscalerImpl vpaUpdater = VpaAutoscalerImpl.getInstance();
                             vpaUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
                         }
@@ -60,8 +60,8 @@ public class AutoscalerService {
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
                 }
-            }, AnalyzerConstants.RecommendationUpdaterConstants.DEFAULT_INITIAL_DELAY,
-                    AnalyzerConstants.RecommendationUpdaterConstants.DEFAULT_SLEEP_INTERVAL,
+            }, AnalyzerConstants.AutoscalerConstants.DEFAULT_INITIAL_DELAY,
+                    AnalyzerConstants.AutoscalerConstants.DEFAULT_SLEEP_INTERVAL,
                     TimeUnit.SECONDS);
         } catch (Exception e) {
             LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDTAER_SERVICE_START_ERROR + e.getMessage());
@@ -70,7 +70,7 @@ public class AutoscalerService {
 
     private static Map<String, KruizeObject> getAutoModeExperiments() {
         try {
-            LOGGER.debug(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.CHECKING_AUTO_EXP);
+            LOGGER.debug(AnalyzerConstants.AutoscalerConstants.InfoMsgs.CHECKING_AUTO_EXP);
             Map<String, KruizeObject> mainKruizeExperimentMap = new ConcurrentHashMap<>();
             new ExperimentDBService().loadAllLMExperiments(mainKruizeExperimentMap);
             // filter map to only include entries where mode is auto or recreate

@@ -1,16 +1,21 @@
 package com.autotune.analyzer.recommendations.autoscaler.instaslice;
 
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class InstasliceHelper {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(InstasliceHelper.class);
 
     private static InstasliceHelper instance;
     private static final String instasliceNamespace = "instaslice-system";
@@ -73,7 +78,7 @@ public class InstasliceHelper {
             try {
                 instasliceObjects.forEach(item -> {
                     String name = item.getMetadata().getName();
-                    System.out.println("Found Instaslice: " + name);
+                    LOGGER.debug(AnalyzerConstants.AutoscalerConstants.InfoMsgs.FOUND_INSTASLICE, name);
 
                     Map<String, Object> allocations = (Map<String, Object>) ((Map<String, Object>) item.getAdditionalProperties().get("spec")).get("allocations");
                     for (Map.Entry<String, Object> entry : allocations.entrySet()) {
@@ -82,7 +87,6 @@ public class InstasliceHelper {
                         if (allocationMap.get("namespace").toString().equalsIgnoreCase(workloadNamespace)
                                 && allocationMap.get("podName").toString().startsWith(workloadName)) {
                             uuid.set(allocationMap.get("gpuUUID").toString());
-                            System.out.println(allocationMap.get("gpuUUID"));
                         }
                     }
                 });
@@ -90,7 +94,7 @@ public class InstasliceHelper {
                 e.printStackTrace();
             }
         } else {
-            System.out.println("No Instaslice objects found in namespace: " + namespace);
+            LOGGER.info(AnalyzerConstants.AutoscalerConstants.InfoMsgs.NO_INSTASLICE_OBJECTS, namespace);
         }
         return uuid.get();
     }
@@ -108,7 +112,7 @@ public class InstasliceHelper {
             try {
                 instasliceObjects.forEach(item -> {
                     String name = item.getMetadata().getName();
-                    System.out.println("Found Instaslice: " + name);
+                    LOGGER.debug(AnalyzerConstants.AutoscalerConstants.InfoMsgs.FOUND_INSTASLICE, name);
 
                     Map<String, Object> allocations = (Map<String, Object>) ((Map<String, Object>) item.getAdditionalProperties().get("spec")).get("allocations");
                     for (Map.Entry<String, Object> entry : allocations.entrySet()) {
@@ -126,7 +130,7 @@ public class InstasliceHelper {
                 e.printStackTrace();
             }
         } else {
-            System.out.println("No Instaslice objects found in namespace: " + namespace);
+            LOGGER.info(AnalyzerConstants.AutoscalerConstants.InfoMsgs.NO_INSTASLICE_OBJECTS, namespace);
         }
         return profile.get();
     }
