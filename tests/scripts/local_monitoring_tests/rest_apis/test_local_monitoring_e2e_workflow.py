@@ -131,13 +131,13 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     container_exp_content = template.render(
        version="v2.0", experiment_name="monitor-sysbench", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
        mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="container", kubernetes_obj_type="deployment", name="sysbench",
-       namespace="default", namespace_name=None, container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="15min", threshold="0.1"
+       namespace="default", namespace_name=None, container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min", threshold="0.1"
     )
 
     namespace_exp_content = template.render(
         version="v2.0", experiment_name="monitor-ns", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
         mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="namespace", kubernetes_obj_type=None, name=None,
-        namespace=None, namespace_name="default", container_image_name=None, container_name=None, measurement_duration="15min", threshold="0.1"
+        namespace=None, namespace_name="default", container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
     )
 
     # Convert rendered content to a dictionary
@@ -231,7 +231,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
     # Wait for the threshold for short term recommendations
-    time.sleep(1800)
+    time.sleep(300)
 
     # generate recommendations
     json_file = open(container_exp_json_file, "r")
