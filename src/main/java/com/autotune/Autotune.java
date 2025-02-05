@@ -139,7 +139,7 @@ public class Autotune {
                 // load available metadata profiles from db
                 loadMetadataProfilesFromDB();
                 // start updater service
-                startRecommendationUpdaterService();
+                startAutoscalerService();
 
             }
             // close the existing session factory before recreating
@@ -307,7 +307,7 @@ public class Autotune {
     }
 
     // starts the recommendation updater service
-    private static void startRecommendationUpdaterService() {
+    private static void startAutoscalerService() {
         AutoscalerService.initiateAutoscalerService();
     }
 }
