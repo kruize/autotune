@@ -2201,7 +2201,7 @@ public class RecommendationEngine {
                                     gpuProfile);
 
                             if (null == kruizeObject.getDefaultUpdater()) {
-                                kruizeObject.setDefaultUpdater(AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.ACCELERATOR);
+                                kruizeObject.setDefaultUpdater(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.ACCELERATOR);
                             }
                         }
                     }
