@@ -1,4 +1,4 @@
-package com.autotune.analyzer.utils;
+package com.autotune.analyzer.recommendations.autoscaler.instaslice;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.fabric8.kubernetes.api.model.GenericKubernetesResource;

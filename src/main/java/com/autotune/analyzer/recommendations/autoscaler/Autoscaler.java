@@ -29,7 +29,7 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
  * For example, vpaUpdaterImpl for updating resources with recommendations related to CPU and memory resources.
  */
 
-public interface RecommendationUpdater {
+public interface Autoscaler {
     /**
      * Retrieves an instance of a specific updater implementation based on the provided updater type
      *
@@ -37,7 +37,7 @@ public interface RecommendationUpdater {
      * @return RecommendationUpdaterImpl An instance of provided updater type class
      * @throws InvalidRecommendationUpdaterType If the provided updater type doesn't match any valid type of updater.
      */
-    RecommendationUpdaterImpl getUpdaterInstance(String updaterType) throws InvalidRecommendationUpdaterType;
+    AutoscalerImpl getAutoscalerInstance(String updaterType) throws InvalidRecommendationUpdaterType;
 
     /**
      * Checks whether the necessary updater dependencies are installed or available in the system.

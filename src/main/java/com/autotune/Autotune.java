@@ -22,7 +22,7 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
-import com.autotune.analyzer.recommendations.autoscaler.RecommendationUpdaterService;
+import com.autotune.analyzer.recommendations.autoscaler.AutoscalerService;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -308,6 +308,6 @@ public class Autotune {
 
     // starts the recommendation updater service
     private static void startRecommendationUpdaterService() {
-        RecommendationUpdaterService.initiateUpdaterService();
+        AutoscalerService.initiateAutoscalerService();
     }
 }

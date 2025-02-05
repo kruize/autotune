@@ -20,7 +20,7 @@ import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
 import com.autotune.analyzer.exceptions.UnableToCreateVPAException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
-import com.autotune.analyzer.recommendations.autoscaler.RecommendationUpdaterImpl;
+import com.autotune.analyzer.recommendations.autoscaler.AutoscalerImpl;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -47,31 +47,31 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class VpaUpdaterImpl extends RecommendationUpdaterImpl {
-    private static final Logger LOGGER = LoggerFactory.getLogger(VpaUpdaterImpl.class);
-    private static VpaUpdaterImpl vpaUpdater;
+public class VpaAutoscalerImpl extends AutoscalerImpl {
+    private static final Logger LOGGER = LoggerFactory.getLogger(VpaAutoscalerImpl.class);
+    private static VpaAutoscalerImpl vpaAutoscaler;
 
     private KubernetesClient kubernetesClient;
     private ApiextensionsAPIGroupDSL apiextensionsClient;
 
 
-    private VpaUpdaterImpl() {
+    private VpaAutoscalerImpl() {
         this.kubernetesClient = new DefaultKubernetesClient();
         this.apiextensionsClient = kubernetesClient.apiextensions();
     }
 
-    public static VpaUpdaterImpl getInstance() {
-        if (null != vpaUpdater) {
-            return vpaUpdater;
+    public static VpaAutoscalerImpl getInstance() {
+        if (null != vpaAutoscaler) {
+            return vpaAutoscaler;
         }
 
-        synchronized (VpaUpdaterImpl.class) {
-            if (null == vpaUpdater) {
-                vpaUpdater = new VpaUpdaterImpl();
+        synchronized (VpaAutoscalerImpl.class) {
+            if (null == vpaAutoscaler) {
+                vpaAutoscaler = new VpaAutoscalerImpl();
             }
         }
 
-        return vpaUpdater;
+        return vpaAutoscaler;
     }
 
     /**

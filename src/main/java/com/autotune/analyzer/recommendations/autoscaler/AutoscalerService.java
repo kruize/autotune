@@ -17,7 +17,7 @@
 package com.autotune.analyzer.recommendations.autoscaler;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.recommendations.autoscaler.vpa.VpaUpdaterImpl;
+import com.autotune.analyzer.recommendations.autoscaler.vpa.VpaAutoscalerImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.database.service.ExperimentDBService;
@@ -32,28 +32,28 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class RecommendationUpdaterService {
+public class AutoscalerService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationUpdaterService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AutoscalerService.class);
 
-    public static void initiateUpdaterService() {
+    public static void initiateAutoscalerService() {
         try {
             ScheduledExecutorService executorService = Executors.newSingleThreadScheduledExecutor();
 
             LOGGER.info(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.STARTING_SERVICE);
             executorService.scheduleAtFixedRate(() -> {
                 try {
-                    RecommendationUpdaterImpl updater = new RecommendationUpdaterImpl();
+                    AutoscalerImpl autoscaler = new AutoscalerImpl();
                     Map<String, KruizeObject> experiments = getAutoModeExperiments();
                     for (Map.Entry<String, KruizeObject> experiment : experiments.entrySet()) {
-                        KruizeObject kruizeObject = updater.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
+                        KruizeObject kruizeObject = autoscaler.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
                         // TODO:// add default updater in kruizeObject and check if GPU recommendations are present
                         if (kruizeObject.getDefaultUpdater() == null) {
                              kruizeObject.setDefaultUpdater(AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA);
                         }
 
                         if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA)) {
-                            VpaUpdaterImpl vpaUpdater = VpaUpdaterImpl.getInstance();
+                            VpaAutoscalerImpl vpaUpdater = VpaAutoscalerImpl.getInstance();
                             vpaUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
                         }
                     }
