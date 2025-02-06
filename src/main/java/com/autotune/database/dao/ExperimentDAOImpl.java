@@ -25,6 +25,7 @@ import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
@@ -523,6 +524,44 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
+     * Add MetadataProfile to database
+     *
+     * @param kruizeMetadataProfileEntry Metadata Profile Database object to be added
+     * @return validationOutputData contains the status of the DB insert operation
+     */
+    @Override
+    public ValidationOutputData addMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerAddMetadataProfileDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeMetadataProfileEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save metadata profile due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save metadata profile source due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerAddMetadataProfileDB) {
+                MetricsConfig.timerAddMetadataProfileDB = MetricsConfig.timerBAddMetadataProfileDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerAddMetadataProfileDB.stop(MetricsConfig.timerAddMetadataProfileDB);
+            }
+        }
+
+        return validationOutputData;
+    }
+
+    /**
      * @param kruizeDataSourceEntry
      * @param validationOutputData
      * @return validationOutputData contains the status of the DB insert operation
@@ -943,6 +982,32 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
+    /**
+     * Fetches all the Metadata Profile records from KruizeLMMetadataProfileEntry database table
+     *
+     * @return List of all KruizeLMMetadataProfileEntry database objects
+     * @throws Exception
+     */
+    @Override
+    public List<KruizeLMMetadataProfileEntry> loadAllMetadataProfiles() throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadAllMetadataProfiles = Timer.start(MetricsConfig.meterRegistry());
+
+        List<KruizeLMMetadataProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_METADATA_PROFILE, KruizeLMMetadataProfileEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Metadata Profile  due to {}", e.getMessage());
+            throw new Exception("Error while loading existing Metadata Profile from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadAllMetadataProfiles) {
+                MetricsConfig.timerLoadAllMetadataProfiles = MetricsConfig.timerBLoadAllMetadataProfiles.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadAllMetadataProfiles.stop(MetricsConfig.timerLoadAllMetadataProfiles);
+            }
+        }
+        return entries;
+    }
+
     @Override
     public List<KruizeLMExperimentEntry> loadLMExperimentByName(String experimentName) throws Exception {
         //todo load only experimentStatus=inprogress , playback may not require completed experiments
@@ -1249,6 +1314,32 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } catch (Exception e) {
             LOGGER.error("Not able to load Metric Profile {} due to {}", metricProfileName, e.getMessage());
             throw new Exception("Error while loading existing metric profile from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
+
+    /**
+     * Fetches Metadata Profile by name from KruizeLMMetadataProfileEntry database table
+     *
+     * @param metadataProfileName Metadata profile name
+     * @return List of KruizeLMMetadataProfileEntry objects
+     * @throws Exception
+     */
+    public List<KruizeLMMetadataProfileEntry> loadMetadataProfileByName(String metadataProfileName) throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadMetadataProfileName = Timer.start(MetricsConfig.meterRegistry());
+        List<KruizeLMMetadataProfileEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_METADATA_PROFILE_BY_NAME, KruizeLMMetadataProfileEntry.class)
+                    .setParameter("name", metadataProfileName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Metadata Profile {} due to {}", metadataProfileName, e.getMessage());
+            throw new Exception("Error while loading existing metadata profile from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadMetadataProfileName) {
+                MetricsConfig.timerLoadMetadataProfileName = MetricsConfig.timerBLoadMetadataProfileName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadMetadataProfileName.stop(MetricsConfig.timerLoadMetadataProfileName);
+            }
         }
         return entries;
     }
