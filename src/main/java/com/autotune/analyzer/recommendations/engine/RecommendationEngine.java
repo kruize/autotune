@@ -362,18 +362,6 @@ public class RecommendationEngine {
                 }
             }
 
-//                if(kruizeObject.getTerms() == null) {
-//                if (null == kruizeObject.getRecommendation_settings().getTermSettings()) {
-//                    KruizeObject.setDefaultTerms(terms, kruizeObject);
-//                } else {
-//                    // set custom terms as provided by the user
-//
-//                        KruizeObject.setCustomTerms(terms, kruizeObject);
-//
-//                }
-//            }
-
-
             // set the performance profile
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
 
@@ -433,7 +421,7 @@ public class RecommendationEngine {
                         if(kruizeObject.getRecommendation_settings().getModelSettings().getModels() != null &&
                                 kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
                             // call for that one model
-//                            String model = kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0);
+                            // String model = kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0);
                             CustomLoadRecommendationModel(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
                         }
                         else{
