@@ -115,7 +115,7 @@ public class ExperimentInitiator {
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage("Validation failed: " + validationObject.getErrorMessage());
             }
-        } catch (Exception | InvalidTermException | InvalidModelException e) {
+        } catch (Exception e) {
             LOGGER.error("Validate and push experiment falied: " + e.getMessage());
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage("Validation failed: " + e.getMessage());
