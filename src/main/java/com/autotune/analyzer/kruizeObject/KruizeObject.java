@@ -140,28 +140,30 @@ public final class KruizeObject implements ExperimentTypeAware {
     public static void setDefaultTerms(Map<String, Terms> terms, KruizeObject kruizeObject) {
         // TODO: define term names like daily, weekly, fortnightly etc
         // TODO: add CRD for terms
-
-            // for monitoring use case
-        terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
-                    .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
-                    .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD, 4, 0.25));
-        terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM, KruizeConstants
-                    .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants
-                    .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD, 7, 1));
-        terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM, KruizeConstants
-                    .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants
-                    .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD, 15, 1));
+        // for monitoring use case
+        terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM,
+                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
+                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD,
+                    4, 0.25));
+        terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM,
+                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
+                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD,
+                    7, 1));
+        terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM,
+                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
+                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD,
+                    15, 1));
         kruizeObject.setTerms(terms);
-
 
     }
 
-    public static void setDefaultTermsForAutoAndRecreate(Map<String, Terms> terms, KruizeObject kruizeObject){
+    public static void setDefaultTermsForAutoAndRecreate(Map<String, Terms> terms, KruizeObject kruizeObject) {
         // for auto and recreate mode
         // Default is Short Term
-        terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
-                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
-                .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD, 4, 0.25));
+        terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM,
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD,
+                4, 0.25));
 
         kruizeObject.setTerms(terms);
     }
@@ -170,33 +172,33 @@ public final class KruizeObject implements ExperimentTypeAware {
         // TODO: define term names like daily, weekly, fortnightly etc
         // TODO: add CRD for terms
 
-        if(  kruizeObject.getRecommendation_settings() != null && kruizeObject.getRecommendation_settings().getTermSettings() != null ){
+        if (kruizeObject.getRecommendation_settings() != null && kruizeObject.getRecommendation_settings().getTermSettings() != null) {
 
             List<String> termList = kruizeObject.getRecommendation_settings().getTermSettings().getTerms();
 
             for (String userInputTerm : termList) {
                 if (AnalyzerConstants.RecommendationSettings.SHORT.equalsIgnoreCase(userInputTerm)) {
-                    terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM, KruizeConstants.RecommendationEngineConstants
-                            .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS, KruizeConstants.RecommendationEngineConstants
-                            .DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD, 4, 0.25));
+                    terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM,
+                            KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
+                            KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD,
+                            4, 0.25));
                 } else if (AnalyzerConstants.RecommendationSettings.MEDIUM.equalsIgnoreCase(userInputTerm)) {
-                    terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM, KruizeConstants
-                            .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS, KruizeConstants
-                            .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD, 7, 1));
+                    terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM,
+                            KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
+                            KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD,
+                            7, 1));
                 } else if (AnalyzerConstants.RecommendationSettings.LONG.equalsIgnoreCase(userInputTerm)) {
-                    terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM, KruizeConstants
-                            .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS, KruizeConstants
-                            .RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD, 15, 1));
-
+                    terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM,
+                            KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
+                            KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD,
+                            15, 1));
                 } else {
-                    // Term name is invalid
                     throw new InvalidTermException(userInputTerm + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
                 }
             }
             kruizeObject.setTerms(terms);
-        }
-        else {
-            // Handle the case where termSettings is null
+        } else {
+            // Handles the case where termSettings is null
             throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.TERM_SETTINGS_UNDEFINED);
         }
     }
