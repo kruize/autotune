@@ -70,6 +70,8 @@ public class Converters {
                     LOGGER.debug("Experiment Type: {}", createExperimentAPIObject.getExperimentType());
                     k8sObjectList.add(k8sObject);
                 }
+                // TODO : some modification to add custom terms and models automatically here
+
                 kruizeObject.setKubernetes_objects(k8sObjectList);
                 kruizeObject.setExperimentName(createExperimentAPIObject.getExperimentName());
                 kruizeObject.setApiVersion(createExperimentAPIObject.getApiVersion());
@@ -86,6 +88,7 @@ public class Converters {
                 recommendationSettings.setTermSettings(termSettings);
                 ModelSettings modelSettings = createExperimentAPIObject.getRecommendationSettings().getModelSettings();
                 recommendationSettings.setModelSettings(modelSettings);
+//                recommendationSettings.setThreshold(createExperimentAPIObject.getRecommendationSettings().getThreshold());
                 kruizeObject.setRecommendation_settings(recommendationSettings);
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
