@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
-public class InvalidTermException extends Throwable{
+public class InvalidTermException extends Throwable {
     public InvalidTermException(String term) {
         super(term);
     }
