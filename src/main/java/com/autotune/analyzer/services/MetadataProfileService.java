@@ -17,7 +17,6 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
-import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.MetadataProfileResponse;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
@@ -30,6 +29,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
+import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
@@ -207,6 +207,73 @@ public class MetadataProfileService extends HttpServlet{
         super.doPut(req, resp);
     }
 
+    /**
+     * Delete MetadataProfile
+     * Handles the DELETE request for deleting metadata profile - DELETE /deleteMetadataProfile
+     *
+     * Supported Query Parameters -
+     * name	- metadata profile name to be deleted(required)
+     *
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
+        response.setStatus(HttpServletResponse.SC_OK);
+
+        ConcurrentHashMap<String, MetadataProfile> metadataProfilesMap = new ConcurrentHashMap<>();
+        String metadataProfileName = request.getParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME);
+
+        if (null == metadataProfileName || metadataProfileName.isEmpty()) {
+            sendErrorResponse(
+                    response,
+                    new Exception(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.MISSING_METADATA_PROFILE_NAME_EXCPTN),
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    String.format(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.MISSING_METADATA_PROFILE_NAME_MSG)
+            );
+            return;
+        }
+
+        try {
+            // load specified metadata profile
+            loadMetadataProfilesFromCollection(metadataProfilesMap, metadataProfileName);
+
+            // Check if metadata profile exists
+            if (!metadataProfilesMap.isEmpty() && metadataProfilesMap.containsKey(metadataProfileName)) {
+                try {
+                    // Deletes database and in-memory metadata profile object stored
+                    deleteMetadataProfile(metadataProfileName);
+                    metadataProfilesMap.remove(metadataProfileName);
+                } catch (Exception e) {
+                    sendErrorResponse(
+                            response,
+                            e,
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            e.getMessage());
+                    return;
+                }
+            } else {
+                sendErrorResponse(
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.INVALID_METADATA_PROFILE_NAME_EXCPTN),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.INVALID_METADATA_PROFILE_NAME_MSG, metadataProfileName)
+                );
+                return;
+            }
+
+            sendSuccessResponse(response, String.format(KruizeConstants.MetadataProfileAPIMessages.DELETE_METADATA_PROFILE_SUCCESS_MSG, metadataProfileName));
+
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
+    }
+
 
     /**
      * Send success response in case of no errors or exceptions.
@@ -262,6 +329,27 @@ public class MetadataProfileService extends HttpServlet{
             LOGGER.error(AnalyzerErrorConstants.APIErrors.ListMetadataProfileAPI.LOAD_METADATA_PROFILE_ERROR, e.getMessage());
         }
 
+    }
+
+    /**
+     * This method deletes specified profile name from database and MetadataProfileCollection
+     * @param metadataProfileName Name of the metadata profile to be deleted
+     */
+    private void deleteMetadataProfile(String metadataProfileName) {
+        ValidationOutputData deletedMetadataProfileFromDB = null;
+        try {
+            // delete the metadata profile from DB
+            deletedMetadataProfileFromDB = new ExperimentDAOImpl().deleteKruizeLMMetadataProfileEntryByName(metadataProfileName);
+            if (deletedMetadataProfileFromDB.isSuccess()) {
+                // remove in-memory metadata profile
+                MetadataProfileCollection.getInstance().getMetadataProfileCollection().remove(metadataProfileName);
+                LOGGER.debug(KruizeConstants.MetadataProfileAPIMessages.DELETE_METADATA_PROFILE_FROM_DB_SUCCESS_MSG);
+            } else {
+                LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.DELETE_METADATA_PROFILE_FROM_DB_FAILURE_MSG, deletedMetadataProfileFromDB.getMessage());
+            }
+        }  catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.DELETE_METADATA_PROFILE_FAILURE_MSG, e.getMessage());
+        }
     }
 
     private Gson createGsonObject() {

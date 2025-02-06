@@ -618,6 +618,7 @@ public class AnalyzerConstants {
         public static final String METADATA_PROFILE_PLURALS = "kruizemetadataprofiles";
         public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
         public static final String DATASOURCE = "datasource";
+        public static final String METADATA_PROFILE_NAME_PARAMETER = "metadataProfileName";
     }
 
     public static final class CommonProfileMsgs {

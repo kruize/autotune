@@ -104,6 +104,9 @@ public interface ExperimentDAO {
     // Delete metric profile for the specified metric profile name
     public ValidationOutputData deleteKruizeMetricProfileEntryByName(String metricProfileName);
 
+    // Delete metadata profile for the specified metadata profile name
+    public ValidationOutputData deleteKruizeLMMetadataProfileEntryByName(String metadataProfileName);
+
     // Load all recommendations of a particular experiment and interval end Time
     KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, String cluster_name, Timestamp interval_end_time) throws Exception;
 
