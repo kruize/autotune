@@ -376,7 +376,7 @@ public class RecommendationEngine {
                     loadCustomRecommendationModels(modelNames);
                 }
             }
-            else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)){
+            else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
                 // auto or recreate mode
                 if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getModelSettings() == null ||
@@ -389,7 +389,7 @@ public class RecommendationEngine {
                         if (kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
                             // call for that one model
                             loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
-                        }else {
+                        } else {
                             // multiple model throw error
                             throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED);
                         }
