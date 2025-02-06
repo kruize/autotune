@@ -97,6 +97,7 @@ public class AnalyzerConstants {
     public static final String TRIAL_RESULT_SUMMARY = "trialSummaryResult";
     public static final String CYCLE_DATA_MAP = "cycleDataMap";
     public static final String METRICS = "metrics";
+    public static final String SUCCESS_STATUS = "SUCCESS";
 
 
     private AnalyzerConstants() {

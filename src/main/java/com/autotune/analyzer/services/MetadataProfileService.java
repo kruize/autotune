@@ -291,7 +291,7 @@ public class MetadataProfileService extends HttpServlet{
                 new Gson().toJson(
                         new MetadataProfileResponse(message +
                                 KruizeConstants.MetadataProfileAPIMessages.VIEW_METADATA_PROFILES_MSG,
-                                HttpServletResponse.SC_CREATED, "", KruizeConstants.APIMessages.SUCCESS)
+                                HttpServletResponse.SC_CREATED, "", AnalyzerConstants.SUCCESS_STATUS)
                 )
         );
         out.flush();
