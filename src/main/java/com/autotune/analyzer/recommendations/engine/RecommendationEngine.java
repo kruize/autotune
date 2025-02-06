@@ -69,7 +69,7 @@ public class RecommendationEngine {
     private Map<String, Terms> terms;
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
-    private List<String> modelName;
+    private List<String> modelNames;
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
@@ -126,7 +126,7 @@ public class RecommendationEngine {
         return (int) Math.ceil(max_pods_cpu);
     }
 
-    private void DefaultLoadRecommendationModel() {
+    private void loadDefaultRecommendationModels() {
         // create both cost and performance model by default
         recommendationModels = new ArrayList<>();
         // Create Cost based model
@@ -137,7 +137,7 @@ public class RecommendationEngine {
         registerModel(performanceBasedRecommendationModel);
     }
 
-    private void DefaultLoadRecommendationModelForAutoAndRecreate() {
+    private void loadDefaultRecommendationModelForAutoAndRecreate() {
         // create performance model by default
         recommendationModels = new ArrayList<>();
         // Create Performance based model
@@ -145,21 +145,19 @@ public class RecommendationEngine {
         registerModel(performanceBasedRecommendationModel);
     }
 
-    private void CustomLoadRecommendationModel(List<String> modelName) throws InvalidModelException {
+    private void loadCustomRecommendationModels(List<String> modelName) throws InvalidModelException {
         // Add new models
         recommendationModels = new ArrayList<>();
-        for(String model : modelName){
-            if("cost".equalsIgnoreCase(model)) {
+        for (String model : modelName) {
+            if ("cost".equalsIgnoreCase(model)) {
                 // Create Cost based model
                 CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
                 registerModel(costBasedRecommendationModel);
-            }
-            else if("performance".equalsIgnoreCase(model)){
+            } else if ("performance".equalsIgnoreCase(model)) {
                 // Create Performance based model
                 PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
                 registerModel(performanceBasedRecommendationModel);
-            }
-            else {
+            } else {
                 // user input does not matches standard models
                 throw new InvalidModelException(modelName + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
             }
@@ -198,12 +196,12 @@ public class RecommendationEngine {
         this.experimentName = experimentName;
     }
 
-    public List<String> getModelName() {
-        return modelName;
+    public List<String> getModelNames() {
+        return modelNames;
     }
 
-    public void setModelName(List<String> modelName) {
-        this.modelName = modelName;
+    public void setModelNames(List<String> modelNames) {
+        this.modelNames = modelNames;
     }
 
     public Timestamp getInterval_end_time() {
@@ -307,7 +305,7 @@ public class RecommendationEngine {
      * @param calCount The count of incoming requests.
      * @return The KruizeObject containing the prepared recommendations.
      */
-    public KruizeObject prepareRecommendations(int calCount, String target_cluster) throws FetchMetricsError {
+    public KruizeObject prepareRecommendations(int calCount, String target_cluster) throws FetchMetricsError, InvalidModelException {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
         Map<String, Terms> terms = new HashMap<>();
         ValidationOutputData validationOutputData;
@@ -325,37 +323,31 @@ public class RecommendationEngine {
         // continue to generate recommendation when kruizeObject is successfully created
         try {
             // term settings for different use cases
-            if( kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
+            if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
                 // monitoring mode
-                if(kruizeObject.getRecommendation_settings() == null ||
-                kruizeObject.getRecommendation_settings().getTermSettings() == null ||
-                kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null){
+                if (kruizeObject.getRecommendation_settings() == null ||
+                    kruizeObject.getRecommendation_settings().getTermSettings() == null ||
+                    kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null) {
                     // default for monitoring
                     KruizeObject.setDefaultTerms(terms,kruizeObject);
-                }
-                else{
+                } else {
                     // Process terms
                     KruizeObject.setCustomTerms(terms, kruizeObject);
                 }
-
             }
             else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
                 // auto or recreate mode
-                if(kruizeObject.getRecommendation_settings() == null ||
+                if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getTermSettings() == null ||
-                        kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null){
-
-                    // default for monitoring
+                        kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null) {
+                    // default
                     KruizeObject.setDefaultTermsForAutoAndRecreate(terms, kruizeObject);
-                }
-                else{
+                } else {
                     // terms for auto recreate
-                    // verify if single
-                    if(kruizeObject.getRecommendation_settings().getTermSettings().getTerms().size() == 1) {
-                        // call for that one term
+                    if (kruizeObject.getRecommendation_settings().getTermSettings().getTerms().size() == 1) {
+                        // single term
                        KruizeObject.setCustomTerms(terms, kruizeObject);
-                    }
-                    else{
+                    } else {
                         // multiple terms throw error
                         throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_TERMS_UNSUPPORTED);
                     }
@@ -370,68 +362,37 @@ public class RecommendationEngine {
             String dataSource = kruizeObject.getDataSource();
 
             // call different models for different use cases
-            if( kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)){
+            if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
                 // can be local or remote monitoring use case
-                if(kruizeObject.getRecommendation_settings() == null){
+                if (kruizeObject.getRecommendation_settings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings().getModels() == null) {
                     // recommendation setting are null -> use default values
                     // both cost and perf model to be called
-                    DefaultLoadRecommendationModel();
+                    loadDefaultRecommendationModels();
+                } else {
+                    // models present
+                    setModelNames(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
+                    loadCustomRecommendationModels(modelNames);
                 }
-                else{
-                    // recommendation setting are present --> check for model settings
-                    if(kruizeObject.getRecommendation_settings().getModelSettings() == null){
-                        // model settings are not present
-                        DefaultLoadRecommendationModel();
-                    }
-                    else {
-                        // model settings are present
-                        // for what ever model settings are present do as directed.
-                        List<String> models = kruizeObject.getRecommendation_settings().getModelSettings().getModels();
-                        if(models == null ){
-                            // models are not there
-                            DefaultLoadRecommendationModel();
-                        }
-                        else{
-                            // models present
-                            setModelName(models);
-                            CustomLoadRecommendationModel(modelName);
-                        }
-
-                    }
-                }
-
             }
             else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)){
                 // auto or recreate mode
-                if(kruizeObject.getRecommendation_settings() == null){
+                if (kruizeObject.getRecommendation_settings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings().getModels() != null) {
                     // recommendation setting are null -> use default values
-                    // perf model to be called
-                    DefaultLoadRecommendationModelForAutoAndRecreate();
-                }
-                else{
-                    // recommendation setting are present --> check for model settings
-                    if(kruizeObject.getRecommendation_settings().getModelSettings() == null){
-                        // model settings are not present
-                        DefaultLoadRecommendationModelForAutoAndRecreate();
-                    }
-                    else {
-                        // model settings are present
+                    loadDefaultRecommendationModelForAutoAndRecreate();
+                } else {
                         // for what ever model settings are present do as directed.
                         // check for single model
-                        if(kruizeObject.getRecommendation_settings().getModelSettings().getModels() != null &&
-                                kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
+                        if (kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
                             // call for that one model
-                            // String model = kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0);
-                            CustomLoadRecommendationModel(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
-                        }
-                        else{
+                            loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
+                        }else {
                             // multiple model throw error
                             throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED);
                         }
-
-
-                    }
-
                 }
             }
 

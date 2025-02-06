@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2025 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
-public class InvalidModelException extends Throwable
-{
+public class InvalidModelException extends Throwable{
     public InvalidModelException(String model) {
         super(model);
     }
