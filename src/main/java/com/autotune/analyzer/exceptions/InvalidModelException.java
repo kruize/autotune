@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
-public class InvalidModelException extends Throwable{
+public class InvalidModelException extends Throwable {
     public InvalidModelException(String model) {
         super(model);
     }
