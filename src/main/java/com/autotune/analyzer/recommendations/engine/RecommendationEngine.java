@@ -4,6 +4,7 @@ import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
@@ -143,6 +144,14 @@ public class RecommendationEngine {
         // Create Performance based model
         PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
         registerModel(performanceBasedRecommendationModel);
+
+        RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
+        List<String> models = new ArrayList<>() ;
+        models.add("performance");
+        ModelSettings modelSettings = new ModelSettings();
+        modelSettings.setModels(models);
+        recommendationSettings.setModelSettings(modelSettings);
+
     }
 
     private void loadCustomRecommendationModels(List<String> modelName) throws InvalidModelException {

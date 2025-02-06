@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
+import com.autotune.analyzer.exceptions.InvalidModelException;
+import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
@@ -113,7 +115,7 @@ public class ExperimentInitiator {
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage("Validation failed: " + validationObject.getErrorMessage());
             }
-        } catch (Exception e) {
+        } catch (Exception | InvalidTermException | InvalidModelException e) {
             LOGGER.error("Validate and push experiment falied: " + e.getMessage());
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage("Validation failed: " + e.getMessage());
