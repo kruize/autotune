@@ -19,6 +19,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -85,7 +86,12 @@ public class MetadataProfileValidation {
 
             // If the mandatory values are present,proceed for further validation else return the validation object directly
             if (validationOutputData.isSuccess()) {
-                // TODO: Loading saved metadata profiles from DB
+
+                try {
+                    new ExperimentDBService().loadAllMetadataProfiles(metadataProfilesMap);
+                } catch (Exception e) {
+                    LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.LOAD_METADATA_PROFILES_FROM_DB_FAILURE, e.getMessage());
+                }
 
                 // Check if profile metadata exists
                 JsonNode metadata = metadataProfile.getMetadata();

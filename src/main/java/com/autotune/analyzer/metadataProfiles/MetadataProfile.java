@@ -55,7 +55,6 @@ public class MetadataProfile {
         this.apiVersion = apiVersion;
         this.kind = kind;
         this.metadata = metadata;
-        this.name = metadata.get("name").asText();
         this.profile_version = profile_version;
         this.k8s_type = k8s_type;
         this.datasource = datasource;
