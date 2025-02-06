@@ -1,10 +1,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
-import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.kruizeObject.*;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
@@ -84,7 +81,10 @@ public class Converters {
                 kruizeObject.setExperimentType(createExperimentAPIObject.getExperimentType());
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
                 kruizeObject.setTrial_settings(createExperimentAPIObject.getTrialSettings());
-                kruizeObject.setRecommendation_settings(createExperimentAPIObject.getRecommendationSettings());
+                TermSettings termSettings = createExperimentAPIObject.getRecommendationSettings().getTermSettings();
+                RecommendationSettings recommendationSettings = new RecommendationSettings();
+                recommendationSettings.setTermSettings(termSettings);
+                kruizeObject.setRecommendation_settings(recommendationSettings);
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
                 kruizeObject.setExperiment_usecase_type(new ExperimentUseCaseType(kruizeObject));
