@@ -4,7 +4,7 @@ import java.util.List;
 
 public class TermSettings {
     private List<String> terms;
-    private String singleTerm;
+    private String termDuration;
 
     public List<String> getTerms() {
         return terms;
@@ -14,19 +14,19 @@ public class TermSettings {
         this.terms = terms;
     }
 
-    public String getSingleTerm() {
-        return singleTerm;
+    public String getTermDuration() {
+        return termDuration;
     }
 
-    public void setSingleTerm(String singleTerm) {
-        this.singleTerm = singleTerm;
+    public void setTermDuration(String termDuration) {
+        this.termDuration = termDuration;
     }
-    
+
     @Override
     public String toString() {
         return "TermSettings{" +
                 "terms=" + terms + 
-                ", singleTerm='" + singleTerm + '\'' +
+                ", singleTerm='" + termDuration + '\'' +
                 '}';
     }
 }

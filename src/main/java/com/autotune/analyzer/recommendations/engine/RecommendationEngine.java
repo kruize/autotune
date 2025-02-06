@@ -67,13 +67,16 @@ public class RecommendationEngine {
     private Map<String, Terms> terms;
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
+    private String modelName;
+//    private ModelName modelName = kruizeObject.getRecommendationSettings().getModelSettings().getModels();
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
         this.experimentName = experimentName;
         this.intervalEndTimeStr = intervalEndTimeStr;
         this.intervalStartTimeStr = intervalStartTimeStr;
-        this.init();
+//        this.modelName = modelName;
+//        this.init(modelName);
     }
 
     private static int getNumPods(Map<Timestamp, IntervalResults> filteredResultsMap) {
@@ -123,16 +126,27 @@ public class RecommendationEngine {
         return (int) Math.ceil(max_pods_cpu);
     }
 
-    private void init() {
+    private void LoadRecommendationModel(String modelName) {
         // Add new models
         recommendationModels = new ArrayList<>();
         // Create Cost based model
-        CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
-        // TODO: Create profile based model
-        registerModel(costBasedRecommendationModel);
-        // Create Performance based model
-        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
-        registerModel(performanceBasedRecommendationModel);
+        /// TODO: add if else pick models for the  get func we created -- first change
+        if("cost".equalsIgnoreCase(modelName)) {
+            CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
+            // TODO: Create profile based model
+            registerModel(costBasedRecommendationModel);
+        } else if ("performance".equalsIgnoreCase(modelName)) {
+            // Create Performance based model
+            PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+            registerModel(performanceBasedRecommendationModel);
+        } else {
+            CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
+            // TODO: Create profile based model
+            registerModel(costBasedRecommendationModel);
+            // Create Performance based model
+            PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+            registerModel(performanceBasedRecommendationModel);
+        }
         // TODO: Add profile based once recommendation algos are available
     }
 
@@ -168,8 +182,20 @@ public class RecommendationEngine {
         this.experimentName = experimentName;
     }
 
+    public String getModelName() {
+        return modelName;
+    }
+
+    public void setModelName(String modelName) {
+        this.modelName = modelName;
+    }
+
     public Timestamp getInterval_end_time() {
         return interval_end_time;
+    }
+
+    public String getIntervalEndTimeStr() {
+        return intervalEndTimeStr;
     }
 
     public void setInterval_end_time(Timestamp interval_end_time) {
@@ -291,9 +317,15 @@ public class RecommendationEngine {
                 KruizeObject.setDefaultTerms(terms, kruizeObject);
             // set the performance profile
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
+            // set custom terms
+            KruizeObject.setCustomTerms(terms, kruizeObject);
             // get the datasource
             // TODO: If no data source given use KruizeDeploymentInfo.monitoring_agent / default datasource
             String dataSource = kruizeObject.getDataSource();
+
+            setModelName(kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0));
+            LoadRecommendationModel(modelName);
+
             LOGGER.debug(String.format(KruizeConstants.APIMessages.EXPERIMENT_DATASOURCE, kruizeObject.getExperimentName(), dataSource));
 
             int maxDay = Terms.getMaxDays(terms);
