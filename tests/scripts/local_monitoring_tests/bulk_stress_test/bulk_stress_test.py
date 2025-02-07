@@ -126,7 +126,7 @@ def fetch_recommendations(job_status_json, worker_number, logger):
 
 def fetch_bulk_job_status(job_id, worker_number, logger):
     # Get the bulk job status using the job id
-    include = "summary,experiments"
+    include = "summary"
     bulk_job_response = get_bulk_job_status(job_id, include, logger)
     job_status_json = bulk_job_response.json()
 
@@ -146,6 +146,11 @@ def fetch_bulk_job_status(job_id, worker_number, logger):
         sleep(5)
 
     logger.info(f"worker number - {worker_number} job id - {job_id} job status - {job_status}")
+    
+    # Fetch Job status with experiments
+    include = "summary,experiments"
+    bulk_job_response = get_bulk_job_status(job_id, include, logger)
+    job_status_json = bulk_job_response.json()
 
     # Dump the job status json into a file
     job_status_dir = results_dir + "/job_status_jsons"

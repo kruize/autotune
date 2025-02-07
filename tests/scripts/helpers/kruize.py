@@ -471,42 +471,40 @@ def generate_recommendations(experiment_name):
     print("\n************************************************************")
     return response
 
+def log_message(message, logger=None):
+ if logger:
+      logger.info(message)
+ else:
+      print(message)
+
 def post_bulk_api(input_json_file, logger=None):
-    if logger:
-        logger.info("\n************************************************************")
-    else:
-        print("\n************************************************************")
+    msg = ("\n************************************************************")
+    log_message(msg, logger)
 
-    if logger:
-        logger.info(f"Sending POST request to URL: {URL}/bulk")
-        logger.info(f"Request Payload: {input_json_file}")
-    else:
-        print("Sending POST request to URL: ", f"{URL}/bulk")
-        print("Request Payload: ", input_json_file)
+    msg = f"Sending POST request to URL: {URL}/bulk"
+    log_message(msg, logger)
 
-    curl_command = f"curl -X POST {URL}/bulk -H 'Content-Type: application/json' -d '{json.dumps(input_json_file)}'"
-    if logger:
-        logger.info(f"Equivalent cURL command: {curl_command}")
-    else:
-        print("Equivalent cURL command: ", curl_command)
+    msg = logger.info(f"Request Payload: {input_json_file}")
+    log_message(msg, logger)
+
+    msg = f"curl -X POST {URL}/bulk -H 'Content-Type: application/json' -d '{json.dumps(input_json_file)}'"
+    log_message(msg, logger)
 
     # Send the POST request
     response = requests.post(f"{URL}/bulk", json=input_json_file)
 
-    if logger:
-        logger.info(f"Response Status Code: {response.status_code}")
-        logger.info(f"Response JSON: {response.json()}")
-    else:
-        print("Response Status Code: ", response.status_code)
-        print("Response JSON: ", response.json())
+    msg = f"Response Status Code: {response.status_code}"
+    log_message(msg, logger)
+
+    msg = f"Response JSON: {response.json()}"
+    log_message(msg, logger)
+
     return response
 
 
 def get_bulk_job_status(job_id,include=None,logger=None):
-    if logger:
-        logger.info("\n************************************************************")
-    else:
-        print("\n************************************************************")
+    msg = "\n************************************************************"
+    log_message(msg, logger)
     
     url_basic = f"{URL}/bulk?job_id={job_id}"
     url_include = f"{URL}/bulk?job_id={job_id}&include={include}"
@@ -514,23 +512,21 @@ def get_bulk_job_status(job_id,include=None,logger=None):
     if include:
         getJobIDURL = url_include
 
-    if logger:
-        logger.info(f"Sending GET request to URL ( include={include} ): {getJobIDURL}")
-    else:
-        print("Sending GET request to URL ( include=",include," ): ", getJobIDURL)
+    msg = f"Sending GET request to URL ( include={include} ): {getJobIDURL}"
+    log_message(msg, logger)
 
     curl_command_include = f"curl -X GET '{getJobIDURL}'"
 
-    if logger:
-        logger.info(f"Equivalent cURL command : {curl_command_include}")
-    else:
-        print("Equivalent cURL command : ", curl_command_include)
+    msg = f"Equivalent cURL command : {curl_command_include}"
+    log_message(msg, logger)
+
     response = requests.get(url_include)
 
-    if logger:
-        logger.info(f"Include GET Response Status Code: {response.status_code}")
-        #logger.info(f"Include GET Response JSON: {response.json()}")
-    else:
-        print("Include GET Response Status Code: ", response.status_code)
-        print("Include GET Response JSON: ", response.json())
+    msg = f"Include GET Response Status Code: {response.status_code}"
+    log_message(msg, logger)
+
+    if logger and include == "summary" or logger == None:
+         msg = f"Include GET Response JSON: {response.json()}"
+         log_message(msg, logger)
+
     return response
