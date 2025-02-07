@@ -270,13 +270,11 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     String user_model = kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0);
                     HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> recommendationsConfig;
 
-                    if("cost".equalsIgnoreCase(user_model)){
+                    if ("cost".equalsIgnoreCase(user_model)) {
                         recommendationsConfig = termRecommendations.getCostRecommendations().getConfig();
-                    }
-                    else if ("performance".equalsIgnoreCase(user_model)){
+                    } else if ("performance".equalsIgnoreCase(user_model)) {
                         recommendationsConfig = termRecommendations.getPerformanceRecommendations().getConfig();
-                    }
-                    else{
+                    } else {
                         throw new IllegalArgumentException("Unknown model: "+ user_model);
                     }
 

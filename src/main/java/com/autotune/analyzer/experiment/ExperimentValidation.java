@@ -16,8 +16,6 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.kruizeObject.ModelSettings;
-import com.autotune.analyzer.kruizeObject.TermSettings;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -265,15 +263,14 @@ public class ExperimentValidation {
                             }
                     );
                 }
-                // only vpa specific check for multiple term & model
-                TermSettings term_settings = expObj.getRecommendation_settings().getTermSettings();
-                ModelSettings model_settings = expObj.getRecommendation_settings().getModelSettings();
-                List<String> terms = expObj.getRecommendation_settings().getTermSettings().getTerms();
-                List<String> models = expObj.getRecommendation_settings().getModelSettings().getModels();
-                String mode = expObj.getMode();
 
-                if( AnalyzerConstants.AUTO.equalsIgnoreCase(mode) || AnalyzerConstants.RECREATE.equalsIgnoreCase(mode)) {
-                    if (term_settings != null && terms != null && terms.size() > 1) {
+
+                if (AnalyzerConstants.AUTO.equalsIgnoreCase(expObj.getMode()) || AnalyzerConstants.RECREATE.equalsIgnoreCase(expObj.getMode())) {
+                    // only vpa specific check for multiple term & model
+
+                    if (expObj.getRecommendation_settings().getTermSettings() != null &&
+                            expObj.getRecommendation_settings().getTermSettings().getTerms() != null &&
+                            expObj.getRecommendation_settings().getTermSettings().getTerms().size() > 1) {
                         // Checks for multiple terms and throws error
                         errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_TERMS_UNSUPPORTED;
                         validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
@@ -282,7 +279,9 @@ public class ExperimentValidation {
                         return validationOutputData;
                     }
                     // Check for multiple models
-                    if (model_settings != null && models != null && models.size() > 1) {
+                    if (expObj.getRecommendation_settings().getModelSettings() != null &&
+                            expObj.getRecommendation_settings().getModelSettings().getModels() != null &&
+                            expObj.getRecommendation_settings().getModelSettings().getModels().size() > 1) {
                         errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED;
                         validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                         validationOutputData.setSuccess(false);
@@ -292,10 +291,11 @@ public class ExperimentValidation {
                 }
 
                 // common check for terms and models
-                if(term_settings != null && terms != null ){
+                if(expObj.getRecommendation_settings().getTermSettings() != null &&
+                        expObj.getRecommendation_settings().getTermSettings().getTerms() != null ){
                     Set<String> validTerms = Set.of("short", "medium", "long");
 
-                    for(String term: terms) {
+                    for(String term: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
                         // Check for whitespace in terms
                         if (term == null || term.trim().isEmpty()) {
                             errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.WHITESPACE_NOT_ALLOWED;
@@ -312,10 +312,11 @@ public class ExperimentValidation {
                     LOGGER.info("All terms are valid");
                 }
 
-                if(model_settings != null && models != null){
+                if(expObj.getRecommendation_settings().getModelSettings() != null &&
+                        expObj.getRecommendation_settings().getModelSettings().getModels() != null){
                     Set<String> validModels = Set.of("cost", "performance");
 
-                    for(String model: models){
+                    for(String model: expObj.getRecommendation_settings().getModelSettings().getModels()){
                         if(model == null || model.trim().isEmpty()){
                             errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.WHITESPACE_NOT_ALLOWED;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
