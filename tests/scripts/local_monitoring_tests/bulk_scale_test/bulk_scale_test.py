@@ -139,15 +139,14 @@ def fetch_bulk_job_status(job_id, worker_number, logger):
         logger.info(f"Check {job_file} for job status")
         return -1
 
-def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_start_time, current_end_time):
+def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number):
     try:
-
         scale_log_dir = resultsdir + "/scale_logs"
         os.makedirs(scale_log_dir, exist_ok=True)
 
         bulk_json = update_bulk_config(org_id, cluster_id, current_start_time, current_end_time)
 
-        log_id = str(org_id) + "-" + str(cluster_id)
+        log_id = str(worker_number) + "_org-" + str(org_id) + "_cluster-" + str(cluster_id)
         log_file = f"{scale_log_dir}/worker_{log_id}.log"
 
         logger = setup_logger(f"logger_{log_id}", log_file)
@@ -181,11 +180,6 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
     print(f"num_tsdb_blocks - {num_tsdb_blocks}")
 
     current_end_time = initial_end_time
-    # Update time range in the bulk input json
-    bulk_json_file = "../json_files/bulk_input_timerange.json"
-
-    json_file = open(bulk_json_file, "r")
-    bulk_input_json = json.loads(json_file.read())
 
     for k in range(1, num_tsdb_blocks + 1):
 
@@ -202,9 +196,12 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
             futures = []
 
             futures = [
-                executor.submit(invoke_bulk_with_time_range_labels, resultsdir, org_id, cluster_id, current_start_time, current_end_time)
-                for org_id in range(1, org_ids + 1)
-                for cluster_id in range(1, cluster_ids + 1)
+            executor.submit(invoke_bulk_with_time_range_labels, resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number)
+                for worker_number, (org_id, cluster_id) in enumerate(
+                    ((org_id, cluster_id) for org_id in range(1, org_ids + 1) for cluster_id in
+                     range(1, cluster_ids + 1)),
+                    start=1
+                )
             ]
 
             # Process the results as they complete
