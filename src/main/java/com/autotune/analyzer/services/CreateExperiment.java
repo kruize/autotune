@@ -177,13 +177,8 @@ public class CreateExperiment extends HttpServlet {
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
         String inputData = "";
         String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
-        boolean rmTable = false;
-        if (null != rm
-                && !rm.isEmpty()
-                && rm.equalsIgnoreCase(AnalyzerConstants.BooleanString.TRUE)
-        ) {
-            rmTable = true;
-        }
+        // Check if rm is not null and set to true
+        boolean rmTable = (null != rm && AnalyzerConstants.BooleanString.TRUE.equalsIgnoreCase(rm.trim()));
         try {
             inputData = request.getReader().lines().collect(Collectors.joining());
             CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
