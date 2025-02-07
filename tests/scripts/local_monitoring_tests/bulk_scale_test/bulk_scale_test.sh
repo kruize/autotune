@@ -94,7 +94,7 @@ function kruize_local_thanos_patch() {
 }
 
 
-while getopts r:i:d:s:t:a:o:c:zh:-: gopts
+while getopts r:i:d:w:s:t:a:o:c:zh:-: gopts
 do
 	case ${gopts} in
 	-)
