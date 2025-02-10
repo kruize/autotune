@@ -29,6 +29,9 @@ public class BulkInput {
 
     // Getters and Setters
 
+    public BulkInput() {
+    }
+
     public TimeRange getTime_range() {
         return time_range;
     }
@@ -51,6 +54,14 @@ public class BulkInput {
 
     public void setFilter(FilterWrapper filter) {
         this.filter = filter;
+    }
+
+    public Webhook getWebhook() {
+        return webhook;
+    }
+
+    public void setWebhook(Webhook webhook) {
+        this.webhook = webhook;
     }
 
     // Nested class for FilterWrapper that contains 'exclude' and 'include'
@@ -138,21 +149,17 @@ public class BulkInput {
         }
     }
 
-    public static class Webhook{
+    public static class Webhook {
         private String url;
+
         public String getUrl() {
             return url;
         }
+
         public void setUrl(String url) {
             this.url = url;
         }
     }
 
-    public Webhook getWebhook() {
-        return webhook;
-    }
-
-    public void setWebhook(Webhook webhook) {
-        this.webhook = webhook;
-    }
+  
 }

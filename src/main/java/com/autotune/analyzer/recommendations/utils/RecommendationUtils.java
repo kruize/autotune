@@ -256,7 +256,7 @@ public class RecommendationUtils {
                                 metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
                                 metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
                                 metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
-                                isSupportedMig);
+                                null, isSupportedMig, false);
 
 
                         if (null == containerData.getContainerDeviceList()) {
