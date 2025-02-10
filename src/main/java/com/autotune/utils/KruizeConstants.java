@@ -966,5 +966,7 @@ public class KruizeConstants {
         public static final String SUMMARY = "summary";
         public static final String EXPERIMENTS = "experiments";
         public static final String RECOMMENDATIONS = "recommendations";
+
+        public static final String BOOTSTRAP_SERVER_MISSING = "Missing required environment variable: KAFKA_BOOTSTRAP_SERVERS";
     }
 }

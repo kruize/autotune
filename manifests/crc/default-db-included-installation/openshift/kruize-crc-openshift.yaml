@@ -211,7 +211,6 @@ data:
       "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
       "bulkapilimit" : 1000,
       "isKafkaEnabled" : "true",
-      "kafkaBootstrapServers" : "kruize-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -363,6 +362,8 @@ spec:
               value: "/etc/config/kruizeconfigjson"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=80"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kruize-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
           resources:
             requests:
               memory: "350Mi"
