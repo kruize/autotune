@@ -384,8 +384,7 @@ public class RecommendationEngine {
                     setModelNames(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
                     loadCustomRecommendationModels(modelNames);
                 }
-            }
-            else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
+            } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
                 // auto or recreate mode
                 if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getModelSettings() == null ||

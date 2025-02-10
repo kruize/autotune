@@ -305,6 +305,10 @@ public class AnalyzerConstants {
         public static final String SHORT = "short";
         public static final String MEDIUM = "medium";
         public static final String LONG = "long";
+        public static final String SHORT_TERM = "short_term";
+        public static final String MEDIUM_TERM = "medium_term";
+        public static final String LONG_TERM = "long_term";
+
 
         private RecommendationSettings() {
         }

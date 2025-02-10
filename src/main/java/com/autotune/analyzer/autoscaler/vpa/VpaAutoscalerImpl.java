@@ -31,6 +31,7 @@ import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
+import com.autotune.utils.KruizeConstants;
 import io.fabric8.autoscaling.api.model.v1.*;
 import io.fabric8.kubernetes.api.model.ObjectMeta;
 import io.fabric8.kubernetes.api.model.Quantity;
@@ -257,11 +258,11 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
 
                     TermRecommendations termRecommendations;
 
-                    if ("short_term".equals(user_selected_term)) {
+                    if (AnalyzerConstants.RecommendationSettings.SHORT_TERM.equals(user_selected_term)) {
                         termRecommendations = value.getShortTermRecommendations();
-                    } else if ("medium_term".equals(user_selected_term)) {
+                    } else if (AnalyzerConstants.RecommendationSettings.MEDIUM_TERM.equals(user_selected_term)) {
                         termRecommendations = value.getMediumTermRecommendations();
-                    } else if ("long_term".equals(user_selected_term)) {
+                    } else if (AnalyzerConstants.RecommendationSettings.LONG_TERM.equals(user_selected_term)) {
                         termRecommendations = value.getLongTermRecommendations();
                     } else {
                         throw new IllegalArgumentException("Unknown term: " + user_selected_term);
@@ -270,9 +271,9 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     String user_model = kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0);
                     HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> recommendationsConfig;
 
-                    if ("cost".equalsIgnoreCase(user_model)) {
+                    if (KruizeConstants.JSONKeys.COST.equalsIgnoreCase(user_model)) {
                         recommendationsConfig = termRecommendations.getCostRecommendations().getConfig();
-                    } else if ("performance".equalsIgnoreCase(user_model)) {
+                    } else if (KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(user_model)) {
                         recommendationsConfig = termRecommendations.getPerformanceRecommendations().getConfig();
                     } else {
                         throw new IllegalArgumentException("Unknown model: "+ user_model);

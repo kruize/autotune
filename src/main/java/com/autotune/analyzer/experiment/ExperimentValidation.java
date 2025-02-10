@@ -291,8 +291,8 @@ public class ExperimentValidation {
                 }
 
                 // common check for terms and models
-                if(expObj.getRecommendation_settings().getTermSettings() != null &&
-                        expObj.getRecommendation_settings().getTermSettings().getTerms() != null ){
+                if (expObj.getRecommendation_settings().getTermSettings() != null &&
+                        expObj.getRecommendation_settings().getTermSettings().getTerms() != null ) {
                     Set<String> validTerms = Set.of("short", "medium", "long");
 
                     for(String term: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
@@ -312,19 +312,19 @@ public class ExperimentValidation {
                     LOGGER.info("All terms are valid");
                 }
 
-                if(expObj.getRecommendation_settings().getModelSettings() != null &&
-                        expObj.getRecommendation_settings().getModelSettings().getModels() != null){
+                if (expObj.getRecommendation_settings().getModelSettings() != null &&
+                        expObj.getRecommendation_settings().getModelSettings().getModels() != null) {
                     Set<String> validModels = Set.of("cost", "performance");
 
-                    for(String model: expObj.getRecommendation_settings().getModelSettings().getModels()){
-                        if(model == null || model.trim().isEmpty()){
+                    for (String model: expObj.getRecommendation_settings().getModelSettings().getModels()) {
+                        if (model == null || model.trim().isEmpty()) {
                             errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.WHITESPACE_NOT_ALLOWED;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
                             validationOutputData.setMessage(errorMsg);
                             return validationOutputData;
                         }
-                        if(!validModels.contains(model)){
+                        if (!validModels.contains(model)) {
                             throw new IllegalArgumentException( model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
                         }
                     }
