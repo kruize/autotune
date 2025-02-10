@@ -23,6 +23,7 @@ from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
 from helpers.list_metadata_profiles_validate import *
+from helpers.list_metadata_profiles_schema import *
 from helpers.list_metadata_profiles_without_parameters_schema import *
 
 metadata_profile_dir = get_metadata_profile_dir()
@@ -206,7 +207,11 @@ def test_list_metadata_profiles_with_verbose(verbose, cluster_type):
     list_metadata_profiles_json = response.json()
 
     # Validate the json against the json schema
-    errorMsg = validate_list_metadata_profiles_json(list_metadata_profiles_json, list_metadata_profiles_schema)
+    if verbose == "true":
+        errorMsg = validate_list_metadata_profiles_json(list_metadata_profiles_json, list_metadata_profiles_schema)
+    else:
+        errorMsg = validate_list_metadata_profiles_json(list_metadata_profiles_json, list_metadata_profiles_without_parameters_schema)
+
     assert errorMsg == ""
 
 
