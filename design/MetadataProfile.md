@@ -79,3 +79,6 @@ These set of queries fetch list of namespaces, workloads and containers for spec
 | namespacesForAdditionalLabel | sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!="" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]))                                                                                                                                                                                                                                    |
 | workloadsForAdditionalLabel  | sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!="" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]))                                                                                                                                                                                          |
 | containersForAdditionalLabel | sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!="" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]) <br/> * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!="" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m])) |
+
+
+* #####  Refer [REST APIs doc](/design/MetadataProfileAPI.md) supported for more details.

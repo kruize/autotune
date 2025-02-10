@@ -274,6 +274,20 @@ public class AnalyzerErrorConstants {
             public static final String DELETE_METRIC_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeMetricProfileEntry not found with metric profile name: ";
             public static final String DELETE_METRIC_PROFILE_ENTRY_ERROR_MSG = "Not able to delete metric profile for metric profile {} due to {}";
         }
+
+
+        public static final class ListMetadataProfileAPI {
+            public ListMetadataProfileAPI() {
+            }
+            public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+            public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
+            public static final String INVALID_METADATA_PROFILE_NAME_EXCPTN = "Invalid Metadata Profile Name";
+            public static final String INVALID_METADATA_PROFILE_NAME_MSG = "Given metadata profile name - %s either does not exist or is not valid";
+            public static final String NO_METADATA_PROFILES_EXCPTN = "No metadata profile";
+            public static final String NO_METADATA_PROFILES = "No metadata profiles found!";
+            public static final String LOAD_METADATA_PROFILE_ERROR = "Failed to load saved metadata profile data due to: {} ";
+            public static final String LOAD_ALL_METADATA_PROFILES_ERROR = "Failed to load all the metadata profiles data due to: {} ";
+        }
     }
 
     public static final class ConversionErrors {
