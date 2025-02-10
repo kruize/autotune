@@ -55,68 +55,25 @@ def fetch_bulk_recommendations(job_status_json, logger):
         for exp_name in exp_list:
             logger.info(f"Fetching recommendations for {exp_name}...")
             reco_response = job_status_json['experiments'][exp_name]['apis']['recommendations']['response']
-            recommendations = reco_response[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
-            reco_available_msg = recommendations['notifications']['111000']['message']
-            logger.info(reco_available_msg)
+            if reco_response:
+                recommendations = reco_response[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
+                reco_available_msg = recommendations['notifications']['111000']['message']
+                logger.info(reco_available_msg)
 
-            if reco_available_msg != "Recommendations Are Available":
-                reco_failures = reco_failures + 1
-                logger.info(f"Bulk recommendations failed for the experiment - {exp_name}!")
-                logger.info(reco_response)
-                continue
+                if reco_available_msg != "Recommendations Are Available":
+                    reco_failures += 1
+                    logger.info(f"Bulk recommendations failed for the experiment - {exp_name}!")
+                    logger.info(reco_response)
+                    continue
+                else:
+                    logger.info(f"Fetched recommendations for {exp_name} - Done")
             else:
-                logger.info(f"Fetched recommendations for {exp_name} - Done")
+                logger.info("Recommendations is not available!")
+                reco_failures += 1
 
         if reco_failures != 0:
             logger.info(
                 f"Bulk recommendations failed for some of the experiments, check the log {log_file} for details!")
-            return -1
-        else:
-            return 0
-    else:
-        logger.error("Something went wrong! There are no experiments with recommendations!")
-        return -1
-
-
-def fetch_recommendations(job_status_json, worker_number, logger):
-    logger.info("Fetching processed experiments...")
-    exp_list = list(job_status_json["experiments"].keys())
-
-    logger.info("List of processed experiments")
-    logger.info("**************************************************")
-    logger.info(exp_list)
-    logger.info("**************************************************")
-
-    # List recommendations for the experiments for which recommendations are available
-    recommendations_json_arr = []
-
-    if exp_list:
-        list_reco_failures = 0
-        for exp_name in exp_list:
-            logger.info(f"Fetching recommendations for {exp_name}...")
-            list_reco_response = list_recommendations(exp_name)
-            if list_reco_response.status_code != 200:
-                list_reco_failures = list_reco_failures + 1
-                logger.info(f"List recommendations failed for the experiment - {exp_name}!")
-                reco = list_reco_response.json()
-                logger.info(reco)
-                continue
-            else:
-                logger.info(f"Fetched recommendations for {exp_name} - Done")
-
-            reco = list_reco_response.json()
-            recommendations_json_arr.append(reco)
-
-            # Dump the recommendations into a json file
-            reco_dir = results_dir + "/recommendation_jsons"
-            os.makedirs(reco_dir, exist_ok=True)
-            reco_file = reco_dir + "/recommendations" + str(worker_number) + ".json"
-            with open(reco_file, 'w') as f:
-                json.dump(recommendations_json_arr, f, indent=4)
-
-        if list_reco_failures != 0:
-            logger.info(
-                f"List recommendations failed for some of the experiments, check the log {log_file} for details!")
             return -1
         else:
             return 0

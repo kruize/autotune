@@ -39,7 +39,7 @@ usage: bulk_stress_test.sh
 	    [ -r ] : Results directory path
 	    [ -w ] : No. of parallel workers (default - 5)
         [ -t ] : interval hours (default - 2)
-        [ -s ] : Initial end date (default - 2024-12-18T06:20:00.000Z)
+        [ -s ] : Initial end date (default - current date & time)
         [ -a ] : kruize replicas (default - 3)
         [ -z ] : To register prometheus datasource with kruize
         [ --test ] : Specify the test to be run [time_range/no_config/time_range_split] (default - time_range)

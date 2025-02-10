@@ -31,7 +31,7 @@ CLUSTER_TYPE=openshift
 NAMESPACE=openshift-tuning
 num_workers=5
 interval_hours=6
-initial_end_date="2024-12-18T13:30:00.000Z"
+initial_end_date=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
 
 skip_setup=0
 prometheus_ds=0
@@ -44,7 +44,7 @@ KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-w No. of workers (default - 5)] [-t interval hours (default - 2)] [-s End date of tsdb block (default - 2024-12-18T06:20:00.000Z)]"
+	echo "Usage: [-i Kruize image] [-w No. of workers (default - 5)] [-t interval hours (default - 2)] [-s End date of tsdb block (default - current date & time)]"
 	echo "[-a kruize replicas (default - 3)][-r <resultsdir path>] [--skipsetup skip kruize setup] [ -z to test with prometheus datasource]"
 	echo "[--test Specify the test to be run (default - time_range)] [--url Datasource url (default - ${ds_url}]"
 	exit 1
