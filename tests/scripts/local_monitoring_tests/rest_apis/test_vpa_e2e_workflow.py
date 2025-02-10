@@ -45,6 +45,7 @@ from helpers.list_reco_json_local_monitoring_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.import_metadata_json_validate import *
 from jinja2 import Environment, FileSystemLoader
+from helpers.autoscaler_utils import *
 
 metric_profile_dir = get_metric_profile_dir()
 
@@ -115,7 +116,7 @@ def test_workflow_for_vpa_exps(cluster_type):
     content = template.render(
         version="v2.0", experiment_name="optimize-sysbench", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
         mode="auto", target_cluster="local", datasource="prometheus-1", experiment_type="container", kubernetes_obj_type="deployment", name="sysbench",
-        namespace="vpa", namespace_name=None, container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min",
+        namespace="vpa", namespace_name=None, container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min",threshold="0.1"
     )
 
     # Convert rendered content to a dictionary
