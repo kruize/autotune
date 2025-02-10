@@ -57,7 +57,7 @@ KRUIZE_UI_REPO="quay.io/kruize/kruize-ui"
 KRUIZE_UI_VERSION="$(curl -s https://raw.githubusercontent.com/kruize/kruize-ui/mvp_demo/package.json | grep -m1 '"version"' | tr -d ' ' | cut -d: -f2 | tr -d \" | sed 's/,$//')"
 KRUIZE_UI_DOCKER_IMAGE=${KRUIZE_UI_REPO}:${KRUIZE_UI_VERSION}
 
-HPO_DOCKER_REPO="docker.io/kruize/hpo"
+HPO_DOCKER_REPO="quay.io/kruize/hpo"
 # From the kruize/hpo repo
 HPO_VERSION=0.0.2
 HPO_DOCKER_IMAGE=${HPO_DOCKER_REPO}:${HPO_VERSION}

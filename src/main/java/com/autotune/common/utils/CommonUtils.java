@@ -261,7 +261,8 @@ public class CommonUtils {
         if (datasource.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
             return (new StringBuilder())
                     .append(dataSourceInfo.getUrl().toString())
-                    .append("/api/v1/query?query=")
+                    .append(dataSourceInfo.getUrl().toString().endsWith("/") ? "" : "/")
+                    .append("api/v1/query?query=")
                     .toString();
         }
         return null;

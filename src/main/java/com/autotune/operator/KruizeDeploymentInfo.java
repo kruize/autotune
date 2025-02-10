@@ -90,6 +90,7 @@ public class KruizeDeploymentInfo {
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
     public static Boolean is_ros_enabled = false;
+    public static String datasource_via_env = null;
 
 
     private KruizeDeploymentInfo() {

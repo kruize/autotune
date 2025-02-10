@@ -85,6 +85,7 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
         Object queryResult;
 
         String query = KruizeConstants.DataSourceConstants.PROMETHEUS_REACHABILITY_QUERY;
+        LOGGER.debug("query : {}",query);
         CommonUtils.DatasourceReachabilityStatus reachabilityStatus;
 
         queryResult = this.getValueForQuery(dataSource, query);
@@ -135,6 +136,10 @@ public class PrometheusDataOperatorImpl extends DataSourceOperatorImpl {
     public JSONObject getJsonObjectForQuery(DataSourceInfo dataSource, String query) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         // Create the client
         GenericRestApiClient apiClient = new GenericRestApiClient(dataSource);
+        LOGGER.debug("url : {}",CommonUtils.getBaseDataSourceUrl(
+                dataSource,
+                KruizeConstants.SupportedDatasources.PROMETHEUS
+        ));
         apiClient.setBaseURL(CommonUtils.getBaseDataSourceUrl(
                 dataSource,
                 KruizeConstants.SupportedDatasources.PROMETHEUS
