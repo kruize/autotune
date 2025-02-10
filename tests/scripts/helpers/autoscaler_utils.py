@@ -26,7 +26,7 @@ def check_vpa_exists(vpa_name, namespace):
         output = subprocess.check_output(command, shell=True, stderr=subprocess.DEVNULL)
         found_vpa = output.decode('utf-8').strip()
 
-        asse
+        
         if found_vpa == vpa_name:
             print(f"VPA '{vpa_name}' exists in namespace '{namespace}'.")
             return True
