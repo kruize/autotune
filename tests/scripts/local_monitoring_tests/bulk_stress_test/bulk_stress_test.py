@@ -273,7 +273,7 @@ def parallel_requests_to_bulk():
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         # Submit all the tasks to the executor
         futures = [
-            executor.submit(invoke_bulk, worker_number, current_start_time, current_end_time) if test == "time_range" else executor.submit(invoke, worker_number)
+            executor.submit(invoke_bulk, worker_number, current_start_time, current_end_time) if test == "time_range" else executor.submit(invoke_bulk, worker_number)
             for worker_number in range(1, max_workers+1)
         ]
         
