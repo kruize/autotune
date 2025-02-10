@@ -716,7 +716,6 @@ public class KruizeConstants {
         public static final String IS_ROS_ENABLED = "isROSEnabled";
         public static final String DATASOURCE_VIA_ENV = "datasource";
         public static final String IS_KAFKA_ENABLED = "isKafkaEnabled";
-        public static final String KAFKA_BOOTSTRAP_SERVERS = "kafkaBootstrapServers";
     }
 
     public static final class RecommendationEngineConstants {
@@ -933,7 +932,7 @@ public class KruizeConstants {
     }
 
     public static final class MetadataProfileConstants {
-        public static final String METADATA_PROFILE_VALIDATION_FAILURE = "MetadataProfile validation failed: ";
+        public static final String METADATA_PROFILE_VALIDATION_FAILURE = "Validation failed: ";
         public static final String METADATA_PROFILE_VALIDATION_AND_ADD_FAILURE = "Validate and add metadata profile failed: {}";
         public static final String ADD_METADATA_PROFILE = "Added MetadataProfile: {}";
         public static final String CHECKING_AVAILABLE_METADATA_PROFILE_FROM_DB = "Checking available metadata profiles from database: ";
@@ -942,11 +941,12 @@ public class KruizeConstants {
         public static final String ADDING_METADATA_PROFILE = "Trying to add the metadata profile to collection: ";
         public static final String METADATA_PROFILE_ALREADY_EXISTS = "MetadataProfile already exists: ";
         public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: ";
+        public static final String CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE = "Failed to convert input JSON to MetadataProfile object due to: {}";
 
         public static class MetadataProfileErrorMsgs {
 
             public static final String ADD_METADATA_PROFILE_TO_DB_ERROR = "Failed to add Metadata Profile due to {}";
-            public static final String LOAD_METADATA_PROFILES_FROM_DB_FAILURE = "None of the Metadata Profiles loaded from DB.";
+            public static final String LOAD_METADATA_PROFILES_FROM_DB_FAILURE = "Failed to load Metadata Profiles from DB.";
             public static final String CONVERTING_METADATA_PROFILE_DB_OBJECT_ERROR = "Error occurred while reading from MetadataProfile DB object due to : {}";
             public static final String PROCESS_METADATA_PROFILE_OBJECT_ERROR = "Failed to process metadata of metadataProfile object due to : {}";
             public static final String PROCESS_QUERY_VARIABLES_ERROR = "Error occurred while processing query_variables data due to : {}";
@@ -956,6 +956,15 @@ public class KruizeConstants {
             }
         }
 
+    }
+
+    public static final class MetadataProfileAPIMessages {
+        public static final String CREATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s created successfully.";
+        public static final String VIEW_METADATA_PROFILES_MSG = " View Metadata Profiles at /listMetadataProfiles";
+        public static final String ADD_METADATA_PROFILE_TO_DB_WITH_VERSION = "Added Metadata Profile : {} into the DB with version: {}";
+
+        private MetadataProfileAPIMessages() {
+        }
     }
 
     public static final class KAFKA_CONSTANTS {

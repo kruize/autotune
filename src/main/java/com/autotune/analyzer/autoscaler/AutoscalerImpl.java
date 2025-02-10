@@ -14,22 +14,22 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.recommendations.updater;
+package com.autotune.analyzer.autoscaler;
 
+import com.autotune.analyzer.autoscaler.vpa.VpaAutoscalerImpl;
 import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidRecommendationUpdaterType;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
-import com.autotune.analyzer.recommendations.updater.vpa.VpaUpdaterImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RecommendationUpdaterImpl implements RecommendationUpdater {
+public class AutoscalerImpl implements Autoscaler {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationUpdaterImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(AutoscalerImpl.class);
 
     /**
      * Retrieves an instance of a specific updater implementation based on the provided updater type
@@ -39,9 +39,9 @@ public class RecommendationUpdaterImpl implements RecommendationUpdater {
      * @throws InvalidRecommendationUpdaterType If the provided updater type doesn't match any valid type of updater.
      */
     @Override
-    public RecommendationUpdaterImpl getUpdaterInstance(String updaterType) throws InvalidRecommendationUpdaterType {
-        if (AnalyzerConstants.RecommendationUpdaterConstants.SupportedUpdaters.VPA.equalsIgnoreCase(updaterType)) {
-            return VpaUpdaterImpl.getInstance();
+    public AutoscalerImpl getAutoscalerInstance(String updaterType) throws InvalidRecommendationUpdaterType {
+        if (AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA.equalsIgnoreCase(updaterType)) {
+            return VpaAutoscalerImpl.getInstance();
         } else {
             throw new InvalidRecommendationUpdaterType(String.format(AnalyzerErrorConstants.RecommendationUpdaterErrors.UNSUPPORTED_UPDATER_TYPE, updaterType));
         }
@@ -68,7 +68,7 @@ public class RecommendationUpdaterImpl implements RecommendationUpdater {
     @Override
     public KruizeObject generateResourceRecommendationsForExperiment(String experimentName) {
         try {
-            LOGGER.debug(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.GENERATING_RECOMMENDATIONS, experimentName);
+            LOGGER.debug(AnalyzerConstants.AutoscalerConstants.InfoMsgs.GENERATING_RECOMMENDATIONS, experimentName);
             // generating latest recommendations for experiment
             RecommendationEngine recommendationEngine = new RecommendationEngine(experimentName, null, null);
             int calCount = 0;
@@ -76,7 +76,7 @@ public class RecommendationUpdaterImpl implements RecommendationUpdater {
             if (validationMessage.isEmpty()) {
                 KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, null);
                 if (kruizeObject.getValidation_data().isSuccess()) {
-                    LOGGER.debug(AnalyzerConstants.RecommendationUpdaterConstants.InfoMsgs.GENERATED_RECOMMENDATIONS, experimentName);
+                    LOGGER.debug(AnalyzerConstants.AutoscalerConstants.InfoMsgs.GENERATED_RECOMMENDATIONS, experimentName);
                     return kruizeObject;
                 } else {
                     throw new Exception(kruizeObject.getValidation_data().getMessage());

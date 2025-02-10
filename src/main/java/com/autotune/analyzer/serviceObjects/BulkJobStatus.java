@@ -149,7 +149,7 @@ public class BulkJobStatus {
         private String jobID;
         private String status;
         private int total_experiments;
-        private AtomicInteger processed_experiments;  //todo : If the primary operations are increments or simple atomic updates, use AtomicInteger. It is designed for lock-free thread-safe access
+        private AtomicInteger processed_experiments;
         @JsonProperty("job_start_time")
         private String startTime; // Change to String to store formatted time
         @JsonProperty("job_end_time")
@@ -262,28 +262,28 @@ public class BulkJobStatus {
 
     @JsonFilter("experimentFilter")
     public static class API_Response {
-        private CreateAPIResponse create = new CreateAPIResponse();
-        private GenerateAPIResponse recommendations = new GenerateAPIResponse();
+        private CreateExperimentAPIResponse create = new CreateExperimentAPIResponse();
+        private GenerateRecommendationsAPIResponse recommendations = new GenerateRecommendationsAPIResponse();
 
-        public CreateAPIResponse getCreate() {
+        public CreateExperimentAPIResponse getCreate() {
             return create;
         }
 
-        public void setCreate(CreateAPIResponse create) {
+        public void setCreate(CreateExperimentAPIResponse create) {
             this.create = create;
         }
 
-        public GenerateAPIResponse getRecommendations() {
+        public GenerateRecommendationsAPIResponse getRecommendations() {
             return recommendations;
         }
 
-        public void setRecommendations(GenerateAPIResponse recommendations) {
+        public void setRecommendations(GenerateRecommendationsAPIResponse recommendations) {
             this.recommendations = recommendations;
         }
     }
 
     @JsonFilter("experimentFilter")
-    public static class CreateAPIResponse {
+    public static class CreateExperimentAPIResponse {
         private KruizeResponse response;
         private CreateExperimentAPIObject request;
 
@@ -305,14 +305,14 @@ public class BulkJobStatus {
     }
 
     @JsonFilter("experimentFilter")
-    public static class GenerateAPIResponse {
+    public static class GenerateRecommendationsAPIResponse {
 
         Object response = null;
 
-        public GenerateAPIResponse() {
+        public GenerateRecommendationsAPIResponse() {
         }
 
-        public GenerateAPIResponse(Object response) {
+        public GenerateRecommendationsAPIResponse(Object response) {
             if (response instanceof List) {
                 this.response = Optional.of((List<ListRecommendationsAPIObject>) response);
             }
