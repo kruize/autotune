@@ -83,12 +83,19 @@ public class Converters {
                 kruizeObject.setExperimentType(createExperimentAPIObject.getExperimentType());
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
                 kruizeObject.setTrial_settings(createExperimentAPIObject.getTrialSettings());
-                TermSettings termSettings = createExperimentAPIObject.getRecommendationSettings().getTermSettings();
                 RecommendationSettings recommendationSettings = new RecommendationSettings();
-                recommendationSettings.setTermSettings(termSettings);
-                ModelSettings modelSettings = createExperimentAPIObject.getRecommendationSettings().getModelSettings();
-                recommendationSettings.setModelSettings(modelSettings);
-                recommendationSettings.setThreshold(createExperimentAPIObject.getRecommendationSettings().getThreshold());
+                RecommendationSettings apiRecommendationSettings = createExperimentAPIObject.getRecommendationSettings();
+                if (apiRecommendationSettings != null) {
+                    if (apiRecommendationSettings.getTermSettings() != null) {
+                        recommendationSettings.setTermSettings(apiRecommendationSettings.getTermSettings());
+                    }
+                    if (apiRecommendationSettings.getModelSettings() != null) {
+                        recommendationSettings.setModelSettings(apiRecommendationSettings.getModelSettings());
+                    }
+                    if (apiRecommendationSettings.getThreshold() != null) {
+                        recommendationSettings.setThreshold(apiRecommendationSettings.getThreshold());
+                    }
+                }
                 kruizeObject.setRecommendation_settings(recommendationSettings);
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
