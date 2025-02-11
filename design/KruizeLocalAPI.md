@@ -2573,7 +2573,7 @@ If no experiment type is specified, it will default to `container`.
 **Request with `model_settings` and `term_settings` field**
 
 Under `recommendation_settings`, the `model_settings` and `term_settings` field is optional 
-and allows you to specify model and term details. Currently, it supports configurations 
+and can be used to specify model and term details. Currently, it supports configurations 
 for a single model and a single term. Model can be set to either cost or performance and
 term can be set to short, medium or long term.
 
