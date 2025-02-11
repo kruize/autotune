@@ -147,7 +147,7 @@ public class RecommendationEngine {
 
         RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
         List<String> models = new ArrayList<>() ;
-        models.add("performance");
+        models.add(KruizeConstants.JSONKeys.PERFORMANCE);
         ModelSettings modelSettings = new ModelSettings();
         modelSettings.setModels(models);
         recommendationSettings.setModelSettings(modelSettings);

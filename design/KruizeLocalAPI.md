@@ -2577,8 +2577,8 @@ and can be used to specify model and term details. Currently, it supports config
 for a single model and a single term. Model can be set to either cost or performance and
 term can be set to short, medium or long term.
 
-If mode is set to auto or recreate and the above settings are not mentioned then it will
-default to `performance` and `short` term.
+If mode is set to auto or recreate then there can only be one term and one model chosen.
+By default, model will be `performance` and term will be set to `short` term.
 
 <details>
   <summary><b>Example Request with custom model_settings and term_settings </b></summary>
