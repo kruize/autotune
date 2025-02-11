@@ -66,7 +66,7 @@ public class KruizeDeploymentInfo {
     public static String database_admin_username;
     public static String database_admin_password;
     public static String database_ssl_mode;
-
+    public static boolean cacheJobInMemory = true;
     public static String cloudwatch_logs_access_key_id;
     public static String cloudwatch_logs_secret_access_key;
     public static String cloudwatch_logs_log_group;

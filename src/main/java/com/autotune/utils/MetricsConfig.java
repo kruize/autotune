@@ -17,9 +17,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MetricsConfig {
     
     public static Timer timerListRec, timerListExp, timerCreateExp, timerUpdateResults, timerUpdateRecomendations;
-    public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName, timerLoadRecExpNameDate, timerBoxPlots;
+    public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName, timerLoadBulkJobId, timerUpdateBulkJobId, timerLoadRecExpNameDate, timerBoxPlots;
     public static Timer timerLoadAllRec, timerLoadAllExp, timerLoadAllResults;
-    public static Timer timerAddRecDB, timerAddResultsDB, timerAddExpDB, timerAddBulkResultsDB;
+    public static Timer timerAddRecDB, timerAddResultsDB, timerAddExpDB, timerAddBulkResultsDB, timerSaveBulkJobDB,  timerAddBulkJob;
     public static Timer timerAddPerfProfileDB, timerLoadPerfProfileName, timerLoadAllPerfProfiles;
     public static Timer timerAddMetadataProfileDB, timerLoadMetadataProfileName, timerLoadAllMetadataProfiles;
     public static Timer timerImportMetadata, timerGetMetadata;
@@ -28,7 +28,7 @@ public class MetricsConfig {
     public static Timer.Builder timerBListRec, timerBListExp, timerBCreateExp, timerBUpdateResults, timerBUpdateRecommendations;
     public static Timer.Builder timerBLoadRecExpName, timerBLoadResultsExpName, timerBLoadExpName, timerBLoadRecExpNameDate, timerBBoxPlots;
     public static Timer.Builder timerBLoadAllRec, timerBLoadAllExp, timerBLoadAllResults;
-    public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB;
+    public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB, timerBLoadBulkJobId, timerBUpdateBulkJobId, timerBSaveBulkJobDB, timerBaddBulkJob;
     public static Timer.Builder timerBAddPerfProfileDB, timerBLoadPerfProfileName, timerBLoadAllPerfProfiles;
     public static Counter.Builder timerBKruizeNotifications, timerBBulkJobs;
     public static PrometheusMeterRegistry meterRegistry;
@@ -37,12 +37,12 @@ public class MetricsConfig {
     public static Timer.Builder timerBImportMetadata, timerBGetMetadata;
     public static Timer.Builder timerBJobStatus, timerBCreateBulkJob, timerBGetExpMap, timerBCreateBulkExp, timerBGenerateBulkRec, timerBRunJob;
     public static Timer.Builder timerBAddMetadataProfileDB, timerBLoadMetadataProfileName, timerBLoadAllMetadataProfiles;
+    public static Gauge.Builder timerBBulkRunJobs;
     private static MetricsConfig INSTANCE;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
     public String DB_METRIC_DESC = "Time taken for KruizeDB methods";
     public String METHOD_METRIC_DESC = "Time taken for Kruize methods";
     public static final AtomicInteger activeJobs = new AtomicInteger(0);
-    public static Gauge.Builder timerBBulkRunJobs;
 
     private MetricsConfig() {
         meterRegistry = new PrometheusMeterRegistry(PrometheusConfig.DEFAULT);
@@ -65,6 +65,10 @@ public class MetricsConfig {
         timerBAddResultsDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addResultToDB");
         timerBAddBulkResultsDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addBulkResultsToDBAndFetchFailedResults");
         timerBAddExpDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addExperimentToDB");
+        timerBSaveBulkJobDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "saveBulkJobDB");
+        timerBLoadBulkJobId = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "getBulkJobDB");
+        timerBUpdateBulkJobId = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updateBulkJobDB");
+
         timerBAddPerfProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addPerformanceProfileToDB");
         timerBLoadPerfProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadPerformanceProfileByName");
         timerBLoadAllPerfProfiles = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllPerformanceProfiles");
@@ -74,6 +78,8 @@ public class MetricsConfig {
         timerBImportDSMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "dsmetadata").tag("method", "POST");
         timerBListDSMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "dsmetadata").tag("method", "GET");
         timerBKruizeNotifications = Counter.builder("KruizeNotifications").description("Kruize notifications").tag("api", "updateRecommendations");
+
+        timerBaddBulkJob = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addBulkJobToDB");
 
         timerBImportMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "datasources").tag("method", "importMetadata");
         timerBGetMetadata = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "datasources").tag("method", "getMetadata");

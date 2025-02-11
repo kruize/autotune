@@ -24,6 +24,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.*;
+import com.autotune.database.table.lm.BulkJob;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
@@ -653,6 +654,106 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return validationOutputData;
     }
+
+    @Override
+    public ValidationOutputData bulkJobSave(BulkJob bulkJob) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        String statusValue = "failure";
+        Timer.Sample timerSaveBulkJobDB = Timer.start(MetricsConfig.meterRegistry());
+        try {
+            try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+                try {
+                    tx = session.beginTransaction();
+                    session.saveOrUpdate(bulkJob);
+                    tx.commit();
+                    // TODO: remove native sql query and transient
+                    validationOutputData.setSuccess(true);
+                    statusValue = "success";
+                } catch (HibernateException e) {
+                    LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+                    if (tx != null) tx.rollback();
+                    e.printStackTrace();
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(e.getMessage());
+                    //TODO: save error to API_ERROR_LOG
+                }
+            }
+        } catch (Exception e) {
+            LOGGER.debug("Bulk JOB Save ={}", bulkJob);
+            LOGGER.error("Not able to save BulkJob due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerSaveBulkJobDB) {
+                MetricsConfig.timerSaveBulkJobDB = MetricsConfig.timerBSaveBulkJobDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerSaveBulkJobDB.stop(MetricsConfig.timerSaveBulkJobDB);
+            }
+        }
+        return validationOutputData;
+    }
+
+    @Override
+    public BulkJob findBulkJobById(String jobId) throws Exception {
+        BulkJob bulkJob = null;
+        String statusValue = "failure";
+        Timer.Sample timerGetBulkJobDB = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            bulkJob = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_BULKJOBS_BY_JOB_ID, BulkJob.class)
+                    .setParameter("jobId", jobId).getSingleResult();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load bulk JOB {} due to {}", jobId, e.getMessage());
+            throw new Exception("Error while loading BulkJob from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerGetBulkJobDB) {
+                MetricsConfig.timerLoadBulkJobId = MetricsConfig.timerBLoadBulkJobId.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerGetBulkJobDB.stop(MetricsConfig.timerLoadExpName);
+            }
+        }
+        return bulkJob;
+    }
+
+    @Override
+    public ValidationOutputData updateBulkJobByExperiment(String jobId, String experimentName, String notification, String recommendationJson) throws Exception {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerGetBulkJobDB = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            // Construct JSON paths for notification and recommendations fields
+            String notificationPath = "{experiments,\"" + experimentName + "\",notification}";
+            String recommendationPath = "{experiments,\"" + experimentName + "\",recommendations}";
+
+            // Native SQL query using jsonb_set for partial updates
+            String sql = UPDATE_BULKJOB_BY_ID;
+
+            // Execute the query
+            session.createNativeQuery(sql)
+                    .setParameter("notificationPath", notificationPath)
+                    .setParameter("newNotification", notification == null ? "null" : "\"" + notification + "\"") // Handle null value
+                    .setParameter("recommendationPath", recommendationPath)
+                    .setParameter("newRecommendation", recommendationJson)
+                    .setParameter("jobId", jobId)
+                    .executeUpdate();
+            validationOutputData.setSuccess(true);
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load bulk JOB {} due to {}", jobId, e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+            throw new Exception("Error while loading BulkJob from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerGetBulkJobDB) {
+                MetricsConfig.timerUpdateBulkJobId = MetricsConfig.timerBUpdateBulkJobId.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerGetBulkJobDB.stop(MetricsConfig.timerLoadExpName);
+            }
+        }
+        return validationOutputData;
+    }
+
+    @Override
+    public void deleteBulkJobByID(String jobId) {
+        //todo
+    }
+
 
     @Override
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {
