@@ -243,7 +243,7 @@ public class MetadataProfileService extends HttpServlet{
             loadMetadataProfilesFromCollection(metadataProfilesMap, metadataProfileName);
 
             // Check if metadata profile exists
-            if (!metadataProfilesMap.isEmpty() && metadataProfilesMap.containsKey(metadataProfileName)) {
+            if (metadataProfilesMap.containsKey(metadataProfileName)) {
                 try {
                     // Deletes database and in-memory metadata profile object stored
                     deleteMetadataProfile(metadataProfileName);
@@ -336,10 +336,9 @@ public class MetadataProfileService extends HttpServlet{
      * @param metadataProfileName Name of the metadata profile to be deleted
      */
     private void deleteMetadataProfile(String metadataProfileName) {
-        ValidationOutputData deletedMetadataProfileFromDB = null;
         try {
             // delete the metadata profile from DB
-            deletedMetadataProfileFromDB = new ExperimentDAOImpl().deleteKruizeLMMetadataProfileEntryByName(metadataProfileName);
+            ValidationOutputData deletedMetadataProfileFromDB = new ExperimentDAOImpl().deleteKruizeLMMetadataProfileEntryByName(metadataProfileName);
             if (deletedMetadataProfileFromDB.isSuccess()) {
                 // remove in-memory metadata profile
                 MetadataProfileCollection.getInstance().getMetadataProfileCollection().remove(metadataProfileName);

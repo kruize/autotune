@@ -784,6 +784,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             }
         } catch (Exception e) {
             LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_ENTRY_ERROR_MSG, metricProfileName, e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
         }
         return validationOutputData;
     }
