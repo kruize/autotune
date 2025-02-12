@@ -30,7 +30,8 @@ CLUSTER_TYPE=openshift
 
 NAMESPACE=openshift-tuning
 num_workers=5
-interval_hours=6
+days_of_res=15
+interval_hours=2
 initial_end_date=$(date -u +"%Y-%m-%dT%H:%M:%S.000Z")
 
 skip_setup=0
@@ -45,8 +46,8 @@ KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
 function usage() {
 	echo
 	echo "Usage: [-i Kruize image] [-w No. of workers (default - 5)] [-t interval hours (default - 2)] [-s End date of tsdb block (default - current date & time)]"
-	echo "[-a kruize replicas (default - 3)][-r <resultsdir path>] [--skipsetup skip kruize setup] [ -z to test with prometheus datasource]"
-	echo "[--test Specify the test to be run (default - time_range)] [--url Datasource url (default - ${ds_url}]"
+	echo "[-d no. of days of metrics usage data (default - 15)] [-a kruize replicas (default - 3)][-r <resultsdir path>] [--skipsetup skip kruize setup]"
+	echo "[ -z to test with prometheus datasource] [--test Specify the test to be run (default - time_range)] [--url Datasource url (default - ${ds_url}]"
 	exit 1
 }
 
@@ -94,7 +95,7 @@ function kruize_local_thanos_patch() {
 }
 
 
-while getopts r:i:w:s:t:a:zh:-: gopts
+while getopts r:i:w:d:s:t:a:zh:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -122,6 +123,9 @@ do
 		;;
 	w)
 		num_workers="${OPTARG}"		
+		;;
+  d)
+		days_of_res="${OPTARG}"
 		;;
 	s)
 		initial_end_date="${OPTARG}"
@@ -216,7 +220,7 @@ export PYTHONUNBUFFERED=1
 echo ""
 echo "Running bulk stress test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 echo ""
-python3 bulk_stress_test.py --test "${test}" --workers "${num_workers}" --enddate "${initial_end_date}" --interval "${interval_hours}" --resultsdir "${LOG_DIR}" --prometheus "${prometheus_ds}" | tee -a ${LOG}
+python3 bulk_stress_test.py --test "${test}" --workers "${num_workers}" --days_of_res "${days_of_res}" --enddate "${initial_end_date}" --interval "${interval_hours}" --resultsdir "${LOG_DIR}" --prometheus "${prometheus_ds}" | tee -a ${LOG}
 
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")

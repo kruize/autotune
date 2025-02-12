@@ -44,11 +44,6 @@ def fetch_bulk_recommendations(job_status_json, logger):
     logger.info("Fetching processed experiments...")
     exp_list = list(job_status_json["experiments"].keys())
 
-    logger.info("List of processed experiments")
-    logger.info("**************************************************")
-    logger.info(exp_list)
-    logger.info("**************************************************")
-
     # List recommendations for the experiments for which recommendations are available
     if exp_list:
         reco_failures = 0
@@ -57,23 +52,29 @@ def fetch_bulk_recommendations(job_status_json, logger):
             reco_response = job_status_json['experiments'][exp_name]['apis']['recommendations']['response']
             if reco_response:
                 recommendations = reco_response[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
-                reco_available_msg = recommendations['notifications']['111000']['message']
-                logger.info(reco_available_msg)
-
-                if reco_available_msg != "Recommendations Are Available":
-                    reco_failures += 1
-                    logger.info(f"Bulk recommendations failed for the experiment - {exp_name}!")
-                    logger.info(reco_response)
-                    continue
-                else:
-                    logger.info(f"Fetched recommendations for {exp_name} - Done")
+                notifications_list = list(recommendations['notifications'].keys())
+                for notification_code in notifications_list:
+                    if notification_code == "111000":
+                        reco_available_msg = recommendations['notifications'][notification_code]['message']
+                        if reco_available_msg != "Recommendations Are Available":
+                            reco_failures += 1
+                            logger.info(f"Bulk recommendations failed for the experiment - {exp_name}!")
+                            continue
+                        else:
+                            if prometheus == 0:
+                                logger.info(f"Recommendations is not available for the experiment - {exp_name}!")
+                                reco_failures += 1
+                    elif notification_code == "120001" and prometheus == 0:
+                        reco_failures += 1
+                        logger.info(f"Recommendations is not available for the experiment - {exp_name}!")
             else:
-                logger.info("Recommendations is not available!")
-                reco_failures += 1
+                if prometheus == 0:
+                    logger.info("Recommendations is not available!")
+                    reco_failures += 1
 
         if reco_failures != 0:
             logger.info(
-                f"Bulk recommendations failed for some of the experiments, check the log {log_file} for details!")
+                f"Bulk recommendations failed for some of the experiments, check the logs for details!")
             return -1
         else:
             return 0
@@ -173,6 +174,7 @@ def invoke_bulk(worker_number, start_time=None, end_time=None):
         return_status = fetch_bulk_job_status(job_id, worker_number, logger)
         return return_status
     except Exception as e:
+        print("Exception occurred:", repr(e))
         return {'error': str(e)}
 
 
@@ -245,8 +247,6 @@ def parallel_requests_to_bulk():
 
 def parallel_requests_with_time_range_split(max_workers):
     results = []
-    # This test passes 6 hrs time range from end_time to each worker thread
-
     print(f"days_of_res - {days_of_res}")
     print(f"interval_hours - {interval_hours}")
     actual_max_workers = int((days_of_res * 24) / interval_hours)
@@ -297,6 +297,7 @@ if __name__ == '__main__':
     # add the named arguments
     parser.add_argument('--test', type=str, help='specify the test to be run')
     parser.add_argument('--workers', type=str, help='specify the number of workers')
+    parser.add_argument('--days_of_res', type=str, help='specify the number of days of results')
     parser.add_argument('--enddate', type=str, help='Specify end date and time of tsdb blocks in "%Y-%m-%dT%H:%M:%S.%fZ" format.')
     parser.add_argument('--interval', type=str, help='specify the interval hours')
     parser.add_argument('--resultsdir', type=str, help='specify the results dir')
@@ -310,6 +311,9 @@ if __name__ == '__main__':
 
     if args.workers:
         max_workers = int(args.workers)
+
+    if args.workers:
+        days_of_res = int(args.days_of_res)
 
     if args.enddate:
         initial_end_time = args.enddate
