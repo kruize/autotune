@@ -60,10 +60,10 @@ public class DataSourceManager {
      * Imports Metadata for a specific data source using associated DataSourceInfo.
      *
      * @param dataSourceInfo
-     * @param uniqueKey      this is used as labels in query example container="xyz" namespace="abc"
-     * @param startTime      Get metadata from starttime to endtime
-     * @param endTime        Get metadata from starttime to endtime
-     * @param steps          the interval between data points in a range query
+     * @param uniqueKey        this is used as labels in query example container="xyz" namespace="abc"
+     * @param startTime        Get metadata from starttime to endtime
+     * @param endTime          Get metadata from starttime to endtime
+     * @param steps            the interval between data points in a range query
      * @param includeResources
      * @param excludeResources
      * @return

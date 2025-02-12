@@ -27,26 +27,26 @@ public class DataSourceMetadataHelper {
      *
      * @param resultArray The JsonArray containing the namespace information.
      * @return A HashMap<String, DataSourceNamespace> representing namespaces
-     *
+     * <p>
      * Example:
      * input resultArray structure:
      * {
-     *   "result": [
-     *     {
-     *       "metric": {
-     *         "namespace": "exampleNamespace"
-     *       }
-     *     },
-     *     // ... additional result objects ...
-     *   ]
+     * "result": [
+     * {
+     * "metric": {
+     * "namespace": "exampleNamespace"
      * }
-     *
+     * },
+     * // ... additional result objects ...
+     * ]
+     * }
+     * <p>
      * The function would parse the JsonObject and return a HashMap like:
      * {
-     *   "exampleNamespace": {
-     *     "namespaceName": "exampleNamespace"
-     *   },
-     *   // ... additional namespace entries ...
+     * "exampleNamespace": {
+     * "namespaceName": "exampleNamespace"
+     * },
+     * // ... additional namespace entries ...
      * }
      */
     public HashMap<String, DataSourceNamespace> getActiveNamespaces(JsonArray resultArray) {
@@ -71,7 +71,7 @@ public class DataSourceMetadataHelper {
                 }
                 String namespace = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.NAMESPACE).getAsString();
 
-                DataSourceNamespace dataSourceNamespace = new DataSourceNamespace(namespace,null);
+                DataSourceNamespace dataSourceNamespace = new DataSourceNamespace(namespace, null);
                 namespaceMap.put(namespace, dataSourceNamespace);
             }
         } catch (JsonParseException e) {
@@ -96,32 +96,32 @@ public class DataSourceMetadataHelper {
      *
      * @param resultArray The JsonArray containing the workload information.
      * @return A HashMap<String, HashMap<String, DataSourceWorkload>> representing namespaces
-     *         and their associated workload details.
-     *
+     * and their associated workload details.
+     * <p>
      * Example:
      * input resultArray structure:
      * {
-     *   "result": [
-     *     {
-     *       "metric": {
-     *         "namespace": "exampleNamespace",
-     *         "workload": "exampleWorkload",
-     *         "workloadType": "exampleWorkloadType"
-     *       }
-     *     },
-     *     // ... additional result objects ...
-     *   ]
+     * "result": [
+     * {
+     * "metric": {
+     * "namespace": "exampleNamespace",
+     * "workload": "exampleWorkload",
+     * "workloadType": "exampleWorkloadType"
      * }
-     *
+     * },
+     * // ... additional result objects ...
+     * ]
+     * }
+     * <p>
      * The function would parse the JsonObject and return a nested HashMap like:
      * {
-     *   "exampleNamespace": {
-     *     "exampleWorkload": {
-     *       "workload": "exampleWorkload",
-     *       "workloadType": "exampleWorkloadType"
-     *     }
-     *   },
-     *   // ... additional namespace entries ...
+     * "exampleNamespace": {
+     * "exampleWorkload": {
+     * "workload": "exampleWorkload",
+     * "workloadType": "exampleWorkloadType"
+     * }
+     * },
+     * // ... additional namespace entries ...
      * }
      */
     public HashMap<String, HashMap<String, DataSourceWorkload>> getWorkloadInfo(JsonArray resultArray) {
@@ -152,7 +152,7 @@ public class DataSourceMetadataHelper {
 
                 String workloadName = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD).getAsString();
                 String workloadType = metricObject.get(KruizeConstants.DataSourceConstants.DataSourceQueryMetricKeys.WORKLOAD_TYPE).getAsString();
-                DataSourceWorkload dataSourceWorkload = new DataSourceWorkload(workloadName, workloadType,null);
+                DataSourceWorkload dataSourceWorkload = new DataSourceWorkload(workloadName, workloadType, null);
 
                 // Put the DataSourceWorkload into the inner hashmap directly
                 namespaceWorkloadMap.get(namespace).put(workloadName, dataSourceWorkload);
@@ -178,32 +178,32 @@ public class DataSourceMetadataHelper {
      *
      * @param resultArray The JsonArray containing the container information.
      * @return A HashMap<String, HashMap<String, DataSourceContainer>> representing workloads
-     *         and their associated container details.
-     *
+     * and their associated container details.
+     * <p>
      * Example:
      * input resultArray structure:
      * {
-     *   "result": [
-     *     {
-     *       "metric": {
-     *         "workload_name": "exampleWorkloadName",
-     *         "container": "exampleContainer",
-     *         "image_name": "exampleImageName"
-     *       }
-     *     },
-     *     // ... additional result objects ...
-     *   ]
+     * "result": [
+     * {
+     * "metric": {
+     * "workload_name": "exampleWorkloadName",
+     * "container": "exampleContainer",
+     * "image_name": "exampleImageName"
      * }
-     *
+     * },
+     * // ... additional result objects ...
+     * ]
+     * }
+     * <p>
      * The function would parse the JsonObject and return a nested HashMap like:
      * {
-     *   "exampleWorkloadName": {
-     *     "exampleContainer": {
-     *       "containerName": "exampleContainer",
-     *       "containerImageName": "exampleImageName"
-     *     }
-     *   },
-     *   // ... additional workload entries ...
+     * "exampleWorkloadName": {
+     * "exampleContainer": {
+     * "containerName": "exampleContainer",
+     * "containerImageName": "exampleImageName"
+     * }
+     * },
+     * // ... additional workload entries ...
      * }
      */
     public HashMap<String, HashMap<String, DataSourceContainer>> getContainerInfo(JsonArray resultArray) {
@@ -254,16 +254,16 @@ public class DataSourceMetadataHelper {
      * Creates and returns a DataSourceMetadataInfo object based on the provided parameters.
      * This function populates the DataSourceMetadataInfo object with information about active namespaces
      *
-     * @param dataSourceName         Name of the data source.
-     * @param namespaceMap           Map of namespace objects
-     * @return                       A DataSourceMetadataInfo object with populated information.
+     * @param dataSourceName Name of the data source.
+     * @param namespaceMap   Map of namespace objects
+     * @return A DataSourceMetadataInfo object with populated information.
      */
     public DataSourceMetadataInfo createDataSourceMetadataInfoObject(String dataSourceName, HashMap<String, DataSourceNamespace> namespaceMap) {
 
         try {
             DataSourceMetadataInfo dataSourceMetadataInfo = new DataSourceMetadataInfo(null);
 
-            DataSource dataSource = new DataSource(dataSourceName,null);
+            DataSource dataSource = new DataSource(dataSourceName, null);
 
             DataSourceCluster dataSourceCluster = new DataSourceCluster(KruizeConstants.DataSourceConstants.
                     DataSourceMetadataInfoConstants.CLUSTER_NAME, namespaceMap);
@@ -289,9 +289,9 @@ public class DataSourceMetadataHelper {
     /**
      * Updates the namespace metadata in the provided DataSourceMetadataInfo object for a specific data source.
      *
-     * @param dataSourceName        The name of the data source to update.
+     * @param dataSourceName         The name of the data source to update.
      * @param dataSourceMetadataInfo The DataSourceMetadataInfo object to update.
-     * @param namespaceMap          A map containing namespace name as keys and namespace object as values.
+     * @param namespaceMap           A map containing namespace name as keys and namespace object as values.
      */
     public void updateNamespaceDataSourceMetadataInfoObject(String dataSourceName, DataSourceMetadataInfo dataSourceMetadataInfo,
                                                             HashMap<String, DataSourceNamespace> namespaceMap) {
@@ -318,9 +318,9 @@ public class DataSourceMetadataHelper {
     /**
      * Validates input parameters and retrieves the DataSourceCluster object.
      *
-     * @param dataSourceName      The name of the data source.
+     * @param dataSourceName         The name of the data source.
      * @param dataSourceMetadataInfo The DataSourceMetadataInfo object.
-     * @param namespaceWorkloadMap  The map containing workload information.
+     * @param namespaceWorkloadMap   The map containing workload information.
      * @return The DataSourceCluster object if validation passes, or null if validation fails.
      */
     private DataSourceCluster validateInputParametersAndGetClusterObject(String dataSourceName, DataSourceMetadataInfo dataSourceMetadataInfo,
@@ -354,12 +354,12 @@ public class DataSourceMetadataHelper {
     /**
      * Updates the workload metadata in the provided DataSourceMetadataInfo object for a specific data source.
      *
-     * @param dataSourceName        The name of the data source to update.
+     * @param dataSourceName         The name of the data source to update.
      * @param dataSourceMetadataInfo The DataSourceMetadataInfo object to update.
-     * @param namespaceWorkloadMap  A map containing namespace as keys and workload data as values.
+     * @param namespaceWorkloadMap   A map containing namespace as keys and workload data as values.
      */
     public void updateWorkloadDataSourceMetadataInfoObject(String dataSourceName, DataSourceMetadataInfo dataSourceMetadataInfo,
-                                                          HashMap<String, HashMap<String, DataSourceWorkload>> namespaceWorkloadMap) {
+                                                           HashMap<String, HashMap<String, DataSourceWorkload>> namespaceWorkloadMap) {
         try {
 
             // Retrieve DataSourceCluster
@@ -387,20 +387,21 @@ public class DataSourceMetadataHelper {
                 dataSourceNamespace.setDataSourceWorkloadHashMap(namespaceWorkloadMap.get(namespace));
             }
         } catch (Exception e) {
-            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.WORKLOAD_METADATA_UPDATE_ERROR+ e.getMessage());
+            LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.WORKLOAD_METADATA_UPDATE_ERROR + e.getMessage());
         }
     }
+
     /**
      * Updates the container metadata in the provided DataSourceMetadataInfo object for a specific data source.
      *
      * @param dataSourceName         The name of the data source to update.
      * @param dataSourceMetadataInfo The DataSourceMetadataInfo object to update.
      * @param namespaceWorkloadMap   A map containing namespace as keys and workload data as values.
-     * @param workloadContainerMap  A map containing workload names as keys and container data as values.
+     * @param workloadContainerMap   A map containing workload names as keys and container data as values.
      */
     public void updateContainerDataSourceMetadataInfoObject(String dataSourceName, DataSourceMetadataInfo dataSourceMetadataInfo,
-                                                           HashMap<String, HashMap<String, DataSourceWorkload>> namespaceWorkloadMap,
-                                                           HashMap<String, HashMap<String, DataSourceContainer>> workloadContainerMap) {
+                                                            HashMap<String, HashMap<String, DataSourceWorkload>> namespaceWorkloadMap,
+                                                            HashMap<String, HashMap<String, DataSourceContainer>> workloadContainerMap) {
         try {
 
             if (null == workloadContainerMap || workloadContainerMap.isEmpty()) {

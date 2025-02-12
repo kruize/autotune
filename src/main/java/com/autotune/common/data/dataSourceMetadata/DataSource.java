@@ -23,7 +23,7 @@ public class DataSource {
     @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS)
     private HashMap<String, DataSourceCluster> clusterHashMap;
 
-    public DataSource(String dataSourceName, HashMap<String,DataSourceCluster> clusterHashMap) {
+    public DataSource(String dataSourceName, HashMap<String, DataSourceCluster> clusterHashMap) {
         this.dataSourceName = dataSourceName;
         this.clusterHashMap = clusterHashMap;
     }

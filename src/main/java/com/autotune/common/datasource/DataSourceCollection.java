@@ -255,7 +255,7 @@ public class DataSourceCollection {
      * deletes the datasource from the Hashmap
      *
      * @param name String containing the name of the datasource to be deleted
-     *                                                                                                                                                                                                             TODO: add db related operations
+     *                                                                                                                                                                                                                                     TODO: add db related operations
      */
     public void deleteDataSource(String name) throws DataSourceMissingRequiredFiled, DataSourceDoesNotExist {
 
@@ -275,7 +275,7 @@ public class DataSourceCollection {
      *
      * @param name          String containing the name of the datasource to be updated
      * @param newDataSource DataSourceInfo object with updated values
-     *                                                                                                                                                                                                                                                                                                                                                                      TODO: add db related operations
+     *                                                                                                                                                                                                                                                                                                                                                                                                                TODO: add db related operations
      */
     public void updateDataSource(String name, DataSourceInfo newDataSource) throws UnsupportedDataSourceProvider, DataSourceNotServiceable, DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DataSourceDoesNotExist {
 

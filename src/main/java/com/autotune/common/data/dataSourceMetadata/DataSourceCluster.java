@@ -44,7 +44,7 @@ public class DataSourceCluster {
     }
 
     public DataSourceNamespace getDataSourceNamespaceObject(String namespace) {
-        if  (null != namespaceHashMap && namespaceHashMap.containsKey(namespace)) {
+        if (null != namespaceHashMap && namespaceHashMap.containsKey(namespace)) {
             return namespaceHashMap.get(namespace);
         }
         return null;

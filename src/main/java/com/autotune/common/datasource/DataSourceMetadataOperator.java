@@ -69,7 +69,7 @@ public class DataSourceMetadataOperator {
      * @param startTime        Get metadata from starttime to endtime
      * @param endTime          Get metadata from starttime to endtime
      * @param steps            the interval between data points in a range query
-     *                                                                                                                                                                                                                                                                                                 TODO - support multiple data sources
+     *                                                                                                                                                                                                                                                                                                                                                 TODO - support multiple data sources
      * @param includeResources
      * @param excludeResources
      */
@@ -115,8 +115,8 @@ public class DataSourceMetadataOperator {
      * @param dataSourceInfo The DataSourceInfo object containing information about the
      *                       data source to be updated.
      *                       <p>
-     *                                                                                                                                                                                                                                                                          TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
-     *                                                                                                                                                                                                                                                                                 need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
+     *                                                                                                                                                                                                                                                                                                                      TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
+     *                                                                                                                                                                                                                                                                                                                             need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
     public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
                                                            long endTime, int steps, Map<String, String> includeResources,

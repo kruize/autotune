@@ -31,9 +31,13 @@ public class DataSourceWorkload {
         this.containerHashMap = containerHashMap;
     }
 
-    public String getDataSourceWorkloadName() {return workloadName;}
+    public String getDataSourceWorkloadName() {
+        return workloadName;
+    }
 
-    public String getDataSourceWorkloadType() {return workloadType;}
+    public String getDataSourceWorkloadType() {
+        return workloadType;
+    }
 
     public HashMap<String, DataSourceContainer> getDataSourceContainerHashMap() {
         return containerHashMap;
