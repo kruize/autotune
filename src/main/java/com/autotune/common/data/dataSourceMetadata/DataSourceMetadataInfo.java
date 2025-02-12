@@ -16,8 +16,6 @@ public class DataSourceMetadataInfo {
      * Key: Data Source name
      * Value: Associated DataSource object
      */
-    //@SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCES)
-    //@JsonProperty(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCES)
     private HashMap<String, DataSource> datasources;
 
     public DataSourceMetadataInfo(HashMap<String, DataSource> datasources) {
