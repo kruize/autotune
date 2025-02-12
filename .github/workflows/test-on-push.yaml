@@ -22,7 +22,7 @@ jobs:
   build_job:
     needs: get_pr
     # The type of runner that the job will run on
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-20.04
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -50,7 +50,7 @@ jobs:
   deploy_crc:
     # The type of runner that the job will run on
     needs: [build_job, get_pr]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-20.04
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
