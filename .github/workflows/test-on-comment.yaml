@@ -13,7 +13,7 @@ jobs:
       workflow_url: ${{ steps.workflow_run_info.outputs.url }}
       workflow_id: ${{ steps.workflow_run_info.outputs.id }}
 
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-20.04
     steps:
       - name: Get workflow run info
         run: |
