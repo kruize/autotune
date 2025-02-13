@@ -272,6 +272,10 @@ public class KruizeConstants {
         public static final String DEVICE = "device";
         public static final String MODEL_NAME = "modelName";
 
+        // Config changes JSON Keys
+        public static final String MODEL_SETTINGS = "model_settings";
+        public static final String TERM_SETTINGS = "term_settings";
+
         private JSONKeys() {
         }
     }
