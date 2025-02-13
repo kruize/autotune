@@ -183,9 +183,9 @@ public class AnalyzerErrorConstants {
             public static final String AUTO_EXP_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case.";
             public static final String INVALID_TERM_NAME = " term name is not supported. Use short, medium or long term.";
             public static final String TERM_SETTINGS_UNDEFINED= "Term settings are not defined in the recommendation settings.";
-            public static final String MULTIPLE_TERMS_UNSUPPORTED = "Multiple terms are currently not supported";
+            public static final String MULTIPLE_TERMS_UNSUPPORTED = "Multiple terms are currently not supported for auto or recreate mode.";
             public static final String INVALID_MODEL_NAME = " model name is not supported. Use cost or performance.";
-            public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported";
+            public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
             public static final String WHITESPACE_NOT_ALLOWED = "Whitespace can not be entered as a term or model value ";
             private CreateExperimentAPI() {
 
