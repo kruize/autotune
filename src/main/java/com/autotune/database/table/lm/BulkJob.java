@@ -1,17 +1,24 @@
 package com.autotune.database.table.lm;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 import java.sql.Timestamp;
-import java.util.UUID;
 
 
 @Entity
 @Table(name = "kruize_bulkjobs")
 public class BulkJob {
     @Id
-    @Column(name = "job_id")
-    private UUID jobId;
+    @Column(name = "job_id", columnDefinition = "VARCHAR(36)")
+    private String jobId;
     private String status;
     @Column(name = "total_count")
     private int totalExperiments;
@@ -21,13 +28,148 @@ public class BulkJob {
     private Timestamp jobStartTime;
     @Column(name = "end_time")
     private Timestamp jobEndTime;
-    private String webhook;
-    
-    @Column(columnDefinition = "jsonb")
-    private String notifications; // Stored as JSON string
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode webhook;
 
-    @Column(columnDefinition = "jsonb")
-    private String experiments; // JSONB field for experiments data
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode notifications; // Stored as JSON string
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode experiments; // JSONB field for experiments data
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode metadata; // JSONB field for experiments data
+
+    @JdbcTypeCode(SqlTypes.JSON)
+    private JsonNode payload; // JSONB field for experiments data
+
+    public BulkJob(String jobId, String status, int totalExperiments, int processedExperiments, Timestamp jobStartTime, Timestamp jobEndTime, String webhook, String notifications, String experiments, String metadata, String payload) {
+        this.jobId = jobId;
+        this.status = status;
+        this.totalExperiments = totalExperiments;
+        this.processedExperiments = processedExperiments;
+        this.jobStartTime = jobStartTime;
+        this.jobEndTime = jobEndTime;
+        try {
+            this.webhook = new ObjectMapper().readTree(webhook);
+            this.notifications = new ObjectMapper().readTree(notifications);
+            this.experiments = new ObjectMapper().readTree(experiments);
+            this.metadata = new ObjectMapper().readTree(metadata);
+            this.payload = new ObjectMapper().readTree(payload);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e);
+        }
+
+    }
+
+    public BulkJob() {
+
+    }
 
     // Getters and Setters
+
+    public String getJobId() {
+        return jobId;
+    }
+
+    public void setJobId(String jobId) {
+        this.jobId = jobId;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public int getTotalExperiments() {
+        return totalExperiments;
+    }
+
+    public void setTotalExperiments(int totalExperiments) {
+        this.totalExperiments = totalExperiments;
+    }
+
+    public int getProcessedExperiments() {
+        return processedExperiments;
+    }
+
+    public void setProcessedExperiments(int processedExperiments) {
+        this.processedExperiments = processedExperiments;
+    }
+
+    public Timestamp getJobStartTime() {
+        return jobStartTime;
+    }
+
+    public void setJobStartTime(Timestamp jobStartTime) {
+        this.jobStartTime = jobStartTime;
+    }
+
+    public Timestamp getJobEndTime() {
+        return jobEndTime;
+    }
+
+    public void setJobEndTime(Timestamp jobEndTime) {
+        this.jobEndTime = jobEndTime;
+    }
+
+    public JsonNode getWebhook() {
+        return webhook;
+    }
+
+    public void setWebhook(JsonNode webhook) {
+        this.webhook = webhook;
+    }
+
+    public JsonNode getNotifications() {
+        return notifications;
+    }
+
+    public void setNotifications(JsonNode notifications) {
+        this.notifications = notifications;
+    }
+
+    public JsonNode getExperiments() {
+        return experiments;
+    }
+
+    public void setExperiments(JsonNode experiments) {
+        this.experiments = experiments;
+    }
+
+    public JsonNode getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(JsonNode metadata) {
+        this.metadata = metadata;
+    }
+
+    public JsonNode getPayload() {
+        return payload;
+    }
+
+    public void setPayload(JsonNode payload) {
+        this.payload = payload;
+    }
+
+    @Override
+    public String toString() {
+        return "BulkJob{" +
+                "jobId=" + jobId +
+                ", status='" + status + '\'' +
+                ", totalExperiments=" + totalExperiments +
+                ", processedExperiments=" + processedExperiments +
+                ", jobStartTime=" + jobStartTime +
+                ", jobEndTime=" + jobEndTime +
+                ", webhook='" + webhook + '\'' +
+                ", notifications='" + notifications + '\'' +
+                ", experiments='" + experiments + '\'' +
+                ", metadata='" + metadata + '\'' +
+                ", payload='" + payload + '\'' +
+                '}';
+    }
 }
