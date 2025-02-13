@@ -261,7 +261,7 @@ def main(argv):
     time.sleep(1)
 
     # Delete the experiment
-    delete_experiment(create_exp_json_file)
+    delete_experiment(create_exp_json_file, rm=False)
 
     if failed == 1:
         print("Test Failed! Check the logs for test failures")

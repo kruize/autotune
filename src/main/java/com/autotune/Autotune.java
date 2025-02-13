@@ -22,7 +22,8 @@ import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
-import com.autotune.analyzer.recommendations.updater.RecommendationUpdaterService;
+import com.autotune.analyzer.autoscaler.AutoscalerService;
+import com.autotune.analyzer.autoscaler.settings.AutoscalingSettings;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -138,7 +139,7 @@ public class Autotune {
                 // load available metadata profiles from db
                 loadMetadataProfilesFromDB();
                 // start updater service
-                startRecommendationUpdaterService();
+                startAutoscalerService();
 
             }
             // close the existing session factory before recreating
@@ -175,6 +176,9 @@ public class Autotune {
         } else {
             startAutotuneNormalMode(context);
         }
+
+        // Check the settings initially while starting
+        AutoscalingSettings.getInstance().initialiseAutoscalingSettings();
 
         try {
             String startAutotune = System.getenv("START_AUTOTUNE");
@@ -303,7 +307,7 @@ public class Autotune {
     }
 
     // starts the recommendation updater service
-    private static void startRecommendationUpdaterService() {
-        RecommendationUpdaterService.initiateUpdaterService();
+    private static void startAutoscalerService() {
+        AutoscalerService.initiateAutoscalerService();
     }
 }
