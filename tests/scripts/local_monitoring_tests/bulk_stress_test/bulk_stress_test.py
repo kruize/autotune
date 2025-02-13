@@ -288,7 +288,7 @@ if __name__ == '__main__':
     days_of_res = 15
     results_dir = "."
     initial_end_time = ""
-    interval_hours = 6
+    interval_hours = 2
     test = ""
     prometheus = 0
 
