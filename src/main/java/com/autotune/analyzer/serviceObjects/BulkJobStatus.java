@@ -17,13 +17,16 @@ package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
+import com.autotune.database.table.lm.BulkJob;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -31,6 +34,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import static com.autotune.analyzer.serviceObjects.BulkJobStatus.Summary.parseUTCStringToTimestamp;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.UNPROCESSED;
 
@@ -120,15 +124,14 @@ public class BulkJobStatus {
      *
      * @param regex the regular expression used to filter entries by key, or {@code null} to copy all entries.
      *
-     * <pre>
-     * Example Usage:
-     * Given a map containing:
-     * {"test1" -> "value1", "example2" -> "value2", "sample3" -> "value3"}
+     *              <pre>
+     *                                                                               Example Usage:
+     *                                                                               Given a map containing:
+     *                                                                               {"test1" -> "value1", "example2" -> "value2", "sample3" -> "value3"}
      *
-     * copyByPattern("test") will result in:
-     * {"test1" -> "value1"} being copied to {@code experiments}.
-     * </pre>
-     *
+     *                                                                               copyByPattern("test") will result in:
+     *                                                                               {"test1" -> "value1"} being copied to {@code experiments}.
+     *                                                                               </pre>
      */
     public void copyByPattern(String regex) {
 
@@ -147,6 +150,27 @@ public class BulkJobStatus {
                 });
             }
         }
+    }
+
+    public BulkJob getBulkJobForDB(String experimentsString) throws Exception {
+        BulkJob bulkJob = null;
+        try {
+            bulkJob = new BulkJob(getSummary().getJobID(),
+                    getSummary().getStatus(),
+                    getSummary().getTotal_experiments(),
+                    getSummary().getProcessed_experiments().get(),
+                    parseUTCStringToTimestamp(getSummary().getStartTime()),
+                    parseUTCStringToTimestamp(getSummary().getEndTime()),
+                    new ObjectMapper().writeValueAsString(getWebhook()),
+                    new ObjectMapper().writeValueAsString(getSummary().getNotifications()),
+                    experimentsString,
+                    new ObjectMapper().writeValueAsString(getMetadata()),
+                    new ObjectMapper().writeValueAsString(getSummary().getInput())
+            );
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+        return bulkJob;
     }
 
     public static enum NotificationType {
@@ -186,6 +210,21 @@ public class BulkJobStatus {
             this.input = input;
             setStartTime(startTime);
             this.processed_experiments = new AtomicInteger(0);
+        }
+
+        // Utility function to parse string to java.sql.Timestamp in UTC
+        static Timestamp parseUTCStringToTimestamp(String utcString) {
+            if (null != utcString) {
+                DateTimeFormatter formatter = DateTimeFormatter
+                        .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                        .withZone(ZoneOffset.UTC);
+
+                // Parse the instant and create a timestamp
+                Instant instant = Instant.from(formatter.parse(utcString));
+                return Timestamp.from(instant);
+            } else {
+                return null;
+            }
         }
 
         public String getJobID() {

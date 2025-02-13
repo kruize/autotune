@@ -66,7 +66,8 @@ public class KruizeDeploymentInfo {
     public static String database_admin_username;
     public static String database_admin_password;
     public static String database_ssl_mode;
-    public static boolean cacheJobInMemory = true;
+    public static Boolean cache_job_in_mem = true;
+    public static String job_filter_to_db = "experiments|status|apis|create|response";      //Use this constant to store necessary information into DB also can be set via env variable
     public static String cloudwatch_logs_access_key_id;
     public static String cloudwatch_logs_secret_access_key;
     public static String cloudwatch_logs_log_group;
@@ -86,11 +87,11 @@ public class KruizeDeploymentInfo {
     public static int generate_recommendations_date_range_limit_in_days = 15;
     public static Integer delete_partition_threshold_in_days = DELETE_PARTITION_THRESHOLD_IN_DAYS;
     public static String experiment_name_format = "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%";
+    public static Boolean is_ros_enabled = false;
+    public static String datasource_via_env = null;
     private static Hashtable<String, Class> tunableLayerPair;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
-    public static Boolean is_ros_enabled = false;
-    public static String datasource_via_env = null;
 
 
     private KruizeDeploymentInfo() {

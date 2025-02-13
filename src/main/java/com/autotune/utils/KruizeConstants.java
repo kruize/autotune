@@ -715,6 +715,8 @@ public class KruizeConstants {
         public static final String RECOMMENDATIONS_URL = "recommendationsURL";
         public static final String EXPERIMENTS_URL = "experimentsURL";
         public static final String BULK_API_LIMIT = "bulkapilimit";
+        public static final String CACHE_JOB_IN_MEM = "cacheJobInMemory";
+        public static final String JOB_FILTER_TO_DB = "jobFilterToDB";
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
         public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
         public static final String IS_ROS_ENABLED = "isROSEnabled";

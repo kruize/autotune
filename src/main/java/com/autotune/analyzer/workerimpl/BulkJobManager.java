@@ -29,6 +29,7 @@ import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
@@ -63,8 +64,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.autotune.analyzer.services.BulkService.filterJson;
 import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
-import static com.autotune.operator.KruizeDeploymentInfo.experiments_url;
+import static com.autotune.operator.KruizeDeploymentInfo.job_filter_to_db;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.*;
 
@@ -179,6 +181,7 @@ public class BulkJobManager implements Runnable {
                     if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
                         setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO, datasource);
                     } else {
+                        new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB("{}"));
                         ExecutorService createExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
                         ExecutorService generateExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
                         try {
@@ -191,7 +194,6 @@ public class BulkJobManager implements Runnable {
                                         // send request to createExperiment API for experiment creation
                                         experiment.getApis().getCreate().setRequest(apiObject);
                                         GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
-                                        LOGGER.debug("experiment_url : {}", experiments_url);
                                         apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
                                         GenericRestApiClient.HttpResponseWrapper responseCode;
                                         boolean experiment_exists = false;
@@ -369,6 +371,13 @@ public class BulkJobManager implements Runnable {
                 webhook.setStatus(WebHookStatus.FAILED);
                 jobData.setWebhook(webhook);
             }
+        }
+        try {
+            Set<String> includeFields = new HashSet<>(Arrays.asList(job_filter_to_db));
+            String experimentJSONString = filterJson(jobData, includeFields, Collections.emptySet(), null);
+            new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB(experimentJSONString));
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
         }
     }
 
