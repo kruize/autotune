@@ -15,8 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.dataSourceMetadata.*;
-import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.Gson;
@@ -73,10 +73,11 @@ public class DataSourceMetadataOperator {
      * @param includeResources
      * @param excludeResources
      */
-    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
-                                                           long endTime, int steps, Map<String, String> includeResources,
+    public DataSourceMetadataInfo createDataSourceMetadata(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
+                                                           long endTime, int steps,  String measurementDuration, Map<String, String> includeResources,
                                                            Map<String, String> excludeResources) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps, includeResources, excludeResources);
+        return processQueriesAndPopulateDataSourceMetadataInfo(metadataProfileName, dataSourceInfo, uniqueKey, startTime,
+                endTime, steps, measurementDuration, includeResources, excludeResources);
     }
 
     /**
@@ -118,10 +119,11 @@ public class DataSourceMetadataOperator {
      *                                                                                                                                                                                                                                                                          TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
      *                                                                                                                                                                                                                                                                                 need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
-    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
-                                                           long endTime, int steps, Map<String, String> includeResources,
+    public DataSourceMetadataInfo updateDataSourceMetadata(String metadataProfileName,DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
+                                                           long endTime, int steps,  String measurementDuration, Map<String, String> includeResources,
                                                            Map<String, String> excludeResources) throws Exception {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps, includeResources, excludeResources);
+        return processQueriesAndPopulateDataSourceMetadataInfo(metadataProfileName, dataSourceInfo, uniqueKey, startTime,
+                endTime, steps, measurementDuration, includeResources, excludeResources);
     }
 
     /**
@@ -163,8 +165,8 @@ public class DataSourceMetadataOperator {
      * @return DataSourceMetadataInfo object with populated metadata fields
      * todo rename processQueriesAndFetchClusterMetadataInfo
      */
-    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo, String uniqueKey,
-                                                                                  long startTime, long endTime, int steps,
+    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey,
+                                                                                  long startTime, long endTime, int steps,  String measurementDuration,
                                                                                   Map<String, String> includeResources,
                                                                                   Map<String, String> excludeResources) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
@@ -192,7 +194,7 @@ public class DataSourceMetadataOperator {
             String includeRegex = includeResources.getOrDefault(field + "Regex", "");
             String excludeRegex = excludeResources.getOrDefault(field + "Regex", "");
             String filter = constructDynamicFilter(field, includeRegex, excludeRegex);
-            String queryTemplate = getQueryTemplate(field); // Helper to map fields to PromQL queries
+            String queryTemplate = getQueryTemplate(field, metadataProfileName); // Helper to map fields to PromQL queries
             queries.put(field, String.format(queryTemplate, filter));
         });
 
@@ -204,17 +206,32 @@ public class DataSourceMetadataOperator {
         String dataSourceName = dataSourceInfo.getName();
         if (null != uniqueKey && !uniqueKey.isEmpty()) {
             LOGGER.debug("uniquekey: {}", uniqueKey);
-            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
-            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
-            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
+            namespaceQuery = namespaceQuery.
+                    replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
+            workloadQuery = workloadQuery.
+                    replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
+            containerQuery = containerQuery.
+                    replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "," + uniqueKey);
         } else {
-            namespaceQuery = namespaceQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
-            workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
-            containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+            namespaceQuery = namespaceQuery.
+                    replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+            workloadQuery = workloadQuery.
+                    replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
+            containerQuery = containerQuery.
+                    replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
         }
+
+        namespaceQuery = namespaceQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, measurementDuration);
+        workloadQuery = workloadQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, measurementDuration);
+        containerQuery = containerQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, measurementDuration);
+
         LOGGER.info("namespaceQuery: {}", namespaceQuery);
         LOGGER.info("workloadQuery: {}", workloadQuery);
         LOGGER.info("containerQuery: {}", containerQuery);
+        LOGGER.info("startTime: {}", startTime);
+        LOGGER.info("endTime: {}", endTime);
+        LOGGER.info("steps: {}", steps);
+
 
         JsonArray namespacesDataResultArray = fetchQueryResults(dataSourceInfo, namespaceQuery, startTime, endTime, steps);
         LOGGER.debug("namespacesDataResultArray: {}", namespacesDataResultArray);
@@ -275,11 +292,13 @@ public class DataSourceMetadataOperator {
     }
 
     // Helper function to map fields to query templates
-    private String getQueryTemplate(String field) {
+    private String getQueryTemplate(String field, String metadataProfileName) {
+        DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
+        MetadataProfile metadataProfile = MetadataProfileCollection.getInstance().getMetadataProfileCollection().get(metadataProfileName);
         return switch (field) {
-            case "namespace" -> PromQLDataSourceQueries.NAMESPACE_QUERY;
-            case "workload" -> PromQLDataSourceQueries.WORKLOAD_QUERY;
-            case "container" -> PromQLDataSourceQueries.CONTAINER_QUERY;
+            case "namespace" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.NAMESPACE);
+            case "workload" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.WORKLOAD);
+            case "container" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.CONTAINER);
             default -> throw new IllegalArgumentException("Unknown field: " + field);
         };
     }
