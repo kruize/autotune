@@ -83,6 +83,7 @@ public class AnalyzerErrorConstants {
         public static final String MISSING_METRIC_PROFILE_METADATA= "metadata missing\n";
         public static final String DUPLICATE_METRIC_PROFILE = "Metric Profile already exists: ";
         public static final String MISSING_METADATA_PROFILE = "Not Found: metadata_profile does not exist: ";
+        public static final String MISSING_METADATA_PROFILE_FIELD = "Missing `metadata_profile` field";
         public static final String METADATA_PROFILE_NOT_SUPPORTED = "Metadata profile is not supported in remote monitoring: ";
         public static final String MISSING_METADATA_PROFILE_METADATA= "metadata missing\n";
         public static final String DUPLICATE_METADATA_PROFILE = "Metadata Profile already exists: ";

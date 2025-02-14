@@ -36,6 +36,8 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     private String clusterName;
     @SerializedName(KruizeConstants.JSONKeys.PERFORMANCE_PROFILE)
     private String performanceProfile;
+    @SerializedName(KruizeConstants.JSONKeys.METADATA_PROFILE)
+    private String metadataProfile;
     @SerializedName("slo")
     private SloInfo sloInfo;
     @SerializedName(KruizeConstants.JSONKeys.MODE)
@@ -72,6 +74,10 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     public void setPerformanceProfile(String performanceProfile) {
         this.performanceProfile = performanceProfile;
     }
+
+    public String getMetadataProfile() { return metadataProfile; }
+
+    public void setMetadataProfile(String metadataProfile) { this.metadataProfile = metadataProfile; }
 
     public String getMode() {
         return mode;
@@ -168,6 +174,7 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
                 "apiVersion='" + getApiVersion() + '\'' +
                 "clusterName='" + clusterName + '\'' +
                 ", performanceProfile='" + performanceProfile + '\'' +
+                ", metadatProfile='" + metadataProfile + '\'' +
                 ", sloInfo=" + sloInfo +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +

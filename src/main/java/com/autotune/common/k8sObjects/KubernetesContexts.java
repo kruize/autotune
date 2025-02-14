@@ -61,6 +61,15 @@ public class KubernetesContexts
 			.withName(AnalyzerConstants.PerformanceProfileConstants.PERFORMANCE_PROFILE_RESOURCE_NAME)
 			.build();
 
+	private static final CustomResourceDefinitionContext metadataProfileCrdContext = new CustomResourceDefinitionContext
+			.Builder()
+			.withGroup(AnalyzerConstants.GROUP)
+			.withScope(AnalyzerConstants.SCOPE)
+			.withPlural(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_PLURALS)
+			.withVersion(AnalyzerConstants.API_VERSION_V1)
+			.withName(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_RESOURCE_NAME)
+			.build();
+
 	public static CustomResourceDefinitionContext getAutotuneCrdContext() {
 		return autotuneCrdContext;
 	}
@@ -76,4 +85,6 @@ public class KubernetesContexts
 	public static CustomResourceDefinitionContext getPerformanceProfileCrdContext() {
 		return performanceProfileCrdContext;
 	}
+
+	public static CustomResourceDefinitionContext getMetadataProfileCrdContext() { return metadataProfileCrdContext; }
 }
