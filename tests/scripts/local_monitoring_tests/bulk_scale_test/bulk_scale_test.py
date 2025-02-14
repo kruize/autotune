@@ -28,6 +28,27 @@ import time
 import logging
 from datetime import datetime, timedelta
 
+def get_server():
+    try:
+        # Run the oc status command
+        cmd = ["oc", "status", "--namespace=openshift-tuning"]
+        result = subprocess.run(cmd, capture_output=True, text=True, check=True)
+
+        lines = [line for line in result.stdout.splitlines() if "kruize" in line and "port" in line]
+
+        server = ""
+        for line in lines:
+            parts = line.split()
+            if len(parts) > 0:
+                server = parts[0].split("/")[2].split(".", 2)[-1]
+                print(server)
+        return server
+
+    except subprocess.CalledProcessError as e:
+        print("Error running oc command:", e)
+        return server
+
+
 def setup_logger(name, log_file, level=logging.INFO):
 
     handler = logging.FileHandler(log_file)
@@ -77,24 +98,34 @@ def fetch_bulk_recommendations(job_status_json, logger):
         for exp_name in exp_list:
             logger.info(f"Fetching recommendations for {exp_name}...")
             reco_response = job_status_json['experiments'][exp_name]['apis']['recommendations']['response']
-            recommendations = reco_response[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
-            reco_available_msg = recommendations['notifications']['111000']['message']
-            logger.info(reco_available_msg)
-
-            if reco_available_msg != "Recommendations Are Available":
-                reco_failures = reco_failures + 1
-                logger.info(f"Bulk recommendations failed for the experiment - {exp_name}!")
-                logger.info(reco_response)
-                continue
+            if reco_response:
+                recommendations = reco_response[0]['kubernetes_objects'][0]['containers'][0]['recommendations']
+                notifications_list = list(recommendations['notifications'].keys())
+                for notification_code in notifications_list:
+                    if notification_code == "111000":
+                        reco_available_msg = recommendations['notifications'][notification_code]['message']
+                        if reco_available_msg != "Recommendations Are Available":
+                            reco_failures += 1
+                            logger.info(f"Bulk recommendations failed for the experiment - {exp_name}!")
+                            continue
+                        else:
+                            if prometheus == 0:
+                                logger.info(f"Recommendations is not available for the experiment - {exp_name}!")
+                                reco_failures += 1
+                    elif notification_code == "120001" and prometheus == 0:
+                        reco_failures += 1
+                        logger.info(f"Recommendations is not available for the experiment - {exp_name}!")
             else:
-                logger.info(f"Fetched recommendations for {exp_name} - Done")
+                if prometheus == 0:
+                    logger.info("Recommendations is not available!")
+                    reco_failures += 1
 
-        if reco_failures != 0:
-            logger.info(
-                f"Bulk recommendations failed for some of the experiments, check the log {log_file} for details!")
-            return -1
-        else:
-            return 0
+            if reco_failures != 0:
+                logger.info(
+                    f"Bulk recommendations failed for some of the experiments, check the logs for details!")
+                return -1
+            else:
+                return 0
     else:
         logger.error("Something went wrong! There are no experiments with recommendations!")
         return -1
@@ -139,14 +170,14 @@ def fetch_bulk_job_status(job_id, worker_number, logger):
         logger.info(f"Check {job_file} for job status")
         return -1
 
-def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number):
+def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number, tsdb_id):
     try:
         scale_log_dir = resultsdir + "/scale_logs"
         os.makedirs(scale_log_dir, exist_ok=True)
 
         bulk_json = update_bulk_config(org_id, cluster_id, current_start_time, current_end_time)
 
-        log_id = str(worker_number) + "_org-" + str(org_id) + "_cluster-" + str(cluster_id)
+        log_id = "_tsdb-" + str(tsdb_id) + "_worker-" + str(worker_number) + "_org-" + str(org_id) + "_cluster-" + str(cluster_id)
         log_file = f"{scale_log_dir}/worker_{log_id}.log"
 
         logger = setup_logger(f"logger_{log_id}", log_file)
@@ -170,6 +201,10 @@ def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_s
 
 def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, interval_hours, days_of_res, org_ids, cluster_ids):
     results = []
+    server = get_server()
+    if server == "":
+        print("Failed obtaining server details required for kruize_metrics script")
+        sys.exit(1)
 
     print(f"initial_end_time - {initial_end_time}")
     print(f"days_of_res - {days_of_res}")
@@ -186,17 +221,26 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
         current_start_time = datetime.strptime(current_end_time, '%Y-%m-%dT%H:%M:%S.%fZ') - timedelta(
             hours=interval_hours)
         current_end_time = datetime.strptime(current_end_time, '%Y-%m-%dT%H:%M:%S.%fZ')
-        print(current_end_time)
-        print(current_start_time)
         current_start_time = current_start_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
         current_end_time = current_end_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
+
+        script_path = "../../../../scripts/kruize_metrics.py"
+        cluster = "openshift"
+
+        timeout = "60m"
+        csv_file = f"kruizeMetrics-{k}.csv"
+        kruize_metrics_res_dir = f"{resultsdir}/results"
+
+        params = ["python3", script_path, "-c", cluster, "-s", server, "-t", timeout, "-e", kruize_metrics_res_dir, "-r", csv_file]
+
+        subprocess.Popen(params, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all the tasks to the executor
             futures = []
 
             futures = [
-            executor.submit(invoke_bulk_with_time_range_labels, resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number)
+            executor.submit(invoke_bulk_with_time_range_labels, resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number, k)
                 for worker_number, (org_id, cluster_id) in enumerate(
                     ((org_id, cluster_id) for org_id in range(1, org_ids + 1) for cluster_id in
                      range(1, cluster_ids + 1)),
@@ -211,6 +255,7 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
                     results.append(result)
                 except Exception as e:
                     results.append({'error': str(e)})
+        
 
         current_end_time = current_start_time
 
@@ -225,6 +270,7 @@ if __name__ == '__main__':
     interval_hours = 6
     org_ids = 10
     cluster_ids = 10
+    prometheus = 0
 
     parser = argparse.ArgumentParser()
 
@@ -236,6 +282,7 @@ if __name__ == '__main__':
     parser.add_argument('--resultsdir', type=str, help='specify the results dir')
     parser.add_argument('--org_ids', type=str, help='specify the no. of orgs')
     parser.add_argument('--cluster_ids', type=str, help='specify the no. of clusters / org')
+    parser.add_argument('--prometheus', type=str, help='specify the value as 1 for prometheus, default is 0')
 
     # parse the arguments from the command line
     args = parser.parse_args()
@@ -260,6 +307,9 @@ if __name__ == '__main__':
 
     if args.cluster_ids:
         cluster_ids = int(args.cluster_ids)
+
+    if args.prometheus:
+        prometheus = int(args.prometheus)
 
     form_kruize_url(cluster_type)
 
