@@ -40,7 +40,7 @@ skip_setup=0
 prometheus_ds=0
 replicas=3
 
-ds_url="http://thanos-query-frontend.thanos-bench.svc.cluster.local:9090/"
+ds_url="http://thanos-query-frontend-example-query.thanos-operator-system.svc.cluster.local:9090/"
 
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
@@ -88,7 +88,7 @@ function kruize_local_thanos_patch() {
 	sed -i 's/"serviceName": "prometheus-k8s"/"serviceName": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
         sed -i 's/"namespace": "openshift-monitoring"/"namespace": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	sed -i 's#"url": ""#"url": "'"${ds_url}"'"#' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-
+  			sed -i 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9]\+/"bulkapilimit" : 10000/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 }
@@ -171,6 +171,10 @@ if [ ${skip_setup} -eq 0 ]; then
 		# Update datasource
 		if [ ${prometheus_ds} == 0 ]; then
 			kruize_local_thanos_patch
+		else
+			sed -i 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9]\+/"bulkapilimit" : 10000/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+      sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+			sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 		fi
 
         	echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
@@ -212,7 +216,7 @@ export PYTHONUNBUFFERED=1
 echo ""
 echo "Running scale test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 echo ""
-python3 bulk_scale_test.py --workers ${workers} --org_ids ${org_ids} --cluster_ids ${cluster_ids} --days_of_res ${days_of_res} --enddate ${initial_end_date} --interval ${interval_hours} --resultsdir ${LOG_DIR} | tee -a ${LOG}
+python3 bulk_scale_test.py --workers "${workers}" --org_ids "${org_ids}" --cluster_ids "${cluster_ids}" --days_of_res "${days_of_res}" --enddate "${initial_end_date}" --interval "${interval_hours}" --resultsdir "${LOG_DIR}" --prometheus "${prometheus_ds}" | tee -a ${LOG}
 
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
