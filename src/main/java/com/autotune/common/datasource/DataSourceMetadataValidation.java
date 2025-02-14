@@ -48,13 +48,13 @@ public class DataSourceMetadataValidation {
     public void validate(DataSourceMetadataInfo dataSourceMetadataInfo) {
         List<String> missingMandatoryFields = new ArrayList<>();
         try {
-            if (null == dataSourceMetadataInfo || null == dataSourceMetadataInfo.getDataSourceHashMap()) {
+            if (null == dataSourceMetadataInfo || null == dataSourceMetadataInfo.getDatasources()) {
                 String errorMsg = AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_CONNECTION_FAILED;
                 markFailed(errorMsg);
                 return;
             }
 
-            for (Map.Entry<String, DataSource> entry : dataSourceMetadataInfo.getDataSourceHashMap().entrySet()) {
+            for (Map.Entry<String, DataSource> entry : dataSourceMetadataInfo.getDatasources().entrySet()) {
                 DataSource dataSource = entry.getValue();
                 if (null == dataSource.getDataSourceName()) {
                     missingMandatoryFields.add(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCE_NAME);
@@ -81,14 +81,14 @@ public class DataSourceMetadataValidation {
     /**
      * Validates the given DataSource object for mandatory fields like "clusters" and "cluster_name".
      *
-     * @param dataSource the DataSource object to validate.
+     * @param dataSource             the DataSource object to validate.
      * @param missingMandatoryFields the list to which any missing fields will be added.
      */
     private void validateDataSourceCluster(DataSource dataSource, List<String> missingMandatoryFields) {
-        if (null == dataSource.getDataSourceClusterHashMap()) {
+        if (null == dataSource.getClusters()) {
             missingMandatoryFields.add(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTERS);
         } else {
-            for (Map.Entry<String, DataSourceCluster> entry : dataSource.getDataSourceClusterHashMap().entrySet()) {
+            for (Map.Entry<String, DataSourceCluster> entry : dataSource.getClusters().entrySet()) {
                 DataSourceCluster dataSourceCluster = entry.getValue();
                 if (null == dataSourceCluster.getDataSourceClusterName()) {
                     missingMandatoryFields.add(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTER_NAME);
