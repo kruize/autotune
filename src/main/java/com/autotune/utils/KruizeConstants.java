@@ -254,6 +254,9 @@ public class KruizeConstants {
         public static final String SHORT_TERM = "short_term";
         public static final String MEDIUM_TERM = "medium_term";
         public static final String LONG_TERM = "long_term";
+        public static final String SHORT = "short";
+        public static final String MEDIUM = "medium";
+        public static final String LONG= "long";
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String VARIATION = "variation";
         public static final String NOTIFICATIONS = "notifications";
@@ -271,6 +274,10 @@ public class KruizeConstants {
         public static final String UUID = "UUID";
         public static final String DEVICE = "device";
         public static final String MODEL_NAME = "modelName";
+
+        // Config changes JSON Keys
+        public static final String MODEL_SETTINGS = "model_settings";
+        public static final String TERM_SETTINGS = "term_settings";
 
         private JSONKeys() {
         }

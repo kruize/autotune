@@ -1,7 +1,10 @@
 package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.exceptions.FetchMetricsError;
+import com.autotune.analyzer.exceptions.InvalidModelException;
+import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
@@ -67,13 +70,14 @@ public class RecommendationEngine {
     private Map<String, Terms> terms;
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
+    private List<String> modelNames;
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
         this.experimentName = experimentName;
         this.intervalEndTimeStr = intervalEndTimeStr;
         this.intervalStartTimeStr = intervalStartTimeStr;
-        this.init();
+
     }
 
     private static int getNumPods(Map<Timestamp, IntervalResults> filteredResultsMap) {
@@ -123,17 +127,50 @@ public class RecommendationEngine {
         return (int) Math.ceil(max_pods_cpu);
     }
 
-    private void init() {
-        // Add new models
+    private void loadDefaultRecommendationModels() {
+        // create both cost and performance model by default
         recommendationModels = new ArrayList<>();
         // Create Cost based model
         CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
-        // TODO: Create profile based model
         registerModel(costBasedRecommendationModel);
         // Create Performance based model
         PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
         registerModel(performanceBasedRecommendationModel);
-        // TODO: Add profile based once recommendation algos are available
+    }
+
+    private void loadDefaultRecommendationModelForAutoAndRecreate() {
+        // create performance model by default
+        recommendationModels = new ArrayList<>();
+        // Create Performance based model
+        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+        registerModel(performanceBasedRecommendationModel);
+
+        RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
+        List<String> models = new ArrayList<>() ;
+        models.add(KruizeConstants.JSONKeys.PERFORMANCE);
+        ModelSettings modelSettings = new ModelSettings();
+        modelSettings.setModels(models);
+        recommendationSettings.setModelSettings(modelSettings);
+
+    }
+
+    private void loadCustomRecommendationModels(List<String> modelName) throws InvalidModelException {
+        // Add new models
+        recommendationModels = new ArrayList<>();
+        for (String model : modelName) {
+            if (KruizeConstants.JSONKeys.COST.equalsIgnoreCase(model)) {
+                // Create Cost based model
+                CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
+                registerModel(costBasedRecommendationModel);
+            } else if (KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(model)) {
+                // Create Performance based model
+                PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+                registerModel(performanceBasedRecommendationModel);
+            } else {
+                // user input does not matches standard models
+                throw new InvalidModelException(model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+            }
+        }
     }
 
     private void registerModel(RecommendationModel recommendationModel) {
@@ -166,6 +203,14 @@ public class RecommendationEngine {
 
     public void setExperimentName(String experimentName) {
         this.experimentName = experimentName;
+    }
+
+    public List<String> getModelNames() {
+        return modelNames;
+    }
+
+    public void setModelNames(List<String> modelNames) {
+        this.modelNames = modelNames;
     }
 
     public Timestamp getInterval_end_time() {
@@ -286,14 +331,79 @@ public class RecommendationEngine {
         mainKruizeExperimentMAP.put(kruizeObject.getExperimentName(), kruizeObject);
         // continue to generate recommendation when kruizeObject is successfully created
         try {
-            // set the default terms if the terms aren't provided by the user
-            if (kruizeObject.getTerms() == null)
-                KruizeObject.setDefaultTerms(terms, kruizeObject);
+            // term settings for different use cases
+            if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
+                // monitoring mode
+                if (kruizeObject.getRecommendation_settings() == null ||
+                    kruizeObject.getRecommendation_settings().getTermSettings() == null ||
+                    kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null) {
+                    // default for monitoring
+                    KruizeObject.setDefaultTerms(terms,kruizeObject);
+                } else {
+                    // Process terms
+                    KruizeObject.setCustomTerms(terms, kruizeObject);
+                }
+            }
+            else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
+                // auto or recreate mode
+                if (kruizeObject.getRecommendation_settings() == null ||
+                        kruizeObject.getRecommendation_settings().getTermSettings() == null ||
+                        kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null) {
+                    // default
+                    KruizeObject.setDefaultTermsForAutoAndRecreate(terms, kruizeObject);
+                } else {
+                    // terms for auto recreate
+                    if (kruizeObject.getRecommendation_settings().getTermSettings().getTerms().size() == 1) {
+                        // single term
+                       KruizeObject.setCustomTerms(terms, kruizeObject);
+                    } else {
+                        // multiple terms throw error
+                        throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_TERMS_UNSUPPORTED);
+                    }
+                }
+            }
+
             // set the performance profile
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
+
             // get the datasource
             // TODO: If no data source given use KruizeDeploymentInfo.monitoring_agent / default datasource
             String dataSource = kruizeObject.getDataSource();
+
+            // call different models for different use cases
+            if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
+                // can be local or remote monitoring use case
+                if (kruizeObject.getRecommendation_settings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings().getModels() == null) {
+                    // recommendation setting are null -> use default values
+                    // both cost and perf model to be called
+                    loadDefaultRecommendationModels();
+                } else {
+                    // models present
+                    setModelNames(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
+                    loadCustomRecommendationModels(modelNames);
+                }
+            } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
+                // auto or recreate mode
+                if (kruizeObject.getRecommendation_settings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings().getModels() != null) {
+                    // recommendation setting are null -> use default values
+                    loadDefaultRecommendationModelForAutoAndRecreate();
+                } else {
+                        // for what ever model settings are present do as directed.
+                        // check for single model
+                        if (kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
+                            // call for that one model
+                            loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
+                        } else {
+                            // multiple model throw error
+                            throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED);
+                        }
+                }
+            }
+
             LOGGER.debug(String.format(KruizeConstants.APIMessages.EXPERIMENT_DATASOURCE, kruizeObject.getExperimentName(), dataSource));
 
             int maxDay = Terms.getMaxDays(terms);
@@ -333,7 +443,7 @@ public class RecommendationEngine {
                         experimentName, interval_start_time, interval_end_time));
                 kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
             }
-        } catch (Exception | FetchMetricsError e) {
+        } catch (Exception | FetchMetricsError | InvalidModelException | InvalidTermException e) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_EXCEPTION,
                     experimentName, interval_end_time, e.getMessage()));
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
