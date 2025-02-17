@@ -56,7 +56,7 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
     @Override
     public void applyResourceRecommendationsForExperiment(KruizeObject kruizeObject) throws ApplyRecommendationsError {
         if (!isUpdaterInstalled()) {
-            LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDATER_NOT_INSTALLED);
+            LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.UPDATER_NOT_INSTALLED);
             return;
         }
 
@@ -64,13 +64,13 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
             String namespace = kruizeObject.getKubernetes_objects().get(0).getNamespace();
             String workloadName = kruizeObject.getKubernetes_objects().get(0).getName();
             if (null == namespace){
-                // Add Logger
+                LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.AcceleratorAutoscaler.NAMESPACE_NULL);
                 return;
             }
 
             Map<String, ContainerData> containers = kruizeObject.getKubernetes_objects().get(0).getContainerDataMap();
             if (null == containers) {
-                // Add Logger
+                LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.AcceleratorAutoscaler.CONTAINER_NULL);
                 return;
             }
 
@@ -143,7 +143,7 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
                 if (!updatedLimits.isEmpty())
                     updatedRec.put(AnalyzerConstants.ResourceSetting.limits, updatedLimits);
 
-                updateOrRevertResources(containerName, namespace, workloadName, "job",
+                updateOrRevertResources(containerName, namespace, workloadName, AnalyzerConstants.K8sObjectConstants.Types.JOB,
                         updatedRec);
             }
         } catch (Exception e) {

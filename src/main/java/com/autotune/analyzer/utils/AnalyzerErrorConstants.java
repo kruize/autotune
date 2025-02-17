@@ -313,16 +313,25 @@ public class AnalyzerErrorConstants {
         }
     }
 
-    public static final class RecommendationUpdaterErrors {
-        private RecommendationUpdaterErrors() {
+    public static final class AutoscalerErrors {
+        private AutoscalerErrors() {
 
         }
 
-        public static final String UPDTAER_SERVICE_START_ERROR = "Error occurred while initializing RecommendationUpdaterService.";
+        public static final String UPDATER_SERVICE_START_ERROR = "Error occurred while initializing RecommendationUpdaterService.";
         public static final String UNSUPPORTED_UPDATER_TYPE = "Updater type %s is not supported.";
-        public static final String GENERATE_RECOMMNEDATION_FAILED = "Failed to generate recommendations for experiment: {}";
+        public static final String GENERATE_RECOMMENDATION_FAILED = "Failed to generate recommendations for experiment: {}";
         public static final String UPDATER_NOT_INSTALLED = "Updater is not installed.";
         public static final String RECOMMENDATION_DATA_NOT_PRESENT = "Recommendations are not present for the experiment.";
         public static final String INVALID_VPA_NAME = "VPA name cannot be null or empty.";
+
+        public static final class AcceleratorAutoscaler {
+            private AcceleratorAutoscaler() {
+
+            }
+            public static final String NAMESPACE_NULL = "Namespace cannot be null";
+            public static final String CONTAINER_NULL = "Container cannot be null";
+
+        }
     }
 }

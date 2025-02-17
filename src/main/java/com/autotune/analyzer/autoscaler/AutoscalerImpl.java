@@ -43,7 +43,7 @@ public class AutoscalerImpl implements Autoscaler {
         if (AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA.equalsIgnoreCase(updaterType)) {
             return VpaAutoscalerImpl.getInstance();
         } else {
-            throw new InvalidRecommendationUpdaterType(String.format(AnalyzerErrorConstants.RecommendationUpdaterErrors.UNSUPPORTED_UPDATER_TYPE, updaterType));
+            throw new InvalidRecommendationUpdaterType(String.format(AnalyzerErrorConstants.AutoscalerErrors.UNSUPPORTED_UPDATER_TYPE, updaterType));
         }
     }
 
@@ -85,7 +85,7 @@ public class AutoscalerImpl implements Autoscaler {
                 throw new Exception(validationMessage);
             }
         } catch (Exception | FetchMetricsError e) {
-            LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.GENERATE_RECOMMNEDATION_FAILED, experimentName);
+            LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.GENERATE_RECOMMENDATION_FAILED, experimentName);
             LOGGER.debug(e.getMessage());
             return null;
         }

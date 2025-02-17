@@ -70,7 +70,7 @@ public class AutoscalerService {
                     AnalyzerConstants.AutoscalerConstants.DEFAULT_SLEEP_INTERVAL,
                     TimeUnit.SECONDS);
         } catch (Exception e) {
-            LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDTAER_SERVICE_START_ERROR + e.getMessage());
+            LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.UPDATER_SERVICE_START_ERROR + e.getMessage());
         }
     }
 
