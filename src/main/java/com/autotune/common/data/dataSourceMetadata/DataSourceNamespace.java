@@ -13,12 +13,14 @@ import java.util.HashMap;
 public class DataSourceNamespace {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceNamespace.class);
     private String namespace;
-
     /**
      * Key: Workload name
      * Value: Associated DataSourceWorkload object
      */
     private HashMap<String, DataSourceWorkload> workloads;
+
+    public DataSourceNamespace() {
+    }
 
     public DataSourceNamespace(String namespace, HashMap<String, DataSourceWorkload> workloads) {
         this.namespace = namespace;

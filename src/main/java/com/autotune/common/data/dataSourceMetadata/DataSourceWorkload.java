@@ -20,12 +20,14 @@ public class DataSourceWorkload {
     @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.WORKLOAD_TYPE)
     @JsonProperty(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.WORKLOAD_TYPE)
     private String workloadType;
-
     /**
      * Key: Container name
      * Value: Associated DataSourceContainer object
      */
     private HashMap<String, DataSourceContainer> containers;
+
+    public DataSourceWorkload() {
+    }
 
     public DataSourceWorkload(String workloadName, String workloadType, HashMap<String, DataSourceContainer> containers) {
         this.workloadName = workloadName;

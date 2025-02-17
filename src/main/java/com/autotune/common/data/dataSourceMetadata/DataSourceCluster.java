@@ -1,6 +1,7 @@
 package com.autotune.common.data.dataSourceMetadata;
 
 import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 import org.slf4j.Logger;
@@ -12,17 +13,20 @@ import java.util.HashMap;
  * DataSourceCluster object represents the cluster of a data source, and it's associated namespaces
  * used to store hashmap of DataSourceNamespace objects representing namespace metadata
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class DataSourceCluster {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCluster.class);
     @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTER_NAME)
     @JsonProperty(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CLUSTER_NAME)
     private String clusterName;
-
     /**
      * Key: Namespace
      * Value: Associated DataSourceNamespace object
      */
     private HashMap<String, DataSourceNamespace> namespaces;
+
+    public DataSourceCluster() {
+    }
 
     public DataSourceCluster(String clusterName, HashMap<String, DataSourceNamespace> namespaces) {
         this.clusterName = clusterName;
