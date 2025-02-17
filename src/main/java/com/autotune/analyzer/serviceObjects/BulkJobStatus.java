@@ -56,6 +56,13 @@ public class BulkJobStatus {
         this.summary = new Summary(jobID, status, startTime, input);
     }
 
+    public BulkJobStatus(Summary summary, Map<String, Experiment> experimentMap, Webhook webhook, DataSourceMetadataInfo metadata) {
+        this.summary = summary;
+        this.experimentMap = experimentMap;
+        this.webhook = webhook;
+        this.metadata = metadata;
+    }
+
     // Utility function to format Instant into the required UTC format
     private static String formatInstantAsUTCString(Instant instant) {
         DateTimeFormatter formatter = DateTimeFormatter
@@ -125,31 +132,34 @@ public class BulkJobStatus {
      * @param regex the regular expression used to filter entries by key, or {@code null} to copy all entries.
      *
      *              <pre>
-     *                                                                               Example Usage:
-     *                                                                               Given a map containing:
-     *                                                                               {"test1" -> "value1", "example2" -> "value2", "sample3" -> "value3"}
+     *                                                                                                                                                                                                    Example Usage:
+     *                                                                                                                                                                                                    Given a map containing:
+     *                                                                                                                                                                                                    {"test1" -> "value1", "example2" -> "value2", "sample3" -> "value3"}
      *
-     *                                                                               copyByPattern("test") will result in:
-     *                                                                               {"test1" -> "value1"} being copied to {@code experiments}.
-     *                                                                               </pre>
+     *                                                                                                                                                                                                    copyByPattern("test") will result in:
+     *                                                                                                                                                                                                    {"test1" -> "value1"} being copied to {@code experiments}.
+     *                                                                                                                                                                                                    </pre>
      */
     public void copyByPattern(String regex) {
 
         experiments.clear();
-        synchronized (experimentMap) {
-            if (regex == null) {
-                experiments.putAll(experimentMap);
-            } else {
-                LOGGER.debug("regex : {}", regex);
-                Pattern pattern = Pattern.compile(".*" + Pattern.quote(regex) + ".*");
+        if (null != experimentMap) {
+            synchronized (experimentMap) {
+                if (regex == null) {
+                    experiments.putAll(experimentMap);
+                } else {
+                    LOGGER.debug("regex : {}", regex);
+                    Pattern pattern = Pattern.compile(".*" + Pattern.quote(regex) + ".*");
 
-                experimentMap.forEach((key, value) -> {
-                    if (pattern.matcher(key).matches()) {
-                        experiments.put(key, value); // Direct reference copy
-                    }
-                });
+                    experimentMap.forEach((key, value) -> {
+                        if (pattern.matcher(key).matches()) {
+                            experiments.put(key, value); // Direct reference copy
+                        }
+                    });
+                }
             }
         }
+
     }
 
     public BulkJob getBulkJobForDB(String experimentsString) throws Exception {
@@ -210,6 +220,17 @@ public class BulkJobStatus {
             this.input = input;
             setStartTime(startTime);
             this.processed_experiments = new AtomicInteger(0);
+        }
+
+        public Summary(String jobID, String status, int total_experiments, int processed_experiments, Timestamp startTime, Timestamp endTime, Map<String, Notification> notifications, BulkInput input) {
+            this.jobID = jobID;
+            this.status = status;
+            this.total_experiments = total_experiments;
+            this.processed_experiments = new AtomicInteger(processed_experiments);
+            this.startTime = formatInstantAsUTCString(startTime.toInstant());
+            this.endTime = (endTime != null) ? formatInstantAsUTCString(endTime.toInstant()) : null;
+            this.notifications = notifications;
+            this.input = input;
         }
 
         // Utility function to parse string to java.sql.Timestamp in UTC
@@ -326,6 +347,9 @@ public class BulkJobStatus {
         private CreateExperimentAPIResponse create = new CreateExperimentAPIResponse();
         private GenerateRecommendationsAPIResponse recommendations = new GenerateRecommendationsAPIResponse();
 
+        public API_Response() {
+        }
+
         public CreateExperimentAPIResponse getCreate() {
             return create;
         }
@@ -347,6 +371,9 @@ public class BulkJobStatus {
     public static class CreateExperimentAPIResponse {
         private KruizeResponse response;
         private CreateExperimentAPIObject request;
+
+        public CreateExperimentAPIResponse() {
+        }
 
         public KruizeResponse getResponse() {
             return response;
@@ -422,6 +449,9 @@ public class BulkJobStatus {
             status_history.add(new StatusHistory(UNPROCESSED, Instant.now()));
         }
 
+        public Experiment() {
+        }
+
         public String getName() {
             return name;
         }
@@ -465,6 +495,9 @@ public class BulkJobStatus {
             this.timestamp = formatInstantAsUTCString(timestamp);
         }
 
+        public StatusHistory() {
+        }
+
         public KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status getStatus() {
             return status;
         }
@@ -481,6 +514,9 @@ public class BulkJobStatus {
         private int code;
 
         // Constructor, getters, and setters
+
+        public Notification() {
+        }
 
         public Notification(NotificationType type, String message, int code) {
             this.type = type;

@@ -67,7 +67,7 @@ public class KruizeDeploymentInfo {
     public static String database_admin_password;
     public static String database_ssl_mode;
     public static Boolean cache_job_in_mem = true;
-    public static String job_filter_to_db = "experiments|status|apis|create|response";      //Use this constant to store necessary information into DB also can be set via env variable
+    public static String job_filter_to_db = "experiments|status|apis|create|response|status_history";      //Use this constant to store necessary information into DB also can be set via env variable
     public static String cloudwatch_logs_access_key_id;
     public static String cloudwatch_logs_secret_access_key;
     public static String cloudwatch_logs_log_group;

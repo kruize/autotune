@@ -1,5 +1,8 @@
 package com.autotune.database.table.lm;
 
+import com.autotune.analyzer.serviceObjects.BulkInput;
+import com.autotune.analyzer.serviceObjects.BulkJobStatus;
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -9,13 +12,18 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
+import java.util.HashMap;
+import java.util.Map;
 
 
 @Entity
 @Table(name = "kruize_bulkjobs")
 public class BulkJob {
+    private static final Logger LOGGER = LoggerFactory.getLogger(BulkJob.class);
     @Id
     @Column(name = "job_id", columnDefinition = "VARCHAR(36)")
     private String jobId;
@@ -30,16 +38,12 @@ public class BulkJob {
     private Timestamp jobEndTime;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode webhook;
-
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode notifications; // Stored as JSON string
-
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode experiments; // JSONB field for experiments data
-
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode metadata; // JSONB field for experiments data
-
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode payload; // JSONB field for experiments data
 
@@ -172,4 +176,78 @@ public class BulkJob {
                 ", payload='" + payload + '\'' +
                 '}';
     }
+
+    public BulkJobStatus getBulkJobStatus() {
+        BulkJobStatus jobStatus = new BulkJobStatus(
+                new BulkJobStatus.Summary(
+                        jobId,
+                        status,
+                        totalExperiments,
+                        processedExperiments,
+                        jobStartTime,
+                        jobEndTime,
+                        convertJsonNodeToMap(notifications),
+                        convertJsonNodeToBulkInput(payload)),
+                convertJsonNodeToExperimentsMap(experiments.get("experiments")),
+                null,
+                convertJsonNodeToMetaData(metadata)
+        );
+        return jobStatus;
+
+    }
+
+
+    public Map<String, BulkJobStatus.Notification> convertJsonNodeToMap(JsonNode jsonNode) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (jsonNode == null || jsonNode.isNull()) {
+            return new HashMap<>(); // Return an empty map if null
+        }
+
+        try {
+            return objectMapper.convertValue(jsonNode, objectMapper.getTypeFactory()
+                    .constructMapType(Map.class, String.class, BulkJobStatus.Notification.class));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert JsonNode to Map<String, Notification>", e);
+        }
+    }
+
+    public BulkInput convertJsonNodeToBulkInput(JsonNode jsonNode) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (jsonNode == null || jsonNode.isNull()) {
+            return null; // Return null if the JsonNode is empty
+        }
+
+        try {
+            return objectMapper.treeToValue(jsonNode, BulkInput.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert JsonNode to BulkInput", e);
+        }
+    }
+
+    public Map<String, BulkJobStatus.Experiment> convertJsonNodeToExperimentsMap(JsonNode jsonNode) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (jsonNode == null || jsonNode.isNull()) {
+            return null; // Return null if the JsonNode is empty
+        }
+        try {
+            return objectMapper.convertValue(jsonNode, objectMapper.getTypeFactory()
+                    .constructMapType(Map.class, String.class, BulkJobStatus.Experiment.class));
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert JsonNode to BulkJobStatus.Experiment", e);
+        }
+    }
+
+    public DataSourceMetadataInfo convertJsonNodeToMetaData(JsonNode jsonNode) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (jsonNode == null || jsonNode.isNull()) {
+            return null; // Return null if the JsonNode is empty
+        }
+
+        try {
+            return objectMapper.treeToValue(jsonNode, DataSourceMetadataInfo.class);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to convert JsonNode to MetaData", e);
+        }
+    }
+
 }

@@ -18,7 +18,9 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.serviceObjects.BulkInput;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.workerimpl.BulkJobManager;
+import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.database.table.lm.BulkJob;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.MetricsConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -161,17 +163,22 @@ public class BulkService extends HttpServlet {
             boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
             BulkJobStatus jobDetails;
             LOGGER.info("Job ID: " + jobID);
-            if (jobStatusMap.isEmpty()) {
-                sendErrorResponse(
-                        resp,
-                        null,
-                        HttpServletResponse.SC_NOT_FOUND,
-                        JOB_NOT_FOUND_MSG
-                );
-                return;
+            if (KruizeDeploymentInfo.cache_job_in_mem) {
+                if (jobStatusMap.isEmpty()) {
+                    sendErrorResponse(
+                            resp,
+                            null,
+                            HttpServletResponse.SC_NOT_FOUND,
+                            JOB_NOT_FOUND_MSG
+                    );
+                    return;
+                }
+                jobDetails = jobStatusMap.get(jobID);
+            } else {
+                ExperimentDAO experimentDAO = new ExperimentDAOImpl();
+                BulkJob bulkJob = experimentDAO.findBulkJobById(jobID);
+                jobDetails = bulkJob.getBulkJobStatus();
             }
-            jobDetails = jobStatusMap.get(jobID);
-            LOGGER.info("Job Status: {}" + jobDetails.getSummary().getStatus());
             resp.setContentType(JSON_CONTENT_TYPE);
             resp.setCharacterEncoding(CHARACTER_ENCODING);
             SimpleFilterProvider filters = new SimpleFilterProvider();
@@ -185,6 +192,7 @@ public class BulkService extends HttpServlet {
                 );
             } else {
                 try {
+                    LOGGER.info("Job Status: {}" + jobDetails.getSummary().getStatus());
                     resp.setStatus(HttpServletResponse.SC_OK);
                     // Filter JSON
                     String filteredJson = filterJson(jobDetails, includeFields, excludeFields, experiment_name);

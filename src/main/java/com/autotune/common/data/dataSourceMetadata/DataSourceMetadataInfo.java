@@ -11,12 +11,14 @@ import java.util.HashMap;
  */
 public class DataSourceMetadataInfo {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceMetadataInfo.class);
-
     /**
      * Key: Data Source name
      * Value: Associated DataSource object
      */
     private HashMap<String, DataSource> datasources;
+
+    public DataSourceMetadataInfo() {
+    }
 
     public DataSourceMetadataInfo(HashMap<String, DataSource> datasources) {
         this.datasources = datasources;

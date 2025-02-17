@@ -17,12 +17,14 @@ public class DataSource {
     @SerializedName(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCE_NAME)
     @JsonProperty(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.DATASOURCE_NAME)
     private String dataSourceName;
-
     /**
      * Key: Cluster name
      * Value: Associated DataSourceCluster object
      */
     private HashMap<String, DataSourceCluster> clusters;
+
+    public DataSource() {
+    }
 
     public DataSource(String dataSourceName, HashMap<String, DataSourceCluster> clusters) {
         this.dataSourceName = dataSourceName;

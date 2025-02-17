@@ -707,7 +707,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } finally {
             if (null != timerGetBulkJobDB) {
                 MetricsConfig.timerLoadBulkJobId = MetricsConfig.timerBLoadBulkJobId.tag("status", statusValue).register(MetricsConfig.meterRegistry());
-                timerGetBulkJobDB.stop(MetricsConfig.timerLoadExpName);
+                timerGetBulkJobDB.stop(MetricsConfig.timerLoadBulkJobId);
             }
         }
         return bulkJob;
@@ -977,7 +977,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
-   
+
     @Override
     public List<KruizeResultsEntry> loadAllResults() throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
