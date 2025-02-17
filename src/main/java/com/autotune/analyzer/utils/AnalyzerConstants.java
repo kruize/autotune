@@ -301,6 +301,15 @@ public class AnalyzerConstants {
         }
     }
 
+    public static final class RecommendationSettings {
+        public static final String SHORT = "short";
+        public static final String MEDIUM = "medium";
+        public static final String LONG = "long";
+
+        private RecommendationSettings() {
+        }
+    }
+
     /**
      * Used to parse the Autotune kind resource
      */

@@ -2570,6 +2570,65 @@ If no experiment type is specified, it will default to `container`.
 ```
 </details>
 
+**Request with `model_settings` and `term_settings` field**
+
+Under `recommendation_settings`, the `model_settings` and `term_settings` field is optional 
+and can be used to specify model and term details. Currently, it supports configurations 
+for a single model and a single term. Model can be set to either cost or performance and
+term can be set to short, medium or long term.
+
+If mode is set to auto or recreate and the above settings are not mentioned then it will
+default to `performance` and `short` term.
+
+<details>
+  <summary><b>Example Request with custom model_settings and term_settings </b></summary>
+
+### EXAMPLE REQUEST
+```json
+[
+  {
+    "version": "v2.0",
+    "experiment_name": "default|default|deployment|tfb-qrh-deployment",
+    "cluster_name": "default",
+    "performance_profile": "resource-optimization-openshift",
+    "mode": "monitor",
+    "target_cluster": "local",
+    "experiment_type": "container",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-db:1.15",
+            "container_name": "tfb-server-0"
+          },
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1"
+          }
+        ]
+      }
+    ],
+    "trial_settings": {
+      "measurement_duration": "15min"
+    },
+    "recommendation_settings": {
+      "threshold": "0.1",
+      "model_settings": {
+        "models": ["cost"]
+      },
+      "term_settings": {
+        "terms": ["short"]
+      }
+    },
+    "datasource": "prometheus-1"
+  }
+]
+```
+</details>
+
 **Response**
 
 <details>
