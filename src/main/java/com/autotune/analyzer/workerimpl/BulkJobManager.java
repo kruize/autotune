@@ -173,6 +173,7 @@ public class BulkJobManager implements Runnable {
                 if (null == metadataInfo) {
                     setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
                 } else {
+
                     jobData.setMetadata(metadataInfo);
                     Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
                     //  TODO: Remove getExperimentMap and instead collect all metadata, process it, and create experiments dynamically during metadata iteration.
@@ -281,16 +282,6 @@ public class BulkJobManager implements Runnable {
                                                     experiment.setStatus(NotificationConstants.Status.FAILED);
                                                     experiment.getApis().getRecommendations().setResponse(new KruizeResponse(e.getMessage(),
                                                             HttpURLConnection.HTTP_INTERNAL_ERROR, null, FAILED));
-                                                    // if kafka is enabled, push the error response in the error topic
-                                                    if(KruizeDeploymentInfo.is_kafka_enabled) {
-                                                        String processedJobDataJson = null;
-                                                        try {
-                                                            processedJobDataJson = buildKafkaResponse(jobData, experiment_name, KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC, KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS);
-                                                        } catch (Exception ex) {
-                                                            LOGGER.error("Exception occurred while building Kafka response: {}", ex.getMessage());
-                                                        }
-                                                        initiateKafkaCall(KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC, processedJobDataJson);
-                                                    }
                                                 } finally {
                                                     jobData.getSummary().incrementProcessed_experiments();
                                                     synchronized (jobData) {

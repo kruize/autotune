@@ -101,7 +101,7 @@ public class BulkService extends HttpServlet {
                 return;
             }
             jobDetails = jobStatusMap.get(jobID);
-            LOGGER.info("Job Status: " + jobDetails.getSummary().getStatus());
+            LOGGER.info("Job Status: {}" + jobDetails.getSummary().getStatus());
             resp.setContentType(JSON_CONTENT_TYPE);
             resp.setCharacterEncoding(CHARACTER_ENCODING);
             SimpleFilterProvider filters = new SimpleFilterProvider();
@@ -206,7 +206,7 @@ public class BulkService extends HttpServlet {
      * @return A JSON string representation of the filtered BulkJobStatus object.
      * @throws Exception If there is an error during JSON processing.
      */
-    public static String filterJson(BulkJobStatus jsonInput, Set<String> includeFields, Set<String> excludeFields, String experiment_name) throws Exception {
+    public String filterJson(BulkJobStatus jsonInput, Set<String> includeFields, Set<String> excludeFields, String experiment_name) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         // Include or exclude fields
         SimpleFilterProvider filters = new SimpleFilterProvider();
