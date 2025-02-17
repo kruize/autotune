@@ -293,6 +293,19 @@ public class AnalyzerErrorConstants {
             public static final String LOAD_METADATA_PROFILE_ERROR = "Failed to load saved metadata profile data due to: {} ";
             public static final String LOAD_ALL_METADATA_PROFILES_ERROR = "Failed to load all the metadata profiles data due to: {} ";
         }
+
+        public static final class DeleteMetadataProfileAPI {
+            public DeleteMetadataProfileAPI() {
+            }
+            public static final String INVALID_METADATA_PROFILE_NAME_EXCPTN = "Invalid Metadata Profile Name";
+            public static final String INVALID_METADATA_PROFILE_NAME_MSG = "Given metadata profile name - %s either does not exist or is not valid";
+            public static final String MISSING_METADATA_PROFILE_NAME_EXCPTN = "Missing Metadata Profile Name";
+            public static final String MISSING_METADATA_PROFILE_NAME_MSG = "Missing metadata profile 'name' parameter";
+            public static final String DELETE_METADATA_PROFILE_FROM_DB_FAILURE_MSG = "Failed to delete metadata profile from DB: %s";
+            public static final String DELETE_METADATA_PROFILE_FAILURE_MSG = "Failed to delete the specified metadata profile data: %s";
+            public static final String DELETE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeLMMetadataProfileEntry not found with metadata profile name: ";
+            public static final String DELETE_METADATA_PROFILE_ENTRY_ERROR_MSG = "Failed to delete metadata profile for metric profile {} due to {}";
+        }
     }
 
     public static final class ConversionErrors {

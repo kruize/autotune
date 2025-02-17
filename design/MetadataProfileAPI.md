@@ -299,3 +299,40 @@ Returns list of all the metadata profile created with all the metadata queries
 ]
 ```
 </details>
+
+### Delete Metadata Profile API
+
+This is quick guide instructions to delete metadata profile created as follows.
+
+**Request Parameters**
+
+| Parameter | Type   | Required | Description                      |
+|-----------|--------|----------|----------------------------------|
+| name      | string | required | The name of the metadata profile |
+
+
+**Request with name query parameter**
+
+`DELETE /deleteMetadataProfile`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/deleteMetadataProfile?name=cluster-metadata-local-monitoring`
+
+Deletes the specified metadata profile name, provided metadata profile already is created
+
+<details>
+<summary><b>Response</b></summary>
+
+### Example Response
+
+```json
+{
+  "message": "Metadata profile: cluster-metadata-local-monitoring deleted successfully. View Metadata Profiles at /listMetadataProfiles",
+  "httpcode": 201,
+  "documentationLink": "",
+  "status": "SUCCESS"
+}
+```
+
+</details>
+
+<br>
