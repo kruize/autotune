@@ -16,6 +16,7 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.utils.KruizeConstants;
+import software.amazon.awssdk.services.cloudwatchlogs.endpoints.internal.Value;
 
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -294,6 +295,26 @@ public class AnalyzerConstants {
             private AcceleratorProfiles() {
 
             }
+        }
+
+        public static final class AcceleratorMemory {
+            private AcceleratorMemory() {
+
+            }
+
+            public static final String UNIT_GB = "GB";
+            public static final String GB_40 = "40" + UNIT_GB;
+            public static final String GB_80 = "80" + UNIT_GB;
+
+        }
+
+        public static final class AcceleratorAutoscalerLabels {
+            private AcceleratorAutoscalerLabels() {
+
+            }
+
+            public static final String CONTROLLER_UID = "controller-uid";
+            public static final String BATCH_CONTROLLER_UID = "batch.kubernetes.io/controller-uid";
         }
     }
 

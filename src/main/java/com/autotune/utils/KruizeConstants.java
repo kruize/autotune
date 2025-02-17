@@ -619,6 +619,19 @@ public class KruizeConstants {
                 }
             }
         }
+
+        public static class RecommendationErrorMsgs {
+            private RecommendationErrorMsgs() {
+
+            }
+
+            public static final String AMT_FORMAT_IS_NULL = "Invalid input: 'amount' and 'format' cannot be null";
+            public static final String CPU_UNSUPPORTED_FORMAT = "Unsupported format for CPU conversion: ";
+            public static final String ACCELERATOR_UNSUPPORTED_FORMAT = "Unsupported format for Accelerator conversion: ";
+            public static final String INPUT_NULL = "Input object cannot be null";
+            public static final String VALUE_NEGATIVE = "Value cannot be negative";
+            public static final String INVALID_MEM_FORMAT = "Invalid format: Supported formats are bytes, KB, KiB, MB, MiB, GB, GiB, etc.";
+        }
     }
 
     /**

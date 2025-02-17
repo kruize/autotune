@@ -1,6 +1,7 @@
 package com.autotune.analyzer.autoscaler.accelerator;
 
 import com.autotune.analyzer.autoscaler.AutoscalerImpl;
+import com.autotune.analyzer.autoscaler.accelerator.utils.AcceleratorAutoscalerUtils;
 import com.autotune.analyzer.autoscaler.settings.AutoscalingSettings;
 import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
@@ -162,38 +163,16 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
         Map<String, Map<String, Quantity>> originalResourcesLimits = new HashMap<>();
 
         try (KubernetesClient kubernetesClient = new DefaultKubernetesClient()) {
-            if (koType.equalsIgnoreCase("deployment")) {
+            if (koType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.DEPLOYMENT)) {
                 kubernetesClient.apps().deployments().inNamespace(namespace).list().getItems().forEach(deployment -> {
                     deployment.getSpec().getTemplate().getSpec().getContainers().stream().filter(
                             container -> container.getName().equals(containerName)
                     ).forEach(container -> {
-                        originalResourcesRequests.put(containerName, container.getResources().getRequests());
-                        originalResourcesLimits.put(containerName, container.getResources().getLimits());
-
-                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestRecommendation =
-                                recommendations.get(AnalyzerConstants.ResourceSetting.requests);
-
-                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsRecommendation =
-                                recommendations.get(AnalyzerConstants.ResourceSetting.limits);
-
-                        Map<String, Quantity> requestMap = new HashMap<>();
-                        Map<String, Quantity> limitsMap = new HashMap<>();
-
-                        for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry : requestRecommendation.entrySet()) {
-                            requestMap.put(entry.getKey().toString(), new Quantity(String.valueOf(entry.getValue().getAmount().intValue()), entry.getValue().getFormat()));
-                        }
-
-                        for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry : limitsRecommendation.entrySet()) {
-                            if (entry.getKey().toString().contains("nvidia")) {
-                                limitsMap.put(entry.getKey().toString(), new Quantity(String.valueOf(entry.getValue().getAmount().intValue())));
-                            } else {
-                                limitsMap.put(entry.getKey().toString(), new Quantity(String.valueOf(entry.getValue().getAmount().intValue()), entry.getValue().getFormat()));
-                            }
-                        }
-
-
-                        container.getResources().setRequests(requestMap);
-                        container.getResources().setLimits(limitsMap);
+                        AcceleratorAutoscalerUtils.updateResourceValues(containerName,
+                                container,
+                                recommendations,
+                                originalResourcesRequests,
+                                originalResourcesLimits);
 
                         kubernetesClient.apps().deployments()
                                 .inNamespace(namespace)
@@ -201,37 +180,16 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
                                 .patch(deployment);
                     });
                 });
-            } else if (koType.equalsIgnoreCase("statefulset")) {
+            } else if (koType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.STATEFULSET)) {
                 kubernetesClient.apps().statefulSets().inNamespace(namespace).list().getItems().forEach(statefulSet -> {
                     statefulSet.getSpec().getTemplate().getSpec().getContainers().stream().filter(
                             container -> container.getName().equals(containerName)
                     ).forEach(container -> {
-                        originalResourcesRequests.put(containerName, container.getResources().getRequests());
-                        originalResourcesLimits.put(containerName, container.getResources().getLimits());
-
-                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestRecommendation =
-                                recommendations.get(AnalyzerConstants.ResourceSetting.requests);
-
-                        HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> limitsRecommendation =
-                                recommendations.get(AnalyzerConstants.ResourceSetting.limits);
-
-                        Map<String, Quantity> requestMap = new HashMap<>();
-                        Map<String, Quantity> limitsMap = new HashMap<>();
-
-                        for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry : requestRecommendation.entrySet()) {
-                            requestMap.put(entry.getKey().toString(), new Quantity(String.valueOf(entry.getValue().getAmount().intValue()), entry.getValue().getFormat()));
-                        }
-
-                        for (Map.Entry<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> entry : limitsRecommendation.entrySet()) {
-                            if (entry.getKey().toString().contains("nvidia")) {
-                                limitsMap.put(entry.getKey().toString(), new Quantity(String.valueOf(entry.getValue().getAmount().intValue())));
-                            } else {
-                                limitsMap.put(entry.getKey().toString(), new Quantity(String.valueOf(entry.getValue().getAmount().intValue()), entry.getValue().getFormat()));
-                            }
-                        }
-
-                        container.getResources().setRequests(requestMap);
-                        container.getResources().setLimits(limitsMap);
+                        AcceleratorAutoscalerUtils.updateResourceValues(containerName,
+                                container,
+                                recommendations,
+                                originalResourcesRequests,
+                                originalResourcesLimits);
 
                         kubernetesClient.apps().statefulSets()
                                 .inNamespace(namespace)
@@ -239,7 +197,7 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
                                 .patch(statefulSet);
                     });
                 });
-            } else if (koType.equalsIgnoreCase("job")) {
+            } else if (koType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.JOB)) {
                 Job existingJob = kubernetesClient.batch().jobs().inNamespace(namespace).withName(workloadName).get();
                 if (existingJob == null) {
                     return;
@@ -277,8 +235,8 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
 
                 Map<String, String> labels = podTemplate.getMetadata().getLabels();
                 if (labels != null) {
-                    labels.remove("controller-uid");
-                    labels.remove("batch.kubernetes.io/controller-uid");
+                    labels.remove(AnalyzerConstants.AcceleratorConstants.AcceleratorAutoscalerLabels.CONTROLLER_UID);
+                    labels.remove(AnalyzerConstants.AcceleratorConstants.AcceleratorAutoscalerLabels.BATCH_CONTROLLER_UID);
                 }
 
                 existingJob.getSpec().setSelector(null);

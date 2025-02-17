@@ -323,25 +323,25 @@ public class CommonUtils {
 
     public static RecommendationConfigItem formatMemoryUnits(RecommendationConfigItem input) {
         if (input == null) {
-            return new RecommendationConfigItem("Input object cannot be null");
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.INPUT_NULL);
         }
 
         Double amount = input.getAmount();
         String format = input.getFormat();
 
         if (amount == null || format == null) {
-            return new RecommendationConfigItem("Invalid input: 'amount' and 'format' cannot be null");
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.AMT_FORMAT_IS_NULL);
         }
 
         if (amount < 0) {
-            return new RecommendationConfigItem("Value cannot be negative");
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.VALUE_NEGATIVE);
         }
 
         // Convert all formats to bytes
         double bytes = convertToBytes(amount, format);
 
         if (bytes < 0) {
-            return new RecommendationConfigItem("Invalid format: Supported formats are bytes, KB, KiB, MB, MiB, GB, GiB, etc.");
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.INVALID_MEM_FORMAT);
         }
 
         // Determine the best unit for the value
@@ -359,7 +359,7 @@ public class CommonUtils {
 
     public static RecommendationConfigItem formatCpuUnits(RecommendationConfigItem configItem) {
         if (configItem == null || configItem.getAmount() == null || configItem.getFormat() == null) {
-            return new RecommendationConfigItem("Invalid input: Amount or format is null");
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.AMT_FORMAT_IS_NULL);
         }
 
         String format = configItem.getFormat().toLowerCase();
@@ -372,12 +372,12 @@ public class CommonUtils {
         }
 
         // If the format is not "cores", return the same object with an error message
-        return new RecommendationConfigItem("Unsupported format for CPU conversion: " + format);
+        return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.CPU_UNSUPPORTED_FORMAT + format);
     }
 
     public static RecommendationConfigItem formatAcceleratorUnits(RecommendationConfigItem configItem) {
         if (configItem == null || configItem.getAmount() == null || configItem.getFormat() == null) {
-            return new RecommendationConfigItem("Invalid input: Amount or format is null");
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.AMT_FORMAT_IS_NULL);
         }
 
         String format = configItem.getFormat().toLowerCase();
@@ -388,51 +388,24 @@ public class CommonUtils {
         }
 
         // If the format is not "cores", return the same object with an error message
-        return new RecommendationConfigItem("Unsupported format for Accelerator conversion: " + format);
+        return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.ACCELERATOR_UNSUPPORTED_FORMAT + format);
     }
 
 
     public static double convertToBytes(double amount, String format) {
         format = format.toLowerCase();
 
-        switch (format) {
-            case "bytes":
-            case "byte":
-                return amount;
-            case "kb":
-            case "kilobyte":
-            case "kilobytes":
-                return amount * 1000;
-            case "kib":
-            case "kibibyte":
-            case "kibibytes":
-                return amount * 1024;
-            case "mb":
-            case "megabyte":
-            case "megabytes":
-                return amount * 1000 * 1000;
-            case "mib":
-            case "mebibyte":
-            case "mebibytes":
-                return amount * 1024 * 1024;
-            case "gb":
-            case "gigabyte":
-            case "gigabytes":
-                return amount * 1000 * 1000 * 1000;
-            case "gib":
-            case "gibibyte":
-            case "gibibytes":
-                return amount * 1024 * 1024 * 1024;
-            case "tb":
-            case "terabyte":
-            case "terabytes":
-                return amount * 1000 * 1000 * 1000 * 1000;
-            case "tib":
-            case "tebibyte":
-            case "tebibytes":
-                return amount * 1024 * 1024 * 1024 * 1024;
-            default:
-                return -1; // unsupported format
-        }
+        return switch (format) {
+            case "bytes", "byte" -> amount;
+            case "kb", "kilobyte", "kilobytes" -> amount * 1000;
+            case "kib", "kibibyte", "kibibytes" -> amount * 1024;
+            case "mb", "megabyte", "megabytes" -> amount * 1000 * 1000;
+            case "mib", "mebibyte", "mebibytes" -> amount * 1024 * 1024;
+            case "gb", "gigabyte", "gigabytes" -> amount * 1000 * 1000 * 1000;
+            case "gib", "gibibyte", "gibibytes" -> amount * 1024 * 1024 * 1024;
+            case "tb", "terabyte", "terabytes" -> amount * 1000 * 1000 * 1000 * 1000;
+            case "tib", "tebibyte", "tebibytes" -> amount * 1024 * 1024 * 1024 * 1024;
+            default -> -1; // unsupported format
+        };
     }
 }

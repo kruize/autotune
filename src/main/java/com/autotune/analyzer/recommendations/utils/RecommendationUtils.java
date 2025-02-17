@@ -530,10 +530,10 @@ public class RecommendationUtils {
 
         modelName = modelName.toUpperCase();
 
-        if (modelName.contains("40GB"))
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_40))
             return 40 * 1024;
 
-        if (modelName.contains("80GB"))
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_80))
             return 80 * 1024;
 
         return -1;
