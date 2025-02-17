@@ -20,7 +20,6 @@ import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.serviceObjects.*;
-import com.autotune.analyzer.services.BulkService;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.data.dataSourceMetadata.*;
@@ -35,7 +34,6 @@ import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
-import com.autotune.utils.kafka.KruizeKafkaProducer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -102,12 +100,13 @@ public class BulkJobManager implements Runnable {
     private String jobID;
     private BulkInput bulkInput;
     private BulkJobStatus jobData;
-    private final ExecutorService kafkaExecutorService = Executors.newFixedThreadPool(3);
+    private KruizeKafkaManager kruizeKafkaManager;
 
     public BulkJobManager(String jobID, BulkJobStatus jobData, BulkInput payload) {
         this.jobID = jobID;
         this.jobData = jobData;
         this.bulkInput = payload;
+        this.kruizeKafkaManager = KruizeDeploymentInfo.is_kafka_enabled ? new KruizeKafkaManager() : null;
     }
 
     public static List<String> appendExperiments(List<String> allExperiments, String experimentName) {
@@ -214,10 +213,9 @@ public class BulkJobManager implements Runnable {
                                                 experiment.setStatus(NotificationConstants.Status.FAILED);
                                                 LOGGER.info("Processing experiment {}", jobData.getSummary().getProcessed_experiments());
                                                 jobData.getSummary().incrementProcessed_experiments();
-                                                // if kafka is enabled, push the error response in the error topic
-                                                if(KruizeDeploymentInfo.is_kafka_enabled) {
-                                                    String processedJobDataJson = buildKafkaResponse(jobData, experiment_name, KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC, KruizeConstants.KAFKA_CONSTANTS.EXPERIMENTS);
-                                                    initiateKafkaCall(KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC, processedJobDataJson);
+                                                // if kafka is enabled, push the response in the respective topic
+                                                if (kruizeKafkaManager != null) {
+                                                    kruizeKafkaManager.publishKafkaMessage(KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC, jobData, experiment_name, experiment, KruizeConstants.KAFKA_CONSTANTS.EXPERIMENTS);
                                                 }
                                             }
                                             synchronized (jobData) {
@@ -229,6 +227,7 @@ public class BulkJobManager implements Runnable {
 
                                         if (experiment_exists) {
                                             generateExecutor.submit(() -> {
+                                                String topic = "";
                                                 // send request to generateRecommendations API
                                                 GenericRestApiClient recommendationApiClient = new GenericRestApiClient(finalDatasource);
                                                 String encodedExperimentName;
@@ -262,40 +261,31 @@ public class BulkJobManager implements Runnable {
                                                     experiment.getApis().getRecommendations().setResponse(gsonObj.fromJson(recommendationResponseCode.getResponseBody().toString(), List.class));
                                                     if (recommendationResponseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
                                                         experiment.setStatus(NotificationConstants.Status.PROCESSED);
-                                                        // if kafka is enabled, push the recommendation response in the recommendations topic
-                                                        if(KruizeDeploymentInfo.is_kafka_enabled) {
-                                                            String processedJobDataJson = buildKafkaResponse(jobData, experiment_name, KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS_TOPIC, null);
-                                                            try {
-                                                                //TODO: need to add metrics response in case of kafka failure
-                                                                initiateKafkaCall(KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS_TOPIC, processedJobDataJson);
-                                                            } catch (Exception e) {
-                                                                LOGGER.error(e.getMessage());
-                                                            }
-                                                        }
+                                                        topic = KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS_TOPIC;
                                                     } else {
                                                         experiment.setStatus(NotificationConstants.Status.FAILED);
                                                         experiment.getApis().getRecommendations().setResponse(new KruizeResponse(recommendationResponseCode.getResponseBody().toString(),
                                                                 recommendationResponseCode.getStatusCode(), null, FAILED));
+                                                        topic = KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC;
                                                     }
                                                 } catch (Exception e) {
+                                                    topic = KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC;
                                                     e.printStackTrace();
                                                     experiment.setStatus(NotificationConstants.Status.FAILED);
                                                     experiment.getApis().getRecommendations().setResponse(new KruizeResponse(e.getMessage(),
                                                             HttpURLConnection.HTTP_INTERNAL_ERROR, null, FAILED));
                                                 } finally {
                                                     jobData.getSummary().incrementProcessed_experiments();
+                                                    // if kafka is enabled, push the response in the respective topic
+                                                    if (kruizeKafkaManager != null) {
+                                                        kruizeKafkaManager.publishKafkaMessage(topic, jobData, experiment_name, experiment, null);
+                                                    }
                                                     synchronized (jobData) {
                                                         if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
                                                             setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                                             // if kafka is enabled, push the final summary in the summary topic
-                                                            if (KruizeDeploymentInfo.is_kafka_enabled) {
-                                                                String finalJSON = null;
-                                                                try {
-                                                                    finalJSON = buildKafkaResponse(jobData, experiment_name, KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC, null);
-                                                                } catch (Exception e) {
-                                                                    LOGGER.error(e.getMessage());
-                                                                }
-                                                                initiateKafkaCall(KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC, finalJSON);
+                                                            if (kruizeKafkaManager != null) {
+                                                                kruizeKafkaManager.publishKafkaMessage(KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC, jobData, experiment_name, experiment, null);
                                                             }
                                                         }
                                                     }
@@ -364,72 +354,6 @@ public class BulkJobManager implements Runnable {
                 timerRunJob.stop(MetricsConfig.timerRunJob);
             }
             MetricsConfig.activeJobs.decrementAndGet();
-        }
-    }
-
-    /**
-     *
-     * @param jobData Recommendation/Summary/Error data to be sent in the kafka topic
-     * @param experimentName name of the experiment
-     * @param topic kafka topic to which the data is sent
-     * @param failedAPI contains the name of the API that failed to construct the corresponding response (Metadata, Experiments, Recommendations)
-     * @return filtered JSON message to be sent to kafka topic
-     * @throws Exception exception if raised during filter process
-     */
-    private String buildKafkaResponse(BulkJobStatus jobData, String experimentName, String topic, String failedAPI) throws Exception {
-        return BulkService.filterJson(jobData, getIncludeFields(topic, failedAPI), Set.of(), experimentName);
-    }
-
-    /**
-     *
-     * @param topic name of the kafka topic
-     * @param failedAPI contains the name of the API that failed to construct the corresponding response (Metadata, Experiments, Recommendations)
-     * @return set of values to be included in the query params
-     */
-    private static Set<String> getIncludeFields(String topic, String failedAPI) {
-        return switch (topic) {
-            case KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS_TOPIC ->
-                    Set.of("summary|job_id|status", "experiments|status|apis|recommendations|response|status_history");
-            case KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC -> getQueryParams(failedAPI);
-            case KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC ->
-                    Set.of(KruizeConstants.KAFKA_CONSTANTS.SUMMARY);
-            default -> Set.of();
-        };
-    }
-
-    /**
-     *
-     * @param failedAPI contains the name of the API that failed to construct the corresponding response (Metadata, Experiments, Recommendations)
-     * @return set of values to be included in the query params
-     */
-    private static Set<String> getQueryParams(String failedAPI) {
-        return QUERY_PARAMS_MAP.getOrDefault(failedAPI.toLowerCase(), Set.of("summary", "metadata", "experiments"));
-    }
-
-    private static final Map<String, Set<String>> QUERY_PARAMS_MAP = Map.of(
-            KruizeConstants.KAFKA_CONSTANTS.EXPERIMENTS, Set.of("summary|job_id|status", "experiments"),
-            KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS, Set.of("summary|job_id|status", "experiments")
-    );
-
-    /**
-     *
-     * @param topic name of the kafka topic
-     * @param jobDataJson JSON String containing Recommendation/Summary/Error data to be sent in the kafka topic
-     */
-    private void initiateKafkaCall(String topic, String jobDataJson) {
-
-        switch (topic) {
-            case KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS_TOPIC:
-                kafkaExecutorService.submit(new KruizeKafkaProducer.ValidRecommendationMessageProducer(jobDataJson));
-                break;
-            case KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC:
-                kafkaExecutorService.submit(new KruizeKafkaProducer.ErrorMessageProducer(jobDataJson));
-                break;
-            case KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC:
-                kafkaExecutorService.submit(new KruizeKafkaProducer.SummaryResponseMessageProducer(jobDataJson));
-                break;
-            default:
-                throw new IllegalArgumentException("Unknown topic: " + topic);
         }
     }
 

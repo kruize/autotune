@@ -29,6 +29,10 @@ import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
 import java.util.Hashtable;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_CONFIG_DEFAULT_VALUE.DELETE_PARTITION_THRESHOLD_IN_DAYS;
@@ -95,6 +99,7 @@ public class KruizeDeploymentInfo {
     public static String kafka_bootstrap_servers = System.getenv("KAFKA_BOOTSTRAP_SERVERS");;
     public static String kafka_topic_inbound = System.getenv("INGRESS_KAFKA_TOPIC");
     public static String kafka_group_id = System.getenv("KAFKA_CONSUMER_GROUP_ID");
+    public static String kafka_topics = System.getenv("KAFKA_TOPICS");
 
 
     private KruizeDeploymentInfo() {
@@ -195,6 +200,14 @@ public class KruizeDeploymentInfo {
         LOGGER.info("Monitoring agent service: {}", KruizeDeploymentInfo.monitoring_service);
         LOGGER.info("Kruize Local Flag: {}\n\n", KruizeDeploymentInfo.local);
         LOGGER.info("Log Request and Response: {}\n\n", KruizeDeploymentInfo.log_http_req_resp);
+    }
+
+    public static Set<String> loadKafkaTopicsFromConfig() {
+        // Load topics from config (Assuming topics are in a comma-separated format)
+        return kafka_topics != null ? Arrays.stream(kafka_topics.split(","))
+                .map(String::trim) // Trim spaces
+                .filter(s -> !s.isEmpty()) // Remove empty values
+                .collect(Collectors.toSet())  : new HashSet<>();
     }
 }
 

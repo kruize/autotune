@@ -906,7 +906,9 @@ public class KruizeConstants {
                 PROCESSED("PROCESSED"),
                 UNPROCESSED("UNPROCESSED"),
                 PROCESSING("PROCESSING"),
-                FAILED("FAILED");
+                FAILED("FAILED"),
+                PUBLISHED("PUBLISHED"),
+                PUBLISH_FAILED("PUBLISH_FAILED");
 
                 private final String status;
 

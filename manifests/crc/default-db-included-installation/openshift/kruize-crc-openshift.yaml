@@ -367,6 +367,8 @@ spec:
               value: "-XX:MaxRAMPercentage=80"
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "kruize-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+            - name: KAFKA_TOPICS
+              value: "recommendations-topic,error-topic,summary-topic"
           resources:
             requests:
               memory: "350Mi"
