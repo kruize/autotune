@@ -70,6 +70,7 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED;
+import static com.autotune.utils.KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.SET_UP_DEFAULT_METADATA_PROFILE_ERROR;
 import static com.autotune.utils.ServerContext.*;
 
 public class Autotune {
@@ -138,6 +139,12 @@ public class Autotune {
                 loadMetricProfilesFromDB();
                 // load available metadata profiles from db
                 loadMetadataProfilesFromDB();
+                // setting up metadata profile
+                try {
+                    setUpMetadataProfile();
+                } catch (Exception e) {
+                    LOGGER.error(SET_UP_DEFAULT_METADATA_PROFILE_ERROR, e.getMessage());
+                }
                 // start updater service
                 startAutoscalerService();
 
@@ -238,6 +245,14 @@ public class Autotune {
     private static void loadMetadataProfilesFromDB() {
         MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
         metadataProfileCollection.loadMetadataProfilesFromDB();
+    }
+
+    /**
+     * Set up the metadata profile at installation time
+     */
+    private static void setUpMetadataProfile() throws Exception {
+        MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
+        metadataProfileCollection.addDefaultMetadataProfile();
     }
 
     private static void addAutotuneServlets(ServletContextHandler context) {

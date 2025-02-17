@@ -931,7 +931,7 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_FOUND = "MetadataProfile found: ";
         public static final String ADDING_METADATA_PROFILE = "Trying to add the metadata profile to collection: ";
         public static final String METADATA_PROFILE_ALREADY_EXISTS = "MetadataProfile already exists: ";
-        public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: ";
+        public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: {}";
         public static final String CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE = "Failed to convert input JSON to MetadataProfile object due to: {}";
 
         public static class MetadataProfileErrorMsgs {
@@ -942,6 +942,8 @@ public class KruizeConstants {
             public static final String PROCESS_METADATA_PROFILE_OBJECT_ERROR = "Failed to process metadata of metadataProfile object due to : {}";
             public static final String PROCESS_QUERY_VARIABLES_ERROR = "Error occurred while processing query_variables data due to : {}";
             public static final String CONVERT_METADATA_PROFILE_TO_DB_OBJECT_FAILURE = "Failed to convert MetadataProfile Object to MetadataProfile DB object due to {}";
+            public static final String ADD_DEFAULT_METADATA_PROFILE_EXCEPTION = "Exception occurred while adding default Metadata profile: {}";
+            public static final String SET_UP_DEFAULT_METADATA_PROFILE_ERROR = "Failed to set up default MetadataProfile due to: {}";
 
             private MetadataProfileErrorMsgs() {
             }
