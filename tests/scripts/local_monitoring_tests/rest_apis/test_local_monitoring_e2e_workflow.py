@@ -162,16 +162,8 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     container_exp_json_file = tmp_container_exp_json_file
     namespace_exp_json_file = tmp_namespace_exp_json_file
 
-<<<<<<< HEAD
-    response = delete_experiment(tfb_exp_json_file, rm=False)
-    print("delete tfb exp = ", response.status_code)
-
-    response = delete_experiment(tfb_db_exp_json_file, rm=False)
-    print("delete tfb_db exp = ", response.status_code)
-=======
-    response = delete_experiment(container_exp_json_file)
+    response = delete_experiment(container_exp_json_file, rm=False)
     print("delete sysbench container exp = ", response.status_code)
->>>>>>> 33edaf5c (updating test for e2e lm)
 
     response = delete_experiment(namespace_exp_json_file, rm=False)
     print("delete namespace exp = ", response.status_code)
