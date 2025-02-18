@@ -422,7 +422,8 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
                     continue;
 
                 boolean isCoreUsage = gpuEntry.getKey() == AnalyzerConstants.MetricName.gpuCoreUsage;
-                boolean isMemoryUsage = gpuEntry.getKey() == AnalyzerConstants.MetricName.gpuMemoryUsage;
+                boolean isMemoryUsage = (gpuEntry.getKey() == AnalyzerConstants.MetricName.gpuMemoryUsage)
+                        || (gpuEntry.getKey() == AnalyzerConstants.MetricName.acceleratorMigMemoryUsage);
 
                 // Skip if it's none of the Accelerator metrics
                 if (!isCoreUsage && !isMemoryUsage)

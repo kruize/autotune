@@ -96,7 +96,7 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
             if (isVpaInstalled) {
                 LOGGER.debug(AnalyzerConstants.AutoscalerConstants.InfoMsgs.FOUND_UPDATER_INSTALLED, AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA);
             } else {
-                LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDATER_NOT_INSTALLED);
+                LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.UPDATER_NOT_INSTALLED);
             }
             return isVpaInstalled;
         } catch (Exception e) {
@@ -114,7 +114,7 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
     private boolean checkIfVpaIsPresent(String vpaName) {
         try {
             if (null == vpaName || vpaName.isEmpty()) {
-                throw new Exception(AnalyzerErrorConstants.RecommendationUpdaterErrors.INVALID_VPA_NAME);
+                throw new Exception(AnalyzerErrorConstants.AutoscalerErrors.INVALID_VPA_NAME);
             } else {
                 LOGGER.debug(String.format(AnalyzerConstants.AutoscalerConstants.InfoMsgs.CHECKING_IF_VPA_PRESENT, vpaName));
                 NamespacedVerticalPodAutoscalerClient client = new DefaultVerticalPodAutoscalerClient();
@@ -148,7 +148,7 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
     private VerticalPodAutoscaler getVpaIsPresent(String vpaName) {
         try {
             if (null == vpaName || vpaName.isEmpty()) {
-                throw new Exception(AnalyzerErrorConstants.RecommendationUpdaterErrors.INVALID_VPA_NAME);
+                throw new Exception(AnalyzerErrorConstants.AutoscalerErrors.INVALID_VPA_NAME);
             } else {
                 LOGGER.debug(String.format(AnalyzerConstants.AutoscalerConstants.InfoMsgs.CHECKING_IF_VPA_PRESENT, vpaName));
                 NamespacedVerticalPodAutoscalerClient client = new DefaultVerticalPodAutoscalerClient();
@@ -185,7 +185,7 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
         try {
             // checking if VPA is installed or not
             if (!isUpdaterInstalled()) {
-                LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDATER_NOT_INSTALLED);
+                LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.UPDATER_NOT_INSTALLED);
             } else {
                 String expName = kruizeObject.getExperimentName();
                 boolean vpaPresent = checkIfVpaIsPresent(expName);
@@ -198,7 +198,7 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                 for (K8sObject k8sObject: kruizeObject.getKubernetes_objects()) {
                     List<RecommendedContainerResources> containerRecommendations = convertRecommendationsToContainerPolicy(k8sObject.getContainerDataMap(), kruizeObject);
                     if (containerRecommendations.isEmpty()){
-                        LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.RECOMMENDATION_DATA_NOT_PRESENT);
+                        LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.RECOMMENDATION_DATA_NOT_PRESENT);
                     } else {
                         RecommendedPodResources recommendedPodResources = new RecommendedPodResources();
                         recommendedPodResources.setContainerRecommendations(containerRecommendations);
@@ -246,7 +246,7 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
 
             // checking if recommendation data is present
             if (null == recommendationData) {
-                LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.RECOMMENDATION_DATA_NOT_PRESENT);
+                LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.RECOMMENDATION_DATA_NOT_PRESENT);
             } else {
                 for (MappedRecommendationForTimestamp value : recommendationData.values()) {
                     /*
@@ -378,7 +378,7 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                 }
 
             } else {
-                throw new UnableToCreateVPAException(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDATER_NOT_INSTALLED);
+                throw new UnableToCreateVPAException(AnalyzerErrorConstants.AutoscalerErrors.UPDATER_NOT_INSTALLED);
             }
         } catch (Exception e) {
             throw new UnableToCreateVPAException(e.getMessage());

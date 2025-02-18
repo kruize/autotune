@@ -12,6 +12,7 @@ import java.util.HashMap;
 public class ContainerDeviceList implements DeviceHandler, DeviceComponentDetector {
     private final HashMap<AnalyzerConstants.DeviceType, ArrayList<DeviceDetails>> deviceMap;
     private boolean isAcceleratorDeviceDetected;
+    private boolean isAcceleratorPartitionDetected;
     private boolean isCPUDeviceDetected;
     private boolean isMemoryDeviceDetected;
     private boolean isNetworkDeviceDetected;
@@ -19,6 +20,7 @@ public class ContainerDeviceList implements DeviceHandler, DeviceComponentDetect
     public ContainerDeviceList(){
         this.deviceMap = new HashMap<AnalyzerConstants.DeviceType, ArrayList<DeviceDetails>>();
         this.isAcceleratorDeviceDetected = false;
+        this.isAcceleratorPartitionDetected = false;
         // Currently setting up CPU, Memory and Network as true by default
         this.isCPUDeviceDetected = true;
         this.isMemoryDeviceDetected = true;
@@ -34,6 +36,11 @@ public class ContainerDeviceList implements DeviceHandler, DeviceComponentDetect
 
         if (deviceType == AnalyzerConstants.DeviceType.ACCELERATOR)
             this.isAcceleratorDeviceDetected = true;
+
+        if (deviceType == AnalyzerConstants.DeviceType.ACCELERATOR_PARTITION) {
+            this.isAcceleratorPartitionDetected = true;
+            this.isAcceleratorDeviceDetected = true;
+        }
 
         // TODO: Handle multiple same entries
         // Currently only first MIG is getting added so no check for existing duplicates is done
@@ -125,6 +132,11 @@ public class ContainerDeviceList implements DeviceHandler, DeviceComponentDetect
     @Override
     public boolean isAcceleratorDeviceDetected() {
         return this.isAcceleratorDeviceDetected;
+    }
+
+    @Override
+    public boolean isAcceleratorPartitionDetected() {
+        return this.isAcceleratorPartitionDetected;
     }
 
     @Override
