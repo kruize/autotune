@@ -231,7 +231,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
     # Wait for the threshold for short term recommendations
-    time.sleep(300)
+    time.sleep(240)
 
     # generate recommendations
     json_file = open(container_exp_json_file, "r")
