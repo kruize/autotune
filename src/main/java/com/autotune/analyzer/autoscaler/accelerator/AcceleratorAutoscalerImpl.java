@@ -151,6 +151,39 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
         }
     }
 
+    /**
+     * Updates or reverts (Yet to be implemented) resource settings for a specified container in a Kubernetes workload.
+     * <p>
+     * This method adjusts resource requests and limits for a container within a Deployment, StatefulSet, or Job
+     * based on the provided recommendations. It supports the following Kubernetes object types:
+     * <ul>
+     *     <li>Deployment</li>
+     *     <li>StatefulSet</li>
+     *     <li>Job</li>
+     * </ul>
+     * <p>
+     * For Deployments and StatefulSets:
+     * <ul>
+     *     <li>Updates resource values of the container using the provided recommendations.</li>
+     *     <li>Patches the updated Deployment or StatefulSet back to the cluster.</li>
+     * </ul>
+     * <p>
+     * For Jobs:
+     * <ul>
+     *     <li>Finds the Job by name in the specified namespace.</li>
+     *     <li>Updates the container's resource requests and limits according to the recommendations.</li>
+     *     <li>Removes specific controller labels to avoid conflicts during recreation.</li>
+     *     <li>Deletes the existing Job and recreates it with the modified configuration.</li>
+     * </ul>
+     *
+     * @param containerName  The name of the container whose resources are to be updated.
+     * @param namespace      The namespace where the workload resides.
+     * @param workloadName   The name of the workload (applicable only for Jobs).
+     * @param koType         The type of Kubernetes object (Deployment, StatefulSet, or Job).
+     *                       Only these types are supported.
+     * @param recommendations A map containing recommended resource settings (requests and limits)
+     *                        for the container.
+     */
     public static void updateOrRevertResources(String containerName,
                                                String namespace,
                                                String workloadName,
@@ -178,6 +211,7 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
                                 .inNamespace(namespace)
                                 .withName(deployment.getMetadata().getName())
                                 .patch(deployment);
+                        // TODO: Add logic / watcher for reverting if the recommendations fail
                     });
                 });
             } else if (koType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.STATEFULSET)) {
@@ -195,6 +229,7 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
                                 .inNamespace(namespace)
                                 .withName(statefulSet.getMetadata().getName())
                                 .patch(statefulSet);
+                        // TODO: Add logic / watcher for reverting if the recommendations fail
                     });
                 });
             } else if (koType.equalsIgnoreCase(AnalyzerConstants.K8sObjectConstants.Types.JOB)) {
@@ -242,7 +277,12 @@ public class AcceleratorAutoscalerImpl extends AutoscalerImpl {
                 existingJob.getSpec().setSelector(null);
 
                 kubernetesClient.batch().jobs().inNamespace(namespace).withName(workloadName).delete();
+
+                // TODO: Add watcher to trigger event after complete deletion and proceed to job creation
+
                 kubernetesClient.batch().jobs().inNamespace(namespace).createOrReplace(existingJob);
+
+                // TODO: Add logic / watcher for reverting if the recommendations fail
             }
         } catch (Exception e) {
             e.printStackTrace();
