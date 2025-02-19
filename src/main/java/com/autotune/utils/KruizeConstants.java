@@ -35,6 +35,7 @@ public class KruizeConstants {
     public static final String CONFIG_FILE = "KRUIZE_CONFIG_FILE";
     public static final String SQL_EXCEPTION_HELPER_PKG = "org.hibernate.engine.jdbc.spi";
     public static final String METADATA_PROFILE_CONTAINER_FILE = "METADATA_PROFILE_JSON_FILE_PATH";
+    public static final String METRIC_PROFILE_CONTAINER_FILE = "METRIC_PROFILE_JSON_FILE_PATH";
 
     private KruizeConstants() {
     }
@@ -87,7 +88,19 @@ public class KruizeConstants {
         public static final String METRIC_PROFILE_FOUND = "MetricProfile found: ";
         public static final String ADDING_METRIC_PROFILE = "Trying to add the metric profile to collection: ";
         public static final String METRIC_PROFILE_ALREADY_EXISTS = "MetricProfile already exists: ";
-        public static final String METRIC_PROFILE_ADDED = "MetricProfile added to the collection successfully: ";
+        public static final String METRIC_PROFILE_ADDED = "MetricProfile added to the collection successfully: {}";
+
+        public static class MetricProfileErrorMsgs {
+            public static final String ADD_DEFAULT_METRIC_PROFILE_EXCEPTION = "Exception occurred while adding default Metric profile: {}";
+            public static final String SET_UP_DEFAULT_METRIC_PROFILE_ERROR = "Failed to set up default MetricProfile due to: {}";
+            public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
+            public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
+            public static final String ADD_METRIC_PROFILE_TO_DB_ERROR = "Failed to add Metric Profile due to {}";
+            public static final String METRIC_PROFILE_VALIDATION_FAILURE = "Validation failed: ";
+
+            public MetricProfileErrorMsgs() {
+            }
+        }
     }
 
     /**

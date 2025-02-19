@@ -71,6 +71,7 @@ import java.util.Scanner;
 
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED;
 import static com.autotune.utils.KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.SET_UP_DEFAULT_METADATA_PROFILE_ERROR;
+import static com.autotune.utils.KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.SET_UP_DEFAULT_METRIC_PROFILE_ERROR;
 import static com.autotune.utils.ServerContext.*;
 
 public class Autotune {
@@ -137,6 +138,12 @@ public class Autotune {
                 checkAvailableDataSources();
                 // load available metric profiles from db
                 loadMetricProfilesFromDB();
+                // setting up metric profile
+                try {
+                    setUpMetricProfile();
+                } catch (Exception e) {
+                    LOGGER.error(SET_UP_DEFAULT_METRIC_PROFILE_ERROR, e.getMessage());
+                }
                 // load available metadata profiles from db
                 loadMetadataProfilesFromDB();
                 // setting up metadata profile
@@ -237,6 +244,14 @@ public class Autotune {
     private static void loadMetricProfilesFromDB() {
         MetricProfileCollection metricProfileCollection = MetricProfileCollection.getInstance();
         metricProfileCollection.loadMetricProfilesFromDB();
+    }
+
+    /**
+     * Set up the metric profile at installation time
+     */
+    private static void setUpMetricProfile() throws IOException {
+        MetricProfileCollection metricProfileCollection = MetricProfileCollection.getInstance();
+        metricProfileCollection.addMetricProfileFromContainerPath(KruizeConstants.METRIC_PROFILE_CONTAINER_FILE);
     }
 
     /**

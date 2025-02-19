@@ -105,11 +105,11 @@ public class MetadataProfileCollection {
 
     public void addMetadataProfileFromContainerPath(String containerFileName) {
         try {
-            String setupMetadataProfile = System.getenv(containerFileName);
-            LOGGER.info("file path: {}", setupMetadataProfile);
+            String defaultMetadataProfilePath = System.getenv(containerFileName);
+            LOGGER.info("MetadataProfile file path: {}", defaultMetadataProfilePath);
 
             String jsonContent = null;
-            try (InputStream inputStream = new FileInputStream(setupMetadataProfile)) {
+            try (InputStream inputStream = new FileInputStream(defaultMetadataProfilePath)) {
                 jsonContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
             } catch (FileNotFoundException e) {
                 LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_NOT_FOUND_ERROR, containerFileName);
@@ -130,7 +130,7 @@ public class MetadataProfileCollection {
             } else {
                 LOGGER.error(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_FAILURE, validationOutputData.getMessage());
             }
-        } catch (IOException e) {
+        } catch (Exception e) {
             LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.ADD_DEFAULT_METADATA_PROFILE_EXCEPTION, e.getMessage());
         }
     }
