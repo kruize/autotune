@@ -76,7 +76,7 @@ public final class KruizeObject implements ExperimentTypeAware {
     private ValidationOutputData validation_data;
     private List<K8sObject> kubernetes_objects;
     private Map<String, Terms> terms;
-
+    private transient String bulkJobId;
 
     public KruizeObject(String experimentName,
                         String clusterName,
@@ -141,17 +141,17 @@ public final class KruizeObject implements ExperimentTypeAware {
         // TODO: add CRD for terms
         // for monitoring use case
         terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM,
-                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
-                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD,
-                    4, 0.25));
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS_THRESHOLD,
+                4, 0.25));
         terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM,
-                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
-                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD,
-                    7, 1));
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS_THRESHOLD,
+                7, 1));
         terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM,
-                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
-                    KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD,
-                    15, 1));
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
+                KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS_THRESHOLD,
+                15, 1));
         kruizeObject.setTerms(terms);
 
     }
@@ -200,6 +200,14 @@ public final class KruizeObject implements ExperimentTypeAware {
             // Handles the case where termSettings is null
             throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.TERM_SETTINGS_UNDEFINED);
         }
+    }
+
+    public String getBulkJobId() {
+        return bulkJobId;
+    }
+
+    public void setBulkJobId(String bulkJobId) {
+        this.bulkJobId = bulkJobId;
     }
 
     public String getExperimentName() {

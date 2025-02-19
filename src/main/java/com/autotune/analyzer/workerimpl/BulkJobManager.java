@@ -226,11 +226,11 @@ public class BulkJobManager implements Runnable {
                                                 GenericRestApiClient recommendationApiClient = new GenericRestApiClient(finalDatasource);
                                                 String encodedExperimentName;
                                                 encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
-                                                recommendationApiClient.setBaseURL(String.format(KruizeDeploymentInfo.recommendations_url, encodedExperimentName));
+                                                String recommendationURL = String.format(KruizeDeploymentInfo.recommendations_url + "&" + JOB_ID + "=%s", encodedExperimentName, jobID);
+                                                recommendationApiClient.setBaseURL(recommendationURL);
                                                 GenericRestApiClient.HttpResponseWrapper recommendationResponseCode = null;
                                                 try {
                                                     recommendationResponseCode = recommendationApiClient.callKruizeAPI(null);
-                                                    LOGGER.debug("API Response code: {}", recommendationResponseCode);
                                                     ExclusionStrategy strategy = new ExclusionStrategy() {
                                                         @Override
                                                         public boolean shouldSkipField(FieldAttributes field) {

@@ -44,7 +44,6 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
                             kruizeObject.getExperimentName(),
                             kruizeObject
                     );
-                    LOGGER.debug("Added Experiment name : {} into main map.", kruizeObject.getExperimentName());
                 }
         );
         return true;

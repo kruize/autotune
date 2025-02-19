@@ -305,7 +305,7 @@ public class RecommendationEngine {
      * @param calCount The count of incoming requests.
      * @return The KruizeObject containing the prepared recommendations.
      */
-    public KruizeObject prepareRecommendations(int calCount, String target_cluster) throws FetchMetricsError {
+    public KruizeObject prepareRecommendations(int calCount, String target_cluster, String bulkJobID) throws FetchMetricsError {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
         Map<String, Terms> terms = new HashMap<>();
         ValidationOutputData validationOutputData;
@@ -316,6 +316,7 @@ public class RecommendationEngine {
             setInterval_end_time(interval_end_time);
         }
         KruizeObject kruizeObject = createKruizeObject(target_cluster);
+        if (null != bulkJobID) kruizeObject.setBulkJobId(bulkJobID);
         if (!kruizeObject.getValidation_data().isSuccess())
             return kruizeObject;
         setKruizeObject(kruizeObject);
@@ -326,16 +327,15 @@ public class RecommendationEngine {
             if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
                 // monitoring mode
                 if (kruizeObject.getRecommendation_settings() == null ||
-                    kruizeObject.getRecommendation_settings().getTermSettings() == null ||
-                    kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null) {
+                        kruizeObject.getRecommendation_settings().getTermSettings() == null ||
+                        kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null) {
                     // default for monitoring
-                    KruizeObject.setDefaultTerms(terms,kruizeObject);
+                    KruizeObject.setDefaultTerms(terms, kruizeObject);
                 } else {
                     // Process terms
                     KruizeObject.setCustomTerms(terms, kruizeObject);
                 }
-            }
-            else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
+            } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
                 // auto or recreate mode
                 if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getTermSettings() == null ||
@@ -346,7 +346,7 @@ public class RecommendationEngine {
                     // terms for auto recreate
                     if (kruizeObject.getRecommendation_settings().getTermSettings().getTerms().size() == 1) {
                         // single term
-                       KruizeObject.setCustomTerms(terms, kruizeObject);
+                        KruizeObject.setCustomTerms(terms, kruizeObject);
                     } else {
                         // multiple terms throw error
                         throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_TERMS_UNSUPPORTED);
@@ -375,8 +375,7 @@ public class RecommendationEngine {
                     setModelNames(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
                     loadCustomRecommendationModels(modelNames);
                 }
-            }
-            else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
+            } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
                 // auto or recreate mode
                 if (kruizeObject.getRecommendation_settings() == null ||
                         kruizeObject.getRecommendation_settings().getModelSettings() == null ||
@@ -384,15 +383,15 @@ public class RecommendationEngine {
                     // recommendation setting are null -> use default values
                     loadDefaultRecommendationModelForAutoAndRecreate();
                 } else {
-                        // for what ever model settings are present do as directed.
-                        // check for single model
-                        if (kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
-                            // call for that one model
-                            loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
-                        } else {
-                            // multiple model throw error
-                            throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED);
-                        }
+                    // for what ever model settings are present do as directed.
+                    // check for single model
+                    if (kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
+                        // call for that one model
+                        loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
+                    } else {
+                        // multiple model throw error
+                        throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED);
+                    }
                 }
             }
 

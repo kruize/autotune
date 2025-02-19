@@ -132,13 +132,13 @@ public class BulkJobStatus {
      * @param regex the regular expression used to filter entries by key, or {@code null} to copy all entries.
      *
      *              <pre>
-     *                                                                                                                                                                                                    Example Usage:
-     *                                                                                                                                                                                                    Given a map containing:
-     *                                                                                                                                                                                                    {"test1" -> "value1", "example2" -> "value2", "sample3" -> "value3"}
+     *                                                                                                                                                                                                                 Example Usage:
+     *                                                                                                                                                                                                                 Given a map containing:
+     *                                                                                                                                                                                                                 {"test1" -> "value1", "example2" -> "value2", "sample3" -> "value3"}
      *
-     *                                                                                                                                                                                                    copyByPattern("test") will result in:
-     *                                                                                                                                                                                                    {"test1" -> "value1"} being copied to {@code experiments}.
-     *                                                                                                                                                                                                    </pre>
+     *                                                                                                                                                                                                                 copyByPattern("test") will result in:
+     *                                                                                                                                                                                                                 {"test1" -> "value1"} being copied to {@code experiments}.
+     *                                                                                                                                                                                                                 </pre>
      */
     public void copyByPattern(String regex) {
 
@@ -148,9 +148,7 @@ public class BulkJobStatus {
                 if (regex == null) {
                     experiments.putAll(experimentMap);
                 } else {
-                    LOGGER.debug("regex : {}", regex);
                     Pattern pattern = Pattern.compile(".*" + Pattern.quote(regex) + ".*");
-
                     experimentMap.forEach((key, value) -> {
                         if (pattern.matcher(key).matches()) {
                             experiments.put(key, value); // Direct reference copy

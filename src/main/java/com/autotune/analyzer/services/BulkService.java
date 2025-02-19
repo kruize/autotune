@@ -22,7 +22,9 @@ import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.table.lm.BulkJob;
 import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.MetricsConfig;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
 import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider;
@@ -38,6 +40,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,7 +82,6 @@ public class BulkService extends HttpServlet {
             // Include or exclude fields
             jsonInput.copyByPattern(experiment_name);
             if (!includeFields.isEmpty()) {
-                LOGGER.debug("includeFields : {}", includeFields);
                 Set<String> jobFields = new HashSet<>();
                 for (String field : includeFields) {
                     if (field.startsWith(SUMMARY)) {
@@ -147,22 +150,13 @@ public class BulkService extends HttpServlet {
             String includeParams = req.getParameter("include");
             String excludeParams = req.getParameter("exclude");
             String experiment_name = req.getParameter("experiment_name");
-
-            LOGGER.debug(" include fields: {}", includeParams);
-            LOGGER.debug(" exclude fields: {}", excludeParams);
-
             // Parse the include and exclude parameters into lists
             Set<String> includeFields = includeParams != null ? new HashSet<>(Arrays.asList(includeParams.split(","))) : new HashSet<>(Arrays.asList("summary"));
             Set<String> excludeFields = excludeParams != null ? new HashSet<>(Arrays.asList(excludeParams.split(","))) : Collections.emptySet();
 
-            LOGGER.debug(" include fields: {}", includeFields);
-            LOGGER.debug(" exclude fields: {}", excludeFields);
-            LOGGER.debug(" experiment_name: {}", experiment_name);
-
             // If the parameter is not provided (null), default it to false
             boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
             BulkJobStatus jobDetails;
-            LOGGER.info("Job ID: " + jobID);
             if (KruizeDeploymentInfo.cache_job_in_mem) {
                 if (jobStatusMap.isEmpty()) {
                     sendErrorResponse(
@@ -178,6 +172,44 @@ public class BulkService extends HttpServlet {
                 ExperimentDAO experimentDAO = new ExperimentDAOImpl();
                 BulkJob bulkJob = experimentDAO.findBulkJobById(jobID);
                 jobDetails = bulkJob.getBulkJobStatus();
+                if (!includeFields.isEmpty() && includeFields.contains("experiments")) {
+                    GenericRestApiClient recommendationApiClient = new GenericRestApiClient();
+                    String listRecommendationsURL = String.format(
+                            KruizeDeploymentInfo.recommendations_url.replaceAll("generateRecommendations.*", "listRecommendations") + "?" + JOB_ID
+                                    + "=%s", jobID);
+                    if (experiment_name != null && !experiment_name.equals("")) {
+                        String encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
+                        listRecommendationsURL = listRecommendationsURL + "&experiment_name=" + encodedExperimentName;
+                    }
+                    recommendationApiClient.setBaseURL(listRecommendationsURL);
+                    GenericRestApiClient.HttpResponseWrapper recommendationResponseCode = null;
+                    Map<String, JsonNode> recommendationResponse = new HashMap<>();
+                    try {
+                        recommendationResponseCode = recommendationApiClient.getKruizeAPI(null);
+                        // Parse JSON using Jackson
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        JsonNode rootArray = objectMapper.readTree(recommendationResponseCode.getResponseBody().toString());
+                        // Extract "experiment_name" values
+                        for (JsonNode node : rootArray) {
+                            String experimentName = node.get("experiment_name").asText();
+                            recommendationResponse.put(experimentName, node);
+                        }
+                        jobDetails.getExperimentMap().forEach(
+                                (experimentName, experiment) -> {
+                                    BulkJobStatus.GenerateRecommendationsAPIResponse bresp =
+                                            new BulkJobStatus.GenerateRecommendationsAPIResponse();
+                                    if (recommendationResponse.containsKey(experimentName)) {
+                                        bresp.setResponse(
+                                                new ArrayList<>(Arrays.asList(recommendationResponse.get(experimentName)))
+                                        );
+                                        experiment.getApis().setRecommendations(bresp);
+                                    }
+                                }
+                        );
+                    } catch (Exception e) {
+                        LOGGER.error("Not able to fetch recommedations from database due to {}", e.getMessage());
+                    }
+                }
             }
             resp.setContentType(JSON_CONTENT_TYPE);
             resp.setCharacterEncoding(CHARACTER_ENCODING);
@@ -192,7 +224,6 @@ public class BulkService extends HttpServlet {
                 );
             } else {
                 try {
-                    LOGGER.info("Job Status: {}" + jobDetails.getSummary().getStatus());
                     resp.setStatus(HttpServletResponse.SC_OK);
                     // Filter JSON
                     String filteredJson = filterJson(jobDetails, includeFields, excludeFields, experiment_name);

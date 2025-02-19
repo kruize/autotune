@@ -440,9 +440,9 @@ public class ListExperiments extends HttpServlet {
                     new ExperimentDBService().loadRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
             } else {
                 if (experimentName == null || experimentName.isEmpty())
-                    new ExperimentDBService().loadAllLMRecommendations(mKruizeExperimentMap);
+                    new ExperimentDBService().loadAllLMRecommendations(mKruizeExperimentMap, null);
                 else
-                    new ExperimentDBService().loadLMRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+                    new ExperimentDBService().loadLMRecommendationsFromDBByName(mKruizeExperimentMap, experimentName, null);
             }
         } catch (Exception e) {
             LOGGER.error("Failed to load saved recommendations data: {} ", e.getMessage());

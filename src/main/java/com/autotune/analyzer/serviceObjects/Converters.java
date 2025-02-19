@@ -24,7 +24,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -67,7 +66,6 @@ public class Converters {
                         // namespace recommendations experiment type
                         k8sObject = createNamespaceExperiment(kubernetesAPIObject);
                     }
-                    LOGGER.debug("Experiment Type: {}", createExperimentAPIObject.getExperimentType());
                     k8sObjectList.add(k8sObject);
                 }
                 // TODO : some modification to add custom terms and models automatically here

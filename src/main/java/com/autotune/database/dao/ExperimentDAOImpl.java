@@ -56,6 +56,7 @@ import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY_ALT;
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
 import static com.autotune.utils.KruizeConstants.JSONKeys.CLUSTER_NAME;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
 
 public class ExperimentDAOImpl implements ExperimentDAO {
     private static final long serialVersionUID = 1L;
@@ -1023,14 +1024,21 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizeLMRecommendationEntry> loadAllLMRecommendations() throws Exception {
+    public List<KruizeLMRecommendationEntry> loadAllLMRecommendations(String bulkJobId) throws Exception {
         List<KruizeLMRecommendationEntry> recommendationEntries = null;
         String statusValue = "failure";
         Timer.Sample timerLoadAllRec = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            recommendationEntries = session.createQuery(
-                    DBConstants.SQLQUERY.SELECT_FROM_LM_RECOMMENDATIONS,
-                    KruizeLMRecommendationEntry.class).list();
+            if (null != bulkJobId || bulkJobId != "") {
+                recommendationEntries = session.createQuery(SELECT_FROM_LM_RECOMMENDATIONS_BY_JOB_ID,
+                                KruizeLMRecommendationEntry.class)
+                        .setParameter(JOB_ID, bulkJobId)
+                        .list();
+            } else {
+                recommendationEntries = session.createQuery(
+                        DBConstants.SQLQUERY.SELECT_FROM_LM_RECOMMENDATIONS,
+                        KruizeLMRecommendationEntry.class).list();
+            }
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
@@ -1290,13 +1298,20 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     @Override
-    public List<KruizeLMRecommendationEntry> loadLMRecommendationsByExperimentName(String experimentName) throws Exception {
+    public List<KruizeLMRecommendationEntry> loadLMRecommendationsByExperimentName(String experimentName, String bulkJobId) throws Exception {
         List<KruizeLMRecommendationEntry> recommendationEntries = null;
         String statusValue = "failure";
         Timer.Sample timerLoadRecExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            recommendationEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_LM_RECOMMENDATIONS_BY_EXP_NAME, KruizeLMRecommendationEntry.class)
-                    .setParameter("experimentName", experimentName).list();
+            if (null != bulkJobId) {
+                recommendationEntries = session.createQuery(SELECT_FROM_LM_RECOMMENDATIONS_BY_EXP_NAME_BY_JOB_ID, KruizeLMRecommendationEntry.class)
+                        .setParameter("experimentName", experimentName)
+                        .setParameter(JOB_ID, bulkJobId)
+                        .list();
+            } else {
+                recommendationEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_LM_RECOMMENDATIONS_BY_EXP_NAME, KruizeLMRecommendationEntry.class)
+                        .setParameter("experimentName", experimentName).list();
+            }
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to load recommendations due to {}", e.getMessage());
