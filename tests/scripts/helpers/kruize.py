@@ -18,7 +18,6 @@ import json
 import requests
 import subprocess
 
-
 def get_kruize_url():
     return URL
 
@@ -475,33 +474,62 @@ def generate_recommendations(experiment_name):
     print("\n************************************************************")
     return response
 
+def log_message(message, logger=None):
+ if logger:
+      logger.info(message)
+ else:
+      print(message)
 
-def post_bulk_api(input_json_file):
-    print("\n************************************************************")
-    print("Sending POST request to URL: ", f"{URL}/bulk")
-    print("Request Payload: ", input_json_file)
-    curl_command = f"curl -X POST {URL}/bulk -H 'Content-Type: application/json' -d '{json.dumps(input_json_file)}'"
-    print("Equivalent cURL command: ", curl_command)
+def post_bulk_api(input_json_file, logger=None):
+    msg = ("\n************************************************************")
+    log_message(msg, logger)
+
+    msg = f"Sending POST request to URL: {URL}/bulk"
+    log_message(msg, logger)
+
+    msg = logger.info(f"Request Payload: {input_json_file}")
+    log_message(msg, logger)
+
+    msg = f"curl -X POST {URL}/bulk -H 'Content-Type: application/json' -d '{json.dumps(input_json_file)}'"
+    log_message(msg, logger)
 
     # Send the POST request
     response = requests.post(f"{URL}/bulk", json=input_json_file)
-    print("Response Status Code: ", response.status_code)
-    print("Response JSON: ", response.json())
+
+    msg = f"Response Status Code: {response.status_code}"
+    log_message(msg, logger)
+
+    msg = f"Response JSON: {response.json()}"
+    log_message(msg, logger)
+
     return response
 
 
-def get_bulk_job_status(job_id, verbose=False):
-    print("\n************************************************************")
+def get_bulk_job_status(job_id,include=None,logger=None):
+    msg = "\n************************************************************"
+    log_message(msg, logger)
+    
     url_basic = f"{URL}/bulk?job_id={job_id}"
-    url_verbose = f"{URL}/bulk?job_id={job_id}&verbose={verbose}"
+    url_include = f"{URL}/bulk?job_id={job_id}&include={include}"
     getJobIDURL = url_basic
-    if verbose:
-        getJobIDURL = url_verbose
-    print("Sending GET request to URL ( verbose=", verbose, " ): ", getJobIDURL)
-    curl_command_verbose = f"curl -X GET '{getJobIDURL}'"
-    print("Equivalent cURL command : ", curl_command_verbose)
-    response = requests.get(url_verbose)
+    if include:
+        getJobIDURL = url_include
 
-    print("Verbose GET Response Status Code: ", response.status_code)
-    print("Verbose GET Response JSON: ", response.json())
+    msg = f"Sending GET request to URL ( include={include} ): {getJobIDURL}"
+    log_message(msg, logger)
+
+    curl_command_include = f"curl -X GET '{getJobIDURL}'"
+
+    msg = f"Equivalent cURL command : {curl_command_include}"
+    log_message(msg, logger)
+
+    response = requests.get(url_include)
+
+    msg = f"Include GET Response Status Code: {response.status_code}"
+    log_message(msg, logger)
+
+    if logger and include == "summary" or logger == None:
+         msg = f"Include GET Response JSON: {response.json()}"
+         log_message(msg, logger)
+
     return response
