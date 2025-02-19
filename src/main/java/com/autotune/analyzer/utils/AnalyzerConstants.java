@@ -210,12 +210,6 @@ public class AnalyzerConstants {
         gpuMemoryUsage
     }
 
-    public enum MetadataMetricName {
-        namespacesAcrossCluster,
-        workloadsAcrossCluster,
-        containersAcrossCluster
-    }
-
     public enum K8S_OBJECT_TYPES {
         DEPLOYMENT,
         DEPLOYMENT_CONFIG,
@@ -624,10 +618,6 @@ public class AnalyzerConstants {
         public static final String METADATA_PROFILE_PLURALS = "kruizemetadataprofiles";
         public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
         public static final String DATASOURCE = "datasource";
-        public static final String DEFAULT_DATASOURCE = "prometheus";
-        public static final String DEFAULT_VALUE_TYPE = "double";
-        public static final String DEFAULT_KUBERNETES_OBJECT = "container";
-        public static final String DEFAULT_AGGREGATION_FUNCTION = "sum";
     }
 
     public static final class CommonProfileMsgs {
