@@ -34,6 +34,7 @@ public class KruizeConstants {
     public static final String OPENSHIFT = "openshift";
     public static final String CONFIG_FILE = "KRUIZE_CONFIG_FILE";
     public static final String SQL_EXCEPTION_HELPER_PKG = "org.hibernate.engine.jdbc.spi";
+    public static final String METADATA_PROFILE_CONTAINER_FILE = "METADATA_PROFILE_JSON_FILE_PATH";
 
     private KruizeConstants() {
     }
@@ -944,6 +945,8 @@ public class KruizeConstants {
             public static final String CONVERT_METADATA_PROFILE_TO_DB_OBJECT_FAILURE = "Failed to convert MetadataProfile Object to MetadataProfile DB object due to {}";
             public static final String ADD_DEFAULT_METADATA_PROFILE_EXCEPTION = "Exception occurred while adding default Metadata profile: {}";
             public static final String SET_UP_DEFAULT_METADATA_PROFILE_ERROR = "Failed to set up default MetadataProfile due to: {}";
+            public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
+            public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
 
             private MetadataProfileErrorMsgs() {
             }

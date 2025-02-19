@@ -89,12 +89,17 @@ COPY --chown=${UID}:0 --from=mvnbuild-jdk21 ${AUTOTUNE_HOME}/src/autotune/jre/ $
 # Copy the app binaries
 COPY --chown=${UID}:0 --from=mvnbuild-jdk21 ${AUTOTUNE_HOME}/src/autotune/target/ ${AUTOTUNE_HOME}/app/target/
 
+# Copy the large JSON file into the runtime image
+COPY manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json ${AUTOTUNE_HOME}/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json
+
+
 # Grant execute permission
 RUN chmod -R +x $AUTOTUNE_HOME/app/target/bin/
 
 EXPOSE 8080
 
 ENV JAVA_HOME=${AUTOTUNE_HOME}/app/jre \
-    PATH="${AUTOTUNE_HOME}/app/jre/bin:$PATH"
+    PATH="${AUTOTUNE_HOME}/app/jre/bin:$PATH" \
+    METADATA_PROFILE_JSON_FILE_PATH=${AUTOTUNE_HOME}/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json
 
 ENTRYPOINT bash target/bin/Autotune

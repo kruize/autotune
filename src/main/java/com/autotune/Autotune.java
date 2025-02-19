@@ -250,9 +250,9 @@ public class Autotune {
     /**
      * Set up the metadata profile at installation time
      */
-    private static void setUpMetadataProfile() throws Exception {
+    private static void setUpMetadataProfile() throws IOException {
         MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
-        metadataProfileCollection.addDefaultMetadataProfile();
+        metadataProfileCollection.addMetadataProfileFromContainerPath(KruizeConstants.METADATA_PROFILE_CONTAINER_FILE);
     }
 
     private static void addAutotuneServlets(ServletContextHandler context) {

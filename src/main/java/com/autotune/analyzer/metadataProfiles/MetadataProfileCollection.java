@@ -16,19 +16,18 @@
 package com.autotune.analyzer.metadataProfiles;
 
 import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
-import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
-import com.autotune.common.data.metrics.AggregationFunctions;
-import com.autotune.common.data.metrics.Metric;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -104,45 +103,21 @@ public class MetadataProfileCollection {
         }
     }
 
-    public void addDefaultMetadataProfile() {
-        MetadataProfile metadataProfile;
+    public void addMetadataProfileFromContainerPath(String containerFileName) {
         try {
-            String apiVersion = AnalyzerConstants.MetadataProfileConstants.DEFAULT_API_VERSION;
-            String kind = AnalyzerConstants.MetadataProfileConstants.DEFAULT_KIND;
-            String name = AnalyzerConstants.MetadataProfileConstants.DEFAULT_PROFILE;
-            String datasource = AnalyzerConstants.MetadataProfileConstants.DEFAULT_DATASOURCE;
-            String value_type = AnalyzerConstants.MetadataProfileConstants.DEFAULT_VALUE_TYPE;
-            String kubernetes_object = AnalyzerConstants.MetadataProfileConstants.DEFAULT_KUBERNETES_OBJECT;
-            String function = AnalyzerConstants.MetadataProfileConstants.DEFAULT_AGGREGATION_FUNCTION;
+            String setupMetadataProfile = System.getenv(containerFileName);
+            LOGGER.info("file path: {}", setupMetadataProfile);
 
-            ObjectMapper objectMapper = new ObjectMapper();
-            ObjectNode metadataNode = objectMapper.createObjectNode();
-            metadataNode.put(KruizeConstants.JSONKeys.NAME,name);
-            ArrayList<Metric> queryVariables = new ArrayList<>();
+            String jsonContent = null;
+            try (InputStream inputStream = new FileInputStream(setupMetadataProfile)) {
+                jsonContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            } catch (FileNotFoundException e) {
+                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_NOT_FOUND_ERROR, containerFileName);
+            } catch (IOException e) {
+                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_READ_ERROR_ERROR_MESSAGE, containerFileName);
+            }
 
-
-            Metric namespaceMetric= new Metric(AnalyzerConstants.MetadataMetricName.namespacesAcrossCluster.toString(), null, datasource, value_type, kubernetes_object);
-            HashMap<String, AggregationFunctions> aggregationFunctionsHashMap = new HashMap<>();
-            aggregationFunctionsHashMap.put(function,new AggregationFunctions(function, PromQLDataSourceQueries.NAMESPACE_QUERY, null));
-            namespaceMetric.setAggregationFunctionsMap(aggregationFunctionsHashMap);
-            queryVariables.add(namespaceMetric);
-
-            Metric workloadMetric = new Metric(AnalyzerConstants.MetadataMetricName.workloadsAcrossCluster.toString(), null, datasource, value_type, kubernetes_object);
-            HashMap<String, AggregationFunctions> aggregationFunctionsHashMap1 = new HashMap<>();
-            aggregationFunctionsHashMap1.put(function,new AggregationFunctions(function, PromQLDataSourceQueries.WORKLOAD_QUERY, null));
-            workloadMetric.setAggregationFunctionsMap(aggregationFunctionsHashMap1);
-            queryVariables.add(workloadMetric);
-
-            Metric containerMetric = new Metric(AnalyzerConstants.MetadataMetricName.containersAcrossCluster.toString(), null, datasource, value_type, kubernetes_object);
-            HashMap<String, AggregationFunctions> aggregationFunctionsHashMap2 = new HashMap<>();
-            aggregationFunctionsHashMap2.put(function,new AggregationFunctions(function,PromQLDataSourceQueries.CONTAINER_QUERY, null));
-            containerMetric.setAggregationFunctionsMap(aggregationFunctionsHashMap2);
-            queryVariables.add(containerMetric);
-
-            double profile_version = AnalyzerConstants.DEFAULT_PROFILE_VERSION;
-            String k8s_type = AnalyzerConstants.DEFAULT_K8S_TYPE;
-
-            metadataProfile = new MetadataProfile(apiVersion, kind, metadataNode, profile_version, k8s_type, datasource, queryVariables);
+            MetadataProfile metadataProfile = Converters.KruizeObjectConverters.convertInputJSONToCreateMetadataProfile(jsonContent);
 
             ValidationOutputData validationOutputData = MetadataProfileUtil.validateAndAddMetadataProfile(metadataProfileCollection, metadataProfile);
             if (validationOutputData.isSuccess()) {
@@ -155,7 +130,7 @@ public class MetadataProfileCollection {
             } else {
                 LOGGER.error(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_FAILURE, validationOutputData.getMessage());
             }
-        } catch (Exception e) {
+        } catch (IOException e) {
             LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.ADD_DEFAULT_METADATA_PROFILE_EXCEPTION, e.getMessage());
         }
     }
