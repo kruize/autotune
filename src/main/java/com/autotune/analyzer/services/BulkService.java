@@ -18,6 +18,11 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.serviceObjects.BulkInput;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.workerimpl.BulkJobManager;
+import com.autotune.database.dao.ExperimentDAO;
+import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.database.table.lm.BulkJob;
+import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.MetricsConfig;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -158,7 +163,16 @@ public class BulkService extends HttpServlet {
             // Generate a unique jobID
             String jobID = UUID.randomUUID().toString();
             BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now(), payload);
-            jobStatusMap.put(jobID, jobStatus);
+
+            if (KruizeDeploymentInfo.cache_job_in_mem)
+                jobStatusMap.put(jobID, jobStatus);
+            else {
+                try {
+                    new ExperimentDAOImpl().bulkJobSave(jobStatus.getBulkJobForDB("{}"));
+                } catch (Exception e) {
+                    LOGGER.error("Not able to save jb details into DB {} due to {}", jobStatus, e.getMessage());
+                }
+            }
             // Submit the job to be processed asynchronously
             executorService.submit(new BulkJobManager(jobID, jobStatus, payload));      //TOdo remove payload as it is part of jobStatus object
 

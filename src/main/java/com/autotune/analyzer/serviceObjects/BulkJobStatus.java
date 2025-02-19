@@ -17,13 +17,16 @@ package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
+import com.autotune.database.table.lm.BulkJob;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
@@ -31,6 +34,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
+import static com.autotune.analyzer.serviceObjects.BulkJobStatus.Summary.parseUTCStringToTimestamp;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.UNPROCESSED;
 
@@ -50,6 +54,13 @@ public class BulkJobStatus {
 
     public BulkJobStatus(String jobID, String status, Instant startTime, BulkInput input) {
         this.summary = new Summary(jobID, status, startTime, input);
+    }
+
+    public BulkJobStatus(Summary summary, Map<String, Experiment> experimentMap, Webhook webhook, DataSourceMetadataInfo metadata) {
+        this.summary = summary;
+        this.experimentMap = experimentMap;
+        this.webhook = webhook;
+        this.metadata = metadata;
     }
 
     // Utility function to format Instant into the required UTC format
@@ -147,6 +158,28 @@ public class BulkJobStatus {
                 });
             }
         }
+
+    }
+
+    public BulkJob getBulkJobForDB(String experimentsString) throws Exception {
+        BulkJob bulkJob = null;
+        try {
+            bulkJob = new BulkJob(getSummary().getJobID(),
+                    getSummary().getStatus(),
+                    getSummary().getTotal_experiments(),
+                    getSummary().getProcessed_experiments().get(),
+                    parseUTCStringToTimestamp(getSummary().getStartTime()),
+                    parseUTCStringToTimestamp(getSummary().getEndTime()),
+                    new ObjectMapper().writeValueAsString(getWebhook()),
+                    new ObjectMapper().writeValueAsString(getSummary().getNotifications()),
+                    experimentsString,
+                    new ObjectMapper().writeValueAsString(getMetadata()),
+                    new ObjectMapper().writeValueAsString(getSummary().getInput())
+            );
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+        }
+        return bulkJob;
     }
 
     public static enum NotificationType {
@@ -186,6 +219,32 @@ public class BulkJobStatus {
             this.input = input;
             setStartTime(startTime);
             this.processed_experiments = new AtomicInteger(0);
+        }
+
+        public Summary(String jobID, String status, int total_experiments, int processed_experiments, Timestamp startTime, Timestamp endTime, Map<String, Notification> notifications, BulkInput input) {
+            this.jobID = jobID;
+            this.status = status;
+            this.total_experiments = total_experiments;
+            this.processed_experiments = new AtomicInteger(processed_experiments);
+            this.startTime = formatInstantAsUTCString(startTime.toInstant());
+            this.endTime = (endTime != null) ? formatInstantAsUTCString(endTime.toInstant()) : null;
+            this.notifications = notifications;
+            this.input = input;
+        }
+
+        // Utility function to parse string to java.sql.Timestamp in UTC
+        static Timestamp parseUTCStringToTimestamp(String utcString) {
+            if (null != utcString) {
+                DateTimeFormatter formatter = DateTimeFormatter
+                        .ofPattern("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'")
+                        .withZone(ZoneOffset.UTC);
+
+                // Parse the instant and create a timestamp
+                Instant instant = Instant.from(formatter.parse(utcString));
+                return Timestamp.from(instant);
+            } else {
+                return null;
+            }
         }
 
         public String getJobID() {
@@ -287,6 +346,9 @@ public class BulkJobStatus {
         private CreateExperimentAPIResponse create = new CreateExperimentAPIResponse();
         private GenerateRecommendationsAPIResponse recommendations = new GenerateRecommendationsAPIResponse();
 
+        public API_Response() {
+        }
+
         public CreateExperimentAPIResponse getCreate() {
             return create;
         }
@@ -308,6 +370,9 @@ public class BulkJobStatus {
     public static class CreateExperimentAPIResponse {
         private KruizeResponse response;
         private CreateExperimentAPIObject request;
+
+        public CreateExperimentAPIResponse() {
+        }
 
         public KruizeResponse getResponse() {
             return response;
@@ -383,6 +448,9 @@ public class BulkJobStatus {
             status_history.add(new StatusHistory(UNPROCESSED, Instant.now()));
         }
 
+        public Experiment() {
+        }
+
         public String getName() {
             return name;
         }
@@ -426,6 +494,9 @@ public class BulkJobStatus {
             this.timestamp = formatInstantAsUTCString(timestamp);
         }
 
+        public StatusHistory() {
+        }
+
         public KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status getStatus() {
             return status;
         }
@@ -442,6 +513,9 @@ public class BulkJobStatus {
         private int code;
 
         // Constructor, getters, and setters
+
+        public Notification() {
+        }
 
         public Notification(NotificationType type, String message, int code) {
             this.type = type;

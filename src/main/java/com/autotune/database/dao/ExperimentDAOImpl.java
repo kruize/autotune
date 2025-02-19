@@ -56,6 +56,7 @@ import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY_ALT;
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
 import static com.autotune.utils.KruizeConstants.JSONKeys.CLUSTER_NAME;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
 
 public class ExperimentDAOImpl implements ExperimentDAO {
     private static final long serialVersionUID = 1L;
@@ -707,7 +708,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         } finally {
             if (null != timerGetBulkJobDB) {
                 MetricsConfig.timerLoadBulkJobId = MetricsConfig.timerBLoadBulkJobId.tag("status", statusValue).register(MetricsConfig.meterRegistry());
-                timerGetBulkJobDB.stop(MetricsConfig.timerLoadExpName);
+                timerGetBulkJobDB.stop(MetricsConfig.timerLoadBulkJobId);
             }
         }
         return bulkJob;
@@ -977,7 +978,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
-   
+
     @Override
     public List<KruizeResultsEntry> loadAllResults() throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
