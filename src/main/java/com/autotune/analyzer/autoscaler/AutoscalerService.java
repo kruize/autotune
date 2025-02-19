@@ -16,11 +16,14 @@
 
 package com.autotune.analyzer.autoscaler;
 
+import com.autotune.analyzer.autoscaler.validator.AutoscalerGuard;
+import com.autotune.analyzer.autoscaler.validator.ResourceValidator;
 import com.autotune.analyzer.autoscaler.vpa.VpaAutoscalerImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.autoscaler.accelerator.AcceleratorAutoscalerImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.service.ExperimentDBService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,15 +50,22 @@ public class AutoscalerService {
                     AutoscalerImpl autoscaler = new AutoscalerImpl();
                     Map<String, KruizeObject> experiments = getAutoModeExperiments();
                     for (Map.Entry<String, KruizeObject> experiment : experiments.entrySet()) {
-                        KruizeObject kruizeObject = autoscaler.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
-                        // TODO:// add default updater in kruizeObject and check if GPU recommendations are present
-                        if (kruizeObject.getDefaultUpdater() == null) {
-                             kruizeObject.setDefaultUpdater(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA);
-                        }
+                        // autoscaler guard checks
+                        ValidationOutputData validationOutputData = AutoscalerGuard.checkAutoscalerGuard(experiment.getValue());
+                        if (validationOutputData.isSuccess()) {
+                            KruizeObject kruizeObject = autoscaler.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
 
-                        if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA)) {
-                            VpaAutoscalerImpl vpaUpdater = VpaAutoscalerImpl.getInstance();
-                            vpaUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
+                            // TODO:// add default updater in kruizeObject and check if GPU recommendations are present
+                            if (kruizeObject.getDefaultUpdater() == null) {
+                                kruizeObject.setDefaultUpdater(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA);
+                            }
+
+                            if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA)) {
+                                VpaAutoscalerImpl vpaUpdater = VpaAutoscalerImpl.getInstance();
+                                vpaUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
+                            }
+                        } else {
+                            LOGGER.error(validationOutputData.getMessage());
                         }
 
                         if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.ACCELERATOR)) {

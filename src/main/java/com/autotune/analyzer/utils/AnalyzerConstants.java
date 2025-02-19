@@ -750,6 +750,11 @@ public class AnalyzerConstants {
 
         public static final int DEFAULT_SLEEP_INTERVAL = 60;
         public static final int DEFAULT_INITIAL_DELAY = 30;
+
+        public static final String AUTOSCALER_OPTIONS = "autoscaler_options";
+        public static final String EXCLUDE_NAMESPACES = "exclude_namespaces";
+        public static final String REGEX_FOR_DRY_RUN_ERROR = "Message: (.*?)(?=\\. Received status:)";
+
         public static final class SupportedUpdaters {
             public static final String VPA = "vpa";
             public static final String ACCELERATOR = "accelerator";
@@ -790,6 +795,7 @@ public class AnalyzerConstants {
             public static final String CHECKING_AUTO_EXP = "Searching for experiments with auto or recreate mode.";
             public static final String FOUND_INSTASLICE = "Found Instaslice: {}";
             public static final String NO_INSTASLICE_OBJECTS = "No Instaslice objects found in namespace: {}";
+            public static final String POD_READY = "Pod is ready to schedule.";
             private InfoMsgs() {
 
             }
