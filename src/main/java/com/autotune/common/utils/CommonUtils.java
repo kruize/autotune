@@ -16,6 +16,7 @@
 
 package com.autotune.common.utils;
 
+import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
@@ -261,7 +262,8 @@ public class CommonUtils {
         if (datasource.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS)) {
             return (new StringBuilder())
                     .append(dataSourceInfo.getUrl().toString())
-                    .append("/api/v1/query?query=")
+                    .append(dataSourceInfo.getUrl().toString().endsWith("/") ? "" : "/")
+                    .append("api/v1/query?query=")
                     .toString();
         }
         return null;
@@ -317,5 +319,93 @@ public class CommonUtils {
     public static boolean isInvalidDataSource(DataSourceInfo datasource) {
         return datasource == null || datasource.getAuthenticationConfig() == null ||
                 datasource.getAuthenticationConfig().toString().isEmpty();
+    }
+
+    public static RecommendationConfigItem formatMemoryUnits(RecommendationConfigItem input) {
+        if (input == null) {
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.INPUT_NULL);
+        }
+
+        Double amount = input.getAmount();
+        String format = input.getFormat();
+
+        if (amount == null || format == null) {
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.AMT_FORMAT_IS_NULL);
+        }
+
+        if (amount < 0) {
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.VALUE_NEGATIVE);
+        }
+
+        // Convert all formats to bytes
+        double bytes = convertToBytes(amount, format);
+
+        if (bytes < 0) {
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.INVALID_MEM_FORMAT);
+        }
+
+        // Determine the best unit for the value
+        String[] units = {"bytes", "Ki", "Mi", "Gi", "Ti", "Pi"};
+        int unitIndex = 0;
+
+        while (bytes >= 1024 && unitIndex < units.length - 1) {
+            bytes /= 1024;
+            unitIndex++;
+        }
+
+        // Create a new RecommendationConfigItem with the formatted result
+        return new RecommendationConfigItem(bytes, units[unitIndex]);
+    }
+
+    public static RecommendationConfigItem formatCpuUnits(RecommendationConfigItem configItem) {
+        if (configItem == null || configItem.getAmount() == null || configItem.getFormat() == null) {
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.AMT_FORMAT_IS_NULL);
+        }
+
+        String format = configItem.getFormat().toLowerCase();
+        Double amount = configItem.getAmount();
+
+        if ("cores".equals(format)) {
+            // Convert cores to milli (m) by multiplying by 1000 and rounding to the nearest whole number
+            double convertedAmount = Math.round(amount * 1000);
+            return new RecommendationConfigItem(convertedAmount, "m");
+        }
+
+        // If the format is not "cores", return the same object with an error message
+        return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.CPU_UNSUPPORTED_FORMAT + format);
+    }
+
+    public static RecommendationConfigItem formatAcceleratorUnits(RecommendationConfigItem configItem) {
+        if (configItem == null || configItem.getAmount() == null || configItem.getFormat() == null) {
+            return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.AMT_FORMAT_IS_NULL);
+        }
+
+        String format = configItem.getFormat().toLowerCase();
+        Double amount = configItem.getAmount();
+
+        if ("cores".equals(format)) {
+            return new RecommendationConfigItem(amount, "");
+        }
+
+        // If the format is not "cores", return the same object with an error message
+        return new RecommendationConfigItem(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.ACCELERATOR_UNSUPPORTED_FORMAT + format);
+    }
+
+
+    public static double convertToBytes(double amount, String format) {
+        format = format.toLowerCase();
+
+        return switch (format) {
+            case "bytes", "byte" -> amount;
+            case "kb", "kilobyte", "kilobytes" -> amount * 1000;
+            case "kib", "kibibyte", "kibibytes" -> amount * 1024;
+            case "mb", "megabyte", "megabytes" -> amount * 1000 * 1000;
+            case "mib", "mebibyte", "mebibytes" -> amount * 1024 * 1024;
+            case "gb", "gigabyte", "gigabytes" -> amount * 1000 * 1000 * 1000;
+            case "gib", "gibibyte", "gibibytes" -> amount * 1024 * 1024 * 1024;
+            case "tb", "terabyte", "terabytes" -> amount * 1000 * 1000 * 1000 * 1000;
+            case "tib", "tebibyte", "tebibytes" -> amount * 1024 * 1024 * 1024 * 1024;
+            default -> -1; // unsupported format
+        };
     }
 }

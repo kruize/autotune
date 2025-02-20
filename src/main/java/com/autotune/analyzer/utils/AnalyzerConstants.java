@@ -16,6 +16,7 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.utils.KruizeConstants;
+import software.amazon.awssdk.services.cloudwatchlogs.endpoints.internal.Value;
 
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -94,6 +95,11 @@ public class AnalyzerConstants {
     public static final String KRUIZE_LOCAL_DDL_SQL = "kruize_local_ddl.sql";
     public static final String VERSION = "version";
     public static final String DATASOURCE_NAME = "dataSourceName";
+    public static final String TRIAL_RESULT_SUMMARY = "trialSummaryResult";
+    public static final String CYCLE_DATA_MAP = "cycleDataMap";
+    public static final String METRICS = "metrics";
+    public static final String UUID_VARIABLE = "$UUID$";
+    public static final String PROFILE_VARIABLE = "$GPU_I_PROFILE$";
 
 
     private AnalyzerConstants() {
@@ -204,7 +210,8 @@ public class AnalyzerConstants {
         namespaceRunningPods,
         namespaceMaxDate,
         gpuCoreUsage,
-        gpuMemoryUsage
+        gpuMemoryUsage,
+        acceleratorMigMemoryUsage
     }
 
     public enum K8S_OBJECT_TYPES {
@@ -227,7 +234,8 @@ public class AnalyzerConstants {
         CPU,
         MEMORY,
         NETWORK,
-        ACCELERATOR
+        ACCELERATOR,
+        ACCELERATOR_PARTITION
     }
 
     public enum DeviceParameters {
@@ -288,6 +296,26 @@ public class AnalyzerConstants {
 
             }
         }
+
+        public static final class AcceleratorMemory {
+            private AcceleratorMemory() {
+
+            }
+
+            public static final String UNIT_GB = "GB";
+            public static final String GB_40 = "40" + UNIT_GB;
+            public static final String GB_80 = "80" + UNIT_GB;
+
+        }
+
+        public static final class AcceleratorAutoscalerLabels {
+            private AcceleratorAutoscalerLabels() {
+
+            }
+
+            public static final String CONTROLLER_UID = "controller-uid";
+            public static final String BATCH_CONTROLLER_UID = "batch.kubernetes.io/controller-uid";
+        }
     }
 
     public static final class ExperimentTypes {
@@ -335,7 +363,9 @@ public class AnalyzerConstants {
         public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
         public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
         public static final String FUNCTION_VARIABLE = "function_variable: ";
+        public static final String QUERY_VARIABLE = "query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
+        public static final String QUERY_VARIABLES = "query_variables";
 
         private AutotuneObjectConstants() {
         }
@@ -599,6 +629,29 @@ public class AnalyzerConstants {
         );
     }
 
+    public static final class MetadataProfileConstants {
+
+        public static final String QUERY_VARIABLES = "queryVariables";
+        public static final String METADATA_PROFILE_NAME = "name";
+        public static final String K8S_TYPE = "k8s_type";
+        public static final String METADATA_PROFILE_MAP = "metadataProfileMap";
+        public static final String VALUE_TYPE = "valueType";
+        public static final String DEFAULT_API_VERSION = "recommender.com/v1";
+        public static final String DEFAULT_KIND = "KruizeMetadataProfile";
+        public static final String DEFAULT_PROFILE = "default";
+        public static final String METADATA_PROFILE = "metadataProfile";
+        public static final String METADATA_PROFILE_PLURALS = "kruizemetadataprofiles";
+        public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
+        public static final String DATASOURCE = "datasource";
+    }
+
+    public static final class CommonProfileMsgs {
+        public static final String METHOD_NAME = "MethodName = {}";
+        public static final String INVALID_METHOD_NAME = "Method name {} doesn't exist!";
+        public static final String MISSING_MANDATORY_PARAMETERS = "Missing mandatory parameters: %s ";
+        public static final String VALIDATION_ERROR_MSG = "Validation error message :{}";
+    }
+
     public static final class K8sObjectConstants {
         private K8sObjectConstants() {
 
@@ -680,8 +733,8 @@ public class AnalyzerConstants {
         }
     }
 
-    public static final class RecommendationUpdaterConstants {
-        private RecommendationUpdaterConstants() {
+    public static final class AutoscalerConstants {
+        private AutoscalerConstants() {
 
         }
 
@@ -689,6 +742,7 @@ public class AnalyzerConstants {
         public static final int DEFAULT_INITIAL_DELAY = 30;
         public static final class SupportedUpdaters {
             public static final String VPA = "vpa";
+            public static final String ACCELERATOR = "accelerator";
 
             private SupportedUpdaters() {
 
@@ -724,6 +778,8 @@ public class AnalyzerConstants {
             public static final String CREATED_VPA = "Created VPA with name: %s";
             public static final String STARTING_SERVICE = "Starting recommendation updater.";
             public static final String CHECKING_AUTO_EXP = "Searching for experiments with auto or recreate mode.";
+            public static final String FOUND_INSTASLICE = "Found Instaslice: {}";
+            public static final String NO_INSTASLICE_OBJECTS = "No Instaslice objects found in namespace: {}";
             private InfoMsgs() {
 
             }

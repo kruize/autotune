@@ -19,6 +19,8 @@ import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryEx
 import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.serviceObjects.*;
@@ -34,9 +36,11 @@ import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
+import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -197,6 +201,24 @@ public class ExperimentDBService {
             }
         }
     }
+
+    /**
+     * Loads All Metadata Profiles from database
+     *
+     * @param metadataProfileMap Metadata profile map to store the objects to be added
+     * @return ValidationOutputData object
+     */
+    public void loadAllMetadataProfiles(Map<String, MetadataProfile> metadataProfileMap) throws Exception {
+        List<KruizeLMMetadataProfileEntry> entries = experimentDAO.loadAllMetadataProfiles();
+        if (null != entries && !entries.isEmpty()) {
+            List<MetadataProfile> metadataProfiles = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileEntryToMetadataProfileObject(entries);
+            if (!metadataProfiles.isEmpty()) {
+                metadataProfiles.forEach(metadataProfile ->
+                        MetadataProfileUtil.addMetadataProfile(metadataProfileMap, metadataProfile));
+            }
+        }
+    }
+
 
     public boolean loadResultsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, Timestamp calculated_start_time, Timestamp interval_end_time) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
@@ -389,6 +411,24 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
+    /**
+     * Adds Metadata Profile to kruizeLMMetadataProfileEntry
+     *
+     * @param metadataProfile Metadata profile object to be added
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData addMetadataProfileToDB(MetadataProfile metadataProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileObjToMetadataProfileDBObj(metadataProfile);
+            validationOutputData = this.experimentDAO.addMetadataProfileToDB(kruizeMetadataProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.ADD_METADATA_PROFILE_TO_DB_ERROR, e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+
     /*
      * This is a Java method that loads all experiments from the database using an experimentDAO object.
      * The method then converts the retrieved data into KruizeObject format, adds them to a list,
@@ -548,6 +588,28 @@ public class ExperimentDBService {
                 for (PerformanceProfile performanceProfile : metricProfiles) {
                     if (null != performanceProfile) {
                         PerformanceProfileUtil.addMetricProfile(metricProfileMap, performanceProfile);
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Fetches Metadata Profile by name from kruizeMetadataProfileEntry
+     *
+     * @param metadataProfileMap  Map to store metadata profile loaded from the database
+     * @param metadataProfileName Metadata profile name to be fetched
+     * @return ValidationOutputData object
+     */
+    public void loadMetadataProfileFromDBByName(Map<String, MetadataProfile> metadataProfileMap, String metadataProfileName) throws Exception {
+        List<KruizeLMMetadataProfileEntry> entries = experimentDAO.loadMetadataProfileByName(metadataProfileName);
+        if (null != entries && !entries.isEmpty()) {
+            List<MetadataProfile> metadataProfiles = DBHelpers.Converters.KruizeObjectConverters
+                    .convertMetadataProfileEntryToMetadataProfileObject(entries);
+            if (!metadataProfiles.isEmpty()) {
+                for (MetadataProfile metadataProfile : metadataProfiles) {
+                    if (null != metadataProfile) {
+                        MetadataProfileUtil.addMetadataProfile(metadataProfileMap, metadataProfile);
                     }
                 }
             }

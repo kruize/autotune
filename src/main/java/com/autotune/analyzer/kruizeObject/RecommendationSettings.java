@@ -15,8 +15,17 @@
  *******************************************************************************/
 package com.autotune.analyzer.kruizeObject;
 
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.annotations.SerializedName;
+
 public class RecommendationSettings {
     private Double threshold;
+    @SerializedName(KruizeConstants.JSONKeys.MODEL_SETTINGS)
+    private ModelSettings modelSettings;
+    @SerializedName(KruizeConstants.JSONKeys.TERM_SETTINGS)
+    private TermSettings termSettings;
+
+    public RecommendationSettings(){}
 
     public Double getThreshold() {
         return threshold;
@@ -26,10 +35,28 @@ public class RecommendationSettings {
         this.threshold = threshold;
     }
 
+    public ModelSettings getModelSettings() {
+        return modelSettings;
+    }
+
+    public void setModelSettings(ModelSettings modelSettings) {
+        this.modelSettings = modelSettings;
+    }
+
+    public TermSettings getTermSettings() {
+        return termSettings;
+    }
+
+    public void setTermSettings(TermSettings termSettings) {
+        this.termSettings = termSettings;
+    }
+
     @Override
     public String toString() {
         return "RecommendationSettings{" +
                 "threshold=" + threshold +
+                ", modelSettings=" + modelSettings +
+                ", termSettings=" + termSettings +
                 '}';
     }
 }

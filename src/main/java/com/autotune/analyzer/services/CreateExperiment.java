@@ -108,6 +108,11 @@ public class CreateExperiment extends HttpServlet {
                             if (null != kubernetesAPIObject.getNamespaceAPIObjects()) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP);
                             }
+                            if ((AnalyzerConstants.AUTO.equalsIgnoreCase(createExperimentAPIObject.getMode())
+                                    || AnalyzerConstants.RECREATE.equalsIgnoreCase(createExperimentAPIObject.getMode())) &&
+                                            AnalyzerConstants.REMOTE.equalsIgnoreCase(createExperimentAPIObject.getTargetCluster())) {
+                                throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.AUTO_EXP_NOT_SUPPORTED_FOR_REMOTE);
+                            }
                         } else if (createExperimentAPIObject.isNamespaceExperiment()) {
                             if (null != kubernetesAPIObject.getContainerAPIObjects()) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP);
@@ -171,6 +176,9 @@ public class CreateExperiment extends HttpServlet {
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
         String inputData = "";
+        String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
+        // Check if rm is not null and set to true
+        boolean rmTable = (null != rm && AnalyzerConstants.BooleanString.TRUE.equalsIgnoreCase(rm.trim()));
         try {
             inputData = request.getReader().lines().collect(Collectors.joining());
             CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
@@ -180,7 +188,11 @@ public class CreateExperiment extends HttpServlet {
             } else {
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                     try {
-                        new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                        if(rmTable) {
+                            new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                        } else {
+                            new ExperimentDBService().loadLMExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                        }
                     } catch (Exception e) {
                         LOGGER.error("Loading saved experiment {} failed: {} ", ko.getExperimentName(), e.getMessage());
                     }
@@ -189,7 +201,12 @@ public class CreateExperiment extends HttpServlet {
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                     String expName = ko.getExperimentName();
                     if (!mKruizeExperimentMap.isEmpty() && mKruizeExperimentMap.containsKey(expName)) {
-                        ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
+                        ValidationOutputData validationOutputData;
+                        if(rmTable) {
+                            validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
+                        } else {
+                            validationOutputData = new ExperimentDAOImpl().deleteKruizeLMExperimentEntryByName(expName);
+                        }
                         if (validationOutputData.isSuccess()) {
                             mKruizeExperimentMap.remove(ko.getExperimentName());
                         } else {

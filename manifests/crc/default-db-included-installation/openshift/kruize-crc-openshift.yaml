@@ -75,6 +75,56 @@ roleRef:
   apiGroup: rbac.authorization.k8s.io
 ---
 apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: kruize-edit-ko
+rules:
+  - apiGroups: [ "apps" ]
+    resources: [ "deployments", "statefulsets", "daemonsets" ]
+    verbs: [ "get", "list", "patch", "update" ]
+  - apiGroups: [ "batch" ]
+    resources: [ "jobs" ]
+    verbs: [ "get", "list", "create", "delete" ]
+  - apiGroups: [ "" ]
+    resources: [ "namespaces" ]
+    verbs: [ "get", "list" ]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: instaslices-access
+rules:
+  - apiGroups: ["inference.redhat.com"]
+    resources: ["instaslices"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: instaslices-access-binding
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+roleRef:
+  kind: ClusterRole
+  name: instaslices-access
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: kruize-edit-ko-binding
+subjects:
+  - kind: ServiceAccount
+    name: kruize-sa
+    namespace: openshift-tuning
+roleRef:
+  kind: ClusterRole
+  name: kruize-edit-ko
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   name: autotune-scc-crb
@@ -298,7 +348,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.3
+          image: quay.io/kruize/autotune_operator:0.4
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -316,10 +366,10 @@ spec:
               value: "-XX:MaxRAMPercentage=80"
           resources:
             requests:
-              memory: "350Mi"
+              memory: "768Mi"
               cpu: "0.7"
             limits:
-              memory: "350Mi"
+              memory: "768Mi"
               cpu: "0.7"
           ports:
             - name: kruize-port
@@ -370,7 +420,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.3
+              image: quay.io/kruize/autotune_operator:0.4
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -411,7 +461,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.3
+              image: quay.io/kruize/autotune_operator:0.4
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume

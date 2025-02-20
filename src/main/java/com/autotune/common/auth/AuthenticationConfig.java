@@ -44,7 +44,8 @@ public class AuthenticationConfig {
                     break;
                 case BEARER:
                     BearerTokenCredentials bearerCredentials = new BearerTokenCredentials();
-                    bearerCredentials.setTokenFilePath(credentialsObj.getString(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TOKEN_FILE));
+                    bearerCredentials.setTokenFilePath(credentialsObj.optString(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TOKEN_FILE,null));
+                    bearerCredentials.setToken(credentialsObj.optString(KruizeConstants.AuthenticationConstants.AUTHENTICATION_TOKEN,null));
                     credentials = bearerCredentials;
                     break;
                 case API_KEY:

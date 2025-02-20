@@ -64,12 +64,12 @@ public class DataSourceMetadataOperator {
      * <p>
      * Currently supported DataSourceProvider - Prometheus
      *
-     * @param dataSourceInfo The DataSourceInfo object containing information about the data source.
-     * @param uniqueKey      this is used as labels in query example container="xyz" namespace="abc"
-     * @param startTime      Get metadata from starttime to endtime
-     * @param endTime        Get metadata from starttime to endtime
-     * @param steps          the interval between data points in a range query
-     *                                                                                                                                                                                                                                                                         TODO - support multiple data sources
+     * @param dataSourceInfo   The DataSourceInfo object containing information about the data source.
+     * @param uniqueKey        this is used as labels in query example container="xyz" namespace="abc"
+     * @param startTime        Get metadata from starttime to endtime
+     * @param endTime          Get metadata from starttime to endtime
+     * @param steps            the interval between data points in a range query
+     *                                                                                                                                                                                                                                                                                                 TODO - support multiple data sources
      * @param includeResources
      * @param excludeResources
      */
@@ -91,7 +91,7 @@ public class DataSourceMetadataOperator {
                 return null;
             }
             String dataSourceName = dataSourceInfo.getName();
-            HashMap<String, DataSource> dataSourceHashMap = dataSourceMetadataInfo.getDataSourceHashMap();
+            HashMap<String, DataSource> dataSourceHashMap = dataSourceMetadataInfo.getDatasources();
 
             if (null == dataSourceHashMap || !dataSourceHashMap.containsKey(dataSourceName)) {
                 LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_DATASOURCE_NOT_AVAILABLE + "{}", dataSourceName);
@@ -115,8 +115,8 @@ public class DataSourceMetadataOperator {
      * @param dataSourceInfo The DataSourceInfo object containing information about the
      *                       data source to be updated.
      *                       <p>
-     *                                                                                                                                                                                                                                                    TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
-     *                                                                                                                                                                                                                                                           need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
+     *                                                                                                                                                                                                                                                                          TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
+     *                                                                                                                                                                                                                                                                                 need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
     public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
                                                            long endTime, int steps, Map<String, String> includeResources,
@@ -137,7 +137,7 @@ public class DataSourceMetadataOperator {
                 return;
             }
             String dataSourceName = dataSourceInfo.getName();
-            HashMap<String, DataSource> dataSourceHashMap = dataSourceMetadataInfo.getDataSourceHashMap();
+            HashMap<String, DataSource> dataSourceHashMap = dataSourceMetadataInfo.getDatasources();
 
             if (null == dataSourceHashMap || !dataSourceHashMap.containsKey(dataSourceName)) {
                 LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_DATASOURCE_NOT_AVAILABLE + "{}", dataSourceName);
@@ -153,11 +153,11 @@ public class DataSourceMetadataOperator {
      * Fetches and processes metadata related to namespaces, workloads, and containers of a given datasource and populates the
      * DataSourceMetadataInfo object
      *
-     * @param dataSourceInfo The DataSourceInfo object containing information about the data source
-     * @param uniqueKey      this is used as labels in query example container="xyz" namespace="abc"
-     * @param startTime      Get metadata from starttime to endtime
-     * @param endTime        Get metadata from starttime to endtime
-     * @param steps          the interval between data points in a range query
+     * @param dataSourceInfo   The DataSourceInfo object containing information about the data source
+     * @param uniqueKey        this is used as labels in query example container="xyz" namespace="abc"
+     * @param startTime        Get metadata from starttime to endtime
+     * @param endTime          Get metadata from starttime to endtime
+     * @param steps            the interval between data points in a range query
      * @param includeResources
      * @param excludeResources
      * @return DataSourceMetadataInfo object with populated metadata fields

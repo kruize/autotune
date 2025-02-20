@@ -6,6 +6,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 
 import java.sql.Timestamp;
@@ -36,14 +37,20 @@ public interface ExperimentDAO {
     // Add Metric Profile  to DB
     public ValidationOutputData addMetricProfileToDB(KruizeMetricProfileEntry kruizeMetricProfileEntry);
 
+    // Add Metadata Profile  to DB
+    public ValidationOutputData addMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry);
+
     // Add DataSource to DB
     ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry, ValidationOutputData validationOutputData);
 
     // Update experiment status
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status);
 
-    // Delete experiment
+    // Delete RM experiment
     public ValidationOutputData deleteKruizeExperimentEntryByName(String experimentName);
+
+    // Delete LM experiment
+    public ValidationOutputData deleteKruizeLMExperimentEntryByName(String experimentName);
 
     // If Kruize object restarts load all experiment which are in inprogress
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception;
@@ -64,6 +71,9 @@ public interface ExperimentDAO {
 
     // If Kruize restarts load all metric profiles
     List<KruizeMetricProfileEntry> loadAllMetricProfiles() throws Exception;
+
+    // If Kruize restarts load all metadata profiles
+    List<KruizeLMMetadataProfileEntry> loadAllMetadataProfiles() throws Exception;
 
     // Load a single experiment based on experimentName
     List<KruizeExperimentEntry> loadExperimentByName(String experimentName) throws Exception;
@@ -90,6 +100,9 @@ public interface ExperimentDAO {
 
     // Load a single Metric Profile based on name
     List<KruizeMetricProfileEntry> loadMetricProfileByName(String metricProfileName) throws Exception;
+
+    // Load a single Metadata Profile based on name
+    List<KruizeLMMetadataProfileEntry> loadMetadataProfileByName(String metadataProfileName) throws Exception;
 
     // Delete metric profile for the specified metric profile name
     public ValidationOutputData deleteKruizeMetricProfileEntryByName(String metricProfileName);

@@ -254,6 +254,9 @@ public class KruizeConstants {
         public static final String SHORT_TERM = "short_term";
         public static final String MEDIUM_TERM = "medium_term";
         public static final String LONG_TERM = "long_term";
+        public static final String SHORT = "short";
+        public static final String MEDIUM = "medium";
+        public static final String LONG= "long";
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String VARIATION = "variation";
         public static final String NOTIFICATIONS = "notifications";
@@ -271,6 +274,11 @@ public class KruizeConstants {
         public static final String UUID = "UUID";
         public static final String DEVICE = "device";
         public static final String MODEL_NAME = "modelName";
+        public static final String GPU_PROFILE = "GPU_I_PROFILE";
+
+        // Config changes JSON Keys
+        public static final String MODEL_SETTINGS = "model_settings";
+        public static final String TERM_SETTINGS = "term_settings";
 
         private JSONKeys() {
         }
@@ -342,6 +350,7 @@ public class KruizeConstants {
 
     public static class SupportedDatasources {
         public static final String PROMETHEUS = "prometheus";
+        public static final String THANOS = "thanos";
 
         private SupportedDatasources() {
         }
@@ -422,18 +431,20 @@ public class KruizeConstants {
         }
 
         public static class DataSourceInfoMsgs {
-            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: {}";
+            public static final String ADDING_DATASOURCE = "Trying to add the datasource to collection: {} - {}";
             public static final String VERIFYING_DATASOURCE_REACHABILITY = "Verifying datasource reachability status: {}";
             public static final String CHECKING_AVAILABLE_DATASOURCE = "Checking available datasources:";
             public static final String CHECKING_AVAILABLE_DATASOURCE_FROM_DB = "Checking available datasources from database:";
             public static final String NO_DATASOURCE_FOUND_IN_DB = "No datasource found in database.";
             public static final String CHECK_DATASOURCE_UPDATES = "Datasource {} already exists, Checking for updates...";
             public static final String DATASOURCE_AUTH_CHANGED = "Authentication details for datasource {} have changed. Checking if the datasource is serviceable with the new config...";
-            public static final String DATASOURCE_AUTH_UNCHANGED= "No changes detected in the authentication details for datasource {}";
+            public static final String DATASOURCE_AUTH_UNCHANGED = "No changes detected in the authentication details for datasource {}";
+
             private DataSourceInfoMsgs() {
             }
 
         }
+
         public static class DataSourceSuccessMsgs {
 
             public static final String DATASOURCE_ADDED = "Datasource added to the collection successfully.";
@@ -610,6 +621,19 @@ public class KruizeConstants {
                 }
             }
         }
+
+        public static class RecommendationErrorMsgs {
+            private RecommendationErrorMsgs() {
+
+            }
+
+            public static final String AMT_FORMAT_IS_NULL = "Invalid input: 'amount' and 'format' cannot be null";
+            public static final String CPU_UNSUPPORTED_FORMAT = "Unsupported format for CPU conversion: ";
+            public static final String ACCELERATOR_UNSUPPORTED_FORMAT = "Unsupported format for Accelerator conversion: ";
+            public static final String INPUT_NULL = "Input object cannot be null";
+            public static final String VALUE_NEGATIVE = "Value cannot be negative";
+            public static final String INVALID_MEM_FORMAT = "Invalid format: Supported formats are bytes, KB, KiB, MB, MiB, GB, GiB, etc.";
+        }
     }
 
     /**
@@ -711,6 +735,7 @@ public class KruizeConstants {
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
         public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
         public static final String IS_ROS_ENABLED = "isROSEnabled";
+        public static final String DATASOURCE_VIA_ENV = "datasource";
     }
 
     public static final class RecommendationEngineConstants {
@@ -730,6 +755,14 @@ public class KruizeConstants {
                 public static final int MEDIUM_TERM_DURATION_DAYS_THRESHOLD = 2;
                 public static final int LONG_TERM_DURATION_DAYS = 15;
                 public static final int LONG_TERM_DURATION_DAYS_THRESHOLD = 8;
+                // Represents the minimum number of data points required for different term thresholds.
+                // Minimum data points are calculated based on the above threshold in days and a 15-minute measurement duration.
+                // If the short-term threshold is 30 minutes and the measurement duration is 15 minutes
+                // then the minimum data points = 30 / 15 = 2
+                public static final int SHORT_TERM_MIN_DATAPOINTS = 2;
+                public static final int MEDIUM_TERM_MIN_DATAPOINTS = 192;
+                public static final int LONG_TERM_MIN_DATAPOINTS = 768;
+
 
                 private DurationAmount() {
 
@@ -783,6 +816,7 @@ public class KruizeConstants {
         public static final String AUTHENTICATION_USERNAME = "username";
         public static final String AUTHENTICATION_PASSWORD = "password";
         public static final String AUTHENTICATION_TOKEN_FILE = "tokenFilePath";
+        public static final String AUTHENTICATION_TOKEN = "token";
         public static final String AUTHENTICATION_API_KEY = "apiKey";
         public static final String AUTHENTICATION_HEADER_NAME = "header";
         public static final String AUTHENTICATION_TOKEN_ENDPOINT = "tokenEndpoint";
@@ -812,6 +846,12 @@ public class KruizeConstants {
         public static final String END_TIME = "end_time";
         public static final String STEPS = "steps";
         public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
+        public static final String SUMMARY = "summary";
+        public static final String SUMMARY_FILTER = "summaryFilter";
+        public static final String EXPERIMENTS = "experiments";
+        public static final String EXPERIMENTS_FILTER = "experimentFilter";
+        public static final String JOB_FILTER = "jobFilter";
+
 
         // TODO : Bulk API Create Experiments defaults
         public static final CreateExperimentConfigBean CREATE_EXPERIMENT_CONFIG_BEAN;
@@ -908,6 +948,42 @@ public class KruizeConstants {
             }
 
 
+        }
+    }
+
+    public static final class MetadataProfileConstants {
+        public static final String METADATA_PROFILE_VALIDATION_FAILURE = "Validation failed: ";
+        public static final String METADATA_PROFILE_VALIDATION_AND_ADD_FAILURE = "Validate and add metadata profile failed: {}";
+        public static final String ADD_METADATA_PROFILE = "Added MetadataProfile: {}";
+        public static final String CHECKING_AVAILABLE_METADATA_PROFILE_FROM_DB = "Checking available metadata profiles from database: ";
+        public static final String NO_METADATA_PROFILE_FOUND_IN_DB = "No metadata profile found in database.";
+        public static final String METADATA_PROFILE_FOUND = "MetadataProfile found: ";
+        public static final String ADDING_METADATA_PROFILE = "Trying to add the metadata profile to collection: ";
+        public static final String METADATA_PROFILE_ALREADY_EXISTS = "MetadataProfile already exists: ";
+        public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: ";
+        public static final String CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE = "Failed to convert input JSON to MetadataProfile object due to: {}";
+
+        public static class MetadataProfileErrorMsgs {
+
+            public static final String ADD_METADATA_PROFILE_TO_DB_ERROR = "Failed to add Metadata Profile due to {}";
+            public static final String LOAD_METADATA_PROFILES_FROM_DB_FAILURE = "Failed to load Metadata Profiles from DB.";
+            public static final String CONVERTING_METADATA_PROFILE_DB_OBJECT_ERROR = "Error occurred while reading from MetadataProfile DB object due to : {}";
+            public static final String PROCESS_METADATA_PROFILE_OBJECT_ERROR = "Failed to process metadata of metadataProfile object due to : {}";
+            public static final String PROCESS_QUERY_VARIABLES_ERROR = "Error occurred while processing query_variables data due to : {}";
+            public static final String CONVERT_METADATA_PROFILE_TO_DB_OBJECT_FAILURE = "Failed to convert MetadataProfile Object to MetadataProfile DB object due to {}";
+
+            private MetadataProfileErrorMsgs() {
+            }
+        }
+
+    }
+
+    public static final class MetadataProfileAPIMessages {
+        public static final String CREATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s created successfully.";
+        public static final String VIEW_METADATA_PROFILES_MSG = " View Metadata Profiles at /listMetadataProfiles";
+        public static final String ADD_METADATA_PROFILE_TO_DB_WITH_VERSION = "Added Metadata Profile : {} into the DB with version: {}";
+
+        private MetadataProfileAPIMessages() {
         }
     }
 }

@@ -18,7 +18,6 @@ package com.autotune.analyzer.utils;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
-import software.amazon.awssdk.services.cloudwatchlogs.endpoints.internal.Value;
 
 import java.util.Arrays;
 
@@ -57,6 +56,7 @@ public class AnalyzerErrorConstants {
         public static final String SLO_CLASS_NOT_SUPPORTED = "slo_class " + UNSUPPORTED;
         public static final String DIRECTION_NOT_SUPPORTED = "direction " + UNSUPPORTED;
         public static final String FUNCTION_VARIABLES_EMPTY = "function_variables is empty\n";
+        public static final String QUERY_VARIABLES_EMPTY = "query_variables is empty\n";
         public static final String OBJECTIVE_FUNCTION_MISSING = "objective_function missing\n";
         public static final String MODE_NOT_SUPPORTED = "Autotune object mode " + UNSUPPORTED;
         public static final String TARGET_CLUSTER_NOT_SUPPORTED = "Autotune object targetCluster " + UNSUPPORTED;
@@ -82,6 +82,10 @@ public class AnalyzerErrorConstants {
         public static final String MISSING_PERF_PROFILE = "Not Found: performance_profile does not exist: ";
         public static final String MISSING_METRIC_PROFILE_METADATA= "metadata missing\n";
         public static final String DUPLICATE_METRIC_PROFILE = "Metric Profile already exists: ";
+        public static final String MISSING_METADATA_PROFILE = "Not Found: metadata_profile does not exist: ";
+        public static final String METADATA_PROFILE_NOT_SUPPORTED = "Metadata profile is not supported in remote monitoring: ";
+        public static final String MISSING_METADATA_PROFILE_METADATA= "metadata missing\n";
+        public static final String DUPLICATE_METADATA_PROFILE = "Metadata Profile already exists: ";
         public static final String MISSING_EXPERIMENT_NAME = "Not Found: experiment_name does not exist: ";
         public static final String NO_METRICS_AVAILABLE = "No metrics available from %s to %s";
         public static final String UNSUPPORTED_EXPERIMENT = String.format("At present, the system does not support bulk entries!");
@@ -174,7 +178,15 @@ public class AnalyzerErrorConstants {
             public static final String CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP = "Can not specify container data for namespace experiment";
             public static final String NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP = "Can not specify namespace data for container experiment";
             public static final String NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE = "Namespace experiment type is not supported for remote monitoring use case.";
-
+            public static final String INVALID_MODE_FOR_NAMESPACE_EXP = "Auto or recreate mode is not supported for namespace experiment.";
+            public static final String INVALID_OBJECT_TYPE_FOR_AUTO_EXP = "Kubernetes object type is not supported for auto or recreate mode.";
+            public static final String AUTO_EXP_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case.";
+            public static final String INVALID_TERM_NAME = " term name is not supported. Use short, medium or long term.";
+            public static final String TERM_SETTINGS_UNDEFINED= "Term settings are not defined in the recommendation settings.";
+            public static final String MULTIPLE_TERMS_UNSUPPORTED = "Multiple terms are currently not supported for auto or recreate mode.";
+            public static final String INVALID_MODEL_NAME = " model name is not supported. Use cost or performance.";
+            public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
+            public static final String WHITESPACE_NOT_ALLOWED = "Whitespace can not be entered as a term or model value ";
             private CreateExperimentAPI() {
 
             }
@@ -267,6 +279,20 @@ public class AnalyzerErrorConstants {
             public static final String DELETE_METRIC_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeMetricProfileEntry not found with metric profile name: ";
             public static final String DELETE_METRIC_PROFILE_ENTRY_ERROR_MSG = "Not able to delete metric profile for metric profile {} due to {}";
         }
+
+
+        public static final class ListMetadataProfileAPI {
+            public ListMetadataProfileAPI() {
+            }
+            public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+            public static final String INVALID_QUERY_PARAM_VALUE = "The query param value(s) is/are invalid";
+            public static final String INVALID_METADATA_PROFILE_NAME_EXCPTN = "Invalid Metadata Profile Name";
+            public static final String INVALID_METADATA_PROFILE_NAME_MSG = "Given metadata profile name - %s either does not exist or is not valid";
+            public static final String NO_METADATA_PROFILES_EXCPTN = "No metadata profile";
+            public static final String NO_METADATA_PROFILES = "No metadata profiles found!";
+            public static final String LOAD_METADATA_PROFILE_ERROR = "Failed to load saved metadata profile data due to: {} ";
+            public static final String LOAD_ALL_METADATA_PROFILES_ERROR = "Failed to load all the metadata profiles data due to: {} ";
+        }
     }
 
     public static final class ConversionErrors {
@@ -287,16 +313,25 @@ public class AnalyzerErrorConstants {
         }
     }
 
-    public static final class RecommendationUpdaterErrors {
-        private RecommendationUpdaterErrors() {
+    public static final class AutoscalerErrors {
+        private AutoscalerErrors() {
 
         }
 
-        public static final String UPDTAER_SERVICE_START_ERROR = "Error occurred while initializing RecommendationUpdaterService.";
+        public static final String UPDATER_SERVICE_START_ERROR = "Error occurred while initializing RecommendationUpdaterService.";
         public static final String UNSUPPORTED_UPDATER_TYPE = "Updater type %s is not supported.";
-        public static final String GENERATE_RECOMMNEDATION_FAILED = "Failed to generate recommendations for experiment: {}";
+        public static final String GENERATE_RECOMMENDATION_FAILED = "Failed to generate recommendations for experiment: {}";
         public static final String UPDATER_NOT_INSTALLED = "Updater is not installed.";
         public static final String RECOMMENDATION_DATA_NOT_PRESENT = "Recommendations are not present for the experiment.";
         public static final String INVALID_VPA_NAME = "VPA name cannot be null or empty.";
+
+        public static final class AcceleratorAutoscaler {
+            private AcceleratorAutoscaler() {
+
+            }
+            public static final String NAMESPACE_NULL = "Namespace cannot be null";
+            public static final String CONTAINER_NULL = "Container cannot be null";
+
+        }
     }
 }

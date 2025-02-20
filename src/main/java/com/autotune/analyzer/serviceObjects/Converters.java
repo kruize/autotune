@@ -1,10 +1,8 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
-import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.kruizeObject.*;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
@@ -21,10 +19,12 @@ import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,6 +70,8 @@ public class Converters {
                     LOGGER.debug("Experiment Type: {}", createExperimentAPIObject.getExperimentType());
                     k8sObjectList.add(k8sObject);
                 }
+                // TODO : some modification to add custom terms and models automatically here
+
                 kruizeObject.setKubernetes_objects(k8sObjectList);
                 kruizeObject.setExperimentName(createExperimentAPIObject.getExperimentName());
                 kruizeObject.setApiVersion(createExperimentAPIObject.getApiVersion());
@@ -81,7 +83,20 @@ public class Converters {
                 kruizeObject.setExperimentType(createExperimentAPIObject.getExperimentType());
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
                 kruizeObject.setTrial_settings(createExperimentAPIObject.getTrialSettings());
-                kruizeObject.setRecommendation_settings(createExperimentAPIObject.getRecommendationSettings());
+                RecommendationSettings recommendationSettings = new RecommendationSettings();
+                RecommendationSettings apiRecommendationSettings = createExperimentAPIObject.getRecommendationSettings();
+                if (apiRecommendationSettings != null) {
+                    if (apiRecommendationSettings.getTermSettings() != null) {
+                        recommendationSettings.setTermSettings(apiRecommendationSettings.getTermSettings());
+                    }
+                    if (apiRecommendationSettings.getModelSettings() != null) {
+                        recommendationSettings.setModelSettings(apiRecommendationSettings.getModelSettings());
+                    }
+                    if (apiRecommendationSettings.getThreshold() != null) {
+                        recommendationSettings.setThreshold(apiRecommendationSettings.getThreshold());
+                    }
+                }
+                kruizeObject.setRecommendation_settings(recommendationSettings);
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
                 kruizeObject.setExperiment_usecase_type(new ExperimentUseCaseType(kruizeObject));
@@ -387,6 +402,52 @@ public class Converters {
             }
             return metricProfile;
         }
+
+        public static MetadataProfile convertInputJSONToCreateMetadataProfile(String inputData) throws JsonProcessingException {
+            MetadataProfile metadataProfile = null;
+
+            if (inputData != null) {
+                JSONObject jsonObject = new JSONObject(inputData);
+                String apiVersion = jsonObject.getString(AnalyzerConstants.API_VERSION);
+                String kind = jsonObject.getString(AnalyzerConstants.KIND);
+
+                JSONObject metadataObject = jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
+                ObjectMapper objectMapper = new ObjectMapper();
+                ObjectNode metadata = objectMapper.readValue(metadataObject.toString(), ObjectNode.class);
+                metadata.put(AnalyzerConstants.AutotuneObjectConstants.NAME, metadataObject.getString(AnalyzerConstants.AutotuneObjectConstants.NAME));
+
+                Double profileVersion = jsonObject.has(AnalyzerConstants.PROFILE_VERSION) ? jsonObject.getDouble(AnalyzerConstants.PROFILE_VERSION) : null;
+                String k8sType = jsonObject.has(AnalyzerConstants.MetadataProfileConstants.K8S_TYPE) ? jsonObject.getString(AnalyzerConstants.MetadataProfileConstants.K8S_TYPE) : null;
+                String datasource = jsonObject.getString(AnalyzerConstants.MetadataProfileConstants.DATASOURCE);
+                JSONArray queryVariableArray = jsonObject.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.QUERY_VARIABLES);
+                ArrayList<Metric> queryVariablesList = new ArrayList<>();
+                for (Object object : queryVariableArray) {
+                    JSONObject functionVarObj = (JSONObject) object;
+                    String name = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
+                    datasource = functionVarObj.has(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE) ? functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE) : datasource;
+                    String query = functionVarObj.has(AnalyzerConstants.AutotuneObjectConstants.QUERY) ? functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.QUERY) : null;
+                    String valueType = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
+                    String kubeObject = functionVarObj.has(AnalyzerConstants.KUBERNETES_OBJECT) ? functionVarObj.getString(AnalyzerConstants.KUBERNETES_OBJECT) : null;
+                    Metric metric = new Metric(name, query, datasource, valueType, kubeObject);
+                    JSONArray aggrFunctionArray = functionVarObj.getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS);
+                    HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
+                    for (Object innerObject : aggrFunctionArray) {
+                        JSONObject aggrFuncJsonObject = (JSONObject) innerObject;
+                        String function = aggrFuncJsonObject.getString(AnalyzerConstants.FUNCTION);
+                        String aggrFuncQuery = aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.QUERY);
+                        String version = aggrFuncJsonObject.has(KruizeConstants.JSONKeys.VERSION) ? aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.VERSION) : null;
+                        AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version);
+                        aggregationFunctionsMap.put(function, aggregationFunctions);
+                    }
+                    metric.setAggregationFunctionsMap(aggregationFunctionsMap);
+                    queryVariablesList.add(metric);
+                }
+
+                metadataProfile = new MetadataProfile(apiVersion, kind, metadata, profileVersion, k8sType, datasource, queryVariablesList);
+            }
+            return metadataProfile;
+        }
+
 
         public static ConcurrentHashMap<String, KruizeObject> ConvertUpdateResultDataToAPIResponse(ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap) {
             return null;
