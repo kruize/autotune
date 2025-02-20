@@ -348,7 +348,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.3
+          image: quay.io/kruize/autotune_operator:0.4
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -366,10 +366,10 @@ spec:
               value: "-XX:MaxRAMPercentage=80"
           resources:
             requests:
-              memory: "350Mi"
+              memory: "768Mi"
               cpu: "0.7"
             limits:
-              memory: "350Mi"
+              memory: "768Mi"
               cpu: "0.7"
           ports:
             - name: kruize-port
@@ -420,7 +420,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.3
+              image: quay.io/kruize/autotune_operator:0.4
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -461,7 +461,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.3
+              image: quay.io/kruize/autotune_operator:0.4
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
