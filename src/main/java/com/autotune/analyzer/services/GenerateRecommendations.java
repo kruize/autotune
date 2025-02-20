@@ -18,6 +18,8 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
+import com.autotune.analyzer.exceptions.InvalidModelException;
+import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
 import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
@@ -122,9 +124,12 @@ public class GenerateRecommendations extends HttpServlet {
         } catch (FetchMetricsError e) {
             LOGGER.error(AnalyzerErrorConstants.APIErrors.generateRecommendationsAPI.ERROR_FETCHING_METRICS);
             sendErrorResponse(response, new Exception(e), HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } catch (InvalidTermException | InvalidModelException e) {
+            LOGGER.error(e.getMessage());
+            sendErrorResponse(response, new Exception(e) , HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             LOGGER.error("Exception occurred while processing request: " + e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            sendErrorResponse(response, new Exception(e), HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } finally {
             if (timerBUpdateRecommendations != null) {
                 MetricsConfig.timerUpdateRecomendations = MetricsConfig.timerBUpdateRecommendations.tag(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS, statusValue).register(MetricsConfig.meterRegistry());

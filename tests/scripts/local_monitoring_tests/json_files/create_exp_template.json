@@ -24,7 +24,13 @@
 		"measurement_duration": "{{measurement_duration}}"
 	},
 	"recommendation_settings": {
-		"threshold": "{{threshold}}"
+		"threshold": "{{threshold}}",
+		"model_settings": {
+			"models":"{{ models }}"
+		},
+		"term_settings": {
+			"terms": "{{ terms }}"
+		}
 	}
 }]
 

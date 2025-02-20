@@ -15,6 +15,7 @@ limitations under the License.
 """
 import pytest
 import sys
+import ast
 sys.path.append("../../")
 
 from helpers.fixtures import *
@@ -23,18 +24,51 @@ from helpers.utils import *
 from jinja2 import Environment, FileSystemLoader
 
 @pytest.mark.sanity
-@pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
+@pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, models, terms",
     [
-        ("valid_namespace_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1"),
-        ("valid_container_exp_without_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("valid_container_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("valid_auto_mode_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-auto-container-exp", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("valid_recreate_mode_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-recreate-container-exp", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("valid_auto_mode_exp_without_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-auto", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("valid_recreate_mode_exp_without_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-recreate", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1")
+        ("valid_namespace_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, None),
+        ("valid_container_exp_without_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("valid_container_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("valid_auto_mode_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-auto-container-exp", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("valid_recreate_mode_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-recreate-container-exp", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("valid_auto_mode_exp_without_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-auto", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("valid_recreate_mode_exp_without_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-recreate", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None)
+
+     #Namespace Experiments
+        ("valid_namespace_exp_with_exp_type_with_model_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", ["cost"] , None),
+        ("valid_namespace_exp_with_exp_type_with_model_settings_perf", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring","cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", ["performance"], None),
+        ("valid_namespace_exp_with_exp_type_with_multiple_model_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", ["cost", "performance"], None),
+
+        ("valid_namespace_exp_with_exp_type_with_term_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, ["short"]),
+        ("valid_namespace_exp_with_exp_type_with_term_settings_med", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, ["medium"]),
+        ("valid_namespace_exp_with_exp_type_with_term_settings_long", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, ["long"]),
+        ("valid_namespace_exp_with_exp_type_with_multiple_term_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1",[], ["short", "medium", "long"]),
+
+
+        ("valid_namespace_exp_with_exp_type_with_single_model_term_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1",["cost"], ["short"]),
+        ("valid_namespace_exp_with_exp_type_with_single_model_term_settings_perf", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1",["performance"], ["short"]),
+        ("valid_namespace_exp_with_exp_type_with_2model_term_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1",["cost", "performance"], ["short"]),
+
+     # Container Experiments
+    ("valid_container_exp_without_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","monitor", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+    ("valid_container_exp_without_exp_type_with_model_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","monitor", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", ["cost"], None),
+    ("valid_container_exp_without_exp_type_with_term_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","monitor", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, ["short"]),
+    ("valid_container_exp_without_exp_type_with_multiple_model_term_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","monitor", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", ["cost", "performance"], ["short", "medium", "long"]),
+
+    # Auto Mode Experiments
+    ("valid_auto_mode_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-auto-container-exp", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","auto", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+    ("valid_auto_mode_exp_with_exp_type_with_model_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-auto-container-exp", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","auto", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", ["performance"], None),
+    ("valid_auto_mode_exp_with_exp_type_with_term_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-auto-container-exp", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","auto", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, ["medium"]),
+
+    # Recreate Mode Experiments
+    ("valid_recreate_mode_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-recreate-container-exp", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","recreate", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+    ("valid_recreate_mode_exp_with_exp_type_with_model_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-recreate-container-exp", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","recreate", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", ["performance"], None),
+    ("valid_recreate_mode_exp_with_exp_type_with_term_settings", SUCCESS_STATUS_CODE, "v2.0", "tfb-recreate-container-exp", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring","recreate", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, ["medium"]),
+
+
     ]
 )
-def test_create_exp_valid_tests(test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, cluster_type):
+def test_create_exp_valid_tests(test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, cluster_type, models, terms):
     """
     Test Description: This test validates the response status code of createExperiment API
     for namespace experiment by passing a valid input for the json
@@ -74,7 +108,10 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
         container_image_name=container_image_name,
         container_name=container_name,
         measurement_duration=measurement_duration,
-        threshold=threshold
+        threshold=threshold,
+        models=models,
+        terms=terms
+
     )
 
     # Convert rendered content to a dictionary
@@ -92,6 +129,16 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
         json_content[0]["kubernetes_objects"][0].pop("namespaces")
     if json_content[0]["experiment_type"] == "None":
         json_content[0].pop("experiment_type")
+    if json_content[0]["recommendation_settings"]["model_settings"]["models"] == "None":
+        json_content[0]["recommendation_settings"].pop("model_settings")
+    if json_content[0]["recommendation_settings"]["term_settings"]["terms"] == "None":
+        json_content[0]["recommendation_settings"].pop("term_settings")
+
+    if json_content[0]["recommendation_settings"].get("model_settings") is not None:
+        json_content[0]["recommendation_settings"]["model_settings"]["models"] = ast.literal_eval(json_content[0]["recommendation_settings"]["model_settings"]["models"])
+    if json_content[0]["recommendation_settings"].get("term_settings") is not None:
+        json_content[0]["recommendation_settings"]["term_settings"]["terms"] = ast.literal_eval(json_content[0]["recommendation_settings"]["term_settings"]["terms"])
+
 
     # Write the final JSON to the temp file
     with open(tmp_json_file, mode="w", encoding="utf-8") as message:
@@ -120,25 +167,40 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
 
 
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, expected_status_code, expected_error_msg, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
+@pytest.mark.parametrize("test_name, expected_status_code, expected_error_msg, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, models, terms",
     [
         ("invalid_namespace_exp_without_exp_type", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", None, None, None, None, "default", None, None, "15min", "0.1"),
-        ("invalid_both_container_and_namespace_without_exp_type", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_both_container_and_namespace_namespace_exp_type", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_both_container_and_namespace_container_exp_type", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_namespace_exp_type_with_only_containers", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_container_exp_type_with_only_namespace", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "container", None, None, None, "default", None, None, "15min", "0.1"),
-        ("invalid_namespace_exp_with_auto_mode", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE,"v2.0", "tfb-workload-namespace-auto", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1"),
-        ("invalid_namespace_exp_with_recreate_mode", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE,"v2.0", "tfb-workload-namespace-recreate", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1"),
-        ("invalid_auto_mode_exp_with_exp_type_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE, "v2.0", "tfb-auto-container-exp-remote", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "remote", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_recreate_mode_exp_with_exp_type_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE, "v2.0", "tfb-recreate-container-exp-remote", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "remote", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_auto_mode_exp_without_exp_type_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE, "v2.0", "tfb-auto-remote", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "remote", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_recreate_mode_exp_without_exp_type_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE, "v2.0", "tfb-recreate-remote", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "remote", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_auto_mode_with_unsupported_object_type", ERROR_STATUS_CODE, CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA, "v2.0", "tfb-auto-invalid-object", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "local", "prometheus-1", "container", "statefulset", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1"),
-        ("invalid_recreate_mode_with_unsupported_object_type", ERROR_STATUS_CODE, CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA, "v2.0", "tfb-recreate-invalid-object", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "local", "prometheus-1", "container", "job", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1")
+        ("invalid_both_container_and_namespace_without_exp_type", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("invalid_both_container_and_namespace_namespace_exp_type", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("invalid_both_container_and_namespace_container_exp_type", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("invalid_namespace_exp_type_with_only_containers", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("invalid_container_exp_type_with_only_namespace", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "container", None, None, None, "default", None, None, "15min", "0.1", None, None),
+        ("invalid_namespace_exp_with_auto_mode", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE,"v2.0", "tfb-workload-namespace-auto", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, None),
+        ("invalid_namespace_exp_with_recreate_mode", ERROR_STATUS_CODE, CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE,"v2.0", "tfb-workload-namespace-recreate", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, None),
+        ("invalid_auto_mode_exp_with_exp_type_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE, "v2.0", "tfb-auto-container-exp-remote", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "remote", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("invalid_recreate_mode_exp_with_exp_type_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE, "v2.0", "tfb-recreate-container-exp-remote", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "remote", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("invalid_auto_mode_exp_without_exp_type_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE, "v2.0", "tfb-auto-remote", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "remote", "prometheus-1", None, "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("invalid_recreate_mode_exp_without_exp_type_remote_cluster", ERROR_STATUS_CODE, CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE, "v2.0", "tfb-recreate-remote", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "remote", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("invalid_auto_mode_with_unsupported_object_type", ERROR_STATUS_CODE, CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA, "v2.0", "tfb-auto-invalid-object", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "auto", "local", "prometheus-1", "container", "statefulset", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+        ("invalid_recreate_mode_with_unsupported_object_type", ERROR_STATUS_CODE, CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA, "v2.0", "tfb-recreate-invalid-object", "default", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "recreate", "local", "prometheus-1", "container", "job", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+
+#         ("valid_container_exp_with_exp_type", SUCCESS_STATUS_CODE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "container", "deployment", "tfb-qrh-sample", "default", None, "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", None, None),
+
+#         ("invalid_namespace_exp_without_exp_type_with_invalid_model_settings", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, ["sh"]),
+#         ("invalid_namespace_exp_without_exp_type_with_whitespace_model_settings", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", [""], None),
+#  ("valid_namespace_exp_with_exp_type",  ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, [""]),
+#         ("invalid_namespace_exp_without_exp_type_with_invalid_term_settings", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, ["sho"]),
+#         ("invalid_namespace_exp_without_exp_type_with_whitespace_term_settings", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, [""]),
+#         ("invalid_namespace_exp_without_exp_type_with_invalid_model_term_settings", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE, "v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1","namespace", None, None, None, "default", None, None, "15min", "0.1",["cos", "performance"], ["med", "short"]),
+#
+#         ("invalid_both_container_and_namespace_without_exp_type_invalid_model_setting", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1", "namespace", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", ["perf"], None),
+#         ("invalid_both_container_and_namespace_without_exp_type_whitespace_model_settings", ERROR_STATUS_CODE, CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE,"v2.0", "tfb-workload-namespace", "default", "resource-optimization-local-monitoring", "monitor", "local", "prometheus-1","namespace", "deployment", "tfb-qrh-sample", "default", "default", "kruize/tfb-qrh:1.13.2.F_et17", "tfb-server", "15min", "0.1", [""], None),
+
+
+
     ]
 )
-def test_create_exp_invalid_tests(test_name, expected_status_code, expected_error_msg, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, cluster_type):
+def test_create_exp_invalid_tests(test_name, expected_status_code, expected_error_msg, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, cluster_type, models, terms):
     """
     Test Description: This test validates the response status code of createExperiment API
     for namespace experiment by passing a valid input for the json
@@ -177,7 +239,9 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, expected_erro
         container_image_name=container_image_name,
         container_name=container_name,
         measurement_duration=measurement_duration,
-        threshold=threshold
+        threshold=threshold,
+        models=models,
+        terms=terms
     )
 
     # Convert rendered content to a dictionary
@@ -195,6 +259,16 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, expected_erro
             json_content[0]["kubernetes_objects"][0].pop("namespaces")
     if json_content[0]["experiment_type"] == "None":
         json_content[0].pop("experiment_type")
+    if json_content[0]["recommendation_settings"]["model_settings"]["models"] == "None":
+        json_content[0]["recommendation_settings"].pop("model_settings")
+    if json_content[0]["recommendation_settings"]["term_settings"]["terms"] == "None":
+        json_content[0]["recommendation_settings"].pop("term_settings")
+    if json_content[0]["recommendation_settings"].get("model_settings") is not None:
+        json_content[0]["recommendation_settings"]["model_settings"]["models"] = ast.literal_eval(json_content[0]["recommendation_settings"]["model_settings"]["models"])
+    if json_content[0]["recommendation_settings"].get("term_settings") is not None:
+        json_content[0]["recommendation_settings"]["term_settings"]["terms"] = ast.literal_eval(json_content[0]["recommendation_settings"]["term_settings"]["terms"])
+
+
 
     # Write the final JSON to the temp file
     with open(tmp_json_file, mode="w", encoding="utf-8") as message:
