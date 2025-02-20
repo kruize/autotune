@@ -46,14 +46,14 @@ metric_profile_dir = get_metric_profile_dir()
 metadata_profile_dir = get_metadata_profile_dir()
 
 @pytest.mark.sanity
-@pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
+@pytest.mark.parametrize("test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, models, terms",
     [
-        ("list_reco_default_cluster1", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-1", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1"),
-        ("list_reco_default_cluster2", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-2", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1")
+        ("list_reco_default_cluster1", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-1", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, None),
+        ("list_reco_default_cluster2", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-2", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, None)
     ]
 )
-def test_list_recommendations_namespace_single_result(test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, cluster_type):
-    """test_list_recommendations_namespace_single_result
+def test_list_recommendations_namespace_single_result(test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, cluster_type, models, terms):
+    """
     Test Description: This test validates listRecommendations by passing a valid
     namespace experiment name
     """
@@ -83,7 +83,9 @@ def test_list_recommendations_namespace_single_result(test_name, expected_status
         container_image_name=container_image_name,
         container_name=container_name,
         measurement_duration=measurement_duration,
-        threshold=threshold
+        threshold=threshold,
+        models=models,
+        terms=terms
     )
 
     # Convert rendered content to a dictionary
@@ -97,6 +99,16 @@ def test_list_recommendations_namespace_single_result(test_name, expected_status
         json_content[0]["kubernetes_objects"][0].pop("namespace")
     if json_content[0]["kubernetes_objects"][0]["containers"][0]["container_image_name"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("containers")
+    if json_content[0]["recommendation_settings"]["model_settings"]["models"] == None:
+        json_content[0]["recommendation_settings"].pop("model_settings")
+    if json_content[0]["recommendation_settings"]["term_settings"]["terms"] == None:
+        json_content[0]["recommendation_settings"].pop("term_settings")
+
+    if json_content[0]["recommendation_settings"].get("model_settings") is not None:
+        json_content[0]["recommendation_settings"]["model_settings"]["models"] = ast.literal_eval(json_content[0]["recommendation_settings"]["model_settings"]["models"])
+    if json_content[0]["recommendation_settings"].get("term_settings") is not None:
+        json_content[0]["recommendation_settings"]["term_settings"]["terms"] = ast.literal_eval(json_content[0]["recommendation_settings"]["term_settings"]["terms"])
+
 
     # Write the final JSON to the temp file
     with open(tmp_json_file, mode="w", encoding="utf-8") as message:
