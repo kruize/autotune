@@ -17,9 +17,7 @@
 package com.autotune.analyzer.autoscaler;
 
 import com.autotune.analyzer.autoscaler.vpa.VpaAutoscalerImpl;
-import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
-import com.autotune.analyzer.exceptions.FetchMetricsError;
-import com.autotune.analyzer.exceptions.InvalidRecommendationUpdaterType;
+import com.autotune.analyzer.exceptions.*;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.recommendations.engine.RecommendationEngine;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -84,7 +82,12 @@ public class AutoscalerImpl implements Autoscaler {
             } else {
                 throw new Exception(validationMessage);
             }
-        } catch (Exception | FetchMetricsError e) {
+        } catch (Exception | InvalidModelException | InvalidTermException e) {
+            LOGGER.error(e.getMessage());
+//            sendErrorResponse(response, new Exception(e), HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            LOGGER.debug(e.getMessage());
+            return null;
+        } catch ( FetchMetricsError e) {
             LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.GENERATE_RECOMMNEDATION_FAILED, experimentName);
             LOGGER.debug(e.getMessage());
             return null;
