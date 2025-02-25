@@ -114,7 +114,7 @@ public class ListRecommendations extends HttpServlet {
                     if (rmTable) {
                         new ExperimentDBService().loadExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
                     } else {
-                        new ExperimentDBService().loadLMExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
+                        new ExperimentDBService().loadLMExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName, null);
                     }
                 } catch (Exception e) {
                     LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
@@ -165,7 +165,7 @@ public class ListRecommendations extends HttpServlet {
                     if (rmTable) {
                         new ExperimentDBService().loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
                     } else {
-                        new ExperimentDBService().loadAllLMExperimentsAndRecommendations(mKruizeExperimentMap);
+                        new ExperimentDBService().loadAllLMExperimentsAndRecommendations(mKruizeExperimentMap, null);
                     }
                 } catch (Exception e) {
                     LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
