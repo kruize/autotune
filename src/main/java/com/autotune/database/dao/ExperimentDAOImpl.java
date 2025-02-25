@@ -693,6 +693,16 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+    /**
+     * Retrieves a {@link BulkJob} object from the database based on the provided job ID.
+     *
+     * <p>This method queries the database for a bulk job using the given job ID. It also
+     * records metrics for performance monitoring and logs any errors encountered during retrieval.</p>
+     *
+     * @param jobId
+     * @return
+     * @throws Exception
+     */
     @Override
     public BulkJob findBulkJobById(String jobId) throws Exception {
         BulkJob bulkJob = null;
@@ -713,6 +723,23 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return bulkJob;
     }
+
+    /**
+     * Updates the notification and recommendation fields of a bulk job for a specific experiment.
+     *
+     * <p>This method performs a partial update on a bulk job's JSON fields using the jsonb_set function
+     * in PostgreSQL. It updates the notification and recommendation data for a given experiment within
+     * the bulk job record.</p>
+     *
+     * <p>Performance metrics are recorded, and any errors encountered during execution are logged.</p>
+     *
+     * @param jobId
+     * @param experimentName
+     * @param notification
+     * @param recommendationJson
+     * @return
+     * @throws Exception
+     */
 
     @Override
     public ValidationOutputData updateBulkJobByExperiment(String jobId, String experimentName, String notification, String recommendationJson) throws Exception {
@@ -978,7 +1005,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
-   
+
     @Override
     public List<KruizeResultsEntry> loadAllResults() throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments
