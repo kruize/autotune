@@ -76,6 +76,9 @@ public class GenericRestApiClient {
                 dataSourceInfo.getAuthenticationConfig());
     }
 
+    public GenericRestApiClient() {
+    }
+
     /**
      * This method appends queryString with baseURL and returns response in JSON using specified authentication.
      *
@@ -177,6 +180,37 @@ public class GenericRestApiClient {
             }
             // Execute the request and return the response code
             try (CloseableHttpResponse response = httpclient.execute(httpPost)) {
+                // Get the status code from the response
+                int responseCode = response.getStatusLine().getStatusCode();
+                LOGGER.debug("Response code: {}", responseCode);
+                if (response.getEntity() != null) {
+                    // Convert response entity to string
+                    String responseBody = EntityUtils.toString(response.getEntity(), "UTF-8");
+                    try {
+                        // Attempt to parse as JSON
+                        JSONObject json = new JSONObject(responseBody);
+                        httpResponseWrapper = new HttpResponseWrapper(responseCode, json);
+                    } catch (JSONException e) {
+                        // If JSON parsing fails, return as plain string
+                        httpResponseWrapper = new HttpResponseWrapper(responseCode, responseBody);
+                    }
+                }
+            }
+        }
+        return httpResponseWrapper;
+    }
+
+    public HttpResponseWrapper getKruizeAPI(String payload) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        HttpResponseWrapper httpResponseWrapper = null;
+        // Create an HTTP client
+        try (CloseableHttpClient httpclient = setupHttpClient()) {
+            // Prepare the HTTP POST request
+            HttpGet httpget = new HttpGet(baseURL);
+            httpget.setHeader("Content-Type", "application/json");
+            httpget.setHeader("Accept", "application/json");
+      
+            // Execute the request and return the response code
+            try (CloseableHttpResponse response = httpclient.execute(httpget)) {
                 // Get the status code from the response
                 int responseCode = response.getStatusLine().getStatusCode();
                 LOGGER.debug("Response code: {}", responseCode);
