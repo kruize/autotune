@@ -58,6 +58,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
 
 /**
  * Rest API used to recommend right configuration.
@@ -85,6 +86,7 @@ public class ListRecommendations extends HttpServlet {
         String latestRecommendation = request.getParameter(AnalyzerConstants.ServiceConstants.LATEST);
         String monitoringEndTime = request.getParameter(KruizeConstants.JSONKeys.MONITORING_END_TIME);
         String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
+        String bulkJobID = request.getParameter(JOB_ID);
         Timestamp monitoringEndTimestamp = null;
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
 
@@ -114,7 +116,7 @@ public class ListRecommendations extends HttpServlet {
                     if (rmTable) {
                         new ExperimentDBService().loadExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName);
                     } else {
-                        new ExperimentDBService().loadLMExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName, null);
+                        new ExperimentDBService().loadLMExperimentAndRecommendationsFromDBByName(mKruizeExperimentMap, experimentName, bulkJobID);
                     }
                 } catch (Exception e) {
                     LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
@@ -165,7 +167,7 @@ public class ListRecommendations extends HttpServlet {
                     if (rmTable) {
                         new ExperimentDBService().loadAllExperimentsAndRecommendations(mKruizeExperimentMap);
                     } else {
-                        new ExperimentDBService().loadAllLMExperimentsAndRecommendations(mKruizeExperimentMap, null);
+                        new ExperimentDBService().loadAllLMExperimentsAndRecommendations(mKruizeExperimentMap, bulkJobID);
                     }
                 } catch (Exception e) {
                     LOGGER.error("Loading saved experiment {} failed: {} ", experimentName, e.getMessage());
@@ -209,7 +211,6 @@ public class ListRecommendations extends HttpServlet {
                 List<ListRecommendationsAPIObject> recommendationList = new ArrayList<>();
                 for (KruizeObject ko : kruizeObjectList) {
                     try {
-                        LOGGER.debug(ko.getKubernetes_objects().toString());
                         ListRecommendationsAPIObject listRecommendationsAPIObject = Converters.KruizeObjectConverters.
                                 convertKruizeObjectToListRecommendationSO(
                                         ko,

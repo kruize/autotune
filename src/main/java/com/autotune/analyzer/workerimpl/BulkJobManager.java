@@ -29,6 +29,7 @@ import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
@@ -63,8 +64,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.autotune.analyzer.services.BulkService.filterJson;
 import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
-import static com.autotune.operator.KruizeDeploymentInfo.experiments_url;
+import static com.autotune.operator.KruizeDeploymentInfo.job_filter_to_db;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.*;
 
@@ -170,7 +172,6 @@ public class BulkJobManager implements Runnable {
                 if (null == metadataInfo) {
                     setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
                 } else {
-
                     jobData.setMetadata(metadataInfo);
                     Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
                     //  TODO: Remove getExperimentMap and instead collect all metadata, process it, and create experiments dynamically during metadata iteration.
@@ -179,6 +180,7 @@ public class BulkJobManager implements Runnable {
                     if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
                         setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO, datasource);
                     } else {
+                        new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB("{}"));
                         ExecutorService createExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
                         ExecutorService generateExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
                         try {
@@ -191,7 +193,6 @@ public class BulkJobManager implements Runnable {
                                         // send request to createExperiment API for experiment creation
                                         experiment.getApis().getCreate().setRequest(apiObject);
                                         GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
-                                        LOGGER.debug("experiment_url : {}", experiments_url);
                                         apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
                                         GenericRestApiClient.HttpResponseWrapper responseCode;
                                         boolean experiment_exists = false;
@@ -225,11 +226,11 @@ public class BulkJobManager implements Runnable {
                                                 GenericRestApiClient recommendationApiClient = new GenericRestApiClient(finalDatasource);
                                                 String encodedExperimentName;
                                                 encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
-                                                recommendationApiClient.setBaseURL(String.format(KruizeDeploymentInfo.recommendations_url, encodedExperimentName));
+                                                String recommendationURL = String.format(KruizeDeploymentInfo.recommendations_url + "&" + JOB_ID + "=%s", encodedExperimentName, jobID);
+                                                recommendationApiClient.setBaseURL(recommendationURL);
                                                 GenericRestApiClient.HttpResponseWrapper recommendationResponseCode = null;
                                                 try {
                                                     recommendationResponseCode = recommendationApiClient.callKruizeAPI(null);
-                                                    LOGGER.debug("API Response code: {}", recommendationResponseCode);
                                                     ExclusionStrategy strategy = new ExclusionStrategy() {
                                                         @Override
                                                         public boolean shouldSkipField(FieldAttributes field) {
@@ -344,13 +345,13 @@ public class BulkJobManager implements Runnable {
         jobData.getSummary().setEndTime(Instant.now());
         if (null != notification)
             jobData.getSummary().setNotification(notificationKey, notification);
-        GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
         if (null != bulkInput.getWebhook() && null != bulkInput.getWebhook().getUrl()) {
-            apiClient.setBaseURL(bulkInput.getWebhook().getUrl());
             GenericRestApiClient.HttpResponseWrapper responseCode;
             BulkJobStatus.Webhook webhook = new BulkJobStatus.Webhook(WebHookStatus.IN_PROGRESS);
             jobData.setWebhook(webhook);
             try {
+                GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
+                apiClient.setBaseURL(bulkInput.getWebhook().getUrl());
                 responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(jobData) + "]");
                 LOGGER.debug("API Response code: {}", responseCode);
                 if (responseCode.getStatusCode() == HttpURLConnection.HTTP_OK) {
@@ -369,6 +370,17 @@ public class BulkJobManager implements Runnable {
                 webhook.setStatus(WebHookStatus.FAILED);
                 jobData.setWebhook(webhook);
             }
+        }
+        try {
+            if (null == jobData.getExperimentMap() || jobData.getExperimentMap().isEmpty()) {
+                new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB("{}"));
+            } else {
+                Set<String> includeFields = new HashSet<>(Arrays.asList(job_filter_to_db));
+                String experimentJSONString = filterJson(jobData, includeFields, Collections.emptySet(), null);
+                new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB(experimentJSONString));
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
         }
     }
 

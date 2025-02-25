@@ -256,7 +256,7 @@ public class KruizeConstants {
         public static final String LONG_TERM = "long_term";
         public static final String SHORT = "short";
         public static final String MEDIUM = "medium";
-        public static final String LONG= "long";
+        public static final String LONG = "long";
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String VARIATION = "variation";
         public static final String NOTIFICATIONS = "notifications";
@@ -623,16 +623,16 @@ public class KruizeConstants {
         }
 
         public static class RecommendationErrorMsgs {
-            private RecommendationErrorMsgs() {
-
-            }
-
             public static final String AMT_FORMAT_IS_NULL = "Invalid input: 'amount' and 'format' cannot be null";
             public static final String CPU_UNSUPPORTED_FORMAT = "Unsupported format for CPU conversion: ";
             public static final String ACCELERATOR_UNSUPPORTED_FORMAT = "Unsupported format for Accelerator conversion: ";
             public static final String INPUT_NULL = "Input object cannot be null";
             public static final String VALUE_NEGATIVE = "Value cannot be negative";
             public static final String INVALID_MEM_FORMAT = "Invalid format: Supported formats are bytes, KB, KiB, MB, MiB, GB, GiB, etc.";
+
+            private RecommendationErrorMsgs() {
+
+            }
         }
     }
 
@@ -839,6 +839,7 @@ public class KruizeConstants {
         public static final String JOB_ID = "job_id";
         public static final String ERROR = "error";
         public static final String JOB_NOT_FOUND_MSG = "Job not found";
+        public static final String INCORRECT_COUNT = "A total of %s experiments were processed, but the count was not updated, possibly due to a POD restart OR the JOB still running.";
         public static final String IN_PROGRESS = "IN_PROGRESS";
         public static final String COMPLETED = "COMPLETED";
         public static final String FAILED = "FAILED";
