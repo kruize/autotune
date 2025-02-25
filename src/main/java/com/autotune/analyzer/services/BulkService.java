@@ -206,7 +206,7 @@ public class BulkService extends HttpServlet {
      * @return A JSON string representation of the filtered BulkJobStatus object.
      * @throws Exception If there is an error during JSON processing.
      */
-    public String filterJson(BulkJobStatus jsonInput, Set<String> includeFields, Set<String> excludeFields, String experiment_name) throws Exception {
+    public static String filterJson(BulkJobStatus jsonInput, Set<String> includeFields, Set<String> excludeFields, String experiment_name) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         // Include or exclude fields
         SimpleFilterProvider filters = new SimpleFilterProvider();

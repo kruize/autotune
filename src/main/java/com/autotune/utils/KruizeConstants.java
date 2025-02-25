@@ -736,6 +736,7 @@ public class KruizeConstants {
         public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
         public static final String IS_ROS_ENABLED = "isROSEnabled";
         public static final String DATASOURCE_VIA_ENV = "datasource";
+        public static final String IS_KAFKA_ENABLED = "isKafkaEnabled";
     }
 
     public static final class RecommendationEngineConstants {
@@ -919,7 +920,9 @@ public class KruizeConstants {
                 PROCESSED("PROCESSED"),
                 UNPROCESSED("UNPROCESSED"),
                 PROCESSING("PROCESSING"),
-                FAILED("FAILED");
+                FAILED("FAILED"),
+                PUBLISHED("PUBLISHED"),
+                PUBLISH_FAILED("PUBLISH_FAILED");
 
                 private final String status;
 
@@ -985,5 +988,17 @@ public class KruizeConstants {
 
         private MetadataProfileAPIMessages() {
         }
+    }
+
+    public static final class KAFKA_CONSTANTS {
+        public static final String RECOMMENDATIONS_TOPIC = "recommendations-topic";
+        public static final String ERROR_TOPIC = "error-topic";
+        public static final String SUMMARY_TOPIC = "summary-topic";
+
+        public static final String SUMMARY = "summary";
+        public static final String EXPERIMENTS = "experiments";
+        public static final String RECOMMENDATIONS = "recommendations";
+
+        public static final String BOOTSTRAP_SERVER_MISSING = "Missing required environment variable: KAFKA_BOOTSTRAP_SERVERS";
     }
 }
