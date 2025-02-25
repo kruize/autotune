@@ -656,6 +656,12 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+    /**
+     * Save/Update bulkJOB details into DB
+     *
+     * @param bulkJob
+     * @return
+     */
     @Override
     public ValidationOutputData bulkJobSave(BulkJob bulkJob) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
