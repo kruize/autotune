@@ -27,6 +27,8 @@ public class KruizeResponse {
 
     private List<FailedUpdateResultsAPIObject> data;
 
+    public KruizeResponse() {
+    }
 
     public KruizeResponse(String message, int httpcode, String documentationLink, String status) {
         this.message = message;
