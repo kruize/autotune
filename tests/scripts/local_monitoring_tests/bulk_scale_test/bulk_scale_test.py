@@ -106,15 +106,11 @@ def fetch_bulk_recommendations(job_status_json, logger):
                         reco_available_msg = recommendations['notifications'][notification_code]['message']
                         if reco_available_msg != "Recommendations Are Available":
                             reco_failures += 1
-                            logger.info(f"Bulk recommendations failed for the experiment - {exp_name}!")
+                            logger.info(f"'Recommendations Are Available' message is not found in 1110000 notification code - {exp_name}!")
                             continue
-                        else:
-                            if prometheus == 0:
-                                logger.info(f"Recommendations is not available for the experiment - {exp_name}!")
-                                reco_failures += 1
                     elif notification_code == "120001" and prometheus == 0:
                         reco_failures += 1
-                        logger.info(f"Recommendations is not available for the experiment - {exp_name}!")
+                        logger.info(f"Not enough data! Recommendations is not available for the experiment - {exp_name}!")
             else:
                 if prometheus == 0:
                     logger.info("Recommendations is not available!")
@@ -170,14 +166,25 @@ def fetch_bulk_job_status(job_id, worker_number, logger):
         logger.info(f"Check {job_file} for job status")
         return -1
 
-def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number, tsdb_id):
+def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number, tsdb_id, server):
     try:
+        script_path = "../../../../scripts/kruize_metrics.py"
+        cluster = "openshift"
+
+        timeout = "60m"
+        csv_file = f"kruizeMetrics-{tsdb_id}.csv"
+        kruize_metrics_res_dir = f"{resultsdir}/results"
+
+        params = ["python3", script_path, "-c", cluster, "-s", server, "-t", timeout, "-e", kruize_metrics_res_dir,
+                  "-r", csv_file]
+
+        subprocess.Popen(params, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         scale_log_dir = resultsdir + "/scale_logs"
         os.makedirs(scale_log_dir, exist_ok=True)
 
         bulk_json = update_bulk_config(org_id, cluster_id, current_start_time, current_end_time)
 
-        log_id = "_tsdb-" + str(tsdb_id) + "_worker-" + str(worker_number) + "_org-" + str(org_id) + "_cluster-" + str(cluster_id)
+        log_id = "tsdb-" + str(tsdb_id) + "_worker-" + str(worker_number) + "_org-" + str(org_id) + "_cluster-" + str(cluster_id)
         log_file = f"{scale_log_dir}/worker_{log_id}.log"
 
         logger = setup_logger(f"logger_{log_id}", log_file)
@@ -199,12 +206,8 @@ def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_s
     except Exception as e:
         return {'error': str(e)}
 
-def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, interval_hours, days_of_res, org_ids, cluster_ids):
+def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, interval_hours, days_of_res, org_ids, cluster_ids, server):
     results = []
-    server = get_server()
-    if server == "":
-        print("Failed obtaining server details required for kruize_metrics script")
-        sys.exit(1)
 
     print(f"initial_end_time - {initial_end_time}")
     print(f"days_of_res - {days_of_res}")
@@ -224,23 +227,12 @@ def parallel_requests_with_labels(max_workers, resultsdir, initial_end_time, int
         current_start_time = current_start_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
         current_end_time = current_end_time.strftime('%Y-%m-%dT%H:%M:%S.000Z')
 
-        script_path = "../../../../scripts/kruize_metrics.py"
-        cluster = "openshift"
-
-        timeout = "60m"
-        csv_file = f"kruizeMetrics-{k}.csv"
-        kruize_metrics_res_dir = f"{resultsdir}/results"
-
-        params = ["python3", script_path, "-c", cluster, "-s", server, "-t", timeout, "-e", kruize_metrics_res_dir, "-r", csv_file]
-
-        subprocess.Popen(params, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
         with ThreadPoolExecutor(max_workers=max_workers) as executor:
             # Submit all the tasks to the executor
             futures = []
 
             futures = [
-            executor.submit(invoke_bulk_with_time_range_labels, resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number, k)
+            executor.submit(invoke_bulk_with_time_range_labels, resultsdir, org_id, cluster_id, current_start_time, current_end_time, worker_number, k, server)
                 for worker_number, (org_id, cluster_id) in enumerate(
                     ((org_id, cluster_id) for org_id in range(1, org_ids + 1) for cluster_id in
                      range(1, cluster_ids + 1)),
@@ -271,6 +263,7 @@ if __name__ == '__main__':
     org_ids = 10
     cluster_ids = 10
     prometheus = 0
+    server = ""
 
     parser = argparse.ArgumentParser()
 
@@ -328,9 +321,14 @@ if __name__ == '__main__':
         print("Failed! Thanos datasource is not registered with Kruize!")
         sys.exit(1)
 
+    server = get_server()
+    if server == "":
+        print("Failed obtaining server details required for kruize_metrics script")
+        sys.exit(1)
+
     start_time = time.time()
     print(f"initial_end_date to parallel requests - {initial_end_date}")
-    responses = parallel_requests_with_labels(max_workers, results_dir, initial_end_date, interval_hours, days_of_res, org_ids, cluster_ids)
+    responses = parallel_requests_with_labels(max_workers, results_dir, initial_end_date, interval_hours, days_of_res, org_ids, cluster_ids, server)
 
     # Print the results
     for i, response in enumerate(responses):
