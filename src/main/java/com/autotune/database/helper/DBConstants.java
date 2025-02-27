@@ -9,6 +9,13 @@ public class DBConstants {
         public static final String SELECT_FROM_LM_EXPERIMENTS = "from KruizeLMExperimentEntry";
         public static final String SELECT_FROM_EXPERIMENTS_BY_EXP_NAME = "from KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_LM_EXPERIMENTS_BY_EXP_NAME = "from KruizeLMExperimentEntry k WHERE k.experiment_name = :experimentName";
+        public static final String SELECT_FROM_BULKJOBS_BY_JOB_ID = "from BulkJob k WHERE k.jobId = :jobId";
+        public static final String UPDATE_BULKJOB_BY_ID = "UPDATE kruize_bulkjobs " +
+                "SET experiments = jsonb_set(" +
+                "    jsonb_set(experiments, :notificationPath, :newNotification::jsonb, true), " +
+                "    :recommendationPath, :newRecommendation::jsonb, true" +
+                ") " +
+                "WHERE job_id = :jobId";
         public static final String SELECT_FROM_RESULTS = "from KruizeResultsEntry";
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME = "from KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_DATASOURCE = "from KruizeDataSourceEntry";
@@ -52,6 +59,10 @@ public class DBConstants {
                 KruizeConstants.JSONKeys.EXPERIMENT_NAME, KruizeConstants.JSONKeys.EXPERIMENT_NAME);
         public static final String SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME = String.format("from KruizeRecommendationEntry k WHERE k.experiment_name = :experimentName");
         public static final String SELECT_FROM_LM_RECOMMENDATIONS_BY_EXP_NAME = String.format("from KruizeLMRecommendationEntry k WHERE k.experiment_name = :experimentName");
+        public static final String SELECT_FROM_LM_RECOMMENDATIONS_BY_EXP_NAME_BY_JOB_ID =
+                String.format(
+                        "from KruizeLMRecommendationEntry k WHERE k.experiment_name = :experimentName " +
+                                "AND function('jsonb_extract_path_text', extended_data, 'job_id') = :job_id");
         public static final String SELECT_FROM_RECOMMENDATIONS_BY_EXP_NAME_AND_END_TIME = String.format(
                 "from KruizeRecommendationEntry k WHERE " +
                         "k.experiment_name = :%s and " +
@@ -64,6 +75,7 @@ public class DBConstants {
                 KruizeConstants.JSONKeys.EXPERIMENT_NAME, KruizeConstants.JSONKeys.INTERVAL_END_TIME);
         public static final String SELECT_FROM_RECOMMENDATIONS = "from KruizeRecommendationEntry";
         public static final String SELECT_FROM_LM_RECOMMENDATIONS = "from KruizeLMRecommendationEntry";
+        public static final String SELECT_FROM_LM_RECOMMENDATIONS_BY_JOB_ID = "from KruizeLMRecommendationEntry where function('jsonb_extract_path_text', extended_data, 'job_id') = :job_id";
         public static final String SELECT_FROM_PERFORMANCE_PROFILE = "from KruizePerformanceProfileEntry";
         public static final String SELECT_FROM_PERFORMANCE_PROFILE_BY_NAME = "from KruizePerformanceProfileEntry k WHERE k.name = :name";
         public static final String SELECT_FROM_METRIC_PROFILE = "from KruizeMetricProfileEntry";

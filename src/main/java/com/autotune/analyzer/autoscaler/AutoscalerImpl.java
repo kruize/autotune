@@ -49,13 +49,14 @@ public class AutoscalerImpl implements Autoscaler {
 
     /**
      * Checks whether the necessary updater dependencies are installed or available in the system.
+     *
      * @return boolean true if the required updaters are installed, false otherwise.
      */
     @Override
     public boolean isUpdaterInstalled() {
         /*
-        * This function will be implemented by specific updater type child classes
-        */
+         * This function will be implemented by specific updater type child classes
+         */
         return false;
     }
 
@@ -74,7 +75,7 @@ public class AutoscalerImpl implements Autoscaler {
             int calCount = 0;
             String validationMessage = recommendationEngine.validate_local();
             if (validationMessage.isEmpty()) {
-                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, null);
+                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, null, null);
                 if (kruizeObject.getValidation_data().isSuccess()) {
                     LOGGER.debug(AnalyzerConstants.AutoscalerConstants.InfoMsgs.GENERATED_RECOMMENDATIONS, experimentName);
                     return kruizeObject;

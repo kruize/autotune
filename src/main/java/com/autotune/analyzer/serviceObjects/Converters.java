@@ -67,7 +67,6 @@ public class Converters {
                         // namespace recommendations experiment type
                         k8sObject = createNamespaceExperiment(kubernetesAPIObject);
                     }
-                    LOGGER.debug("Experiment Type: {}", createExperimentAPIObject.getExperimentType());
                     k8sObjectList.add(k8sObject);
                 }
                 // TODO : some modification to add custom terms and models automatically here
