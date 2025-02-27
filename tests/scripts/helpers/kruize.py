@@ -533,3 +533,76 @@ def get_bulk_job_status(job_id,include=None,logger=None):
          log_message(msg, logger)
 
     return response
+
+
+# Description: This function creates a metric profile using the Kruize createMetadataProfile API
+# Input Parameters: metadata profile json
+def create_metadata_profile(metadata_profile_json_file):
+    json_file = open(metadata_profile_json_file, "r")
+    metric_profile_json = json.loads(json_file.read())
+
+    print("\nCreating metadata profile...")
+    url = URL + "/createMetadataProfile"
+    print("URL = ", url)
+
+    response = requests.post(url, json=metric_profile_json)
+    print("Response status code = ", response.status_code)
+    print(response.text)
+    return response
+
+
+# Description: This function deletes the metadata profile
+# Input Parameters: metadata profile input json
+def delete_metadata_profile(input_json_file, invalid_header=False):
+    json_file = open(input_json_file, "r")
+    input_json = json.loads(json_file.read())
+
+    print("\nDeleting the metadata profile...")
+    url = URL + "/deleteMetadataProfile"
+
+    metadata_profile_name = input_json['metadata']['name']
+    query_string = f"name={metadata_profile_name}"
+
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
+
+    headers = {'content-type': 'application/xml'}
+    if invalid_header:
+        print("Invalid header")
+        response = requests.delete(url, headers=headers)
+    else:
+        response = requests.delete(url)
+
+    print(response)
+    print("Response status code = ", response.status_code)
+    return response
+
+
+# Description: This function lists the metadata profile from Kruize Autotune using GET listMetadataProfiles API
+# Input Parameters: metadata profile name and verbose - flag indicating granularity of data to be listed
+def list_metadata_profiles(name=None, verbose=None, logging=True):
+    print("\nListing the metadata profiles...")
+
+    query_params = {}
+
+    if name is not None:
+        query_params['name'] = name
+    if verbose is not None:
+        query_params['verbose'] = verbose
+
+    query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
+
+    url = URL + "/listMetadataProfiles"
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
+    print("PARAMS = ", query_params)
+    response = requests.get(url)
+
+    print("Response status code = ", response.status_code)
+    if logging:
+        print("\n************************************************************")
+        print(response.text)
+        print("\n************************************************************")
+    return response
