@@ -50,7 +50,6 @@ import java.util.concurrent.Executors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
-import static org.apache.http.HttpStatus.SC_EXPECTATION_FAILED;
 
 /**
  *
@@ -173,34 +172,29 @@ public class BulkService extends HttpServlet {
                 ExperimentDAO experimentDAO = new ExperimentDAOImpl();
                 BulkJob bulkJob = experimentDAO.findBulkJobById(jobID);
                 jobDetails = bulkJob.getBulkJobStatus();
-                if (!includeFields.isEmpty() && includeFields.contains("experiments")) {
-                    GenericRestApiClient recommendationApiClient = new GenericRestApiClient();
-                    String listRecommendationsURL = String.format(
-                            KruizeDeploymentInfo.recommendations_url.replaceAll("generateRecommendations.*", "listRecommendations") + "?" + JOB_ID
-                                    + "=%s", jobID);
-                    if (experiment_name != null && !experiment_name.equals("")) {
-                        String encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
-                        listRecommendationsURL = listRecommendationsURL + "&experiment_name=" + encodedExperimentName;
+
+                GenericRestApiClient recommendationApiClient = new GenericRestApiClient();
+                String listRecommendationsURL = String.format(
+                        KruizeDeploymentInfo.recommendations_url.replaceAll("generateRecommendations.*", "listRecommendations") + "?" + JOB_ID
+                                + "=%s", jobID);
+                if (experiment_name != null && !experiment_name.equals("")) {
+                    String encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
+                    listRecommendationsURL = listRecommendationsURL + "&experiment_name=" + encodedExperimentName;
+                }
+                recommendationApiClient.setBaseURL(listRecommendationsURL);
+                GenericRestApiClient.HttpResponseWrapper recommendationResponseCode = null;
+                Map<String, JsonNode> recommendationResponse = new HashMap<>();
+                try {
+                    recommendationResponseCode = recommendationApiClient.getKruizeAPI(null);
+                    // Parse JSON using Jackson
+                    ObjectMapper objectMapper = new ObjectMapper();
+                    JsonNode rootArray = objectMapper.readTree(recommendationResponseCode.getResponseBody().toString());
+                    // Extract "experiment_name" values
+                    for (JsonNode node : rootArray) {
+                        String experimentName = node.get("experiment_name").asText();
+                        recommendationResponse.put(experimentName, node);
                     }
-                    recommendationApiClient.setBaseURL(listRecommendationsURL);
-                    GenericRestApiClient.HttpResponseWrapper recommendationResponseCode = null;
-                    Map<String, JsonNode> recommendationResponse = new HashMap<>();
-                    try {
-                        recommendationResponseCode = recommendationApiClient.getKruizeAPI(null);
-                        // Parse JSON using Jackson
-                        ObjectMapper objectMapper = new ObjectMapper();
-                        JsonNode rootArray = objectMapper.readTree(recommendationResponseCode.getResponseBody().toString());
-                        // Extract "experiment_name" values
-                        for (JsonNode node : rootArray) {
-                            String experimentName = node.get("experiment_name").asText();
-                            recommendationResponse.put(experimentName, node);
-                        }
-                        if (recommendationResponse.size() != jobDetails.getSummary().getProcessed_experiments().get()) {
-                            BulkJobStatus.Notification inccorectBNotification = new BulkJobStatus.Notification();
-                            inccorectBNotification.setMessage(String.format(INCORRECT_COUNT, jobDetails.getSummary().getProcessed_experiments().get()));
-                            inccorectBNotification.setCode(SC_EXPECTATION_FAILED);
-                            jobDetails.getSummary().setNotification(String.valueOf(SC_EXPECTATION_FAILED), inccorectBNotification);
-                        }
+                    if (!includeFields.isEmpty() && includeFields.contains("experiments")) {
                         jobDetails.getExperimentMap().forEach(
                                 (experimentName, experiment) -> {
                                     BulkJobStatus.GenerateRecommendationsAPIResponse bresp =
@@ -213,10 +207,11 @@ public class BulkService extends HttpServlet {
                                     }
                                 }
                         );
-                    } catch (Exception e) {
-                        LOGGER.error("Not able to fetch recommedations from database due to {}", e.getMessage());
                     }
+                } catch (Exception e) {
+                    LOGGER.error("Not able to fetch recommedations from database due to {}", e.getMessage());
                 }
+
             }
             resp.setContentType(JSON_CONTENT_TYPE);
             resp.setCharacterEncoding(CHARACTER_ENCODING);

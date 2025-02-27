@@ -914,6 +914,11 @@ public class KruizeConstants {
                     "ConnectTimeoutException: cannot establish a data source connection in a given time frame due to connectivity issues. (%s)",
                     503
             );
+            public static final BulkJobStatus.Notification EXPERIMENT_FAILED = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Not able to proceed due to. (%s)",
+                    503
+            );
 
 
             // More notification constants can be added here as needed
