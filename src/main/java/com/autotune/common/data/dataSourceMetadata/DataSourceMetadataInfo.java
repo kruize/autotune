@@ -18,6 +18,9 @@ public class DataSourceMetadataInfo {
      */
     private HashMap<String, DataSource> datasources;
 
+    public DataSourceMetadataInfo() {
+    }
+
     public DataSourceMetadataInfo(HashMap<String, DataSource> datasources) {
         this.datasources = datasources;
     }

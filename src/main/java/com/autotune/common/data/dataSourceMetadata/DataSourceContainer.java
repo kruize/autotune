@@ -15,6 +15,9 @@ public class DataSourceContainer {
     @JsonProperty(KruizeConstants.DataSourceConstants.DataSourceMetadataInfoJSONKeys.CONTAINER_IMAGE_NAME)
     private String containerImageName;
 
+    public DataSourceContainer() {
+    }
+
     public DataSourceContainer(String containerName, String containerImageName) {
         this.containerName = containerName;
         this.containerImageName = containerImageName;

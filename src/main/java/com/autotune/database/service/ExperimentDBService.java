@@ -136,10 +136,10 @@ public class ExperimentDBService {
         }
     }
 
-    public void loadAllLMRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
+    public void loadAllLMRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap, String bulkJobId) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         // Load Recommendations from DB and save to local
-        List<KruizeLMRecommendationEntry> recommendationEntries = experimentDAO.loadAllLMRecommendations();
+        List<KruizeLMRecommendationEntry> recommendationEntries = experimentDAO.loadAllLMRecommendations(bulkJobId);
         if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
             List<ListRecommendationsAPIObject> recommendationsAPIObjects = null;
             try {
@@ -272,10 +272,10 @@ public class ExperimentDBService {
         }
     }
 
-    public void loadLMRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
+    public void loadLMRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, String bulkJobId) throws Exception {
         ExperimentInterface experimentInterface = new ExperimentInterfaceImpl();
         // Load Recommendations from DB and save to local
-        List<KruizeLMRecommendationEntry> recommendationEntries = experimentDAO.loadLMRecommendationsByExperimentName(experimentName);
+        List<KruizeLMRecommendationEntry> recommendationEntries = experimentDAO.loadLMRecommendationsByExperimentName(experimentName, bulkJobId);
         if (null != recommendationEntries && !recommendationEntries.isEmpty()) {
             List<ListRecommendationsAPIObject> recommendationsAPIObjects
                     = null;
@@ -550,11 +550,11 @@ public class ExperimentDBService {
         loadRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName);
     }
 
-    public void loadLMExperimentAndRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName) throws Exception {
+    public void loadLMExperimentAndRecommendationsFromDBByName(Map<String, KruizeObject> mainKruizeExperimentMap, String experimentName, String bulkJobId) throws Exception {
 
         loadLMExperimentFromDBByName(mainKruizeExperimentMap, experimentName);
 
-        loadLMRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName);
+        loadLMRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName, bulkJobId);
     }
 
     public void loadPerformanceProfileFromDBByName(Map<String, PerformanceProfile> performanceProfileMap, String performanceProfileName) throws Exception {
@@ -623,11 +623,11 @@ public class ExperimentDBService {
         loadAllRecommendations(mainKruizeExperimentMap);
     }
 
-    public void loadAllLMExperimentsAndRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap) throws Exception {
+    public void loadAllLMExperimentsAndRecommendations(Map<String, KruizeObject> mainKruizeExperimentMap, String bulkJobId) throws Exception {
 
         loadAllLMExperiments(mainKruizeExperimentMap);
 
-        loadAllLMRecommendations(mainKruizeExperimentMap);
+        loadAllLMRecommendations(mainKruizeExperimentMap, bulkJobId);
     }
 
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {

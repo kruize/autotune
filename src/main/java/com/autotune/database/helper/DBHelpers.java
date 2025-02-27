@@ -63,6 +63,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.autotune.analyzer.experiment.ExperimentInitiator.getErrorMap;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
 
 /**
  * Helper functions used by the DB to create entity objects.
