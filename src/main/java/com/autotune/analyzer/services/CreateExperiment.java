@@ -17,8 +17,6 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.InvalidExperimentType;
-import com.autotune.analyzer.exceptions.InvalidModelException;
-import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
