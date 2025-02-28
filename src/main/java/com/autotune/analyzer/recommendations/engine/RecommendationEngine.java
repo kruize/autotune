@@ -314,7 +314,7 @@ public class RecommendationEngine {
      * @param calCount The count of incoming requests.
      * @return The KruizeObject containing the prepared recommendations.
      */
-    public KruizeObject prepareRecommendations(int calCount, String target_cluster) throws FetchMetricsError, InvalidTermException, InvalidModelException {
+    public KruizeObject prepareRecommendations(int calCount, String target_cluster) throws FetchMetricsError {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
         Map<String, Terms> terms = new HashMap<>();
         ValidationOutputData validationOutputData;
@@ -432,7 +432,7 @@ public class RecommendationEngine {
                 validationOutputData = addRecommendationsToDB(mainKruizeExperimentMAP, kruizeObject);
                 if (!validationOutputData.isSuccess()) {
                     LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
-                    validationOutputData = new ValidationOutputData(false, validationOutputData.getMessage(), HttpServletResponse.SC_BAD_REQUEST);
+                    validationOutputData = new ValidationOutputData(false, validationOutputData.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
                 } else {
                     LOGGER.debug(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_SUCCESS_COUNT, calCount));
                 }
@@ -441,9 +441,14 @@ public class RecommendationEngine {
                 LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
                 LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_ERROR,
                         experimentName, interval_start_time, interval_end_time));
-                kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_BAD_REQUEST));
+                kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
             }
-        } catch (Exception | FetchMetricsError | InvalidModelException | InvalidTermException e) {
+        } catch (FetchMetricsError e) {
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_EXCEPTION,
+                    experimentName, interval_end_time, e.getMessage()));
+            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
+            kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
+        } catch (InvalidModelException | InvalidTermException e) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_EXCEPTION,
                     experimentName, interval_end_time, e.getMessage()));
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));

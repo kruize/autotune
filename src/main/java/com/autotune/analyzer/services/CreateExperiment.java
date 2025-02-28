@@ -17,8 +17,6 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.InvalidExperimentType;
-import com.autotune.analyzer.exceptions.InvalidModelException;
-import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
@@ -156,7 +154,7 @@ public class CreateExperiment extends HttpServlet {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught: " + e.getMessage());
             sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
-        } catch (InvalidExperimentType  e) {
+        } catch (InvalidExperimentType e) {
             sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } finally {
             if (null != timerCreateExp) {
