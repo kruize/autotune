@@ -109,15 +109,10 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
         threshold=threshold,
         models=models,
         terms=terms
-
     )
 
     # Convert rendered content to a dictionary
     json_content = json.loads(content)
-    print("BHANVIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIiiii")
-    print(json_content[0]["recommendation_settings"]["term_settings"]["terms"])
-#     print(json_content[0]["recommendation_settings"]["model_settings"].pop("models"))
-    print("BHANVIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII")
 
     if json_content[0]["kubernetes_objects"][0]["type"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("type")
