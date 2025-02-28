@@ -111,7 +111,6 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
         threshold=threshold,
         models=models,
         terms=terms
-
     )
 
     # Convert rendered content to a dictionary

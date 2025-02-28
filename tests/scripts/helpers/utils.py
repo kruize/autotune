@@ -1717,8 +1717,6 @@ def validate_accelerator_recommendations_for_container(recommendations_json):
         assert recommendations_json[0]['experiment_type'] == CONTAINER_EXPERIMENT_TYPE, "Test is only applicable for container experiment type"
 
     assert recommendations_json[0]['kubernetes_objects'], "Kubernetes objects expected"
-    print(recommendations_json)
-    print("BHAVI****************************")
     # Test needs to be changed if we support multiple kubernetes objects
     kubernetes_obj = recommendations_json[0]['kubernetes_objects'][0]
     assert kubernetes_obj["containers"], "Containers array expected"
@@ -1730,8 +1728,6 @@ def validate_accelerator_recommendations_for_container(recommendations_json):
         assert container['recommendations'], "Recommendations object expected"
         recommendations = container['recommendations']
 
-        print(recommendations[data])
-        print("**********BHVI")
         assert recommendations["data"], "Data object expected"
         data = recommendations["data"]
 
