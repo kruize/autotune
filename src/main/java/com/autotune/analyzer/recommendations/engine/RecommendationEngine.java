@@ -169,7 +169,7 @@ public class RecommendationEngine {
                 registerModel(performanceBasedRecommendationModel);
             } else {
                 // user input does not matches standard models
-                throw new InvalidModelException(model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+                throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
             }
         }
     }

@@ -306,7 +306,11 @@ public class ExperimentValidation {
                         }
                         // Check for correct term in terms
                         if (!validTerms.contains(term)) {
-                            throw new IllegalArgumentException(term + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
                         }
                     }
                     LOGGER.info("All terms are valid");
@@ -325,7 +329,11 @@ public class ExperimentValidation {
                             return validationOutputData;
                         }
                         if (!validModels.contains(model)) {
-                            throw new IllegalArgumentException( model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
                         }
                     }
                 }
