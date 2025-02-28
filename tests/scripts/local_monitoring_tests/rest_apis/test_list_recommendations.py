@@ -19,6 +19,7 @@ import time
 
 import pytest
 import sys
+import ast
 
 sys.path.append("../../")
 
@@ -50,6 +51,12 @@ metadata_profile_dir = get_metadata_profile_dir()
     [
         ("list_reco_default_cluster1", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-1", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, None),
         ("list_reco_default_cluster2", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-2", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", None, None)
+        ("list_reco_default_cluster3", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-1", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", ["performance"], ["medium"]),
+        ("list_reco_default_cluster4", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-2", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", ["cost"], ["short"]),
+        ("list_reco_default_cluster5", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-2", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", ["cost", "performance"], ["short", "medium"]),
+        ("list_reco_default_cluster6", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-2", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", ["performance"], ["short"]),
+        ("list_reco_default_cluster7", SUCCESS_STATUS_CODE, "v2.0", "test-default-ns", "cluster-2", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "namespace", None, None, None, "default", None, None, "15min", "0.1", ["cost", "performance"], ["short", "medium", "long"])
+
     ]
 )
 def test_list_recommendations_namespace_single_result(test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, cluster_type, models, terms):
@@ -99,9 +106,9 @@ def test_list_recommendations_namespace_single_result(test_name, expected_status
         json_content[0]["kubernetes_objects"][0].pop("namespace")
     if json_content[0]["kubernetes_objects"][0]["containers"][0]["container_image_name"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("containers")
-    if json_content[0]["recommendation_settings"]["model_settings"]["models"] == None:
+    if json_content[0]["recommendation_settings"]["model_settings"]["models"] == "None":
         json_content[0]["recommendation_settings"].pop("model_settings")
-    if json_content[0]["recommendation_settings"]["term_settings"]["terms"] == None:
+    if json_content[0]["recommendation_settings"]["term_settings"]["terms"] == "None":
         json_content[0]["recommendation_settings"].pop("term_settings")
 
     if json_content[0]["recommendation_settings"].get("model_settings") is not None:
