@@ -315,7 +315,7 @@ public class RecommendationEngine {
      * @param calCount The count of incoming requests.
      * @return The KruizeObject containing the prepared recommendations.
      */
-    public KruizeObject prepareRecommendations(int calCount, String target_cluster) throws FetchMetricsError {
+    public KruizeObject prepareRecommendations(int calCount, String target_cluster, String bulkJobID) throws FetchMetricsError {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
         Map<String, Terms> terms = new HashMap<>();
         ValidationOutputData validationOutputData;
@@ -326,6 +326,7 @@ public class RecommendationEngine {
             setInterval_end_time(interval_end_time);
         }
         KruizeObject kruizeObject = createKruizeObject(target_cluster);
+        if (null != bulkJobID) kruizeObject.setBulkJobId(bulkJobID);
         if (!kruizeObject.getValidation_data().isSuccess())
             return kruizeObject;
         setKruizeObject(kruizeObject);
