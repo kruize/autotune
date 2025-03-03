@@ -100,8 +100,6 @@ RUN chmod -R +x $AUTOTUNE_HOME/app/target/bin/
 EXPOSE 8080
 
 ENV JAVA_HOME=${AUTOTUNE_HOME}/app/jre \
-    PATH="${AUTOTUNE_HOME}/app/jre/bin:$PATH" \
-    METRIC_PROFILE_JSON_FILE_PATH=${AUTOTUNE_HOME}/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json \
-    METADATA_PROFILE_JSON_FILE_PATH=${AUTOTUNE_HOME}/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json
+    PATH="${AUTOTUNE_HOME}/app/jre/bin:$PATH"
 
 ENTRYPOINT bash target/bin/Autotune

@@ -34,8 +34,8 @@ public class KruizeConstants {
     public static final String OPENSHIFT = "openshift";
     public static final String CONFIG_FILE = "KRUIZE_CONFIG_FILE";
     public static final String SQL_EXCEPTION_HELPER_PKG = "org.hibernate.engine.jdbc.spi";
-    public static final String METADATA_PROFILE_CONTAINER_FILE = "METADATA_PROFILE_JSON_FILE_PATH";
-    public static final String METRIC_PROFILE_CONTAINER_FILE = "METRIC_PROFILE_JSON_FILE_PATH";
+    public static final String METADATA_PROFILE_CONTAINER_FILE_PATH = "/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json";
+    public static final String METRIC_PROFILE_CONTAINER_FILE_PATH = "/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json";
 
     private KruizeConstants() {
     }
@@ -96,7 +96,7 @@ public class KruizeConstants {
             public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
             public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
             public static final String ADD_METRIC_PROFILE_TO_DB_ERROR = "Failed to add Metric Profile due to {}";
-            public static final String METRIC_PROFILE_VALIDATION_FAILURE = "Validation failed: ";
+            public static final String METRIC_PROFILE_VALIDATION_FAILURE = "Validation failed: {}";
 
             public MetricProfileErrorMsgs() {
             }
@@ -729,6 +729,12 @@ public class KruizeConstants {
         public static final String DATASOURCE_VIA_ENV = "datasource";
     }
 
+    public static final class METADATA_PROFILE_ENV_NAME {
+    }
+
+    public static final class METRIC_PROFILE_ENV_NAME {
+    }
+
     public static final class RecommendationEngineConstants {
         private RecommendationEngineConstants() {
 
@@ -937,7 +943,7 @@ public class KruizeConstants {
     }
 
     public static final class MetadataProfileConstants {
-        public static final String METADATA_PROFILE_VALIDATION_FAILURE = "Validation failed: ";
+        public static final String METADATA_PROFILE_VALIDATION_FAILURE = "Validation failed: {}";
         public static final String METADATA_PROFILE_VALIDATION_AND_ADD_FAILURE = "Validate and add metadata profile failed: {}";
         public static final String ADD_METADATA_PROFILE = "Added MetadataProfile: {}";
         public static final String CHECKING_AVAILABLE_METADATA_PROFILE_FROM_DB = "Checking available metadata profiles from database: ";

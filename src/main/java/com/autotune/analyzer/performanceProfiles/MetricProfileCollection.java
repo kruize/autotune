@@ -82,18 +82,17 @@ public class MetricProfileCollection {
         }
     }
 
-    public void addMetricProfileFromContainerPath(String containerFileName) {
+    public void addMetricProfileFromContainerPath(String containerFilePath) {
         try {
-            String defaultMetricProfilePath = System.getenv(containerFileName);
-            LOGGER.info("MetricProfile file path: {}", defaultMetricProfilePath);
+            LOGGER.info("MetricProfile file path: {}", containerFilePath);
 
             String jsonContent = null;
-            try (InputStream inputStream = new FileInputStream(defaultMetricProfilePath)) {
+            try (InputStream inputStream = new FileInputStream(containerFilePath)) {
                 jsonContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
             } catch (FileNotFoundException e) {
-                LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.FILE_NOT_FOUND_ERROR, containerFileName);
+                LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.FILE_NOT_FOUND_ERROR, containerFilePath);
             } catch (IOException e) {
-                LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.FILE_READ_ERROR_ERROR_MESSAGE, containerFileName);
+                LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.FILE_READ_ERROR_ERROR_MESSAGE, containerFilePath);
             }
 
             PerformanceProfile metricProfile = Converters.KruizeObjectConverters.convertInputJSONToCreateMetricProfile(jsonContent);

@@ -128,6 +128,7 @@ public class Autotune {
                 executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
                 // load available datasources from db
                 loadDataSourcesFromDB();
+                //TODO: check for is_ros_enabled and then add default
                 // setting up DataSources
                 try {
                     setUpDataSources();
@@ -251,7 +252,7 @@ public class Autotune {
      */
     private static void setUpMetricProfile() throws IOException {
         MetricProfileCollection metricProfileCollection = MetricProfileCollection.getInstance();
-        metricProfileCollection.addMetricProfileFromContainerPath(KruizeConstants.METRIC_PROFILE_CONTAINER_FILE);
+        metricProfileCollection.addMetricProfileFromContainerPath(KruizeConstants.METRIC_PROFILE_CONTAINER_FILE_PATH);
     }
 
     /**
@@ -267,7 +268,7 @@ public class Autotune {
      */
     private static void setUpMetadataProfile() throws IOException {
         MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
-        metadataProfileCollection.addMetadataProfileFromContainerPath(KruizeConstants.METADATA_PROFILE_CONTAINER_FILE);
+        metadataProfileCollection.addMetadataProfileFromContainerPath(KruizeConstants.METADATA_PROFILE_CONTAINER_FILE_PATH);
     }
 
     private static void addAutotuneServlets(ServletContextHandler context) {

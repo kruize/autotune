@@ -103,18 +103,17 @@ public class MetadataProfileCollection {
         }
     }
 
-    public void addMetadataProfileFromContainerPath(String containerFileName) {
+    public void addMetadataProfileFromContainerPath(String containerFilePath) {
         try {
-            String defaultMetadataProfilePath = System.getenv(containerFileName);
-            LOGGER.info("MetadataProfile file path: {}", defaultMetadataProfilePath);
+            LOGGER.info("MetadataProfile file path: {}", containerFilePath);
 
             String jsonContent = null;
-            try (InputStream inputStream = new FileInputStream(defaultMetadataProfilePath)) {
+            try (InputStream inputStream = new FileInputStream(containerFilePath)) {
                 jsonContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
             } catch (FileNotFoundException e) {
-                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_NOT_FOUND_ERROR, containerFileName);
+                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_NOT_FOUND_ERROR, containerFilePath);
             } catch (IOException e) {
-                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_READ_ERROR_ERROR_MESSAGE, containerFileName);
+                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_READ_ERROR_ERROR_MESSAGE, containerFilePath);
             }
 
             MetadataProfile metadataProfile = Converters.KruizeObjectConverters.convertInputJSONToCreateMetadataProfile(jsonContent);
