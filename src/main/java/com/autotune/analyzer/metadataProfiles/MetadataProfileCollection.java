@@ -19,6 +19,7 @@ import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,17 +104,18 @@ public class MetadataProfileCollection {
         }
     }
 
-    public void addMetadataProfileFromContainerPath(String containerFilePath) {
+    public void addMetadataProfileFromConfigFile() {
         try {
-            LOGGER.info("MetadataProfile file path: {}", containerFilePath);
+            String metadataProfilePath = KruizeDeploymentInfo.metadata_profile_file_path;
+            LOGGER.info("MetadataProfile file path: {}", metadataProfilePath);
 
             String jsonContent = null;
-            try (InputStream inputStream = new FileInputStream(containerFilePath)) {
+            try (InputStream inputStream = new FileInputStream(metadataProfilePath)) {
                 jsonContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
             } catch (FileNotFoundException e) {
-                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_NOT_FOUND_ERROR, containerFilePath);
+                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_NOT_FOUND_ERROR, metadataProfilePath);
             } catch (IOException e) {
-                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_READ_ERROR_ERROR_MESSAGE, containerFilePath);
+                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_READ_ERROR_ERROR_MESSAGE, metadataProfilePath);
             }
 
             MetadataProfile metadataProfile = Converters.KruizeObjectConverters.convertInputJSONToCreateMetadataProfile(jsonContent);

@@ -20,7 +20,9 @@ import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -82,17 +84,18 @@ public class MetricProfileCollection {
         }
     }
 
-    public void addMetricProfileFromContainerPath(String containerFilePath) {
+    public void addMetricProfileFromConfigFile() {
         try {
-            LOGGER.info("MetricProfile file path: {}", containerFilePath);
+            String metricProfilePath = KruizeDeploymentInfo.metric_profile_file_path;
+            LOGGER.info("MetricProfile file path: {}", metricProfilePath);
 
             String jsonContent = null;
-            try (InputStream inputStream = new FileInputStream(containerFilePath)) {
+            try (InputStream inputStream = new FileInputStream(metricProfilePath)) {
                 jsonContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
             } catch (FileNotFoundException e) {
-                LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.FILE_NOT_FOUND_ERROR, containerFilePath);
+                LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.FILE_NOT_FOUND_ERROR, metricProfilePath);
             } catch (IOException e) {
-                LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.FILE_READ_ERROR_ERROR_MESSAGE, containerFilePath);
+                LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.FILE_READ_ERROR_ERROR_MESSAGE, metricProfilePath);
             }
 
             PerformanceProfile metricProfile = Converters.KruizeObjectConverters.convertInputJSONToCreateMetricProfile(jsonContent);

@@ -257,7 +257,7 @@ public class Autotune {
      */
     private static void setUpMetricProfile() throws IOException {
         MetricProfileCollection metricProfileCollection = MetricProfileCollection.getInstance();
-        metricProfileCollection.addMetricProfileFromContainerPath(KruizeConstants.METRIC_PROFILE_CONTAINER_FILE_PATH);
+        metricProfileCollection.addMetricProfileFromConfigFile();
     }
 
     /**
@@ -273,7 +273,7 @@ public class Autotune {
      */
     private static void setUpMetadataProfile() throws IOException {
         MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
-        metadataProfileCollection.addMetadataProfileFromContainerPath(KruizeConstants.METADATA_PROFILE_CONTAINER_FILE_PATH);
+        metadataProfileCollection.addMetadataProfileFromConfigFile();
     }
 
     private static void addAutotuneServlets(ServletContextHandler context) {

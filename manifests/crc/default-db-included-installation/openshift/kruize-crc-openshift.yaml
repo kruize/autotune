@@ -213,6 +213,8 @@ data:
       "experimentsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/createExperiment",
       "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
       "bulkapilimit" : 1000,
+      "metadataProfileFilePath" : "/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json",
+      "metricProfileFilePath" : "/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",

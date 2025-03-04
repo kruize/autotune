@@ -34,8 +34,6 @@ public class KruizeConstants {
     public static final String OPENSHIFT = "openshift";
     public static final String CONFIG_FILE = "KRUIZE_CONFIG_FILE";
     public static final String SQL_EXCEPTION_HELPER_PKG = "org.hibernate.engine.jdbc.spi";
-    public static final String METADATA_PROFILE_CONTAINER_FILE_PATH = "/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json";
-    public static final String METRIC_PROFILE_CONTAINER_FILE_PATH = "/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json";
 
     private KruizeConstants() {
     }
@@ -727,12 +725,8 @@ public class KruizeConstants {
         public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
         public static final String IS_ROS_ENABLED = "isROSEnabled";
         public static final String DATASOURCE_VIA_ENV = "datasource";
-    }
-
-    public static final class METADATA_PROFILE_ENV_NAME {
-    }
-
-    public static final class METRIC_PROFILE_ENV_NAME {
+        public static final String METADATA_PROFILE_FILE_PATH = "metadataProfileFilePath";
+        public static final String METRIC_PROFILE_FILE_PATH = "metricProfileFilePath";
     }
 
     public static final class RecommendationEngineConstants {

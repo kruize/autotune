@@ -91,6 +91,8 @@ public class KruizeDeploymentInfo {
     private static KubeEventLogger kubeEventLogger;
     public static Boolean is_ros_enabled = false;
     public static String datasource_via_env = null;
+    public static String metadata_profile_file_path;
+    public static String metric_profile_file_path;
 
 
     private KruizeDeploymentInfo() {
