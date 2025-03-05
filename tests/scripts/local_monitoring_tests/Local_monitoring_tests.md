@@ -83,7 +83,19 @@ Here are the test scenarios:
 - Create experiment specifying both namespaces and containers specifying the container experiment type
 - Create namespace experiment specifying containers 
 - Create container experiment specifying namespaces
-- Create multiple experiments with valid namespace
+- Create multiple experiments with valid namespace 
+- Create container experiment without specifying experiment_type and with auto mode 
+- Create container experiment without specifying experiment_type and with recreate mode 
+- Create container experiment specifying experiment_type and auto mode 
+- Create container experiment specifying experiment_type and recreate mode 
+- Create namespace experiment with auto mode 
+- Create namespace experiment with recreate mode 
+- Create container experiment specifying experiment_type, target_cluster as remote and mode as recreate 
+- Create container experiment specifying experiment_type, target_cluster as remote and mode as auto 
+- Create container experiment without specifying experiment_type, target_cluster as remote and mode as recreate
+- Create container experiment without specifying experiment_type, target_cluster as remote and mode as auto
+- Create container experiment with auto mode with invalid kubernetes object type 
+- Create container experiment with recreate mode with invalid kubernetes object type
 
 ### **List Recommendations API tests**
 
@@ -106,6 +118,19 @@ Here are the test scenarios:
   - Sample JSON Payload: Verifies the API correctly processes a structured payload and generates a job_id.
 - Verify the response of the GET job status API for the generated job_id.
   - Tests both verbose=false and verbose=true GET requests for comprehensive verification.
+
+### **Autoscaler tests**
+This test script validates the functionality of the Vertical Pod Autoscaler (VPA) integration with Kruize, 
+ensuring that the workflow operates as expected from creation to recommendation patching.
+
+Here are the test scenarios:
+- Validate VPA object creation 
+  - Ensure that a VPA object is created successfully with the expected name.
+  - Ensure that VPA object contains correct containers
+  - Validate VPA object is patched with recommendations
+  - Ensure that the VPA object contains appropriate resource recommendations for each container, 
+including CPU and memory recommendations.
+
 
 ## Prerequisites for running the tests:
 - Minikube setup or access to Openshift cluster
