@@ -1393,7 +1393,7 @@ def benchmarks_install(namespace="default", manifests="default_manifests", name=
     except Exception as e:
         print(f"ERROR: Could not change to 'benchmarks' directory: {e}")
 
-    print("Installing {name} benchmark into cluster")
+    print(f"Installing {name} benchmark into cluster")
 
     # Change to the techempower directory
     try:
