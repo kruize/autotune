@@ -48,13 +48,13 @@ public class KruizeKafkaManager {
         return instance;
     }
 
-    void publishKafkaMessage(String topic, BulkJobStatus jobData, String experimentName, BulkJobStatus.Experiment experiment, String experiments) {
+    void publishKafkaMessage(String topic, BulkJobStatus jobData, String experimentName, BulkJobStatus.Experiment experiment, Set<String> kafkaIncludeFilter, Set<String> kafkaExcludeFilter) {
         try {
             if (!validTopics.contains(topic)) {
                 LOGGER.error("Kafka topic '{}' does not exist! Skipping message publishing.", topic);
                 throw new Exception("Kafka topic '" + topic + "' does not exist!");
             }
-            String kafkaMessage = BulkService.filterJson(jobData, getIncludeFields(topic, null), Set.of(), experimentName);
+            String kafkaMessage = BulkService.filterJson(jobData, kafkaIncludeFilter, kafkaExcludeFilter, experimentName);
             publish(new KruizeKafka(topic, kafkaMessage));
             experiment.setStatus(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.PUBLISHED);
         } catch (Exception e) {
@@ -86,34 +86,4 @@ public class KruizeKafkaManager {
         });
     }
 
-    /**
-     *
-     * @param topic name of the kafka topic
-     * @param failedAPI contains the name of the API that failed to construct the corresponding response (Metadata, Experiments, Recommendations)
-     * @return set of values to be included in the query params
-     */
-    private static Set<String> getIncludeFields(String topic, String failedAPI) {
-        return switch (topic) {
-            case KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS_TOPIC ->
-                    Set.of("summary|job_id|status", "experiments|status|apis|recommendations|response|status_history");
-            case KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC -> getQueryParams(failedAPI);
-            case KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC ->
-                    Set.of(KruizeConstants.KAFKA_CONSTANTS.SUMMARY);
-            default -> Set.of();
-        };
-    }
-
-    /**
-     *
-     * @param failedAPI contains the name of the API that failed to construct the corresponding response (Metadata, Experiments, Recommendations)
-     * @return set of values to be included in the query params
-     */
-    private static Set<String> getQueryParams(String failedAPI) {
-        return QUERY_PARAMS_MAP.getOrDefault(failedAPI.toLowerCase(), Set.of("summary", "metadata", "experiments"));
-    }
-
-    private static final Map<String, Set<String>> QUERY_PARAMS_MAP = Map.of(
-            KruizeConstants.KAFKA_CONSTANTS.EXPERIMENTS, Set.of("summary|job_id|status", "experiments"),
-            KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS, Set.of("summary|job_id|status", "experiments")
-    );
 }

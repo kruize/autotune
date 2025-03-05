@@ -22,16 +22,14 @@ import com.autotune.analyzer.kruizeLayer.layers.ContainerLayer;
 import com.autotune.analyzer.kruizeLayer.layers.GenericLayer;
 import com.autotune.analyzer.kruizeLayer.layers.HotspotLayer;
 import com.autotune.analyzer.kruizeLayer.layers.QuarkusLayer;
+import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.KubeEventLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
-import java.util.Hashtable;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
@@ -100,6 +98,8 @@ public class KruizeDeploymentInfo {
     public static String kafka_topic_inbound = System.getenv("INGRESS_KAFKA_TOPIC");
     public static String kafka_group_id = System.getenv("KAFKA_CONSUMER_GROUP_ID");
     public static String kafka_topics = System.getenv("KAFKA_TOPICS");
+    public static String kafka_response_filter_include = System.getenv("KAFKA_RESPONSE_FILTER_INCLUDE");
+    public static String kafka_response_filter_exclude = System.getenv("KAFKA_RESPONSE_FILTER_EXCLUDE");
 
 
     private KruizeDeploymentInfo() {
@@ -208,6 +208,16 @@ public class KruizeDeploymentInfo {
                 .map(String::trim) // Trim spaces
                 .filter(s -> !s.isEmpty()) // Remove empty values
                 .collect(Collectors.toSet())  : new HashSet<>();
+    }
+
+    public static Set<String> getKafkaIncludeFilter() {
+        String response = KruizeDeploymentInfo.kafka_response_filter_include;
+        return response != null ? new HashSet<>(Arrays.asList(response.split(","))) : new HashSet<>(List.of(KruizeConstants.KAFKA_CONSTANTS.SUMMARY));
+    }
+
+    public static Set<String> getKafkaExcludeFilter() {
+        String response = KruizeDeploymentInfo.kafka_response_filter_exclude;
+        return response != null ? new HashSet<>(Arrays.asList(response.split(","))) : Collections.emptySet();
     }
 }
 

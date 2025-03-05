@@ -101,12 +101,16 @@ public class BulkJobManager implements Runnable {
     private BulkInput bulkInput;
     private BulkJobStatus jobData;
     private KruizeKafkaManager kruizeKafkaManager;
+    private final Set<String> kafkaIncludeFilter;
+    private final Set<String> kafkaExcludeFilter;
 
     public BulkJobManager(String jobID, BulkJobStatus jobData, BulkInput payload) {
         this.jobID = jobID;
         this.jobData = jobData;
         this.bulkInput = payload;
         this.kruizeKafkaManager = KruizeDeploymentInfo.is_kafka_enabled ? new KruizeKafkaManager() : null;
+        this.kafkaIncludeFilter = KruizeDeploymentInfo.getKafkaIncludeFilter();
+        this.kafkaExcludeFilter = KruizeDeploymentInfo.getKafkaExcludeFilter();
     }
 
     public static List<String> appendExperiments(List<String> allExperiments, String experimentName) {
@@ -215,7 +219,7 @@ public class BulkJobManager implements Runnable {
                                                 jobData.getSummary().incrementProcessed_experiments();
                                                 // if kafka is enabled, push the response in the respective topic
                                                 if (kruizeKafkaManager != null) {
-                                                    kruizeKafkaManager.publishKafkaMessage(KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC, jobData, experiment_name, experiment, KruizeConstants.KAFKA_CONSTANTS.EXPERIMENTS);
+                                                    kruizeKafkaManager.publishKafkaMessage(KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC, jobData, experiment_name, experiment, kafkaIncludeFilter, kafkaExcludeFilter);
                                                 }
                                             }
                                             synchronized (jobData) {
@@ -278,14 +282,14 @@ public class BulkJobManager implements Runnable {
                                                     jobData.getSummary().incrementProcessed_experiments();
                                                     // if kafka is enabled, push the response in the respective topic
                                                     if (kruizeKafkaManager != null) {
-                                                        kruizeKafkaManager.publishKafkaMessage(topic, jobData, experiment_name, experiment, null);
+                                                        kruizeKafkaManager.publishKafkaMessage(topic, jobData, experiment_name, experiment, kafkaIncludeFilter, kafkaExcludeFilter);
                                                     }
                                                     synchronized (jobData) {
                                                         if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
                                                             setFinalJobStatus(COMPLETED, null, null, finalDatasource);
                                                             // if kafka is enabled, push the final summary in the summary topic
                                                             if (kruizeKafkaManager != null) {
-                                                                kruizeKafkaManager.publishKafkaMessage(KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC, jobData, experiment_name, experiment, null);
+                                                                kruizeKafkaManager.publishKafkaMessage(KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC, jobData, experiment_name, experiment, kafkaIncludeFilter, kafkaExcludeFilter);
                                                             }
                                                         }
                                                     }
