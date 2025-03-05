@@ -80,15 +80,18 @@ function get_kruize_service_log() {
         kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
-function kruize_local_thanos_patch() {
+function kruize_local_config_patch() {
         CRC_DIR="./manifests/crc/default-db-included-installation"
         KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+ 
+        if [[ "${prometheus_ds}" == 0 ]]; then
+	    sed -i 's/"name": "prometheus-1"/"name": "thanos"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	    sed -i 's/"serviceName": "prometheus-k8s"/"serviceName": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+            sed -i 's/"namespace": "openshift-monitoring"/"namespace": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	    sed -i 's#"url": ""#"url": "'"${ds_url}"'"#' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	fi
 
-	sed -i 's/"name": "prometheus-1"/"name": "thanos"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	sed -i 's/"serviceName": "prometheus-k8s"/"serviceName": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-        sed -i 's/"namespace": "openshift-monitoring"/"namespace": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	sed -i 's#"url": ""#"url": "'"${ds_url}"'"#' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-  			sed -i 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9]\+/"bulkapilimit" : 10000/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+        sed -i 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9]\+/"bulkapilimit" : 10000/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 }
@@ -168,14 +171,8 @@ if [ ${skip_setup} -eq 0 ]; then
 	echo "Setting up kruize..." | tee -a ${LOG}
 	echo "$KRUIZE_REPO"
 	pushd ${KRUIZE_REPO} > /dev/null
-		# Update datasource
-		if [ ${prometheus_ds} == 0 ]; then
-			kruize_local_thanos_patch
-		else
-			sed -i 's/"bulkapilimit"[[:space:]]*:[[:space:]]*[0-9]\+/"bulkapilimit" : 10000/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-      sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-			sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-		fi
+		# Update kruize config
+		kruize_local_config_patch
 
         	echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
 		./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG} 2>&1
@@ -216,7 +213,9 @@ export PYTHONUNBUFFERED=1
 echo ""
 echo "Running scale test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 echo ""
+echo "python3 bulk_scale_test.py --workers ${workers} --org_ids ${org_ids} --cluster_ids ${cluster_ids} --days_of_res ${days_of_res} --enddate ${initial_end_date} --interval ${interval_hours} --resultsdir ${LOG_DIR} --prometheus ${prometheus_ds}" | tee -a ${LOG}
 python3 bulk_scale_test.py --workers "${workers}" --org_ids "${org_ids}" --cluster_ids "${cluster_ids}" --days_of_res "${days_of_res}" --enddate "${initial_end_date}" --interval "${interval_hours}" --resultsdir "${LOG_DIR}" --prometheus "${prometheus_ds}" | tee -a ${LOG}
+status=$?
 
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
@@ -224,10 +223,15 @@ echo ""
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
 
 if [[ $(grep -i "error\|exception" ${KRUIZE_SERVICE_LOG}) ]]; then
+	echo "Bulk scale test failed! Check the logs for details" | tee -a ${LOG}
+	exit 1
+else
+	if [[ ${status} == 1 ]]; then
 		echo "Bulk scale test failed! Check the logs for details" | tee -a ${LOG}
 		exit 1
-else
+	else
 		echo "Bulk scale test completed! Check the logs for details" | tee -a ${LOG}
 		exit 0
+	fi
 fi
 

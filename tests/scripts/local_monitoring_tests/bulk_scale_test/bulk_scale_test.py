@@ -79,8 +79,11 @@ def update_bulk_config(org_id, cluster_id, current_start_time, current_end_time)
 
     bulk_json['time_range']['start'] = current_start_time
     bulk_json['time_range']['end'] = current_end_time
-    bulk_json['filter']['include']['labels'].update(new_labels)
-
+    if prometheus == 0:
+        bulk_json['filter']['include']['labels'].update(new_labels)
+    else:
+        bulk_json['datasource'] = "prometheus-1"
+    
     return bulk_json
 
 def fetch_bulk_recommendations(job_status_json, logger):
@@ -184,7 +187,11 @@ def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_s
 
         bulk_json = update_bulk_config(org_id, cluster_id, current_start_time, current_end_time)
 
-        log_id = "tsdb-" + str(tsdb_id) + "_worker-" + str(worker_number) + "_org-" + str(org_id) + "_cluster-" + str(cluster_id)
+        if prometheus == 0:
+            log_id = "tsdb-" + str(tsdb_id) + "_worker-" + str(worker_number) + "_org-" + str(org_id) + "_cluster-" + str(cluster_id)
+        else:
+            log_id = "tsdb-" + str(tsdb_id) + "_worker-" + str(worker_number)
+
         log_file = f"{scale_log_dir}/worker_{log_id}.log"
 
         logger = setup_logger(f"logger_{log_id}", log_file)
@@ -317,9 +324,14 @@ if __name__ == '__main__':
     list_response = list_datasources(datasource_name)
     list_response_json = list_response.json()
 
-    if list_response_json['datasources'][0]['name'] != "thanos":
-        print("Failed! Thanos datasource is not registered with Kruize!")
-        sys.exit(1)
+    if prometheus == 0:
+        if list_response_json['datasources'][0]['name'] != "thanos":
+            print("Failed! Thanos datasource is not registered with Kruize!")
+            sys.exit(1)
+    else:
+        if list_response_json['datasources'][0]['name'] != "prometheus-1":
+            print("Failed! Prometheus-1 datasource is not registered with Kruize!")
+            sys.exit(1)
 
     server = get_server()
     if server == "":
@@ -331,9 +343,17 @@ if __name__ == '__main__':
     responses = parallel_requests_with_labels(max_workers, results_dir, initial_end_date, interval_hours, days_of_res, org_ids, cluster_ids, server)
 
     # Print the results
+    failed = 0
     for i, response in enumerate(responses):
-        print(f"Response {i+1}: {json.dumps(response, indent=2)}")
+        # print(f"Response {i+1}: {json.dumps(response)}")
+        if response != 0:
+            failed = 1
 
     end_time = time.time()
     exec_time = end_time - start_time
     print(f"Execution time: {exec_time} seconds")
+    if failed == 0:
+        sys.exit(0)
+    else:
+        sys.exit(1)
+
