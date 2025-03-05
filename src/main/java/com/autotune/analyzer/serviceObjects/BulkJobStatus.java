@@ -31,13 +31,13 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
-import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.UNPROCESSED;
 
 /**
  * Bulk API Response payload Object.
  */
-@JsonFilter("jobFilter")
+@JsonFilter(JOB_FILTER)
 public class BulkJobStatus {
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkJobStatus.class);
     private Summary summary;
@@ -108,6 +108,28 @@ public class BulkJobStatus {
         this.experiments = experiments;
     }
 
+    /**
+     * Copies entries from {@code experimentMap} to {@code experiments} based on a specified pattern.
+     * <p>
+     * If the provided regex is {@code null}, all entries from {@code experimentMap} are copied
+     * into {@code experiments}. If a regex is specified, only the entries whose keys match
+     * the pattern are copied.
+     * <p>
+     * This method clears the current contents of {@code experiments} before performing the copy operation.
+     * Access to {@code experimentMap} is synchronized to ensure thread safety.
+     *
+     * @param regex the regular expression used to filter entries by key, or {@code null} to copy all entries.
+     *
+     * <pre>
+     * Example Usage:
+     * Given a map containing:
+     * {"test1" -> "value1", "example2" -> "value2", "sample3" -> "value3"}
+     *
+     * copyByPattern("test") will result in:
+     * {"test1" -> "value1"} being copied to {@code experiments}.
+     * </pre>
+     *
+     */
     public void copyByPattern(String regex) {
 
         experiments.clear();
@@ -143,7 +165,7 @@ public class BulkJobStatus {
         }
     }
 
-    @JsonFilter("summaryFilter")
+    @JsonFilter(SUMMARY_FILTER)
     public static class Summary {
         @JsonProperty(JOB_ID)
         private String jobID;
@@ -260,7 +282,7 @@ public class BulkJobStatus {
         }
     }
 
-    @JsonFilter("experimentFilter")
+    @JsonFilter(EXPERIMENTS_FILTER)
     public static class API_Response {
         private CreateExperimentAPIResponse create = new CreateExperimentAPIResponse();
         private GenerateRecommendationsAPIResponse recommendations = new GenerateRecommendationsAPIResponse();
@@ -282,7 +304,7 @@ public class BulkJobStatus {
         }
     }
 
-    @JsonFilter("experimentFilter")
+    @JsonFilter(EXPERIMENTS_FILTER)
     public static class CreateExperimentAPIResponse {
         private KruizeResponse response;
         private CreateExperimentAPIObject request;
@@ -304,7 +326,7 @@ public class BulkJobStatus {
         }
     }
 
-    @JsonFilter("experimentFilter")
+    @JsonFilter(EXPERIMENTS_FILTER)
     public static class GenerateRecommendationsAPIResponse {
 
         Object response = null;
@@ -347,7 +369,7 @@ public class BulkJobStatus {
 
     }
 
-    @JsonFilter("experimentFilter")
+    @JsonFilter(EXPERIMENTS_FILTER)
     public static class Experiment {
 
         private String name;

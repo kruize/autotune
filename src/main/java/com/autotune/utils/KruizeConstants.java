@@ -254,6 +254,9 @@ public class KruizeConstants {
         public static final String SHORT_TERM = "short_term";
         public static final String MEDIUM_TERM = "medium_term";
         public static final String LONG_TERM = "long_term";
+        public static final String SHORT = "short";
+        public static final String MEDIUM = "medium";
+        public static final String LONG= "long";
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String VARIATION = "variation";
         public static final String NOTIFICATIONS = "notifications";
@@ -271,6 +274,11 @@ public class KruizeConstants {
         public static final String UUID = "UUID";
         public static final String DEVICE = "device";
         public static final String MODEL_NAME = "modelName";
+        public static final String GPU_PROFILE = "GPU_I_PROFILE";
+
+        // Config changes JSON Keys
+        public static final String MODEL_SETTINGS = "model_settings";
+        public static final String TERM_SETTINGS = "term_settings";
 
         private JSONKeys() {
         }
@@ -430,11 +438,13 @@ public class KruizeConstants {
             public static final String NO_DATASOURCE_FOUND_IN_DB = "No datasource found in database.";
             public static final String CHECK_DATASOURCE_UPDATES = "Datasource {} already exists, Checking for updates...";
             public static final String DATASOURCE_AUTH_CHANGED = "Authentication details for datasource {} have changed. Checking if the datasource is serviceable with the new config...";
-            public static final String DATASOURCE_AUTH_UNCHANGED= "No changes detected in the authentication details for datasource {}";
+            public static final String DATASOURCE_AUTH_UNCHANGED = "No changes detected in the authentication details for datasource {}";
+
             private DataSourceInfoMsgs() {
             }
 
         }
+
         public static class DataSourceSuccessMsgs {
 
             public static final String DATASOURCE_ADDED = "Datasource added to the collection successfully.";
@@ -610,6 +620,19 @@ public class KruizeConstants {
                 private ListDeploymentsInNamespace() {
                 }
             }
+        }
+
+        public static class RecommendationErrorMsgs {
+            private RecommendationErrorMsgs() {
+
+            }
+
+            public static final String AMT_FORMAT_IS_NULL = "Invalid input: 'amount' and 'format' cannot be null";
+            public static final String CPU_UNSUPPORTED_FORMAT = "Unsupported format for CPU conversion: ";
+            public static final String ACCELERATOR_UNSUPPORTED_FORMAT = "Unsupported format for Accelerator conversion: ";
+            public static final String INPUT_NULL = "Input object cannot be null";
+            public static final String VALUE_NEGATIVE = "Value cannot be negative";
+            public static final String INVALID_MEM_FORMAT = "Invalid format: Supported formats are bytes, KB, KiB, MB, MiB, GB, GiB, etc.";
         }
     }
 
@@ -823,6 +846,12 @@ public class KruizeConstants {
         public static final String END_TIME = "end_time";
         public static final String STEPS = "steps";
         public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
+        public static final String SUMMARY = "summary";
+        public static final String SUMMARY_FILTER = "summaryFilter";
+        public static final String EXPERIMENTS = "experiments";
+        public static final String EXPERIMENTS_FILTER = "experimentFilter";
+        public static final String JOB_FILTER = "jobFilter";
+
 
         // TODO : Bulk API Create Experiments defaults
         public static final CreateExperimentConfigBean CREATE_EXPERIMENT_CONFIG_BEAN;

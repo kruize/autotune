@@ -263,6 +263,73 @@ public class ExperimentValidation {
                             }
                     );
                 }
+
+
+                if (AnalyzerConstants.AUTO.equalsIgnoreCase(expObj.getMode()) || AnalyzerConstants.RECREATE.equalsIgnoreCase(expObj.getMode())) {
+                    // only vpa specific check for multiple term & model
+
+                    if (expObj.getRecommendation_settings().getTermSettings() != null &&
+                            expObj.getRecommendation_settings().getTermSettings().getTerms() != null &&
+                            expObj.getRecommendation_settings().getTermSettings().getTerms().size() > 1) {
+                        // Checks for multiple terms and throws error
+                        errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_TERMS_UNSUPPORTED;
+                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        validationOutputData.setSuccess(false);
+                        validationOutputData.setMessage(errorMsg);
+                        return validationOutputData;
+                    }
+                    // Check for multiple models
+                    if (expObj.getRecommendation_settings().getModelSettings() != null &&
+                            expObj.getRecommendation_settings().getModelSettings().getModels() != null &&
+                            expObj.getRecommendation_settings().getModelSettings().getModels().size() > 1) {
+                        errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED;
+                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        validationOutputData.setSuccess(false);
+                        validationOutputData.setMessage(errorMsg);
+                        return validationOutputData;
+                    }
+                }
+
+                // common check for terms and models
+                if (expObj.getRecommendation_settings().getTermSettings() != null &&
+                        expObj.getRecommendation_settings().getTermSettings().getTerms() != null ) {
+                    Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG);
+
+                    for(String term: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
+                        // Check for whitespace in terms
+                        if (term == null || term.trim().isEmpty()) {
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.WHITESPACE_NOT_ALLOWED;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
+                        }
+                        // Check for correct term in terms
+                        if (!validTerms.contains(term)) {
+                            throw new IllegalArgumentException(term + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
+                        }
+                    }
+                    LOGGER.info("All terms are valid");
+                }
+
+                if (expObj.getRecommendation_settings().getModelSettings() != null &&
+                        expObj.getRecommendation_settings().getModelSettings().getModels() != null) {
+                    Set<String> validModels = Set.of(KruizeConstants.JSONKeys.COST, KruizeConstants.JSONKeys.PERFORMANCE);
+
+                    for (String model: expObj.getRecommendation_settings().getModelSettings().getModels()) {
+                        if (model == null || model.trim().isEmpty()) {
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.WHITESPACE_NOT_ALLOWED;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
+                        }
+                        if (!validModels.contains(model)) {
+                            throw new IllegalArgumentException( model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+                        }
+                    }
+                }
+
                 String depType = "";
                 if (expObj.getExperiment_usecase_type().isRemote_monitoring()) {
                     // In case of RM, kubernetes_obj is mandatory

@@ -149,6 +149,7 @@ public class DataSourceCollection {
         for (Object dataSourceObj : dataSourceArr) {
             JSONObject dataSourceObject = (JSONObject) dataSourceObj;
             String name = dataSourceObject.getString(KruizeConstants.DataSourceConstants.DATASOURCE_NAME);
+            LOGGER.info("datasource name: {}", name);
             // Fetch the existing datasource from the DB (if it exists)
             DataSourceInfo dataSourceInfo = null;
             try {
