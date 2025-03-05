@@ -53,6 +53,7 @@ import java.util.List;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
 
 /**
  *
@@ -95,6 +96,7 @@ public class GenerateRecommendations extends HttpServlet {
             String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
             String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
             String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
+            String bulkJobID = request.getParameter(JOB_ID);
             Timestamp interval_end_time, interval_start_time;
 
             // create recommendation engine object
@@ -102,7 +104,7 @@ public class GenerateRecommendations extends HttpServlet {
             // validate and create KruizeObject if successful
             String validationMessage = recommendationEngine.validate_local();
             if (validationMessage.isEmpty()) {
-                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, AnalyzerConstants.LOCAL);   // todo target cluster is set to LOCAL always
+                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, AnalyzerConstants.LOCAL, bulkJobID);   // todo target cluster is set to LOCAL always
                 if (kruizeObject.getValidation_data().isSuccess()) {
                     LOGGER.debug("UpdateRecommendations API request count: {} success", calCount);
                     interval_end_time = Utils.DateUtils.getTimeStampFrom(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT,
