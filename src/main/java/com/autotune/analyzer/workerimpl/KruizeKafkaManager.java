@@ -19,8 +19,8 @@ import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.services.BulkService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.kafka.KruizeKafka;
-import com.autotune.utils.kafka.KruizeKafkaProducer;
+import com.autotune.common.kafka.KruizeKafka;
+import com.autotune.common.kafka.KruizeKafkaProducer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,19 +28,31 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Manages Kafka message publishing using an executor service.
+ * Ensures messages are published to valid Kafka topics and processed asynchronously.
+ */
 public class KruizeKafkaManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(KruizeKafkaManager.class);
     private static KruizeKafkaManager instance;
     private final ExecutorService kafkaExecutorService;
     private final Set<String> validTopics;
 
-
+    /**
+     * Constructs a KruizeKafkaManager instance.
+     * Initializes an executor service and loads valid Kafka topics from the configuration.
+     */
     public KruizeKafkaManager() {
         this.kafkaExecutorService = Executors.newFixedThreadPool(3);
         // Load valid topics from config
         validTopics = KruizeDeploymentInfo.loadKafkaTopicsFromConfig();
     }
 
+    /**
+     * Returns a singleton instance of the KruizeKafkaManager.
+     *
+     * @return the singleton instance
+     */
     public static synchronized KruizeKafkaManager getInstance() {
         if (instance == null) {
             instance = new KruizeKafkaManager();
@@ -48,6 +60,16 @@ public class KruizeKafkaManager {
         return instance;
     }
 
+    /**
+     * Publishes a Kafka message after filtering and validation.
+     *
+     * @param topic              the Kafka topic
+     * @param jobData            the bulkJobStatus object containing the response data
+     * @param experimentName     the experiment name
+     * @param experiment         the experiment object
+     * @param kafkaIncludeFilter filters to include in the Kafka message
+     * @param kafkaExcludeFilter filters to exclude from the Kafka message
+     */
     void publishKafkaMessage(String topic, BulkJobStatus jobData, String experimentName, BulkJobStatus.Experiment experiment, Set<String> kafkaIncludeFilter, Set<String> kafkaExcludeFilter) {
         try {
             if (!validTopics.contains(topic)) {
@@ -63,6 +85,11 @@ public class KruizeKafkaManager {
         }
     }
 
+    /**
+     * Publishes a Kafka message asynchronously using the executor service.
+     *
+     * @param kruizeKafka the Kafka message containing the topic and message content
+     */
     public void publish(KruizeKafka kruizeKafka) {
         kafkaExecutorService.submit(() -> {
             try {
@@ -85,5 +112,4 @@ public class KruizeKafkaManager {
             }
         });
     }
-
 }

@@ -14,25 +14,49 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.utils.kafka;
+package com.autotune.common.kafka;
 
+/**
+ * Represents a Kafka Object with a topic and message content.
+ */
 public class KruizeKafka {
     private final String topic;
     private final String message;
 
+    /**
+     * Constructs a KruizeKafka instance with the specified topic and message.
+     *
+     * @param topic   the Kafka topic to which the message belongs
+     * @param message the message content
+     */
     public KruizeKafka(String topic, String message) {
         this.topic = topic;
         this.message = message;
     }
 
+    /**
+     * Retrieves the Kafka topic of this message.
+     *
+     * @return the topic
+     */
     public String getTopic() {
         return topic;
     }
 
+    /**
+     * Retrieves the content of the message.
+     *
+     * @return the message content
+     */
     public String getMessage() {
         return message;
     }
 
+    /**
+     * Returns a string representation of this Kafka message.
+     *
+     * @return a string containing the topic and message content
+     */
     @Override
     public String toString() {
         return "KruizeKafka{" +
