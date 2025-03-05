@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
+import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -229,7 +230,7 @@ public class MetadataProfileService extends HttpServlet{
         String metadataProfileName = request.getParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME);
 
         if (null == metadataProfileName || metadataProfileName.isEmpty()) {
-            sendErrorResponse(
+            sendDeleteErrorResponse(
                     response,
                     new Exception(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.MISSING_METADATA_PROFILE_NAME_EXCPTN),
                     HttpServletResponse.SC_BAD_REQUEST,
@@ -249,7 +250,7 @@ public class MetadataProfileService extends HttpServlet{
                     deleteMetadataProfile(metadataProfileName);
                     metadataProfilesMap.remove(metadataProfileName);
                 } catch (Exception e) {
-                    sendErrorResponse(
+                    sendDeleteErrorResponse(
                             response,
                             e,
                             HttpServletResponse.SC_BAD_REQUEST,
@@ -257,7 +258,7 @@ public class MetadataProfileService extends HttpServlet{
                     return;
                 }
             } else {
-                sendErrorResponse(
+                sendDeleteErrorResponse(
                         response,
                         new Exception(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.INVALID_METADATA_PROFILE_NAME_EXCPTN),
                         HttpServletResponse.SC_BAD_REQUEST,
@@ -270,7 +271,7 @@ public class MetadataProfileService extends HttpServlet{
 
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            sendDeleteErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -349,6 +350,40 @@ public class MetadataProfileService extends HttpServlet{
         }  catch (Exception e) {
             LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.DELETE_METADATA_PROFILE_FAILURE_MSG, e.getMessage());
         }
+    }
+
+    /**
+     * Sends a formatted JSON error response with HTTP status, error message, and error details.
+     * Specifically used for DELETE request as by default the content-length is set to 0 and no response message is
+     * being returned in case of 400 error status
+     *
+     * @param response
+     * @param e
+     * @param httpStatusCode
+     * @param errorMsg
+     * @throws IOException
+     */
+    public void sendDeleteErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws IOException {
+        if (e != null) {
+            LOGGER.error(e.toString());
+            if (errorMsg == null) {
+                errorMsg = e.getMessage();
+            }
+        }
+        response.setStatus(httpStatusCode);
+        response.setContentType(AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING);
+
+        PrintWriter out = response.getWriter();
+        out.append(
+                new Gson().toJson(
+                        new MetadataProfileResponse(errorMsg,
+                                httpStatusCode,
+                                "",
+                                AnalyzerConstants.ERROR_STATUS)
+                )
+        );
+        out.flush();
     }
 
     private Gson createGsonObject() {

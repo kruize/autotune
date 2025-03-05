@@ -101,6 +101,7 @@ public class AnalyzerConstants {
     public static final String SUCCESS_STATUS = "SUCCESS";
     public static final String UUID_VARIABLE = "$UUID$";
     public static final String PROFILE_VARIABLE = "$GPU_I_PROFILE$";
+    public static final String ERROR_STATUS = "ERROR";
 
 
     private AnalyzerConstants() {
