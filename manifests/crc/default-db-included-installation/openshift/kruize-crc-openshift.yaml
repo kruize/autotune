@@ -79,12 +79,15 @@ kind: ClusterRole
 metadata:
   name: kruize-edit-ko
 rules:
-  - apiGroups: ["apps"]
-    resources: ["deployments", "statefulsets", "daemonsets"]
-    verbs: ["get", "patch", "update"]
+  - apiGroups: [ "apps" ]
+    resources: [ "deployments", "statefulsets", "daemonsets" ]
+    verbs: [ "get", "list", "patch", "update" ]
   - apiGroups: [ "batch" ]
     resources: [ "jobs" ]
-    verbs: [ "get", "patch", "update" ]
+    verbs: [ "get", "list", "create", "delete" ]
+  - apiGroups: [ "" ]
+    resources: [ "namespaces" ]
+    verbs: [ "get", "list" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -346,7 +349,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.3
+          image: quay.io/kruize/autotune_operator:0.4
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -366,10 +369,10 @@ spec:
               value: "kruize-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
           resources:
             requests:
-              memory: "350Mi"
+              memory: "768Mi"
               cpu: "0.7"
             limits:
-              memory: "350Mi"
+              memory: "768Mi"
               cpu: "0.7"
           ports:
             - name: kruize-port
@@ -420,7 +423,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.3
+              image: quay.io/kruize/autotune_operator:0.4
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -461,7 +464,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.3
+              image: quay.io/kruize/autotune_operator:0.4
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume

@@ -18,6 +18,7 @@ package com.autotune.analyzer.autoscaler;
 
 import com.autotune.analyzer.autoscaler.vpa.VpaAutoscalerImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.autoscaler.accelerator.AcceleratorAutoscalerImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.database.service.ExperimentDBService;
@@ -56,6 +57,11 @@ public class AutoscalerService {
                             VpaAutoscalerImpl vpaUpdater = VpaAutoscalerImpl.getInstance();
                             vpaUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
                         }
+
+                        if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.ACCELERATOR)) {
+                            AcceleratorAutoscalerImpl acceleratorUpdater = AcceleratorAutoscalerImpl.getInstance();
+                            acceleratorUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
+                        }
                     }
                 } catch (Exception e) {
                     LOGGER.error(e.getMessage());
@@ -64,7 +70,7 @@ public class AutoscalerService {
                     AnalyzerConstants.AutoscalerConstants.DEFAULT_SLEEP_INTERVAL,
                     TimeUnit.SECONDS);
         } catch (Exception e) {
-            LOGGER.error(AnalyzerErrorConstants.RecommendationUpdaterErrors.UPDTAER_SERVICE_START_ERROR + e.getMessage());
+            LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.UPDATER_SERVICE_START_ERROR + e.getMessage());
         }
     }
 

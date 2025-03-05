@@ -1,10 +1,7 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
-import com.autotune.analyzer.kruizeObject.ExperimentUseCaseType;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
-import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.kruizeObject.*;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
@@ -73,6 +70,8 @@ public class Converters {
                     LOGGER.debug("Experiment Type: {}", createExperimentAPIObject.getExperimentType());
                     k8sObjectList.add(k8sObject);
                 }
+                // TODO : some modification to add custom terms and models automatically here
+
                 kruizeObject.setKubernetes_objects(k8sObjectList);
                 kruizeObject.setExperimentName(createExperimentAPIObject.getExperimentName());
                 kruizeObject.setApiVersion(createExperimentAPIObject.getApiVersion());
@@ -84,7 +83,20 @@ public class Converters {
                 kruizeObject.setExperimentType(createExperimentAPIObject.getExperimentType());
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
                 kruizeObject.setTrial_settings(createExperimentAPIObject.getTrialSettings());
-                kruizeObject.setRecommendation_settings(createExperimentAPIObject.getRecommendationSettings());
+                RecommendationSettings recommendationSettings = new RecommendationSettings();
+                RecommendationSettings apiRecommendationSettings = createExperimentAPIObject.getRecommendationSettings();
+                if (apiRecommendationSettings != null) {
+                    if (apiRecommendationSettings.getTermSettings() != null) {
+                        recommendationSettings.setTermSettings(apiRecommendationSettings.getTermSettings());
+                    }
+                    if (apiRecommendationSettings.getModelSettings() != null) {
+                        recommendationSettings.setModelSettings(apiRecommendationSettings.getModelSettings());
+                    }
+                    if (apiRecommendationSettings.getThreshold() != null) {
+                        recommendationSettings.setThreshold(apiRecommendationSettings.getThreshold());
+                    }
+                }
+                kruizeObject.setRecommendation_settings(recommendationSettings);
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
                 kruizeObject.setExperiment_usecase_type(new ExperimentUseCaseType(kruizeObject));

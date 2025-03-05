@@ -18,7 +18,6 @@ package com.autotune.analyzer.utils;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
-import software.amazon.awssdk.services.cloudwatchlogs.endpoints.internal.Value;
 
 import java.util.Arrays;
 
@@ -182,6 +181,12 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_MODE_FOR_NAMESPACE_EXP = "Auto or recreate mode is not supported for namespace experiment.";
             public static final String INVALID_OBJECT_TYPE_FOR_AUTO_EXP = "Kubernetes object type is not supported for auto or recreate mode.";
             public static final String AUTO_EXP_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case.";
+            public static final String INVALID_TERM_NAME = " term name is not supported. Use short, medium or long term.";
+            public static final String TERM_SETTINGS_UNDEFINED= "Term settings are not defined in the recommendation settings.";
+            public static final String MULTIPLE_TERMS_UNSUPPORTED = "Multiple terms are currently not supported for auto or recreate mode.";
+            public static final String INVALID_MODEL_NAME = " model name is not supported. Use cost or performance.";
+            public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
+            public static final String WHITESPACE_NOT_ALLOWED = "Whitespace can not be entered as a term or model value ";
             private CreateExperimentAPI() {
 
             }
@@ -308,16 +313,25 @@ public class AnalyzerErrorConstants {
         }
     }
 
-    public static final class RecommendationUpdaterErrors {
-        private RecommendationUpdaterErrors() {
+    public static final class AutoscalerErrors {
+        private AutoscalerErrors() {
 
         }
 
-        public static final String UPDTAER_SERVICE_START_ERROR = "Error occurred while initializing RecommendationUpdaterService.";
+        public static final String UPDATER_SERVICE_START_ERROR = "Error occurred while initializing RecommendationUpdaterService.";
         public static final String UNSUPPORTED_UPDATER_TYPE = "Updater type %s is not supported.";
-        public static final String GENERATE_RECOMMNEDATION_FAILED = "Failed to generate recommendations for experiment: {}";
+        public static final String GENERATE_RECOMMENDATION_FAILED = "Failed to generate recommendations for experiment: {}";
         public static final String UPDATER_NOT_INSTALLED = "Updater is not installed.";
         public static final String RECOMMENDATION_DATA_NOT_PRESENT = "Recommendations are not present for the experiment.";
         public static final String INVALID_VPA_NAME = "VPA name cannot be null or empty.";
+
+        public static final class AcceleratorAutoscaler {
+            private AcceleratorAutoscaler() {
+
+            }
+            public static final String NAMESPACE_NULL = "Namespace cannot be null";
+            public static final String CONTAINER_NULL = "Container cannot be null";
+
+        }
     }
 }

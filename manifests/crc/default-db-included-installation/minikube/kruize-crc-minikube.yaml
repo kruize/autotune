@@ -55,12 +55,15 @@ kind: ClusterRole
 metadata:
   name: kruize-edit-ko
 rules:
-  - apiGroups: ["apps"]
-    resources: ["deployments", "statefulsets", "daemonsets"]
-    verbs: ["get", "patch", "update"]
+  - apiGroups: [ "apps" ]
+    resources: [ "deployments", "statefulsets", "daemonsets" ]
+    verbs: [ "get", "list", "patch", "update" ]
   - apiGroups: [ "batch" ]
     resources: [ "jobs" ]
-    verbs: [ "get", "patch", "update" ]
+    verbs: [ "get", "list", "create", "delete" ]
+  - apiGroups: [ "" ]
+    resources: [ "namespaces" ]
+    verbs: [ "get", "list" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -281,7 +284,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.3
+          image: quay.io/kruize/autotune_operator:0.4
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -348,7 +351,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.3
+              image: quay.io/kruize/autotune_operator:0.4
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -474,7 +477,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.3
+              image: quay.io/kruize/autotune_operator:0.4
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
