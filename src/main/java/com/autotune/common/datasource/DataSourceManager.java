@@ -60,10 +60,10 @@ public class DataSourceManager {
      * Imports Metadata for a specific data source using associated DataSourceInfo.
      *
      * @param dataSourceInfo
-     * @param uniqueKey      this is used as labels in query example container="xyz" namespace="abc"
-     * @param startTime      Get metadata from starttime to endtime
-     * @param endTime        Get metadata from starttime to endtime
-     * @param steps          the interval between data points in a range query
+     * @param uniqueKey        this is used as labels in query example container="xyz" namespace="abc"
+     * @param startTime        Get metadata from starttime to endtime
+     * @param endTime          Get metadata from starttime to endtime
+     * @param steps            the interval between data points in a range query
      * @param includeResources
      * @param excludeResources
      * @return
@@ -299,11 +299,11 @@ public class DataSourceManager {
         try {
             HashMap<String, DataSource> filteredDataSourceHashMap = new HashMap<>();
 
-            DataSource dataSource = dataSourceMetadataInfo.getDataSourceHashMap().get(dataSourceName);
+            DataSource dataSource = dataSourceMetadataInfo.getDatasources().get(dataSourceName);
 
             HashMap<String, DataSourceCluster> filteredClusterHashMap = new HashMap<>();
 
-            for (Map.Entry<String, DataSourceCluster> clusterEntry : dataSource.getDataSourceClusterHashMap().entrySet()) {
+            for (Map.Entry<String, DataSourceCluster> clusterEntry : dataSource.getClusters().entrySet()) {
                 String clusterName = clusterEntry.getKey();
                 DataSourceCluster cluster = clusterEntry.getValue();
 

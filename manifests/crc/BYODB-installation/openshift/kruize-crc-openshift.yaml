@@ -119,7 +119,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: kruize/autotune_operator:0.3
+          image: kruize/autotune_operator:0.4
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -137,11 +137,11 @@ spec:
               value: "-XX:MaxRAMPercentage=80"
           resources:
             requests:
-              memory: "2Gi"
-              cpu: "2"
+              memory: "768Mi"
+              cpu: "0.7"
             limits:
-              memory: "2Gi"
-              cpu: "2"
+              memory: "768Mi"
+              cpu: "0.7"
           ports:
             - name: kruize-port
               containerPort: 8080

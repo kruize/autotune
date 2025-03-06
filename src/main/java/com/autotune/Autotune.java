@@ -201,6 +201,11 @@ public class Autotune {
         AutoscalingSettings.getInstance().initialiseAutoscalingSettings();
 
         try {
+            // check if kafka flag is enabled and the corresponding server details are added
+            if (KruizeDeploymentInfo.is_kafka_enabled && KruizeDeploymentInfo.kafka_bootstrap_servers == null) {
+                LOGGER.error(KruizeConstants.KAFKA_CONSTANTS.BOOTSTRAP_SERVER_MISSING);
+                throw new IllegalStateException(KruizeConstants.KAFKA_CONSTANTS.BOOTSTRAP_SERVER_MISSING);
+            }
             String startAutotune = System.getenv("START_AUTOTUNE");
             if (startAutotune == null || startAutotune.equalsIgnoreCase("true")) {
                 server.start();

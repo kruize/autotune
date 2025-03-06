@@ -219,6 +219,7 @@ data:
       "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",
       "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
       "bulkapilimit" : 1000,
+      "isKafkaEnabled" : "true",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -283,7 +284,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.3
+          image: quay.io/kruize/autotune_operator:0.4
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -299,6 +300,8 @@ spec:
               value: "/etc/config/kruizeconfigjson"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=80"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kruize-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
           ports:
             - name: kruize-port
               containerPort: 8080
@@ -348,7 +351,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.3
+              image: quay.io/kruize/autotune_operator:0.4
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -474,7 +477,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.3
+              image: quay.io/kruize/autotune_operator:0.4
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume

@@ -15,8 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.exceptions;
 
-public class InvalidValueException extends Throwable
-{
+public class InvalidValueException extends Throwable {
     public InvalidValueException(String namespace) {
         super(namespace);
     }

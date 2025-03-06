@@ -1,7 +1,11 @@
 package com.autotune.analyzer.recommendations.engine;
 
+import com.autotune.analyzer.autoscaler.instaslice.InstasliceHelper;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
+import com.autotune.analyzer.exceptions.InvalidModelException;
+import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
@@ -67,13 +71,14 @@ public class RecommendationEngine {
     private Map<String, Terms> terms;
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
+    private List<String> modelNames;
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
         this.experimentName = experimentName;
         this.intervalEndTimeStr = intervalEndTimeStr;
         this.intervalStartTimeStr = intervalStartTimeStr;
-        this.init();
+
     }
 
     private static int getNumPods(Map<Timestamp, IntervalResults> filteredResultsMap) {
@@ -123,17 +128,50 @@ public class RecommendationEngine {
         return (int) Math.ceil(max_pods_cpu);
     }
 
-    private void init() {
-        // Add new models
+    private void loadDefaultRecommendationModels() {
+        // create both cost and performance model by default
         recommendationModels = new ArrayList<>();
         // Create Cost based model
         CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
-        // TODO: Create profile based model
         registerModel(costBasedRecommendationModel);
         // Create Performance based model
         PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
         registerModel(performanceBasedRecommendationModel);
-        // TODO: Add profile based once recommendation algos are available
+    }
+
+    private void loadDefaultRecommendationModelForAutoAndRecreate() {
+        // create performance model by default
+        recommendationModels = new ArrayList<>();
+        // Create Performance based model
+        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+        registerModel(performanceBasedRecommendationModel);
+
+        RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
+        List<String> models = new ArrayList<>() ;
+        models.add(KruizeConstants.JSONKeys.PERFORMANCE);
+        ModelSettings modelSettings = new ModelSettings();
+        modelSettings.setModels(models);
+        recommendationSettings.setModelSettings(modelSettings);
+
+    }
+
+    private void loadCustomRecommendationModels(List<String> modelName) throws InvalidModelException {
+        // Add new models
+        recommendationModels = new ArrayList<>();
+        for (String model : modelName) {
+            if (KruizeConstants.JSONKeys.COST.equalsIgnoreCase(model)) {
+                // Create Cost based model
+                CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
+                registerModel(costBasedRecommendationModel);
+            } else if (KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(model)) {
+                // Create Performance based model
+                PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+                registerModel(performanceBasedRecommendationModel);
+            } else {
+                // user input does not matches standard models
+                throw new InvalidModelException(model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+            }
+        }
     }
 
     private void registerModel(RecommendationModel recommendationModel) {
@@ -166,6 +204,14 @@ public class RecommendationEngine {
 
     public void setExperimentName(String experimentName) {
         this.experimentName = experimentName;
+    }
+
+    public List<String> getModelNames() {
+        return modelNames;
+    }
+
+    public void setModelNames(List<String> modelNames) {
+        this.modelNames = modelNames;
     }
 
     public Timestamp getInterval_end_time() {
@@ -286,14 +332,79 @@ public class RecommendationEngine {
         mainKruizeExperimentMAP.put(kruizeObject.getExperimentName(), kruizeObject);
         // continue to generate recommendation when kruizeObject is successfully created
         try {
-            // set the default terms if the terms aren't provided by the user
-            if (kruizeObject.getTerms() == null)
-                KruizeObject.setDefaultTerms(terms, kruizeObject);
+            // term settings for different use cases
+            if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
+                // monitoring mode
+                if (kruizeObject.getRecommendation_settings() == null ||
+                    kruizeObject.getRecommendation_settings().getTermSettings() == null ||
+                    kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null) {
+                    // default for monitoring
+                    KruizeObject.setDefaultTerms(terms,kruizeObject);
+                } else {
+                    // Process terms
+                    KruizeObject.setCustomTerms(terms, kruizeObject);
+                }
+            }
+            else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
+                // auto or recreate mode
+                if (kruizeObject.getRecommendation_settings() == null ||
+                        kruizeObject.getRecommendation_settings().getTermSettings() == null ||
+                        kruizeObject.getRecommendation_settings().getTermSettings().getTerms() == null) {
+                    // default
+                    KruizeObject.setDefaultTermsForAutoAndRecreate(terms, kruizeObject);
+                } else {
+                    // terms for auto recreate
+                    if (kruizeObject.getRecommendation_settings().getTermSettings().getTerms().size() == 1) {
+                        // single term
+                       KruizeObject.setCustomTerms(terms, kruizeObject);
+                    } else {
+                        // multiple terms throw error
+                        throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_TERMS_UNSUPPORTED);
+                    }
+                }
+            }
+
             // set the performance profile
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
+
             // get the datasource
             // TODO: If no data source given use KruizeDeploymentInfo.monitoring_agent / default datasource
             String dataSource = kruizeObject.getDataSource();
+
+            // call different models for different use cases
+            if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.MONITOR)) {
+                // can be local or remote monitoring use case
+                if (kruizeObject.getRecommendation_settings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings().getModels() == null) {
+                    // recommendation setting are null -> use default values
+                    // both cost and perf model to be called
+                    loadDefaultRecommendationModels();
+                } else {
+                    // models present
+                    setModelNames(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
+                    loadCustomRecommendationModels(modelNames);
+                }
+            } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
+                // auto or recreate mode
+                if (kruizeObject.getRecommendation_settings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings() == null ||
+                        kruizeObject.getRecommendation_settings().getModelSettings().getModels() != null) {
+                    // recommendation setting are null -> use default values
+                    loadDefaultRecommendationModelForAutoAndRecreate();
+                } else {
+                        // for what ever model settings are present do as directed.
+                        // check for single model
+                        if (kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
+                            // call for that one model
+                            loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
+                        } else {
+                            // multiple model throw error
+                            throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED);
+                        }
+                }
+            }
+
             LOGGER.debug(String.format(KruizeConstants.APIMessages.EXPERIMENT_DATASOURCE, kruizeObject.getExperimentName(), dataSource));
 
             int maxDay = Terms.getMaxDays(terms);
@@ -333,7 +444,7 @@ public class RecommendationEngine {
                         experimentName, interval_start_time, interval_end_time));
                 kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
             }
-        } catch (Exception | FetchMetricsError e) {
+        } catch (Exception | FetchMetricsError | InvalidModelException | InvalidTermException e) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_EXCEPTION,
                     experimentName, interval_end_time, e.getMessage()));
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
@@ -1832,18 +1943,23 @@ public class RecommendationEngine {
 
             String maxDateQuery = null;
             String acceleratorDetectionQuery = null;
+            String acceleratorMigDetectionQuery = null;
+
             if (kruizeObject.isContainerExperiment()) {
-                maxDateQuery = getMaxDateQuery(metricProfile, AnalyzerConstants.MetricName.maxDate.name());
-                acceleratorDetectionQuery = getMaxDateQuery(metricProfile, AnalyzerConstants.MetricName.gpuMemoryUsage.name());
+                maxDateQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.maxDate.name());
+                acceleratorDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.gpuMemoryUsage.name());
+                acceleratorMigDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.acceleratorMigMemoryUsage.name());
+
                 fetchContainerMetricsBasedOnDataSourceAndProfile(kruizeObject,
                         interval_end_time,
                         interval_start_time,
                         dataSourceInfo,
                         metricProfile,
                         maxDateQuery,
-                        acceleratorDetectionQuery);
+                        acceleratorDetectionQuery,
+                        acceleratorMigDetectionQuery);
             } else if (kruizeObject.isNamespaceExperiment()) {
-                maxDateQuery = getMaxDateQuery(metricProfile, AnalyzerConstants.MetricName.namespaceMaxDate.name());
+                maxDateQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.namespaceMaxDate.name());
                 fetchNamespaceMetricsBasedOnDataSourceAndProfile(kruizeObject, interval_end_time, interval_start_time, dataSourceInfo, metricProfile, maxDateQuery);
             }
         } catch (Exception e) {
@@ -2017,6 +2133,8 @@ public class RecommendationEngine {
      * @param dataSourceInfo      DataSource object
      * @param metricProfile       performance profile to be used
      * @param maxDateQuery        max date query for containers
+     * @param acceleratorDetectionQuery query to detect accelerator
+     * @param acceleratorMigDetectionQuery query to detect MIG partitions of accelerators
      * @throws Exception
      */
     private void fetchContainerMetricsBasedOnDataSourceAndProfile(KruizeObject kruizeObject,
@@ -2025,7 +2143,8 @@ public class RecommendationEngine {
                                                                   DataSourceInfo dataSourceInfo,
                                                                   PerformanceProfile metricProfile,
                                                                   String maxDateQuery,
-                                                                  String acceleratorDetectionQuery) throws Exception, FetchMetricsError {
+                                                                  String acceleratorDetectionQuery,
+                                                                  String acceleratorMigDetectionQuery) throws Exception, FetchMetricsError {
         try {
             long interval_end_time_epoc = 0;
             long interval_start_time_epoc = 0;
@@ -2042,20 +2161,49 @@ public class RecommendationEngine {
                 String workload_type = k8sObject.getType();
                 HashMap<String, ContainerData> containerDataMap = k8sObject.getContainerDataMap();
 
+                // Check if the instaslice has created MIG's for the workloads
+                InstasliceHelper instasliceHelper = InstasliceHelper.getInstance();
+                String gpuUUID = instasliceHelper.getUUID(namespace, workload);
+                String gpuProfile = instasliceHelper.getMIGProfile(namespace, workload);
+
                 for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
                     ContainerData containerData = entry.getValue();
 
+                    boolean containerAcceleratorDetected = false;
+                    boolean containerAcceleratorPartitionDetected = false;
+
                     // Check if the container data has Accelerator support else check for Accelerator metrics
-                    if (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected()) {
-                        RecommendationUtils.markAcceleratorDeviceStatusToContainer(containerData,
-                                maxDateQuery,
-                                namespace,
-                                workload,
-                                workload_type,
-                                dataSourceInfo,
-                                kruizeObject.getTerms(),
-                                measurementDurationMinutesInDouble,
-                                acceleratorDetectionQuery);
+                    if (null == gpuUUID && (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
+                        containerAcceleratorDetected = RecommendationUtils.markAcceleratorDeviceStatusToContainer(containerData,
+                                                                            maxDateQuery,
+                                                                            namespace,
+                                                                            workload,
+                                                                            workload_type,
+                                                                            dataSourceInfo,
+                                                                            kruizeObject.getTerms(),
+                                                                            measurementDurationMinutesInDouble,
+                                                                            acceleratorDetectionQuery);
+                    }
+
+                    // Check if it's a partition
+                    if (!containerAcceleratorDetected) {
+                        if (null != gpuUUID) {
+                            containerAcceleratorPartitionDetected = RecommendationUtils.markAcceleratorPartitionDeviceStatusToContainer(containerData,
+                                    maxDateQuery,
+                                    namespace,
+                                    workload,
+                                    workload_type,
+                                    dataSourceInfo,
+                                    kruizeObject.getTerms(),
+                                    measurementDurationMinutesInDouble,
+                                    acceleratorMigDetectionQuery,
+                                    gpuUUID,
+                                    gpuProfile);
+
+                            if (null == kruizeObject.getDefaultUpdater()) {
+                                kruizeObject.setDefaultUpdater(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.ACCELERATOR);
+                            }
+                        }
                     }
 
                     String containerName = containerData.getContainer_name();
@@ -2120,11 +2268,16 @@ public class RecommendationEngine {
                             AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
                             AnalyzerConstants.MetricName.gpuMemoryUsage.toString()
                     );
+
+                    List<String> acceleratorPartitionFunctions = Arrays.asList(
+                            AnalyzerConstants.MetricName.acceleratorMigMemoryUsage.toString()
+                    );
                     // Iterate over metrics and aggregation functions
                     for (Metric metricEntry : metricList) {
 
                         boolean isAcceleratorMetric = false;
                         boolean fetchAcceleratorMetrics = false;
+                        boolean isAcceleratorPartitionMetric = false;
 
                         if (acceleratorFunctions.contains(metricEntry.getName())) {
                             isAcceleratorMetric = true;
@@ -2136,8 +2289,21 @@ public class RecommendationEngine {
                             fetchAcceleratorMetrics = true;
                         }
 
+                        if (acceleratorPartitionFunctions.contains(metricEntry.getName())) {
+                            isAcceleratorPartitionMetric = true;
+                        }
+
+                        if (isAcceleratorPartitionMetric
+                                && null != containerData.getContainerDeviceList()
+                                && containerData.getContainerDeviceList().isAcceleratorPartitionDetected()) {
+                            fetchAcceleratorMetrics = true;
+                        }
+
                         // Skip fetching Accelerator metrics if the workload doesn't use Accelerator
                         if (isAcceleratorMetric && !fetchAcceleratorMetrics)
+                            continue;
+
+                        if (isAcceleratorPartitionMetric && !fetchAcceleratorMetrics)
                             continue;
 
                         HashMap<String, AggregationFunctions> aggregationFunctions = metricEntry.getAggregationFunctionsMap();
@@ -2158,17 +2324,28 @@ public class RecommendationEngine {
                                 format = KruizeConstants.JSONKeys.CORES;
                             } else if (memFunction.contains(metricEntry.getName())) {
                                 format = KruizeConstants.JSONKeys.BYTES;
-                            } else if (isAcceleratorMetric) {
+                            } else if (isAcceleratorMetric || isAcceleratorPartitionMetric) {
                                 format = KruizeConstants.JSONKeys.CORES;
                             }
 
-                            // If promQL is determined, fetch metrics from the datasource
-                            promQL = promQL
-                                    .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
-                                    .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
-                                    .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
-                                    .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
-                                    .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+                            if (isAcceleratorPartitionMetric) {
+
+                                if (null == gpuUUID)
+                                    continue;
+
+                                promQL = promQL
+                                        .replace(AnalyzerConstants.UUID_VARIABLE, gpuUUID)
+                                        .replace(AnalyzerConstants.PROFILE_VARIABLE, gpuProfile)
+                                        .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()));
+                            } else {
+                                // If promQL is determined, fetch metrics from the datasource
+                                promQL = promQL
+                                        .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
+                                        .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
+                                        .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDurationMinutesInDouble.intValue()))
+                                        .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
+                                        .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
+                            }
 
                             LOGGER.debug(promQL);
                             String podMetricsUrl;
@@ -2190,7 +2367,7 @@ public class RecommendationEngine {
                                     continue;
 
                                 // Process fetched metrics
-                                if (isAcceleratorMetric) {
+                                if (isAcceleratorMetric || isAcceleratorPartitionMetric){
                                     for (JsonElement result : resultArray) {
                                         JsonObject resultObject = result.getAsJsonObject();
                                         JsonObject metricObject = resultObject.getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
@@ -2201,7 +2378,15 @@ public class RecommendationEngine {
                                         if (metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString().isEmpty())
                                             continue;
 
-                                        ArrayList<DeviceDetails> deviceDetails = containerData.getContainerDeviceList().getDevices(AnalyzerConstants.DeviceType.ACCELERATOR);
+                                        ArrayList<DeviceDetails> deviceDetails = null;
+
+                                        if (isAcceleratorMetric) {
+                                            deviceDetails = containerData.getContainerDeviceList().getDevices(AnalyzerConstants.DeviceType.ACCELERATOR);
+                                        }
+
+                                        if (isAcceleratorPartitionMetric) {
+                                            deviceDetails = containerData.getContainerDeviceList().getDevices(AnalyzerConstants.DeviceType.ACCELERATOR_PARTITION);
+                                        }
                                         // Continuing to next element
                                         // All other elements will also fail as there is no Accelerator attached
                                         // Theoretically, it doesn't fail, but the future implementations may change
@@ -2227,7 +2412,8 @@ public class RecommendationEngine {
                                                 metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
                                                 metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
                                                 metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
-                                                null, true, false);
+                                                containerAcceleratorDeviceData.getProfile(),
+                                                true, containerAcceleratorDeviceData.isMIGPartition());
 
                                         JsonArray valuesArray = resultObject.getAsJsonArray(KruizeConstants.DataSourceConstants
                                                 .DataSourceQueryJSONKeys.VALUES);
@@ -2238,6 +2424,13 @@ public class RecommendationEngine {
                                             JsonArray valueArray = element.getAsJsonArray();
                                             long epochTime = valueArray.get(0).getAsLong();
                                             double value = valueArray.get(1).getAsDouble();
+
+                                            // Currently only supports 40GB GPU's needs to be made dynamic based on card memory
+                                            if (isAcceleratorPartitionMetric) {
+                                                double cardFrameBuffer = RecommendationUtils.getFrameBufferBasedOnModel(containerAcceleratorDeviceData.getModelName());
+                                                if (cardFrameBuffer > 0)
+                                                    value = (value / cardFrameBuffer) * 100;
+                                            }
                                             String timestamp = sdf.format(new Date(epochTime * KruizeConstants.TimeConv.NO_OF_MSECS_IN_SEC));
                                             Date date = sdf.parse(timestamp);
                                             Timestamp tempTime = new Timestamp(date.getTime());
@@ -2335,7 +2528,7 @@ public class RecommendationEngine {
      *
      * @param metricProfile performance profile to be used
      */
-    private String getMaxDateQuery(PerformanceProfile metricProfile, String metricName) {
+    private String getMaxQueryByName(PerformanceProfile metricProfile, String metricName) {
         List<Metric> metrics = metricProfile.getSloInfo().getFunctionVariables();
         for (Metric metric : metrics) {
             String name = metric.getName();

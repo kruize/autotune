@@ -63,7 +63,7 @@ public class MappedRecommendationForTimestamp {
             this.recommendationForTermHashMap.put(KruizeConstants.JSONKeys.SHORT_TERM, shortTermRecommendations);
     }
 
-    public MappedRecommendationForTerm getMediumTermRecommendations() {
+    public TermRecommendations getMediumTermRecommendations() {
         if (null != this.recommendationForTermHashMap && this.recommendationForTermHashMap.containsKey(KruizeConstants.JSONKeys.MEDIUM_TERM))
             return this.recommendationForTermHashMap.get(KruizeConstants.JSONKeys.MEDIUM_TERM);
         return null;
@@ -74,7 +74,7 @@ public class MappedRecommendationForTimestamp {
             this.recommendationForTermHashMap.put(KruizeConstants.JSONKeys.MEDIUM_TERM, mediumTermRecommendations);
     }
 
-    public MappedRecommendationForTerm getLongTermRecommendations() {
+    public TermRecommendations getLongTermRecommendations() {
         if (null != this.recommendationForTermHashMap && this.recommendationForTermHashMap.containsKey(KruizeConstants.JSONKeys.LONG_TERM))
             return this.recommendationForTermHashMap.get(KruizeConstants.JSONKeys.LONG_TERM);
         return null;
