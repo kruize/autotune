@@ -156,7 +156,7 @@ metadata:
 spec:
   storageClassName: manual
   capacity:
-    storage: 500Mi # Sets PV Volume
+    storage: 1Gi # Sets PV Volume
   accessModes:
     - ReadWriteMany
   hostPath:
@@ -175,7 +175,7 @@ spec:
     - ReadWriteMany  # Sets read and write access
   resources:
     requests:
-      storage: 500Mi  # Sets volume size
+      storage: 1Gi  # Sets volume size
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -207,14 +207,14 @@ data:
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
-      "isROSEnabled": "false",
+      "isROSEnabled": "true",
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",
       "experimentsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/createExperiment",
       "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
       "bulkapilimit" : 1000,
-      "metadataProfileFilePath" : "/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json",
-      "metricProfileFilePath" : "/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json",
+      "metricProfileFilePath": "/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json",
+      "metadataProfileFilePath": "/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -286,11 +286,11 @@ spec:
               value: /var/lib/pg_data
           resources:
             requests:
-              memory: "100Mi"
-              cpu: "0.5"
+              memory: "2Gi"
+              cpu: "2"
             limits:
-              memory: "100Mi"
-              cpu: "0.5"
+              memory: "2Gi"
+              cpu: "2"
           ports:
             - containerPort: 5432
           volumeMounts:
@@ -368,11 +368,11 @@ spec:
               value: "-XX:MaxRAMPercentage=80"
           resources:
             requests:
-              memory: "350Mi"
-              cpu: "0.7"
+              memory: "2Gi"
+              cpu: "2"
             limits:
-              memory: "350Mi"
-              cpu: "0.7"
+              memory: "2Gi"
+              cpu: "2"
           ports:
             - name: kruize-port
               containerPort: 8080

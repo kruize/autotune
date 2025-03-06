@@ -1899,6 +1899,7 @@ function kruize_local_patch() {
 #
 # "isROSEnabled" flag is turned on for RM.
 # Restores kruize default cpu/memory resources, PV storage for openshift
+# Adds `metadataProfileFilePath` and `metricProfileFilePath` under kruizeconfigjson to mount the respective file paths
 #
 function kruize_remote_patch() {
 	CRC_DIR="./manifests/crc/default-db-included-installation"
@@ -1910,6 +1911,18 @@ function kruize_remote_patch() {
     if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}; then
       echo "match found"
       sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+
+      # Use awk to find the 'kruizeconfigjson' block and insert 'metricProfileFilePath' and 'metadataProfileFilePath' before "hibernate"
+      awk '
+      /kruizeconfigjson: \|/ {in_config=1}
+      in_config && /"hibernate":/ {
+          print "      \"metricProfileFilePath\": \"/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json\",";
+          print "      \"metadataProfileFilePath\": \"/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json\",";
+          print
+          next
+      }
+      {print}
+      ' "${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}" > temp.yaml && mv temp.yaml "${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}"
     else
       echo "Error: Match not found" >&2
       exit 1
@@ -1918,6 +1931,18 @@ function kruize_remote_patch() {
     sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
     sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
     sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+
+    # Use awk to find the 'kruizeconfigjson' block and insert 'metricProfileFilePath' and 'metadataProfileFilePath' before "hibernate"
+    awk '
+    /kruizeconfigjson: \|/ {in_config=1}
+    in_config && /"hibernate":/ {
+        print "      \"metricProfileFilePath\": \"/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json\",";
+        print "      \"metadataProfileFilePath\": \"/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json\",";
+        print
+        next
+    }
+    {print}
+    ' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" > temp.yaml && mv temp.yaml "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
   fi
 }
 
