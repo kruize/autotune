@@ -16,6 +16,7 @@
 package com.autotune.common.kafka;
 
 import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.KruizeConstants;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.common.serialization.StringDeserializer;
@@ -50,7 +51,7 @@ public class KruizeKafkaConsumer implements Runnable {
             consumer.subscribe(java.util.Collections.singletonList(KruizeDeploymentInfo.bulk_input_topic));
             while (continueListening) {
                 consumer.poll(java.time.Duration.ofMillis(100)).forEach(record -> {
-                    LOGGER.debug("Received Input: JobID={}, Value={}, Partition={}, Offset={}",
+                    LOGGER.debug(KruizeConstants.KAFKA_CONSTANTS.MESSAGE_RECEIVED_SUCCESSFULLY,
                             record.key(), record.value(), record.partition(), record.offset());
                 });
                 if (isTerminationSignalReceived()) {

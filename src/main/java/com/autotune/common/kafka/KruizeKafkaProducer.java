@@ -48,7 +48,7 @@ public class KruizeKafkaProducer {
         producerProps.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, KruizeDeploymentInfo.kafka_bootstrap_servers);
         producerProps.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
         producerProps.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        producerProps.put(ProducerConfig.ACKS_CONFIG, "all");
+        producerProps.put(ProducerConfig.ACKS_CONFIG, KruizeConstants.KAFKA_CONSTANTS.ALL);
         return producerProps;
     }
 
@@ -63,12 +63,11 @@ public class KruizeKafkaProducer {
             RecordMetadata metadata = producer.send(new ProducerRecord<>(topic, payload))
                     .get(5, TimeUnit.SECONDS); //todo : set the timeout value via ENV
             // todo: get the status of message whether its delivered or failed
-            LOGGER.debug("Message sent successfully to topic {} at partition {} and offset {}",
-                    metadata.topic(), metadata.partition(), metadata.offset());
+            LOGGER.debug(KruizeConstants.KAFKA_CONSTANTS.MESSAGE_SENT_SUCCESSFULLY, metadata.topic(), metadata.partition(), metadata.offset());
         } catch (TimeoutException te) {
-            LOGGER.error("Kafka timeout while sending message to topic {}: {}", topic, te.getMessage());
+            LOGGER.error(KruizeConstants.KAFKA_CONSTANTS.KAFKA_MESSAGE_TIMEOUT_ERROR, topic, te.getMessage());
         } catch (Exception e) {
-            LOGGER.error("Error sending message to Kafka topic {}: {}", topic, e.getMessage(), e);
+            LOGGER.error(KruizeConstants.KAFKA_CONSTANTS.KAFKA_MESSAGE_FAILED, topic, e.getMessage(), e);
         }
     }
 
@@ -150,7 +149,7 @@ public class KruizeKafkaProducer {
     public static void close() {
         if (producer != null) {
             producer.close();
-            LOGGER.info("Kafka producer closed.");
+            LOGGER.debug(KruizeConstants.KAFKA_CONSTANTS.KAFKA_PRODUCER_CLOSED);
         }
     }
 }
