@@ -828,52 +828,114 @@ insert into kruize_performance_profiles;
 This table stores job-level data, including information such as job status, start and end times, notification details, experiments details total and processed counts.
 
 ```sql
-CREATE TABLE kruize_bulkjobs (
-    job_id UUID NOT NULL,
-    end_time TIMESTAMP(6),
-    start_time TIMESTAMP(6),
-    notifications JSONB,
-    experiments JSONB,
-    processed_count INTEGER,
-    status VARCHAR(255),
-    total_count INTEGER,
-    webhook VARCHAR(255),
-    PRIMARY KEY (job_id)
-);
+create table IF NOT EXISTS kruize_bulkjobs (
+    job_id VARCHAR(36) not null, 
+    experiments jsonb, end_time timestamp(6), 
+    start_time timestamp(6), 
+    metadata jsonb, 
+    notifications jsonb, 
+    payload jsonb, 
+    processed_count integer, 
+    status varchar(255), 
+    total_count integer, 
+    webhook jsonb, 
+    primary key (job_id)
+)
 ```
-Sample data
+ps `payload` is equivalent to json parameter name called 'input' 
+Example
 ```json
 {
+  "summary": {
     "status": "COMPLETED",
-    "total_experiments": 686,
-    "processed_experiments": 686,
-    "notifications": null,
-    "experiments": {
-        "prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-28902795(job)|collect-profiles": {
-            "notification": null,
-            "recommendations": {
-                "status": "PROCESSED",
-                "notifications": null
-            }
+    "total_experiments": 1143,
+    "processed_experiments": 1143,
+    "notifications": {},
+    "input": {
+      "filter": {
+        "exclude": {
+          "namespace": null,
+          "workload": null,
+          "containers": null,
+          "labels": null
         },
-        "prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-28908435(job)|collect-profiles": {
-            "notification": null,
-            "recommendations": {
-                "status": "PROCESSED",
-                "notifications": null
-            }
+        "include": {
+          "namespace": null,
+          "workload": null,
+          "containers": null,
+          "labels": null
+        }
+      },
+      "time_range": null,
+      "datasource": "prometheus-1",
+      "webhook": null
+    },
+    "job_id": "c1840d71-5e6f-4615-bb5e-ed30a9eaaff6",
+    "job_start_time": "2025-03-06T01:39:45.394Z",
+    "job_end_time": "2025-03-06T01:44:28.716Z"
+  },
+  "experiments": {
+    "prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-29017635(job)|collect-profiles": {
+      "name": null,
+      "status": "PROCESSED",
+      "apis": {
+        "create": {
+          "response": {
+            "message": "Experiment registered successfully with Kruize. View registered experiments at /listExperiments",
+            "httpcode": 201,
+            "documentationLink": "",
+            "status": "SUCCESS"
+          },
+          "request": null
         },
-        "prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-28904820(job)|collect-profiles": {
-            "notification": null,
-            "recommendations": {
-                "status": "PROCESSED",
-                "notifications": null
+        "recommendations": {
+          "response": [
+            {
+              "cluster_name": "default",
+              "experiment_type": "container",
+              "kubernetes_objects": [
+                {
+                  "type": "job",
+                  "name": "collect-profiles-29017635",
+                  "namespace": "openshift-operator-lifecycle-manager",
+                  "containers": [
+                    {
+                      "container_image_name": "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:82ff155c5e7118a86952f86cba21da8e249f74f0a8f1ac0f2161e2bc1e3b3dbf",
+                      "container_name": "collect-profiles",
+                      "recommendations": {
+                        "version": "1.0",
+                        "notifications": {
+                          "120001": {
+                            "type": "info",
+                            "message": "There is not enough data available to generate a recommendation.",
+                            "code": 120001
+                          }
+                        },
+                        "data": {}
+                      }
+                    }
+                  ]
+                }
+              ],
+              "version": "v2.0",
+              "experiment_name": "prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-29017635(job)|collect-profiles"
             }
-        }},
-    "webhook": null,
-    "job_id": "3d14daf3-0f27-4848-8f5e-d9e890c5730e",
-    "job_start_time": "2024-12-19T06:28:11.536Z",
-    "job_end_time": "2024-12-19T06:30:27.764Z"
+          ]
+        }
+      },
+      "status_history": [
+        {
+          "status": "UNPROCESSED",
+          "timestamp": "2025-03-06T01:39:49.255Z"
+        },
+        {
+          "status": "PROCESSED",
+          "timestamp": "2025-03-06T01:39:54.064Z"
+        }
+      ],
+      "notifications": null
+    }
+  }
 }
 ```
 When handling an "experiments" column with a large JSON field being updated by multiple threads, the primary considerations are ensuring concurrency, minimizing contention, and optimizing performance. This can be achieved by:
