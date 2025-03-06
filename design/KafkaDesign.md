@@ -1,7 +1,7 @@
 # Kafka Documentation
 
 Kruize has a BulkService feature which designed to streamline the detection, management, and optimization of containerized environments. It relies on the REST APIs without a message broker, which introduces latency when handling multiple parallel requests.
-Kafka replaces this existing REST API service for faster, asynchronous communication and to ensure seamless handling of recommendations at scale.
+Kafka augments this existing REST API service for faster, asynchronous communication and to ensure seamless handling of recommendations at scale.
 
 Kruize Kafka Producer internally uses the BulkService and publishes recommendations in the form of message in three topics namely, `recommendations-topic`, `error-topic` and `summary-topic`.
 
@@ -20,9 +20,11 @@ Kruize Kafka Producer internally uses the BulkService and publishes recommendati
 
 ## Specifications
  - User needs to hit a REST API POST request with a Payload as mentioned in the BulkAPI doc. For details, kindly refer to the [BulkAPI](BulkAPI.md) design doc.
- - Kafka needs to be installed locally or in a cluster, and it's corresponding Bootstrap server URL should be added in the crc file based on your cluster.
+ - Kafka enablement flag : `"isKafkaEnabled" : "true",` , needs to be set in the config to enable the usage of Kafka.
+ - Kafka needs to be installed locally or in a cluster, and it's corresponding Bootstrap server URL should be added as an ENV.
 Example:
- - `"kafkaBootstrapServers" : "<kafka-cluster-svc-name>.<kafka-ns>.svc.cluster.local:9092"`
+ -  `- name: KAFKA_BOOTSTRAP_SERVERS
+      value: "<kafka-cluster-svc-name>.<kafka-ns>.svc.cluster.local:9092"`
  - Consumer needs to be subscribed to the `recommendations-topic` to get the recommendations.
  - Subscribing to the `error-topic` and the `summary-topic` is optional
 
@@ -74,249 +76,249 @@ Example:
 
 ```json
 {
-  "summary": {
-	"status": "COMPLETED",    
-	"job_id": "65603c30-64ee-4bd2-85db-8328425c3b09"
-  },
-  "experiments": {
-	"prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor": {
-  	"name": "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor",
-  	"status": "PROCESSED",
-  	"apis": {
-    	"recommendations": {
-      	"response": [
-        	{
-          	"cluster_name": "default",
-          	"experiment_type": "container",
-          	"kubernetes_objects": [
-            	{
-              	"type": "daemonset",
-              	"name": "cadvisor",
-              	"namespace": "cadvisor",
-              	"containers": [
-                	{
-                  	"container_image_name": "gcr.io/cadvisor/cadvisor:v0.45.0",
-                  	"container_name": "cadvisor",
-                  	"recommendations": {
-                    	"version": "1.0",
-                    	"notifications": {
-                      	"111000": {
-                        	"type": "info",
-                        	"message": "Recommendations Are Available",
-                        	"code": 111000
-                      	}
-                    	},
-                    	"data": {
-                      	"2025-01-27T11:28:24.000Z": {
-                        	"notifications": { 	},
-                        	"monitoring_end_time": "2025-01-27T11:28:24.000Z",
-                        	"current": {},
-                        	"recommendation_terms": {
-                          	"short_term": {
-                            	"duration_in_hours": 24,
-                            	"notifications": {
-                              	"112101": {
-                                	"type": "info",
-                                	"message": "Cost Recommendations Available",
-                                	"code": 112101
-                              	},
-                              	"112102": {
-                                	"type": "info",
-                                	"message": "Performance Recommendations Available",
-                                	"code": 112102
-                              	}
-                            	},
-                            	"monitoring_start_time": "2025-01-26T11:28:24.000Z",
-                            	"recommendation_engines": {
-                              	"cost": {
-                                	"pods_count": 1,
-                                	"confidence_level": 0,
-                                	"config": {
-                                  	"limits": {
-                                    	"memory": {
-                                      	"amount": 136651161.6,
-                                      	"format": "bytes"
-                                    	},
-                                    	"cpu": {
-                                      	"amount": 0.22053964085707395,
-                                      	"format": "cores"
-                                    	}
-                                  	},
-                                  	"requests": {
-                                    	"memory": {
-                                      	"amount": 136651161.6,
-                                      	"format": "bytes"
-                                    	},
-                                    	"cpu": {
-                                      	"amount": 0.22053964085707395,
-                                      	"format": "cores"
-                                    	}
-                                  	}
-                                	},
-                                	"variation": {
-                                  	"limits": {
-                                    	"memory": {
-                                      	"amount": 136651161.6,
-                                      	"format": "bytes"
-                                    	},
-                                    	"cpu": {
-                                      	"amount": 0.22053964085707395,
-                                      	"format": "cores"
-                                    	}
-                                  	},
-                                  	"requests": {
-                                    	"memory": {
-                                      	"amount": 136651161.6,
-                                      	"format": "bytes"
-                                    	},
-                                    	"cpu": {
-                                      	"amount": 0.22053964085707395,
-                                      	"format": "cores"
-                                    	}
-                                  	}
-                                	},
-                                	"notifications": {}
-                              	},
-                              	"performance": {
-                                	"pods_count": 1,
-                                	"confidence_level": 0,
-                                	"config": {
-                                  	"limits": {
-                                    	"memory": {
-                                      	"amount": 136651161.6,
-                                      	"format": "bytes"
-                                    	},
-                                    	"cpu": {
-                                      	"amount": 0.22053964085707395,
-                                      	"format": "cores"
-                                    	}
-                                  	},
-                                  	"requests": {
-                                    	"memory": {
-                                      	"amount": 136651161.6,
-                                      	"format": "bytes"
-                                    	},
-                                    	"cpu": {
-                                      	"amount": 0.22053964085707395,
-                                      	"format": "cores"
-                                    	}
-                                  	}
-                                	},
-                                	"variation": {
-                                  	"limits": {
-                                    	"memory": {
-                                      	"amount": 136651161.6,
-                                      	"format": "bytes"
-                                    	},
-                                    	"cpu": {
-                                      	"amount": 0.22053964085707395,
-                                      	"format": "cores"
-                                    	}
-                                  	},
-                                  	"requests": {
-                                    	"memory": {
-                                      	"amount": 136651161.6,
-                                      	"format": "bytes"
-                                    	},
-                                    	"cpu": {
-                                      	"amount": 0.22053964085707395,
-                                      	"format": "cores"
-                                    	}
-                                  	}
-                                	},
-                                	"notifications": {}
-                              	}
-                            	},
-                            	"plots": {
-                              	"datapoints": 4,
-                              	"plots_data": {
-                                	"2025-01-27T11:28:24.000Z": {
-                                  	"cpuUsage": {
-                                    	"min": 0.08396913905943296,
-                                    	"q1": 0.18669564827597168,
-                                    	"median": 0.19308384827591732,
-                                    	"q3": 0.2056331399785098,
-                                    	"max": 0.22053964085707395,
-                                    	"format": "cores"
-                                  	},
-                                  	"memoryUsage": {
-                                    	"min": 104177664,
-                                    	"q1": 116555776,
-                                    	"median": 121192448,
-                                    	"q3": 122347520,
-                                    	"max": 123654144,
-                                    	"format": "bytes"
-                                  	}
-                                	},
-                                	"2025-01-26T23:28:24.000Z": {},
-                                	"2025-01-26T17:28:24.000Z": {},
-                                	"2025-01-27T05:28:24.000Z": {
-                                  	"cpuUsage": {
-                                    	"min": 0.09123101016771845,
-                                    	"q1": 0.1949451069246897,
-                                    	"median": 0.19694082169152047,
-                                    	"q3": 0.19694082169152047,
-                                    	"max": 0.21236305529661514,
-                                    	"format": "cores"
-                                  	},
-                                  	"memoryUsage": {
-                                    	"min": 111341568,
-                                    	"q1": 121679872,
-                                    	"median": 121905152,
-                                    	"q3": 121905152,
-                                    	"max": 123506688,
-                                    	"format": "bytes"
-                                  	}
-                                	}
-                              	}
-                            	}
-                          	},
-                          	"medium_term": {
-                            	"duration_in_hours": 168,
-                            	"notifications": {
-                              	"120001": {
-                                	"type": "info",
-                                	"message": "There is not enough data available to generate a recommendation.",
-                                	"code": 120001
-                              	}
-                            	}
-                          	},
-                          	"long_term": {
-                            	"duration_in_hours": 360,
-                            	"notifications": {
-                              	"120001": {
-                                	"type": "info",
-                                	"message": "There is not enough data available to generate a recommendation.",
-                                	"code": 120001
-                              	}
-                            	}
-                          	}
-                        	}
-                      	}
-                    	}
-                  	}
-                	}
-              	]
-            	}
-          	],
-          	"version": "v2.0",
-          	"experiment_name": "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor"
-        	}
-      	]
-    	}
-  	},
-  	"status_history": [
-    	{
-      	"status": "UNPROCESSED",
-      	"timestamp": "2025-01-27T11:18:24.056Z"
-    	},
-    	{
-      	"status": "PROCESSED",
-      	"timestamp": "2025-01-27T11:18:27.012Z"
-    	}
-  	]
-	}
-  }
+   "summary": {
+      "status": "COMPLETED",
+      "job_id": "65603c30-64ee-4bd2-85db-8328425c3b09"
+   },
+   "experiments": {
+      "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor": {
+         "name": "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor",
+         "status": "PROCESSED",
+         "apis": {
+            "recommendations": {
+               "response": [
+                  {
+                     "cluster_name": "default",
+                     "experiment_type": "container",
+                     "kubernetes_objects": [
+                        {
+                           "type": "daemonset",
+                           "name": "cadvisor",
+                           "namespace": "cadvisor",
+                           "containers": [
+                              {
+                                 "container_image_name": "gcr.io/cadvisor/cadvisor:v0.45.0",
+                                 "container_name": "cadvisor",
+                                 "recommendations": {
+                                    "version": "1.0",
+                                    "notifications": {
+                                       "111000": {
+                                          "type": "info",
+                                          "message": "Recommendations Are Available",
+                                          "code": 111000
+                                       }
+                                    },
+                                    "data": {
+                                       "2025-01-27T11:28:24.000Z": {
+                                          "notifications": {},
+                                          "monitoring_end_time": "2025-01-27T11:28:24.000Z",
+                                          "current": {},
+                                          "recommendation_terms": {
+                                             "short_term": {
+                                                "duration_in_hours": 24,
+                                                "notifications": {
+                                                   "112101": {
+                                                      "type": "info",
+                                                      "message": "Cost Recommendations Available",
+                                                      "code": 112101
+                                                   },
+                                                   "112102": {
+                                                      "type": "info",
+                                                      "message": "Performance Recommendations Available",
+                                                      "code": 112102
+                                                   }
+                                                },
+                                                "monitoring_start_time": "2025-01-26T11:28:24.000Z",
+                                                "recommendation_engines": {
+                                                   "cost": {
+                                                      "pods_count": 1,
+                                                      "confidence_level": 0,
+                                                      "config": {
+                                                         "limits": {
+                                                            "memory": {
+                                                               "amount": 136651161.6,
+                                                               "format": "bytes"
+                                                            },
+                                                            "cpu": {
+                                                               "amount": 0.22053964085707395,
+                                                               "format": "cores"
+                                                            }
+                                                         },
+                                                         "requests": {
+                                                            "memory": {
+                                                               "amount": 136651161.6,
+                                                               "format": "bytes"
+                                                            },
+                                                            "cpu": {
+                                                               "amount": 0.22053964085707395,
+                                                               "format": "cores"
+                                                            }
+                                                         }
+                                                      },
+                                                      "variation": {
+                                                         "limits": {
+                                                            "memory": {
+                                                               "amount": 136651161.6,
+                                                               "format": "bytes"
+                                                            },
+                                                            "cpu": {
+                                                               "amount": 0.22053964085707395,
+                                                               "format": "cores"
+                                                            }
+                                                         },
+                                                         "requests": {
+                                                            "memory": {
+                                                               "amount": 136651161.6,
+                                                               "format": "bytes"
+                                                            },
+                                                            "cpu": {
+                                                               "amount": 0.22053964085707395,
+                                                               "format": "cores"
+                                                            }
+                                                         }
+                                                      },
+                                                      "notifications": {}
+                                                   },
+                                                   "performance": {
+                                                      "pods_count": 1,
+                                                      "confidence_level": 0,
+                                                      "config": {
+                                                         "limits": {
+                                                            "memory": {
+                                                               "amount": 136651161.6,
+                                                               "format": "bytes"
+                                                            },
+                                                            "cpu": {
+                                                               "amount": 0.22053964085707395,
+                                                               "format": "cores"
+                                                            }
+                                                         },
+                                                         "requests": {
+                                                            "memory": {
+                                                               "amount": 136651161.6,
+                                                               "format": "bytes"
+                                                            },
+                                                            "cpu": {
+                                                               "amount": 0.22053964085707395,
+                                                               "format": "cores"
+                                                            }
+                                                         }
+                                                      },
+                                                      "variation": {
+                                                         "limits": {
+                                                            "memory": {
+                                                               "amount": 136651161.6,
+                                                               "format": "bytes"
+                                                            },
+                                                            "cpu": {
+                                                               "amount": 0.22053964085707395,
+                                                               "format": "cores"
+                                                            }
+                                                         },
+                                                         "requests": {
+                                                            "memory": {
+                                                               "amount": 136651161.6,
+                                                               "format": "bytes"
+                                                            },
+                                                            "cpu": {
+                                                               "amount": 0.22053964085707395,
+                                                               "format": "cores"
+                                                            }
+                                                         }
+                                                      },
+                                                      "notifications": {}
+                                                   }
+                                                },
+                                                "plots": {
+                                                   "datapoints": 4,
+                                                   "plots_data": {
+                                                      "2025-01-27T11:28:24.000Z": {
+                                                         "cpuUsage": {
+                                                            "min": 0.08396913905943296,
+                                                            "q1": 0.18669564827597168,
+                                                            "median": 0.19308384827591732,
+                                                            "q3": 0.2056331399785098,
+                                                            "max": 0.22053964085707395,
+                                                            "format": "cores"
+                                                         },
+                                                         "memoryUsage": {
+                                                            "min": 104177664,
+                                                            "q1": 116555776,
+                                                            "median": 121192448,
+                                                            "q3": 122347520,
+                                                            "max": 123654144,
+                                                            "format": "bytes"
+                                                         }
+                                                      },
+                                                      "2025-01-26T23:28:24.000Z": {},
+                                                      "2025-01-26T17:28:24.000Z": {},
+                                                      "2025-01-27T05:28:24.000Z": {
+                                                         "cpuUsage": {
+                                                            "min": 0.09123101016771845,
+                                                            "q1": 0.1949451069246897,
+                                                            "median": 0.19694082169152047,
+                                                            "q3": 0.19694082169152047,
+                                                            "max": 0.21236305529661514,
+                                                            "format": "cores"
+                                                         },
+                                                         "memoryUsage": {
+                                                            "min": 111341568,
+                                                            "q1": 121679872,
+                                                            "median": 121905152,
+                                                            "q3": 121905152,
+                                                            "max": 123506688,
+                                                            "format": "bytes"
+                                                         }
+                                                      }
+                                                   }
+                                                }
+                                             },
+                                             "medium_term": {
+                                                "duration_in_hours": 168,
+                                                "notifications": {
+                                                   "120001": {
+                                                      "type": "info",
+                                                      "message": "There is not enough data available to generate a recommendation.",
+                                                      "code": 120001
+                                                   }
+                                                }
+                                             },
+                                             "long_term": {
+                                                "duration_in_hours": 360,
+                                                "notifications": {
+                                                   "120001": {
+                                                      "type": "info",
+                                                      "message": "There is not enough data available to generate a recommendation.",
+                                                      "code": 120001
+                                                   }
+                                                }
+                                             }
+                                          }
+                                       }
+                                    }
+                                 }
+                              }
+                           ]
+                        }
+                     ],
+                     "version": "v2.0",
+                     "experiment_name": "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor"
+                  }
+               ]
+            }
+         },
+         "status_history": [
+            {
+               "status": "UNPROCESSED",
+               "timestamp": "2025-01-27T11:18:24.056Z"
+            },
+            {
+               "status": "PROCESSED",
+               "timestamp": "2025-01-27T11:18:27.012Z"
+            }
+         ]
+      }
+   }
 }
 
 ```
