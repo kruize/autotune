@@ -56,7 +56,7 @@ import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY_ALT;
 import static com.autotune.database.helper.DBConstants.SQLQUERY.*;
 import static com.autotune.utils.KruizeConstants.JSONKeys.CLUSTER_NAME;
-import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 
 public class ExperimentDAOImpl implements ExperimentDAO {
     private static final long serialVersionUID = 1L;
@@ -678,7 +678,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     validationOutputData.setSuccess(true);
                     statusValue = "success";
                 } catch (HibernateException e) {
-                    LOGGER.error("Not able to save experiment due to {}", e.getMessage());
+                    LOGGER.error(BULK_JOB_SAVE_ERROR, e.getMessage());
                     if (tx != null) tx.rollback();
                     e.printStackTrace();
                     validationOutputData.setSuccess(false);
@@ -687,8 +687,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 }
             }
         } catch (Exception e) {
-            LOGGER.debug("Bulk JOB Save ={}", bulkJob);
-            LOGGER.error("Not able to save BulkJob due to {}", e.getMessage());
+            LOGGER.error(BULK_JOB_SAVE_ERROR, e.getMessage());
             validationOutputData.setMessage(e.getMessage());
         } finally {
             if (null != timerSaveBulkJobDB) {
@@ -719,8 +718,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     .setParameter("jobId", jobId).getSingleResult();
             statusValue = "success";
         } catch (Exception e) {
-            LOGGER.error("Not able to load bulk JOB {} due to {}", jobId, e.getMessage());
-            throw new Exception("Error while loading BulkJob from database due to : " + e.getMessage());
+            LOGGER.error(BULK_JOB_LOAD_ERROR, jobId, e.getMessage());
+            throw new Exception(e.getMessage());
         } finally {
             if (null != timerGetBulkJobDB) {
                 MetricsConfig.timerLoadBulkJobId = MetricsConfig.timerBLoadBulkJobId.tag("status", statusValue).register(MetricsConfig.meterRegistry());
@@ -771,9 +770,9 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             validationOutputData.setSuccess(true);
             statusValue = "success";
         } catch (Exception e) {
-            LOGGER.error("Not able to load bulk JOB {} due to {}", jobId, e.getMessage());
+            LOGGER.error(BULK_JOB_LOAD_ERROR, jobId, e.getMessage());
             validationOutputData.setMessage(e.getMessage());
-            throw new Exception("Error while loading BulkJob from database due to : " + e.getMessage());
+            throw new Exception(e.getMessage());
         } finally {
             if (null != timerGetBulkJobDB) {
                 MetricsConfig.timerUpdateBulkJobId = MetricsConfig.timerBUpdateBulkJobId.tag("status", statusValue).register(MetricsConfig.meterRegistry());
