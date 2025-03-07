@@ -535,7 +535,7 @@ def get_bulk_job_status(job_id,include=None,logger=None):
     return response
 
 
-# Description: This function creates a metric profile using the Kruize createMetadataProfile API
+# Description: This function creates a metadata profile using the Kruize createMetadataProfile API
 # Input Parameters: metadata profile json
 def create_metadata_profile(metadata_profile_json_file):
     json_file = open(metadata_profile_json_file, "r")
@@ -553,26 +553,17 @@ def create_metadata_profile(metadata_profile_json_file):
 
 # Description: This function deletes the metadata profile
 # Input Parameters: metadata profile input json
-def delete_metadata_profile(input_json_file, invalid_header=False):
-    json_file = open(input_json_file, "r")
-    input_json = json.loads(json_file.read())
-
+def delete_metadata_profile(metadata_profile_name):
     print("\nDeleting the metadata profile...")
     url = URL + "/deleteMetadataProfile"
 
-    metadata_profile_name = input_json['metadata']['name']
     query_string = f"name={metadata_profile_name}"
 
     if query_string:
         url += "?" + query_string
     print("URL = ", url)
 
-    headers = {'content-type': 'application/xml'}
-    if invalid_header:
-        print("Invalid header")
-        response = requests.delete(url, headers=headers)
-    else:
-        response = requests.delete(url)
+    response = requests.delete(url)
 
     print(response)
     print("Response status code = ", response.status_code)
@@ -580,7 +571,8 @@ def delete_metadata_profile(input_json_file, invalid_header=False):
 
 
 # Description: This function lists the metadata profile from Kruize Autotune using GET listMetadataProfiles API
-# Input Parameters: metadata profile name and verbose - flag indicating granularity of data to be listed
+# Input Parameters: metadata profile name, verbose - flag indicating granularity of data to be listed
+# and logging - flag determining whether to output response data.
 def list_metadata_profiles(name=None, verbose=None, logging=True):
     print("\nListing the metadata profiles...")
 

@@ -55,7 +55,10 @@ def test_create_metadata_profile(cluster_type):
     input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
     form_kruize_url(cluster_type)
 
-    response = delete_metadata_profile(input_json_file)
+    json_data = json.load(open(input_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
     # Create metadata profile using the specified json
@@ -66,10 +69,6 @@ def test_create_metadata_profile(cluster_type):
 
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
-
-    json_file = open(input_json_file, "r")
-    input_json = json.loads(json_file.read())
-    metadata_profile_name = input_json['metadata']['name']
     assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
 
     response = list_metadata_profiles(name=metadata_profile_name)
@@ -81,7 +80,7 @@ def test_create_metadata_profile(cluster_type):
     errorMsg = validate_list_metadata_profiles_json(metadata_profile_json, list_metadata_profiles_schema)
     assert errorMsg == ""
 
-    response = delete_metadata_profile(input_json_file)
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
 
@@ -99,7 +98,7 @@ def test_create_duplicate_metadata_profile(cluster_type):
 
     form_kruize_url(cluster_type)
 
-    response = delete_metadata_profile(input_json_file)
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
     # Create metadata profile using the specified json
@@ -122,7 +121,7 @@ def test_create_duplicate_metadata_profile(cluster_type):
     assert data['status'] == ERROR_STATUS
     assert data['message'] == METADATA_PROFILE_EXISTS_MSG % metadata_profile_name
 
-    response = delete_metadata_profile(input_json_file)
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
 
@@ -156,7 +155,7 @@ def test_create_multiple_metadata_profiles(cluster_type):
         with open(temp_json_file, 'w') as file:
             json.dump(json_data, file, indent=4)
 
-        response = delete_metadata_profile(temp_json_file)
+        response = delete_metadata_profile(metadata_profile_name)
         print("delete metadata profile = ", response.status_code)
 
         response = create_metadata_profile(temp_json_file)
@@ -191,17 +190,26 @@ def test_create_multiple_metadata_profiles(cluster_type):
     errorMsg = validate_list_metadata_profiles_json(list_metadata_profiles_json, list_metadata_profiles_without_parameters_schema)
     assert errorMsg == ""
 
+    # Validate all the metadata profiles names present in /listMetadataProfiles JSON
+    list_metadata_profile_names = {obj.get("name") for obj in list_metadata_profiles_json}
+
+    for metadata_profile in metadata_profiles:
+        profile_name = metadata_profile['metadata']['name']
+
+        assert profile_name in list_metadata_profile_names, f"Metadata profile name '{profile_name}' is not found in the /listMetadataProfiles JSON!"
+
     # Write the profiles to the output file
     with open(output_json_file, 'w') as file:
         json.dump(metadata_profiles, file, indent=4)
 
     for i in range(num_metadata_profiles):
         metadata_profile = metadata_profiles[i]
+        metadata_profile_name = metadata_profile['metadata']['name']
 
         with open(temp_json_file, 'w') as file:
             json.dump(metadata_profile, file, indent=4)
 
-        response = delete_metadata_profile(temp_json_file)
+        response = delete_metadata_profile(metadata_profile_name)
         print("delete metadata profile = ", response.status_code)
 
 
@@ -219,6 +227,7 @@ def test_create_metadata_profiles_mandatory_fields(cluster_type, field, expected
     json_file = "/tmp/create_metadata_profile.json"
     input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
     json_data = json.load(open(input_json_file))
+    metadata_profile_name = json_data['metadata']['name']
 
     if field == "apiVersion":
         json_data.pop("apiVersion", None)
@@ -252,7 +261,7 @@ def test_create_metadata_profiles_mandatory_fields(cluster_type, field, expected
     with open(json_file, 'w') as file:
         file.write(data)
 
-    response = delete_metadata_profile(input_json_file)
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
     response = create_metadata_profile(json_file)
 
@@ -268,5 +277,5 @@ def test_create_metadata_profiles_mandatory_fields(cluster_type, field, expected
     else:
         assert data['message'] == CREATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG % field
 
-    response = delete_metadata_profile(input_json_file)
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)

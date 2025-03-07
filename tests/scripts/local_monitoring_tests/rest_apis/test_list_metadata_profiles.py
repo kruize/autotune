@@ -37,7 +37,10 @@ def test_list_metadata_profiles_with_name(cluster_type):
     input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
     form_kruize_url(cluster_type)
 
-    response = delete_metadata_profile(input_json_file)
+    json_data = json.load(open(input_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
     # Create metadata profile using the specified json
@@ -48,10 +51,6 @@ def test_list_metadata_profiles_with_name(cluster_type):
 
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
-
-    json_file = open(input_json_file, "r")
-    input_json = json.loads(json_file.read())
-    metadata_profile_name = input_json['metadata']['name']
     assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
 
     response = list_metadata_profiles(metadata_profile_name)
@@ -62,7 +61,7 @@ def test_list_metadata_profiles_with_name(cluster_type):
     assert errorMsg == ""
 
 
-    response = delete_metadata_profile(input_json_file)
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
 
@@ -75,7 +74,10 @@ def test_list_metadata_profiles_without_parameters(cluster_type):
     input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
     form_kruize_url(cluster_type)
 
-    response = delete_metadata_profile(input_json_file)
+    json_data = json.load(open(input_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
     # Create metadata profile using the specified json
@@ -86,10 +88,6 @@ def test_list_metadata_profiles_without_parameters(cluster_type):
 
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
-
-    json_file = open(input_json_file, "r")
-    input_json = json.loads(json_file.read())
-    metadata_profile_name = input_json['metadata']['name']
     assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
 
     response = list_metadata_profiles()
@@ -100,7 +98,7 @@ def test_list_metadata_profiles_without_parameters(cluster_type):
     assert errorMsg == ""
 
 
-    response = delete_metadata_profile(input_json_file)
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
 
@@ -113,13 +111,11 @@ def test_list_metadata_profiles_without_creating_profile(cluster_type):
     input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
     form_kruize_url(cluster_type)
 
-    response = delete_metadata_profile(input_json_file)
+    json_data = json.load(open(input_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
-
-
-    json_file = open(input_json_file, "r")
-    input_json = json.loads(json_file.read())
-    metadata_profile_name = input_json['metadata']['name']
 
     response = list_metadata_profiles(metadata_profile_name)
     data = response.json()
@@ -128,7 +124,7 @@ def test_list_metadata_profiles_without_creating_profile(cluster_type):
     assert data['message'] == LIST_METADATA_PROFILES_INVALID_NAME % metadata_profile_name
 
 
-    response = delete_metadata_profile(input_json_file)
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
 
@@ -148,7 +144,10 @@ def test_list_metadata_profiles_invalid_name(test_name, expected_status_code, na
     input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
     form_kruize_url(cluster_type)
 
-    response = delete_metadata_profile(input_json_file)
+    json_data = json.load(open(input_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
     # Create metadata profile using the specified json
@@ -159,10 +158,6 @@ def test_list_metadata_profiles_invalid_name(test_name, expected_status_code, na
 
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
-
-    json_file = open(input_json_file, "r")
-    input_json = json.loads(json_file.read())
-    metadata_profile_name = input_json['metadata']['name']
     assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
 
     response = list_metadata_profiles(name=name)
@@ -171,7 +166,7 @@ def test_list_metadata_profiles_invalid_name(test_name, expected_status_code, na
     assert response.status_code == ERROR_STATUS_CODE
     assert data['message'] == LIST_METADATA_PROFILES_INVALID_NAME % name
 
-    response = delete_metadata_profile(input_json_file)
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
 
@@ -186,7 +181,10 @@ def test_list_metadata_profiles_with_verbose(verbose, cluster_type):
     input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
     form_kruize_url(cluster_type)
 
-    response = delete_metadata_profile(input_json_file)
+    json_data = json.load(open(input_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
     # Create metadata profile using the specified json
@@ -197,10 +195,6 @@ def test_list_metadata_profiles_with_verbose(verbose, cluster_type):
 
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
-
-    json_file = open(input_json_file, "r")
-    input_json = json.loads(json_file.read())
-    metadata_profile_name = input_json['metadata']['name']
     assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
 
     response = list_metadata_profiles(verbose=verbose)
@@ -215,7 +209,7 @@ def test_list_metadata_profiles_with_verbose(verbose, cluster_type):
     assert errorMsg == ""
 
 
-    response = delete_metadata_profile(input_json_file)
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
 
@@ -230,7 +224,10 @@ def test_list_metadata_profiles_name_and_verbose(verbose, cluster_type):
     input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
     form_kruize_url(cluster_type)
 
-    response = delete_metadata_profile(input_json_file)
+    json_data = json.load(open(input_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 
     # Create metadata profile using the specified json
@@ -241,13 +238,9 @@ def test_list_metadata_profiles_name_and_verbose(verbose, cluster_type):
 
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
-
-    json_file = open(input_json_file, "r")
-    input_json = json.loads(json_file.read())
-    metadata_profile_name = input_json['metadata']['name']
     assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
 
-    response = list_metadata_profiles(name= metadata_profile_name, verbose=verbose)
+    response = list_metadata_profiles(name=metadata_profile_name, verbose=verbose)
     list_metadata_profiles_json = response.json()
 
     # Validate the json against the json schema
@@ -255,6 +248,6 @@ def test_list_metadata_profiles_name_and_verbose(verbose, cluster_type):
     assert errorMsg == ""
 
 
-    response = delete_metadata_profile(input_json_file)
+    response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
 

@@ -68,7 +68,6 @@ def validate_list_metadata_profiles_json(list_metadata_profiles_json, json_schem
             return err.message
 
 def validate_list_metadata_profiles_json_values(metadata_profile):
-    print(metadata_profile)
     validationErrorMsg = ""
 
     query_var = "query_variables"
