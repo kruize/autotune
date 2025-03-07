@@ -445,7 +445,7 @@ public class RecommendationEngine {
                         experimentName, interval_start_time, interval_end_time));
                 kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
             }
-        } catch (FetchMetricsError e) {
+        } catch (Exception | FetchMetricsError e) {
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_EXCEPTION,
                     experimentName, interval_end_time, e.getMessage()));
             LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));

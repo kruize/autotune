@@ -105,6 +105,15 @@ Here are the test scenarios:
 - Create namespace experiment specifying containers 
 - Create container experiment specifying namespaces
 - Create multiple experiments with valid namespace
+- Create namespace experiemnt with single model cost
+- Create namespace experiemnt with single model performance
+- Create namespace experiemnt with both cost and eprformance model
+- Create namespace experiemnt with single term short
+- Create namespace experiemnt with single term medium
+- Create namespace experiemnt with single term long
+- Create namespace experiemnt with short, medium, long term
+- 
+
 
 ### **List Recommendations API tests**
 
