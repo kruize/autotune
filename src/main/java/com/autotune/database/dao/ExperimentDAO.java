@@ -5,7 +5,7 @@ import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.table.*;
-import com.autotune.database.table.lm.BulkJob;
+import com.autotune.database.table.lm.KruizeBulkJob;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
@@ -148,9 +148,9 @@ public interface ExperimentDAO {
     ValidationOutputData addAuthenticationDetailsToDB(KruizeAuthenticationEntry kruizeAuthenticationEntry);
 
     // save ,get, partial update and delete  BulkJob data
-    ValidationOutputData bulkJobSave(BulkJob bulkJob);
+    ValidationOutputData bulkJobSave(KruizeBulkJob kruizeBulkJob);
 
-    BulkJob findBulkJobById(String jobId) throws Exception;
+    KruizeBulkJob findBulkJobById(String jobId) throws Exception;
 
     ValidationOutputData updateBulkJobByExperiment(String jobId, String experimentName, String notification, String recommendationJson) throws Exception;
 

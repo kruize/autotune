@@ -24,7 +24,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.*;
-import com.autotune.database.table.lm.BulkJob;
+import com.autotune.database.table.lm.KruizeBulkJob;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
@@ -659,11 +659,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     /**
      * Save/Update bulkJOB details into DB
      *
-     * @param bulkJob
+     * @param kruizeBulkJob
      * @return
      */
     @Override
-    public ValidationOutputData bulkJobSave(BulkJob bulkJob) {
+    public ValidationOutputData bulkJobSave(KruizeBulkJob kruizeBulkJob) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         Transaction tx = null;
         String statusValue = "failure";
@@ -672,7 +672,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
                 try {
                     tx = session.beginTransaction();
-                    session.saveOrUpdate(bulkJob);
+                    session.saveOrUpdate(kruizeBulkJob);
                     tx.commit();
                     // TODO: remove native sql query and transient
                     validationOutputData.setSuccess(true);
@@ -699,7 +699,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
-     * Retrieves a {@link BulkJob} object from the database based on the provided job ID.
+     * Retrieves a {@link KruizeBulkJob} object from the database based on the provided job ID.
      *
      * <p>This method queries the database for a bulk job using the given job ID. It also
      * records metrics for performance monitoring and logs any errors encountered during retrieval.</p>
@@ -709,12 +709,12 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * @throws Exception
      */
     @Override
-    public BulkJob findBulkJobById(String jobId) throws Exception {
-        BulkJob bulkJob = null;
+    public KruizeBulkJob findBulkJobById(String jobId) throws Exception {
+        KruizeBulkJob kruizeBulkJob = null;
         String statusValue = "failure";
         Timer.Sample timerGetBulkJobDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            bulkJob = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_BULKJOBS_BY_JOB_ID, BulkJob.class)
+            kruizeBulkJob = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_BULKJOBS_BY_JOB_ID, KruizeBulkJob.class)
                     .setParameter("jobId", jobId).getSingleResult();
             statusValue = "success";
         } catch (Exception e) {
@@ -726,7 +726,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 timerGetBulkJobDB.stop(MetricsConfig.timerLoadBulkJobId);
             }
         }
-        return bulkJob;
+        return kruizeBulkJob;
     }
 
     /**

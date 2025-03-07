@@ -20,7 +20,7 @@ import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.workerimpl.BulkJobManager;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
-import com.autotune.database.table.lm.BulkJob;
+import com.autotune.database.table.lm.KruizeBulkJob;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.MetricsConfig;
@@ -171,8 +171,8 @@ public class BulkService extends HttpServlet {
                 jobDetails = jobStatusMap.get(jobID);
             } else {
                 ExperimentDAO experimentDAO = new ExperimentDAOImpl();
-                BulkJob bulkJob = experimentDAO.findBulkJobById(jobID);
-                jobDetails = bulkJob.getBulkJobStatus();
+                KruizeBulkJob kruizeBulkJob = experimentDAO.findBulkJobById(jobID);
+                jobDetails = kruizeBulkJob.getBulkJobStatus();
 
                 GenericRestApiClient recommendationApiClient = new GenericRestApiClient();
                 String listRecommendationsURL = String.format(

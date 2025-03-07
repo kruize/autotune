@@ -17,7 +17,7 @@ package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
-import com.autotune.database.table.lm.BulkJob;
+import com.autotune.database.table.lm.KruizeBulkJob;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -161,10 +161,10 @@ public class BulkJobStatus {
 
     }
 
-    public BulkJob getBulkJobForDB(String experimentsString) throws Exception {
-        BulkJob bulkJob = null;
+    public KruizeBulkJob getBulkJobForDB(String experimentsString) throws Exception {
+        KruizeBulkJob kruizeBulkJob = null;
         try {
-            bulkJob = new BulkJob(getSummary().getJobID(),
+            kruizeBulkJob = new KruizeBulkJob(getSummary().getJobID(),
                     getSummary().getStatus(),
                     getSummary().getTotal_experiments(),
                     getSummary().getProcessed_experiments().get(),
@@ -179,7 +179,7 @@ public class BulkJobStatus {
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
-        return bulkJob;
+        return kruizeBulkJob;
     }
 
     public static enum NotificationType {
