@@ -227,9 +227,9 @@ def test_list_recommendations_namespace_single_result(test_name, expected_status
 
 @pytest.mark.sanity
 @pytest.mark.parametrize(
-    "test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold",
+    "test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, metadata_profile, mode, target_cluster, datasource, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, models, terms",
                          [
-                             ("list_accelerator_recommendations", SUCCESS_STATUS_CODE, "v2.0", "human_eval_exp", "cluster-1", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "container", "statefulset", "human-eval-benchmark", "unpartitioned", None, None, "human-eval-benchmark", "15min", "0.1"),
+                             ("list_accelerator_recommendations", SUCCESS_STATUS_CODE, "v2.0", "human_eval_exp", "cluster-1", "resource-optimization-local-monitoring", "cluster-metadata-local-monitoring", "monitor", "local", "prometheus-1", "container", "statefulset", "human-eval-benchmark", "unpartitioned", None, None, "human-eval-benchmark", "15min", "0.1", None, None),
                          ]
                          )
 def test_accelerator_recommendation_if_exists(
@@ -252,7 +252,9 @@ def test_accelerator_recommendation_if_exists(
         container_name,
         measurement_duration,
         threshold,
-        cluster_type):
+        cluster_type,
+        models,
+        terms):
     """
     Test Description: This test validates listRecommendations by passing a valid
     container experiment name which has gpu usage
@@ -296,6 +298,13 @@ def test_accelerator_recommendation_if_exists(
     if json_content[0]["kubernetes_objects"][0]["containers"][0]["container_name"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("containers")
 
+    if json_content[0]["recommendation_settings"]["model_settings"]["models"] == "":
+        json_content[0]["recommendation_settings"].pop("model_settings")
+    if json_content[0]["recommendation_settings"]["term_settings"]["terms"] == "":
+        json_content[0]["recommendation_settings"].pop("term_settings")
+
+
+    print(json_content)
     # Write the final JSON to the temp file
     with open(tmp_json_file, mode="w", encoding="utf-8") as message:
         json.dump(json_content, message, indent=4)
