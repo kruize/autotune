@@ -22,9 +22,18 @@ Kruize Kafka Producer internally uses the BulkService and publishes recommendati
  - User needs to hit a REST API POST request with a Payload as mentioned in the BulkAPI doc. For details, kindly refer to the [BulkAPI](BulkAPI.md) design doc.
  - Kafka enablement flag : `"isKafkaEnabled" : "true",` , needs to be set in the config to enable the usage of Kafka.
  - Kafka needs to be installed locally or in a cluster, and it's corresponding Bootstrap server URL should be added as an ENV.
+ - Kafka topics should be added as an ENV.
+ - Kafka response filters if required, should be added as an ENV.
 Example:
  -  `- name: KAFKA_BOOTSTRAP_SERVERS
       value: "<kafka-cluster-svc-name>.<kafka-ns>.svc.cluster.local:9092"`
+ -  `- name: KAFKA_TOPICS
+    value: "recommendations-topic,error-topic,summary-topic"`
+ -  `- name: KAFKA_RESPONSE_FILTER_INCLUDE
+    value: "summary"`
+ -  `- name: KAFKA_RESPONSE_FILTER_EXCLUDE
+    value: ""`
+
  - Consumer needs to be subscribed to the `recommendations-topic` to get the recommendations.
  - Subscribing to the `error-topic` and the `summary-topic` is optional
 

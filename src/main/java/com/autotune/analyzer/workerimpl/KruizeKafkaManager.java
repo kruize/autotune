@@ -21,6 +21,8 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.common.kafka.KruizeKafka;
 import com.autotune.common.kafka.KruizeKafkaProducer;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -44,6 +46,8 @@ public class KruizeKafkaManager {
      */
     public KruizeKafkaManager() {
         this.kafkaExecutorService = Executors.newFixedThreadPool(3);
+        // validate the Kafka Connection
+        validateKafkaConnection();
         // Load valid topics from config
         validTopics = KruizeDeploymentInfo.loadKafkaTopicsFromConfig();
     }
@@ -73,14 +77,13 @@ public class KruizeKafkaManager {
     void publishKafkaMessage(String topic, BulkJobStatus jobData, String experimentName, BulkJobStatus.Experiment experiment, Set<String> kafkaIncludeFilter, Set<String> kafkaExcludeFilter) {
         try {
             if (!validTopics.contains(topic)) {
-                LOGGER.error("Kafka topic '{}' does not exist! Skipping message publishing.", topic);
-                throw new Exception("Kafka topic '" + topic + "' does not exist!");
+                throw new Exception(String.format(KruizeConstants.KAFKA_CONSTANTS.MISSING_KAFKA_TOPIC, topic));
             }
             String kafkaMessage = BulkService.filterJson(jobData, kafkaIncludeFilter, kafkaExcludeFilter, experimentName);
             publish(new KruizeKafka(topic, kafkaMessage));
             experiment.setStatus(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.PUBLISHED);
         } catch (Exception e) {
-            LOGGER.error("Exception while publishing Kafka message: {}", e.getMessage());
+            LOGGER.error(e.getMessage());
             experiment.setStatus(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.PUBLISH_FAILED);
         }
     }
@@ -105,11 +108,34 @@ public class KruizeKafkaManager {
                         new KruizeKafkaProducer.SummaryResponseMessageProducer(kruizeKafka.getMessage());
                         break;
                     default:
-                        throw new IllegalArgumentException("Unknown topic: " + kruizeKafka.getTopic());
+                        throw new IllegalArgumentException(String.format(KruizeConstants.KAFKA_CONSTANTS.UNKNOWN_TOPIC, kruizeKafka.getTopic()));
                 }
             } catch (Exception e) {
-                LOGGER.error("Failed to publish to Kafka: {}", e.getMessage());
+                LOGGER.error(KruizeConstants.KAFKA_CONSTANTS.KAFKA_PUBLISH_FAILED, e.getMessage());
             }
         });
+    }
+
+    /**
+     * Validates the Kafka connection by attempting to connect to the configured Kafka bootstrap servers.
+     * Creates an AdminClient with the bootstrap server properties.
+     * Attempts to describe the Kafka cluster to check if nodes are reachable.
+     * Logs a debug message if the connection is successful.
+     * Throws a RuntimeException if the connection fails.
+     *
+     * @throws RuntimeException if the Kafka connection cannot be established.
+     */
+    private void validateKafkaConnection() {
+
+        Properties props = new Properties();
+        props.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, KruizeDeploymentInfo.kafka_bootstrap_servers);
+
+        try (AdminClient adminClient = AdminClient.create(props)) {
+            // Check if cluster nodes are reachable
+            adminClient.describeCluster().nodes().get();
+            LOGGER.debug(KruizeConstants.KAFKA_CONSTANTS.KAFKA_CONNECTION_SUCCESS, KruizeDeploymentInfo.kafka_bootstrap_servers);
+        } catch (Exception e) {
+            throw new RuntimeException(String.format(KruizeConstants.KAFKA_CONSTANTS.KAFKA_CONNECTION_FAILURE, KruizeDeploymentInfo.kafka_bootstrap_servers).concat(e.getMessage()));
+        }
     }
 }
