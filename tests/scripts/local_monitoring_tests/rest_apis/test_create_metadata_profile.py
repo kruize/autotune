@@ -38,7 +38,6 @@ mandatory_fields = [
     ("datasource", ERROR_500_STATUS_CODE, ERROR_STATUS),
     ("query_variables", ERROR_500_STATUS_CODE, ERROR_STATUS),
     ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("datasource", ERROR_500_STATUS_CODE, ERROR_STATUS),
     ("value_type", ERROR_500_STATUS_CODE, ERROR_STATUS),
     ("aggregation_functions", ERROR_500_STATUS_CODE, ERROR_STATUS),
     ("function", ERROR_500_STATUS_CODE, ERROR_STATUS),
@@ -243,8 +242,6 @@ def test_create_metadata_profiles_mandatory_fields(cluster_type, field, expected
         json_data.pop("query_variables", None)
     elif field == "name":
         json_data['query_variables'].pop("name", None)
-    elif field == "datasource":
-        json_data['query_variables'][0].pop("datasource", None)
     elif field == "value_type":
         json_data['query_variables'][0].pop("value_type", None)
     elif field == "aggregation_functions":
