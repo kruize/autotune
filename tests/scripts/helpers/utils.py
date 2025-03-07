@@ -85,7 +85,7 @@ CREATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONOb
 CREATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
 
 
-WHITESPACE_MODELS_TERMS = "Whitespace can not be entered as a term or model value."
+EMPTY_MODELS_TERMS = "Empty term or model value."
 INVALID_TERMS = "Term name is not supported. Use short, medium or long term."
 INVALID_MODELS = "Model name is not supported. Use cost or performance."
 MULTIPLE_TERMS = "Multiple terms are currently not supported for auto or recreate mode."
