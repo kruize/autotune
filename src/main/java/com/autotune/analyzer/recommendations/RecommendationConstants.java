@@ -257,6 +257,11 @@ public class RecommendationConstants {
                 RecommendationConstants.NotificationCodes.CRITICAL_MEMORY_LIMIT_NOT_SET,
                 RecommendationConstants.RecommendationNotificationMsgConstant.MEMORY_LIMIT_NOT_SET,
                 RecommendationConstants.RecommendationNotificationTypes.CRITICAL
+        ),
+        VPA_COULD_NOT_APPLY_RECOMMENDATION(
+                RecommendationConstants.NotificationCodes.VPA_COULD_NOT_APPLY_RECOMMENDATIONS,
+                "VPA COULD NOT APPLY RECOMMENDATION",
+                RecommendationConstants.RecommendationNotificationTypes.CRITICAL
         );
 
 
@@ -500,6 +505,7 @@ public class RecommendationConstants {
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_DISK_END = 526999;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_POWER_START = 527000;
         public static final int SECTION_CRITICAL_SUBSECTION_DATA_SUBSYSTEM_POWER_END = 527999;
+        public static final int VPA_COULD_NOT_APPLY_RECOMMENDATIONS = 527998;
         public static final HashMap<Integer, List<Integer>> CONTRADICTING_MAP = new HashMap<>();
 
         // Add contents in static block instead of initialising every var as static

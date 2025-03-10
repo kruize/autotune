@@ -751,8 +751,6 @@ public class AnalyzerConstants {
         public static final int DEFAULT_SLEEP_INTERVAL = 60;
         public static final int DEFAULT_INITIAL_DELAY = 30;
 
-        public static final String AUTOSCALER_OPTIONS = "autoscaler_options";
-        public static final String EXCLUDE_NAMESPACES = "exclude_namespaces";
         public static final String REGEX_FOR_DRY_RUN_ERROR = "Message: (.*?)(?=\\. Received status:)";
 
         public static final class SupportedUpdaters {

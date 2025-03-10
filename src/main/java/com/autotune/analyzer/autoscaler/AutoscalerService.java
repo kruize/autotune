@@ -16,7 +16,6 @@
 
 package com.autotune.analyzer.autoscaler;
 
-import com.autotune.analyzer.autoscaler.validator.AutoscalerGuard;
 import com.autotune.analyzer.autoscaler.validator.ResourceValidator;
 import com.autotune.analyzer.autoscaler.vpa.VpaAutoscalerImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
@@ -50,22 +49,16 @@ public class AutoscalerService {
                     AutoscalerImpl autoscaler = new AutoscalerImpl();
                     Map<String, KruizeObject> experiments = getAutoModeExperiments();
                     for (Map.Entry<String, KruizeObject> experiment : experiments.entrySet()) {
-                        // autoscaler guard checks
-                        ValidationOutputData validationOutputData = AutoscalerGuard.checkAutoscalerGuard(experiment.getValue());
-                        if (validationOutputData.isSuccess()) {
-                            KruizeObject kruizeObject = autoscaler.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
+                        KruizeObject kruizeObject = autoscaler.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
 
-                            // TODO:// add default updater in kruizeObject and check if GPU recommendations are present
-                            if (kruizeObject.getDefaultUpdater() == null) {
-                                kruizeObject.setDefaultUpdater(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA);
-                            }
+                        // TODO:// add default updater in kruizeObject and check if GPU recommendations are present
+                        if (kruizeObject.getDefaultUpdater() == null) {
+                            kruizeObject.setDefaultUpdater(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA);
+                        }
 
-                            if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA)) {
-                                VpaAutoscalerImpl vpaUpdater = VpaAutoscalerImpl.getInstance();
-                                vpaUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
-                            }
-                        } else {
-                            LOGGER.error(validationOutputData.getMessage());
+                        if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA)) {
+                            VpaAutoscalerImpl vpaUpdater = VpaAutoscalerImpl.getInstance();
+                            vpaUpdater.applyResourceRecommendationsForExperiment(kruizeObject);
                         }
 
                         if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.ACCELERATOR)) {
