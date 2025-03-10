@@ -174,7 +174,7 @@ def invoke_bulk_with_time_range_labels(resultsdir, org_id, cluster_id, current_s
         script_path = "../../../../scripts/kruize_metrics.py"
         cluster = "openshift"
 
-        timeout = "60m"
+        timeout = "300m"
         csv_file = f"kruizeMetrics-{tsdb_id}.csv"
         kruize_metrics_res_dir = f"{resultsdir}/results"
 
