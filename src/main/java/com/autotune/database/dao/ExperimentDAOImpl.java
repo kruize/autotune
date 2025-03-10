@@ -736,6 +736,16 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * in PostgreSQL. It updates the notification and recommendation data for a given experiment within
      * the bulk job record.</p>
      *
+     * updateBulkJobByExperiment is an important function that is intended to be called frequently for each experiment per job_id.
+     *   However,  avoid these frequent updates to the bulk job. Instead, we can leverage the kruize_lm_recommendations table
+     *   to derive the status of each experiment. But kept this function as of now JIC if there is any need comes up for ACM usecase
+     *   Current Flow:
+     *   When Kruize receives a bulk request, an immediate entry is created in kruize_bulkjobs.
+     *   A subsequent entry is added with total_experiments and metadata.
+     *   A final update occurs once all experiments are completed, but not for every individual experiment.
+     *   The kruize_lm_recommendations table contains an entry for each experiment.
+     *   So only three calls to kruize_bulkjob table per bulk request
+     *   By utilizing kruize_lm_recommendations, we can reduce the number of updates to kruize_bulkjobs.
      * <p>Performance metrics are recorded, and any errors encountered during execution are logged.</p>
      *
      * @param jobId
