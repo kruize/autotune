@@ -17,6 +17,7 @@ import pytest
 import json
 import sys
 import copy
+import os
 
 
 sys.path.append("../../")
@@ -201,12 +202,11 @@ def test_create_multiple_metadata_profiles(cluster_type):
     with open(output_json_file, 'w') as file:
         json.dump(metadata_profiles, file, indent=4)
 
+    os.remove(temp_json_file)
+
     for i in range(num_metadata_profiles):
         metadata_profile = metadata_profiles[i]
         metadata_profile_name = metadata_profile['metadata']['name']
-
-        with open(temp_json_file, 'w') as file:
-            json.dump(metadata_profile, file, indent=4)
 
         response = delete_metadata_profile(metadata_profile_name)
         print("delete metadata profile = ", response.status_code)
