@@ -851,6 +851,8 @@ public class KruizeConstants {
         public static final String EXPERIMENTS = "experiments";
         public static final String EXPERIMENTS_FILTER = "experimentFilter";
         public static final String JOB_FILTER = "jobFilter";
+        public static final String BULK_JOB_SAVE_ERROR = "Not able to save experiment due to {}";
+        public static final String BULK_JOB_LOAD_ERROR = "Not able to load bulk JOB {} due to {}";
 
 
         // TODO : Bulk API Create Experiments defaults
