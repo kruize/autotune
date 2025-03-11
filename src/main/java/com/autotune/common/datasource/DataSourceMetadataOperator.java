@@ -191,12 +191,14 @@ public class DataSourceMetadataOperator {
         // Map for storing queries
         Map<String, String> queries = new HashMap<>();
 
+        MetadataProfile metadataProfile = MetadataProfileCollection.getInstance().getMetadataProfileCollection().get(metadataProfileName);
+
         // Populate filters for each field
         fields.forEach(field -> {
             String includeRegex = includeResources.getOrDefault(field + "Regex", "");
             String excludeRegex = excludeResources.getOrDefault(field + "Regex", "");
             String filter = constructDynamicFilter(field, includeRegex, excludeRegex);
-            String queryTemplate = getQueryTemplate(field, metadataProfileName); // Helper to map fields to PromQL queries
+            String queryTemplate = getQueryTemplate(field, metadataProfile); // Helper to map fields to PromQL queries
             queries.put(field, String.format(queryTemplate, filter));
         });
 
@@ -294,9 +296,9 @@ public class DataSourceMetadataOperator {
     }
 
     // Helper function to map fields to query templates
-    private String getQueryTemplate(String field, String metadataProfileName) {
+    private String getQueryTemplate(String field, MetadataProfile metadataProfile) {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
-        MetadataProfile metadataProfile = MetadataProfileCollection.getInstance().getMetadataProfileCollection().get(metadataProfileName);
+
         return switch (field) {
             case "namespace" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.NAMESPACE);
             case "workload" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.WORKLOAD);

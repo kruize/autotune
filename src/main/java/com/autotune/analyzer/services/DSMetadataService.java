@@ -19,6 +19,8 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.serviceObjects.DSMetadataAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -72,7 +74,9 @@ public class DSMetadataService extends HttpServlet {
      * Example:
      * {
      *     "version": "v1.0",
-     *     "datasource_name": "exampleDataSourceName"
+     *     "datasource_name": "exampleDataSourceName",
+     *     "metadata_profile": "cluster-metadata-local-monitoring",
+     *     "measurement_duration": "15min"
      * }
      * where:
      * The `version` field is the version of the API, and the `datasource_name` field is the datasource name
@@ -118,8 +122,6 @@ public class DSMetadataService extends HttpServlet {
             if (validationOutputData.isSuccess()) {
 
                 String dataSourceName = metadataAPIObject.getDataSourceName();
-                String metadataProfileName = metadataAPIObject.getMetadataProfile();
-                Integer measurementDuration = metadataAPIObject.getMeasurement_duration_inInteger();
 
                 // fetch the DatasourceInfo object based on datasource name
                 DataSourceInfo datasource;
@@ -132,6 +134,24 @@ public class DSMetadataService extends HttpServlet {
                             new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_DATASOURCE_NAME_METADATA_EXCPTN),
                             HttpServletResponse.SC_BAD_REQUEST,
                             String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.DATASOURCE_METADATA_IMPORT_ERROR_MSG, dataSourceName)
+                    );
+                    return;
+                }
+
+                String metadataProfileName = metadataAPIObject.getMetadataProfile();
+                if (null == metadataAPIObject.getMeasurementDurationMinutes()) {
+                    metadataAPIObject.setMeasurementDurationMinutes(AnalyzerConstants.MetadataProfileConstants.DEFAULT_MEASUREMENT_DURATION);
+                }
+                Integer measurementDuration = metadataAPIObject.getMeasurement_duration_inInteger();
+
+                // Verify if metadata_profile specified is valid
+                if (null == MetadataProfileCollection.getInstance().getMetadataProfileCollection().get(metadataProfileName)) {
+                    sendErrorResponse(
+                            inputData,
+                            response,
+                            new Exception(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_METADATA_PROFILE_NAME_EXCPTN),
+                            HttpServletResponse.SC_BAD_REQUEST,
+                            String.format(AnalyzerErrorConstants.APIErrors.DSMetadataAPI.INVALID_METADATA_PROFILE_NAME_MSG, metadataProfileName)
                     );
                     return;
                 }
@@ -199,7 +219,6 @@ public class DSMetadataService extends HttpServlet {
 
     }
 
-    //TODO - Add measurement_duration if required
     private List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.VERSION,
             AnalyzerConstants.DATASOURCE_NAME,

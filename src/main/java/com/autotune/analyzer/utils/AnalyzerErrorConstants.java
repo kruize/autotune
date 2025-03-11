@@ -254,6 +254,8 @@ public class AnalyzerErrorConstants {
             public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_EXCPTN = "Invalid DataSourceMetadata object";
             public static final String DATASOURCE_METADATA_MISSING_REQUEST_INPUT_EXCPTN = "Request input data cannot be null or empty";
             public static final String DATASOURCE_METADATA_CONNECTION_FAILED = "Metadata cannot be imported, datasource connection refused or timed out";
+            public static final String INVALID_METADATA_PROFILE_NAME_EXCPTN = "Invalid MetadataProfile Name";
+            public static final String INVALID_METADATA_PROFILE_NAME_MSG = "MetadataProfile - %s either does not exist or is not valid";
         }
 
         public static final class ListMetricProfileAPI {
