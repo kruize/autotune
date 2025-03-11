@@ -19,6 +19,8 @@ import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
@@ -63,8 +65,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
-import static com.autotune.operator.KruizeDeploymentInfo.experiments_url;
+import static com.autotune.operator.KruizeDeploymentInfo.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.*;
 
@@ -137,6 +138,9 @@ public class BulkJobManager implements Runnable {
         DataSourceMetadataInfo metadataInfo = null;
         DataSourceManager dataSourceManager = new DataSourceManager();
         DataSourceInfo datasource = null;
+        MetadataProfile metadataProfile;
+        String metadataProfileName = null;
+        Integer measurementDuration = 0;
         String labelString = null;
         Map<String, String> includeResourcesMap = new HashMap<>();
         Map<String, String> excludeResourcesMap = new HashMap<>();
@@ -158,14 +162,38 @@ public class BulkJobManager implements Runnable {
                 notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
                 setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
             }
+
+            //check for "is_ros_enabled" flag and specify
+            if ((is_ros_enabled) && (null == this.bulkInput.getMetadata_profile())) {
+                 metadataProfile = MetadataProfileCollection.getInstance().
+                        loadMetadataProfileFromCollection(AnalyzerConstants.MetadataProfileConstants.CLUSTER_METADATA_LOCAL_MON_PROFILE);
+                this.bulkInput.setMetadata_profile(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText());
+            }
+
+            try{
+                metadataProfileName = this.bulkInput.getMetadata_profile();
+                metadataProfile = MetadataProfileCollection.getInstance().loadMetadataProfileFromCollection(metadataProfileName);
+
+                if (null == this.bulkInput.getMeasurement_duration()) {
+                    this.bulkInput.setMeasurement_duration(AnalyzerConstants.MetadataProfileConstants.DEFAULT_MEASUREMENT_DURATION);
+                }
+                measurementDuration = this.bulkInput.getMeasurement_duration_inInteger();
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage());
+                e.printStackTrace();
+                BulkJobStatus.Notification notification = METADATA_PROFILE_NOT_FOUND;
+                notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
+                setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
+            }
+
             if (null != datasource) {
                 JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
                 if (null != daterange) {
-                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get(START_TIME),
-                            (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), includeResourcesMap, excludeResourcesMap);
+                    metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, (Long) daterange.get(START_TIME),
+                            (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), measurementDuration, includeResourcesMap, excludeResourcesMap);
                 } else {
-                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, 0, 0,
-                            0, includeResourcesMap, excludeResourcesMap);
+                    metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, 0, 0,
+                            0, measurementDuration, includeResourcesMap, excludeResourcesMap);
                 }
                 if (null == metadataInfo) {
                     setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);

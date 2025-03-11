@@ -279,7 +279,7 @@ public class KruizeConstants {
         // Config changes JSON Keys
         public static final String MODEL_SETTINGS = "model_settings";
         public static final String TERM_SETTINGS = "term_settings";
-        public static final String METADATA_PROFILE = "metadataProfile";
+        public static final String METADATA_PROFILE = "metadata_profile";
 
         private JSONKeys() {
         }
@@ -912,6 +912,11 @@ public class KruizeConstants {
                     "ConnectTimeoutException: cannot establish a data source connection in a given time frame due to connectivity issues. (%s)",
                     503
             );
+            public static final BulkJobStatus.Notification METADATA_PROFILE_NOT_FOUND = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Metadata profile not found. (%s)",
+                    400
+            );
 
 
             // More notification constants can be added here as needed
@@ -972,7 +977,7 @@ public class KruizeConstants {
             public static final String PROCESS_METADATA_PROFILE_OBJECT_ERROR = "Failed to process metadata of metadataProfile object due to : {}";
             public static final String PROCESS_QUERY_VARIABLES_ERROR = "Error occurred while processing query_variables data due to : {}";
             public static final String CONVERT_METADATA_PROFILE_TO_DB_OBJECT_FAILURE = "Failed to convert MetadataProfile Object to MetadataProfile DB object due to {}";
-
+            public static final String INVALID_METADATA_PROFILE = "Metadata profile name either does not exist or is not valid: ";
             private MetadataProfileErrorMsgs() {
             }
         }

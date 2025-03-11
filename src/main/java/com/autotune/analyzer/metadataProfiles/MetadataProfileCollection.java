@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.analyzer.metadataProfiles;
 
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
@@ -93,5 +95,17 @@ public class MetadataProfileCollection {
             LOGGER.info(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_ADDED + "{}", metadataProfileName);
             metadataProfileCollection.put(metadataProfileName, metadataProfile);
         }
+    }
+
+    public MetadataProfile loadMetadataProfileFromCollection(String metadataProfileName) throws Exception {
+        MetadataProfile metadataProfile = null;
+        if (null != metadataProfileName && !metadataProfileName.isEmpty()) {
+            metadataProfile = metadataProfileCollection.get(metadataProfileName);
+        }
+
+        if (null == metadataProfile) {
+            throw new Exception(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.INVALID_METADATA_PROFILE + metadataProfileName);
+        }
+        return metadataProfile;
     }
 }

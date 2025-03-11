@@ -26,6 +26,8 @@ public class BulkInput {
     private TimeRange time_range;
     private String datasource;
     private Webhook webhook;
+    private String metadata_profile;
+    private String measurement_duration;
 
     // Getters and Setters
 
@@ -62,6 +64,19 @@ public class BulkInput {
 
     public void setWebhook(Webhook webhook) {
         this.webhook = webhook;
+    }
+
+    public String getMetadata_profile() { return metadata_profile;}
+
+    public void setMetadata_profile(String metadata_profile) { this.metadata_profile = metadata_profile;}
+
+    public String getMeasurement_duration() {return measurement_duration;}
+
+    public void setMeasurement_duration(String measurement_duration) {this.measurement_duration = measurement_duration;}
+
+    public Integer getMeasurement_duration_inInteger() {
+        String measurementDuration = getMeasurement_duration().replaceAll("\\D+", "");;
+        return Integer.parseInt(measurementDuration);
     }
 
     // Nested class for FilterWrapper that contains 'exclude' and 'include'
