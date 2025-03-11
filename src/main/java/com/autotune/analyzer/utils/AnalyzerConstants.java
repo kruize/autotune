@@ -98,8 +98,10 @@ public class AnalyzerConstants {
     public static final String TRIAL_RESULT_SUMMARY = "trialSummaryResult";
     public static final String CYCLE_DATA_MAP = "cycleDataMap";
     public static final String METRICS = "metrics";
+    public static final String SUCCESS_STATUS = "SUCCESS";
     public static final String UUID_VARIABLE = "$UUID$";
     public static final String PROFILE_VARIABLE = "$GPU_I_PROFILE$";
+    public static final String ERROR_STATUS = "ERROR";
 
 
     private AnalyzerConstants() {
@@ -643,6 +645,7 @@ public class AnalyzerConstants {
         public static final String METADATA_PROFILE_PLURALS = "kruizemetadataprofiles";
         public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
         public static final String DATASOURCE = "datasource";
+        public static final String METADATA_PROFILE_NAME_PARAMETER = "metadataProfileName";
     }
 
     public static final class CommonProfileMsgs {

@@ -19,6 +19,7 @@ The Kruize Autotune project has the following entities:
 2. kruize_results
 3. kruize_recommendations
 4. kruize_performance_profiles
+5. kruize_bulkjobs
 
 ## **kruize_experiments**
 
@@ -818,4 +819,139 @@ curl --location --request POST 'http://127.0.0.1:8080/createPerformanceProfile' 
 
 ```
 insert into kruize_performance_profiles; 
+```
+
+## **kruize_bulkjobs**
+
+---
+
+This table stores job-level data, including information such as job status, start and end times, notification details, experiments details total and processed counts.
+
+```sql
+create table IF NOT EXISTS kruize_bulkjobs (
+    job_id VARCHAR(36) not null, 
+    experiments jsonb, end_time timestamp(6), 
+    start_time timestamp(6), 
+    metadata jsonb, 
+    notifications jsonb, 
+    payload jsonb, 
+    processed_count integer, 
+    status varchar(255), 
+    total_count integer, 
+    webhook jsonb, 
+    primary key (job_id)
+)
+```
+ps `payload` is equivalent to json parameter name called 'input' 
+Example
+```json
+{
+  "summary": {
+    "status": "COMPLETED",
+    "total_experiments": 1143,
+    "processed_experiments": 1143,
+    "notifications": {},
+    "input": {
+      "filter": {
+        "exclude": {
+          "namespace": null,
+          "workload": null,
+          "containers": null,
+          "labels": null
+        },
+        "include": {
+          "namespace": null,
+          "workload": null,
+          "containers": null,
+          "labels": null
+        }
+      },
+      "time_range": null,
+      "datasource": "prometheus-1",
+      "webhook": null
+    },
+    "job_id": "c1840d71-5e6f-4615-bb5e-ed30a9eaaff6",
+    "job_start_time": "2025-03-06T01:39:45.394Z",
+    "job_end_time": "2025-03-06T01:44:28.716Z"
+  },
+  "experiments": {
+    "prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-29017635(job)|collect-profiles": {
+      "name": null,
+      "status": "PROCESSED",
+      "apis": {
+        "create": {
+          "response": {
+            "message": "Experiment registered successfully with Kruize. View registered experiments at /listExperiments",
+            "httpcode": 201,
+            "documentationLink": "",
+            "status": "SUCCESS"
+          },
+          "request": null
+        },
+        "recommendations": {
+          "response": [
+            {
+              "cluster_name": "default",
+              "experiment_type": "container",
+              "kubernetes_objects": [
+                {
+                  "type": "job",
+                  "name": "collect-profiles-29017635",
+                  "namespace": "openshift-operator-lifecycle-manager",
+                  "containers": [
+                    {
+                      "container_image_name": "quay.io/openshift-release-dev/ocp-v4.0-art-dev@sha256:82ff155c5e7118a86952f86cba21da8e249f74f0a8f1ac0f2161e2bc1e3b3dbf",
+                      "container_name": "collect-profiles",
+                      "recommendations": {
+                        "version": "1.0",
+                        "notifications": {
+                          "120001": {
+                            "type": "info",
+                            "message": "There is not enough data available to generate a recommendation.",
+                            "code": 120001
+                          }
+                        },
+                        "data": {}
+                      }
+                    }
+                  ]
+                }
+              ],
+              "version": "v2.0",
+              "experiment_name": "prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-29017635(job)|collect-profiles"
+            }
+          ]
+        }
+      },
+      "status_history": [
+        {
+          "status": "UNPROCESSED",
+          "timestamp": "2025-03-06T01:39:49.255Z"
+        },
+        {
+          "status": "PROCESSED",
+          "timestamp": "2025-03-06T01:39:54.064Z"
+        }
+      ],
+      "notifications": null
+    }
+  }
+}
+```
+When handling an "experiments" column with a large JSON field being updated by multiple threads, the primary considerations are ensuring concurrency, minimizing contention, and optimizing performance. This can be achieved by:
+
+Optimizing Updates:
+Partial Updates:
+    Update only the specific fields within the JSON, rather than replacing the entire document. The jsonb_set() function can be used for partial updates.
+Batch Updates: 
+    Group multiple updates into a single transaction to reduce overhead and minimize contention.
+
+Note: This approach is particularly relevant to PostgreSQL databases.
+
+**Example:**
+Let's say we want to update a part of the experiments field, for example, changing the value of the recommendations.status field of a specific experiment.
+```sql
+UPDATE kruize_bulkjobs
+SET experiments = jsonb_set(experiments, '{prometheus-1|default|openshift-operator-lifecycle-manager|collect-profiles-28902795(job)|collect-profiles,recommendations,status}', '"NEW_STATUS"')
+WHERE job_id = '3d14daf3-0f27-4848-8f5e-d9e890c5730e';
 ```
