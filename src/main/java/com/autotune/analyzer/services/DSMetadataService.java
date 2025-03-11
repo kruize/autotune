@@ -119,7 +119,7 @@ public class DSMetadataService extends HttpServlet {
 
                 String dataSourceName = metadataAPIObject.getDataSourceName();
                 String metadataProfileName = metadataAPIObject.getMetadataProfile();
-                String measurementDuration = metadataAPIObject.getMeasurementDurationMinutes();
+                Integer measurementDuration = metadataAPIObject.getMeasurement_duration_inInteger();
 
                 // fetch the DatasourceInfo object based on datasource name
                 DataSourceInfo datasource;

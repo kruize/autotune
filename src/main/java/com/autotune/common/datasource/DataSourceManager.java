@@ -68,7 +68,7 @@ public class DataSourceManager {
      * @param excludeResources
      * @return
      */
-    public DataSourceMetadataInfo importMetadataFromDataSource(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps, String measurementDuration, Map<String, String> includeResources,
+    public DataSourceMetadataInfo importMetadataFromDataSource(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps, int measurementDuration, Map<String, String> includeResources,
                                                                Map<String, String> excludeResources) throws DataSourceDoesNotExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         String statusValue = "failure";
         io.micrometer.core.instrument.Timer.Sample timerImportMetadata = Timer.start(MetricsConfig.meterRegistry());
@@ -134,7 +134,7 @@ public class DataSourceManager {
      * @param dataSourceMetadataInfo The existing DataSourceMetadataInfo object containing the current
      *                               metadata information of the data source.
      */
-    public void updateMetadataFromDataSource(String metadataProfileName, DataSourceInfo dataSource, DataSourceMetadataInfo dataSourceMetadataInfo, String measurementDuration) {
+    public void updateMetadataFromDataSource(String metadataProfileName, DataSourceInfo dataSource, DataSourceMetadataInfo dataSourceMetadataInfo, int measurementDuration) {
         try {
             if (null == dataSource) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);

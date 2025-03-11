@@ -1,5 +1,6 @@
 package com.autotune.common.data.dataSourceMetadata;
 
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.JsonArray;

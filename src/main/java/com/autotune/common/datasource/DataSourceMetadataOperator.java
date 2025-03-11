@@ -15,6 +15,8 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.utils.GenericRestApiClient;
@@ -74,7 +76,7 @@ public class DataSourceMetadataOperator {
      * @param excludeResources
      */
     public DataSourceMetadataInfo createDataSourceMetadata(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
-                                                           long endTime, int steps,  String measurementDuration, Map<String, String> includeResources,
+                                                           long endTime, int steps,  int measurementDuration, Map<String, String> includeResources,
                                                            Map<String, String> excludeResources) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         return processQueriesAndPopulateDataSourceMetadataInfo(metadataProfileName, dataSourceInfo, uniqueKey, startTime,
                 endTime, steps, measurementDuration, includeResources, excludeResources);
@@ -120,7 +122,7 @@ public class DataSourceMetadataOperator {
      *                                                                                                                                                                                                                                                                                 need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
     public DataSourceMetadataInfo updateDataSourceMetadata(String metadataProfileName,DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
-                                                           long endTime, int steps,  String measurementDuration, Map<String, String> includeResources,
+                                                           long endTime, int steps, int measurementDuration, Map<String, String> includeResources,
                                                            Map<String, String> excludeResources) throws Exception {
         return processQueriesAndPopulateDataSourceMetadataInfo(metadataProfileName, dataSourceInfo, uniqueKey, startTime,
                 endTime, steps, measurementDuration, includeResources, excludeResources);
@@ -166,7 +168,7 @@ public class DataSourceMetadataOperator {
      * todo rename processQueriesAndFetchClusterMetadataInfo
      */
     public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey,
-                                                                                  long startTime, long endTime, int steps,  String measurementDuration,
+                                                                                  long startTime, long endTime, int steps, int measurementDuration,
                                                                                   Map<String, String> includeResources,
                                                                                   Map<String, String> excludeResources) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
@@ -221,9 +223,9 @@ public class DataSourceMetadataOperator {
                     replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
         }
 
-        namespaceQuery = namespaceQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, measurementDuration);
-        workloadQuery = workloadQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, measurementDuration);
-        containerQuery = containerQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, measurementDuration);
+        namespaceQuery = namespaceQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
+        workloadQuery = workloadQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
+        containerQuery = containerQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
 
         LOGGER.info("namespaceQuery: {}", namespaceQuery);
         LOGGER.info("workloadQuery: {}", workloadQuery);

@@ -47,4 +47,9 @@ public class DSMetadataAPIObject {
     public String getMeasurementDurationMinutes() { return measurement_durationMinutes; }
 
     public void setMeasurementDurationMinutes(String measurement_durationMinutes) {this.measurement_durationMinutes = measurement_durationMinutes;}
+
+    public Integer getMeasurement_duration_inInteger() {
+        String measurementDuration = getMeasurementDurationMinutes().replaceAll("\\D+", "");;
+        return Integer.parseInt(measurementDuration);
+    }
 }
