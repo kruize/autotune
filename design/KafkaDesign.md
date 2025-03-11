@@ -34,6 +34,20 @@ Example:
  -  `- name: KAFKA_RESPONSE_FILTER_EXCLUDE
     value: ""`
 
+ - The Include filter has a default value `summary`, which will return the summary of all the experiments. We can also modify this to get more tailored response. User can pass multiple comma separated values here.
+ - **Example**: `"summary, job_id, status"` will give the kafka reponse like this:
+
+   ```json
+   {
+     "summary": {
+       "status": "COMPLETED",
+       "job_id": "ab803e6a-cb06-436a-9721-45a807a15f13"
+     }
+   }
+   ```
+
+ - You can find more examples in the BulkAPI Design doc [here](BulkAPI.md#query-parameters)
+ - Similarly, we can add the same filter names in the exclude filter as well to get the customised response.
  - Consumer needs to be subscribed to the `recommendations-topic` to get the recommendations.
  - Subscribing to the `error-topic` and the `summary-topic` is optional
 
