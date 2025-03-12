@@ -127,7 +127,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
             double cpuRequestIntervalMax;
             double cpuRequestIntervalMin;
             double cpuUsagePod = 0;
-            int numPods;
+            int numPods = 0;
 
             // Use the Max value when available, if not use the Avg
             double cpuUsage = (cpuUsageMax > 0) ? cpuUsageMax : cpuUsageAvg;
