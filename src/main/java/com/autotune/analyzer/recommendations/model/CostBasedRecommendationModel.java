@@ -120,6 +120,9 @@ public class CostBasedRecommendationModel implements RecommendationModel {
             double cpuThrottleMax = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
             double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
             double cpuThrottleMin = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
+            Optional<MetricResults> memoryUsageResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
+            double memUsageAvg = memoryUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+            double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
 
             double cpuRequestIntervalMax;
             double cpuRequestIntervalMin;
@@ -136,11 +139,14 @@ public class CostBasedRecommendationModel implements RecommendationModel {
                 cpuRequestIntervalMax = cpuUsageTotal;
             } else {
                 // Sum/Avg should give us the number of pods
-                if (0 != cpuUsageAvg) {
+                if (0 != memUsageAvg) {
+                    numPods = (int) Math.ceil(memUsageSum / memUsageAvg);
+                }
+                if (0 == numPods && 0 != cpuUsageAvg) {
                     numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
-                    if (0 < numPods) {
-                        cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
-                    }
+                }
+                if (0 < numPods) {
+                    cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
                 }
                 cpuRequestIntervalMax = Math.max(cpuUsagePod, cpuUsageTotal);
             }
@@ -244,11 +250,11 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         double memUsage = 0;
         int numPods = 0;
 
-        if (0 != cpuUsageAvg) {
-            numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
-        }
-        if (0 == numPods && 0 != memUsageAvg) {
+        if (0 != memUsageAvg) {
             numPods = (int) Math.ceil(memUsageSum / memUsageAvg);
+        }
+        if (0 == numPods && 0 != cpuUsageAvg) {
+            numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
         }
         if (0 < numPods) {
             memUsage = (memUsageSum / numPods);
@@ -346,6 +352,9 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         double cpuThrottleAvg = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
         double cpuThrottleMax = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
         double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
+        Optional<MetricResults> memoryUsageResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
+        double memUsageAvg = memoryUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+        double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
         double cpuRequestInterval = 0.0;
         double cpuUsagePod = 0;
         int numPods = 0;
@@ -357,11 +366,14 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         if (CPU_ONE_CORE > cpuUsageTotal) {
             cpuRequestInterval = cpuUsageTotal;
         } else {
-            if (0 != cpuUsageAvg) {
+            if (0 != memUsageAvg) {
+                numPods = (int) Math.ceil(memUsageSum / memUsageAvg);
+            }
+            if (numPods ==0 & 0 != cpuUsageAvg) {
                 numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
-                if (0 < numPods) {
-                    cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
-                }
+            }
+            if (0 < numPods) {
+                cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
             }
             cpuRequestInterval = Math.max(cpuUsagePod, cpuUsageTotal);
         }
