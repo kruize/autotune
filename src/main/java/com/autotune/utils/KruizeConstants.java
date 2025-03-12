@@ -865,6 +865,8 @@ public class KruizeConstants {
         public static final String EXPERIMENTS = "experiments";
         public static final String EXPERIMENTS_FILTER = "experimentFilter";
         public static final String JOB_FILTER = "jobFilter";
+        public static final String BULK_JOB_SAVE_ERROR = "Not able to save experiment due to {}";
+        public static final String BULK_JOB_LOAD_ERROR = "Not able to load bulk JOB {} due to {}";
 
 
         // TODO : Bulk API Create Experiments defaults
@@ -1000,6 +1002,8 @@ public class KruizeConstants {
         public static final String CREATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s created successfully.";
         public static final String VIEW_METADATA_PROFILES_MSG = " View Metadata Profiles at /listMetadataProfiles";
         public static final String ADD_METADATA_PROFILE_TO_DB_WITH_VERSION = "Added Metadata Profile : {} into the DB with version: {}";
+        public static final String DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully.";
+        public static final String DELETE_METADATA_PROFILE_FROM_DB_SUCCESS_MSG = "Metadata profile deleted successfully from the DB.";
 
         private MetadataProfileAPIMessages() {
         }
