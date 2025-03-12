@@ -85,6 +85,7 @@ function kruize_local_config_patch() {
         KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
  
         if [[ "${prometheus_ds}" == 0 ]]; then
+	    sed -i 's#"experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%"#"experimentNameFormat" : "%label:org_id%|%label:cluster_id%|%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%"#g' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	    sed -i 's/"name": "prometheus-1"/"name": "thanos"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	    sed -i 's/"serviceName": "prometheus-k8s"/"serviceName": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
             sed -i 's/"namespace": "openshift-monitoring"/"namespace": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
