@@ -200,6 +200,22 @@ public class GenericRestApiClient {
         return httpResponseWrapper;
     }
 
+    /**
+     * Sends an HTTP GET request to the Kruize API and returns the response wrapped in an {@link HttpResponseWrapper}.
+     *
+     * <p>This method creates an HTTP client, prepares a GET request to the configured base URL,
+     * and sets appropriate headers for JSON communication. It then executes the request, retrieves
+     * the response, and attempts to parse it as JSON. If JSON parsing fails, the response is returned
+     * as a plain string.</p>
+     *
+     * @param payload The request payload (not currently used in this method).
+     * @return An {@link HttpResponseWrapper} containing the response status code and either a JSON object
+     *         or a plain string, depending on the response content.
+     * @throws IOException If an I/O error occurs while executing the request.
+     * @throws NoSuchAlgorithmException If the specified algorithm for SSL context is not available.
+     * @throws KeyStoreException If an issue occurs while initializing the key store.
+     * @throws KeyManagementException If an issue occurs while managing the SSL keys.
+     */
     public HttpResponseWrapper getKruizeAPI(String payload) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         HttpResponseWrapper httpResponseWrapper = null;
         // Create an HTTP client

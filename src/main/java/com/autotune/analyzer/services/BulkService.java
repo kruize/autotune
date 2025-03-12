@@ -157,6 +157,7 @@ public class BulkService extends HttpServlet {
             // If the parameter is not provided (null), default it to false
             boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
             BulkJobStatus jobDetails;
+            // By default cache_job_in_mem set to false , If set it to true it will store in memory
             if (KruizeDeploymentInfo.cache_job_in_mem) {
                 if (jobStatusMap.isEmpty()) {
                     sendErrorResponse(
