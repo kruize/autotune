@@ -19,8 +19,8 @@ import com.autotune.analyzer.serviceObjects.FailedUpdateResultsAPIObject;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.eclipse.jetty.server.Request;
-import org.eclipse.jetty.servlet.ErrorPageErrorHandler;
+import org.eclipse.jetty.ee8.nested.Request;
+import org.eclipse.jetty.ee8.servlet.ErrorPageErrorHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
