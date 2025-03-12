@@ -17,6 +17,7 @@ import logging
 import pytest
 import requests
 import sys
+import json
 
 sys.path.append("../../")
 from helpers.fixtures import *
@@ -24,6 +25,11 @@ from helpers.kruize import *
 from helpers.utils import *
 from helpers.list_metric_profiles_validate import *
 from helpers.list_metric_profiles_without_parameters_schema import *
+from helpers.list_metadata_profiles_validate import *
+from helpers.list_metadata_profiles_schema import *
+
+metric_profile_dir = get_metric_profile_dir()
+metadata_profile_dir = get_metadata_profile_dir()
 
 # Set up logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -57,12 +63,29 @@ def test_bulk_post_request(cluster_type, bulk_request_payload, expected_job_id_p
     URL = get_kruize_url()
 
     # list and validate default metric profile
-    response = list_metric_profiles(verbose="true", logging=False)
+    metric_profile_input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
+    json_data = json.load(open(metric_profile_input_json_file))
+    metric_profile_name = json_data['metadata']['name']
+
+    response = list_metric_profiles(name=metric_profile_name, logging=False)
     metric_profile_json = response.json()
 
     assert response.status_code == SUCCESS_200_STATUS_CODE
 
     errorMsg = validate_list_metric_profiles_json(metric_profile_json, list_metric_profiles_schema)
+    assert errorMsg == ""
+
+    # list and validate default metadata profile
+    metadata_profile_input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
+    json_data = json.load(open(metadata_profile_input_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = list_metadata_profiles(name=metadata_profile_name, logging=False)
+    metadata_profile_json = response.json()
+
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    errorMsg = validate_list_metadata_profiles_json(metadata_profile_json, list_metadata_profiles_schema)
     assert errorMsg == ""
 
     with caplog.at_level(logging.INFO):
