@@ -76,7 +76,7 @@ def test_bulk_post_request(cluster_type, bulk_request_payload, expected_job_id_p
     assert errorMsg == ""
 
     # list and validate default metadata profile
-    metadata_profile_input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
+    metadata_profile_input_json_file = metadata_profile_dir / 'bulk_cluster_metadata_local_monitoring.json'
     json_data = json.load(open(metadata_profile_input_json_file))
     metadata_profile_name = json_data['metadata']['name']
 
