@@ -732,6 +732,8 @@ public class KruizeConstants {
         public static final String RECOMMENDATIONS_URL = "recommendationsURL";
         public static final String EXPERIMENTS_URL = "experimentsURL";
         public static final String BULK_API_LIMIT = "bulkapilimit";
+        public static final String TEST_USE_ONLY_CACHE_JOB_IN_MEM = "testUseOnlycacheJobInMemory";
+        public static final String JOB_FILTER_TO_DB = "jobFilterToDB";
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
         public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
         public static final String IS_ROS_ENABLED = "isROSEnabled";
@@ -911,6 +913,11 @@ public class KruizeConstants {
             public static final BulkJobStatus.Notification DATASOURCE_CONNECT_TIMEOUT_INFO = new BulkJobStatus.Notification(
                     BulkJobStatus.NotificationType.ERROR,
                     "ConnectTimeoutException: cannot establish a data source connection in a given time frame due to connectivity issues. (%s)",
+                    503
+            );
+            public static final BulkJobStatus.Notification EXPERIMENT_FAILED = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Not able to proceed due to. (%s)",
                     503
             );
 
