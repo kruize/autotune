@@ -923,6 +923,7 @@ example
 ## Cache bulk job details in memory or DB
 
 - The default value for the `cacheJobInMemory` environment variable is set to false, meaning bulk summary job details are stored in the `kruize_bulkjobs` database table. If set to true, the details are stored in memory instead. However, this data will be lost if the pod restarts and will not be available in other pod replicas.
+  p.s. This environment variable is intended solely for development and internal testing purposes and has no relevance for Bulk API consumers. 
 
 ## Control Data Attributes Saved in kruize_bulkjobs.experiments
 
