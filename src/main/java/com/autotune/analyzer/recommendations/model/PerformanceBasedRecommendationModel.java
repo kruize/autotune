@@ -139,7 +139,7 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
                     int numPods = 0;
 
                     if (0 != memUsageAvg) {
-                        numPods = (int) Math.ceil(memUsageSum / memUsageAvg);
+                        numPods = (int) Math.round(memUsageSum / memUsageAvg);
                     }
                     // If numPods is still zero, could be because there is no MEM info
                     // We can use cpu data to calculate pods, this is not as reliable as mem

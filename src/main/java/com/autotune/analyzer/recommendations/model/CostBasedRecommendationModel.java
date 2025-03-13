@@ -140,7 +140,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
             } else {
                 // Sum/Avg should give us the number of pods
                 if (0 != memUsageAvg) {
-                    numPods = (int) Math.ceil(memUsageSum / memUsageAvg);
+                    numPods = (int) Math.round(memUsageSum / memUsageAvg);
                 }
                 if (0 == numPods && 0 != cpuUsageAvg) {
                     numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
@@ -251,7 +251,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         int numPods = 0;
 
         if (0 != memUsageAvg) {
-            numPods = (int) Math.ceil(memUsageSum / memUsageAvg);
+            numPods = (int) Math.round(memUsageSum / memUsageAvg);
         }
         if (0 == numPods && 0 != cpuUsageAvg) {
             numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
@@ -261,6 +261,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         }
         memUsageMax = Math.max(memUsage, memUsageMax);
         // traverse over a stream of positive values and find the minimum value
+
         memUsageMin = Stream.of(memUsage, memUsageMax, memUsageMin)
                 .filter(value -> value > 0.0)
                 .min(Double::compare)
@@ -367,7 +368,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
             cpuRequestInterval = cpuUsageTotal;
         } else {
             if (0 != memUsageAvg) {
-                numPods = (int) Math.ceil(memUsageSum / memUsageAvg);
+                numPods = (int) Math.round(memUsageSum / memUsageAvg);
             }
             if (numPods ==0 & 0 != cpuUsageAvg) {
                 numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
