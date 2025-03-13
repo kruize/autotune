@@ -227,7 +227,7 @@ def test_repeated_metadata_import(cluster_type):
     delete_namespace("local-monitoring-test")
 
 
-@pytest.mark.skip(reason="As other tests running after this are failing")
+@pytest.mark.skip(reason="As other tests running after this are failing, issue: #1395")
 @pytest.mark.negative
 def test_repeated_metadata_import_without_datasource_connection(cluster_type):
     """
