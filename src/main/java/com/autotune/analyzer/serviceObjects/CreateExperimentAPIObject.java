@@ -174,7 +174,7 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
                 "apiVersion='" + getApiVersion() + '\'' +
                 "clusterName='" + clusterName + '\'' +
                 ", performanceProfile='" + performanceProfile + '\'' +
-                ", metadatProfile='" + metadataProfile + '\'' +
+                ", metadataProfile='" + metadataProfile + '\'' +
                 ", sloInfo=" + sloInfo +
                 ", mode='" + mode + '\'' +
                 ", targetCluster='" + targetCluster + '\'' +
