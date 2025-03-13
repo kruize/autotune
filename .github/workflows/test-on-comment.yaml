@@ -91,7 +91,7 @@ jobs:
           
       - name: Upload results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
            name: kruize_test_results
            path: ./kruize_test_results.tar

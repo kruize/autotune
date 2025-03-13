@@ -9,7 +9,7 @@ import com.autotune.experimentManager.utils.EMConstants;
 
 import com.autotune.utils.ServerContext;
 
-import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

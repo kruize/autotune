@@ -17,8 +17,8 @@
 package com.autotune.utils.filter;
 
 import com.autotune.utils.KruizeConstants;
-import org.eclipse.jetty.servlet.FilterHolder;
-import org.eclipse.jetty.servlets.CrossOriginFilter;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
+import org.eclipse.jetty.ee8.servlets.CrossOriginFilter;
 
 import java.util.HashMap;
 import java.util.Map;

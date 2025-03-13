@@ -21,7 +21,7 @@ import com.autotune.analyzer.services.*;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.ServerContext;
-import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 
 public class Analyzer {
     public static void start(ServletContextHandler contextHandler) {
