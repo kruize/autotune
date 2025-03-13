@@ -2156,6 +2156,7 @@ public class RecommendationEngine {
             List<K8sObject> kubernetes_objects = kruizeObject.getKubernetes_objects();
 
             boolean isAutoExperiment = false;
+            boolean isROS = KruizeDeploymentInfo.is_ros_enabled;
 
             if (null != kruizeObject.getMode()) {
                 // Check if the experiment is of type auto or recreate
@@ -2188,7 +2189,7 @@ public class RecommendationEngine {
                     boolean containerAcceleratorPartitionDetected = false;
 
                     // Check if the container data has Accelerator support else check for Accelerator metrics
-                    if (null == gpuUUID && (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
+                    if (!isROS && null == gpuUUID && (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
                         containerAcceleratorDetected = RecommendationUtils.markAcceleratorDeviceStatusToContainer(containerData,
                                                                             maxDateQuery,
                                                                             namespace,
@@ -2201,7 +2202,7 @@ public class RecommendationEngine {
                     }
 
                     // Check if it's a partition
-                    if (!containerAcceleratorDetected) {
+                    if (!isROS && !containerAcceleratorDetected) {
                         if (null != gpuUUID) {
                             containerAcceleratorPartitionDetected = RecommendationUtils.markAcceleratorPartitionDeviceStatusToContainer(containerData,
                                     maxDateQuery,
@@ -2298,7 +2299,8 @@ public class RecommendationEngine {
                             isAcceleratorMetric = true;
                         }
 
-                        if (isAcceleratorMetric
+                        // Proceed to set fetchAcceleratorMetrics only if it's not ROS
+                        if (isAcceleratorMetric && !isROS
                                 && null != containerData.getContainerDeviceList()
                                 && containerData.getContainerDeviceList().isAcceleratorDeviceDetected()) {
                             fetchAcceleratorMetrics = true;
@@ -2308,7 +2310,8 @@ public class RecommendationEngine {
                             isAcceleratorPartitionMetric = true;
                         }
 
-                        if (isAcceleratorPartitionMetric
+                        // Proceed to set fetchAcceleratorMetrics only if it's not ROS
+                        if (isAcceleratorPartitionMetric && !isROS
                                 && null != containerData.getContainerDeviceList()
                                 && containerData.getContainerDeviceList().isAcceleratorPartitionDetected()) {
                             fetchAcceleratorMetrics = true;
