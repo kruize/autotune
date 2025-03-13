@@ -65,7 +65,7 @@ public interface ExperimentDAO {
     // If Kruize restarts load all recommendations
     List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception;
 
-    List<KruizeLMRecommendationEntry> loadAllLMRecommendations() throws Exception;
+    List<KruizeLMRecommendationEntry> loadAllLMRecommendations(String bulkJobID) throws Exception;
 
     // If Kruize restarts load all performance profiles
     List<KruizePerformanceProfileEntry> loadAllPerformanceProfiles() throws Exception;
@@ -94,7 +94,7 @@ public interface ExperimentDAO {
     List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception;
 
     // Load all recommendations of a particular experiment
-    List<KruizeLMRecommendationEntry> loadLMRecommendationsByExperimentName(String experimentName) throws Exception;
+    List<KruizeLMRecommendationEntry> loadLMRecommendationsByExperimentName(String experimentName, String bulkJobId) throws Exception;
 
     // Load a single Performance Profile based on name
     List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception;
