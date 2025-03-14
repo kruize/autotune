@@ -717,6 +717,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             kruizeBulkJob = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_BULKJOBS_BY_JOB_ID, KruizeBulkJob.class)
                     .setParameter("jobId", jobId).getSingleResult();
             statusValue = "success";
+        } catch (NoResultException e) {
+            statusValue = "success";
         } catch (Exception e) {
             LOGGER.error(BULK_JOB_LOAD_ERROR, jobId, e.getMessage());
             throw new Exception(e.getMessage());
@@ -735,17 +737,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * <p>This method performs a partial update on a bulk job's JSON fields using the jsonb_set function
      * in PostgreSQL. It updates the notification and recommendation data for a given experiment within
      * the bulk job record.</p>
-     *
+     * <p>
      * updateBulkJobByExperiment is an important function that is intended to be called frequently for each experiment per job_id.
-     *   However,  avoid these frequent updates to the bulk job. Instead, we can leverage the kruize_lm_recommendations table
-     *   to derive the status of each experiment. But kept this function as of now JIC if there is any need comes up for ACM usecase
-     *   Current Flow:
-     *   When Kruize receives a bulk request, an immediate entry is created in kruize_bulkjobs.
-     *   A subsequent entry is added with total_experiments and metadata.
-     *   A final update occurs once all experiments are completed, but not for every individual experiment.
-     *   The kruize_lm_recommendations table contains an entry for each experiment.
-     *   So only three calls to kruize_bulkjob table per bulk request
-     *   By utilizing kruize_lm_recommendations, we can reduce the number of updates to kruize_bulkjobs.
+     * However,  avoid these frequent updates to the bulk job. Instead, we can leverage the kruize_lm_recommendations table
+     * to derive the status of each experiment. But kept this function as of now JIC if there is any need comes up for ACM usecase
+     * Current Flow:
+     * When Kruize receives a bulk request, an immediate entry is created in kruize_bulkjobs.
+     * A subsequent entry is added with total_experiments and metadata.
+     * A final update occurs once all experiments are completed, but not for every individual experiment.
+     * The kruize_lm_recommendations table contains an entry for each experiment.
+     * So only three calls to kruize_bulkjob table per bulk request
+     * By utilizing kruize_lm_recommendations, we can reduce the number of updates to kruize_bulkjobs.
      * <p>Performance metrics are recorded, and any errors encountered during execution are logged.</p>
      *
      * @param jobId
@@ -1060,7 +1062,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
-   
+
     @Override
     public List<KruizeResultsEntry> loadAllResults() throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments

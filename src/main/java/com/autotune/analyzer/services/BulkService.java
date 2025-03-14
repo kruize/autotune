@@ -24,6 +24,7 @@ import com.autotune.database.table.lm.KruizeBulkJob;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.MetricsConfig;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ser.impl.SimpleBeanPropertyFilter;
@@ -77,6 +78,7 @@ public class BulkService extends HttpServlet {
      */
     public static String filterJson(BulkJobStatus jsonInput, Set<String> includeFields, Set<String> excludeFields, String experiment_name) throws Exception {
         ObjectMapper mapper = new ObjectMapper();
+        mapper.setSerializationInclusion(JsonInclude.Include.NON_NULL);
         SimpleFilterProvider filters = new SimpleFilterProvider();
         try {
             jsonInput.copyByPattern(experiment_name);
@@ -172,45 +174,57 @@ public class BulkService extends HttpServlet {
             } else {
                 ExperimentDAO experimentDAO = new ExperimentDAOImpl();
                 KruizeBulkJob kruizeBulkJob = experimentDAO.findBulkJobById(jobID);
-                jobDetails = kruizeBulkJob.getBulkJobStatus();
+                if (null == kruizeBulkJob) {
+                    sendErrorResponse(
+                            resp,
+                            null,
+                            HttpServletResponse.SC_NOT_FOUND,
+                            JOB_NOT_FOUND_MSG
+                    );
+                    return;
+                } else {
+                    jobDetails = kruizeBulkJob.getBulkJobStatus();
 
-                GenericRestApiClient recommendationApiClient = new GenericRestApiClient();
-                String listRecommendationsURL = String.format(
-                        KruizeDeploymentInfo.recommendations_url.replaceAll("generateRecommendations.*", "listRecommendations") + "?" + JOB_ID
-                                + "=%s", jobID);
-                if (experiment_name != null && !experiment_name.equals("")) {
-                    String encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
-                    listRecommendationsURL = listRecommendationsURL + "&experiment_name=" + encodedExperimentName;
-                }
-                recommendationApiClient.setBaseURL(listRecommendationsURL);
-                GenericRestApiClient.HttpResponseWrapper recommendationResponseCode = null;
-                Map<String, JsonNode> recommendationResponse = new HashMap<>();
-                try {
-                    recommendationResponseCode = recommendationApiClient.getKruizeAPI(null);
-                    // Parse JSON using Jackson
-                    ObjectMapper objectMapper = new ObjectMapper();
-                    JsonNode rootArray = objectMapper.readTree(recommendationResponseCode.getResponseBody().toString());
-                    // Extract "experiment_name" values
-                    for (JsonNode node : rootArray) {
-                        String experimentName = node.get("experiment_name").asText();
-                        recommendationResponse.put(experimentName, node);
+                    GenericRestApiClient recommendationApiClient = new GenericRestApiClient();
+                    String listRecommendationsURL = String.format(
+                            KruizeDeploymentInfo.recommendations_url.replaceAll("generateRecommendations.*", "listRecommendations") + "?" + JOB_ID
+                                    + "=%s", jobID);
+                    if (experiment_name != null && !experiment_name.equals("")) {
+                        String encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
+                        listRecommendationsURL = listRecommendationsURL + "&experiment_name=" + encodedExperimentName;
                     }
-                    if (!includeFields.isEmpty() && includeFields.contains("experiments")) {
-                        jobDetails.getExperimentMap().forEach(
-                                (experimentName, experiment) -> {
-                                    BulkJobStatus.GenerateRecommendationsAPIResponse bresp =
-                                            new BulkJobStatus.GenerateRecommendationsAPIResponse();
-                                    if (recommendationResponse.containsKey(experimentName)) {
-                                        bresp.setResponse(
-                                                new ArrayList<>(Arrays.asList(recommendationResponse.get(experimentName)))
-                                        );
-                                        experiment.getApis().setRecommendations(bresp);
-                                    }
-                                }
-                        );
+                    recommendationApiClient.setBaseURL(listRecommendationsURL);
+                    GenericRestApiClient.HttpResponseWrapper recommendationResponseCode = null;
+                    Map<String, JsonNode> recommendationResponse = new HashMap<>();
+                    try {
+                        recommendationResponseCode = recommendationApiClient.getKruizeAPI(null);
+                        // Parse JSON using Jackson
+                        ObjectMapper objectMapper = new ObjectMapper();
+                        JsonNode rootArray = objectMapper.readTree(recommendationResponseCode.getResponseBody().toString());
+                        // Extract "experiment_name" values
+                        for (JsonNode node : rootArray) {
+                            String experimentName = node.get("experiment_name").asText();
+                            recommendationResponse.put(experimentName, node);
+                        }
+                        if (!includeFields.isEmpty() && includeFields.contains("experiments")) {
+                            if (jobDetails != null && jobDetails.getExperimentMap() != null) {
+                                jobDetails.getExperimentMap().forEach(
+                                        (experimentName, experiment) -> {
+                                            BulkJobStatus.GenerateRecommendationsAPIResponse bresp =
+                                                    new BulkJobStatus.GenerateRecommendationsAPIResponse();
+                                            if (recommendationResponse.containsKey(experimentName)) {
+                                                bresp.setResponse(
+                                                        new ArrayList<>(Arrays.asList(recommendationResponse.get(experimentName)))
+                                                );
+                                                experiment.getApis().setRecommendations(bresp);
+                                            }
+                                        }
+                                );
+                            }
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Not able to fetch recommedations from database due to {}", e.getMessage());
                     }
-                } catch (Exception e) {
-                    LOGGER.error("Not able to fetch recommedations from database due to {}", e.getMessage());
                 }
 
             }

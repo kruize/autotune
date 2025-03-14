@@ -134,111 +134,113 @@ public class BulkJobManager implements Runnable {
 
     @Override
     public void run() {
-        String statusValue = "failure";
-        MetricsConfig.activeJobs.incrementAndGet();
-        io.micrometer.core.instrument.Timer.Sample timerRunJob = Timer.start(MetricsConfig.meterRegistry());
-        DataSourceMetadataInfo metadataInfo = null;
-        DataSourceManager dataSourceManager = new DataSourceManager();
-        DataSourceInfo datasource = null;
-        String labelString = null;
-        Map<String, String> includeResourcesMap = new HashMap<>();
-        Map<String, String> excludeResourcesMap = new HashMap<>();
         try {
-            if (this.bulkInput.getFilter() != null) {
-                labelString = getLabels(this.bulkInput.getFilter());
-                includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
-                excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
-            }
-            if (null == this.bulkInput.getDatasource()) {
-                this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
-            }
+            String statusValue = "failure";
+            MetricsConfig.activeJobs.incrementAndGet();
+            io.micrometer.core.instrument.Timer.Sample timerRunJob = Timer.start(MetricsConfig.meterRegistry());
+            DataSourceMetadataInfo metadataInfo = null;
+            DataSourceManager dataSourceManager = new DataSourceManager();
+            DataSourceInfo datasource = null;
+            String labelString = null;
+            Map<String, String> includeResourcesMap = new HashMap<>();
+            Map<String, String> excludeResourcesMap = new HashMap<>();
             try {
-                datasource = CommonUtils.getDataSourceInfo(this.bulkInput.getDatasource());
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage());
-                e.printStackTrace();
-                BulkJobStatus.Notification notification = DATASOURCE_NOT_REG_INFO;
-                notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
-                setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
-            }
-            if (null != datasource) {
-                JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
-                if (null != daterange) {
-                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get(START_TIME),
-                            (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), includeResourcesMap, excludeResourcesMap);
-                } else {
-                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, 0, 0,
-                            0, includeResourcesMap, excludeResourcesMap);
+                if (this.bulkInput.getFilter() != null) {
+                    labelString = getLabels(this.bulkInput.getFilter());
+                    includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
+                    excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
                 }
-                if (null == metadataInfo) {
-                    setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
-                } else {
-                    jobData.setMetadata(metadataInfo);
-                    Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
-                    //  TODO: Remove getExperimentMap and instead collect all metadata, process it, and create experiments dynamically during metadata iteration.
-                    jobData.getSummary().setTotal_experiments(createExperimentAPIObjectMap.size());
-                    jobData.getSummary().setProcessed_experiments(0);
-                    if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
-                        setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO, datasource);
+                if (null == this.bulkInput.getDatasource()) {
+                    this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
+                }
+                try {
+                    datasource = CommonUtils.getDataSourceInfo(this.bulkInput.getDatasource());
+                } catch (Exception e) {
+                    LOGGER.error("Error in bulk job manager for job_id {} due to {}", jobID, e.getMessage());
+                    e.printStackTrace();
+                    BulkJobStatus.Notification notification = DATASOURCE_NOT_REG_INFO;
+                    notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
+                    setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
+                }
+                if (null != datasource) {
+                    JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
+                    if (null != daterange) {
+                        metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get(START_TIME),
+                                (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), includeResourcesMap, excludeResourcesMap);
                     } else {
-                        if (!KruizeDeploymentInfo.TEST_USE_ONLY_CACHE_JOB_IN_MEM) {                       // Todo Try to avoid this check in multiple places
-
-                            new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB("{}"));
-                        }
-
-                        try {
-                            processExperiments(datasource, createExperimentAPIObjectMap);
-                        } finally {
-                            // Shutdown createExecutor and wait for it to finish
-                            createExecutor.shutdown();
-                            while (!createExecutor.isTerminated()) {
-                                try {
-                                    createExecutor.awaitTermination(1, TimeUnit.MINUTES);
-                                } catch (InterruptedException e) {
-                                    Thread.currentThread().interrupt();
-                                    break;
-                                }
+                        metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, 0, 0,
+                                0, includeResourcesMap, excludeResourcesMap);
+                    }
+                    if (null == metadataInfo) {
+                        setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
+                    } else {
+                        jobData.setMetadata(metadataInfo);
+                        Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
+                        //  TODO: Remove getExperimentMap and instead collect all metadata, process it, and create experiments dynamically during metadata iteration.
+                        jobData.getSummary().setTotal_experiments(createExperimentAPIObjectMap.size());
+                        jobData.getSummary().setProcessed_experiments(0);
+                        if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
+                            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO, datasource);
+                        } else {
+                            if (!KruizeDeploymentInfo.TEST_USE_ONLY_CACHE_JOB_IN_MEM) {                       // Todo Try to avoid this check in multiple places
+                                new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB("{}"));
                             }
-                            // Shutdown generateExecutor and wait for it to finish
-                            generateExecutor.shutdown();
-                            while (!generateExecutor.isTerminated()) {
-                                try {
-                                    generateExecutor.awaitTermination(1, TimeUnit.MINUTES);
-                                } catch (InterruptedException e) {
-                                    Thread.currentThread().interrupt();
-                                    break;
+                            try {
+                                processExperiments(datasource, createExperimentAPIObjectMap);
+                            } finally {
+                                // Shutdown createExecutor and wait for it to finish
+                                createExecutor.shutdown();
+                                while (!createExecutor.isTerminated()) {
+                                    try {
+                                        createExecutor.awaitTermination(1, TimeUnit.MINUTES);
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                        break;
+                                    }
                                 }
-                            }
+                                // Shutdown generateExecutor and wait for it to finish
+                                generateExecutor.shutdown();
+                                while (!generateExecutor.isTerminated()) {
+                                    try {
+                                        generateExecutor.awaitTermination(1, TimeUnit.MINUTES);
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                        break;
+                                    }
+                                }
 
-                            if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
-                                statusValue = "success";
+                                if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
+                                    statusValue = "success";
+                                }
                             }
                         }
                     }
                 }
+            } catch (IOException e) {
+                LOGGER.error("Error in bulk job manager for job_id {} due to {}", jobID, e.getMessage());
+                BulkJobStatus.Notification notification;
+                if (e instanceof SocketTimeoutException) {
+                    notification = DATASOURCE_GATEWAY_TIMEOUT_INFO;
+                } else if (e instanceof ConnectTimeoutException) {
+                    notification = DATASOURCE_CONNECT_TIMEOUT_INFO;
+                } else {
+                    notification = DATASOURCE_DOWN_INFO;
+                }
+                notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
+                setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_UNAVAILABLE), notification, datasource);
+            } catch (Exception e) {
+                LOGGER.error("Error in bulk job manager for job_id {} due to {}", jobID, e.getMessage());
+                e.printStackTrace();
+                setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR), new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR), datasource);
+            } finally {
+                if (null != timerRunJob) {
+                    MetricsConfig.timerRunJob = MetricsConfig.timerBRunJob.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                    timerRunJob.stop(MetricsConfig.timerRunJob);
+                }
+                MetricsConfig.activeJobs.decrementAndGet();
             }
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage());
-            BulkJobStatus.Notification notification;
-            if (e instanceof SocketTimeoutException) {
-                notification = DATASOURCE_GATEWAY_TIMEOUT_INFO;
-            } else if (e instanceof ConnectTimeoutException) {
-                notification = DATASOURCE_CONNECT_TIMEOUT_INFO;
-            } else {
-                notification = DATASOURCE_DOWN_INFO;
-            }
-            notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
-            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_UNAVAILABLE), notification, datasource);
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            e.printStackTrace();
-            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR), new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR), datasource);
-        } finally {
-            if (null != timerRunJob) {
-                MetricsConfig.timerRunJob = MetricsConfig.timerBRunJob.tag("status", statusValue).register(MetricsConfig.meterRegistry());
-                timerRunJob.stop(MetricsConfig.timerRunJob);
-            }
-            MetricsConfig.activeJobs.decrementAndGet();
+            LOGGER.error("Error in bulk job manager for job_id {} due to {}", jobID, e.getMessage());
         }
     }
 
