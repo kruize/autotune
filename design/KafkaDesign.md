@@ -32,10 +32,10 @@ Example:
  -  `- name: KAFKA_RESPONSE_FILTER_INCLUDE
     value: "summary"`
  -  `- name: KAFKA_RESPONSE_FILTER_EXCLUDE
-    value: ""`
+    value: "experiment_name=abc"`
 
  - The Include filter has a default value `summary`, which will return the summary of all the experiments. We can also modify this to get more tailored response. User can pass multiple comma separated values here.
- - **Example**: `"summary, job_id, status"` will give the kafka reponse like this:
+ - **Example**: `"summary|job_id|status"` will give the kafka response like this:
 
    ```json
    {

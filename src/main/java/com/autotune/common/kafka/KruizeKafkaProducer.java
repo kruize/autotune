@@ -60,6 +60,7 @@ public class KruizeKafkaProducer {
      */
     private static void sendMessage(String topic, String payload) {
         try {
+            LOGGER.debug("Sending message to Kruize");
             RecordMetadata metadata = producer.send(new ProducerRecord<>(topic, payload))
                     .get(5, TimeUnit.SECONDS); //todo : set the timeout value via ENV
             // todo: get the status of message whether its delivered or failed

@@ -47,6 +47,7 @@ public class KruizeKafkaManager {
     public KruizeKafkaManager() {
         this.kafkaExecutorService = Executors.newFixedThreadPool(3);
         // validate the Kafka Connection
+        LOGGER.debug("Initializing KruizeKafkaManager");
         validateKafkaConnection();
         // Load valid topics from config
         validTopics = KruizeDeploymentInfo.loadKafkaTopicsFromConfig();
@@ -80,6 +81,7 @@ public class KruizeKafkaManager {
                 throw new Exception(String.format(KruizeConstants.KAFKA_CONSTANTS.MISSING_KAFKA_TOPIC, topic));
             }
             String kafkaMessage = BulkService.filterJson(jobData, kafkaIncludeFilter, kafkaExcludeFilter, experimentName);
+            LOGGER.debug("Publishing Kafka Message: {}", kafkaMessage);
             publish(new KruizeKafka(topic, kafkaMessage));
             experiment.setStatus(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.PUBLISHED);
         } catch (Exception e) {
@@ -137,5 +139,12 @@ public class KruizeKafkaManager {
         } catch (Exception e) {
             throw new RuntimeException(String.format(KruizeConstants.KAFKA_CONSTANTS.KAFKA_CONNECTION_FAILURE, KruizeDeploymentInfo.kafka_bootstrap_servers).concat(e.getMessage()));
         }
+    }
+
+    @Override
+    public String toString() {
+        return "KruizeKafkaManager{" +
+                "validTopics=" + validTopics +
+                '}';
     }
 }
