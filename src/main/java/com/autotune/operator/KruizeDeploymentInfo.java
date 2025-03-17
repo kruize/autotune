@@ -96,6 +96,8 @@ public class KruizeDeploymentInfo {
     public static String kafka_bootstrap_servers = System.getenv("KAFKA_BOOTSTRAP_SERVERS");;
     public static String bulk_input_topic = System.getenv("BULK_INPUT_TOPIC");
     public static String kafka_group_id = System.getenv("KAFKA_CONSUMER_GROUP_ID");
+    public static String metadata_profile_file_path;
+    public static String metric_profile_file_path;
 
 
     private KruizeDeploymentInfo() {

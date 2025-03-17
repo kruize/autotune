@@ -40,8 +40,8 @@ import java.util.Map;
  */
 @Entity
 @Table(name = "kruize_bulkjobs")
-public class BulkJob {
-    private static final Logger LOGGER = LoggerFactory.getLogger(BulkJob.class);
+public class KruizeBulkJobEntry {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KruizeBulkJobEntry.class);
     @Id
     @Column(name = "job_id", columnDefinition = "VARCHAR(36)")
     private String jobId;
@@ -65,7 +65,7 @@ public class BulkJob {
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode payload; // JSONB field for experiments data
 
-    public BulkJob(String jobId, String status, int totalExperiments, int processedExperiments, Timestamp jobStartTime, Timestamp jobEndTime, String webhook, String notifications, String experiments, String metadata, String payload) {
+    public KruizeBulkJobEntry(String jobId, String status, int totalExperiments, int processedExperiments, Timestamp jobStartTime, Timestamp jobEndTime, String webhook, String notifications, String experiments, String metadata, String payload) {
         this.jobId = jobId;
         this.status = status;
         this.totalExperiments = totalExperiments;
@@ -84,7 +84,7 @@ public class BulkJob {
 
     }
 
-    public BulkJob() {
+    public KruizeBulkJobEntry() {
 
     }
 
