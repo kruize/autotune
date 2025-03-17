@@ -15,11 +15,21 @@
  *******************************************************************************/
 package com.autotune.analyzer.metadataProfiles;
 
+import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -90,8 +100,40 @@ public class MetadataProfileCollection {
         if(metadataProfileCollection.containsKey(metadataProfileName)) {
             LOGGER.error(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_ALREADY_EXISTS + "{}", metadataProfileName);
         } else {
-            LOGGER.info(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_ADDED + "{}", metadataProfileName);
+            LOGGER.info(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_ADDED , metadataProfileName);
             metadataProfileCollection.put(metadataProfileName, metadataProfile);
+        }
+    }
+
+    public void addMetadataProfileFromConfigFile() {
+        try {
+            String metadataProfilePath = KruizeDeploymentInfo.metadata_profile_file_path;
+            LOGGER.debug(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_FILE_PATH, metadataProfilePath);
+
+            String jsonContent = null;
+            try (InputStream inputStream = new FileInputStream(metadataProfilePath)) {
+                jsonContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            } catch (FileNotFoundException e) {
+                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_NOT_FOUND_ERROR, metadataProfilePath);
+            } catch (IOException e) {
+                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.FILE_READ_ERROR_ERROR_MESSAGE, metadataProfilePath);
+            }
+
+            MetadataProfile metadataProfile = Converters.KruizeObjectConverters.convertInputJSONToCreateMetadataProfile(jsonContent);
+
+            ValidationOutputData validationOutputData = MetadataProfileUtil.validateAndAddMetadataProfile(metadataProfileCollection, metadataProfile);
+            if (validationOutputData.isSuccess()) {
+                ValidationOutputData addedToDB = new ExperimentDBService().addMetadataProfileToDB(metadataProfile);
+                if (addedToDB.isSuccess()) {
+                    LOGGER.info(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_ADDED, metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText());
+                } else {
+                    LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.ADD_METADATA_PROFILE_TO_DB_ERROR,  addedToDB.getMessage());
+                }
+            } else {
+                LOGGER.error(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_FAILURE, validationOutputData.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.ADD_DEFAULT_METADATA_PROFILE_EXCEPTION, e.getMessage());
         }
     }
 }
