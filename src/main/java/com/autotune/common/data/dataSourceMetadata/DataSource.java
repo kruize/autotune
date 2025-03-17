@@ -24,6 +24,9 @@ public class DataSource {
      */
     private HashMap<String, DataSourceCluster> clusters;
 
+    public DataSource() {
+    }
+
     public DataSource(String dataSourceName, HashMap<String, DataSourceCluster> clusters) {
         this.dataSourceName = dataSourceName;
         this.clusters = clusters;
