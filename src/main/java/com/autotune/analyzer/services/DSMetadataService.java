@@ -139,7 +139,7 @@ public class DSMetadataService extends HttpServlet {
                 }
 
                 String metadataProfileName = metadataAPIObject.getMetadataProfile();
-                if (null == metadataAPIObject.getMeasurementDurationMinutes()) {
+                if (null == metadataAPIObject.getMeasurementDurationMinutes() || metadataAPIObject.getMeasurementDurationMinutes().isEmpty()) {
                     metadataAPIObject.setMeasurementDurationMinutes(AnalyzerConstants.MetadataProfileConstants.DEFAULT_MEASUREMENT_DURATION);
                 }
                 Integer measurementDuration = metadataAPIObject.getMeasurement_duration_inInteger();

@@ -48,8 +48,18 @@ public class DSMetadataAPIObject {
 
     public void setMeasurementDurationMinutes(String measurement_durationMinutes) {this.measurement_durationMinutes = measurement_durationMinutes;}
 
+    /**
+     * The function extracts and converts the numeric part of a measurement_duration string
+     * If getMeasurementDurationMinutes() returns "15min", function will strip out the "min", returning just "15".
+     * In case of invalid input like null by default returns 15 as the measurement_duration value.
+     * @return Integer value of measurement_duration
+     */
     public Integer getMeasurement_duration_inInteger() {
-        String measurementDuration = getMeasurementDurationMinutes().replaceAll("\\D+", "");;
-        return Integer.parseInt(measurementDuration);
+        try {
+            String measurementDuration = getMeasurementDurationMinutes().replaceAll("\\D+", "");
+            return Integer.parseInt(measurementDuration);
+        } catch (NumberFormatException | NullPointerException e) {
+            return 15;
+        }
     }
 }
