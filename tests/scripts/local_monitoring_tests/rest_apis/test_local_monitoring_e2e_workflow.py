@@ -56,9 +56,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     Test Description: This test validates list recommendations for multiple experiments posted using different json files
     """
     clone_repo("https://github.com/kruize/benchmarks")
-    benchmarks_install()
-    container_id = apply_tfb_load("default", cluster_type)
-    print(container_id)
+    benchmarks_install(name="sysbench", manifests="sysbench.yaml")
 
     # list all datasources
     form_kruize_url(cluster_type)
@@ -119,43 +117,53 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert errorMsg == ""
 
     # Generate a temporary JSON filename
-    tmp_json_file = "/tmp/create_exp_" + ".json"
-    print("tmp_json_file = ", tmp_json_file)
+    tmp_container_exp_json_file = "/tmp/create_exp_sysbench" + ".json"
+    tmp_namespace_exp_json_file = "/tmp/create_exp_default_ns" + ".json"
+    print("tmp_json_file for container exp = ", tmp_container_exp_json_file)
+    print("tmp_json_file for namespace exp = ", tmp_namespace_exp_json_file)
 
     # Load the Jinja2 template
     environment = Environment(loader=FileSystemLoader("../json_files/"))
     template = environment.get_template("create_exp_template.json")
 
     # Render the JSON content from the template
-    content = template.render(
-        version="v2.0", experiment_name="test-default-ns", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
+
+    container_exp_content = template.render(
+       version="v2.0", experiment_name="monitor-sysbench", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
+       mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="container", kubernetes_obj_type="deployment", name="sysbench",
+       namespace="default", namespace_name=None, container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min", threshold="0.1"
+    )
+
+    namespace_exp_content = template.render(
+        version="v2.0", experiment_name="monitor-ns", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
         mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="namespace", kubernetes_obj_type=None, name=None,
-        namespace=None, namespace_name="default", container_image_name=None, container_name=None, measurement_duration="15min", threshold="0.1"
+        namespace=None, namespace_name="default", container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
     )
 
     # Convert rendered content to a dictionary
-    json_content = json.loads(content)
-    json_content[0]["kubernetes_objects"][0].pop("type")
-    json_content[0]["kubernetes_objects"][0].pop("name")
-    json_content[0]["kubernetes_objects"][0].pop("namespace")
-    json_content[0]["kubernetes_objects"][0].pop("containers")
+    container_exp_json_content = json.loads(container_exp_content)
+    container_exp_json_content[0]["kubernetes_objects"][0].pop("namespaces")
+
+    # Convert rendered content to a dictionary
+    namespace_exp_json_content = json.loads(namespace_exp_content)
+    namespace_exp_json_content[0]["kubernetes_objects"][0].pop("type")
+    namespace_exp_json_content[0]["kubernetes_objects"][0].pop("name")
+    namespace_exp_json_content[0]["kubernetes_objects"][0].pop("namespace")
+    namespace_exp_json_content[0]["kubernetes_objects"][0].pop("containers")
 
     # Write the final JSON to the temp file
-    with open(tmp_json_file, mode="w", encoding="utf-8") as message:
-        json.dump(json_content, message, indent=4)
+    with open(tmp_container_exp_json_file, mode="w", encoding="utf-8") as message:
+        json.dump(container_exp_json_content, message, indent=4)
 
-    # namespace exp json file
-    namespace_exp_json_file = tmp_json_file
+    with open(tmp_namespace_exp_json_file, mode="w", encoding="utf-8") as message:
+        json.dump(namespace_exp_json_content, message, indent=4)
 
-    # delete tfb experiments
-    tfb_exp_json_file = "../json_files/create_tfb_exp.json"
-    tfb_db_exp_json_file = "../json_files/create_tfb_db_exp.json"
+    # exp json file
+    container_exp_json_file = tmp_container_exp_json_file
+    namespace_exp_json_file = tmp_namespace_exp_json_file
 
-    response = delete_experiment(tfb_exp_json_file, rm=False)
-    print("delete tfb exp = ", response.status_code)
-
-    response = delete_experiment(tfb_db_exp_json_file, rm=False)
-    print("delete tfb_db exp = ", response.status_code)
+    response = delete_experiment(container_exp_json_file, rm=False)
+    print("delete sysbench container exp = ", response.status_code)
 
     response = delete_experiment(namespace_exp_json_file, rm=False)
     print("delete namespace exp = ", response.status_code)
@@ -194,17 +202,8 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert errorMsg == ""
 
 
-    # Create tfb experiments using the specified json
-    response = create_experiment(tfb_exp_json_file)
-
-    data = response.json()
-    print(data['message'])
-
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
-    assert data['message'] == CREATE_EXP_SUCCESS_MSG
-
-    response = create_experiment(tfb_db_exp_json_file)
+    # Create container experiments using the specified json
+    response = create_experiment(container_exp_json_file)
 
     data = response.json()
     print(data['message'])
@@ -223,28 +222,24 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    # Wait for the container to complete
-    wait_for_container_to_complete(container_id)
+    # Wait for the threshold for short term recommendations
+    time.sleep(300)
 
     # generate recommendations
-    json_file = open(tfb_exp_json_file, "r")
+    json_file = open(container_exp_json_file, "r")
     input_json = json.loads(json_file.read())
-    tfb_exp_name = input_json[0]['experiment_name']
-
-    json_file = open(tfb_db_exp_json_file, "r")
-    input_json = json.loads(json_file.read())
-    tfb_db_exp_name = input_json[0]['experiment_name']
+    container_exp_name = input_json[0]['experiment_name']
 
     json_file = open(namespace_exp_json_file, "r")
     input_json = json.loads(json_file.read())
     namespace_exp_name = input_json[0]['experiment_name']
 
 
-    response = generate_recommendations(tfb_exp_name)
+    response = generate_recommendations(container_exp_name)
     assert response.status_code == SUCCESS_STATUS_CODE
 
     # Invoke list recommendations for the specified experiment
-    response = list_recommendations(tfb_exp_name)
+    response = list_recommendations(container_exp_name)
     assert response.status_code == SUCCESS_200_STATUS_CODE
     list_reco_json = response.json()
 
@@ -254,25 +249,12 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
 
     # Validate the json values
     validate_local_monitoring_recommendation_data_present(list_reco_json)
-    tfb_exp_json = read_json_data_from_file(tfb_exp_json_file)
-    validate_local_monitoring_reco_json(tfb_exp_json[0], list_reco_json[0])
+    sysbench_exp_json = read_json_data_from_file(container_exp_json_file)
+    validate_local_monitoring_reco_json(sysbench_exp_json[0], list_reco_json[0])
 
-    response = generate_recommendations(tfb_db_exp_name)
+    response = generate_recommendations(container_exp_name)
     assert response.status_code == SUCCESS_STATUS_CODE
 
-    # Invoke list recommendations for the specified experiment
-    response = list_recommendations(tfb_db_exp_name)
-    assert response.status_code == SUCCESS_200_STATUS_CODE
-    list_reco_json = response.json()
-
-    # Validate the json against the json schema
-    errorMsg = validate_list_reco_json(list_reco_json, list_reco_json_local_monitoring_schema)
-    assert errorMsg == ""
-
-    # Validate the json values
-    validate_local_monitoring_recommendation_data_present(list_reco_json)
-    tfb_db_exp_json = read_json_data_from_file(tfb_db_exp_json_file)
-    validate_local_monitoring_reco_json(tfb_db_exp_json[0], list_reco_json[0])
 
     response = generate_recommendations(namespace_exp_name)
     assert response.status_code == SUCCESS_STATUS_CODE
@@ -291,13 +273,9 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     namespace_exp_json = read_json_data_from_file(namespace_exp_json_file)
     validate_local_monitoring_reco_json(namespace_exp_json[0], list_reco_json[0])
 
-    # Delete tfb experiment
-    response = delete_experiment(tfb_exp_json_file, rm=False)
-    print("delete exp = ", response.status_code)
-    assert response.status_code == SUCCESS_STATUS_CODE
 
-    # Delete tfb_db experiment
-    response = delete_experiment(tfb_db_exp_json_file, rm=False)
+    # Delete sysbench container experiment
+    response = delete_experiment(container_exp_json_file, rm=False)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
 
