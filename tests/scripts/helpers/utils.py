@@ -74,6 +74,14 @@ INVALID_LIST_METRIC_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are inva
 LIST_METRIC_PROFILES_INVALID_NAME = "Given metric profile name - %s either does not exist or is not valid"
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
+CREATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s created successfully. View Metadata Profiles at /listMetadataProfiles"
+METADATA_PROFILE_EXISTS_MSG = "Validation failed: Metadata Profile already exists: %s"
+METADATA_PROFILE_NOT_FOUND_MSG = "No metadata profiles found!"
+INVALID_LIST_METADATA_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are invalid"
+LIST_METADATA_PROFILES_INVALID_NAME = "Given metadata profile name - %s either does not exist or is not valid"
+CREATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
+CREATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
+
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
@@ -1385,7 +1393,7 @@ def clone_repo(repo_url, target_dir=None):
 
 
 #  Install Benchmarks
-def benchmarks_install(namespace="default", manifests="default_manifests"):
+def benchmarks_install(namespace="default", manifests="default_manifests", name="techempower"):
 
     # Change to the benchmarks directory
     try:
@@ -1393,13 +1401,16 @@ def benchmarks_install(namespace="default", manifests="default_manifests"):
     except Exception as e:
         print(f"ERROR: Could not change to 'benchmarks' directory: {e}")
 
-    print("Installing TechEmpower (Quarkus REST EASY) benchmark into cluster")
+    print(f"Installing {name} benchmark into cluster")
 
     # Change to the techempower directory
     try:
-        os.chdir("techempower")
+        if name == "sysbench":
+            os.chdir("sysbench")
+        else:
+            os.chdir("techempower")
     except Exception as e:
-        print(f"ERROR: Could not change to 'techempower' directory: {e}")
+        print(f"ERROR: Could not change to {name} directory: {e}")
 
 
     # Apply the Kubernetes manifests
@@ -1612,4 +1623,11 @@ def validate_job_status(job_id, base_url, caplog):
         response_verbose.json().keys()), f"Missing verbose keys in response: {verbose_keys - response_verbose.json().keys()}"
 
 
+def get_metadata_profile_dir():
+    # Get the current directory
+    current_directory = Path(__file__).resolve().parent
+    # Navigate up 3 levels
+    base_dir = current_directory.parents[2]  # (index 2 because it's zero-based)
+    metadata_profile_dir = base_dir / 'manifests' / 'autotune' / 'metadata-profiles'
 
+    return metadata_profile_dir

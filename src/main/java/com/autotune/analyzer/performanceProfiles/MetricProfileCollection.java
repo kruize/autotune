@@ -15,11 +15,22 @@
  *******************************************************************************/
 package com.autotune.analyzer.performanceProfiles;
 
+import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
+import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -68,8 +79,40 @@ public class MetricProfileCollection {
         if(metricProfileCollection.containsKey(metricProfileName)) {
             LOGGER.error(KruizeConstants.MetricProfileConstants.METRIC_PROFILE_ALREADY_EXISTS + "{}", metricProfileName);
         } else {
-            LOGGER.info(KruizeConstants.MetricProfileConstants.METRIC_PROFILE_ADDED + "{}", metricProfileName);
+            LOGGER.info(KruizeConstants.MetricProfileConstants.METRIC_PROFILE_ADDED, metricProfileName);
             metricProfileCollection.put(metricProfileName, metricProfile);
+        }
+    }
+
+    public void addMetricProfileFromConfigFile() {
+        try {
+            String metricProfilePath = KruizeDeploymentInfo.metric_profile_file_path;
+            LOGGER.debug(KruizeConstants.MetricProfileConstants.METRIC_PROFILE_FILE_PATH, metricProfilePath);
+
+            String jsonContent = null;
+            try (InputStream inputStream = new FileInputStream(metricProfilePath)) {
+                jsonContent = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
+            } catch (FileNotFoundException e) {
+                LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.FILE_NOT_FOUND_ERROR, metricProfilePath);
+            } catch (IOException e) {
+                LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.FILE_READ_ERROR_ERROR_MESSAGE, metricProfilePath);
+            }
+
+            PerformanceProfile metricProfile = Converters.KruizeObjectConverters.convertInputJSONToCreateMetricProfile(jsonContent);
+
+            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddMetricProfile(metricProfileCollection, metricProfile);
+            if (validationOutputData.isSuccess()) {
+                ValidationOutputData addedToDB = new ExperimentDBService().addMetricProfileToDB(metricProfile);
+                if (addedToDB.isSuccess()) {
+                    LOGGER.info(KruizeConstants.MetricProfileConstants.METRIC_PROFILE_ADDED, metricProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText());
+                } else {
+                    LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.ADD_METRIC_PROFILE_TO_DB_ERROR,  addedToDB.getMessage());
+                }
+            } else {
+                LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.METRIC_PROFILE_VALIDATION_FAILURE, validationOutputData.getMessage());
+            }
+        } catch (Exception | InvalidValueException e) {
+            LOGGER.error(KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.ADD_DEFAULT_METRIC_PROFILE_EXCEPTION, e.getMessage());
         }
     }
 }

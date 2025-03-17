@@ -68,7 +68,8 @@ public class KruizeDeploymentInfo {
     public static String database_admin_username;
     public static String database_admin_password;
     public static String database_ssl_mode;
-
+    public static Boolean TEST_USE_ONLY_CACHE_JOB_IN_MEM = false;
+    public static String job_filter_to_db = "experiments|status|apis|create|response|status_history|notifications";      //Use this constant to store necessary information into DB also can be set via env variable
     public static String cloudwatch_logs_access_key_id;
     public static String cloudwatch_logs_secret_access_key;
     public static String cloudwatch_logs_log_group;
@@ -97,6 +98,8 @@ public class KruizeDeploymentInfo {
     public static String kafka_bootstrap_servers = System.getenv("KAFKA_BOOTSTRAP_SERVERS");;
     public static String bulk_input_topic = System.getenv("BULK_INPUT_TOPIC");
     public static String kafka_group_id = System.getenv("KAFKA_CONSUMER_GROUP_ID");
+    public static String metadata_profile_file_path;
+    public static String metric_profile_file_path;
     public static String kafka_topics = System.getenv("KAFKA_TOPICS");
     public static String kafka_response_filter_include = System.getenv("KAFKA_RESPONSE_FILTER_INCLUDE");
     public static String kafka_response_filter_exclude = System.getenv("KAFKA_RESPONSE_FILTER_EXCLUDE");

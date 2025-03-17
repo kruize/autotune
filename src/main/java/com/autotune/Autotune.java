@@ -70,6 +70,8 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED;
+import static com.autotune.utils.KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.SET_UP_DEFAULT_METADATA_PROFILE_ERROR;
+import static com.autotune.utils.KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.SET_UP_DEFAULT_METRIC_PROFILE_ERROR;
 import static com.autotune.utils.ServerContext.*;
 
 public class Autotune {
@@ -121,27 +123,45 @@ public class Autotune {
             LOGGER.info("ROS enabled : {}" ,KruizeDeploymentInfo.is_ros_enabled);
             // Read and execute the DDLs here
             executeDDLs(AnalyzerConstants.ROS_DDL_SQL);
-            if (KruizeDeploymentInfo.local == true) {
-                LOGGER.info("Now running kruize local DDL's ");
-                executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
-                // load available datasources from db
-                loadDataSourcesFromDB();
-                // setting up DataSources
-                try {
-                    setUpDataSources();
-                } catch (Exception e) {
-                    LOGGER.error(DATASOURCE_CONNECTION_FAILED, e.getMessage());
-                }
-                // checking available DataSources
-                checkAvailableDataSources();
-                // load available metric profiles from db
-                loadMetricProfilesFromDB();
-                // load available metadata profiles from db
-                loadMetadataProfilesFromDB();
-                // start updater service
-                startAutoscalerService();
 
+            LOGGER.debug("Now running kruize local DDL's ");
+            executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
+            // load available datasources from db
+            loadDataSourcesFromDB();
+
+            // setting up DataSources
+            try {
+                setUpDataSources();
+            } catch (Exception e) {
+                LOGGER.error(DATASOURCE_CONNECTION_FAILED, e.getMessage());
             }
+
+            // checking available DataSources
+            checkAvailableDataSources();
+            // load available metric profiles from db
+            loadMetricProfilesFromDB();
+            if (KruizeDeploymentInfo.is_ros_enabled) {
+                // setting up metric profile
+                try {
+                    setUpMetricProfile();
+                } catch (Exception e) {
+                    LOGGER.error(SET_UP_DEFAULT_METRIC_PROFILE_ERROR, e.getMessage());
+                }
+            }
+
+            // load available metadata profiles from db
+            loadMetadataProfilesFromDB();
+            if (KruizeDeploymentInfo.is_ros_enabled) {
+                // setting up metadata profile
+                try {
+                    setUpMetadataProfile();
+                } catch (Exception e) {
+                    LOGGER.error(SET_UP_DEFAULT_METADATA_PROFILE_ERROR, e.getMessage());
+                }
+            }
+            // start updater service
+            startAutoscalerService();
+
             // close the existing session factory before recreating
             KruizeHibernateUtil.closeSessionFactory();
             //Regenerate a Hibernate session following the creation of new tables
@@ -238,11 +258,27 @@ public class Autotune {
     }
 
     /**
+     * Set up the metric profile at installation time
+     */
+    private static void setUpMetricProfile() throws IOException {
+        MetricProfileCollection metricProfileCollection = MetricProfileCollection.getInstance();
+        metricProfileCollection.addMetricProfileFromConfigFile();
+    }
+
+    /**
      * loads metadata profiles from database
      */
     private static void loadMetadataProfilesFromDB() {
         MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
         metadataProfileCollection.loadMetadataProfilesFromDB();
+    }
+
+    /**
+     * Set up the metadata profile at installation time
+     */
+    private static void setUpMetadataProfile() throws IOException {
+        MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
+        metadataProfileCollection.addMetadataProfileFromConfigFile();
     }
 
     private static void addAutotuneServlets(ServletContextHandler context) {

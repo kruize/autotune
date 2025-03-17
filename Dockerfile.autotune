@@ -16,7 +16,7 @@
 ##########################################################
 #            Build Docker Image
 ##########################################################
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1738816775 as mvnbuild-jdk21
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1741599792 as mvnbuild-jdk21
 ARG USER=autotune
 ARG AUTOTUNE_HOME=/home/$USER
 
@@ -48,7 +48,7 @@ RUN jlink --strip-debug --compress 2 --no-header-files --no-man-pages --module-p
 #            Runtime Docker Image
 ##########################################################
 # Use ubi-minimal as the base image
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1738816775
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1741599792
 
 ARG AUTOTUNE_VERSION
 ARG USER=autotune
@@ -88,6 +88,11 @@ USER ${UID}
 COPY --chown=${UID}:0 --from=mvnbuild-jdk21 ${AUTOTUNE_HOME}/src/autotune/jre/ ${AUTOTUNE_HOME}/app/jre/
 # Copy the app binaries
 COPY --chown=${UID}:0 --from=mvnbuild-jdk21 ${AUTOTUNE_HOME}/src/autotune/target/ ${AUTOTUNE_HOME}/app/target/
+
+# Copy the metric and metadata profile JSON file path into the runtime image
+COPY manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json ${AUTOTUNE_HOME}/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json
+COPY manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json ${AUTOTUNE_HOME}/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json
+
 
 # Grant execute permission
 RUN chmod -R +x $AUTOTUNE_HOME/app/target/bin/

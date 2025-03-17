@@ -43,7 +43,7 @@ function local_monitoring_tests() {
 	target="crc"
 	metric_profile_json="${METRIC_PROFILE_DIR}/resource_optimization_local_monitoring.json"
 
-	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e" "test_e2e_pr_check")
+	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e" "test_e2e_pr_check" "test_bulk_api_ros")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -58,8 +58,8 @@ function local_monitoring_tests() {
 
 	mkdir -p ${TEST_SUITE_DIR}
 
-  # check for 'local' flag
-  kruize_local_patch
+  # check for 'isROSEnabled' flag
+  kruize_local_ros_patch
   # check for 'servicename' and 'datasource_namespace' input variables
   kruize_local_datasource_manifest_patch
 
@@ -72,8 +72,6 @@ function local_monitoring_tests() {
 
 		sleep 60
 
-    # create performance profile
-    create_metric_profile ${metric_profile_json}
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi

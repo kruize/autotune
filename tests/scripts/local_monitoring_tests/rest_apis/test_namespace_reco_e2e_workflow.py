@@ -60,17 +60,9 @@ def test_list_recommendations_namespace_exps(cluster_type):
     create_namespace("ns2")
     create_namespace("ns3")
 
-    benchmarks_install(namespace="ns1")
-    benchmarks_install(namespace="ns2")
-    benchmarks_install(namespace="ns3")
-
-    container_id1 = apply_tfb_load("ns1", cluster_type)
-    container_id2 = apply_tfb_load("ns2", cluster_type)
-    container_id3 = apply_tfb_load("ns3", cluster_type)
-
-    print(container_id1)
-    print(container_id2)
-    print(container_id3)
+    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns1")
+    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns2")
+    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns3")
 
     # list all datasources
     form_kruize_url(cluster_type)
@@ -143,7 +135,7 @@ def test_list_recommendations_namespace_exps(cluster_type):
     content = template.render(
         version="v2.0", experiment_name="test-ns1", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
         mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="namespace", kubernetes_obj_type=None, name=None,
-        namespace=None, namespace_name="ns1", container_image_name=None, container_name=None, measurement_duration="15min", threshold="0.1"
+        namespace=None, namespace_name="ns1", container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
     )
 
     # Convert rendered content to a dictionary
@@ -254,11 +246,8 @@ def test_list_recommendations_namespace_exps(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    # Wait for the container to complete
-    wait_for_container_to_complete(container_id1)
-    wait_for_container_to_complete(container_id2)
-    wait_for_container_to_complete(container_id3)
-
+    # Wait for the threshold for short term recommendations
+    time.sleep(300)
 
     # generate recommendations
     json_file = open(ns1_exp_json_file, "r")
