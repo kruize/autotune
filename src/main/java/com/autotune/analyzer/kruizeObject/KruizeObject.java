@@ -76,7 +76,7 @@ public final class KruizeObject implements ExperimentTypeAware {
     private ValidationOutputData validation_data;
     private List<K8sObject> kubernetes_objects;
     private Map<String, Terms> terms;
-
+    private transient String bulkJobId;
 
     public KruizeObject(String experimentName,
                         String clusterName,
@@ -200,6 +200,14 @@ public final class KruizeObject implements ExperimentTypeAware {
             // Handles the case where termSettings is null
             throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.TERM_SETTINGS_UNDEFINED);
         }
+    }
+
+    public String getBulkJobId() {
+        return bulkJobId;
+    }
+
+    public void setBulkJobId(String bulkJobId) {
+        this.bulkJobId = bulkJobId;
     }
 
     public String getExperimentName() {
