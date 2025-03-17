@@ -124,7 +124,7 @@ public class Autotune {
             // Read and execute the DDLs here
             executeDDLs(AnalyzerConstants.ROS_DDL_SQL);
 
-            LOGGER.info("Now running kruize local DDL's ");
+            LOGGER.debug("Now running kruize local DDL's ");
             executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
             // load available datasources from db
             loadDataSourcesFromDB();

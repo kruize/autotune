@@ -1898,40 +1898,40 @@ function kruize_local_ros_patch() {
 	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
 
 	if [ ${cluster_type} == "minikube" ]; then
-      if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}; then
-        echo "match found"
-        sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+      		if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}; then
+      		  	echo "Setting flag 'isROSEnabled' to 'true'"
+        		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
 
-        # Use awk to find the 'kruizeconfigjson' block and insert 'metricProfileFilePath' and 'metadataProfileFilePath' before "hibernate"
-        awk '
-        /kruizeconfigjson: \|/ {in_config=1}
-        in_config && /"hibernate":/ {
-            print "      \"metricProfileFilePath\": \"/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json\",";
-            print "      \"metadataProfileFilePath\": \"/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json\",";
-            print
-            next
-        }
-        {print}
-        ' "${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}" > temp.yaml && mv temp.yaml "${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}"
-      else
-        echo "Error: Match not found" >&2
-        exit 1
-      fi
-    elif [ ${cluster_type} == "openshift" ]; then
-      sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+        		# Use awk to find the 'kruizeconfigjson' block and insert 'metricProfileFilePath' and 'metadataProfileFilePath' before "hibernate"
+        		awk '
+        		/kruizeconfigjson: \|/ {in_config=1}
+        		in_config && /"hibernate":/ {
+            			print "      \"metricProfileFilePath\": \"/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json\",";
+            			print "      \"metadataProfileFilePath\": \"/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json\",";
+            			print
+            			next
+        		}
+        		{print}
+        		' "${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}" > temp.yaml && mv temp.yaml "${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}"
+      		fi
+  	elif [ ${cluster_type} == "openshift" ]; then
+  	      if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}; then
+  	        	echo "Setting flag 'isROSEnabled' to 'true'"
+            		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 
-      # Use awk to find the 'kruizeconfigjson' block and insert 'metricProfileFilePath' and 'metadataProfileFilePath' before "hibernate"
-      awk '
-      /kruizeconfigjson: \|/ {in_config=1}
-      in_config && /"hibernate":/ {
-          print "      \"metricProfileFilePath\": \"/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json\",";
-          print "      \"metadataProfileFilePath\": \"/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json\",";
-          print
-          next
-      }
-      {print}
-      ' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" > temp.yaml && mv temp.yaml "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
-    fi
+            		# Use awk to find the 'kruizeconfigjson' block and insert 'metricProfileFilePath' and 'metadataProfileFilePath' before "hibernate"
+            		awk '
+            		/kruizeconfigjson: \|/ {in_config=1}
+            		in_config && /"hibernate":/ {
+                		print "      \"metricProfileFilePath\": \"/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json\",";
+                		print "      \"metadataProfileFilePath\": \"/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json\",";
+                		print
+                		next
+            		}
+            		{print}
+            		' "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}" > temp.yaml && mv temp.yaml "${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+          	fi
+  	fi
 }
 
 #

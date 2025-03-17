@@ -20,6 +20,7 @@ package com.autotune.utils;
 import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import org.apache.kafka.common.protocol.types.Field;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -87,6 +88,7 @@ public class KruizeConstants {
         public static final String ADDING_METRIC_PROFILE = "Trying to add the metric profile to collection: ";
         public static final String METRIC_PROFILE_ALREADY_EXISTS = "MetricProfile already exists: ";
         public static final String METRIC_PROFILE_ADDED = "MetricProfile added to the collection successfully: {}";
+        public static final String METRIC_PROFILE_FILE_PATH = "MetricProfile file path: {}";
 
         public static class MetricProfileErrorMsgs {
             public static final String ADD_DEFAULT_METRIC_PROFILE_EXCEPTION = "Exception occurred while adding default Metric profile: {}";
@@ -978,6 +980,7 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_ALREADY_EXISTS = "MetadataProfile already exists: ";
         public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: {}";
         public static final String CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE = "Failed to convert input JSON to MetadataProfile object due to: {}";
+        public static final String METADATA_PROFILE_FILE_PATH = "MetadataProfile file path: {}";
 
         public static class MetadataProfileErrorMsgs {
 

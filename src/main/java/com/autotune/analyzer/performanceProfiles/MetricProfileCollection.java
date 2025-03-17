@@ -87,7 +87,7 @@ public class MetricProfileCollection {
     public void addMetricProfileFromConfigFile() {
         try {
             String metricProfilePath = KruizeDeploymentInfo.metric_profile_file_path;
-            LOGGER.info("MetricProfile file path: {}", metricProfilePath);
+            LOGGER.debug(KruizeConstants.MetricProfileConstants.METRIC_PROFILE_FILE_PATH, metricProfilePath);
 
             String jsonContent = null;
             try (InputStream inputStream = new FileInputStream(metricProfilePath)) {

@@ -17,6 +17,7 @@ package com.autotune.analyzer.metadataProfiles;
 
 import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -107,7 +108,7 @@ public class MetadataProfileCollection {
     public void addMetadataProfileFromConfigFile() {
         try {
             String metadataProfilePath = KruizeDeploymentInfo.metadata_profile_file_path;
-            LOGGER.info("MetadataProfile file path: {}", metadataProfilePath);
+            LOGGER.debug(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_FILE_PATH, metadataProfilePath);
 
             String jsonContent = null;
             try (InputStream inputStream = new FileInputStream(metadataProfilePath)) {
