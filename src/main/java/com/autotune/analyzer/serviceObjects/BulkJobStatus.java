@@ -17,7 +17,7 @@ package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
-import com.autotune.database.table.lm.KruizeBulkJob;
+import com.autotune.database.table.lm.KruizeBulkJobEntry;
 import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.annotation.JsonFilter;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -131,15 +131,14 @@ public class BulkJobStatus {
      *
      * @param regex the regular expression used to filter entries by key, or {@code null} to copy all entries.
      *
-     * <pre>
-     * Example Usage:
-     * Given a map containing:
-     * {"test1" -> "value1", "example2" -> "value2", "sample3" -> "value3"}
+     *              <pre>
+     *              Example Usage:
+     *              Given a map containing:
+     *              {"test1" -> "value1", "example2" -> "value2", "sample3" -> "value3"}
      *
-     * copyByPattern("test") will result in:
-     * {"test1" -> "value1"} being copied to {@code experiments}.
-     * </pre>
-     *
+     *              copyByPattern("test") will result in:
+     *              {"test1" -> "value1"} being copied to {@code experiments}.
+     *              </pre>
      */
     public void copyByPattern(String regex) {
 
@@ -161,10 +160,10 @@ public class BulkJobStatus {
 
     }
 
-    public KruizeBulkJob getBulkJobForDB(String experimentsString) throws Exception {
-        KruizeBulkJob kruizeBulkJob = null;
+    public KruizeBulkJobEntry getBulkJobForDB(String experimentsString) throws Exception {
+        KruizeBulkJobEntry kruizeBulkJobEntry = null;
         try {
-            kruizeBulkJob = new KruizeBulkJob(getSummary().getJobID(),
+            kruizeBulkJobEntry = new KruizeBulkJobEntry(getSummary().getJobID(),
                     getSummary().getStatus(),
                     getSummary().getTotal_experiments(),
                     getSummary().getProcessed_experiments().get(),
@@ -179,7 +178,7 @@ public class BulkJobStatus {
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
-        return kruizeBulkJob;
+        return kruizeBulkJobEntry;
     }
 
     public static enum NotificationType {
