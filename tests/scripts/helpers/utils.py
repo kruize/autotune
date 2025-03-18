@@ -256,6 +256,8 @@ update_results_test_data = {
 import_metadata_test_data = {
     "version": "v1.0",
     "datasource_name": "prometheus-1",
+    "metadata_profile": "cluster-metadata-local-monitoring",
+    "measurement_duration": "15min"
 }
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
@@ -288,6 +290,10 @@ def generate_test_data(csvfile, test_data, api_name):
                 test_name = t + "_" + key
                 status_code = 400
                 if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"):
+                    status_code = 201
+
+                if api_name == "import_metadata" and (test_name == "invalid_version" or test_name == "blank_version" or
+                test_name == "invalid_measurement_duration" or test_name == "blank_measurement_duration" or test_name == "null_measurement_duration"):
                     status_code = 201
 
                 data.append(test_name)

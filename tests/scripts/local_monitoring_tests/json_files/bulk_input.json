@@ -13,5 +13,7 @@
       "labels": {}
     }
   },
-  "datasource": "thanos"
+  "datasource": "thanos",
+  "metadata_profile": "cluster-metadata-local-monitoring",
+  "measurement_duration": "15min"
 }
