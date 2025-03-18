@@ -111,7 +111,7 @@ public class BulkJobManager implements Runnable {
         this.jobID = jobID;
         this.jobData = jobData;
         this.bulkInput = payload;
-        this.kruizeKafkaManager = KruizeDeploymentInfo.is_kafka_enabled ? new KruizeKafkaManager() : null;
+        this.kruizeKafkaManager = KruizeDeploymentInfo.is_kafka_enabled ? KruizeKafkaManager.getInstance() : null;
         this.kafkaIncludeFilter = KruizeDeploymentInfo.getKafkaIncludeFilter();
         this.kafkaExcludeFilter = KruizeDeploymentInfo.getKafkaExcludeFilter();
     }

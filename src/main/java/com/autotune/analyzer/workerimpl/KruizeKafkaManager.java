@@ -81,7 +81,7 @@ public class KruizeKafkaManager {
                 throw new Exception(String.format(KruizeConstants.KAFKA_CONSTANTS.MISSING_KAFKA_TOPIC, topic));
             }
             String kafkaMessage = BulkService.filterJson(jobData, kafkaIncludeFilter, kafkaExcludeFilter, experimentName);
-            LOGGER.debug("Publishing Kafka Message: {}", kafkaMessage);
+            LOGGER.debug("Publishing Kafka Message for experiment {} in topic : {}", experimentName, topic);
             publish(new KruizeKafka(topic, kafkaMessage));
             experiment.setStatus(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.PUBLISHED);
         } catch (Exception e) {
@@ -96,26 +96,24 @@ public class KruizeKafkaManager {
      * @param kruizeKafka the Kafka message containing the topic and message content
      */
     public void publish(KruizeKafka kruizeKafka) {
-        kafkaExecutorService.submit(() -> {
-            try {
-                // Call Kafka producer based on topic
-                switch (kruizeKafka.getTopic()) {
-                    case KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS_TOPIC:
-                        new KruizeKafkaProducer.ValidRecommendationMessageProducer(kruizeKafka.getMessage());
-                        break;
-                    case KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC:
-                        new KruizeKafkaProducer.ErrorMessageProducer(kruizeKafka.getMessage());
-                        break;
-                    case KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC:
-                        new KruizeKafkaProducer.SummaryResponseMessageProducer(kruizeKafka.getMessage());
-                        break;
-                    default:
-                        throw new IllegalArgumentException(String.format(KruizeConstants.KAFKA_CONSTANTS.UNKNOWN_TOPIC, kruizeKafka.getTopic()));
-                }
-            } catch (Exception e) {
-                LOGGER.error(KruizeConstants.KAFKA_CONSTANTS.KAFKA_PUBLISH_FAILED, e.getMessage());
+        try {
+            // Call Kafka producer based on topic
+            switch (kruizeKafka.getTopic()) {
+                case KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS_TOPIC:
+                    kafkaExecutorService.submit(new KruizeKafkaProducer.ValidRecommendationMessageProducer(kruizeKafka.getMessage()));
+                    break;
+                case KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC:
+                    kafkaExecutorService.submit(new KruizeKafkaProducer.ErrorMessageProducer(kruizeKafka.getMessage()));
+                    break;
+                case KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC:
+                    kafkaExecutorService.submit(new KruizeKafkaProducer.SummaryResponseMessageProducer(kruizeKafka.getMessage()));
+                    break;
+                default:
+                    throw new IllegalArgumentException(String.format(KruizeConstants.KAFKA_CONSTANTS.UNKNOWN_TOPIC, kruizeKafka.getTopic()));
             }
-        });
+        } catch (Exception e) {
+            LOGGER.error(KruizeConstants.KAFKA_CONSTANTS.KAFKA_PUBLISH_FAILED, e.getMessage());
+        }
     }
 
     /**
