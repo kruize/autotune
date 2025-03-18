@@ -333,7 +333,6 @@ public class KruizeOperator {
      * @param autotuneObjectJsonStr JSON string of the autotune object
      */
     private static KruizeObject getKruizeObject(String autotuneObjectJsonStr) {
-        LOGGER.info("inside getKruizeObject");
         try {
             //TODO: Make a common method to add data for both CRD and non-CRD
             JSONObject autotuneObjectJson = new JSONObject(autotuneObjectJsonStr);
