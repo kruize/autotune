@@ -231,7 +231,7 @@ This is quick guide instructions to import metadata using input JSON as follows.
 {
   "version": "v1.0",
   "datasource_name": "prometheus-1",
-  "metadata_profile": "cluster_metadata_local_monitoring",
+  "metadata_profile": "cluster-metadata-local-monitoring",
   "measurement_duration": "15min"
 }
 ```

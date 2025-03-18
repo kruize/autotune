@@ -57,7 +57,7 @@ progress of the job.
     "end": "2024-11-15T23:59:59.000Z"
   },
   "datasource": "Cbank1Xyz",
-  "metadata_profile": "cluster_metadata_local_monitoring",
+  "metadata_profile": "cluster-metadata-local-monitoring",
   "measurement_duration": "15min",
   "experiment_types": [
     "container",
@@ -1010,7 +1010,7 @@ and include sections, matching the format above.
       }
     }
   },
-  "metadata_profile": "cluster_metadata_local_monitoring",
+  "metadata_profile": "cluster-metadata-local-monitoring",
   "measurement_duration": "15min"
 }
 ```
