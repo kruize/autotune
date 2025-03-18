@@ -151,7 +151,7 @@ public class ExperimentValidation {
                             try {
                                 new ExperimentDBService().loadMetadataProfileFromDBByName(metadataProfilesMap, metadataProfileName);
                             } catch (Exception e) {
-                                LOGGER.error("Loading saved Metadata Profile {} failed: {} ", metadataProfileName, e.getMessage());
+                                LOGGER.error(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.LOAD_METADATA_PROFILE_FAILURE, metadataProfileName, e.getMessage()));
                             }
 
                             if (null == metadataProfilesMap.get(kruizeObject.getMetadataProfile())) {

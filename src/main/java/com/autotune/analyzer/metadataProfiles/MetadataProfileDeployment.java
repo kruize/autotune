@@ -2,6 +2,7 @@ package com.autotune.analyzer.metadataProfiles;
 
 import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.KubernetesContexts;
 import com.autotune.common.target.kubernetes.service.KubernetesServices;
@@ -79,7 +80,7 @@ public class MetadataProfileDeployment {
                 else
                     new KubeEventLogger(Clock.systemUTC()).log("Failed", validationOutputData.getMessage(), EventLogger.Type.Warning, null, null, null, null);
             } else
-                new KubeEventLogger(Clock.systemUTC()).log("Failed", "Validation of metadata profile failed! ", EventLogger.Type.Warning, null, null, null, null);
+                new KubeEventLogger(Clock.systemUTC()).log("Failed", AnalyzerErrorConstants.AutotuneObjectErrors.METADATA_PROFILE_VALIDATION_FAILED, EventLogger.Type.Warning, null, null, null, null);
         } catch (Exception e) {
             new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null, null, null);
         }
@@ -101,7 +102,7 @@ public class MetadataProfileDeployment {
             return metadataProfile;
 
         } catch (NullPointerException | JSONException e) {
-            LOGGER.error("Exception occurred while parsing the data: {}",e.getMessage());
+            LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.PARSE_ERROR_MESSAGE,e.getMessage());
             return null;
         }
     }
@@ -117,6 +118,6 @@ public class MetadataProfileDeployment {
                 .optString(AnalyzerConstants.AutotuneObjectConstants.NAME);
 
         metadataProfilesMap.remove(name);
-        LOGGER.info("Deleted metadata profile object {}", name);
+        LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.DELETED_METADATA_PROFILE, name);
     }
 }

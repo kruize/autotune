@@ -107,6 +107,10 @@ public class AnalyzerErrorConstants {
         public static final String NULL_OR_BLANK_CONTAINER_NAME = "container_name cannot be null or blank";
         public static final String EXPERIMENT_AND_INTERVAL_END_TIME = " for experiment : %s interval_end_time: %s";
         public static final String LOCAL_MONITORING_DATASOURCE_MANDATORY = "Experiment %s: datasource mandatory for Local Monitoring type";
+        public static final String LOAD_METADATA_PROFILE_FAILURE = "Loading saved Metadata Profile %s failed: %s";
+        public static final String METADATA_PROFILE_VALIDATION_FAILED = "Validation of metadata profile failed!";
+        public static final String PARSE_ERROR_MESSAGE = "Exception occurred while parsing the data: %s";
+        public static final String DELETED_METADATA_PROFILE = "Deleted metadata profile object %s";
 
 
         private AutotuneObjectErrors() {

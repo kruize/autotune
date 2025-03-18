@@ -333,6 +333,7 @@ public class KruizeOperator {
      * @param autotuneObjectJsonStr JSON string of the autotune object
      */
     private static KruizeObject getKruizeObject(String autotuneObjectJsonStr) {
+        LOGGER.info("inside getKruizeObject");
         try {
             //TODO: Make a common method to add data for both CRD and non-CRD
             JSONObject autotuneObjectJson = new JSONObject(autotuneObjectJsonStr);
@@ -394,7 +395,7 @@ public class KruizeOperator {
                             throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + metadataProfileName);
                         }
                     } else {
-                        metadataProfileName = setDefaultMetadataProfile();
+                        throw new InvalidValueException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD);
                     }
                 }
                 selectorJson = specJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SELECTOR);
@@ -503,44 +504,6 @@ public class KruizeOperator {
             return null;
         }
         return metricProfile.getName();
-    }
-
-
-    public static String setDefaultMetadataProfile() {
-        MetadataProfile metadataProfile = null;
-        try {
-            String apiVersion = AnalyzerConstants.MetadataProfileConstants.DEFAULT_API_VERSION;
-            String kind = AnalyzerConstants.MetadataProfileConstants.DEFAULT_KIND;
-            String name = AnalyzerConstants.MetadataProfileConstants.DEFAULT_PROFILE;
-            String datasource = AnalyzerConstants.MetadataProfileConstants.DEFAULT_DATASOURCE;
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            ObjectNode metadataNode = objectMapper.createObjectNode();
-            metadataNode.put("name",name);
-            ArrayList<Metric> queryVariables = new ArrayList<>();
-
-            double profile_version = AnalyzerConstants.DEFAULT_PROFILE_VERSION;
-            String k8s_type = AnalyzerConstants.DEFAULT_K8S_TYPE;
-
-            metadataProfile = new MetadataProfile(apiVersion, kind, metadataNode, profile_version, k8s_type, datasource, queryVariables);
-
-            if (null != metadataProfile) {
-                ValidationOutputData validationOutputData = MetadataProfileUtil.validateAndAddMetadataProfile(MetadataProfileDeployment.metadataProfilesMap, metadataProfile);
-                if (validationOutputData.isSuccess()) {
-                    LOGGER.info("Added metadata Profile : {} into the map with version: {}",
-                            metadataProfile.getName(), metadataProfile.getProfile_version());
-                } else {
-                    new KubeEventLogger(Clock.systemUTC()).log("Failed", validationOutputData.getMessage(), EventLogger.Type.Warning, null, null, null, null);
-                }
-            } else {
-                new KubeEventLogger(Clock.systemUTC()).log("Failed", "Unable to create metric profile ", EventLogger.Type.Warning, null, null, null, null);
-            }
-        } catch (Exception e) {
-            LOGGER.error("Exception while adding Metadata profile with message: {} ", e.getMessage());
-            new KubeEventLogger(Clock.systemUTC()).log("Failed", e.getMessage(), EventLogger.Type.Warning, null, null, null, null);
-            return null;
-        }
-        return metadataProfile.getName();
     }
 
     /**
