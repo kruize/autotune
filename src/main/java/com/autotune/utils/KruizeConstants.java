@@ -888,6 +888,7 @@ public class KruizeConstants {
             CREATE_EXPERIMENT_CONFIG_BEAN.setThreshold(0.1);
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMetadataProfile(AnalyzerConstants.MetadataProfileConstants.CLUSTER_METADATA_LOCAL_MON_PROFILE);
         }
 
         public static class NotificationConstants {

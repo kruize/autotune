@@ -144,9 +144,6 @@ public class BulkJobManager implements Runnable {
             DataSourceMetadataInfo metadataInfo = null;
             DataSourceManager dataSourceManager = new DataSourceManager();
             DataSourceInfo datasource = null;
-            MetadataProfile metadataProfile;
-            String metadataProfileName = null;
-            Integer measurementDuration = 0;
             String labelString = null;
             Map<String, String> includeResourcesMap = new HashMap<>();
             Map<String, String> excludeResourcesMap = new HashMap<>();
@@ -169,28 +166,9 @@ public class BulkJobManager implements Runnable {
                     setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
                 }
 
-                //check for "is_ros_enabled" flag and specify
-                if ((is_ros_enabled) && (null == this.bulkInput.getMetadata_profile())) {
-                    metadataProfile = MetadataProfileCollection.getInstance().
-                            loadMetadataProfileFromCollection(AnalyzerConstants.MetadataProfileConstants.CLUSTER_METADATA_LOCAL_MON_PROFILE);
-                    this.bulkInput.setMetadata_profile(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText());
-                }
+                String metadataProfileName = handleMetadataProfile(datasource);
 
-                try{
-                    metadataProfileName = this.bulkInput.getMetadata_profile();
-                    metadataProfile = MetadataProfileCollection.getInstance().loadMetadataProfileFromCollection(metadataProfileName);
-
-                    if (null == this.bulkInput.getMeasurement_duration() || this.bulkInput.getMeasurement_duration().isEmpty()) {
-                        this.bulkInput.setMeasurement_duration(AnalyzerConstants.MetadataProfileConstants.DEFAULT_MEASUREMENT_DURATION);
-                    }
-                    measurementDuration = this.bulkInput.getMeasurement_duration_inInteger();
-                } catch (Exception e) {
-                    LOGGER.error(e.getMessage());
-                    e.printStackTrace();
-                    BulkJobStatus.Notification notification = METADATA_PROFILE_NOT_FOUND;
-                    notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
-                    setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
-                }
+                int measurementDuration = handleMeasurementDuration(datasource);
 
                 if (null != datasource) {
                     JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
@@ -436,6 +414,59 @@ public class BulkJobManager implements Runnable {
             checkAndFinalizeJob(datasource);
         }
     }
+
+    private String handleMetadataProfile(DataSourceInfo datasource) {
+        LOGGER.info("inside handleMetadataProfile");
+        String metadataProfileName = null;
+        try {
+            MetadataProfile metadataProfile;
+            //check for "metadata_profile" field
+            if (null == this.bulkInput.getMetadata_profile()) {
+                metadataProfile = MetadataProfileCollection.getInstance().
+                        loadMetadataProfileFromCollection(CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile());
+                this.bulkInput.setMetadata_profile(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText());
+            }
+
+            try {
+                metadataProfileName = this.bulkInput.getMetadata_profile();
+                metadataProfile = MetadataProfileCollection.getInstance().loadMetadataProfileFromCollection(metadataProfileName);
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage());
+                e.printStackTrace();
+                BulkJobStatus.Notification notification = METADATA_PROFILE_NOT_FOUND;
+                notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
+                setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            e.printStackTrace();
+            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR), new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR), datasource);
+        } finally {
+            checkAndFinalizeJob(datasource);
+        }
+        return metadataProfileName == null ? CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile() : metadataProfileName;
+    }
+
+    private int handleMeasurementDuration(DataSourceInfo datasource) {
+        int measurement_duration=0;
+        try {
+            //check for "measurement_duration" field
+            if (null == this.bulkInput.getMeasurement_duration() || this.bulkInput.getMeasurement_duration().isEmpty()) {
+                this.bulkInput.setMeasurement_duration(CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDurationStr());
+            }
+            //measurementDuration = this.bulkInput.getMeasurement_duration();
+            String measurementDurationStr = this.bulkInput.getMeasurement_duration().replaceAll("\\D+", "");;
+            measurement_duration = Integer.parseInt(measurementDurationStr);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            e.printStackTrace();
+            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR), new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR), datasource);
+        } finally {
+            checkAndFinalizeJob(datasource);
+        }
+        return measurement_duration == 0 ? CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDuration() : measurement_duration;
+    }
+
 
     private boolean createExperiment(CreateExperimentAPIObject apiObject, BulkJobStatus.Experiment experiment, DataSourceInfo datasource) {
         try {
