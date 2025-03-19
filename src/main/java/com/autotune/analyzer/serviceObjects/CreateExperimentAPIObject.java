@@ -59,6 +59,9 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     private String experiment_id;   // this id is UUID and getting set at createExperiment API
     private ValidationOutputData validationData;  // This object indicates if this API object is valid or invalid
 
+    public CreateExperimentAPIObject() {
+    }
+
     public String getClusterName() {
         return clusterName;
     }

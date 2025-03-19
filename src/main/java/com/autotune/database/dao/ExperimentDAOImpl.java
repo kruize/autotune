@@ -24,7 +24,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.*;
-import com.autotune.database.table.lm.BulkJob;
+import com.autotune.database.table.lm.KruizeBulkJobEntry;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
@@ -659,11 +659,11 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     /**
      * Save/Update bulkJOB details into DB
      *
-     * @param bulkJob
+     * @param kruizeBulkJobEntry
      * @return
      */
     @Override
-    public ValidationOutputData bulkJobSave(BulkJob bulkJob) {
+    public ValidationOutputData bulkJobSave(KruizeBulkJobEntry kruizeBulkJobEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         Transaction tx = null;
         String statusValue = "failure";
@@ -672,7 +672,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
                 try {
                     tx = session.beginTransaction();
-                    session.saveOrUpdate(bulkJob);
+                    session.saveOrUpdate(kruizeBulkJobEntry);
                     tx.commit();
                     // TODO: remove native sql query and transient
                     validationOutputData.setSuccess(true);
@@ -699,7 +699,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
-     * Retrieves a {@link BulkJob} object from the database based on the provided job ID.
+     * Retrieves a {@link KruizeBulkJobEntry} object from the database based on the provided job ID.
      *
      * <p>This method queries the database for a bulk job using the given job ID. It also
      * records metrics for performance monitoring and logs any errors encountered during retrieval.</p>
@@ -709,13 +709,15 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * @throws Exception
      */
     @Override
-    public BulkJob findBulkJobById(String jobId) throws Exception {
-        BulkJob bulkJob = null;
+    public KruizeBulkJobEntry findBulkJobById(String jobId) throws Exception {
+        KruizeBulkJobEntry kruizeBulkJobEntry = null;
         String statusValue = "failure";
         Timer.Sample timerGetBulkJobDB = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            bulkJob = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_BULKJOBS_BY_JOB_ID, BulkJob.class)
+            kruizeBulkJobEntry = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_BULKJOBS_BY_JOB_ID, KruizeBulkJobEntry.class)
                     .setParameter("jobId", jobId).getSingleResult();
+            statusValue = "success";
+        } catch (NoResultException e) {
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error(BULK_JOB_LOAD_ERROR, jobId, e.getMessage());
@@ -726,7 +728,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 timerGetBulkJobDB.stop(MetricsConfig.timerLoadBulkJobId);
             }
         }
-        return bulkJob;
+        return kruizeBulkJobEntry;
     }
 
     /**
@@ -735,17 +737,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * <p>This method performs a partial update on a bulk job's JSON fields using the jsonb_set function
      * in PostgreSQL. It updates the notification and recommendation data for a given experiment within
      * the bulk job record.</p>
-     *
+     * <p>
      * updateBulkJobByExperiment is an important function that is intended to be called frequently for each experiment per job_id.
-     *   However,  avoid these frequent updates to the bulk job. Instead, we can leverage the kruize_lm_recommendations table
-     *   to derive the status of each experiment. But kept this function as of now JIC if there is any need comes up for ACM usecase
-     *   Current Flow:
-     *   When Kruize receives a bulk request, an immediate entry is created in kruize_bulkjobs.
-     *   A subsequent entry is added with total_experiments and metadata.
-     *   A final update occurs once all experiments are completed, but not for every individual experiment.
-     *   The kruize_lm_recommendations table contains an entry for each experiment.
-     *   So only three calls to kruize_bulkjob table per bulk request
-     *   By utilizing kruize_lm_recommendations, we can reduce the number of updates to kruize_bulkjobs.
+     * However,  avoid these frequent updates to the bulk job. Instead, we can leverage the kruize_lm_recommendations table
+     * to derive the status of each experiment. But kept this function as of now JIC if there is any need comes up for ACM usecase
+     * Current Flow:
+     * When Kruize receives a bulk request, an immediate entry is created in kruize_bulkjobs.
+     * A subsequent entry is added with total_experiments and metadata.
+     * A final update occurs once all experiments are completed, but not for every individual experiment.
+     * The kruize_lm_recommendations table contains an entry for each experiment.
+     * So only three calls to kruize_bulkjob table per bulk request
+     * By utilizing kruize_lm_recommendations, we can reduce the number of updates to kruize_bulkjobs.
      * <p>Performance metrics are recorded, and any errors encountered during execution are logged.</p>
      *
      * @param jobId
@@ -1060,7 +1062,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
-   
+
     @Override
     public List<KruizeResultsEntry> loadAllResults() throws Exception {
         // TODO: load only experimentStatus=inProgress , playback may not require completed experiments

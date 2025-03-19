@@ -20,6 +20,7 @@ package com.autotune.utils;
 import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import org.apache.kafka.common.protocol.types.Field;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -86,7 +87,20 @@ public class KruizeConstants {
         public static final String METRIC_PROFILE_FOUND = "MetricProfile found: ";
         public static final String ADDING_METRIC_PROFILE = "Trying to add the metric profile to collection: ";
         public static final String METRIC_PROFILE_ALREADY_EXISTS = "MetricProfile already exists: ";
-        public static final String METRIC_PROFILE_ADDED = "MetricProfile added to the collection successfully: ";
+        public static final String METRIC_PROFILE_ADDED = "MetricProfile added to the collection successfully: {}";
+        public static final String METRIC_PROFILE_FILE_PATH = "MetricProfile file path: {}";
+
+        public static class MetricProfileErrorMsgs {
+            public static final String ADD_DEFAULT_METRIC_PROFILE_EXCEPTION = "Exception occurred while adding default Metric profile: {}";
+            public static final String SET_UP_DEFAULT_METRIC_PROFILE_ERROR = "Failed to set up default MetricProfile due to: {}";
+            public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
+            public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
+            public static final String ADD_METRIC_PROFILE_TO_DB_ERROR = "Failed to add Metric Profile due to {}";
+            public static final String METRIC_PROFILE_VALIDATION_FAILURE = "Validation failed: {}";
+
+            public MetricProfileErrorMsgs() {
+            }
+        }
     }
 
     /**
@@ -739,6 +753,8 @@ public class KruizeConstants {
         public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
         public static final String IS_ROS_ENABLED = "isROSEnabled";
         public static final String DATASOURCE_VIA_ENV = "datasource";
+        public static final String METADATA_PROFILE_FILE_PATH = "metadataProfileFilePath";
+        public static final String METRIC_PROFILE_FILE_PATH = "metricProfileFilePath";
     }
 
     public static final class RecommendationEngineConstants {
@@ -970,8 +986,9 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_FOUND = "MetadataProfile found: ";
         public static final String ADDING_METADATA_PROFILE = "Trying to add the metadata profile to collection: ";
         public static final String METADATA_PROFILE_ALREADY_EXISTS = "MetadataProfile already exists: ";
-        public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: ";
+        public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: {}";
         public static final String CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE = "Failed to convert input JSON to MetadataProfile object due to: {}";
+        public static final String METADATA_PROFILE_FILE_PATH = "MetadataProfile file path: {}";
 
         public static class MetadataProfileErrorMsgs {
 
@@ -981,6 +998,10 @@ public class KruizeConstants {
             public static final String PROCESS_METADATA_PROFILE_OBJECT_ERROR = "Failed to process metadata of metadataProfile object due to : {}";
             public static final String PROCESS_QUERY_VARIABLES_ERROR = "Error occurred while processing query_variables data due to : {}";
             public static final String CONVERT_METADATA_PROFILE_TO_DB_OBJECT_FAILURE = "Failed to convert MetadataProfile Object to MetadataProfile DB object due to {}";
+            public static final String ADD_DEFAULT_METADATA_PROFILE_EXCEPTION = "Exception occurred while adding default Metadata profile: {}";
+            public static final String SET_UP_DEFAULT_METADATA_PROFILE_ERROR = "Failed to set up default MetadataProfile due to: {}";
+            public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
+            public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
 
             private MetadataProfileErrorMsgs() {
             }

@@ -89,6 +89,11 @@ COPY --chown=${UID}:0 --from=mvnbuild-jdk21 ${AUTOTUNE_HOME}/src/autotune/jre/ $
 # Copy the app binaries
 COPY --chown=${UID}:0 --from=mvnbuild-jdk21 ${AUTOTUNE_HOME}/src/autotune/target/ ${AUTOTUNE_HOME}/app/target/
 
+# Copy the metric and metadata profile JSON file path into the runtime image
+COPY manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json ${AUTOTUNE_HOME}/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json
+COPY manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json ${AUTOTUNE_HOME}/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json
+
+
 # Grant execute permission
 RUN chmod -R +x $AUTOTUNE_HOME/app/target/bin/
 
