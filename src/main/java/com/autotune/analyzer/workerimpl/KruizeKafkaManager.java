@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Manages Kafka message publishing using an executor service.
@@ -37,7 +38,7 @@ import java.util.concurrent.Executors;
 public class KruizeKafkaManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(KruizeKafkaManager.class);
     private static KruizeKafkaManager instance;
-    private final ExecutorService kafkaExecutorService;
+    private final ExecutorService kafkaExecutorService = Executors.newFixedThreadPool(KruizeDeploymentInfo.kafka_thread_pool_size);
     private final Set<String> validTopics;
 
     /**
@@ -45,7 +46,6 @@ public class KruizeKafkaManager {
      * Initializes an executor service and loads valid Kafka topics from the configuration.
      */
     public KruizeKafkaManager() {
-        this.kafkaExecutorService = Executors.newFixedThreadPool(3);
         // validate the Kafka Connection
         LOGGER.debug("Initializing KruizeKafkaManager");
         validateKafkaConnection();
@@ -136,6 +136,19 @@ public class KruizeKafkaManager {
             LOGGER.debug(KruizeConstants.KAFKA_CONSTANTS.KAFKA_CONNECTION_SUCCESS, KruizeDeploymentInfo.kafka_bootstrap_servers);
         } catch (Exception e) {
             throw new RuntimeException(String.format(KruizeConstants.KAFKA_CONSTANTS.KAFKA_CONNECTION_FAILURE, KruizeDeploymentInfo.kafka_bootstrap_servers).concat(e.getMessage()));
+        }
+    }
+
+    public void shutdownKafkaManager() {
+        LOGGER.debug("Shutting down Kafka Executor Service...");
+        kafkaExecutorService.shutdown();
+        try {
+            if (!kafkaExecutorService.awaitTermination(1, TimeUnit.MINUTES)) {
+                kafkaExecutorService.shutdownNow();
+            }
+        } catch (InterruptedException e) {
+            kafkaExecutorService.shutdownNow();
+            Thread.currentThread().interrupt();
         }
     }
 

@@ -214,6 +214,10 @@ public class BulkJobManager implements Runnable {
                                         break;
                                     }
                                 }
+                                // Shutdown kafkaExecutor
+                                if (kruizeKafkaManager != null) {
+                                    kruizeKafkaManager.shutdownKafkaManager();
+                                }
 
                                 if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
                                     statusValue = "success";

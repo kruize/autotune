@@ -103,6 +103,7 @@ public class KruizeDeploymentInfo {
     public static String kafka_topics = System.getenv("KAFKA_TOPICS");
     public static String kafka_response_filter_include = System.getenv("KAFKA_RESPONSE_FILTER_INCLUDE");
     public static String kafka_response_filter_exclude = System.getenv("KAFKA_RESPONSE_FILTER_EXCLUDE");
+    public static Integer kafka_thread_pool_size = 3;
 
 
     private KruizeDeploymentInfo() {
