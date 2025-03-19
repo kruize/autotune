@@ -416,7 +416,6 @@ public class BulkJobManager implements Runnable {
     }
 
     private String handleMetadataProfile(DataSourceInfo datasource) {
-        LOGGER.info("inside handleMetadataProfile");
         String metadataProfileName = null;
         try {
             MetadataProfile metadataProfile;
