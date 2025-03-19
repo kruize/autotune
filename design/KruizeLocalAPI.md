@@ -2622,7 +2622,8 @@ see [Create Experiment](/design/CreateExperiment.md)
     "version": "v2.0",
     "experiment_name": "default|default|deployment|tfb-qrh-deployment",
     "cluster_name": "default",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "mode": "monitor",
     "target_cluster": "local",
     "kubernetes_objects": [
@@ -2674,6 +2675,7 @@ If no experiment type is specified, it will default to `container`.
   "experiment_name": "default|namespace-demo",
   "cluster_name": "default",
   "performance_profile": "resource-optimization-local-monitoring",
+  "metadata_profile": "cluster-metadata-local-monitoring",
   "mode": "monitor",
   "target_cluster": "local",
   "datasource": "prometheus-1",
@@ -2705,7 +2707,8 @@ If no experiment type is specified, it will default to `container`.
     "version": "v2.0",
     "experiment_name": "default|default|deployment|tfb-qrh-deployment",
     "cluster_name": "default",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "mode": "monitor",
     "target_cluster": "local",
     "experiment_type": "container",
@@ -2758,7 +2761,8 @@ By default, model will be `performance` and term will be set to `short` term.
     "version": "v2.0",
     "experiment_name": "default|default|deployment|tfb-qrh-deployment",
     "cluster_name": "default",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "mode": "monitor",
     "target_cluster": "local",
     "experiment_type": "container",
@@ -2857,7 +2861,8 @@ Returns the latest recommendations of all the experiments
     "mode": "monitor",
     "target_cluster": "local",
     "status": "IN_PROGRESS",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "trial_settings": {
       "measurement_duration": "15min"
     },
@@ -3028,7 +3033,8 @@ Returns the latest recommendations of all the experiments
     "mode": "monitor",
     "target_cluster": "local",
     "status": "IN_PROGRESS",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "trial_settings": {
       "measurement_duration": "15min"
     },
@@ -3127,7 +3133,8 @@ Returns all the recommendations of all the experiments
     "mode": "monitor",
     "target_cluster": "local",
     "status": "IN_PROGRESS",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "trial_settings": {
       "measurement_duration": "15min"
     },
