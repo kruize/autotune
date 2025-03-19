@@ -33,9 +33,7 @@ public class Analyzer {
         try {
             addServlets(contextHandler);
             PerformanceProfilesDeployment.getPerformanceProfiles(); //  Performance profile should be called first
-            if (KruizeDeploymentInfo.local) {
-                MetadataProfileDeployment.getMetadataProfiles();
-            }
+            MetadataProfileDeployment.getMetadataProfiles();
             KruizeOperator.getKruizeObjects(kruizeOperator);
         } catch (Exception e) {
             e.printStackTrace();

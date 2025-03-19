@@ -144,28 +144,26 @@ public class ExperimentValidation {
                         }
                     }
 
-                    if(KruizeDeploymentInfo.local && target_cluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
-                        if (null != kruizeObject.getMetadataProfile()) {
-                            String metadataProfileName = kruizeObject.getMetadataProfile();
-                            // fetch the Metadata Profile from the DB
-                            try {
-                                new ExperimentDBService().loadMetadataProfileFromDBByName(metadataProfilesMap, metadataProfileName);
-                            } catch (Exception e) {
-                                LOGGER.error(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.LOAD_METADATA_PROFILE_FAILURE, metadataProfileName, e.getMessage()));
-                            }
+                    if (null != kruizeObject.getMetadataProfile()) {
+                        String metadataProfileName = kruizeObject.getMetadataProfile();
+                        // fetch the Metadata Profile from the DB
+                        try {
+                            new ExperimentDBService().loadMetadataProfileFromDBByName(metadataProfilesMap, metadataProfileName);
+                        } catch (Exception e) {
+                            LOGGER.error(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.LOAD_METADATA_PROFILE_FAILURE, metadataProfileName, e.getMessage()));
+                        }
 
-                            if (null == metadataProfilesMap.get(kruizeObject.getMetadataProfile())) {
-                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + kruizeObject.getMetadataProfile();
-                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                                proceed = false;
-                            } else {
-                                proceed = true;
-                            }
-                        } else {
-                            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD;
+                        if (null == metadataProfilesMap.get(metadataProfileName)) {
+                            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + metadataProfileName;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             proceed = false;
+                        } else {
+                            proceed = true;
                         }
+                    } else {
+                        errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD;
+                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        proceed = false;
                     }
 
                     // validate mode and experiment type

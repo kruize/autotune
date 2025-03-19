@@ -386,17 +386,16 @@ public class KruizeOperator {
                     }
                 }
 
-                if(KruizeDeploymentInfo.local && targetCluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
-                    metadataProfileName = specJson.optString(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE);
-                    if (!metadataProfileName.isEmpty()) {
-                        // check if the metadata profile with the given name exist
-                        if (null == MetadataProfileDeployment.metadataProfilesMap.get(metadataProfileName)) {
-                            throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + metadataProfileName);
-                        }
-                    } else {
-                        throw new InvalidValueException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD);
+                metadataProfileName = specJson.optString(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE);
+                if (!metadataProfileName.isEmpty()) {
+                    // check if the metadata profile with the given name exist
+                    if (null == MetadataProfileDeployment.metadataProfilesMap.get(metadataProfileName)) {
+                        throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + metadataProfileName);
                     }
+                } else {
+                    throw new InvalidValueException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD);
                 }
+
                 selectorJson = specJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SELECTOR);
             }
             assert selectorJson != null;

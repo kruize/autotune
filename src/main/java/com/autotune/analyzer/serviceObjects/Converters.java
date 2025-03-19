@@ -100,10 +100,7 @@ public class Converters {
                 kruizeObject.setExperiment_id(createExperimentAPIObject.getExperiment_id());
                 kruizeObject.setStatus(createExperimentAPIObject.getStatus());
                 kruizeObject.setExperiment_usecase_type(new ExperimentUseCaseType(kruizeObject));
-                String target_cluster = createExperimentAPIObject.getTargetCluster();
-                if(KruizeDeploymentInfo.local && target_cluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
-                    kruizeObject.setMetadataProfile(createExperimentAPIObject.getMetadataProfile());
-                }
+                kruizeObject.setMetadataProfile(createExperimentAPIObject.getMetadataProfile());
                 if (null != createExperimentAPIObject.getValidationData()) {
                     //Validation already done and it is getting loaded back from db
                     kruizeObject.setValidation_data(createExperimentAPIObject.getValidationData());
