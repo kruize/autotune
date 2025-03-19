@@ -25,6 +25,14 @@ import static com.autotune.analyzer.recommendations.RecommendationConstants.Reco
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.PERFORMANCE_ACCELERATOR_PERCENTILE;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 
+public class PerformanceBasedRecommendationModel extends  GenericRecommendationModel{
+    public static final String name = RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE;
+
+    public PerformanceBasedRecommendationModel(String name, RecommendationTunables recommendationTunables) {
+        super(name, recommendationTunables);
+    }
+}
+/*
 public class PerformanceBasedRecommendationModel implements RecommendationModel {
 
     private int percentile;
@@ -468,7 +476,7 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
          *
          * So if the fractions are greater than 100 there is a higher chance that there is an anomaly in data
          * so we mark it as 1 to give out full GPU as a recommendation.
-         */
+
         if (coreFraction > 1) {
             LOGGER.info("Data irregularity detected, " +
                     "Notification needs to be added explaining we changed the core usage to 100% as it's more than 100%");
@@ -495,3 +503,4 @@ public class PerformanceBasedRecommendationModel implements RecommendationModel 
 
     }
 }
+*/
