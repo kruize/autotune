@@ -94,9 +94,11 @@ progress of the job.
   an experiment-processing job. Once a job is completed, this webhook will be triggered to send an HTTP request to the
   URL defined in the bulk request payload.
 
-- **metadata_profile:** Name of the metadata profile to import the cluster metadata
+- **metadata_profile:** Name of the metadata profile to import the cluster metadata. This is a mandatory field `metadata_profile` 
+  should be installed / created before invoking bulk API.
 
-- **measurement_duration:** The historic data duration to fetch the cluster metadata
+- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not 
+  specified `15min` as default measurement_duration value is considered.
 
 ### Success Response
 

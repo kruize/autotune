@@ -25,6 +25,7 @@ from helpers.kruize import *
 from datetime import datetime, timedelta
 from kubernetes import client, config
 from pathlib import Path
+from helpers.kruize import get_bulk_job_status
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
@@ -1619,12 +1620,12 @@ def validate_job_status(job_id, base_url, caplog):
     response_basic = get_bulk_job_status(job_id,False)
     # Verify common keys in the basic response
     assert common_keys.issubset(
-        response_basic.json().keys()), f"Missing keys in response: {common_keys - response_basic.json().keys()}"
+        response_basic.json()['summary'].keys()), f"Missing keys in response: {common_keys - response_basic.json().keys()}"
 
-    response_verbose = get_bulk_job_status(job_id,True)
+    response_verbose = get_bulk_job_status(job_id,include="summary,experiments")
     # Verify common and verbose keys in the verbose response
     assert common_keys.issubset(
-        response_verbose.json().keys()), f"Missing keys in verbose response: {common_keys - response_verbose.json().keys()}"
+        response_verbose.json()['summary'].keys()), f"Missing keys in verbose response: {common_keys - response_verbose.json().keys()}"
     assert verbose_keys.issubset(
         response_verbose.json().keys()), f"Missing verbose keys in response: {verbose_keys - response_verbose.json().keys()}"
 
@@ -1637,3 +1638,44 @@ def get_metadata_profile_dir():
     metadata_profile_dir = base_dir / 'manifests' / 'autotune' / 'metadata-profiles'
 
     return metadata_profile_dir
+
+
+def delete_and_create_metadata_profile():
+    metadata_profile_dir = get_metadata_profile_dir()
+
+    metadata_profile_json_file = metadata_profile_dir / 'bulk_cluster_metadata_local_monitoring.json'
+    json_data = json.load(open(metadata_profile_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
+    print("delete metadata profile = ", response.status_code)
+
+    # Create metadata profile using the specified json
+    response = create_metadata_profile(metadata_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
+
+def delete_and_create_metric_profile():
+    metric_profile_dir = get_metric_profile_dir()
+
+    metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
+    json_data = json.load(open(metric_profile_json_file))
+    metric_profile_name = json_data['metadata']['name']
+
+    response = delete_metric_profile(metric_profile_json_file)
+    print("delete metric profile = ", response.status_code)
+
+    # Create metric profile using the specified json
+    response = create_metric_profile(metric_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
