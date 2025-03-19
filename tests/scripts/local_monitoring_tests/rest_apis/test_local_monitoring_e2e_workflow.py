@@ -45,8 +45,11 @@ from helpers.list_reco_json_local_monitoring_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.import_metadata_json_validate import *
 from jinja2 import Environment, FileSystemLoader
+from helpers.list_metadata_profiles_validate import *
+from helpers.list_metadata_profiles_schema import *
 
 metric_profile_dir = get_metric_profile_dir()
+metadata_profile_dir = get_metadata_profile_dir()
 
 
 @pytest.mark.test_e2e
@@ -71,6 +74,34 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
 
     # Validate the json against the json schema
     errorMsg = validate_list_datasources_json(list_datasources_json, list_datasources_json_schema)
+    assert errorMsg == ""
+
+    # Install metadata profile
+    metadata_profile_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
+    json_data = json.load(open(metadata_profile_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
+    print("delete metadata profile = ", response.status_code)
+
+    # Create metadata profile using the specified json
+    response = create_metadata_profile(metadata_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
+
+    response = list_metadata_profiles(name=metadata_profile_name, logging=False)
+    metadata_profile_json = response.json()
+
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    errorMsg = validate_list_metadata_profiles_json(metadata_profile_json, list_metadata_profiles_schema)
     assert errorMsg == ""
 
 
@@ -130,14 +161,16 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
 
     container_exp_content = template.render(
        version="v2.0", experiment_name="monitor-sysbench", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
-       mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="container", kubernetes_obj_type="deployment", name="sysbench",
-       namespace="default", namespace_name=None, container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min", threshold="0.1"
+       metadata_profile="cluster-metadata-local-monitoring", mode="monitor", target_cluster="local", datasource="prometheus-1",
+       experiment_type="container", kubernetes_obj_type="deployment", name="sysbench", namespace="default", namespace_name=None,
+       container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min", threshold="0.1"
     )
 
     namespace_exp_content = template.render(
         version="v2.0", experiment_name="monitor-ns", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
-        mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="namespace", kubernetes_obj_type=None, name=None,
-        namespace=None, namespace_name="default", container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
+        metadata_profile="cluster-metadata-local-monitoring", mode="monitor", target_cluster="local", datasource="prometheus-1",
+        experiment_type="namespace", kubernetes_obj_type=None, name=None, namespace=None, namespace_name="default",
+        container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
     )
 
     # Convert rendered content to a dictionary
