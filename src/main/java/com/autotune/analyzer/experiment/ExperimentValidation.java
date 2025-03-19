@@ -144,26 +144,30 @@ public class ExperimentValidation {
                         }
                     }
 
-                    if (null != kruizeObject.getMetadataProfile()) {
-                        String metadataProfileName = kruizeObject.getMetadataProfile();
-                        // fetch the Metadata Profile from the DB
-                        try {
-                            new ExperimentDBService().loadMetadataProfileFromDBByName(metadataProfilesMap, metadataProfileName);
-                        } catch (Exception e) {
-                            LOGGER.error(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.LOAD_METADATA_PROFILE_FAILURE, metadataProfileName, e.getMessage()));
-                        }
+                    // This conditional check is required as metadata_profile field is added only for local monitoring experiments
+                    // and ignoring this might break the remote monitoring production
+                    if (target_cluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
+                        if (null != kruizeObject.getMetadataProfile()) {
+                            String metadataProfileName = kruizeObject.getMetadataProfile();
+                            // fetch the Metadata Profile from the DB
+                            try {
+                                new ExperimentDBService().loadMetadataProfileFromDBByName(metadataProfilesMap, metadataProfileName);
+                            } catch (Exception e) {
+                                LOGGER.error(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.LOAD_METADATA_PROFILE_FAILURE, metadataProfileName, e.getMessage()));
+                            }
 
-                        if (null == metadataProfilesMap.get(metadataProfileName)) {
-                            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + metadataProfileName;
+                            if (null == metadataProfilesMap.get(metadataProfileName)) {
+                                errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + metadataProfileName;
+                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                proceed = false;
+                            } else {
+                                proceed = true;
+                            }
+                        } else {
+                            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             proceed = false;
-                        } else {
-                            proceed = true;
                         }
-                    } else {
-                        errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD;
-                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                        proceed = false;
                     }
 
                     // validate mode and experiment type

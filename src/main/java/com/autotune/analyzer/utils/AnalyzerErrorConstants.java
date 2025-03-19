@@ -111,6 +111,7 @@ public class AnalyzerErrorConstants {
         public static final String METADATA_PROFILE_VALIDATION_FAILED = "Validation of metadata profile failed!";
         public static final String PARSE_ERROR_MESSAGE = "Exception occurred while parsing the data: %s";
         public static final String DELETED_METADATA_PROFILE = "Deleted metadata profile object: %s";
+        public static final String INVALID_METADATA_PROFILE_NAME = "MetadataProfile 'name' field is either null or empty!";
 
 
         private AutotuneObjectErrors() {

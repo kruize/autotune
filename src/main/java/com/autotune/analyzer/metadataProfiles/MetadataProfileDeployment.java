@@ -100,7 +100,13 @@ public class MetadataProfileDeployment {
             metadataProfileObjectJson.remove("kind");
             metadataProfileObjectJson.remove("metadata");
 
-            metadataProfileObjectJson.put("name",metadataJson.optString(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME));
+            String metadataProfileName = metadataJson.optString(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME);
+
+            if (metadataProfileName == null || metadataProfileName.isEmpty()) {
+                throw new JSONException(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_METADATA_PROFILE_NAME);
+            }
+
+            metadataProfileObjectJson.put("name", metadataProfileName);
             MetadataProfile metadataProfile = new Gson().fromJson(metadataProfileObjectJson.toString(), MetadataProfile.class);
 
             return metadataProfile;
