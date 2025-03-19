@@ -604,7 +604,7 @@ def list_metadata_profiles(name=None, verbose=None, logging=True):
 def delete_and_create_metadata_profile():
     metadata_profile_dir = get_metadata_profile_dir()
 
-    metadata_profile_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
+    metadata_profile_json_file = metadata_profile_dir / 'bulk_cluster_metadata_local_monitoring.json'
     json_data = json.load(open(metadata_profile_json_file))
     metadata_profile_name = json_data['metadata']['name']
 
@@ -620,3 +620,23 @@ def delete_and_create_metadata_profile():
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
+
+def delete_and_create_metric_profile():
+    metric_profile_dir = get_metric_profile_dir()
+
+    metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
+    json_data = json.load(open(metric_profile_json_file))
+    metric_profile_name = json_data['metadata']['name']
+
+    response = delete_metric_profile(metric_profile_json_file)
+    print("delete metric profile = ", response.status_code)
+
+    # Create metric profile using the specified json
+    response = create_metric_profile(metric_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
