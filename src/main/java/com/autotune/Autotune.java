@@ -140,7 +140,7 @@ public class Autotune {
             checkAvailableDataSources();
             // load available metric profiles from db
             loadMetricProfilesFromDB();
-            if (KruizeDeploymentInfo.is_ros_enabled) {
+            if (KruizeDeploymentInfo.is_ros_enabled && KruizeDeploymentInfo.local) {
                 // setting up metric profile
                 try {
                     setUpMetricProfile();
@@ -151,7 +151,7 @@ public class Autotune {
 
             // load available metadata profiles from db
             loadMetadataProfilesFromDB();
-            if (KruizeDeploymentInfo.is_ros_enabled) {
+            if (KruizeDeploymentInfo.is_ros_enabled && KruizeDeploymentInfo.local) {
                 // setting up metadata profile
                 try {
                     setUpMetadataProfile();
