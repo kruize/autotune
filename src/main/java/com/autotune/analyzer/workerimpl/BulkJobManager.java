@@ -417,29 +417,27 @@ public class BulkJobManager implements Runnable {
 
     private String handleMetadataProfile(DataSourceInfo datasource) {
         String metadataProfileName = null;
+        MetadataProfile metadataProfile;
         try {
-            MetadataProfile metadataProfile;
             //check for "metadata_profile" field
             if (null == this.bulkInput.getMetadata_profile()) {
                 metadataProfile = MetadataProfileCollection.getInstance().
                         loadMetadataProfileFromCollection(CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile());
-                this.bulkInput.setMetadata_profile(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText());
+                if (null != metadataProfile) {
+                    this.bulkInput.setMetadata_profile(CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile());
+                }
             }
 
-            try {
+            metadataProfile = MetadataProfileCollection.getInstance().loadMetadataProfileFromCollection(this.bulkInput.getMetadata_profile());
+            if (null != metadataProfile) {
                 metadataProfileName = this.bulkInput.getMetadata_profile();
-                metadataProfile = MetadataProfileCollection.getInstance().loadMetadataProfileFromCollection(metadataProfileName);
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage());
-                e.printStackTrace();
-                BulkJobStatus.Notification notification = METADATA_PROFILE_NOT_FOUND;
-                notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
-                setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
             }
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
             e.printStackTrace();
-            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR), new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR), datasource);
+            BulkJobStatus.Notification notification = METADATA_PROFILE_NOT_FOUND;
+            notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
+            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
         } finally {
             checkAndFinalizeJob(datasource);
         }
