@@ -26,8 +26,17 @@ public class BulkInput {
     private TimeRange time_range;
     private String datasource;
     private Webhook webhook;
+    private String requestId; //TODO: to be used for the Kafka consumer case to map requestID with jobID
 
     // Getters and Setters
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
 
     public BulkInput() {
     }

@@ -22,9 +22,32 @@ Kruize Kafka Producer internally uses the BulkService and publishes recommendati
  - User needs to hit a REST API POST request with a Payload as mentioned in the BulkAPI doc. For details, kindly refer to the [BulkAPI](BulkAPI.md) design doc.
  - Kafka enablement flag : `"isKafkaEnabled" : "true",` , needs to be set in the config to enable the usage of Kafka.
  - Kafka needs to be installed locally or in a cluster, and it's corresponding Bootstrap server URL should be added as an ENV.
+ - Kafka topics should be added as an ENV.
+ - Kafka response filters if required, should be added as an ENV.
 Example:
  -  `- name: KAFKA_BOOTSTRAP_SERVERS
       value: "<kafka-cluster-svc-name>.<kafka-ns>.svc.cluster.local:9092"`
+ -  `- name: KAFKA_TOPICS
+    value: "recommendations-topic,error-topic,summary-topic"`
+ -  `- name: KAFKA_RESPONSE_FILTER_INCLUDE
+    value: "summary"`
+ -  `- name: KAFKA_RESPONSE_FILTER_EXCLUDE
+    value: "experiment_name=abc"`
+
+ - The Include filter has a default value `summary`, which will return the summary of all the experiments. We can also modify this to get more tailored response. User can pass multiple comma separated values here.
+ - **Example**: `"summary|job_id|status"` will give the kafka response like this:
+
+   ```json
+   {
+     "summary": {
+       "status": "COMPLETED",
+       "job_id": "ab803e6a-cb06-436a-9721-45a807a15f13"
+     }
+   }
+   ```
+
+ - You can find more examples in the BulkAPI Design doc [here](BulkAPI.md#query-parameters)
+ - Similarly, we can add the same filter names in the exclude filter as well to get the customised response.
  - Consumer needs to be subscribed to the `recommendations-topic` to get the recommendations.
  - Subscribing to the `error-topic` and the `summary-topic` is optional
 
