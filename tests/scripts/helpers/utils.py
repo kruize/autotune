@@ -1631,3 +1631,24 @@ def get_metadata_profile_dir():
     metadata_profile_dir = base_dir / 'manifests' / 'autotune' / 'metadata-profiles'
 
     return metadata_profile_dir
+
+
+def delete_and_create_metadata_profile():
+    metadata_profile_dir = get_metadata_profile_dir()
+
+    metadata_profile_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
+    json_data = json.load(open(metadata_profile_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
+    print("delete metadata profile = ", response.status_code)
+
+    # Create metadata profile using the specified json
+    response = create_metadata_profile(metadata_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
