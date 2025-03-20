@@ -29,6 +29,7 @@ public class CreateExperimentConfigBean {
     private double threshold;
     private String measurementDurationStr;
     private int measurementDuration;
+    private String metadataProfile;
 
     // Getters and Setters
     public String getMode() {
@@ -95,6 +96,10 @@ public class CreateExperimentConfigBean {
         this.measurementDuration = measurementDuration;
     }
 
+    public String getMetadataProfile() {return metadataProfile;}
+
+    public void setMetadataProfile(String metadataProfile) {this.metadataProfile = metadataProfile;}
+
     @Override
     public String toString() {
         return "CreateExperimentConfigBean{" +
@@ -106,6 +111,7 @@ public class CreateExperimentConfigBean {
                 ", threshold=" + threshold +
                 ", measurementDurationStr='" + measurementDurationStr + '\'' +
                 ", measurementDuration=" + measurementDuration +
+                ", metadataProfile='" + metadataProfile + '\'' +
                 '}';
     }
 }

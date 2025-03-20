@@ -547,6 +547,7 @@ public class BulkJobManager implements Runnable {
         createExperimentAPIObject.setDatasource(this.bulkInput.getDatasource());
         createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
         createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());
+        createExperimentAPIObject.setMetadataProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile());
         List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
         KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
         ContainerAPIObject cao = new ContainerAPIObject(dc.getContainerName(),
