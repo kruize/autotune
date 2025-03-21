@@ -293,6 +293,7 @@ public class KruizeConstants {
         // Config changes JSON Keys
         public static final String MODEL_SETTINGS = "model_settings";
         public static final String TERM_SETTINGS = "term_settings";
+        public static final String METADATA_PROFILE = "metadata_profile";
 
         private JSONKeys() {
         }
@@ -888,6 +889,7 @@ public class KruizeConstants {
             CREATE_EXPERIMENT_CONFIG_BEAN.setThreshold(0.1);
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMetadataProfile(AnalyzerConstants.MetadataProfileConstants.CLUSTER_METADATA_LOCAL_MON_PROFILE);
         }
 
         public static class NotificationConstants {
@@ -936,6 +938,11 @@ public class KruizeConstants {
                     BulkJobStatus.NotificationType.ERROR,
                     "Not able to proceed due to. (%s)",
                     503
+            );
+            public static final BulkJobStatus.Notification METADATA_PROFILE_NOT_FOUND = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Metadata profile not found. (%s)",
+                    400
             );
 
 
@@ -1000,11 +1007,11 @@ public class KruizeConstants {
             public static final String PROCESS_METADATA_PROFILE_OBJECT_ERROR = "Failed to process metadata of metadataProfile object due to : {}";
             public static final String PROCESS_QUERY_VARIABLES_ERROR = "Error occurred while processing query_variables data due to : {}";
             public static final String CONVERT_METADATA_PROFILE_TO_DB_OBJECT_FAILURE = "Failed to convert MetadataProfile Object to MetadataProfile DB object due to {}";
+            public static final String INVALID_METADATA_PROFILE = "Metadata profile name either does not exist or is not valid: ";
             public static final String ADD_DEFAULT_METADATA_PROFILE_EXCEPTION = "Exception occurred while adding default Metadata profile: {}";
             public static final String SET_UP_DEFAULT_METADATA_PROFILE_ERROR = "Failed to set up default MetadataProfile due to: {}";
             public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
             public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
-
             private MetadataProfileErrorMsgs() {
             }
         }
