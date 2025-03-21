@@ -302,12 +302,6 @@ spec:
               value: "-XX:MaxRAMPercentage=80"
             - name: KAFKA_BOOTSTRAP_SERVERS
               value: "kruize-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
-            - name: KAFKA_TOPICS
-              value: "recommendations-topic,error-topic,summary-topic"
-            - name: KAFKA_RESPONSE_FILTER_INCLUDE
-              value: "summary"
-            - name: KAFKA_RESPONSE_FILTER_EXCLUDE
-              value: ""
           ports:
             - name: kruize-port
               containerPort: 8080

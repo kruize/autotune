@@ -60,7 +60,7 @@ public class DSMetadataAPIObject {
             String measurementDuration = getMeasurementDurationMinutes().replaceAll("\\D+", "");
             return Integer.parseInt(measurementDuration);
         } catch (NumberFormatException | NullPointerException e) {
-            return AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT;
+            return Integer.valueOf(AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT);
         }
     }
 }

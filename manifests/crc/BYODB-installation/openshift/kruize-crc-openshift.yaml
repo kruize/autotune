@@ -49,7 +49,6 @@ data:
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",
       "experimentsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/createExperiment",
-      "isKafkaEnabled" : "true",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -134,14 +133,8 @@ spec:
               value: "/etc/config/dbconfigjson"
             - name: KRUIZE_CONFIG_FILE
               value: "/etc/config/kruizeconfigjson"
-            - name: KAFKA_BOOTSTRAP_SERVERS
-              value: "kruize-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
-            - name: KAFKA_TOPICS
-              value: "recommendations-topic,error-topic,summary-topic"
-            - name: KAFKA_RESPONSE_FILTER_INCLUDE
-              value: "summary"
-            - name: KAFKA_RESPONSE_FILTER_EXCLUDE
-              value: ""
+            - name: JAVA_TOOL_OPTIONS
+              value: "-XX:MaxRAMPercentage=80"
           resources:
             requests:
               memory: "768Mi"

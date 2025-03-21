@@ -22,15 +22,13 @@ import com.autotune.analyzer.kruizeLayer.layers.ContainerLayer;
 import com.autotune.analyzer.kruizeLayer.layers.GenericLayer;
 import com.autotune.analyzer.kruizeLayer.layers.HotspotLayer;
 import com.autotune.analyzer.kruizeLayer.layers.QuarkusLayer;
-import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.KubeEventLogger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Clock;
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.Hashtable;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_CONFIG_DEFAULT_VALUE.DELETE_PARTITION_THRESHOLD_IN_DAYS;
@@ -100,10 +98,6 @@ public class KruizeDeploymentInfo {
     public static String kafka_group_id = System.getenv("KAFKA_CONSUMER_GROUP_ID");
     public static String metadata_profile_file_path;
     public static String metric_profile_file_path;
-    public static String kafka_topics = System.getenv("KAFKA_TOPICS");
-    public static String kafka_response_filter_include = System.getenv("KAFKA_RESPONSE_FILTER_INCLUDE");
-    public static String kafka_response_filter_exclude = System.getenv("KAFKA_RESPONSE_FILTER_EXCLUDE");
-    public static Integer kafka_thread_pool_size = 3;
 
 
     private KruizeDeploymentInfo() {
@@ -204,24 +198,6 @@ public class KruizeDeploymentInfo {
         LOGGER.info("Monitoring agent service: {}", KruizeDeploymentInfo.monitoring_service);
         LOGGER.info("Kruize Local Flag: {}\n\n", KruizeDeploymentInfo.local);
         LOGGER.info("Log Request and Response: {}\n\n", KruizeDeploymentInfo.log_http_req_resp);
-    }
-
-    public static Set<String> loadKafkaTopicsFromConfig() {
-        // Load topics from config (Assuming topics are in a comma-separated format)
-        return kafka_topics != null ? Arrays.stream(kafka_topics.split(","))
-                .map(String::trim) // Trim spaces
-                .filter(s -> !s.isEmpty()) // Remove empty values
-                .collect(Collectors.toSet())  : new HashSet<>();
-    }
-
-    public static Set<String> getKafkaIncludeFilter() {
-        String response = KruizeDeploymentInfo.kafka_response_filter_include;
-        return response != null ? new HashSet<>(Arrays.asList(response.split(","))) : new HashSet<>(List.of(KruizeConstants.KAFKA_CONSTANTS.SUMMARY));
-    }
-
-    public static Set<String> getKafkaExcludeFilter() {
-        String response = KruizeDeploymentInfo.kafka_response_filter_exclude;
-        return response != null ? new HashSet<>(Arrays.asList(response.split(","))) : Collections.emptySet();
     }
 }
 
