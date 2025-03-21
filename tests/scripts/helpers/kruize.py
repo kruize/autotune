@@ -523,7 +523,7 @@ def get_bulk_job_status(job_id,include=None,logger=None):
     msg = f"Equivalent cURL command : {curl_command_include}"
     log_message(msg, logger)
 
-    response = requests.get(url_include)
+    response = requests.get(getJobIDURL)
 
     msg = f"Include GET Response Status Code: {response.status_code}"
     log_message(msg, logger)

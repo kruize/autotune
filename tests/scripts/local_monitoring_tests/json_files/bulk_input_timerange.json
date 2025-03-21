@@ -17,5 +17,7 @@
   "time_range": {
 	"start": "2025-01-03T00:00:00.000Z",
 	"end": "2025-01-04T00:00:00.000Z"
-  }
+  },
+  "metadata_profile": "cluster-metadata-local-monitoring",
+  "measurement_duration": "15min"
 }

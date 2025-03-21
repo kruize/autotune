@@ -77,7 +77,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     assert errorMsg == ""
 
     # Install metadata profile
-    metadata_profile_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
+    metadata_profile_json_file = metadata_profile_dir / 'bulk_cluster_metadata_local_monitoring.json'
     json_data = json.load(open(metadata_profile_json_file))
     metadata_profile_name = json_data['metadata']['name']
 
