@@ -20,6 +20,7 @@ import pytest
 import sys
 import time
 import shutil
+import ast
 sys.path.append("../../")
 
 from helpers.fixtures import *
@@ -135,7 +136,8 @@ def test_list_recommendations_namespace_exps(cluster_type):
     content = template.render(
         version="v2.0", experiment_name="test-ns1", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
         mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="namespace", kubernetes_obj_type=None, name=None,
-        namespace=None, namespace_name="ns1", container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
+        namespace=None, namespace_name="ns1", container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1",
+        models=["cost","performance"], terms=["short","medium","long"]
     )
 
     # Convert rendered content to a dictionary
@@ -144,6 +146,12 @@ def test_list_recommendations_namespace_exps(cluster_type):
     json_content[0]["kubernetes_objects"][0].pop("name")
     json_content[0]["kubernetes_objects"][0].pop("namespace")
     json_content[0]["kubernetes_objects"][0].pop("containers")
+
+    if json_content[0]["recommendation_settings"].get("model_settings") is not None:
+        json_content[0]["recommendation_settings"]["model_settings"]["models"] = ast.literal_eval(json_content[0]["recommendation_settings"]["model_settings"]["models"])
+    if json_content[0]["recommendation_settings"].get("term_settings") is not None:
+        json_content[0]["recommendation_settings"]["term_settings"]["terms"] = ast.literal_eval(json_content[0]["recommendation_settings"]["term_settings"]["terms"])
+
 
     # Write the final JSON to the temp file
     with open(tmp_json_file_1, mode="w", encoding="utf-8") as message:

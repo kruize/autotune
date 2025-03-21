@@ -83,6 +83,12 @@ CREATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONOb
 CREATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
 
 
+EMPTY_MODELS_TERMS = "Empty term or model value."
+INVALID_TERMS = "Term name is not supported. Use short, medium or long term."
+INVALID_MODELS = "Model name is not supported. Use cost or performance."
+MULTIPLE_TERMS = "Multiple terms are currently not supported for auto or recreate mode."
+MULTIPLE_MODELS = "Multiple models are currently not supported for auto or recreate mode."
+
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
 NOTIFICATION_CODE_FOR_COST_RECOMMENDATIONS_AVAILABLE = "112101"
@@ -476,7 +482,8 @@ def validate_local_monitoring_reco_json(create_exp_json, list_reco_json, expecte
     create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][0]
     list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
     experiment_type = create_exp_json.get("experiment_type")
-    validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj, list_reco_kubernetes_obj, expected_duration_in_hours,
+    create_exp_recommendation_settings = create_exp_json["recommendation_settings"]
+    validate_local_monitoring_kubernetes_obj(create_exp_recommendation_settings, create_exp_kubernetes_obj, list_reco_kubernetes_obj, expected_duration_in_hours,
                                              test_name, experiment_type)
 
 def validate_list_exp_results_count(expected_results_count, list_exp_json):
@@ -535,16 +542,18 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                     create_exp_kubernetes_obj["containers"][i]["container_name"]:
                 update_results_container = create_exp_kubernetes_obj["containers"][i]
                 list_reco_container = list_reco_kubernetes_obj["containers"][j]
-                validate_container(update_results_container, update_results_json, list_reco_container,
+                create_exp_recommendation_settings = create_exp_json["recommendation_settings"]
+
+                validate_container(create_exp_recommendation_settings, update_results_container, update_results_json, list_reco_container,
                                    expected_duration_in_hours, test_name)
 
-def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
+def validate_local_monitoring_kubernetes_obj(create_exp_recommendation_settings, create_exp_kubernetes_obj,
                             list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
     if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
         assert list_reco_kubernetes_obj["namespaces"]["namespace_name"] == create_exp_kubernetes_obj["namespaces"]["namespace_name"]
         list_reco_namespace = list_reco_kubernetes_obj["namespaces"]
         create_exp_namespace = create_exp_kubernetes_obj["namespaces"]
-        validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name)
+        validate_local_monitoring_namespace( create_exp_recommendation_settings,create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name)
     else:
         # Validate type, name, namespace
         assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
@@ -564,9 +573,10 @@ def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
                         create_exp_kubernetes_obj["containers"][i]["container_name"]:
                     list_reco_container = list_reco_kubernetes_obj["containers"][j]
                     create_exp_container = create_exp_kubernetes_obj["containers"][i]
-                    validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name)
 
-def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours,
+                    validate_local_monitoring_container(create_exp_recommendation_settings, create_exp_container, list_reco_container, expected_duration_in_hours, test_name)
+
+def validate_container(create_exp_recommendation_settings, update_results_container, update_results_json, list_reco_container, expected_duration_in_hours,
                        test_name):
     # Validate container image name and container name
     if update_results_container != None and list_reco_container != None:
@@ -602,6 +612,10 @@ def validate_container(update_results_container, update_results_json, list_reco_
                 current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
 
                 duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+
+                if 'term_settings' in create_exp_recommendation_settings:
+                    duration_terms = get_duration_terms(create_exp_recommendation_settings)
+
                 for term in duration_terms.keys():
                     if check_if_recommendations_are_present(terms_obj[term]):
                         print(f"reco present for term {term}")
@@ -643,7 +657,10 @@ def validate_container(update_results_container, update_results_json, list_reco_
                                                                             interval_end_time)
 
                         # Get engine objects
-                        engines_list = ["cost", "performance"]
+                        if "model_settings" in create_exp_recommendation_settings:
+                            engines_list = create_exp_recommendation_settings["model_settings"]["models"]
+                        else :
+                            engines_list = ["cost", "performance"]
 
                         # Extract recommendation engine objects
                         recommendation_engines_object = None
@@ -669,7 +686,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
 
-def validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name):
+def validate_local_monitoring_container(create_exp_recommendation_settings, create_exp_container, list_reco_container, expected_duration_in_hours, test_name):
     # Validate container image name and container name
     if create_exp_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == create_exp_container["container_image_name"], \
@@ -692,6 +709,10 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
         current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
 
         duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+
+        if 'term_settings' in create_exp_recommendation_settings:
+            duration_terms = get_duration_terms(create_exp_recommendation_settings)
+
         for term in duration_terms.keys():
             if check_if_recommendations_are_present(terms_obj[term]):
                 print(f"reco present for term {term}")
@@ -734,7 +755,10 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
                                                                     interval_end_time)
 
                 # Get engine objects
-                engines_list = ["cost", "performance"]
+                if "model_settings" in create_exp_recommendation_settings:
+                     engines_list = create_exp_recommendation_settings["model_settings"]["models"]
+                else :
+                     engines_list = ["cost", "performance"]
 
                 # Extract recommendation engine objects
                 recommendation_engines_object = None
@@ -760,7 +784,7 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
         assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
 
 
-def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name):
+def validate_local_monitoring_namespace(create_exp_recommendation_settings, create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name):
     # Validate namespace name
     if create_exp_namespace != None and list_reco_namespace != None:
         assert create_exp_namespace["namespace_name"] == list_reco_namespace["namespace_name"], \
@@ -779,6 +803,10 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
         current_config = list_reco_namespace["recommendations"]["data"][interval_end_time]["current"]
 
         duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+
+        if 'term_settings' in create_exp_recommendation_settings:
+            duration_terms = get_duration_terms(create_exp_recommendation_settings)
+
         for term in duration_terms.keys():
             if check_if_recommendations_are_present(terms_obj[term]):
                 print(f"reco present for term {term}")
@@ -818,7 +846,10 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
                                                                     interval_end_time)
 
                 # Get engine objects
-                engines_list = ["cost", "performance"]
+                if "model_settings" in create_exp_recommendation_settings:
+                    engines_list = create_exp_recommendation_settings["model_settings"]["models"]
+                else :
+                    engines_list = ["cost", "performance"]
 
                 # Extract recommendation engine objects
                 recommendation_engines_object = None
@@ -1563,7 +1594,6 @@ def validate_accelerator_recommendations_for_container(recommendations_json):
         assert recommendations_json[0]['experiment_type'] == CONTAINER_EXPERIMENT_TYPE, "Test is only applicable for container experiment type"
 
     assert recommendations_json[0]['kubernetes_objects'], "Kubernetes objects expected"
-
     # Test needs to be changed if we support multiple kubernetes objects
     kubernetes_obj = recommendations_json[0]['kubernetes_objects'][0]
     assert kubernetes_obj["containers"], "Containers array expected"
@@ -1631,3 +1661,17 @@ def get_metadata_profile_dir():
     metadata_profile_dir = base_dir / 'manifests' / 'autotune' / 'metadata-profiles'
 
     return metadata_profile_dir
+
+
+def get_duration_terms(create_exp_recommendation_settings):
+    # Define the default duration terms
+    duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+
+    # Extract the terms from the input dictionary
+    terms_from_settings = create_exp_recommendation_settings.get("term_settings", {}).get("terms",[])
+    terms_from_settings = [term + "_term" for term in terms_from_settings]
+
+    # Filter duration_terms to keep only keys that exist in terms_from_settings
+    filtered_duration_terms = {key: value for key, value in duration_terms.items() if key in terms_from_settings}
+
+    return filtered_duration_terms
