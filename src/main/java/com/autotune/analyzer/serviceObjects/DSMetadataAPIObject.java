@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
@@ -59,7 +60,7 @@ public class DSMetadataAPIObject {
             String measurementDuration = getMeasurementDurationMinutes().replaceAll("\\D+", "");
             return Integer.parseInt(measurementDuration);
         } catch (NumberFormatException | NullPointerException e) {
-            return 15;
+            return Integer.valueOf(AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT);
         }
     }
 }
