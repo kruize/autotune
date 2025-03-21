@@ -105,7 +105,7 @@ public class AnalyzerConstants {
     public static final String METADATA_PROFILE = "metadataProfile";
     public static final String WORKLOAD = "workload";
     public static final String CONTAINER = "container";
-    public static final String DEFAULT_MEASUREMENT_DURATION_INT = "15";
+    public static final int DEFAULT_MEASUREMENT_DURATION_INT = 15;
 
 
     private AnalyzerConstants() {

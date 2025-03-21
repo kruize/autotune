@@ -28,8 +28,17 @@ public class BulkInput {
     private Webhook webhook;
     private String metadata_profile;
     private String measurement_duration;
+    private String requestId; //TODO: to be used for the Kafka consumer case to map requestID with jobID
 
     // Getters and Setters
+
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
 
     public BulkInput() {
     }
