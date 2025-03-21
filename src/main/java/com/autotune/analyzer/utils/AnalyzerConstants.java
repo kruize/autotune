@@ -102,6 +102,10 @@ public class AnalyzerConstants {
     public static final String UUID_VARIABLE = "$UUID$";
     public static final String PROFILE_VARIABLE = "$GPU_I_PROFILE$";
     public static final String ERROR_STATUS = "ERROR";
+    public static final String METADATA_PROFILE = "metadataProfile";
+    public static final String WORKLOAD = "workload";
+    public static final String CONTAINER = "container";
+    public static final int DEFAULT_MEASUREMENT_DURATION_INT = 15;
 
 
     private AnalyzerConstants() {
@@ -648,6 +652,7 @@ public class AnalyzerConstants {
         public static final String METADATA_PROFILE_NAME_PARAMETER = "metadataProfileName";
         public static final String DEFAULT_DATASOURCE = "prometheus";
         public static final String CLUSTER_METADATA_LOCAL_MON_PROFILE = "cluster-metadata-local-monitoring";
+        public static final String DEFAULT_MEASUREMENT_DURATION = "15min";
     }
 
     public static final class CommonProfileMsgs {

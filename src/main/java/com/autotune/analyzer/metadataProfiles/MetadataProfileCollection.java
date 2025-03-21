@@ -105,6 +105,18 @@ public class MetadataProfileCollection {
         }
     }
 
+    public MetadataProfile loadMetadataProfileFromCollection(String metadataProfileName) throws Exception {
+        MetadataProfile metadataProfile = null;
+        if (null != metadataProfileName && !metadataProfileName.isEmpty()) {
+            metadataProfile = metadataProfileCollection.get(metadataProfileName);
+        }
+
+        if (null == metadataProfile) {
+            throw new Exception(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.INVALID_METADATA_PROFILE + metadataProfileName);
+        }
+        return metadataProfile;
+    }
+
     public void addMetadataProfileFromConfigFile() {
         try {
             String metadataProfilePath = KruizeDeploymentInfo.metadata_profile_file_path;

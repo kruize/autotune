@@ -294,6 +294,7 @@ public class KruizeConstants {
         // Config changes JSON Keys
         public static final String MODEL_SETTINGS = "model_settings";
         public static final String TERM_SETTINGS = "term_settings";
+        public static final String METADATA_PROFILE = "metadata_profile";
 
         private JSONKeys() {
         }
@@ -755,6 +756,7 @@ public class KruizeConstants {
         public static final String DATASOURCE_VIA_ENV = "datasource";
         public static final String METADATA_PROFILE_FILE_PATH = "metadataProfileFilePath";
         public static final String METRIC_PROFILE_FILE_PATH = "metricProfileFilePath";
+        public static final String IS_KAFKA_ENABLED = "isKafkaEnabled";
     }
 
     public static final class RecommendationEngineConstants {
@@ -889,6 +891,7 @@ public class KruizeConstants {
             CREATE_EXPERIMENT_CONFIG_BEAN.setThreshold(0.1);
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMetadataProfile(AnalyzerConstants.MetadataProfileConstants.CLUSTER_METADATA_LOCAL_MON_PROFILE);
         }
 
         public static class NotificationConstants {
@@ -938,6 +941,11 @@ public class KruizeConstants {
                     "Not able to proceed due to. (%s)",
                     503
             );
+            public static final BulkJobStatus.Notification METADATA_PROFILE_NOT_FOUND = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Metadata profile not found. (%s)",
+                    400
+            );
 
 
             // More notification constants can be added here as needed
@@ -946,7 +954,9 @@ public class KruizeConstants {
                 PROCESSED("PROCESSED"),
                 UNPROCESSED("UNPROCESSED"),
                 PROCESSING("PROCESSING"),
-                FAILED("FAILED");
+                FAILED("FAILED"),
+                PUBLISHED("PUBLISHED"),
+                PUBLISH_FAILED("PUBLISH_FAILED");
 
                 private final String status;
 
@@ -999,11 +1009,11 @@ public class KruizeConstants {
             public static final String PROCESS_METADATA_PROFILE_OBJECT_ERROR = "Failed to process metadata of metadataProfile object due to : {}";
             public static final String PROCESS_QUERY_VARIABLES_ERROR = "Error occurred while processing query_variables data due to : {}";
             public static final String CONVERT_METADATA_PROFILE_TO_DB_OBJECT_FAILURE = "Failed to convert MetadataProfile Object to MetadataProfile DB object due to {}";
+            public static final String INVALID_METADATA_PROFILE = "Metadata profile name either does not exist or is not valid: ";
             public static final String ADD_DEFAULT_METADATA_PROFILE_EXCEPTION = "Exception occurred while adding default Metadata profile: {}";
             public static final String SET_UP_DEFAULT_METADATA_PROFILE_ERROR = "Failed to set up default MetadataProfile due to: {}";
             public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
             public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
-
             private MetadataProfileErrorMsgs() {
             }
         }
@@ -1022,20 +1032,28 @@ public class KruizeConstants {
     }
 
     public static final class KAFKA_CONSTANTS {
+        public static final String BULK_INPUT_TOPIC = "bulk-input-topic";
         public static final String RECOMMENDATIONS_TOPIC = "recommendations-topic";
         public static final String ERROR_TOPIC = "error-topic";
         public static final String SUMMARY_TOPIC = "summary-topic";
+        public static final String UNKNOWN_TOPIC = "Unknown topic: %s";
 
         public static final String SUMMARY = "summary";
         public static final String EXPERIMENTS = "experiments";
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String ALL = "all";
 
-        public static final String BOOTSTRAP_SERVER_MISSING = "Missing required environment variable: KAFKA_BOOTSTRAP_SERVERS";
+        public static final String BOOTSTRAP_SERVER_MISSING = "Kafka is enabled, but no bootstrap server URL is provided!";
+        public static final String KAFKA_CONNECTION_SUCCESS = "✅ Kafka connection successful: {}";
+        public static final String KAFKA_CONNECTION_FAILURE = "❌ Failed to connect to Kafka at %s : ";
+
+
         public static final String MESSAGE_SENT_SUCCESSFULLY = "Message sent successfully to topic {} at partition {} and offset {}";
         public static final String KAFKA_MESSAGE_TIMEOUT_ERROR = "Kafka timeout while sending message to topic {}: {}";
         public static final String KAFKA_MESSAGE_FAILED = "Error sending message to Kafka topic {}: {}";
         public static final String KAFKA_PRODUCER_CLOSED = "Kafka producer closed.";
+        public static final String MISSING_KAFKA_TOPIC = "Kafka topic '%s' does not exist! Skipping message publishing.";
+        public static final String KAFKA_PUBLISH_FAILED  = "Failed to publish to Kafka: {}";
 
         public static final String MESSAGE_RECEIVED_SUCCESSFULLY = "Received Input: Request_Id={}, Value={}, Partition={}, Offset={}";
 

@@ -111,7 +111,7 @@ public class CreateExperimentConfigBean {
                 ", threshold=" + threshold +
                 ", measurementDurationStr='" + measurementDurationStr + '\'' +
                 ", measurementDuration=" + measurementDuration +
-                ", metadataProfile='" + metadataProfile + '\'' +
+                ", metadataProfile=" + metadataProfile +
                 '}';
     }
 }

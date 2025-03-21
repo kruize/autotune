@@ -68,7 +68,7 @@ public class DataSourceManager {
      * @param excludeResources
      * @return
      */
-    public DataSourceMetadataInfo importMetadataFromDataSource(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps, Map<String, String> includeResources,
+    public DataSourceMetadataInfo importMetadataFromDataSource(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey, long startTime, long endTime, int steps, int measurementDuration, Map<String, String> includeResources,
                                                                Map<String, String> excludeResources) throws DataSourceDoesNotExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         String statusValue = "failure";
         io.micrometer.core.instrument.Timer.Sample timerImportMetadata = Timer.start(MetricsConfig.meterRegistry());
@@ -76,7 +76,8 @@ public class DataSourceManager {
             if (null == dataSourceInfo) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
             }
-            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.createDataSourceMetadata(dataSourceInfo, uniqueKey, startTime, endTime, steps, includeResources, excludeResources);
+            DataSourceMetadataInfo dataSourceMetadataInfo = dataSourceMetadataOperator.createDataSourceMetadata(metadataProfileName,
+                    dataSourceInfo, uniqueKey, startTime, endTime, steps, measurementDuration, includeResources, excludeResources);
             if (null == dataSourceMetadataInfo) {
                 LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.DATASOURCE_METADATA_INFO_NOT_AVAILABLE, "for datasource {}" + dataSourceInfo.getName());
                 return null;
@@ -133,7 +134,7 @@ public class DataSourceManager {
      * @param dataSourceMetadataInfo The existing DataSourceMetadataInfo object containing the current
      *                               metadata information of the data source.
      */
-    public void updateMetadataFromDataSource(DataSourceInfo dataSource, DataSourceMetadataInfo dataSourceMetadataInfo) {
+    public void updateMetadataFromDataSource(String metadataProfileName, DataSourceInfo dataSource, DataSourceMetadataInfo dataSourceMetadataInfo, int measurementDuration) {
         try {
             if (null == dataSource) {
                 throw new DataSourceDoesNotExist(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
@@ -141,7 +142,7 @@ public class DataSourceManager {
             if (null == dataSourceMetadataInfo) {
                 throw new DataSourceDoesNotExist(DATASOURCE_METADATA_INFO_NOT_AVAILABLE);
             }
-            dataSourceMetadataOperator.updateDataSourceMetadata(dataSource, "", 0, 0, 0, null, null);
+            dataSourceMetadataOperator.updateDataSourceMetadata(metadataProfileName, dataSource, "", 0, 0, 0, measurementDuration, null, null);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
         }
