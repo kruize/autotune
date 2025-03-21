@@ -569,6 +569,7 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                     validate_container(update_results_container, update_results_json, list_reco_container,
                                        expected_duration_in_hours, test_name, experiment_type)
 
+
 def validate_local_monitoring_kubernetes_obj(create_exp_recommendation_settings, create_exp_kubernetes_obj,
                             list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
     if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
@@ -633,6 +634,10 @@ def validate_container(update_results_container, update_results_json, list_reco_
                 current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
 
                 duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+
+                if 'term_settings' in create_exp_recommendation_settings:
+                    duration_terms = get_duration_terms(create_exp_recommendation_settings)
+
                 for term in duration_terms.keys():
                     if check_if_recommendations_are_present(terms_obj[term]):
                         print(f"reco present for term {term}")
@@ -674,7 +679,10 @@ def validate_container(update_results_container, update_results_json, list_reco_
                                                                             interval_end_time)
 
                         # Get engine objects
-                        engines_list = ["cost", "performance"]
+                        if "model_settings" in create_exp_recommendation_settings:
+                            engines_list = create_exp_recommendation_settings["model_settings"]["models"]
+                        else :
+                            engines_list = ["cost", "performance"]
 
                         # Extract recommendation engine objects
                         recommendation_engines_object = None
@@ -700,6 +708,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
 
+<<<<<<< HEAD
 
 #TODO: Extract out the common part from this method which matches with container one to remove redundancy
 def validate_namespace(update_results_namespace, update_results_json, list_reco_namespace, expected_duration_in_hours,
@@ -802,6 +811,9 @@ def validate_namespace(update_results_namespace, update_results_json, list_reco_
 
 
 def validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name):
+=======
+def validate_local_monitoring_container(create_exp_recommendation_settings, create_exp_container, list_reco_container, expected_duration_in_hours, test_name):
+>>>>>>> 4bca0493 (makes duration terms dynamic)
     # Validate container image name and container name
     if create_exp_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == create_exp_container["container_image_name"], \
@@ -824,6 +836,10 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
         current_config = list_reco_container["recommendations"]["data"][interval_end_time]["current"]
 
         duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+
+        if 'term_settings' in create_exp_recommendation_settings:
+            duration_terms = get_duration_terms(create_exp_recommendation_settings)
+
         for term in duration_terms.keys():
             if check_if_recommendations_are_present(terms_obj[term]):
                 print(f"reco present for term {term}")
@@ -866,7 +882,10 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
                                                                     interval_end_time)
 
                 # Get engine objects
-                engines_list = ["cost", "performance"]
+                if "model_settings" in create_exp_recommendation_settings:
+                     engines_list = create_exp_recommendation_settings["model_settings"]["models"]
+                else :
+                     engines_list = ["cost", "performance"]
 
                 # Extract recommendation engine objects
                 recommendation_engines_object = None
