@@ -465,8 +465,6 @@ public class BulkJobManager implements Runnable {
             BulkJobStatus.Notification notification = METADATA_PROFILE_NOT_FOUND;
             notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
             setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
-        } finally {
-            checkAndFinalizeJob(datasource);
         }
         return metadataProfileName == null ? CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile() : metadataProfileName;
     }
@@ -485,8 +483,6 @@ public class BulkJobManager implements Runnable {
             LOGGER.error(e.getMessage());
             e.printStackTrace();
             setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR), new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR), datasource);
-        } finally {
-            checkAndFinalizeJob(datasource);
         }
         return measurement_duration == 0 ? CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDuration() : measurement_duration;
     }
