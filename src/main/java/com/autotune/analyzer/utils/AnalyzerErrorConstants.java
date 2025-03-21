@@ -83,6 +83,7 @@ public class AnalyzerErrorConstants {
         public static final String MISSING_METRIC_PROFILE_METADATA= "metadata missing\n";
         public static final String DUPLICATE_METRIC_PROFILE = "Metric Profile already exists: ";
         public static final String MISSING_METADATA_PROFILE = "Not Found: metadata_profile does not exist: ";
+        public static final String MISSING_METADATA_PROFILE_FIELD = "Missing `metadata_profile` field";
         public static final String METADATA_PROFILE_NOT_SUPPORTED = "Metadata profile is not supported in remote monitoring: ";
         public static final String MISSING_METADATA_PROFILE_METADATA= "metadata missing\n";
         public static final String DUPLICATE_METADATA_PROFILE = "Metadata Profile already exists: ";
@@ -106,6 +107,11 @@ public class AnalyzerErrorConstants {
         public static final String NULL_OR_BLANK_CONTAINER_NAME = "container_name cannot be null or blank";
         public static final String EXPERIMENT_AND_INTERVAL_END_TIME = " for experiment : %s interval_end_time: %s";
         public static final String LOCAL_MONITORING_DATASOURCE_MANDATORY = "Experiment %s: datasource mandatory for Local Monitoring type";
+        public static final String LOAD_METADATA_PROFILE_FAILURE = "Loading saved Metadata Profile %s failed: %s";
+        public static final String METADATA_PROFILE_VALIDATION_FAILED = "Validation of metadata profile failed!";
+        public static final String PARSE_ERROR_MESSAGE = "Exception occurred while parsing the data: %s";
+        public static final String DELETED_METADATA_PROFILE = "Deleted metadata profile object: %s";
+        public static final String INVALID_METADATA_PROFILE_NAME = "MetadataProfile 'name' field is either null or empty!";
 
 
         private AutotuneObjectErrors() {

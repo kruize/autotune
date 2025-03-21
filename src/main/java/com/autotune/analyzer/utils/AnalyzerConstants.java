@@ -650,6 +650,7 @@ public class AnalyzerConstants {
         public static final String METADATA_PROFILE_RESOURCE_NAME = METADATA_PROFILE_PLURALS + GROUP;
         public static final String DATASOURCE = "datasource";
         public static final String METADATA_PROFILE_NAME_PARAMETER = "metadataProfileName";
+        public static final String DEFAULT_DATASOURCE = "prometheus";
         public static final String CLUSTER_METADATA_LOCAL_MON_PROFILE = "cluster-metadata-local-monitoring";
         public static final String DEFAULT_MEASUREMENT_DURATION = "15min";
     }

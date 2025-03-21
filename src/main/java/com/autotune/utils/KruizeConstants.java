@@ -250,6 +250,7 @@ public class KruizeConstants {
 
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String PERFORMANCE_PROFILE = "performance_profile";
+        public static final String METADATA_PROFILE = "metadata_profile";
         public static final String TARGET_CLUSTER = "target_cluster";
         public static final String KUBERNETES_OBJECTS = "kubernetes_objects";
         public static final String VERSION = "version";
@@ -293,7 +294,6 @@ public class KruizeConstants {
         // Config changes JSON Keys
         public static final String MODEL_SETTINGS = "model_settings";
         public static final String TERM_SETTINGS = "term_settings";
-        public static final String METADATA_PROFILE = "metadata_profile";
 
         private JSONKeys() {
         }
@@ -886,6 +886,7 @@ public class KruizeConstants {
             CREATE_EXPERIMENT_CONFIG_BEAN.setVersion(AnalyzerConstants.VersionConstants.CURRENT_KRUIZE_OBJECT_VERSION);
             CREATE_EXPERIMENT_CONFIG_BEAN.setDatasourceName("prometheus-1");
             CREATE_EXPERIMENT_CONFIG_BEAN.setPerformanceProfile(AnalyzerConstants.PerformanceProfileConstants.RESOURCE_OPT_LOCAL_MON_PROFILE);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMetadataProfile(AnalyzerConstants.MetadataProfileConstants.CLUSTER_METADATA_LOCAL_MON_PROFILE);
             CREATE_EXPERIMENT_CONFIG_BEAN.setThreshold(0.1);
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);
