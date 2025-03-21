@@ -57,6 +57,8 @@ progress of the job.
     "end": "2024-11-15T23:59:59.000Z"
   },
   "datasource": "Cbank1Xyz",
+  "metadata_profile": "cluster-metadata-local-monitoring",
+  "measurement_duration": "15min",
   "experiment_types": [
     "container",
     "namespace"
@@ -91,6 +93,12 @@ progress of the job.
   status of
   an experiment-processing job. Once a job is completed, this webhook will be triggered to send an HTTP request to the
   URL defined in the bulk request payload.
+
+- **metadata_profile:** Name of the metadata profile to import the cluster metadata. This is a mandatory field `metadata_profile` 
+  should be installed / created before invoking bulk API.
+
+- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not 
+  specified `15min` as default measurement_duration value is considered.
 
 ### Success Response
 
@@ -1003,7 +1011,9 @@ and include sections, matching the format above.
         "cluster_id": "ABG"
       }
     }
-  }
+  },
+  "metadata_profile": "cluster-metadata-local-monitoring",
+  "measurement_duration": "15min"
 }
 ```
 

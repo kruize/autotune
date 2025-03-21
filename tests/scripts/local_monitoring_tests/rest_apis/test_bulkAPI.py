@@ -62,6 +62,8 @@ def test_bulk_post_request(cluster_type, bulk_request_payload, expected_job_id_p
     form_kruize_url(cluster_type)
     URL = get_kruize_url()
 
+    delete_and_create_metric_profile()
+
     # list and validate default metric profile
     metric_profile_input_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     json_data = json.load(open(metric_profile_input_json_file))
@@ -74,6 +76,8 @@ def test_bulk_post_request(cluster_type, bulk_request_payload, expected_job_id_p
 
     errorMsg = validate_list_metric_profiles_json(metric_profile_json, list_metric_profiles_schema)
     assert errorMsg == ""
+
+    delete_and_create_metadata_profile()
 
     # list and validate default metadata profile
     metadata_profile_input_json_file = metadata_profile_dir / 'bulk_cluster_metadata_local_monitoring.json'

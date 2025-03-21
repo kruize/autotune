@@ -1,4 +1,6 @@
 {
   "version": "v1.0",
-  "datasource_name": "thanos"
+  "datasource_name": "thanos",
+  "metadata_profile": "cluster-metadata-local-monitoring",
+  "measurement_duration": "15min"
 }
