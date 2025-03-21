@@ -294,7 +294,6 @@ public class KruizeConstants {
         // Config changes JSON Keys
         public static final String MODEL_SETTINGS = "model_settings";
         public static final String TERM_SETTINGS = "term_settings";
-        public static final String METADATA_PROFILE = "metadata_profile";
 
         private JSONKeys() {
         }
