@@ -124,44 +124,45 @@ public class Autotune {
             // Read and execute the DDLs here
             executeDDLs(AnalyzerConstants.ROS_DDL_SQL);
 
-            LOGGER.debug("Now running kruize local DDL's ");
-            executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
-            // load available datasources from db
-            loadDataSourcesFromDB();
+            if (KruizeDeploymentInfo.local == true) {
+                LOGGER.debug("Now running kruize local DDL's ");
+                executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
+                // load available datasources from db
+                loadDataSourcesFromDB();
 
-            // setting up DataSources
-            try {
-                setUpDataSources();
-            } catch (Exception e) {
-                LOGGER.error(DATASOURCE_CONNECTION_FAILED, e.getMessage());
-            }
-
-            // checking available DataSources
-            checkAvailableDataSources();
-            // load available metric profiles from db
-            loadMetricProfilesFromDB();
-            if (KruizeDeploymentInfo.is_ros_enabled && KruizeDeploymentInfo.local) {
-                // setting up metric profile
+                // setting up DataSources
                 try {
-                    setUpMetricProfile();
+                    setUpDataSources();
                 } catch (Exception e) {
-                    LOGGER.error(SET_UP_DEFAULT_METRIC_PROFILE_ERROR, e.getMessage());
+                    LOGGER.error(DATASOURCE_CONNECTION_FAILED, e.getMessage());
                 }
-            }
 
-            // load available metadata profiles from db
-            loadMetadataProfilesFromDB();
-            if (KruizeDeploymentInfo.is_ros_enabled && KruizeDeploymentInfo.local) {
-                // setting up metadata profile
-                try {
-                    setUpMetadataProfile();
-                } catch (Exception e) {
-                    LOGGER.error(SET_UP_DEFAULT_METADATA_PROFILE_ERROR, e.getMessage());
+                // checking available DataSources
+                checkAvailableDataSources();
+                // load available metric profiles from db
+                loadMetricProfilesFromDB();
+                if (KruizeDeploymentInfo.is_ros_enabled) {
+                    // setting up metric profile
+                    try {
+                        setUpMetricProfile();
+                    } catch (Exception e) {
+                        LOGGER.error(SET_UP_DEFAULT_METRIC_PROFILE_ERROR, e.getMessage());
+                    }
                 }
-            }
-            // start updater service
-            startAutoscalerService();
 
+                // load available metadata profiles from db
+                loadMetadataProfilesFromDB();
+                if (KruizeDeploymentInfo.is_ros_enabled) {
+                    // setting up metadata profile
+                    try {
+                        setUpMetadataProfile();
+                    } catch (Exception e) {
+                        LOGGER.error(SET_UP_DEFAULT_METADATA_PROFILE_ERROR, e.getMessage());
+                    }
+                }
+                // start updater service
+                startAutoscalerService();
+            }
             // close the existing session factory before recreating
             KruizeHibernateUtil.closeSessionFactory();
             //Regenerate a Hibernate session following the creation of new tables
