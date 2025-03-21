@@ -146,7 +146,7 @@ public class ExperimentValidation {
 
                     // This conditional check is required as metadata_profile field is added only for local monitoring experiments
                     // and ignoring this might break the remote monitoring production
-                    if (target_cluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
+                    if (KruizeDeploymentInfo.local && target_cluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
                         if (null != kruizeObject.getMetadataProfile()) {
                             String metadataProfileName = kruizeObject.getMetadataProfile();
                             // fetch the Metadata Profile from the DB

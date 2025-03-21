@@ -102,7 +102,7 @@ public class Converters {
                 kruizeObject.setExperiment_usecase_type(new ExperimentUseCaseType(kruizeObject));
                 String target_cluster = createExperimentAPIObject.getTargetCluster();
                 // metadata_profile field is applicable only for local monitoring experiments
-                if (target_cluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
+                if (KruizeDeploymentInfo.local && target_cluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
                     kruizeObject.setMetadataProfile(createExperimentAPIObject.getMetadataProfile());
                 }
                 if (null != createExperimentAPIObject.getValidationData()) {

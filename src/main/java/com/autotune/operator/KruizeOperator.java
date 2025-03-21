@@ -387,7 +387,7 @@ public class KruizeOperator {
                 }
 
                 // 'metadata_profile' field is applicable only for local_monitoring experiments
-                if (targetCluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
+                if (KruizeDeploymentInfo.local && targetCluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
                     metadataProfileName = specJson.optString(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE);
                     if (!metadataProfileName.isEmpty()) {
                         // check if the metadata profile with the given name exist
