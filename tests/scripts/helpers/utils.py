@@ -1620,12 +1620,12 @@ def validate_job_status(job_id, base_url, caplog):
     response_basic = get_bulk_job_status(job_id,False)
     # Verify common keys in the basic response
     assert common_keys.issubset(
-        response_basic.json()['summary'].keys()), f"Missing keys in response: {common_keys - response_basic.json().keys()}"
+        response_basic.json()['summary'].keys()), f"Missing keys in response: {common_keys - response_basic.json()['summary'].keys()}"
 
     response_verbose = get_bulk_job_status(job_id,include="summary,experiments")
     # Verify common and verbose keys in the verbose response
     assert common_keys.issubset(
-        response_verbose.json()['summary'].keys()), f"Missing keys in verbose response: {common_keys - response_verbose.json().keys()}"
+        response_verbose.json()['summary'].keys()), f"Missing keys in verbose response: {common_keys - response_verbose.json()['summary'].keys()}"
     assert verbose_keys.issubset(
         response_verbose.json().keys()), f"Missing verbose keys in response: {verbose_keys - response_verbose.json().keys()}"
 
@@ -1659,6 +1659,7 @@ def delete_and_create_metadata_profile():
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
+
 
 def delete_and_create_metric_profile():
     metric_profile_dir = get_metric_profile_dir()

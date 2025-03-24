@@ -165,8 +165,9 @@ def test_list_recommendations_namespace_exps(cluster_type):
     # Render the JSON content from the template
     content = template.render(
         version="v2.0", experiment_name="test-ns1", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
-        mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="namespace", kubernetes_obj_type=None, name=None,
-        namespace=None, namespace_name="ns1", container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
+        metadata_profile="cluster-metadata-local-monitoring", mode="monitor", target_cluster="local", datasource="prometheus-1",
+        experiment_type="namespace", kubernetes_obj_type=None, name=None,namespace=None, namespace_name="ns1",
+        container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
     )
 
     # Convert rendered content to a dictionary

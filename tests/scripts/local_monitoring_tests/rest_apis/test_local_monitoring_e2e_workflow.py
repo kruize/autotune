@@ -51,6 +51,7 @@ from helpers.list_metadata_profiles_schema import *
 metric_profile_dir = get_metric_profile_dir()
 metadata_profile_dir = get_metadata_profile_dir()
 
+
 @pytest.mark.test_e2e
 @pytest.mark.test_e2e_pr_check
 def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_type):
@@ -102,6 +103,7 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     # Validate the json against the json schema
     errorMsg = validate_list_metadata_profiles_json(metadata_profile_json, list_metadata_profiles_schema)
     assert errorMsg == ""
+
 
     # Import datasource metadata
     input_json_file = "../json_files/import_metadata.json"
@@ -159,14 +161,16 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
 
     container_exp_content = template.render(
        version="v2.0", experiment_name="monitor-sysbench", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
-       mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="container", kubernetes_obj_type="deployment", name="sysbench",
-       namespace="default", namespace_name=None, container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min", threshold="0.1"
+       metadata_profile="cluster-metadata-local-monitoring", mode="monitor", target_cluster="local", datasource="prometheus-1",
+       experiment_type="container", kubernetes_obj_type="deployment", name="sysbench", namespace="default", namespace_name=None,
+       container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min", threshold="0.1"
     )
 
     namespace_exp_content = template.render(
         version="v2.0", experiment_name="monitor-ns", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
-        mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="namespace", kubernetes_obj_type=None, name=None,
-        namespace=None, namespace_name="default", container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
+        metadata_profile="cluster-metadata-local-monitoring", mode="monitor", target_cluster="local", datasource="prometheus-1",
+        experiment_type="namespace", kubernetes_obj_type=None, name=None, namespace=None, namespace_name="default",
+        container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
     )
 
     # Convert rendered content to a dictionary
