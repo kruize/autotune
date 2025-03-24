@@ -63,6 +63,9 @@ def main(argv):
     metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
     create_metric_profile(metric_profile_json_file)
 
+    # Create the metadata profile
+    delete_and_create_metadata_profile()
+
     list_reco_json_dir = results_dir + "/list_reco_jsons"
     list_datasources_json_dir = results_dir + "/list_datasources_jsons"
     list_metadata_json_dir = results_dir + "/list_metadata_jsons"
