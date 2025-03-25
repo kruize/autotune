@@ -70,9 +70,9 @@ kind: ClusterRole
 metadata:
   name: instaslices-access
 rules:
-  - apiGroups: ["inference.redhat.com"]
-    resources: ["instaslices"]
-    verbs: ["get", "list", "watch"]
+  - apiGroups: [ "inference.redhat.com" ]
+    resources: [ "instaslices" ]
+    verbs: [ "get", "list", "watch" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -221,6 +221,8 @@ data:
       "isKafkaEnabled" : "false",
       "isROSEnabled": "false",
       "local": "true",
+      "metadataProfileFilePath" : "/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json", 
+      "metricProfileFilePath" : "/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",

@@ -99,6 +99,8 @@ data:
       "plots": "true",
       "isROSEnabled": "false",
       "local": "true",
+      "metadataProfileFilePath" : "/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json", 
+      "metricProfileFilePath" : "/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json",
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.monitoring.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",    
       "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",
