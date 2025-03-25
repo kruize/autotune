@@ -163,10 +163,6 @@ public class ExperimentValidation {
                             } else {
                                 proceed = true;
                             }
-                        } else {
-                            errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD;
-                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                            proceed = false;
                         }
                     }
 

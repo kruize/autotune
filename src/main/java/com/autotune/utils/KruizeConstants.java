@@ -35,6 +35,8 @@ public class KruizeConstants {
     public static final String OPENSHIFT = "openshift";
     public static final String CONFIG_FILE = "KRUIZE_CONFIG_FILE";
     public static final String SQL_EXCEPTION_HELPER_PKG = "org.hibernate.engine.jdbc.spi";
+    public static final String METADATA_PROFILE_FILE_PATH = "/home/autotune/app/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json" ;
+    public static final String METRIC_PROFILE_FILE_PATH = "/home/autotune/app/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json";
 
     private KruizeConstants() {
     }

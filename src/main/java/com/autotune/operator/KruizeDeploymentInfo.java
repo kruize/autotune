@@ -98,8 +98,8 @@ public class KruizeDeploymentInfo {
     public static String kafka_bootstrap_servers = System.getenv("KAFKA_BOOTSTRAP_SERVERS");;
     public static String bulk_input_topic = System.getenv("BULK_INPUT_TOPIC");
     public static String kafka_group_id = System.getenv("KAFKA_CONSUMER_GROUP_ID");
-    public static String metadata_profile_file_path;
-    public static String metric_profile_file_path;
+    public static String metadata_profile_file_path= KruizeConstants.METADATA_PROFILE_FILE_PATH;
+    public static String metric_profile_file_path = KruizeConstants.METRIC_PROFILE_FILE_PATH;
     public static String kafka_topics = System.getenv("KAFKA_TOPICS");
     public static String kafka_response_filter_include = System.getenv("KAFKA_RESPONSE_FILTER_INCLUDE");
     public static String kafka_response_filter_exclude = System.getenv("KAFKA_RESPONSE_FILTER_EXCLUDE");

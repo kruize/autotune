@@ -58,8 +58,6 @@ function local_monitoring_tests() {
 
 	mkdir -p ${TEST_SUITE_DIR}
 
-  # check for 'isROSEnabled' flag
-  kruize_local_ros_patch
   # check for 'servicename' and 'datasource_namespace' input variables
   kruize_local_datasource_manifest_patch
 
