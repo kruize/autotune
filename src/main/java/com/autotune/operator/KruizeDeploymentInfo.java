@@ -80,7 +80,7 @@ public class KruizeDeploymentInfo {
     public static Boolean settings_save_to_db;
     public static String em_only_mode;
     public static Integer bulk_update_results_limit = 100;
-    public static Boolean local = true;
+    public static Boolean local = false;
     public static Boolean log_http_req_resp = false;
     public static String recommendations_url;
     public static String experiments_url;
@@ -92,10 +92,11 @@ public class KruizeDeploymentInfo {
     private static Hashtable<String, Class> tunableLayerPair;
     //private static KubernetesClient kubernetesClient;
     private static KubeEventLogger kubeEventLogger;
-    public static Boolean is_ros_enabled = false;
+    public static Boolean is_ros_enabled = true;
     public static String datasource_via_env = null;
     public static Boolean is_kafka_enabled = false;
-    public static String kafka_bootstrap_servers = System.getenv("KAFKA_BOOTSTRAP_SERVERS");;
+    public static String kafka_bootstrap_servers = System.getenv("KAFKA_BOOTSTRAP_SERVERS");
+    ;
     public static String bulk_input_topic = System.getenv("BULK_INPUT_TOPIC");
     public static String kafka_group_id = System.getenv("KAFKA_CONSUMER_GROUP_ID");
     public static String metadata_profile_file_path;
@@ -211,7 +212,7 @@ public class KruizeDeploymentInfo {
         return kafka_topics != null ? Arrays.stream(kafka_topics.split(","))
                 .map(String::trim) // Trim spaces
                 .filter(s -> !s.isEmpty()) // Remove empty values
-                .collect(Collectors.toSet())  : new HashSet<>();
+                .collect(Collectors.toSet()) : new HashSet<>();
     }
 
     public static Set<String> getKafkaIncludeFilter() {

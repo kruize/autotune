@@ -94,9 +94,9 @@ kind: ClusterRole
 metadata:
   name: instaslices-access
 rules:
-  - apiGroups: ["inference.redhat.com"]
-    resources: ["instaslices"]
-    verbs: ["get", "list", "watch"]
+  - apiGroups: [ "inference.redhat.com" ]
+    resources: [ "instaslices" ]
+    verbs: [ "get", "list", "watch" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -208,6 +208,7 @@ data:
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
       "isROSEnabled": "false",
+      "local": "true",
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",
       "experimentsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/createExperiment",

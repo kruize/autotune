@@ -70,9 +70,9 @@ kind: ClusterRole
 metadata:
   name: instaslices-access
 rules:
-  - apiGroups: ["inference.redhat.com"]
-    resources: ["instaslices"]
-    verbs: ["get", "list", "watch"]
+  - apiGroups: [ "inference.redhat.com" ]
+    resources: [ "instaslices" ]
+    verbs: [ "get", "list", "watch" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -213,13 +213,14 @@ data:
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
-      "isROSEnabled": "false",
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.monitoring.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",    
       "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",
       "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
       "bulkapilimit" : 1000,
       "isKafkaEnabled" : "false",
+      "isROSEnabled": "false",
+      "local": "true",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",

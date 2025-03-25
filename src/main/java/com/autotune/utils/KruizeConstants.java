@@ -271,7 +271,7 @@ public class KruizeConstants {
         public static final String LONG_TERM = "long_term";
         public static final String SHORT = "short";
         public static final String MEDIUM = "medium";
-        public static final String LONG= "long";
+        public static final String LONG = "long";
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String VARIATION = "variation";
         public static final String NOTIFICATIONS = "notifications";
@@ -1013,6 +1013,7 @@ public class KruizeConstants {
             public static final String SET_UP_DEFAULT_METADATA_PROFILE_ERROR = "Failed to set up default MetadataProfile due to: {}";
             public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
             public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
+
             private MetadataProfileErrorMsgs() {
             }
         }
@@ -1052,7 +1053,7 @@ public class KruizeConstants {
         public static final String KAFKA_MESSAGE_FAILED = "Error sending message to Kafka topic {}: {}";
         public static final String KAFKA_PRODUCER_CLOSED = "Kafka producer closed.";
         public static final String MISSING_KAFKA_TOPIC = "Kafka topic '%s' does not exist! Skipping message publishing.";
-        public static final String KAFKA_PUBLISH_FAILED  = "Failed to publish to Kafka: {}";
+        public static final String KAFKA_PUBLISH_FAILED = "Failed to publish to Kafka: {}";
 
         public static final String MESSAGE_RECEIVED_SUCCESSFULLY = "Received Input: Request_Id={}, Value={}, Partition={}, Offset={}";
 
