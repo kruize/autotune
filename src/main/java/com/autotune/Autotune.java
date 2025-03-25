@@ -144,22 +144,25 @@ public class Autotune {
                 // load available metric profiles from db
                 loadMetricProfilesFromDB();
 
-                // setting up metric profile
-                try {
-                    setUpMetricProfile();
-                } catch (Exception e) {
-                    LOGGER.error(SET_UP_DEFAULT_METRIC_PROFILE_ERROR, e.getMessage());
+                if (KruizeDeploymentInfo.is_ros_enabled) {
+                    // setting up metric profile
+                    try {
+                        setUpMetricProfile();
+                    } catch (Exception e) {
+                        LOGGER.error(SET_UP_DEFAULT_METRIC_PROFILE_ERROR, e.getMessage());
+                    }
                 }
-
 
                 // load available metadata profiles from db
                 loadMetadataProfilesFromDB();
 
-                // setting up metadata profile
-                try {
-                    setUpMetadataProfile();
-                } catch (Exception e) {
-                    LOGGER.error(SET_UP_DEFAULT_METADATA_PROFILE_ERROR, e.getMessage());
+                if (KruizeDeploymentInfo.is_ros_enabled) {
+                    // setting up metadata profile
+                    try {
+                        setUpMetadataProfile();
+                    } catch (Exception e) {
+                        LOGGER.error(SET_UP_DEFAULT_METADATA_PROFILE_ERROR, e.getMessage());
+                    }
                 }
 
 
