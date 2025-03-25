@@ -394,6 +394,8 @@ public class KruizeOperator {
                         if (null == MetadataProfileDeployment.metadataProfilesMap.get(metadataProfileName)) {
                             throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + metadataProfileName);
                         }
+                    } else {
+                        throw new InvalidValueException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD);
                     }
                 }
 
