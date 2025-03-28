@@ -109,7 +109,7 @@ def main(argv):
     # Fetch listExperiments
     list_exp_json_file_before = list_exp_json_dir + "/list_exp_json_before.json"
     # assign params to be passed in listExp
-    results = "true"
+    results = "false"
     recommendations = "true"
     latest = "false"
     experiment_name = None
@@ -181,7 +181,7 @@ def main(argv):
 
     # Fetch listExperiments
     list_exp_json_file_after = list_exp_json_dir + "/list_exp_json_after.json"
-    results = "true"
+    results = "false"
     recommendations = "true"
     latest = "false"
     experiment_name = None
