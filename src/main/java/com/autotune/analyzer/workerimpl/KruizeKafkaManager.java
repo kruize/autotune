@@ -82,7 +82,10 @@ public class KruizeKafkaManager {
             }
             String kafkaMessage = BulkService.filterJson(jobData, kafkaIncludeFilter, kafkaExcludeFilter, experimentName);
             LOGGER.debug("Publishing Kafka Message for experiment {} in topic : {}", experimentName, topic);
-            publish(new KruizeKafka(topic, kafkaMessage));
+            // synchronize the publish call to avoid inter-leaving of messages
+            synchronized (this) {
+                publish(new KruizeKafka(topic, kafkaMessage));
+            }
             experiment.setStatus(KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.PUBLISHED);
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
