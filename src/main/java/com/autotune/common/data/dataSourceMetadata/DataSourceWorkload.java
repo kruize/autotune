@@ -27,6 +27,9 @@ public class DataSourceWorkload {
      */
     private HashMap<String, DataSourceContainer> containers;
 
+    public DataSourceWorkload() {
+    }
+
     public DataSourceWorkload(String workloadName, String workloadType, HashMap<String, DataSourceContainer> containers) {
         this.workloadName = workloadName;
         this.workloadType = workloadType;

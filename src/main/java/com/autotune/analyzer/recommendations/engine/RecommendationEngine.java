@@ -315,7 +315,7 @@ public class RecommendationEngine {
      * @param calCount The count of incoming requests.
      * @return The KruizeObject containing the prepared recommendations.
      */
-    public KruizeObject prepareRecommendations(int calCount, String target_cluster) throws FetchMetricsError {
+    public KruizeObject prepareRecommendations(int calCount, String target_cluster, String bulkJobID) throws FetchMetricsError {
         Map<String, KruizeObject> mainKruizeExperimentMAP = new ConcurrentHashMap<>();
         Map<String, Terms> terms = new HashMap<>();
         ValidationOutputData validationOutputData;
@@ -326,6 +326,7 @@ public class RecommendationEngine {
             setInterval_end_time(interval_end_time);
         }
         KruizeObject kruizeObject = createKruizeObject(target_cluster);
+        if (null != bulkJobID) kruizeObject.setBulkJobId(bulkJobID);
         if (!kruizeObject.getValidation_data().isSuccess())
             return kruizeObject;
         setKruizeObject(kruizeObject);
@@ -2155,16 +2156,32 @@ public class RecommendationEngine {
             Double measurementDurationMinutesInDouble = kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble();
             List<K8sObject> kubernetes_objects = kruizeObject.getKubernetes_objects();
 
+            boolean isAutoExperiment = false;
+            boolean isROS = KruizeDeploymentInfo.is_ros_enabled;
+
+            if (null != kruizeObject.getMode()) {
+                // Check if the experiment is of type auto or recreate
+                isAutoExperiment = (AnalyzerConstants.AUTO.equalsIgnoreCase(kruizeObject.getMode()) ||
+                        AnalyzerConstants.RECREATE.equalsIgnoreCase(kruizeObject.getMode()));
+            }
+
             for (K8sObject k8sObject : kubernetes_objects) {
                 String namespace = k8sObject.getNamespace();
                 String workload = k8sObject.getName();
                 String workload_type = k8sObject.getType();
                 HashMap<String, ContainerData> containerDataMap = k8sObject.getContainerDataMap();
 
-                // Check if the instaslice has created MIG's for the workloads
-                InstasliceHelper instasliceHelper = InstasliceHelper.getInstance();
-                String gpuUUID = instasliceHelper.getUUID(namespace, workload);
-                String gpuProfile = instasliceHelper.getMIGProfile(namespace, workload);
+
+                String gpuUUID = null;
+                String gpuProfile = null;
+
+                // Check if it's recreate or auto to query instaslice
+                if (isAutoExperiment) {
+                    // Check if the instaslice has created MIG's for the workloads
+                    InstasliceHelper instasliceHelper = InstasliceHelper.getInstance();
+                    gpuUUID = instasliceHelper.getUUID(namespace, workload);
+                    gpuProfile = instasliceHelper.getMIGProfile(namespace, workload);
+                }
 
                 for (Map.Entry<String, ContainerData> entry : containerDataMap.entrySet()) {
                     ContainerData containerData = entry.getValue();
@@ -2173,7 +2190,7 @@ public class RecommendationEngine {
                     boolean containerAcceleratorPartitionDetected = false;
 
                     // Check if the container data has Accelerator support else check for Accelerator metrics
-                    if (null == gpuUUID && (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
+                    if (!isROS && null == gpuUUID && (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
                         containerAcceleratorDetected = RecommendationUtils.markAcceleratorDeviceStatusToContainer(containerData,
                                                                             maxDateQuery,
                                                                             namespace,
@@ -2186,7 +2203,7 @@ public class RecommendationEngine {
                     }
 
                     // Check if it's a partition
-                    if (!containerAcceleratorDetected) {
+                    if (!isROS && !containerAcceleratorDetected) {
                         if (null != gpuUUID) {
                             containerAcceleratorPartitionDetected = RecommendationUtils.markAcceleratorPartitionDeviceStatusToContainer(containerData,
                                     maxDateQuery,
@@ -2283,7 +2300,8 @@ public class RecommendationEngine {
                             isAcceleratorMetric = true;
                         }
 
-                        if (isAcceleratorMetric
+                        // Proceed to set fetchAcceleratorMetrics only if it's not ROS
+                        if (isAcceleratorMetric && !isROS
                                 && null != containerData.getContainerDeviceList()
                                 && containerData.getContainerDeviceList().isAcceleratorDeviceDetected()) {
                             fetchAcceleratorMetrics = true;
@@ -2293,7 +2311,8 @@ public class RecommendationEngine {
                             isAcceleratorPartitionMetric = true;
                         }
 
-                        if (isAcceleratorPartitionMetric
+                        // Proceed to set fetchAcceleratorMetrics only if it's not ROS
+                        if (isAcceleratorPartitionMetric && !isROS
                                 && null != containerData.getContainerDeviceList()
                                 && containerData.getContainerDeviceList().isAcceleratorPartitionDetected()) {
                             fetchAcceleratorMetrics = true;

@@ -97,6 +97,8 @@ data:
       "savetodb": "true",
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
+      "isROSEnabled": "false",
+      "local": "true",
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.monitoring.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",    
       "experimentsURL" : "http://kruize.monitoring.svc.cluster.local:8080/createExperiment",
@@ -154,7 +156,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.4
+          image: quay.io/kruize/autotune_operator:0.5
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -219,7 +221,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.4
+              image: quay.io/kruize/autotune_operator:0.5
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -345,7 +347,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.4
+              image: quay.io/kruize/autotune_operator:0.5
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume

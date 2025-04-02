@@ -70,6 +70,27 @@ Here are the test scenarios:
 - List metric profiles without creating metric profile
 
 
+### **Create Metadata Profile API tests**
+
+Here are the test scenarios:
+
+- Create metadata profile passing a valid input JSON payload with all the metadata queries
+- Post the same metadata profile again - creating it twice and validate the error as metadata profile name is a unique field
+- Create multiple valid metadata profiles using different jsons
+- Create metadata profile missing mandatory fields and validate error messages when the mandatory fields are missing
+
+
+### **List Metadata Profile API tests**
+
+Here are the test scenarios:
+
+- List metadata profiles without specifying any query parameters
+- List metadata profiles specifying profile name query parameter
+- List metadata profiles specifying verbose query parameter
+- List metadata profiles specifying profile name and verbose query parameters
+- Test with invalid values such as blank, null or an invalid value for name query parameter in listMetadataProfiles API
+- List metadata profiles without creating metadata profile
+
 ### **Create Experiment API tests**
 
 Here are the test scenarios:
@@ -95,6 +116,7 @@ Here are the test scenarios:
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
 - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
 - Creates a resource optimization metric profile using the [createMetricProfile API](/design/MetricProfileAPI.md)
+- Creates cluster metadata profile using the [createMetadataProfile API](/design/MetadataProfileAPI.md)
 - Runs the above tests using pytest
 
 ### **Bulk API tests**
@@ -155,7 +177,8 @@ To run only the sanity local monitoring tests,
 Local monitoring tests can also be run without using the test_autotune.sh. To do this, follow the below steps:
 
 - Deploy Kruize using the deploy.sh from the kruize autotune repo
-- Create the performance profile by using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md)
+- Create the metric profile by using the [createMetricProfile API](/design/MetricProfileAPI.md)
+- Create the metadata profile by using the [createMetadataProfile API](/design/MetadataProfileAPI.md)
 - cd <KRUIZE_REPO>/tests/scripts/local_monitoring_tests
 - python3 -m pip install --user -r requirements.txt
 - cd rest_apis

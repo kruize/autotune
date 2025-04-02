@@ -339,6 +339,9 @@ if __name__ == '__main__':
     datasource_name = None
     list_response = list_datasources(datasource_name)
 
+    # Create the metadata profile
+    delete_and_create_metadata_profile()
+
     # Import datasource metadata
     input_json_file = "../json_files/thanos_import_metadata.json"
     if prometheus == 1:

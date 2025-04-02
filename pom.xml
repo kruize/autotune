@@ -6,7 +6,7 @@
 
     <groupId>org.autotune</groupId>
     <artifactId>autotune</artifactId>
-    <version>0.4</version>
+    <version>0.5</version>
     <properties>
         <fabric8-version>7.0.0</fabric8-version>
         <org-json-version>20240303</org-json-version>
@@ -209,6 +209,12 @@
             <groupId>io.micrometer</groupId>
             <artifactId>micrometer-registry-prometheus</artifactId>
             <version>${micrometer-version}</version>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/org.apache.kafka/kafka-clients -->
+        <dependency>
+            <groupId>org.apache.kafka</groupId>
+            <artifactId>kafka-clients</artifactId>
+            <version>3.9.0</version>
         </dependency>
 
     </dependencies>

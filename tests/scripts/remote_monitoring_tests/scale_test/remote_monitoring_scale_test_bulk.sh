@@ -149,7 +149,7 @@ KRUIZE_SERVICE_LOG="${LOG_DIR}/kruize_service.log"
 # Setup kruize
 if [ ${kruize_setup} == true ]; then
 	echo "Setting up kruize..." | tee -a ${LOG}
-	echo "setting local=false"
+	echo "Removing isROSEnabled=false and local=true"
 	cluster_type=${CLUSTER_TYPE}
 	pushd ${KRUIZE_REPO} > /dev/null
 		kruize_remote_patch

@@ -45,8 +45,11 @@ from helpers.list_reco_json_local_monitoring_schema import *
 from helpers.list_reco_json_validate import *
 from helpers.import_metadata_json_validate import *
 from jinja2 import Environment, FileSystemLoader
+from helpers.list_metadata_profiles_validate import *
+from helpers.list_metadata_profiles_schema import *
 
 metric_profile_dir = get_metric_profile_dir()
+metadata_profile_dir = get_metadata_profile_dir()
 
 
 @pytest.mark.test_e2e
@@ -60,17 +63,9 @@ def test_list_recommendations_namespace_exps(cluster_type):
     create_namespace("ns2")
     create_namespace("ns3")
 
-    benchmarks_install(namespace="ns1")
-    benchmarks_install(namespace="ns2")
-    benchmarks_install(namespace="ns3")
-
-    container_id1 = apply_tfb_load("ns1", cluster_type)
-    container_id2 = apply_tfb_load("ns2", cluster_type)
-    container_id3 = apply_tfb_load("ns3", cluster_type)
-
-    print(container_id1)
-    print(container_id2)
-    print(container_id3)
+    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns1")
+    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns2")
+    benchmarks_install(name="sysbench", manifests="sysbench.yaml", namespace="ns3")
 
     # list all datasources
     form_kruize_url(cluster_type)
@@ -85,6 +80,34 @@ def test_list_recommendations_namespace_exps(cluster_type):
 
     # Validate the json against the json schema
     errorMsg = validate_list_datasources_json(list_datasources_json, list_datasources_json_schema)
+    assert errorMsg == ""
+
+    # Install metadata profile
+    metadata_profile_json_file = metadata_profile_dir / 'bulk_cluster_metadata_local_monitoring.json'
+    json_data = json.load(open(metadata_profile_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
+    print("delete metadata profile = ", response.status_code)
+
+    # Create metadata profile using the specified json
+    response = create_metadata_profile(metadata_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
+
+    response = list_metadata_profiles(name=metadata_profile_name, logging=False)
+    metadata_profile_json = response.json()
+
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    errorMsg = validate_list_metadata_profiles_json(metadata_profile_json, list_metadata_profiles_schema)
     assert errorMsg == ""
 
 
@@ -142,8 +165,9 @@ def test_list_recommendations_namespace_exps(cluster_type):
     # Render the JSON content from the template
     content = template.render(
         version="v2.0", experiment_name="test-ns1", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
-        mode="monitor", target_cluster="local", datasource="prometheus-1", experiment_type="namespace", kubernetes_obj_type=None, name=None,
-        namespace=None, namespace_name="ns1", container_image_name=None, container_name=None, measurement_duration="15min", threshold="0.1"
+        metadata_profile="cluster-metadata-local-monitoring", mode="monitor", target_cluster="local", datasource="prometheus-1",
+        experiment_type="namespace", kubernetes_obj_type=None, name=None,namespace=None, namespace_name="ns1",
+        container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
     )
 
     # Convert rendered content to a dictionary
@@ -254,11 +278,8 @@ def test_list_recommendations_namespace_exps(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    # Wait for the container to complete
-    wait_for_container_to_complete(container_id1)
-    wait_for_container_to_complete(container_id2)
-    wait_for_container_to_complete(container_id3)
-
+    # Wait for the threshold for short term recommendations
+    time.sleep(300)
 
     # generate recommendations
     json_file = open(ns1_exp_json_file, "r")

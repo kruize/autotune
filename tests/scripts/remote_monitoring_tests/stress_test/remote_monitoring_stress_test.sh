@@ -130,7 +130,7 @@ jmeter_setup
 echo "Invoking jmeter setup...done" | tee -a ${LOG}
 
 echo "Setting up kruize..." | tee -a ${LOG}
-echo "setting local=false"
+echo "Removing isROSEnabled=false and local=true"
 cluster_type=${CLUSTER_TYPE}
 pushd ${KRUIZE_REPO} > /dev/null
 	kruize_remote_patch

@@ -70,13 +70,15 @@ public final class KruizeObject implements ExperimentTypeAware {
     private AnalyzerConstants.ExperimentStatus status;
     @SerializedName("performance_profile")
     private String performanceProfile;
+    @SerializedName("metadata_profile")
+    private String metadataProfile;
     private TrialSettings trial_settings;
     private RecommendationSettings recommendation_settings;
     private ExperimentUseCaseType experiment_usecase_type;
     private ValidationOutputData validation_data;
     private List<K8sObject> kubernetes_objects;
     private Map<String, Terms> terms;
-
+    private transient String bulkJobId;
 
     public KruizeObject(String experimentName,
                         String clusterName,
@@ -86,6 +88,7 @@ public final class KruizeObject implements ExperimentTypeAware {
                         String hpoAlgoImpl,
                         SelectorInfo selectorInfo,
                         String performanceProfile,
+                        String metadataProfile,
                         String datasource,
                         ObjectReference objectReference
     ) throws InvalidValueException {
@@ -113,6 +116,7 @@ public final class KruizeObject implements ExperimentTypeAware {
             throw new InvalidValueException(error.toString());
         }
         this.performanceProfile = performanceProfile;
+        this.metadataProfile = metadataProfile;
         if (KruizeSupportedTypes.HPO_ALGOS_SUPPORTED.contains(hpoAlgoImpl))
             this.hpoAlgoImpl = hpoAlgoImpl;
         else
@@ -200,6 +204,14 @@ public final class KruizeObject implements ExperimentTypeAware {
             // Handles the case where termSettings is null
             throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.TERM_SETTINGS_UNDEFINED);
         }
+    }
+
+    public String getBulkJobId() {
+        return bulkJobId;
+    }
+
+    public void setBulkJobId(String bulkJobId) {
+        this.bulkJobId = bulkJobId;
     }
 
     public String getExperimentName() {
@@ -375,6 +387,15 @@ public final class KruizeObject implements ExperimentTypeAware {
         this.defaultUpdater = defaultUpdater;
     }
 
+    public String getMetadataProfile() {
+        return metadataProfile;
+    }
+
+    public void setMetadataProfile(String metadataProfile) {
+        this.metadataProfile = metadataProfile;
+    }
+
+
     @Override
     public String toString() {
         // Creating a temporary cluster name as we allow null for cluster name now
@@ -395,6 +416,7 @@ public final class KruizeObject implements ExperimentTypeAware {
                 ", objectReference=" + objectReference +
                 ", status=" + status +
                 ", performanceProfile='" + performanceProfile + '\'' +
+                ", metadataProfile='" + metadataProfile + '\'' +
                 ", trial_settings=" + trial_settings +
                 ", recommendation_settings=" + recommendation_settings +
                 ", experimentUseCaseType=" + experiment_usecase_type +

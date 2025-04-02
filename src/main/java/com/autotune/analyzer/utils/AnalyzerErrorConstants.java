@@ -83,6 +83,7 @@ public class AnalyzerErrorConstants {
         public static final String MISSING_METRIC_PROFILE_METADATA= "metadata missing\n";
         public static final String DUPLICATE_METRIC_PROFILE = "Metric Profile already exists: ";
         public static final String MISSING_METADATA_PROFILE = "Not Found: metadata_profile does not exist: ";
+        public static final String MISSING_METADATA_PROFILE_FIELD = "Missing `metadata_profile` field";
         public static final String METADATA_PROFILE_NOT_SUPPORTED = "Metadata profile is not supported in remote monitoring: ";
         public static final String MISSING_METADATA_PROFILE_METADATA= "metadata missing\n";
         public static final String DUPLICATE_METADATA_PROFILE = "Metadata Profile already exists: ";
@@ -106,6 +107,11 @@ public class AnalyzerErrorConstants {
         public static final String NULL_OR_BLANK_CONTAINER_NAME = "container_name cannot be null or blank";
         public static final String EXPERIMENT_AND_INTERVAL_END_TIME = " for experiment : %s interval_end_time: %s";
         public static final String LOCAL_MONITORING_DATASOURCE_MANDATORY = "Experiment %s: datasource mandatory for Local Monitoring type";
+        public static final String LOAD_METADATA_PROFILE_FAILURE = "Loading saved Metadata Profile %s failed: %s";
+        public static final String METADATA_PROFILE_VALIDATION_FAILED = "Validation of metadata profile failed!";
+        public static final String PARSE_ERROR_MESSAGE = "Exception occurred while parsing the data: %s";
+        public static final String DELETED_METADATA_PROFILE = "Deleted metadata profile object: %s";
+        public static final String INVALID_METADATA_PROFILE_NAME = "MetadataProfile 'name' field is either null or empty!";
 
 
         private AutotuneObjectErrors() {
@@ -254,6 +260,8 @@ public class AnalyzerErrorConstants {
             public static final String DATASOURCE_METADATA_VALIDATION_FAILURE_EXCPTN = "Invalid DataSourceMetadata object";
             public static final String DATASOURCE_METADATA_MISSING_REQUEST_INPUT_EXCPTN = "Request input data cannot be null or empty";
             public static final String DATASOURCE_METADATA_CONNECTION_FAILED = "Metadata cannot be imported, datasource connection refused or timed out";
+            public static final String INVALID_METADATA_PROFILE_NAME_EXCPTN = "Invalid MetadataProfile Name";
+            public static final String INVALID_METADATA_PROFILE_NAME_MSG = "MetadataProfile - %s either does not exist or is not valid";
         }
 
         public static final class ListMetricProfileAPI {
@@ -292,6 +300,19 @@ public class AnalyzerErrorConstants {
             public static final String NO_METADATA_PROFILES = "No metadata profiles found!";
             public static final String LOAD_METADATA_PROFILE_ERROR = "Failed to load saved metadata profile data due to: {} ";
             public static final String LOAD_ALL_METADATA_PROFILES_ERROR = "Failed to load all the metadata profiles data due to: {} ";
+        }
+
+        public static final class DeleteMetadataProfileAPI {
+            public DeleteMetadataProfileAPI() {
+            }
+            public static final String INVALID_METADATA_PROFILE_NAME_EXCPTN = "Invalid Metadata Profile Name";
+            public static final String INVALID_METADATA_PROFILE_NAME_MSG = "Given metadata profile name - %s either does not exist or is not valid";
+            public static final String MISSING_METADATA_PROFILE_NAME_EXCPTN = "Missing Metadata Profile Name";
+            public static final String MISSING_METADATA_PROFILE_NAME_MSG = "Missing metadata profile 'name' parameter";
+            public static final String DELETE_METADATA_PROFILE_FROM_DB_FAILURE_MSG = "Failed to delete metadata profile from DB: %s";
+            public static final String DELETE_METADATA_PROFILE_FAILURE_MSG = "Failed to delete the specified metadata profile data: %s";
+            public static final String DELETE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeLMMetadataProfileEntry not found with metadata profile name: ";
+            public static final String DELETE_METADATA_PROFILE_ENTRY_ERROR_MSG = "Failed to delete metadata profile for metric profile {} due to {}";
         }
     }
 

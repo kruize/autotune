@@ -3,6 +3,7 @@
 	"experiment_name": "{{experiment_name}}",
 	"cluster_name": "{{cluster_name}}",
 	"performance_profile": "{{performance_profile}}",
+	"metadata_profile": "{{metadata_profile}}",
 	"mode": "{{mode}}",
 	"target_cluster": "{{target_cluster}}",
 	"datasource": "{{datasource}}",

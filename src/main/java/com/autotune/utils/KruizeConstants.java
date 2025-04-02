@@ -20,6 +20,7 @@ package com.autotune.utils;
 import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import org.apache.kafka.common.protocol.types.Field;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -86,7 +87,20 @@ public class KruizeConstants {
         public static final String METRIC_PROFILE_FOUND = "MetricProfile found: ";
         public static final String ADDING_METRIC_PROFILE = "Trying to add the metric profile to collection: ";
         public static final String METRIC_PROFILE_ALREADY_EXISTS = "MetricProfile already exists: ";
-        public static final String METRIC_PROFILE_ADDED = "MetricProfile added to the collection successfully: ";
+        public static final String METRIC_PROFILE_ADDED = "MetricProfile added to the collection successfully: {}";
+        public static final String METRIC_PROFILE_FILE_PATH = "MetricProfile file path: {}";
+
+        public static class MetricProfileErrorMsgs {
+            public static final String ADD_DEFAULT_METRIC_PROFILE_EXCEPTION = "Exception occurred while adding default Metric profile: {}";
+            public static final String SET_UP_DEFAULT_METRIC_PROFILE_ERROR = "Failed to set up default MetricProfile due to: {}";
+            public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
+            public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
+            public static final String ADD_METRIC_PROFILE_TO_DB_ERROR = "Failed to add Metric Profile due to {}";
+            public static final String METRIC_PROFILE_VALIDATION_FAILURE = "Validation failed: {}";
+
+            public MetricProfileErrorMsgs() {
+            }
+        }
     }
 
     /**
@@ -236,6 +250,7 @@ public class KruizeConstants {
 
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String PERFORMANCE_PROFILE = "performance_profile";
+        public static final String METADATA_PROFILE = "metadata_profile";
         public static final String TARGET_CLUSTER = "target_cluster";
         public static final String KUBERNETES_OBJECTS = "kubernetes_objects";
         public static final String VERSION = "version";
@@ -256,7 +271,7 @@ public class KruizeConstants {
         public static final String LONG_TERM = "long_term";
         public static final String SHORT = "short";
         public static final String MEDIUM = "medium";
-        public static final String LONG= "long";
+        public static final String LONG = "long";
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String VARIATION = "variation";
         public static final String NOTIFICATIONS = "notifications";
@@ -732,10 +747,15 @@ public class KruizeConstants {
         public static final String RECOMMENDATIONS_URL = "recommendationsURL";
         public static final String EXPERIMENTS_URL = "experimentsURL";
         public static final String BULK_API_LIMIT = "bulkapilimit";
+        public static final String TEST_USE_ONLY_CACHE_JOB_IN_MEM = "testUseOnlycacheJobInMemory";
+        public static final String JOB_FILTER_TO_DB = "jobFilterToDB";
         public static final String BULK_THREAD_POOL_SIZE = "bulkThreadPoolSize";
         public static final String EXPERIMENT_NAME_FORMAT = "experimentNameFormat";
         public static final String IS_ROS_ENABLED = "isROSEnabled";
         public static final String DATASOURCE_VIA_ENV = "datasource";
+        public static final String METADATA_PROFILE_FILE_PATH = "metadataProfileFilePath";
+        public static final String METRIC_PROFILE_FILE_PATH = "metricProfileFilePath";
+        public static final String IS_KAFKA_ENABLED = "isKafkaEnabled";
     }
 
     public static final class RecommendationEngineConstants {
@@ -851,6 +871,8 @@ public class KruizeConstants {
         public static final String EXPERIMENTS = "experiments";
         public static final String EXPERIMENTS_FILTER = "experimentFilter";
         public static final String JOB_FILTER = "jobFilter";
+        public static final String BULK_JOB_SAVE_ERROR = "Not able to save experiment due to {}";
+        public static final String BULK_JOB_LOAD_ERROR = "Not able to load bulk JOB {} due to {}";
 
 
         // TODO : Bulk API Create Experiments defaults
@@ -864,9 +886,11 @@ public class KruizeConstants {
             CREATE_EXPERIMENT_CONFIG_BEAN.setVersion(AnalyzerConstants.VersionConstants.CURRENT_KRUIZE_OBJECT_VERSION);
             CREATE_EXPERIMENT_CONFIG_BEAN.setDatasourceName("prometheus-1");
             CREATE_EXPERIMENT_CONFIG_BEAN.setPerformanceProfile(AnalyzerConstants.PerformanceProfileConstants.RESOURCE_OPT_LOCAL_MON_PROFILE);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMetadataProfile(AnalyzerConstants.MetadataProfileConstants.CLUSTER_METADATA_LOCAL_MON_PROFILE);
             CREATE_EXPERIMENT_CONFIG_BEAN.setThreshold(0.1);
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDurationStr("15min");
             CREATE_EXPERIMENT_CONFIG_BEAN.setMeasurementDuration(15);
+            CREATE_EXPERIMENT_CONFIG_BEAN.setMetadataProfile(AnalyzerConstants.MetadataProfileConstants.CLUSTER_METADATA_LOCAL_MON_PROFILE);
         }
 
         public static class NotificationConstants {
@@ -911,6 +935,16 @@ public class KruizeConstants {
                     "ConnectTimeoutException: cannot establish a data source connection in a given time frame due to connectivity issues. (%s)",
                     503
             );
+            public static final BulkJobStatus.Notification EXPERIMENT_FAILED = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Not able to proceed due to. (%s)",
+                    503
+            );
+            public static final BulkJobStatus.Notification METADATA_PROFILE_NOT_FOUND = new BulkJobStatus.Notification(
+                    BulkJobStatus.NotificationType.ERROR,
+                    "Metadata profile not found. (%s)",
+                    400
+            );
 
 
             // More notification constants can be added here as needed
@@ -919,7 +953,9 @@ public class KruizeConstants {
                 PROCESSED("PROCESSED"),
                 UNPROCESSED("UNPROCESSED"),
                 PROCESSING("PROCESSING"),
-                FAILED("FAILED");
+                FAILED("FAILED"),
+                PUBLISHED("PUBLISHED"),
+                PUBLISH_FAILED("PUBLISH_FAILED");
 
                 private final String status;
 
@@ -960,8 +996,9 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_FOUND = "MetadataProfile found: ";
         public static final String ADDING_METADATA_PROFILE = "Trying to add the metadata profile to collection: ";
         public static final String METADATA_PROFILE_ALREADY_EXISTS = "MetadataProfile already exists: ";
-        public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: ";
+        public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: {}";
         public static final String CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE = "Failed to convert input JSON to MetadataProfile object due to: {}";
+        public static final String METADATA_PROFILE_FILE_PATH = "MetadataProfile file path: {}";
 
         public static class MetadataProfileErrorMsgs {
 
@@ -971,6 +1008,11 @@ public class KruizeConstants {
             public static final String PROCESS_METADATA_PROFILE_OBJECT_ERROR = "Failed to process metadata of metadataProfile object due to : {}";
             public static final String PROCESS_QUERY_VARIABLES_ERROR = "Error occurred while processing query_variables data due to : {}";
             public static final String CONVERT_METADATA_PROFILE_TO_DB_OBJECT_FAILURE = "Failed to convert MetadataProfile Object to MetadataProfile DB object due to {}";
+            public static final String INVALID_METADATA_PROFILE = "Metadata profile name either does not exist or is not valid: ";
+            public static final String ADD_DEFAULT_METADATA_PROFILE_EXCEPTION = "Exception occurred while adding default Metadata profile: {}";
+            public static final String SET_UP_DEFAULT_METADATA_PROFILE_ERROR = "Failed to set up default MetadataProfile due to: {}";
+            public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
+            public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
 
             private MetadataProfileErrorMsgs() {
             }
@@ -982,8 +1024,38 @@ public class KruizeConstants {
         public static final String CREATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s created successfully.";
         public static final String VIEW_METADATA_PROFILES_MSG = " View Metadata Profiles at /listMetadataProfiles";
         public static final String ADD_METADATA_PROFILE_TO_DB_WITH_VERSION = "Added Metadata Profile : {} into the DB with version: {}";
+        public static final String DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully.";
+        public static final String DELETE_METADATA_PROFILE_FROM_DB_SUCCESS_MSG = "Metadata profile deleted successfully from the DB.";
 
         private MetadataProfileAPIMessages() {
         }
+    }
+
+    public static final class KAFKA_CONSTANTS {
+        public static final String BULK_INPUT_TOPIC = "bulk-input-topic";
+        public static final String RECOMMENDATIONS_TOPIC = "recommendations-topic";
+        public static final String ERROR_TOPIC = "error-topic";
+        public static final String SUMMARY_TOPIC = "summary-topic";
+        public static final String UNKNOWN_TOPIC = "Unknown topic: %s";
+
+        public static final String SUMMARY = "summary";
+        public static final String EXPERIMENTS = "experiments";
+        public static final String RECOMMENDATIONS = "recommendations";
+        public static final String ALL = "all";
+
+        public static final String BOOTSTRAP_SERVER_MISSING = "Kafka is enabled, but no bootstrap server URL is provided!";
+        public static final String KAFKA_CONNECTION_SUCCESS = "✅ Kafka connection successful: {}";
+        public static final String KAFKA_CONNECTION_FAILURE = "❌ Failed to connect to Kafka at %s : ";
+
+
+        public static final String MESSAGE_SENT_SUCCESSFULLY = "Message sent successfully to topic {} at partition {} and offset {}";
+        public static final String KAFKA_MESSAGE_TIMEOUT_ERROR = "Kafka timeout while sending message to topic {}: {}";
+        public static final String KAFKA_MESSAGE_FAILED = "Error sending message to Kafka topic {}: {}";
+        public static final String KAFKA_PRODUCER_CLOSED = "Kafka producer closed.";
+        public static final String MISSING_KAFKA_TOPIC = "Kafka topic '%s' does not exist! Skipping message publishing.";
+        public static final String KAFKA_PUBLISH_FAILED = "Failed to publish to Kafka: {}";
+
+        public static final String MESSAGE_RECEIVED_SUCCESSFULLY = "Received Input: Request_Id={}, Value={}, Partition={}, Offset={}";
+
     }
 }

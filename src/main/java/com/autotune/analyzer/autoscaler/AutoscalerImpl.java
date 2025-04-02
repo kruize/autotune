@@ -74,7 +74,7 @@ public class AutoscalerImpl implements Autoscaler {
             int calCount = 0;
             String validationMessage = recommendationEngine.validate_local();
             if (validationMessage.isEmpty()) {
-                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, null);
+                KruizeObject kruizeObject = recommendationEngine.prepareRecommendations(calCount, null, null);
                 if (kruizeObject.getValidation_data().isSuccess()) {
                     LOGGER.debug(AnalyzerConstants.AutoscalerConstants.InfoMsgs.GENERATED_RECOMMENDATIONS, experimentName);
                     return kruizeObject;

@@ -39,6 +39,7 @@ import java.util.Date;
  * mode: A string representing the mode of the experiment.
  * targetCluster: A string representing the target cluster for the experiment.
  * performance_profile: A string representing the performance profile for the experiment.
+ * metadata_profile: A string representing the metadata profile for the experiment.
  * status: An enum representing the status of the experiment, defined in AnalyzerConstants.ExperimentStatus.
  * extended_data: A JSON object representing extended data for the experiment.
  * meta_data: A string representing metadata for the experiment.
@@ -59,6 +60,7 @@ public class KruizeLMExperimentEntry {
     private String mode;
     private String target_cluster;
     private String performance_profile;
+    private String metadata_profile;
     @Enumerated(EnumType.STRING)
     private AnalyzerConstants.ExperimentStatus status;
     @JdbcTypeCode(SqlTypes.JSON)
@@ -126,6 +128,10 @@ public class KruizeLMExperimentEntry {
     public void setPerformance_profile(String performance_profile) {
         this.performance_profile = performance_profile;
     }
+
+    public String getMetadata_profile() { return metadata_profile; }
+
+    public void setMetadata_profile(String metadata_profile) { this.metadata_profile = metadata_profile; }
 
     public JsonNode getExtended_data() {
         return extended_data;
@@ -201,6 +207,7 @@ public class KruizeLMExperimentEntry {
                 ", mode='" + mode + '\'' +
                 ", target_cluster='" + target_cluster + '\'' +
                 ", performance_profile='" + performance_profile + '\'' +
+                ", metadata_profile='" + metadata_profile + '\'' +
                 ", status=" + status +
                 ", datasource=" + datasource +
                 ", extended_data=" + extended_data +

@@ -70,6 +70,8 @@ import java.util.HashMap;
 import java.util.Scanner;
 
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED;
+import static com.autotune.utils.KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.SET_UP_DEFAULT_METADATA_PROFILE_ERROR;
+import static com.autotune.utils.KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.SET_UP_DEFAULT_METRIC_PROFILE_ERROR;
 import static com.autotune.utils.ServerContext.*;
 
 public class Autotune {
@@ -118,30 +120,56 @@ public class Autotune {
             InitializeDeployment.setup_deployment_info();
             // Configure AWS CloudWatch
             CloudWatchAppender.configureLoggerForCloudWatchLog();
-            LOGGER.info("ROS enabled : {}" ,KruizeDeploymentInfo.is_ros_enabled);
+            LOGGER.info("Kruize getting started with is_ros_enabled:{} , local:{}", KruizeDeploymentInfo.is_ros_enabled, KruizeDeploymentInfo.local);
+            if (KruizeDeploymentInfo.is_ros_enabled) {
+                executeDDLs(AnalyzerConstants.ROS_DDL_SQL);
+            }
+
             // Read and execute the DDLs here
-            executeDDLs(AnalyzerConstants.ROS_DDL_SQL);
-            if (KruizeDeploymentInfo.local == true) {
-                LOGGER.info("Now running kruize local DDL's ");
+            if (KruizeDeploymentInfo.local) {
+                LOGGER.debug("Now running kruize local DDL's ");
                 executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
                 // load available datasources from db
                 loadDataSourcesFromDB();
+
                 // setting up DataSources
                 try {
                     setUpDataSources();
                 } catch (Exception e) {
                     LOGGER.error(DATASOURCE_CONNECTION_FAILED, e.getMessage());
                 }
+
                 // checking available DataSources
                 checkAvailableDataSources();
                 // load available metric profiles from db
                 loadMetricProfilesFromDB();
+
+                if (KruizeDeploymentInfo.is_ros_enabled) {
+                    // setting up metric profile
+                    try {
+                        setUpMetricProfile();
+                    } catch (Exception e) {
+                        LOGGER.error(SET_UP_DEFAULT_METRIC_PROFILE_ERROR, e.getMessage());
+                    }
+                }
+
                 // load available metadata profiles from db
                 loadMetadataProfilesFromDB();
+
+                if (KruizeDeploymentInfo.is_ros_enabled) {
+                    // setting up metadata profile
+                    try {
+                        setUpMetadataProfile();
+                    } catch (Exception e) {
+                        LOGGER.error(SET_UP_DEFAULT_METADATA_PROFILE_ERROR, e.getMessage());
+                    }
+                }
+
+
                 // start updater service
                 startAutoscalerService();
-
             }
+
             // close the existing session factory before recreating
             KruizeHibernateUtil.closeSessionFactory();
             //Regenerate a Hibernate session following the creation of new tables
@@ -177,10 +205,17 @@ public class Autotune {
             startAutotuneNormalMode(context);
         }
 
-        // Check the settings initially while starting
-        AutoscalingSettings.getInstance().initialiseAutoscalingSettings();
+        if (KruizeDeploymentInfo.local) {
+            // Check the settings initially while starting
+            AutoscalingSettings.getInstance().initialiseAutoscalingSettings();
+        }
 
         try {
+            // check if kafka flag is enabled and the corresponding server details are added
+            if (KruizeDeploymentInfo.is_kafka_enabled && (KruizeDeploymentInfo.kafka_bootstrap_servers == null || KruizeDeploymentInfo.kafka_bootstrap_servers.isEmpty())) {
+                LOGGER.error(KruizeConstants.KAFKA_CONSTANTS.BOOTSTRAP_SERVER_MISSING);
+                throw new IllegalStateException(KruizeConstants.KAFKA_CONSTANTS.BOOTSTRAP_SERVER_MISSING);
+            }
             String startAutotune = System.getenv("START_AUTOTUNE");
             if (startAutotune == null || startAutotune.equalsIgnoreCase("true")) {
                 server.start();
@@ -233,11 +268,27 @@ public class Autotune {
     }
 
     /**
+     * Set up the metric profile at installation time
+     */
+    private static void setUpMetricProfile() throws IOException {
+        MetricProfileCollection metricProfileCollection = MetricProfileCollection.getInstance();
+        metricProfileCollection.addMetricProfileFromConfigFile();
+    }
+
+    /**
      * loads metadata profiles from database
      */
     private static void loadMetadataProfilesFromDB() {
         MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
         metadataProfileCollection.loadMetadataProfilesFromDB();
+    }
+
+    /**
+     * Set up the metadata profile at installation time
+     */
+    private static void setUpMetadataProfile() throws IOException {
+        MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
+        metadataProfileCollection.addMetadataProfileFromConfigFile();
     }
 
     private static void addAutotuneServlets(ServletContextHandler context) {

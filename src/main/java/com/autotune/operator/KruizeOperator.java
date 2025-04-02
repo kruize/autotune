@@ -25,6 +25,9 @@ import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SelectorInfo;
 import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileDeployment;
+import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
@@ -32,6 +35,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.k8sObjects.KubernetesContexts;
@@ -335,6 +339,7 @@ public class KruizeOperator {
             JSONObject metadataJson = autotuneObjectJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
             String name;
             String perfProfileName = null;
+            String metadataProfileName = null;
             String mode;
             String targetCluster;
             String clusterName;
@@ -380,6 +385,20 @@ public class KruizeOperator {
                         perfProfileName = setDefaultPerformanceProfile(sloInfo, mode, targetCluster);
                     }
                 }
+
+                // 'metadata_profile' field is applicable only for local_monitoring experiments
+                if (KruizeDeploymentInfo.local && targetCluster.equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
+                    metadataProfileName = specJson.optString(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE);
+                    if (!metadataProfileName.isEmpty()) {
+                        // check if the metadata profile with the given name exist
+                        if (null == MetadataProfileDeployment.metadataProfilesMap.get(metadataProfileName)) {
+                            throw new NullPointerException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE + metadataProfileName);
+                        }
+                    } else {
+                        throw new InvalidValueException(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD);
+                    }
+                }
+
                 selectorJson = specJson.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SELECTOR);
             }
             assert selectorJson != null;
@@ -416,6 +435,7 @@ public class KruizeOperator {
                     hpoAlgoImpl,
                     selectorInfo,
                     perfProfileName,
+                    metadataProfileName,
                     datasource,
                     objectReference
             );

@@ -15,8 +15,10 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.dataSourceMetadata.*;
-import com.autotune.common.data.dataSourceQueries.PromQLDataSourceQueries;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.Gson;
@@ -73,10 +75,11 @@ public class DataSourceMetadataOperator {
      * @param includeResources
      * @param excludeResources
      */
-    public DataSourceMetadataInfo createDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
-                                                           long endTime, int steps, Map<String, String> includeResources,
+    public DataSourceMetadataInfo createDataSourceMetadata(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
+                                                           long endTime, int steps,  int measurementDuration, Map<String, String> includeResources,
                                                            Map<String, String> excludeResources) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps, includeResources, excludeResources);
+        return processQueriesAndPopulateDataSourceMetadataInfo(metadataProfileName, dataSourceInfo, uniqueKey, startTime,
+                endTime, steps, measurementDuration, includeResources, excludeResources);
     }
 
     /**
@@ -118,10 +121,11 @@ public class DataSourceMetadataOperator {
      *                                                                                                                                                                                                                                                                          TODO - Currently Create and Update functions have identical functionalities, based on UI workflow and requirements
      *                                                                                                                                                                                                                                                                                 need to further enhance updateDataSourceMetadata() to support namespace, workload level granular updates
      */
-    public DataSourceMetadataInfo updateDataSourceMetadata(DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
-                                                           long endTime, int steps, Map<String, String> includeResources,
+    public DataSourceMetadataInfo updateDataSourceMetadata(String metadataProfileName,DataSourceInfo dataSourceInfo, String uniqueKey, long startTime,
+                                                           long endTime, int steps, int measurementDuration, Map<String, String> includeResources,
                                                            Map<String, String> excludeResources) throws Exception {
-        return processQueriesAndPopulateDataSourceMetadataInfo(dataSourceInfo, uniqueKey, startTime, endTime, steps, includeResources, excludeResources);
+        return processQueriesAndPopulateDataSourceMetadataInfo(metadataProfileName, dataSourceInfo, uniqueKey, startTime,
+                endTime, steps, measurementDuration, includeResources, excludeResources);
     }
 
     /**
@@ -163,8 +167,8 @@ public class DataSourceMetadataOperator {
      * @return DataSourceMetadataInfo object with populated metadata fields
      * todo rename processQueriesAndFetchClusterMetadataInfo
      */
-    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(DataSourceInfo dataSourceInfo, String uniqueKey,
-                                                                                  long startTime, long endTime, int steps,
+    public DataSourceMetadataInfo processQueriesAndPopulateDataSourceMetadataInfo(String metadataProfileName, DataSourceInfo dataSourceInfo, String uniqueKey,
+                                                                                  long startTime, long endTime, int steps, int measurementDuration,
                                                                                   Map<String, String> includeResources,
                                                                                   Map<String, String> excludeResources) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
         DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
@@ -187,12 +191,14 @@ public class DataSourceMetadataOperator {
         // Map for storing queries
         Map<String, String> queries = new HashMap<>();
 
+        MetadataProfile metadataProfile = MetadataProfileCollection.getInstance().getMetadataProfileCollection().get(metadataProfileName);
+
         // Populate filters for each field
         fields.forEach(field -> {
             String includeRegex = includeResources.getOrDefault(field + "Regex", "");
             String excludeRegex = excludeResources.getOrDefault(field + "Regex", "");
             String filter = constructDynamicFilter(field, includeRegex, excludeRegex);
-            String queryTemplate = getQueryTemplate(field); // Helper to map fields to PromQL queries
+            String queryTemplate = getQueryTemplate(field, metadataProfile); // Helper to map fields to PromQL queries
             queries.put(field, String.format(queryTemplate, filter));
         });
 
@@ -212,6 +218,11 @@ public class DataSourceMetadataOperator {
             workloadQuery = workloadQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
             containerQuery = containerQuery.replace(KruizeConstants.KRUIZE_BULK_API.ADDITIONAL_LABEL, "");
         }
+
+        namespaceQuery = namespaceQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
+        workloadQuery = workloadQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
+        containerQuery = containerQuery.replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, Integer.toString(measurementDuration));
+
         LOGGER.info("namespaceQuery: {}", namespaceQuery);
         LOGGER.info("workloadQuery: {}", workloadQuery);
         LOGGER.info("containerQuery: {}", containerQuery);
@@ -275,11 +286,13 @@ public class DataSourceMetadataOperator {
     }
 
     // Helper function to map fields to query templates
-    private String getQueryTemplate(String field) {
+    private String getQueryTemplate(String field, MetadataProfile metadataProfile) {
+        DataSourceMetadataHelper dataSourceDetailsHelper = new DataSourceMetadataHelper();
+
         return switch (field) {
-            case "namespace" -> PromQLDataSourceQueries.NAMESPACE_QUERY;
-            case "workload" -> PromQLDataSourceQueries.WORKLOAD_QUERY;
-            case "container" -> PromQLDataSourceQueries.CONTAINER_QUERY;
+            case "namespace" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.NAMESPACE);
+            case "workload" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.WORKLOAD);
+            case "container" -> dataSourceDetailsHelper.getQueryFromProfile(metadataProfile, AnalyzerConstants.CONTAINER);
             default -> throw new IllegalArgumentException("Unknown field: " + field);
         };
     }

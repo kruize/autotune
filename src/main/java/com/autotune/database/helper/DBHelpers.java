@@ -63,6 +63,7 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 
 import static com.autotune.analyzer.experiment.ExperimentInitiator.getErrorMap;
+import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.JOB_ID;
 
 /**
  * Helper functions used by the DB to create entity objects.
@@ -427,6 +428,7 @@ public class DBHelpers {
                     kruizeLMExperimentEntry.setCluster_name(apiObject.getClusterName());
                     kruizeLMExperimentEntry.setMode(apiObject.getMode());
                     kruizeLMExperimentEntry.setPerformance_profile(apiObject.getPerformanceProfile());
+                    kruizeLMExperimentEntry.setMetadata_profile(apiObject.getMetadataProfile());
                     kruizeLMExperimentEntry.setVersion(apiObject.getApiVersion());
                     kruizeLMExperimentEntry.setTarget_cluster(apiObject.getTargetCluster());
                     kruizeLMExperimentEntry.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
@@ -611,7 +613,10 @@ public class DBHelpers {
                         }
                     }
                     kruizeRecommendationEntry.setInterval_end_time(endInterval);
-                    Map k8sObjectsMap = Map.of(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, listRecommendationsAPIObject.getKubernetesObjects());
+                    Map<String, Object> k8sObjectsMap = new HashMap<>();
+                    k8sObjectsMap.put(KruizeConstants.JSONKeys.KUBERNETES_OBJECTS, listRecommendationsAPIObject.getKubernetesObjects());
+                    if (null != kruizeObject.getBulkJobId())
+                        k8sObjectsMap.put(JOB_ID, kruizeObject.getBulkJobId());
                     String k8sObjectString = gson.toJson(k8sObjectsMap);
                     ObjectMapper objectMapper = new ObjectMapper();
                     DateFormat df = new SimpleDateFormat(KruizeConstants.DateFormats.STANDARD_JSON_DATE_FORMAT);

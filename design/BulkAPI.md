@@ -57,6 +57,8 @@ progress of the job.
     "end": "2024-11-15T23:59:59.000Z"
   },
   "datasource": "Cbank1Xyz",
+  "metadata_profile": "cluster-metadata-local-monitoring",
+  "measurement_duration": "15min",
   "experiment_types": [
     "container",
     "namespace"
@@ -91,6 +93,12 @@ progress of the job.
   status of
   an experiment-processing job. Once a job is completed, this webhook will be triggered to send an HTTP request to the
   URL defined in the bulk request payload.
+
+- **metadata_profile:** Name of the metadata profile to import the cluster metadata. This is a mandatory field `metadata_profile` 
+  should be installed / created before invoking bulk API.
+
+- **measurement_duration:** The historic data duration to fetch the cluster metadata. This is an optional field, if not 
+  specified `15min` as default measurement_duration value is considered.
 
 ### Success Response
 
@@ -920,6 +928,48 @@ example
 - **Control Mechanism:** The number of threads used for bulk API operations can be controlled using the environment
   variable `bulkThreadPoolSize`.
 
+## Cache bulk job details in memory or DB
+
+- The default value for the `testUseOnlycacheJobInMemory` environment variable is set to false, meaning bulk summary job details are stored in the `kruize_bulkjobs` database table. If set to true, the details are stored in memory instead. However, this data will be lost if the pod restarts and will not be available in other pod replicas.
+  p.s. This environment variable is intended solely for development and internal testing purposes and has no relevance for Bulk API consumers. 
+
+## Control Data Attributes Saved in kruize_bulkjobs.experiments
+
+- The experiments column in the `kruize_bulkjobs` table can be controlled using the environment variable `jobFilterToDB`. Since the data volume can be large and some information may not need to be stored, this variable helps manage what gets saved. By default, its value is "experiments|status|apis|create|response", meaning the following example data will be stored in the database.
+- 
+```json
+{
+  "experiments": {
+    "prometheus-1|default|monitoring|kruize(deployment)|kruize": {
+      "apis": {
+        "create": {
+          "response": {
+            "status": "SUCCESS",
+            "message": "Experiment registered successfully with Kruize. View registered experiments at /listExperiments",
+            "httpcode": 201,
+            "documentationLink": ""
+          }
+        }
+      },
+      "status": "PROCESSED"
+    },
+    "prometheus-1|default|cadvisor|cadvisor(daemonset)|cadvisor": {
+      "apis": {
+        "create": {
+          "response": {
+            "status": "SUCCESS",
+            "message": "Experiment registered successfully with Kruize. View registered experiments at /listExperiments",
+            "httpcode": 201,
+            "documentationLink": ""
+          }
+        }
+      },
+      "status": "PROCESSED"
+    }
+  }
+}
+```
+
 ## Experiment Name Format Configuration
 
 - **experimentNameFormat:** The `experimentNameFormat` environment variable is used to define the format for experiment
@@ -961,7 +1011,9 @@ and include sections, matching the format above.
         "cluster_id": "ABG"
       }
     }
-  }
+  },
+  "metadata_profile": "cluster-metadata-local-monitoring",
+  "measurement_duration": "15min"
 }
 ```
 

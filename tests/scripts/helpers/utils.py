@@ -25,6 +25,7 @@ from helpers.kruize import *
 from datetime import datetime, timedelta
 from kubernetes import client, config
 from pathlib import Path
+from helpers.kruize import get_bulk_job_status
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
@@ -74,6 +75,14 @@ INVALID_LIST_METRIC_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are inva
 LIST_METRIC_PROFILES_INVALID_NAME = "Given metric profile name - %s either does not exist or is not valid"
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
+CREATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s created successfully. View Metadata Profiles at /listMetadataProfiles"
+METADATA_PROFILE_EXISTS_MSG = "Validation failed: Metadata Profile already exists: %s"
+METADATA_PROFILE_NOT_FOUND_MSG = "No metadata profiles found!"
+INVALID_LIST_METADATA_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are invalid"
+LIST_METADATA_PROFILES_INVALID_NAME = "Given metadata profile name - %s either does not exist or is not valid"
+CREATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
+CREATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
+
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
@@ -248,6 +257,8 @@ update_results_test_data = {
 import_metadata_test_data = {
     "version": "v1.0",
     "datasource_name": "prometheus-1",
+    "metadata_profile": "cluster-metadata-local-monitoring",
+    "measurement_duration": "15min"
 }
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
@@ -280,6 +291,10 @@ def generate_test_data(csvfile, test_data, api_name):
                 test_name = t + "_" + key
                 status_code = 400
                 if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"):
+                    status_code = 201
+
+                if api_name == "import_metadata" and (test_name == "invalid_version" or test_name == "blank_version" or
+                test_name == "invalid_measurement_duration" or test_name == "blank_measurement_duration" or test_name == "null_measurement_duration"):
                     status_code = 201
 
                 data.append(test_name)
@@ -1385,7 +1400,7 @@ def clone_repo(repo_url, target_dir=None):
 
 
 #  Install Benchmarks
-def benchmarks_install(namespace="default", manifests="default_manifests"):
+def benchmarks_install(namespace="default", manifests="default_manifests", name="techempower"):
 
     # Change to the benchmarks directory
     try:
@@ -1393,13 +1408,16 @@ def benchmarks_install(namespace="default", manifests="default_manifests"):
     except Exception as e:
         print(f"ERROR: Could not change to 'benchmarks' directory: {e}")
 
-    print("Installing TechEmpower (Quarkus REST EASY) benchmark into cluster")
+    print(f"Installing {name} benchmark into cluster")
 
     # Change to the techempower directory
     try:
-        os.chdir("techempower")
+        if name == "sysbench":
+            os.chdir("sysbench")
+        else:
+            os.chdir("techempower")
     except Exception as e:
-        print(f"ERROR: Could not change to 'techempower' directory: {e}")
+        print(f"ERROR: Could not change to {name} directory: {e}")
 
 
     # Apply the Kubernetes manifests
@@ -1602,14 +1620,63 @@ def validate_job_status(job_id, base_url, caplog):
     response_basic = get_bulk_job_status(job_id,False)
     # Verify common keys in the basic response
     assert common_keys.issubset(
-        response_basic.json().keys()), f"Missing keys in response: {common_keys - response_basic.json().keys()}"
+        response_basic.json()['summary'].keys()), f"Missing keys in response: {common_keys - response_basic.json()['summary'].keys()}"
 
-    response_verbose = get_bulk_job_status(job_id,True)
+    response_verbose = get_bulk_job_status(job_id,include="summary,experiments")
     # Verify common and verbose keys in the verbose response
     assert common_keys.issubset(
-        response_verbose.json().keys()), f"Missing keys in verbose response: {common_keys - response_verbose.json().keys()}"
+        response_verbose.json()['summary'].keys()), f"Missing keys in verbose response: {common_keys - response_verbose.json()['summary'].keys()}"
     assert verbose_keys.issubset(
         response_verbose.json().keys()), f"Missing verbose keys in response: {verbose_keys - response_verbose.json().keys()}"
 
 
+def get_metadata_profile_dir():
+    # Get the current directory
+    current_directory = Path(__file__).resolve().parent
+    # Navigate up 3 levels
+    base_dir = current_directory.parents[2]  # (index 2 because it's zero-based)
+    metadata_profile_dir = base_dir / 'manifests' / 'autotune' / 'metadata-profiles'
 
+    return metadata_profile_dir
+
+
+def delete_and_create_metadata_profile():
+    metadata_profile_dir = get_metadata_profile_dir()
+
+    metadata_profile_json_file = metadata_profile_dir / 'bulk_cluster_metadata_local_monitoring.json'
+    json_data = json.load(open(metadata_profile_json_file))
+    metadata_profile_name = json_data['metadata']['name']
+
+    response = delete_metadata_profile(metadata_profile_name)
+    print("delete metadata profile = ", response.status_code)
+
+    # Create metadata profile using the specified json
+    response = create_metadata_profile(metadata_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
+
+
+def delete_and_create_metric_profile():
+    metric_profile_dir = get_metric_profile_dir()
+
+    metric_profile_json_file = metric_profile_dir / 'resource_optimization_local_monitoring.json'
+    json_data = json.load(open(metric_profile_json_file))
+    metric_profile_name = json_data['metadata']['name']
+
+    response = delete_metric_profile(metric_profile_json_file)
+    print("delete metric profile = ", response.status_code)
+
+    # Create metric profile using the specified json
+    response = create_metric_profile(metric_profile_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name

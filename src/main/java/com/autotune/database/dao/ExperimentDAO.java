@@ -5,6 +5,7 @@ import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.table.*;
+import com.autotune.database.table.lm.KruizeBulkJobEntry;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
@@ -64,7 +65,7 @@ public interface ExperimentDAO {
     // If Kruize restarts load all recommendations
     List<KruizeRecommendationEntry> loadAllRecommendations() throws Exception;
 
-    List<KruizeLMRecommendationEntry> loadAllLMRecommendations() throws Exception;
+    List<KruizeLMRecommendationEntry> loadAllLMRecommendations(String bulkJobID) throws Exception;
 
     // If Kruize restarts load all performance profiles
     List<KruizePerformanceProfileEntry> loadAllPerformanceProfiles() throws Exception;
@@ -93,7 +94,7 @@ public interface ExperimentDAO {
     List<KruizeRecommendationEntry> loadRecommendationsByExperimentName(String experimentName) throws Exception;
 
     // Load all recommendations of a particular experiment
-    List<KruizeLMRecommendationEntry> loadLMRecommendationsByExperimentName(String experimentName) throws Exception;
+    List<KruizeLMRecommendationEntry> loadLMRecommendationsByExperimentName(String experimentName, String bulkJobId) throws Exception;
 
     // Load a single Performance Profile based on name
     List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception;
@@ -106,6 +107,9 @@ public interface ExperimentDAO {
 
     // Delete metric profile for the specified metric profile name
     public ValidationOutputData deleteKruizeMetricProfileEntryByName(String metricProfileName);
+
+    // Delete metadata profile for the specified metadata profile name
+    public ValidationOutputData deleteKruizeLMMetadataProfileEntryByName(String metadataProfileName);
 
     // Load all recommendations of a particular experiment and interval end Time
     KruizeRecommendationEntry loadRecommendationsByExperimentNameAndDate(String experimentName, String cluster_name, Timestamp interval_end_time) throws Exception;
@@ -142,4 +146,14 @@ public interface ExperimentDAO {
     public ValidationOutputData deleteKruizeDSMetadataEntryByName(String dataSourceName);
 
     ValidationOutputData addAuthenticationDetailsToDB(KruizeAuthenticationEntry kruizeAuthenticationEntry);
+
+    // save ,get, partial update and delete  BulkJob data
+    ValidationOutputData bulkJobSave(KruizeBulkJobEntry kruizeBulkJobEntry);
+
+    KruizeBulkJobEntry findBulkJobById(String jobId) throws Exception;
+
+    ValidationOutputData updateBulkJobByExperiment(String jobId, String experimentName, String notification, String recommendationJson) throws Exception;
+
+    void deleteBulkJobByID(String jobId);
+
 }

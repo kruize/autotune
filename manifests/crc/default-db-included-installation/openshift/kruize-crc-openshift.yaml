@@ -94,9 +94,9 @@ kind: ClusterRole
 metadata:
   name: instaslices-access
 rules:
-  - apiGroups: ["inference.redhat.com"]
-    resources: ["instaslices"]
-    verbs: ["get", "list", "watch"]
+  - apiGroups: [ "inference.redhat.com" ]
+    resources: [ "instaslices" ]
+    verbs: [ "get", "list", "watch" ]
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
@@ -208,11 +208,13 @@ data:
       "dbdriver": "jdbc:postgresql://",
       "plots": "true",
       "isROSEnabled": "false",
+      "local": "true",
       "logAllHttpReqAndResp": "true",
       "recommendationsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/generateRecommendations?experiment_name=%s",
       "experimentsURL" : "http://kruize.openshift-tuning.svc.cluster.local:8080/createExperiment",
       "experimentNameFormat" : "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%",
       "bulkapilimit" : 1000,
+      "isKafkaEnabled" : "false",
       "hibernate": {
         "dialect": "org.hibernate.dialect.PostgreSQLDialect",
         "driver": "org.postgresql.Driver",
@@ -348,7 +350,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.4
+          image: quay.io/kruize/autotune_operator:0.5
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -364,6 +366,14 @@ spec:
               value: "/etc/config/kruizeconfigjson"
             - name: JAVA_TOOL_OPTIONS
               value: "-XX:MaxRAMPercentage=80"
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: "kruize-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+            - name: KAFKA_TOPICS
+              value: "recommendations-topic,error-topic,summary-topic"
+            - name: KAFKA_RESPONSE_FILTER_INCLUDE
+              value: "experiments|status|apis|recommendations|response|status_history"
+            - name: KAFKA_RESPONSE_FILTER_EXCLUDE
+              value: ""
           resources:
             requests:
               memory: "768Mi"
@@ -420,7 +430,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.4
+              image: quay.io/kruize/autotune_operator:0.5
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -461,7 +471,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.4
+              image: quay.io/kruize/autotune_operator:0.5
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume

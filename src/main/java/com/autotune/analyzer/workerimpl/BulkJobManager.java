@@ -19,6 +19,8 @@ import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
@@ -29,6 +31,7 @@ import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceManager;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.common.utils.CommonUtils;
+import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
@@ -63,8 +66,10 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import static com.autotune.operator.KruizeDeploymentInfo.*;
+import static com.autotune.analyzer.services.BulkService.filterJson;
 import static com.autotune.operator.KruizeDeploymentInfo.bulk_thread_pool_size;
-import static com.autotune.operator.KruizeDeploymentInfo.experiments_url;
+import static com.autotune.operator.KruizeDeploymentInfo.job_filter_to_db;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationConstants.*;
 
@@ -96,15 +101,22 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.NotificationCon
  */
 public class BulkJobManager implements Runnable {
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkJobManager.class);
-
+    ExecutorService createExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
+    ExecutorService generateExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
     private String jobID;
     private BulkInput bulkInput;
     private BulkJobStatus jobData;
+    private KruizeKafkaManager kruizeKafkaManager;
+    private final Set<String> kafkaIncludeFilter;
+    private final Set<String> kafkaExcludeFilter;
 
     public BulkJobManager(String jobID, BulkJobStatus jobData, BulkInput payload) {
         this.jobID = jobID;
         this.jobData = jobData;
         this.bulkInput = payload;
+        this.kruizeKafkaManager = KruizeDeploymentInfo.is_kafka_enabled ? KruizeKafkaManager.getInstance() : null;
+        this.kafkaIncludeFilter = KruizeDeploymentInfo.getKafkaIncludeFilter();
+        this.kafkaExcludeFilter = KruizeDeploymentInfo.getKafkaExcludeFilter();
     }
 
     public static List<String> appendExperiments(List<String> allExperiments, String experimentName) {
@@ -131,211 +143,122 @@ public class BulkJobManager implements Runnable {
 
     @Override
     public void run() {
-        String statusValue = "failure";
-        MetricsConfig.activeJobs.incrementAndGet();
-        io.micrometer.core.instrument.Timer.Sample timerRunJob = Timer.start(MetricsConfig.meterRegistry());
-        DataSourceMetadataInfo metadataInfo = null;
-        DataSourceManager dataSourceManager = new DataSourceManager();
-        DataSourceInfo datasource = null;
-        String labelString = null;
-        Map<String, String> includeResourcesMap = new HashMap<>();
-        Map<String, String> excludeResourcesMap = new HashMap<>();
         try {
-            if (this.bulkInput.getFilter() != null) {
-                labelString = getLabels(this.bulkInput.getFilter());
-                includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
-                excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
-            }
-            if (null == this.bulkInput.getDatasource()) {
-                this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
-            }
+            String statusValue = "failure";
+            MetricsConfig.activeJobs.incrementAndGet();
+            io.micrometer.core.instrument.Timer.Sample timerRunJob = Timer.start(MetricsConfig.meterRegistry());
+            DataSourceMetadataInfo metadataInfo = null;
+            DataSourceManager dataSourceManager = new DataSourceManager();
+            DataSourceInfo datasource = null;
+            String labelString = null;
+            Map<String, String> includeResourcesMap = new HashMap<>();
+            Map<String, String> excludeResourcesMap = new HashMap<>();
             try {
-                datasource = CommonUtils.getDataSourceInfo(this.bulkInput.getDatasource());
-            } catch (Exception e) {
-                LOGGER.error(e.getMessage());
-                e.printStackTrace();
-                BulkJobStatus.Notification notification = DATASOURCE_NOT_REG_INFO;
-                notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
-                setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
-            }
-            if (null != datasource) {
-                JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
-                if (null != daterange) {
-                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, (Long) daterange.get(START_TIME),
-                            (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), includeResourcesMap, excludeResourcesMap);
-                } else {
-                    metadataInfo = dataSourceManager.importMetadataFromDataSource(datasource, labelString, 0, 0,
-                            0, includeResourcesMap, excludeResourcesMap);
+                if (this.bulkInput.getFilter() != null) {
+                    labelString = getLabels(this.bulkInput.getFilter());
+                    includeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getInclude());
+                    excludeResourcesMap = buildRegexFilters(this.bulkInput.getFilter().getExclude());
                 }
-                if (null == metadataInfo) {
-                    setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
-                } else {
+                if (null == this.bulkInput.getDatasource()) {
+                    this.bulkInput.setDatasource(CREATE_EXPERIMENT_CONFIG_BEAN.getDatasourceName());
+                }
+                try {
+                    datasource = CommonUtils.getDataSourceInfo(this.bulkInput.getDatasource());
+                } catch (Exception e) {
+                    LOGGER.error("Error in bulk job manager for job_id {} due to {}", jobID, e.getMessage());
+                    e.printStackTrace();
+                    BulkJobStatus.Notification notification = DATASOURCE_NOT_REG_INFO;
+                    notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
+                    setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
+                }
 
-                    jobData.setMetadata(metadataInfo);
-                    Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
-                    //  TODO: Remove getExperimentMap and instead collect all metadata, process it, and create experiments dynamically during metadata iteration.
-                    jobData.getSummary().setTotal_experiments(createExperimentAPIObjectMap.size());
-                    jobData.getSummary().setProcessed_experiments(0);
-                    if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
-                        setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO, datasource);
+                String metadataProfileName = handleMetadataProfile(datasource);
+
+                int measurementDuration = handleMeasurementDuration(datasource);
+
+                if (null != datasource) {
+                    JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
+                    if (null != daterange) {
+                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, (Long) daterange.get(START_TIME),
+                                (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), measurementDuration, includeResourcesMap, excludeResourcesMap);
                     } else {
-                        ExecutorService createExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
-                        ExecutorService generateExecutor = Executors.newFixedThreadPool(bulk_thread_pool_size);
-                        try {
-                            for (CreateExperimentAPIObject apiObject : createExperimentAPIObjectMap.values()) {
-                                DataSourceInfo finalDatasource = datasource;
-                                createExecutor.submit(() -> {
-                                    String experiment_name = apiObject.getExperimentName();
-                                    BulkJobStatus.Experiment experiment = jobData.addExperiment(experiment_name);
+                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, 0, 0,
+                                0, measurementDuration, includeResourcesMap, excludeResourcesMap);
+                    }
+                    if (null == metadataInfo) {
+                        setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
+                    } else {
+                        jobData.setMetadata(metadataInfo);
+                        Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
+                        //  TODO: Remove getExperimentMap and instead collect all metadata, process it, and create experiments dynamically during metadata iteration.
+                        jobData.getSummary().setTotal_experiments(createExperimentAPIObjectMap.size());
+                        jobData.getSummary().setProcessed_experiments(0);
+                        if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
+                            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO, datasource);
+                        } else {
+                            if (!KruizeDeploymentInfo.TEST_USE_ONLY_CACHE_JOB_IN_MEM) {                       // Todo Try to avoid this check in multiple places
+                                new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB("{}"));
+                            }
+                            try {
+                                processExperiments(datasource, createExperimentAPIObjectMap);
+                            } finally {
+                                // Shutdown createExecutor and wait for it to finish
+                                createExecutor.shutdown();
+                                while (!createExecutor.isTerminated()) {
                                     try {
-                                        // send request to createExperiment API for experiment creation
-                                        experiment.getApis().getCreate().setRequest(apiObject);
-                                        GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
-                                        LOGGER.debug("experiment_url : {}", experiments_url);
-                                        apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
-                                        GenericRestApiClient.HttpResponseWrapper responseCode;
-                                        boolean experiment_exists = false;
-                                        try {
-                                            LOGGER.debug("[" + new Gson().toJson(apiObject) + "]");
-                                            responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(apiObject) + "]");
-                                            experiment.getApis().getCreate().setResponse(new Gson().fromJson(responseCode.getResponseBody().toString(), KruizeResponse.class));
-                                            LOGGER.debug("API Response code: {}", responseCode);
-                                            if (responseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED || responseCode.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
-                                                experiment_exists = true;
-                                            }
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                            experiment.getApis().getCreate().setResponse(new KruizeResponse(e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR, null, FAILED));
-                                        } finally {
-                                            if (!experiment_exists) {
-                                                experiment.setStatus(NotificationConstants.Status.FAILED);
-                                                LOGGER.info("Processing experiment {}", jobData.getSummary().getProcessed_experiments());
-                                                jobData.getSummary().incrementProcessed_experiments();
-                                            }
-                                            synchronized (jobData) {
-                                                if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
-                                                    setFinalJobStatus(COMPLETED, null, null, finalDatasource);
-                                                }
-                                            }
-                                        }
-
-                                        if (experiment_exists) {
-                                            generateExecutor.submit(() -> {
-                                                // send request to generateRecommendations API
-                                                GenericRestApiClient recommendationApiClient = new GenericRestApiClient(finalDatasource);
-                                                String encodedExperimentName;
-                                                encodedExperimentName = URLEncoder.encode(experiment_name, StandardCharsets.UTF_8);
-                                                recommendationApiClient.setBaseURL(String.format(KruizeDeploymentInfo.recommendations_url, encodedExperimentName));
-                                                GenericRestApiClient.HttpResponseWrapper recommendationResponseCode = null;
-                                                try {
-                                                    recommendationResponseCode = recommendationApiClient.callKruizeAPI(null);
-                                                    LOGGER.debug("API Response code: {}", recommendationResponseCode);
-                                                    ExclusionStrategy strategy = new ExclusionStrategy() {
-                                                        @Override
-                                                        public boolean shouldSkipField(FieldAttributes field) {
-                                                            return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results"))
-                                                                    || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
-                                                        }
-
-                                                        @Override
-                                                        public boolean shouldSkipClass(Class<?> clazz) {
-                                                            return false;
-                                                        }
-                                                    };
-                                                    Gson gsonObj = new GsonBuilder()                        //Todo move this to common code
-                                                            .disableHtmlEscaping()
-                                                            .setPrettyPrinting()
-                                                            .enableComplexMapKeySerialization()
-                                                            .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
-                                                            .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
-                                                            .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
-                                                            .setExclusionStrategies(strategy)
-                                                            .create();
-                                                    experiment.getApis().getRecommendations().setResponse(gsonObj.fromJson(recommendationResponseCode.getResponseBody().toString(), List.class));
-                                                    if (recommendationResponseCode.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
-                                                        experiment.setStatus(NotificationConstants.Status.PROCESSED);
-                                                    } else {
-                                                        experiment.setStatus(NotificationConstants.Status.FAILED);
-                                                        experiment.getApis().getRecommendations().setResponse(new KruizeResponse(recommendationResponseCode.getResponseBody().toString(),
-                                                                recommendationResponseCode.getStatusCode(), null, FAILED));
-                                                    }
-                                                } catch (Exception e) {
-                                                    e.printStackTrace();
-                                                    experiment.setStatus(NotificationConstants.Status.FAILED);
-                                                    experiment.getApis().getRecommendations().setResponse(new KruizeResponse(e.getMessage(),
-                                                            HttpURLConnection.HTTP_INTERNAL_ERROR, null, FAILED));
-                                                } finally {
-                                                    jobData.getSummary().incrementProcessed_experiments();
-                                                    synchronized (jobData) {
-                                                        if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
-                                                            setFinalJobStatus(COMPLETED, null, null, finalDatasource);
-                                                        }
-                                                    }
-                                                }
-                                            });
-                                        }
-                                    } catch (Exception e) {
-                                        e.printStackTrace();
-                                        experiment.getApis().getCreate().setResponse(new KruizeResponse(e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR, null, FAILED));
-                                        jobData.getSummary().incrementProcessed_experiments();
-                                        if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
-                                            setFinalJobStatus(COMPLETED, null, null, finalDatasource);
-                                        }
+                                        createExecutor.awaitTermination(1, TimeUnit.MINUTES);
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                        break;
                                     }
-                                });
-                            }
-                        } finally {
-                            // Shutdown createExecutor and wait for it to finish
-                            createExecutor.shutdown();
-                            while (!createExecutor.isTerminated()) {
-                                try {
-                                    createExecutor.awaitTermination(1, TimeUnit.MINUTES);
-                                } catch (InterruptedException e) {
-                                    Thread.currentThread().interrupt();
-                                    break;
                                 }
-                            }
-
-                            // Shutdown generateExecutor and wait for it to finish
-                            generateExecutor.shutdown();
-                            while (!generateExecutor.isTerminated()) {
-                                try {
-                                    generateExecutor.awaitTermination(1, TimeUnit.MINUTES);
-                                } catch (InterruptedException e) {
-                                    Thread.currentThread().interrupt();
-                                    break;
+                                // Shutdown generateExecutor and wait for it to finish
+                                generateExecutor.shutdown();
+                                while (!generateExecutor.isTerminated()) {
+                                    try {
+                                        generateExecutor.awaitTermination(1, TimeUnit.MINUTES);
+                                    } catch (InterruptedException e) {
+                                        Thread.currentThread().interrupt();
+                                        break;
+                                    }
                                 }
-                            }
+                                // Shutdown kafkaExecutor
+                                if (kruizeKafkaManager != null) {
+                                    kruizeKafkaManager.shutdownKafkaManager();
+                                }
 
-                            if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
-                                statusValue = "success";
+                                if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
+                                    statusValue = "success";
+                                }
                             }
                         }
                     }
                 }
+            } catch (IOException e) {
+                LOGGER.error("Error in bulk job manager for job_id {} due to {}", jobID, e.getMessage());
+                BulkJobStatus.Notification notification;
+                if (e instanceof SocketTimeoutException) {
+                    notification = DATASOURCE_GATEWAY_TIMEOUT_INFO;
+                } else if (e instanceof ConnectTimeoutException) {
+                    notification = DATASOURCE_CONNECT_TIMEOUT_INFO;
+                } else {
+                    notification = DATASOURCE_DOWN_INFO;
+                }
+                notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
+                setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_UNAVAILABLE), notification, datasource);
+            } catch (Exception e) {
+                LOGGER.error("Error in bulk job manager for job_id {} due to {}", jobID, e.getMessage());
+                e.printStackTrace();
+                setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR), new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR), datasource);
+            } finally {
+                if (null != timerRunJob) {
+                    MetricsConfig.timerRunJob = MetricsConfig.timerBRunJob.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                    timerRunJob.stop(MetricsConfig.timerRunJob);
+                }
+                MetricsConfig.activeJobs.decrementAndGet();
             }
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage());
-            BulkJobStatus.Notification notification;
-            if (e instanceof SocketTimeoutException) {
-                notification = DATASOURCE_GATEWAY_TIMEOUT_INFO;
-            } else if (e instanceof ConnectTimeoutException) {
-                notification = DATASOURCE_CONNECT_TIMEOUT_INFO;
-            } else {
-                notification = DATASOURCE_DOWN_INFO;
-            }
-            notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
-            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_UNAVAILABLE), notification, datasource);
         } catch (Exception e) {
-            LOGGER.error(e.getMessage());
-            e.printStackTrace();
-            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR), new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR), datasource);
-        } finally {
-            if (null != timerRunJob) {
-                MetricsConfig.timerRunJob = MetricsConfig.timerBRunJob.tag("status", statusValue).register(MetricsConfig.meterRegistry());
-                timerRunJob.stop(MetricsConfig.timerRunJob);
-            }
-            MetricsConfig.activeJobs.decrementAndGet();
+            LOGGER.error("Error in bulk job manager for job_id {} due to {}", jobID, e.getMessage());
         }
     }
 
@@ -344,13 +267,13 @@ public class BulkJobManager implements Runnable {
         jobData.getSummary().setEndTime(Instant.now());
         if (null != notification)
             jobData.getSummary().setNotification(notificationKey, notification);
-        GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
         if (null != bulkInput.getWebhook() && null != bulkInput.getWebhook().getUrl()) {
-            apiClient.setBaseURL(bulkInput.getWebhook().getUrl());
             GenericRestApiClient.HttpResponseWrapper responseCode;
             BulkJobStatus.Webhook webhook = new BulkJobStatus.Webhook(WebHookStatus.IN_PROGRESS);
             jobData.setWebhook(webhook);
             try {
+                GenericRestApiClient apiClient = new GenericRestApiClient(finalDatasource);
+                apiClient.setBaseURL(bulkInput.getWebhook().getUrl());
                 responseCode = apiClient.callKruizeAPI("[" + new Gson().toJson(jobData) + "]");
                 LOGGER.debug("API Response code: {}", responseCode);
                 if (responseCode.getStatusCode() == HttpURLConnection.HTTP_OK) {
@@ -369,6 +292,216 @@ public class BulkJobManager implements Runnable {
                 webhook.setStatus(WebHookStatus.FAILED);
                 jobData.setWebhook(webhook);
             }
+        }
+        if (!KruizeDeploymentInfo.TEST_USE_ONLY_CACHE_JOB_IN_MEM) {               //toDO avoid this check
+            try {
+                if (null == jobData.getExperimentMap() || jobData.getExperimentMap().isEmpty()) {
+                    new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB("{}"));
+                } else {
+                    Set<String> includeFields = new HashSet<>(Arrays.asList(job_filter_to_db));
+                    String experimentJSONString = filterJson(jobData, includeFields, Collections.emptySet(), null);
+                    new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB(experimentJSONString));
+                }
+            } catch (Exception e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
+    }
+
+
+    private void processExperiments(DataSourceInfo datasource, Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap) {
+        for (CreateExperimentAPIObject apiObject : createExperimentAPIObjectMap.values()) {
+            DataSourceInfo finalDatasource = datasource;
+            createExecutor.submit(() -> handleExperimentCreation(apiObject, finalDatasource));
+        }
+    }
+
+    private void handleExperimentCreation(CreateExperimentAPIObject apiObject, DataSourceInfo datasource) {
+        String experimentName = apiObject.getExperimentName();
+        BulkJobStatus.Experiment experiment = jobData.addExperiment(experimentName);
+
+        try {
+            experiment.getApis().getCreate().setRequest(apiObject);
+            boolean experimentExists = createExperiment(apiObject, experiment, datasource);
+
+            if (!experimentExists) {
+                markExperimentAsFailed(experiment, null);
+            }
+
+            if (experimentExists) {
+                try {
+                    generateExecutor.submit(() -> handleRecommendationGeneration(experimentName, datasource, experiment));
+                } catch (Exception e) {
+                    LOGGER.error(e.getMessage());
+                    handleException(e, experiment);
+                }
+            }
+        } catch (Exception e) {
+            handleException(e, experiment);
+        } finally {
+            checkAndFinalizeJob(datasource, experiment);
+        }
+    }
+
+    private List<?> parseRecommendationResponse(GenericRestApiClient.HttpResponseWrapper response) {
+        ExclusionStrategy strategy = new ExclusionStrategy() {
+            @Override
+            public boolean shouldSkipField(FieldAttributes field) {
+                return field.getDeclaringClass() == ContainerData.class && (field.getName().equals("results"))
+                        || (field.getDeclaringClass() == ContainerAPIObject.class && (field.getName().equals("metrics")));
+            }
+
+            @Override
+            public boolean shouldSkipClass(Class<?> clazz) {
+                return false;
+            }
+        };
+        Gson gson = new GsonBuilder()
+                .disableHtmlEscaping()
+                .setPrettyPrinting()
+                .enableComplexMapKeySerialization()
+                .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                .setExclusionStrategies(strategy)
+                .create();
+        return gson.fromJson(response.getResponseBody().toString(), List.class);
+    }
+
+    private void markExperimentAsFailed(BulkJobStatus.Experiment experiment, Exception e) {
+        experiment.setStatus(NotificationConstants.Status.FAILED);
+        jobData.getSummary().incrementProcessed_experiments();
+        BulkJobStatus.Notification notification = EXPERIMENT_FAILED;
+        if (e != null) {
+            String msg = String.format(notification.getMessage(), e.getMessage());
+            LOGGER.error("{} - {} - {} - {}", experiment.getName(), e.getMessage(), msg, notification.getCode());
+            notification.setMessage(msg);
+        } else {
+            notification.setMessage(String.format(notification.getMessage(), ""));
+        }
+
+        experiment.setNotification(
+                String.valueOf(notification.getCode()), notification
+        );
+        // if kafka is enabled, push the response in the respective topic
+        if (kruizeKafkaManager != null) {
+            kruizeKafkaManager.publishKafkaMessage(KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC, jobData, experiment.getName(),
+                    experiment, kafkaIncludeFilter, kafkaExcludeFilter);
+        }
+    }
+
+    private void handleException(Exception e, BulkJobStatus.Experiment experiment) {
+        e.printStackTrace();
+        experiment.getApis().getCreate().setResponse(new KruizeResponse(e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR, null, FAILED));
+        markExperimentAsFailed(experiment, e);
+    }
+
+    private void checkAndFinalizeJob(DataSourceInfo datasource, BulkJobStatus.Experiment experiment) {
+        synchronized (jobData) {
+            if (jobData.getSummary().getTotal_experiments() == jobData.getSummary().getProcessed_experiments().get()) {
+                setFinalJobStatus(COMPLETED, null, null, datasource);
+                // if kafka is enabled, push the final summary in the summary topic
+                if (kruizeKafkaManager != null) {
+                    kruizeKafkaManager.publishKafkaMessage(KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC, jobData,
+                            experiment.getName(), experiment, kafkaIncludeFilter, kafkaExcludeFilter);
+                }
+            }
+        }
+    }
+
+    private void handleRecommendationGeneration(String experimentName, DataSourceInfo datasource, BulkJobStatus.Experiment experiment) {
+        String topic = "";
+        try {
+            String recommendationURL = String.format(KruizeDeploymentInfo.recommendations_url + "&" + JOB_ID + "=%s",
+                    URLEncoder.encode(experimentName, StandardCharsets.UTF_8), jobID);
+
+            GenericRestApiClient recommendationApiClient = new GenericRestApiClient(datasource);
+            recommendationApiClient.setBaseURL(recommendationURL);
+
+            GenericRestApiClient.HttpResponseWrapper recommendationResponse = recommendationApiClient.callKruizeAPI(null);
+
+
+            if (recommendationResponse.getStatusCode() == HttpURLConnection.HTTP_CREATED) {
+                experiment.getApis().getRecommendations().setResponse(parseRecommendationResponse(recommendationResponse));
+                experiment.setStatus(NotificationConstants.Status.PROCESSED);
+                jobData.getSummary().incrementProcessed_experiments();
+                topic = KruizeConstants.KAFKA_CONSTANTS.RECOMMENDATIONS_TOPIC;
+            } else {
+                markExperimentAsFailed(experiment, new Exception(recommendationResponse.getResponseBody().toString()));
+                LOGGER.error(recommendationResponse.getResponseBody().toString());
+                topic = KruizeConstants.KAFKA_CONSTANTS.ERROR_TOPIC;
+            }
+        } catch (Exception e) {
+            handleException(e, experiment);
+        } finally {
+            // if kafka is enabled, push the response in the respective topic
+            if (kruizeKafkaManager != null) {
+                kruizeKafkaManager.publishKafkaMessage(topic, jobData, experimentName, experiment, kafkaIncludeFilter, kafkaExcludeFilter);
+            }
+            checkAndFinalizeJob(datasource, experiment);
+        }
+    }
+
+    private String handleMetadataProfile(DataSourceInfo datasource) {
+        String metadataProfileName = null;
+        MetadataProfile metadataProfile;
+        try {
+            //check for "metadata_profile" field
+            if (null == this.bulkInput.getMetadata_profile()) {
+                metadataProfile = MetadataProfileCollection.getInstance().
+                        loadMetadataProfileFromCollection(CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile());
+                if (null != metadataProfile) {
+                    this.bulkInput.setMetadata_profile(CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile());
+                }
+            }
+
+            metadataProfile = MetadataProfileCollection.getInstance().loadMetadataProfileFromCollection(this.bulkInput.getMetadata_profile());
+            if (null != metadataProfile) {
+                metadataProfileName = this.bulkInput.getMetadata_profile();
+            }
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            e.printStackTrace();
+            BulkJobStatus.Notification notification = METADATA_PROFILE_NOT_FOUND;
+            notification.setMessage(String.format(notification.getMessage(), e.getMessage()));
+            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
+        }
+        return metadataProfileName == null ? CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile() : metadataProfileName;
+    }
+
+    private int handleMeasurementDuration(DataSourceInfo datasource) {
+        int measurement_duration=0;
+        try {
+            //check for "measurement_duration" field
+            if (null == this.bulkInput.getMeasurement_duration() || this.bulkInput.getMeasurement_duration().isEmpty()) {
+                this.bulkInput.setMeasurement_duration(CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDurationStr());
+            }
+            //measurementDuration = this.bulkInput.getMeasurement_duration();
+            String measurementDurationStr = this.bulkInput.getMeasurement_duration().replaceAll("\\D+", "");;
+            measurement_duration = Integer.parseInt(measurementDurationStr);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage());
+            e.printStackTrace();
+            setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_INTERNAL_ERROR), new BulkJobStatus.Notification(BulkJobStatus.NotificationType.ERROR, e.getMessage(), HttpURLConnection.HTTP_INTERNAL_ERROR), datasource);
+        }
+        return measurement_duration == 0 ? CREATE_EXPERIMENT_CONFIG_BEAN.getMeasurementDuration() : measurement_duration;
+    }
+
+
+    private boolean createExperiment(CreateExperimentAPIObject apiObject, BulkJobStatus.Experiment experiment, DataSourceInfo datasource) {
+        try {
+            GenericRestApiClient apiClient = new GenericRestApiClient(datasource);
+            apiClient.setBaseURL(KruizeDeploymentInfo.experiments_url);
+
+            LOGGER.debug("[{}]", new Gson().toJson(apiObject));
+            GenericRestApiClient.HttpResponseWrapper response = apiClient.callKruizeAPI("[" + new Gson().toJson(apiObject) + "]");
+            experiment.getApis().getCreate().setResponse(new Gson().fromJson(response.getResponseBody().toString(), KruizeResponse.class));
+
+            LOGGER.debug("API Response code: {}", response);
+            return response.getStatusCode() == HttpURLConnection.HTTP_CREATED || response.getStatusCode() == HttpURLConnection.HTTP_CONFLICT;
+        } catch (Exception e) {
+            handleException(e, experiment);
+            return false;
         }
     }
 
@@ -495,6 +628,7 @@ public class BulkJobManager implements Runnable {
         createExperimentAPIObject.setDatasource(this.bulkInput.getDatasource());
         createExperimentAPIObject.setClusterName(dsc.getDataSourceClusterName());
         createExperimentAPIObject.setPerformanceProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getPerformanceProfile());
+        createExperimentAPIObject.setMetadataProfile(CREATE_EXPERIMENT_CONFIG_BEAN.getMetadataProfile());
         List<KubernetesAPIObject> kubernetesAPIObjectList = new ArrayList<>();
         KubernetesAPIObject kubernetesAPIObject = new KubernetesAPIObject();
         ContainerAPIObject cao = new ContainerAPIObject(dc.getContainerName(),

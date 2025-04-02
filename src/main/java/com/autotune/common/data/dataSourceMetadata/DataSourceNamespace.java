@@ -20,6 +20,9 @@ public class DataSourceNamespace {
      */
     private HashMap<String, DataSourceWorkload> workloads;
 
+    public DataSourceNamespace() {
+    }
+
     public DataSourceNamespace(String namespace, HashMap<String, DataSourceWorkload> workloads) {
         this.namespace = namespace;
         this.workloads = workloads;

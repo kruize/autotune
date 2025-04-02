@@ -55,6 +55,10 @@ Documentation still in progress stay tuned.
   - Example Request and Response
   - Invalid Scenarios
 
+- [Delete Metadata Profile API](#delete-metadata-profile-api)
+  - Introduction
+  - Example Request and Response
+  - Invalid Scenarios
 
 - [Create Experiment API](#create-experiment-api)
     - Introduction
@@ -226,7 +230,9 @@ This is quick guide instructions to import metadata using input JSON as follows.
 ```json
 {
   "version": "v1.0",
-  "datasource_name": "prometheus-1"
+  "datasource_name": "prometheus-1",
+  "metadata_profile": "cluster-metadata-local-monitoring",
+  "measurement_duration": "15min"
 }
 ```
 
@@ -2199,6 +2205,57 @@ see [Create MetadataProfile](/design/MetadataProfileAPI.md)
 
 </details>
 
+### Invalid Scenarios:
+
+<details>
+<summary><b>Missing mandatory fields</b></summary>
+
+Mandatory fields required to create MetadataProfile are - `apiVersion`, `kind`, `metadata`, `name`, `datasource`, `query_variables`
+
+Example: With missing profile "name"
+```json
+{
+  "message": "Validation failed: JSONObject[\"name\"] not found.",
+  "httpcode": 500,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
+
+<details>
+<summary><b>Duplicate attempt to create MetadataProfile</b></summary>
+
+```json
+{
+  "message": "Validation failed: Metadata Profile already exists: cluster-metadata-local-monitoring",
+  "httpcode": 409,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
+
+
+<details>
+<summary><b>Missing mandatory fields from `query_variables`</b></summary>
+
+Mandatory fields of `query_variables` are - `name`, `aggregation_functions`, `function`, `query`
+
+Example: With missing "query"
+```json
+{
+  "message": "Validation failed: JSONObject[\"query\"] not found.",
+  "httpcode": 500,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
+
 <br>
 
 <a name="list-metadata-profiles-api"></a>
@@ -2428,6 +2485,119 @@ Returns list of all the metadata profile created with all the metadata queries
 
 </details>
 
+### Invalid Scenarios:
+
+<details>
+<summary><b>Invalid or Non-existing MetadataProfile name</b></summary>
+
+`name="xyz"`(Can be either invalid or non-existing profile name)
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listMetadataProfiles?name=xyz`
+```json
+{
+  "message": "Given metadata profile name - xyz either does not exist or is not valid",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
+
+<details>
+<summary><b>Invalid query parameters</b></summary>
+
+Supported query parameters are `name` and `verbose`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listMetadataProfiles?profilename=cluster-metadata-local-monitoring`
+```json
+{
+  "message": "The query param(s) - [profilename] is/are invalid",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
+
+<br>
+
+<a name="delete-metadata-profile-api"></a>
+
+
+### Delete Metadata Profile API
+
+This is quick guide instructions to delete metadata profile created as follows.
+
+**Request Parameters**
+
+| Parameter | Type   | Required | Description                      |
+|-----------|--------|----------|----------------------------------|
+| name      | string | required | The name of the metadata profile |
+
+
+**Request with name query parameter**
+
+`DELETE /deleteMetadataProfile`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/deleteMetadataProfile?name=cluster-metadata-local-monitoring`
+
+Deletes the specified metadata profile name, provided metadata profile already is created
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+{
+  "message": "Metadata profile: cluster-metadata-local-monitoring deleted successfully. View Metadata Profiles at /listMetadataProfiles",
+  "httpcode": 201,
+  "documentationLink": "",
+  "status": "SUCCESS"
+}
+```
+
+</details>
+
+### Invalid Scenarios:
+
+<details>
+<summary><b>Invalid or Non-existing MetadataProfile name</b></summary>
+
+`name="xyz"`(Can be either invalid or non-existing profile name)
+
+`curl -H 'Accept: application/json' -X DELETE http://<URL>:<PORT>/deleteMetadataProfile?name=xyz`
+
+```json
+{
+  "message": "Given metadata profile name - xyz either does not exist or is not valid",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
+
+<details>
+<summary><b>Missing query parameter</b></summary>
+
+Supported query parameter is `name`
+
+Example: `curl -H 'Accept: application/json' -X DELETE http://<URL>:<PORT>/deleteMetadataProfile`
+```json
+{
+  "message": "Missing metadata profile 'name' parameter",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
+
 <br>
 
 <a name="create-experiment-api"></a>
@@ -2454,7 +2624,8 @@ see [Create Experiment](/design/CreateExperiment.md)
     "version": "v2.0",
     "experiment_name": "default|default|deployment|tfb-qrh-deployment",
     "cluster_name": "default",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "mode": "monitor",
     "target_cluster": "local",
     "kubernetes_objects": [
@@ -2506,6 +2677,7 @@ If no experiment type is specified, it will default to `container`.
   "experiment_name": "default|namespace-demo",
   "cluster_name": "default",
   "performance_profile": "resource-optimization-local-monitoring",
+  "metadata_profile": "cluster-metadata-local-monitoring",
   "mode": "monitor",
   "target_cluster": "local",
   "datasource": "prometheus-1",
@@ -2537,7 +2709,8 @@ If no experiment type is specified, it will default to `container`.
     "version": "v2.0",
     "experiment_name": "default|default|deployment|tfb-qrh-deployment",
     "cluster_name": "default",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "mode": "monitor",
     "target_cluster": "local",
     "experiment_type": "container",
@@ -2590,7 +2763,8 @@ By default, model will be `performance` and term will be set to `short` term.
     "version": "v2.0",
     "experiment_name": "default|default|deployment|tfb-qrh-deployment",
     "cluster_name": "default",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "mode": "monitor",
     "target_cluster": "local",
     "experiment_type": "container",
@@ -2689,7 +2863,8 @@ Returns the latest recommendations of all the experiments
     "mode": "monitor",
     "target_cluster": "local",
     "status": "IN_PROGRESS",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "trial_settings": {
       "measurement_duration": "15min"
     },
@@ -2860,7 +3035,8 @@ Returns the latest recommendations of all the experiments
     "mode": "monitor",
     "target_cluster": "local",
     "status": "IN_PROGRESS",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "trial_settings": {
       "measurement_duration": "15min"
     },
@@ -2959,7 +3135,8 @@ Returns all the recommendations of all the experiments
     "mode": "monitor",
     "target_cluster": "local",
     "status": "IN_PROGRESS",
-    "performance_profile": "resource-optimization-openshift",
+    "performance_profile": "resource-optimization-local-monitoring",
+    "metadata_profile": "cluster-metadata-local-monitoring",
     "trial_settings": {
       "measurement_duration": "15min"
     },
