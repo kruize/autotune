@@ -16,13 +16,11 @@
 
 package com.autotune.analyzer.autoscaler;
 
-import com.autotune.analyzer.autoscaler.validator.ResourceValidator;
 import com.autotune.analyzer.autoscaler.vpa.VpaAutoscalerImpl;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.autoscaler.accelerator.AcceleratorAutoscalerImpl;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.service.ExperimentDBService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,7 +48,6 @@ public class AutoscalerService {
                     Map<String, KruizeObject> experiments = getAutoModeExperiments();
                     for (Map.Entry<String, KruizeObject> experiment : experiments.entrySet()) {
                         KruizeObject kruizeObject = autoscaler.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
-
                         // TODO:// add default updater in kruizeObject and check if GPU recommendations are present
                         if (kruizeObject.getDefaultUpdater() == null) {
                             kruizeObject.setDefaultUpdater(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA);
