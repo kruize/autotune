@@ -371,7 +371,7 @@ spec:
             - name: KAFKA_TOPICS
               value: "recommendations-topic,error-topic,summary-topic"
             - name: KAFKA_RESPONSE_FILTER_INCLUDE
-              value: "summary"
+              value: "experiments|status|apis|recommendations|response|status_history"
             - name: KAFKA_RESPONSE_FILTER_EXCLUDE
               value: ""
           resources:
