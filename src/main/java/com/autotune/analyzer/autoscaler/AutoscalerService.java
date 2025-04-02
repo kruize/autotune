@@ -50,7 +50,7 @@ public class AutoscalerService {
                         KruizeObject kruizeObject = autoscaler.generateResourceRecommendationsForExperiment(experiment.getValue().getExperimentName());
                         // TODO:// add default updater in kruizeObject and check if GPU recommendations are present
                         if (kruizeObject.getDefaultUpdater() == null) {
-                            kruizeObject.setDefaultUpdater(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA);
+                             kruizeObject.setDefaultUpdater(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA);
                         }
 
                         if (kruizeObject.getDefaultUpdater().equalsIgnoreCase(AnalyzerConstants.AutoscalerConstants.SupportedUpdaters.VPA)) {
