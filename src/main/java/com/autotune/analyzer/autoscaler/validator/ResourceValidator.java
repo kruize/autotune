@@ -17,31 +17,17 @@
 package com.autotune.analyzer.autoscaler.validator;
 
 
-import com.autotune.analyzer.autoscaler.AutoscalerService;
-import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.utils.KruizeConstants;
 import io.fabric8.kubernetes.api.model.*;
 import io.fabric8.kubernetes.client.DefaultKubernetesClient;
 import io.fabric8.kubernetes.client.KubernetesClient;
-import org.json.JSONArray;
-import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.regex.PatternSyntaxException;
 
 
 
@@ -53,20 +39,38 @@ public class ResourceValidator {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ResourceValidator.class);
 
-
+    /**
+     * Verifies the specified resource requests for a pod and perform dry run.
+     * @param containerName String the name of the container for which resource verification is performed
+     * @param imageName String the name of the image used for the container
+     * @param namespace String the namespace where workload is deployed
+     * @param cpuValue Quantity the CPU resource request to be verified
+     * @param memoryValue Quantity the memory resource request to be verified
+     * @return ValidationOutputData object containing the result of the verification,
+     */
     public static ValidationOutputData verifyResources(String containerName, String imageName,
                                                        String namespace, Quantity cpuValue, Quantity memoryValue) {
 
         ValidationOutputData validationOutputData = new ValidationOutputData(true, null, null);
+        // perform dry run
         dryRunPod(containerName, imageName, namespace, cpuValue, memoryValue, validationOutputData);
         return validationOutputData;
     }
+
+    /**
+     * This method performs a dry run of a pod with the given resource values to determine if they are available.
+     * @param containerName String the name of the container for which resource verification is performed
+     * @param image String the name of the image used for the container
+     * @param namespace String the namespace where workload is deployed
+     * @param cpuValue Quantity the CPU resource request to be verified
+     * @param memoryValue Quantity the memory resource request to be verified
+     */
 
     public static void dryRunPod(String containerName, String image, String namespace,
                                     Quantity cpuValue, Quantity memoryValue, ValidationOutputData validationOutputData) {
         try {
             KubernetesClient client = new DefaultKubernetesClient();
-            // Create a pod definition
+            // Create a pod definition with recommended resoruces
             Pod pod = new PodBuilder()
                     .withNewMetadata()
                     .withName(containerName + "-dryrun")
@@ -89,11 +93,13 @@ public class ResourceValidator {
             // Perform a dry-run to check scheduling
             LOGGER.debug("Performing dry run on pod {}", pod.getMetadata().getName());
             Pod dryRunPod = client.pods().inNamespace(namespace).resource(pod).dryRun(true).create();
+            // no error occurs during the dry run, set validation result is set to true
             validationOutputData.setSuccess(true);
             validationOutputData.setMessage(AnalyzerConstants.AutoscalerConstants.InfoMsgs.POD_READY);
             LOGGER.debug(AnalyzerConstants.AutoscalerConstants.InfoMsgs.POD_READY);
         } catch (Exception e) {
             String logMsg = e.getMessage();
+            // fetching the error message
             Pattern pattern = Pattern.compile(AnalyzerConstants.AutoscalerConstants.REGEX_FOR_DRY_RUN_ERROR);
             Matcher matcher = pattern.matcher(logMsg);
             if (matcher.find()) {
