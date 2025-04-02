@@ -303,6 +303,7 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                             new Quantity(cpuRecommendationValueForVpa), new Quantity(memoryRecommendationValueForVpa));
 
                     if (!validationOutputData.isSuccess()) {
+                        // TODO: store this event in the database to notify the user later
                         LOGGER.error(validationOutputData.getMessage());
                     } else {
                         // creating container resource vpa object
