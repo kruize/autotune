@@ -201,7 +201,7 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     String namespace = k8sObject.getNamespace();
                     List<RecommendedContainerResources> containerRecommendations = convertRecommendationsToContainerPolicy(k8sObject.getContainerDataMap(), namespace, kruizeObject);
                     if (containerRecommendations.isEmpty()){
-                        LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.RECOMMENDATION_DATA_NOT_PRESENT);
+                        LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.RECOMMENDATION_DATA_NOT_PRESENT, expName);
                     } else {
                         RecommendedPodResources recommendedPodResources = new RecommendedPodResources();
                         recommendedPodResources.setContainerRecommendations(containerRecommendations);
