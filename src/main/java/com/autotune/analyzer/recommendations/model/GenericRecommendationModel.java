@@ -25,17 +25,28 @@ import java.util.stream.Stream;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 
+/**
+ * This is a generic class that implements RecommendationModel abstract class and provides the code for functions
+ * that are common across cost and performance recommendation model.
+ */
+
 public class GenericRecommendationModel implements RecommendationModel{
 
-    protected int percentile;
     protected String name;
-
     protected double modelMemoryPercentile;
     protected double modelCPUPercentile;
     protected double modelAcceleratorPercentile;
 
     // constructor
     public GenericRecommendationModel( String name, RecommendationTunables recommendationTunables) {
+        // null checks
+        if (name == null || name.isEmpty()) {
+            throw new IllegalArgumentException("Name cannot be null or empty");
+        }
+        if (recommendationTunables == null) {
+            throw new IllegalArgumentException("RecommendationTunables cannot be null");
+        }
+
         this.name = name;
         this.modelMemoryPercentile = recommendationTunables.getMemoryPercentile();
         this.modelCPUPercentile = recommendationTunables.getCpuPercentile();
@@ -44,7 +55,6 @@ public class GenericRecommendationModel implements RecommendationModel{
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateRecommendations.class);
-
 
     @Override
     public RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
