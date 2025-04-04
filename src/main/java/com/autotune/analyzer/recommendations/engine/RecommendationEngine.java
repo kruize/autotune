@@ -134,10 +134,10 @@ public class RecommendationEngine {
         // create both cost and performance model by default
         recommendationModels = new ArrayList<>();
         // Create Cost based model
-        CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel("cost", COST_RECOMMENDATION_TUNABLES);
+        CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel(COST_RECOMMENDATION_TUNABLES);
         registerModel(costBasedRecommendationModel);
         // Create Performance based model
-        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel("performance", PERFORMANCE_RECOMMENDATION_TUNABLES);
+        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
         registerModel(performanceBasedRecommendationModel);
     }
 
@@ -145,7 +145,7 @@ public class RecommendationEngine {
         // create performance model by default
         recommendationModels = new ArrayList<>();
         // Create Performance based model
-        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel("performance", PERFORMANCE_RECOMMENDATION_TUNABLES);
+        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
         registerModel(performanceBasedRecommendationModel);
 
         RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
@@ -164,12 +164,12 @@ public class RecommendationEngine {
             if (KruizeConstants.JSONKeys.COST.equalsIgnoreCase(model)) {
                 // Create Cost based model
                 // Todo: add custom cost parameters over here
-                CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel("cost", COST_RECOMMENDATION_TUNABLES);
+                CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel(COST_RECOMMENDATION_TUNABLES);
                 registerModel(costBasedRecommendationModel);
             } else if (KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(model)) {
                 // Create Performance based model
                 // Todo: add custom performance parameters over here from the user inputs
-                PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel("performance", PERFORMANCE_RECOMMENDATION_TUNABLES);
+                PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
                 registerModel(performanceBasedRecommendationModel);
             } else {
                 // user input does not matches standard models
