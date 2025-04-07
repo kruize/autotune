@@ -1113,7 +1113,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         String statusValue = "failure";
         Timer.Sample timerLoadAllRec = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            if (null != bulkJobId || bulkJobId != "") {
+            if (null != bulkJobId && !bulkJobId.isEmpty()) {
                 recommendationEntries = session.createQuery(SELECT_FROM_LM_RECOMMENDATIONS_BY_JOB_ID,
                                 KruizeLMRecommendationEntry.class)
                         .setParameter(JOB_ID, bulkJobId)
