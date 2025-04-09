@@ -60,6 +60,8 @@ import java.util.stream.Collectors;
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
+import static com.autotune.utils.KruizeConstants.CostBasedRecommendationConstants.COST_RECOMMENDATION_TUNABLES;
+import static com.autotune.utils.KruizeConstants.PerformanceBasedRecommendationConstants.PERFORMANCE_RECOMMENDATION_TUNABLES;
 
 public class RecommendationEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
@@ -132,10 +134,10 @@ public class RecommendationEngine {
         // create both cost and performance model by default
         recommendationModels = new ArrayList<>();
         // Create Cost based model
-        CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
+        CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel(COST_RECOMMENDATION_TUNABLES);
         registerModel(costBasedRecommendationModel);
         // Create Performance based model
-        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
         registerModel(performanceBasedRecommendationModel);
     }
 
@@ -143,7 +145,7 @@ public class RecommendationEngine {
         // create performance model by default
         recommendationModels = new ArrayList<>();
         // Create Performance based model
-        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+        PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
         registerModel(performanceBasedRecommendationModel);
 
         RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
@@ -161,11 +163,13 @@ public class RecommendationEngine {
         for (String model : modelName) {
             if (KruizeConstants.JSONKeys.COST.equalsIgnoreCase(model)) {
                 // Create Cost based model
-                CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel();
+                // Todo: add custom cost parameters over here
+                CostBasedRecommendationModel costBasedRecommendationModel = new CostBasedRecommendationModel(COST_RECOMMENDATION_TUNABLES);
                 registerModel(costBasedRecommendationModel);
             } else if (KruizeConstants.JSONKeys.PERFORMANCE.equalsIgnoreCase(model)) {
                 // Create Performance based model
-                PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel();
+                // Todo: add custom performance parameters over here from the user inputs
+                PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
                 registerModel(performanceBasedRecommendationModel);
             } else {
                 // user input does not matches standard models
