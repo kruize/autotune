@@ -299,8 +299,13 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     String memoryRecommendationValueForVpa = RecommendationUtils.resource2str(AnalyzerConstants.RecommendationItem.MEMORY.toString(),
                             memoryRecommendationValue);
 
-                    ValidationOutputData validationOutputData = ResourceValidator.verifyResources(containerName, containerImage, namespace,
-                            new Quantity(cpuRecommendationValueForVpa), new Quantity(memoryRecommendationValueForVpa));
+                    Map<String, Quantity> resourceMap = new HashMap<>();
+
+                    resourceMap.put(KruizeConstants.JSONKeys.CPU, new Quantity(cpuRecommendationValueForVpa));
+                    resourceMap.put(KruizeConstants.JSONKeys.MEMORY, new Quantity(memoryRecommendationValueForVpa));
+
+                    ValidationOutputData validationOutputData = ResourceValidator.verifyResources(containerName,
+                            containerImage, namespace, resourceMap);
 
                     if (!validationOutputData.isSuccess()) {
                         // TODO: store this event in the database to notify the user later

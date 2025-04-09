@@ -345,6 +345,7 @@ public class AnalyzerErrorConstants {
         public static final String UPDATER_NOT_INSTALLED = "Updater is not installed.";
         public static final String RECOMMENDATION_DATA_NOT_PRESENT = "Recommendations are not present for the experiment: {}";
         public static final String INVALID_VPA_NAME = "VPA name cannot be null or empty.";
+        public static final String MISSING_REQUIRED_VALUES = "Recommended resource values (CPU or Memory) are missing in resourceMap";
 
         public static final class AcceleratorAutoscaler {
             private AcceleratorAutoscaler() {
