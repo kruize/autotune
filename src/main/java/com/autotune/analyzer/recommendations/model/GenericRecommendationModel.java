@@ -4,7 +4,6 @@ import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
-import com.autotune.analyzer.services.UpdateRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.AcceleratorMetricResult;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
@@ -54,13 +53,13 @@ public class GenericRecommendationModel implements RecommendationModel{
 
     }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UpdateRecommendations.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(GenericRecommendationModel.class);
 
     @Override
     public RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         boolean setNotification = true;
         if (null == notifications) {
-            LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
+            LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
             setNotification = false;
         }
 
@@ -71,12 +70,7 @@ public class GenericRecommendationModel implements RecommendationModel{
 
 
         // Extract "max" values from cpuUsageList
-        List<Double> cpuMaxValues = new ArrayList<>();
-        for (int i = 0; i < cpuUsageList.length(); i++) {
-            JSONObject jsonObject = cpuUsageList.getJSONObject(i);
-            double maxValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
-            cpuMaxValues.add(maxValue);
-        }
+        List<Double> cpuMaxValues = getCPUMaxValues(cpuUsageList);
 
         Double cpuRequest = 0.0;
         Double cpuRequestMax = Collections.max(cpuMaxValues);
@@ -120,6 +114,17 @@ public class GenericRecommendationModel implements RecommendationModel{
 
         recommendationConfigItem = new RecommendationConfigItem(cpuRequest, format);
         return recommendationConfigItem;
+    }
+
+    public static List<Double> getCPUMaxValues(JSONArray cpuUsageList){
+        List<Double> cpuMaxValues = new ArrayList<>();
+
+        for (int i = 0; i < cpuUsageList.length(); i++) {
+            JSONObject jsonObject = cpuUsageList.getJSONObject(i);
+            double maxValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
+            cpuMaxValues.add(maxValue);
+        }
+        return cpuMaxValues;
     }
 
     // helper function common to both cost and performance model hence just taken from there.
@@ -198,7 +203,7 @@ public class GenericRecommendationModel implements RecommendationModel{
     public RecommendationConfigItem getMemoryRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         boolean setNotification = true;
         if (null == notifications) {
-            LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
+            LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
             setNotification = false;
         }
         RecommendationConfigItem recommendationConfigItem = null;
@@ -231,7 +236,7 @@ public class GenericRecommendationModel implements RecommendationModel{
         // Set notifications only if notification object is available
         if (setNotification) {
             // Check if the memory recommendation is 0
-            if (null == memRec || 0.0 == memRec) {
+            if (0.0 == memRec) {
                 // Add appropriate Notification - MEMORY_RECORDS_ARE_ZERO
                 notifications.add(new RecommendationNotification(
                         RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_RECORDS_ARE_ZERO
@@ -303,7 +308,7 @@ public class GenericRecommendationModel implements RecommendationModel{
     public RecommendationConfigItem getCPURequestRecommendationForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         boolean setNotification = true;
         if (null == notifications) {
-            LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
+            LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
             setNotification = false;
         }
 
@@ -313,12 +318,7 @@ public class GenericRecommendationModel implements RecommendationModel{
         JSONArray namespaceCpuUsageList = getNamespaceCPUUsageList(filteredResultsMap);
 
         // Extract 'max' values from cpuUsageList
-        List<Double> namespaceCpuMaxValues = new ArrayList<>();
-        for (int i = 0; i < namespaceCpuUsageList.length(); i++) {
-            JSONObject jsonObject = namespaceCpuUsageList.getJSONObject(i);
-            double maxValue = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);
-            namespaceCpuMaxValues.add(maxValue);
-        }
+        List<Double> namespaceCpuMaxValues = getCPUMaxValues(namespaceCpuUsageList);
 
         Double namespaceCpuRequest = 0.0;
         Double namespaceCpuRequestMax = Collections.max(namespaceCpuMaxValues);
@@ -408,7 +408,7 @@ public class GenericRecommendationModel implements RecommendationModel{
     public RecommendationConfigItem getMemoryRequestRecommendationForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         boolean setNotification = true;
         if (null == notifications) {
-            LOGGER.error("Notifications Object passed is empty. The notifications are not sent as part of recommendation.");
+            LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
             setNotification = false;
         }
 
@@ -443,7 +443,7 @@ public class GenericRecommendationModel implements RecommendationModel{
         // Set notifications only if notification object is available
         if (setNotification) {
             // Check if the memory recommendation is 0
-            if (null == namespaceMemRec || 0.0 == namespaceMemRec) {
+            if (0.0 == namespaceMemRec) {
                 // Add appropriate Notification - MEMORY_RECORDS_ARE_ZERO
                 notifications.add(new RecommendationNotification(
                         RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_RECORDS_ARE_ZERO

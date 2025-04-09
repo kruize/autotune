@@ -662,6 +662,7 @@ public class KruizeConstants {
             public static final String INPUT_NULL = "Input object cannot be null";
             public static final String VALUE_NEGATIVE = "Value cannot be negative";
             public static final String INVALID_MEM_FORMAT = "Invalid format: Supported formats are bytes, KB, KiB, MB, MiB, GB, GiB, etc.";
+            public static final String EMPTY_NOTIFICATIONS_OBJECT ="Notifications Object passed is empty. The notifications are not sent as part of recommendation.";
         }
     }
 
