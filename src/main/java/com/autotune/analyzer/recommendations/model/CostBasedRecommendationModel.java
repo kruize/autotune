@@ -4,9 +4,9 @@ import com.autotune.analyzer.recommendations.RecommendationConstants;
 
 public class CostBasedRecommendationModel extends GenericRecommendationModel {
 
-    public static final String defaultname = RecommendationConstants.RecommendationEngine.ModelNames.COST;
+    public static final String defaultName = RecommendationConstants.RecommendationEngine.ModelNames.COST;
 
     public CostBasedRecommendationModel(RecommendationTunables recommendationTunables) {
-        super( defaultname, recommendationTunables );
+        super( defaultName, recommendationTunables );
     }
 }
