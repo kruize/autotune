@@ -17,7 +17,7 @@ jobs:
   # This workflow builds the kruize image and runs an end-to-end test to validate the remote monitoring workflow
   build_crc:
     # The type of runner that the job will run on
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -77,7 +77,7 @@ jobs:
 
   test_crc_manifest_build:
     # The type of runner that the job will run on
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-latest
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
