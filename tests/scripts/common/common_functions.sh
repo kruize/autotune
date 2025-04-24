@@ -1975,3 +1975,26 @@ function kruize_local_datasource_manifest_patch() {
     fi
   fi
 }
+
+function kruize_kafka_patch() {
+  echo -n "Applying Kafka Patch..."
+	CRC_DIR="./manifests/crc/default-db-included-installation"
+	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
+	KRUIZE_CRC_DEPLOY_MANIFEST_AKS="${CRC_DIR}/aks/kruize-crc-aks.yaml"
+
+	if [ "${cluster_type}" == "kind" ] || [ "${cluster_type}" == "minikube" ]; then
+    sed -i 's/"isKafkaEnabled" : "false"/"isKafkaEnabled" : "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+    # Replace the existing KAFKA_BOOTSTRAP_SERVERS value
+    sed -i "/name: KAFKA_BOOTSTRAP_SERVERS/{n;s|value: \".*\"|value: \"$BOOTSTRAP_SERVER\"|}" ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+    # Replace the existing KAFKA_INCLUDE_FILTERS value
+    sed -i '/name: KAFKA_RESPONSE_FILTER_INCLUDE/{n;s#value: "summary"#value: "experiments|status|apis|recommendations|response|status_history"#}' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+  elif [ "${cluster_type}" == "openshift" ]; then
+    sed -i 's/"isKafkaEnabled" : "false"/"isKafkaEnabled" : "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+    # Replace the existing KAFKA_BOOTSTRAP_SERVERS value
+    sed -i "/name: KAFKA_BOOTSTRAP_SERVERS/{n;s|value: \".*\"|value: \"$BOOTSTRAP_SERVER\"|}" ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+    # Replace the existing KAFKA_INCLUDE_FILTERS value
+    sed -i '/name: KAFKA_RESPONSE_FILTER_INCLUDE/{n;s#value: "summary"#value: "experiments|status|apis|recommendations|response|status_history"#}' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+  fi
+	echo "Done"
+}

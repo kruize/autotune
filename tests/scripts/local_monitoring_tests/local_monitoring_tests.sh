@@ -43,7 +43,7 @@ function local_monitoring_tests() {
 	target="crc"
 	metric_profile_json="${METRIC_PROFILE_DIR}/resource_optimization_local_monitoring.json"
 
-	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e" "test_e2e_pr_check" "test_bulk_api_ros")
+	local_monitoring_tests=("sanity" "extended" "negative" "test_e2e" "test_e2e_pr_check" "test_bulk_api_ros" "kafka")
 
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -63,9 +63,25 @@ function local_monitoring_tests() {
   # check for 'servicename' and 'datasource_namespace' input variables
   kruize_local_datasource_manifest_patch
 
+  kafka_test=0
+	# If testcase is not specified run all tests
+	if [ -z "${testcase}" ]; then
+		testtorun=("${local_monitoring_tests[@]}")
+		kafka_test=1
+	else
+		testtorun=${testcase}
+		if [ "${testtorun}" == "kafka" ]; then
+			kafka_test=1
+		fi
+	fi
+
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
 		echo "Setting up kruize..." | tee -a ${LOG}
+		if [ "${kafka_test}" == "1" ]; then
+		  export BOOTSTRAP_SERVER="kruize-kafka-cluster-kafka-bootstrap.kafka.svc.cluster.local:9092"
+		  kruize_kafka_patch
+    fi
 		echo "${KRUIZE_SETUP_LOG}"
 		setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
 	        echo "Setting up kruize...Done" | tee -a ${LOG}
@@ -76,11 +92,23 @@ function local_monitoring_tests() {
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi
 
-	# If testcase is not specified run all tests
-	if [ -z "${testcase}" ]; then
-		testtorun=("${local_monitoring_tests[@]}")
-	else
-		testtorun=${testcase}
+	KAFKA_SETUP="${HOME}/kafka_setup"
+	if [ "${kafka_test}" == "1" ]; then
+		echo "Setting up kafka..."
+		mkdir -p "${KAFKA_SETUP}"
+		setup_log="${TEST_SUITE_DIR}/setup_kafka.log"
+
+		echo ". ${LOCAL_MONITORING_TEST_DIR}/kafka_test/setup_kafka.sh ${KAFKA_SETUP} > ${setup_log} 2>&1"
+		. "${LOCAL_MONITORING_TEST_DIR}"/kafka_test/setup_kafka.sh "${KAFKA_SETUP}" > "${setup_log}" 2>&1
+		if [ $? -ne 0 ]; then
+			echo "Setting up kafka...Failed!"
+			cp "${KAFKA_SETUP}/kafka-setup.log" "${TEST_SUITE_DIR}"
+			echo "Check ${setup_log} for details!"
+			exit 1
+		else
+			echo "Setting up kafka...Done"
+			cp "${KAFKA_SETUP}/kafka-setup.log" "${TEST_SUITE_DIR}"
+		fi
 	fi
 
 	# create the result directory for given testsuite
@@ -112,12 +140,12 @@ function local_monitoring_tests() {
 		echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"| tee -a ${LOG}
 
 		echo " " | tee -a ${LOG}
-		echo "Test description: ${local_monitoring_test_description[$test]}" | tee -a ${LOG}
+#		echo "Test description: ${local_monitoring_test_description[$test]}" | tee -a ${LOG}
 		echo " " | tee -a ${LOG}
 
 		pushd ${LOCAL_MONITORING_TEST_DIR}/rest_apis > /dev/null
 			echo "pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type}"
-			pytest -m ${test} --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type} | tee -a ${LOG}
+			pytest -m "${test}" --junitxml=${TEST_DIR}/report-${test}.xml --html=${TEST_DIR}/report-${test}.html --cluster_type ${cluster_type} | tee -a ${LOG}
 			err_exit "ERROR: Running the test using pytest failed, check ${LOG} for details!"
 
 		popd > /dev/null
@@ -149,6 +177,22 @@ function local_monitoring_tests() {
 		FAILED_TEST_SUITE+=(${FUNCNAME})
 	fi
 
+	if [ "${kafka_test}" == "1" ]; then
+		echo "Cleaning up kafka..."
+		mkdir -p "${KAFKA_SETUP}"
+		if [ $? -ne 0 ]; then
+			cleanup_log="${KAFKA_SETUP}/cleanup_kafka.log"
+			echo ". ${LOCAL_MONITORING_TEST_DIR}/../helpers/cleanup_kafka.sh ${KAFKA_SETUP} > ${cleanup_log} 2>&1"
+			. ${LOCAL_MONITORING_TEST_DIR}/../helpers/cleanup_kafka.sh "${KAFKA_SETUP}" > ${cleanup_log} 2>&1
+			if [ $? -ne 0 ]; then
+				echo "Cleaning up kafka...Failed!"
+				echo "Check ${cleanup_log} for details!"
+				exit 1
+			else
+				echo "Cleaning up kafka...Done"
+			fi
+		fi
+	fi
 	end_time=$(get_date)
 	elapsed_time=$(time_diff "${start_time}" "${end_time}")
 

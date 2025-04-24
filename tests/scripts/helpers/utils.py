@@ -1605,7 +1605,7 @@ def validate_accelerator_recommendations_for_container(recommendations_json):
                     validate_limits_map_for_accelerator(perf_limits_map)
 
 #@pytest.mark.skip(reason="Not a test function")
-def validate_job_status(job_id, base_url, caplog):
+def validate_job_status(job_id, base_url, caplog=None):
     # Common keys expected in both responses
     common_keys = {
         "status", "total_experiments", "processed_experiments", "job_id", "job_start_time", "job_end_time"
