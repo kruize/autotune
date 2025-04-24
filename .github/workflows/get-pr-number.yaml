@@ -8,7 +8,7 @@ on:
    
 jobs:
   get_pr_number:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       output1: ${{ steps.pr.outputs.pr_number }}
     steps:

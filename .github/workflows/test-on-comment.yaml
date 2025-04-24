@@ -13,7 +13,7 @@ jobs:
       workflow_url: ${{ steps.workflow_run_info.outputs.url }}
       workflow_id: ${{ steps.workflow_run_info.outputs.id }}
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Get workflow run info
         run: |
@@ -98,7 +98,7 @@ jobs:
            retention-days: 2
 
   reportFailure:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [functest]
     if: failure()
     steps:
@@ -119,7 +119,7 @@ jobs:
           })
 
   reportCancelled:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [functest]
     if: cancelled()
     steps:
@@ -140,7 +140,7 @@ jobs:
           })
           
   reportSuccess:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: [functest]
     if: success()
     steps:
