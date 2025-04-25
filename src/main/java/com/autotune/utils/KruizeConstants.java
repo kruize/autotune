@@ -20,7 +20,6 @@ package com.autotune.utils;
 import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import org.apache.kafka.common.protocol.types.Field;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -70,6 +69,7 @@ public class KruizeConstants {
         public static final String UPDATE_RECOMMENDATIONS_FAILURE = "UpdateRecommendations API failure response, experiment_name: %s and intervalEndTimeStr : %s";
         public static final String UPDATE_RECOMMENDATIONS_RESPONSE = "Update Recommendation API response: %s";
         public static final String UPDATE_RECOMMENDATIONS_FAILURE_MSG = "UpdateRecommendations API failed for experiment_name: %s and intervalEndTimeStr : %s due to %s";
+        public static final String RATE_LIMIT_EXCEEDED = "Rate limit exceeded. Server is busy. Please try again later.";
     }
 
     public static class MetricProfileAPIMessages {
@@ -638,16 +638,15 @@ public class KruizeConstants {
         }
 
         public static class RecommendationErrorMsgs {
-            private RecommendationErrorMsgs() {
-
-            }
-
             public static final String AMT_FORMAT_IS_NULL = "Invalid input: 'amount' and 'format' cannot be null";
             public static final String CPU_UNSUPPORTED_FORMAT = "Unsupported format for CPU conversion: ";
             public static final String ACCELERATOR_UNSUPPORTED_FORMAT = "Unsupported format for Accelerator conversion: ";
             public static final String INPUT_NULL = "Input object cannot be null";
             public static final String VALUE_NEGATIVE = "Value cannot be negative";
             public static final String INVALID_MEM_FORMAT = "Invalid format: Supported formats are bytes, KB, KiB, MB, MiB, GB, GiB, etc.";
+            private RecommendationErrorMsgs() {
+
+            }
         }
     }
 
