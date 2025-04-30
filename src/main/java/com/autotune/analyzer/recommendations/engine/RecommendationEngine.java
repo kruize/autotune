@@ -11,9 +11,7 @@ import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.plots.PlotManager;
 import com.autotune.analyzer.recommendations.*;
-import com.autotune.analyzer.recommendations.model.CostBasedRecommendationModel;
-import com.autotune.analyzer.recommendations.model.PerformanceBasedRecommendationModel;
-import com.autotune.analyzer.recommendations.model.RecommendationModel;
+import com.autotune.analyzer.recommendations.model.*;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
@@ -74,6 +72,7 @@ public class RecommendationEngine {
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
     private List<String> modelNames;
+    private Map<String, RecommendationTunables> modelTunable;
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
@@ -157,7 +156,7 @@ public class RecommendationEngine {
 
     }
 
-    private void loadCustomRecommendationModels(List<String> modelName) throws InvalidModelException {
+    private void loadCustomRecommendationModels(List<String> modelName,  Map<String, RecommendationTunables> settings) throws InvalidModelException {
         // Add new models
         recommendationModels = new ArrayList<>();
         for (String model : modelName) {
@@ -172,8 +171,13 @@ public class RecommendationEngine {
                 PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
                 registerModel(performanceBasedRecommendationModel);
             } else {
-                // user input does not matches standard models
-                throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+                // user input does not match standard models
+                // possibly user has entered a custom model
+                System.out.println("In loadcustomrecc model, trying to figure out if we got all the things or not Settings: " + settings);
+                RecommendationTunables genericTunables = settings.get(model);
+                GenericRecommendationModel genericRecommendationModel = new GenericRecommendationModel(model, genericTunables);
+                registerModel(genericRecommendationModel);
+                //                throw new InvalidModelException(model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
             }
         }
     }
@@ -212,6 +216,10 @@ public class RecommendationEngine {
 
     public List<String> getModelNames() {
         return modelNames;
+    }
+
+    private void setModelTunable(Map<String, RecommendationTunables> modelTunable) {
+        this.modelTunable = modelTunable;
     }
 
     public void setModelNames(List<String> modelNames) {
@@ -388,7 +396,8 @@ public class RecommendationEngine {
                 } else {
                     // models present
                     setModelNames(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
-                    loadCustomRecommendationModels(modelNames);
+                    setModelTunable(kruizeObject.getRecommendation_settings().getModelSettings().getModelTunable());
+                    loadCustomRecommendationModels(modelNames, modelTunable );
                 }
             } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
                 // auto or recreate mode
@@ -402,7 +411,7 @@ public class RecommendationEngine {
                         // check for single model
                         if (kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
                             // call for that one model
-                            loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
+                            loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels(),kruizeObject.getRecommendation_settings().getModelSettings().getModelTunable());
                         } else {
                             // multiple model throw error
                             throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED);
