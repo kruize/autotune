@@ -266,4 +266,47 @@ public class MetadataProfileValidation {
                 '}';
     }
 
+    /**
+     * Validates the fields of the metadata profile object before updating it
+     * @param metadataProfile Metadata Profile Object to be validated
+     * @return Returns the ValidationOutputData containing the response based on the validation
+     */
+    public ValidationOutputData validateProfileData(MetadataProfile metadataProfile) {
+        return validateMetadataProfile(metadataProfile);
+    }
+
+    private ValidationOutputData validateMetadataProfile(MetadataProfile metadataProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        StringBuilder errorString = new StringBuilder();
+        try {
+            // validate the mandatory values first
+            validationOutputData = validateMandatoryMetadataProfileFieldsAndData(metadataProfile);
+
+            // If the mandatory values are present,proceed for further validation else return the validation object directly
+            if (validationOutputData.isSuccess()) {
+
+                // Check if profile metadata exists
+                JsonNode metadata = metadataProfile.getMetadata();
+                if (null == metadata) {
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_METADATA);
+                }
+
+                // Validates fields like k8s_type and slo object
+                validateCommonProfileFields(metadataProfile, errorString, validationOutputData);
+
+                if (!errorString.toString().isEmpty()) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(errorString.toString());
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                } else {
+                    validationOutputData.setSuccess(true);
+                }
+            }
+        } catch (Exception e){
+            validationOutputData.setSuccess(false);
+            validationOutputData.setMessage(errorString.toString());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        return validationOutputData;
+    }
 }

@@ -148,4 +148,20 @@ public class MetadataProfileCollection {
             LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.ADD_DEFAULT_METADATA_PROFILE_EXCEPTION, e.getMessage());
         }
     }
+
+    /**
+     * Removes the specified metadataProfile from the collection
+     * @param metadataProfileName Name of the profile to be removed
+     */
+    public void removeMetadataProfileFromCollection(String metadataProfileName) {
+
+        LOGGER.debug(KruizeConstants.MetadataProfileConstants.REMOVING_METADATA_PROFILE, metadataProfileName);
+
+        if(!metadataProfileCollection.containsKey(metadataProfileName)) {
+            LOGGER.error(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_DOES_NOT_EXIST, metadataProfileName);
+        } else {
+            LOGGER.info(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_REMOVED, metadataProfileName);
+            metadataProfileCollection.remove(metadataProfileName);
+        }
+    }
 }

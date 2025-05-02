@@ -999,6 +999,10 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: {}";
         public static final String CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE = "Failed to convert input JSON to MetadataProfile object due to: {}";
         public static final String METADATA_PROFILE_FILE_PATH = "MetadataProfile file path: {}";
+        public static final String REMOVING_METADATA_PROFILE = "Trying to remove the metadata profile from collection: ";
+        public static final String METADATA_PROFILE_DOES_NOT_EXIST = "MetadataProfile does not exists: {}";
+        public static final String METADATA_PROFILE_REMOVED = "MetadataProfile removed from the collection successfully: {}";
+        public static final String METADATA_PROFILE_VALIDATION_ERROR= "Validation of metadata profile failed: {}";
 
         public static class MetadataProfileErrorMsgs {
 
@@ -1013,6 +1017,7 @@ public class KruizeConstants {
             public static final String SET_UP_DEFAULT_METADATA_PROFILE_ERROR = "Failed to set up default MetadataProfile due to: {}";
             public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
             public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
+            public static final String UPDATE_METADATA_PROFILE_FROM_DB_ERROR = "Failed to update Metadata Profile due to {}";
 
             private MetadataProfileErrorMsgs() {
             }
@@ -1026,6 +1031,8 @@ public class KruizeConstants {
         public static final String ADD_METADATA_PROFILE_TO_DB_WITH_VERSION = "Added Metadata Profile : {} into the DB with version: {}";
         public static final String DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully.";
         public static final String DELETE_METADATA_PROFILE_FROM_DB_SUCCESS_MSG = "Metadata profile deleted successfully from the DB.";
+        public static final String UPDATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s updated successfully.";
+        public static final String UPDATE_METADATA_PROFILE_FROM_DB_WITH_VERSION = "Updated Metadata Profile : {} into the DB with version: {}";
 
         private MetadataProfileAPIMessages() {
         }

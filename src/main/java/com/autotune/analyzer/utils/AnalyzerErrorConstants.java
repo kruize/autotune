@@ -314,6 +314,20 @@ public class AnalyzerErrorConstants {
             public static final String DELETE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeLMMetadataProfileEntry not found with metadata profile name: ";
             public static final String DELETE_METADATA_PROFILE_ENTRY_ERROR_MSG = "Failed to delete metadata profile for metric profile {} due to {}";
         }
+
+        public static final class UpdateMetadataProfileAPI {
+            public UpdateMetadataProfileAPI() {
+            }
+            public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+            public static final String INVALID_METADATA_PROFILE_NAME_EXCPTN = "Invalid Metadata Profile Name";
+            public static final String INVALID_METADATA_PROFILE_NAME_MSG = "Given metadata profile name - %s either does not exist or is not valid";
+            public static final String NO_METADATA_PROFILES_EXCPTN = "No metadata profile";
+            public static final String NO_METADATA_PROFILES = "No metadata profiles found!";
+            public static final String UPDATE_METADATA_PROFILE_ERROR = "Failed to update metadata profile data due to: {} ";
+            public static final String METADATA_PROFILE_NAMES_MISMATCH = "MetadataProfile name in URL: %s, does not match name in request body: %s";
+            public static final String MISSING_INPUT_PAYLOAD = "MetadataProfile JSON payload cannot be empty";
+            public static final String UPDATE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeLMMetadataProfileEntry not found with metadata profile name: ";
+        }
     }
 
     public static final class ConversionErrors {

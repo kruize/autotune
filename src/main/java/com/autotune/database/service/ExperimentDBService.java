@@ -428,6 +428,23 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
+    /**
+     * Updates Metadata Profile in kruizeLMMetadataProfileEntry
+     *
+     * @param metadataProfile Metadata profile object to be updated
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData updateMetadataProfileFromDB(MetadataProfile metadataProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileObjToMetadataProfileDBObj(metadataProfile);
+            validationOutputData = this.experimentDAO.updateMetadataProfileFromDB(kruizeMetadataProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.UPDATE_METADATA_PROFILE_FROM_DB_ERROR, e.getMessage());
+        }
+        return validationOutputData;
+    }
+
 
     /*
      * This is a Java method that loads all experiments from the database using an experimentDAO object.

@@ -63,4 +63,19 @@ public class MetadataProfileUtil {
         LOGGER.debug(KruizeConstants.MetadataProfileConstants.ADD_METADATA_PROFILE, metadataProfile.getMetadata().get("name"));
     }
 
+    public static ValidationOutputData validateMetadataProfile(Map<String, MetadataProfile> metadataProfileMapProfilesMap, MetadataProfile metadataProfile) {
+        ValidationOutputData validationOutputData;
+        try {
+            validationOutputData = new MetadataProfileValidation(metadataProfileMapProfilesMap).validateProfileData(metadataProfile);
+            if (!validationOutputData.isSuccess()) {
+                validationOutputData.setMessage(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_FAILURE + validationOutputData.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_ERROR, e.getMessage());
+            validationOutputData = new ValidationOutputData(false,
+                    KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_FAILURE + e.getMessage(),
+                    HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        return validationOutputData;
+    }
 }

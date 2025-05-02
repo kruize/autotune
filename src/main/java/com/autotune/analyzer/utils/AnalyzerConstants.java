@@ -653,6 +653,9 @@ public class AnalyzerConstants {
         public static final String DEFAULT_DATASOURCE = "prometheus";
         public static final String CLUSTER_METADATA_LOCAL_MON_PROFILE = "cluster-metadata-local-monitoring";
         public static final String DEFAULT_MEASUREMENT_DURATION = "15min";
+        public static final String PROFILE_VERSION = "profileVersion";
+        public static final String METADATA = "metadata";
+        public static final String K8STYPE = "k8sType";
     }
 
     public static final class CommonProfileMsgs {
