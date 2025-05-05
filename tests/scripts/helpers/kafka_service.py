@@ -47,11 +47,12 @@ def get_kafka_endpoint():
     ], log_file=LOG_FILE)
 
 
-def consume_kafka_message(endpoint, topic):
+def consumer_kafka(endpoint, topic):
     print(f"Connecting to Kafka at: {endpoint}")
 
-    consumer = KafkaConsumer('my-topic', group_id='my-group', bootstrap_servers=endpoint, ssl_cafile='ca.crt',
-                             security_protocol="SSL", consumer_timeout_ms=10000, enable_auto_commit=True)
+    consumer = KafkaConsumer(topic, group_id='my-group', bootstrap_servers=endpoint, ssl_cafile='ca.crt',
+                             security_protocol="SSL", consumer_timeout_ms=10000, enable_auto_commit=True,
+                            api_version=(0, 10))
     print("Waiting for a message...")
     try:
         for message in consumer:
@@ -64,29 +65,6 @@ def consume_kafka_message(endpoint, topic):
 
 
 
-    # conf = {
-    #     'bootstrap.servers': endpoint,
-    #     'security.protocol': 'SSL',
-    #     'ssl.ca.location': 'ca.crt',
-    #     'group.id': 'python-consumer',
-    #     'auto.offset.reset': 'earliest',
-    # }
-    #
-    # consumer = Consumer(conf)
-    # consumer.subscribe([topic])
-    #
-    # try:
-    #     msg = consumer.poll(timeout=10.0)
-    #     if msg is None:
-    #         print("No message received.")
-    #     elif msg.error():
-    #         print("Consumer error:", msg.error())
-    #     else:
-    #         print(f"Received message: {msg.value().decode('utf-8')}")
-    # finally:
-    #     consumer.close()
-
-
 def consume_messages_from_kafka(topic):
 
     print("Consuming messages from Kafka topic ...")
@@ -94,6 +72,6 @@ def consume_messages_from_kafka(topic):
     try:
         fetch_and_save_ca_cert()
         endpoint = get_kafka_endpoint()
-        consume_kafka_message(endpoint, topic)
+        consumer_kafka(endpoint, topic)
     except Exception as e:
         print(f"ERROR: {e}")

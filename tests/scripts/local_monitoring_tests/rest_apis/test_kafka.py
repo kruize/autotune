@@ -26,7 +26,8 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 @pytest.mark.kafka
-def test_bulk_post_request(cluster_type):
+@pytest.mark.parametrize("topic", ["recommendations-topic", "summary-topic", "error-topic"])
+def test_bulk_post_request_kafka(cluster_type, topic):
     expected_job_id_present = True
     bulk_request_payload = {
          "filter": {
@@ -43,11 +44,8 @@ def test_bulk_post_request(cluster_type):
                  "labels": {}
              }
          },
-	 "datasource": "prometheus-1",
-         "time_range": {
- 	    "start": "2025-01-20T00:00:00.000Z",
-	    "end": "2025-01-20T00:10:00.000Z"
-         }
+	    "datasource": "prometheus-1",
+        "time_range": {}
      }
 
     form_kruize_url(cluster_type)
@@ -70,6 +68,34 @@ def test_bulk_post_request(cluster_type):
         validate_job_status(response.json()["job_id"], URL)
 
     # Consume messages from the topic
-    consume_messages_from_kafka("recommendations-topic")
+    consume_messages_from_kafka(topic)
 
+@pytest.mark.kafka
+def test_bulk_post_request_kafka_error(cluster_type):
+    # Prepare a payload that causes an error
+    invalid_payload = {
+        "filter": {
+            "exclude": {
+                "namespace": [],
+                "workload": [],
+                "containers": [],
+                "labels": {}
+            },
+            "include": {
+                "namespace": ["abc"],
+                "workload": [],
+                "containers": [],
+                "labels": {}
+            }
+        },
+        "time_range": {}
+    }
 
+    # Trigger the Java API with this invalid payload
+    response = requests.post(f"{your_java_api_url}/bulkExperiment", json=invalid_payload)
+    assert response.status_code != 200  # Expect a failure response
+
+    # Wait for message in error-topic
+    error_msg = consume_messages_from_kafka("error-topic", timeout_ms=10000)
+    assert error_msg is not None, "Expected error message not found in Kafka error-topic"
+    print(f"Received error message: {error_msg}")
