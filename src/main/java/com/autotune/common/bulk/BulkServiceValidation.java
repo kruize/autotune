@@ -1,11 +1,11 @@
 package com.autotune.common.bulk;
 
 import com.autotune.analyzer.serviceObjects.BulkInput;
+import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.utils.CommonUtils;
-import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.database.table.lm.KruizeBulkJobEntry;
@@ -30,7 +30,7 @@ public class BulkServiceValidation {
                 payload.getTime_range().getEnd()), jobID);
         if (validationOutputData != null) return validationOutputData;
 
-        validationOutputData = buildErrorOutput(validateRefId(payload.getRequestId()), jobID);
+        validationOutputData = buildErrorOutput(validateRequestId(payload.getRequestId()), jobID);
         if (validationOutputData != null) return validationOutputData;
 
         validationOutputData = buildErrorOutput(validateOneToOneMapping(jobID, payload), jobID);
@@ -46,7 +46,7 @@ public class BulkServiceValidation {
 
     private static ValidationOutputData buildErrorOutput(String errorMsg, String jobID) {
         if (errorMsg != null && !errorMsg.isEmpty()) {
-            return new ValidationOutputData(false, errorMsg + " jobId: " + jobID, 400);
+            return new ValidationOutputData(false, errorMsg + " for the jobId: " + jobID, 400);
         }
         return null;
     }
@@ -54,20 +54,25 @@ public class BulkServiceValidation {
 
 
     public static String validateOneToOneMapping(String jobID, BulkInput currentPayloadJson) throws Exception {
-        String errorMsg = "";
+        String errorMessage = "";
         BulkInput existingPayload;
-        ExperimentDAO experimentDAO = new ExperimentDAOImpl();
-        KruizeBulkJobEntry kruizeBulkJobEntry = experimentDAO.findBulkJobById(jobID);
-        // TODO: convert this back to BulkInput object to compare the values
-//        if (null != kruizeBulkJobEntry) {
-//            existingPayload = kruizeBulkJobEntry.getPayload();
-//
-//            if (existingPayload != null && !existingPayload.equals(currentPayloadJson)) {
-//                LOGGER.error("Duplicate ref_id found with different payload: {}", refId);
-//                throw new DuplicateReferenceIDException("ref_id already used with a different payload.");
-//            }
-//        }
-        return errorMsg;
+        String existingPayloadRequestId;
+        String currentPayloadRequestId;
+        KruizeBulkJobEntry kruizeBulkJobEntry = new ExperimentDAOImpl().findBulkJobById(jobID);
+        if (null != kruizeBulkJobEntry) {
+            BulkJobStatus jobDetails = kruizeBulkJobEntry.getBulkJobStatus();
+            existingPayload = jobDetails.getSummary().getInput();
+            existingPayloadRequestId = jobDetails.getSummary().getInput().getRequestId();
+            currentPayloadRequestId = currentPayloadJson.getRequestId();
+
+            if (currentPayloadRequestId.equals(existingPayloadRequestId)) {
+                if (existingPayload != null && existingPayload.equals(currentPayloadJson)) {
+                    errorMessage = String.format(KruizeConstants.KRUIZE_BULK_API.DUPLICATE_REQ_ID_WITH_SAME_PAYLOAD, currentPayloadJson.getRequestId());
+                    LOGGER.error(errorMessage);
+                }
+            }
+        }
+        return errorMessage;
     }
 
     public static String validateDatasourceConnection(String datasourceName) {
@@ -77,14 +82,14 @@ public class BulkServiceValidation {
             try {
                 dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(datasourceName);
             } catch (Exception e) {
-                errorMessage = String.format("Loading saved datasource %s details from db failed: %s", datasourceName, e.getMessage());
+                errorMessage = String.format(KruizeConstants.DataSourceConstants.DataSourceMetadataErrorMsgs.LOAD_DATASOURCE_FROM_DB_ERROR, datasourceName, e.getMessage());
                 LOGGER.error(errorMessage);
                 return errorMessage;
             }
             LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY, datasourceName);
             DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
             if (op.isServiceable(dataSourceInfo) == CommonUtils.DatasourceReachabilityStatus.NOT_REACHABLE) {
-                errorMessage = String.format("Connection failed for datasource: %s", datasourceName);
+                errorMessage = KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE;
                 LOGGER.error(errorMessage);
             }
         } catch (Exception ex) {
@@ -94,10 +99,12 @@ public class BulkServiceValidation {
         return errorMessage;
     }
 
-    public static String validateRefId(String refId) {
+    public static String validateRequestId(String requestId) {
         String errorMessage = "";
-        if (refId == null || !refId.matches("^[a-zA-Z0-9]{36}$")) {
-            errorMessage = "Invalid ref_id format. Must be 36-character alphanumeric.";
+        if (requestId == null) {
+            errorMessage = KruizeConstants.KRUIZE_BULK_API.MISSING_REQUEST_ID;
+        } else if (!requestId.matches("^[a-zA-Z0-9]{36}$")) {
+            errorMessage = KruizeConstants.KRUIZE_BULK_API.INVALID_REQUEST_ID;
         }
         return errorMessage;
     }
@@ -109,18 +116,18 @@ public class BulkServiceValidation {
             OffsetDateTime endTime = OffsetDateTime.parse(end);
 
             if (startTime.isAfter(endTime)) {
-                errorMessage = "Start time is after end time. Must be after start time.";
+                errorMessage = KruizeConstants.KRUIZE_BULK_API.INVALID_START_TIME;
                 return errorMessage;
             }
 
             Duration duration = Duration.between(startTime, endTime);
             if (duration.toHours() < KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY || duration.toDays() > KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_MINUTES) {
-                errorMessage = "Time range must be between 24 hours and 15 days.";
+                errorMessage = KruizeConstants.KRUIZE_BULK_API.INVALID_TIME_RANGE;
             }
         } catch (DateTimeParseException ex) {
-            errorMessage = "Invalid date format. Must be ISO 8601.";
+            errorMessage = KruizeConstants.KRUIZE_BULK_API.INVALID_DATE_FORMAT;
         } catch (Exception e) {
-            errorMessage = "Exception occurred while validating the time range";
+            errorMessage = KruizeConstants.KRUIZE_BULK_API.TIME_RANGE_EXCEPTION;
         }
         return errorMessage;
     }
