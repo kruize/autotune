@@ -698,15 +698,6 @@ public class RecommendationEngine {
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : getModels()) {
-                    boolean isCostModel = false;
-                    boolean isPerfModel = false;
-
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
-                        isCostModel = true;
-                    }
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
-                        isPerfModel = true;
-                    }
 
                     // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
@@ -729,7 +720,8 @@ public class RecommendationEngine {
                     }
 
                     RecommendationNotification recommendationNotification = null;
-                    if (isCostModel) {
+
+                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
                         // Setting it as at least one recommendation available
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
@@ -737,11 +729,19 @@ public class RecommendationEngine {
                         );
                     }
 
-                    if (isPerfModel) {
+                    else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
                         // Setting it as at least one recommendation available
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
+                        );
+                    }
+
+                    else if (null != model.getModelName()  ) {
+                        // Setting it as at least one recommendation available
+                        recommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_MODEL_RECOMMENDATIONS_AVAILABLE
                         );
                     }
 
@@ -1052,15 +1052,6 @@ public class RecommendationEngine {
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : getModels()) {
-                    boolean isCostModel = false;
-                    boolean isPerfModel = false;
-
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
-                        isCostModel = true;
-                    }
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
-                        isPerfModel = true;
-                    }
 
                     // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                     MappedRecommendationForModel mappedRecommendationForModel = generateNamespaceRecommendationBasedOnModel(
@@ -1083,7 +1074,8 @@ public class RecommendationEngine {
                     }
 
                     RecommendationNotification recommendationNotification = null;
-                    if (isCostModel) {
+
+                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
                         // Setting it as at least one recommendation available
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
@@ -1091,11 +1083,18 @@ public class RecommendationEngine {
                         );
                     }
 
-                    if (isPerfModel) {
+                    else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
                         // Setting it as at least one recommendation available
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
+                        );
+                    }
+                    else if ( null != model.getModelName()) {
+                        // Setting it as at least one recommendation available
+                        namespaceRecommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_MODEL_RECOMMENDATIONS_AVAILABLE
                         );
                     }
 
