@@ -1,0 +1,23 @@
+{
+  "version": "v2.0",
+  "experiment_name": "ns-demo",
+  "cluster_name": "default",
+  "performance_profile": "resource-optimization-openshift",
+  "mode": "monitor",
+  "target_cluster": "remote",
+  "experiment_type": "namespace",
+  "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace_name": "default"
+        }
+      }
+    ],
+
+  "trial_settings": {
+    "measurement_duration": "15min"
+  },
+  "recommendation_settings": {
+    "threshold": "0.1"
+  }
+}

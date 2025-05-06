@@ -16,6 +16,7 @@
 #
 
 cluster_type="openshift"
+exp_type="container"
 num_exps=250
 num_days_of_res=2
 num_clients=10
@@ -50,7 +51,11 @@ function query_db() {
 		if [ ${days_completed} == 0 ]; then
 			echo "Day $day_in_progress in progress"
 		else
-			echo "Day $days_completed completed, Day $day_in_progress in progress"
+			if [ ${days_completed} == ${num_days_of_res} ]; then
+				break
+			else
+				echo "Day $days_completed completed, Day $day_in_progress in progress"
+			fi
 		fi
 		
 		sleep_time=$((query_db_interval * 60))
@@ -91,12 +96,115 @@ function execution_time() {
 	done
 }
 
+function container_ns_scale_test() {
+	declare -a pid_array=()
 
-while getopts c:a:p:r:u:n:d:m:i:e:s:q:h gopts
+	# Each loops kicks off the specified no. of experiments and posts results for the specified no. of days
+	prometheus_server=$(echo ${IP} | cut -d "." -f 3- )
+	echo "Prometheus server = $prometheus_server"
+	for ((loop=1; loop<=num_clients; loop++));
+	do
+		if (( loop <= num_clients - 2 )); then
+			# Kick off container experiments
+			name="scaletest${num_exps}-${loop}"
+			logfile="${SCALE_LOG_DIR}/${name}.log"
+			echo "logfile = $logfile"
+
+			nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "container" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} >> ${logfile} 2>&1 &
+			pid_array+=($!)
+
+			echo
+			echo "###########################################################################"
+			echo "#                                                                         #"
+			echo "#  Kicked off ${num_exps} container experiments and data upload for client: ${loop} #"
+			echo "#                                                                         #"
+			echo "###########################################################################"
+			echo
+		else
+			# Kick off namespace experiments
+			name="ns_scaletest${num_exps}-${loop}"
+			logfile="${SCALE_LOG_DIR}/${name}.log"
+			echo "logfile = $logfile"
+
+			nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "namespace" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} >> ${logfile} 2>&1 &
+			pid_array+=($!)
+			echo
+			echo "#####################################################################################"
+			echo "#                                                                                   #"
+			echo "#  Kicked off ${num_exps} namespace experiments and data upload for client: ${loop} #"
+			echo "#                                                                                   #"
+			echo "#####################################################################################"
+			echo
+		fi
+		query_db &
+		sleep 60
+	done
+
+	query_db &
+	MYSELF=$!
+
+	for pid in "${pid_array[@]}"; do
+		wait "$pid"
+		echo "Process with PID $pid has completed."
+	done
+
+	echo "###########################################################################"
+	echo "				All threads completed!                          "
+	echo "###########################################################################"
+
+}
+
+function scale_test() {
+
+	declare -a pid_array=()
+	# Each loops kicks off the specified no. of experiments and posts results for the specified no. of days
+	prometheus_server=$(echo ${IP} | cut -d "." -f 3- )
+	echo "Prometheus server = $prometheus_server"
+	for ((loop=1; loop<=num_clients; loop++));
+	do
+
+		name="scaletest${num_exps}-${loop}"
+		logfile="${SCALE_LOG_DIR}/${name}.log"
+		echo "logfile = $logfile"
+
+	        nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --exptype "${exp_type}" --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} >> ${logfile} 2>&1 &
+
+	        pid_array+=($!)
+
+	        echo
+	        echo "###########################################################################"
+	        echo "#                                                                         #"
+	        echo "#  Kicked off ${num_exps} experiments and data upload for client: ${loop} #"
+	        echo "#                                                                         #"
+	        echo "###########################################################################"
+	        echo
+
+		query_db &
+
+		sleep 60
+	done
+
+	query_db &
+	MYSELF=$!
+
+	for pid in "${pid_array[@]}"; do
+		wait "$pid"
+		echo "Process with PID $pid has completed."
+	done
+
+	echo "###########################################################################"
+	echo "				All threads completed!                          "
+	echo "###########################################################################"
+}
+
+while getopts c:a:p:r:u:n:d:m:i:e:s:q:f:h gopts
 do
 	case ${gopts} in
 	c)
 		cluster_type=${OPTARG}
+		;;
+	f)
+		exp_type=${OPTARG}
 		;;
 	a)
 		IP=${OPTARG}
@@ -145,44 +253,11 @@ SCALE_LOG_DIR="${RESULTS_DIR}/scale_logs"
 mkdir -p "${SCALE_LOG_DIR}"
 echo "SCALE_LOG_DIR = $SCALE_LOG_DIR"
 
-# Each loops kicks off the specified no. of experiments and posts results for the specified no. of days
-prometheus_server=$(echo ${IP} | cut -d "." -f 3- )
-
-echo "Prometheus server = $prometheus_server"
-declare -a pid_array=()
-for ((loop=1; loop<=num_clients; loop++));
-do
-
-	name="scaletest${num_exps}-${loop}"
-	logfile="${SCALE_LOG_DIR}/${name}.log"
-	echo "logfile = $logfile"
-
-	nohup ./rosSimulationScalabilityWrapper.sh --ip "${IP}" --port "${PORT}" --name ${name} --count ${num_exps},${results_count} --minutesjump ${minutes_jump} --initialstartdate ${initial_start_date} --limitdays ${num_days_of_res} --intervalhours ${interval_hours} --clientthread ${loop}  --prometheusserver ${prometheus_server} --outputdir ${RESULTS_DIR} >> ${logfile} 2>&1 &
-
-	pid_array+=($!)
-
-	echo
-	echo "###########################################################################"
-	echo "#                                                                         #"
-	echo "#  Kicked off ${num_exps} experiments and data upload for client: ${loop} #"
-	echo "#                                                                         #"
-	echo "###########################################################################"
-	echo
-
-	sleep 60
-done
-
-query_db &
-MYSELF=$!
-
-for pid in "${pid_array[@]}"; do
-	wait "$pid"
-    	echo "Process with PID $pid has completed."
-done
-
-echo "###########################################################################"
-echo "				All threads completed!                          "
-echo "###########################################################################"
+if [ "${exp_type}" == "container_ns" ]; then
+	container_ns_scale_test
+elif [[ "${exp_type}" == "container" || "${exp_type}" == "namespace" ]]; then
+	scale_test
+fi
 
 exec_time_log="${RESULTS_DIR}/exec_time.log"
 echo "Capturing execution time in ${exec_time_log}..."
@@ -195,8 +270,8 @@ echo "Capturing execution time in ${exec_time_log}...done"
 
 # Compare the expected results count in the db with the actual results count
 actual_results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
-
 expected_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
+
 total_results_count=$((${expected_results_count} + ${total_results_count}))
 
 j=0
@@ -205,8 +280,8 @@ while [[ ${total_results_count} != ${actual_results_count} ]]; do
 	echo "expected results count = $expected_results_count actual_results_count = $actual_results_count"
 	actual_results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
 
-	expected_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
-	total_results_count=$((${expected_results_count} + ${total_results_count}))
+	#expected_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
+	#total_results_count=$((${expected_results_count} + ${total_results_count}))
 	if [ ${j} == 2 ]; then
 		break
 	else
