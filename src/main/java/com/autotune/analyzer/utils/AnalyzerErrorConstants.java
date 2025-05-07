@@ -214,7 +214,7 @@ public class AnalyzerErrorConstants {
             public static final String UPDATE_RECOMMENDATIONS_SUCCESS_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "success";
             public static final String UPDATE_RECOMMENDATIONS_COMPLETED_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "completed";
             public static final String RECOMMENDATION_ERROR = "Failed to create recommendation for experiment: %s and interval_start_time: %s and interval_end_time: %s";
-            public static final String RECOMMENDATION_EXCEPTION = "Exception occurred while generating recommendations for experiment: %s and interval_end_time: %s : %s ";
+            public static final String RECOMMENDATION_EXCEPTION = "Exception occurred while generating recommendations for experiment: {} and interval_end_time: {} : {} ";
             public static final String METRIC_EXCEPTION = "Exception occurred while fetching metrics from the datasource: ";
             public static final String FETCHING_RESULTS_FAILED = "Failed to fetch the results from the DB: %s";
             public static final String INTERNAL_MAP_EMPTY = "Internal map sent to populate method cannot be null or empty";
