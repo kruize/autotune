@@ -354,9 +354,9 @@ public class ExperimentValidation {
                             validationOutputData.setMessage(errorMsg);
                             return validationOutputData;
                         }
-                        if (!validModels.contains(model)) {
-                            throw new IllegalArgumentException( model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
-                        }
+//                        if (!validModels.contains(model)) {
+//                            throw new IllegalArgumentException( model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+//                        }
                     }
                 }
 
