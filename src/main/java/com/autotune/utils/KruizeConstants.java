@@ -310,7 +310,7 @@ public class KruizeConstants {
         public static final String MEMORY_PERCENTILE = "memory_percentile";
         public static final String CPU_PERCENTILE = "cpu_percentile";
         public static final String ACCELERATOR_PERCENTILE = "accelerator_percentile";
-        public static final String MODEL_TUNABLE = "model_tunable";
+        public static final String MODEL_TUNABLE = "model_tunables";
 
 
 
