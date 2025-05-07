@@ -343,7 +343,6 @@ public class ExperimentValidation {
                             return validationOutputData;
                         }
                     }
-                    LOGGER.info("All terms are valid");
                 }
 
                 if (expObj.getRecommendation_settings().getModelSettings() != null &&
