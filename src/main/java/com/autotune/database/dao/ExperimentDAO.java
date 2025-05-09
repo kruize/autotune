@@ -41,6 +41,9 @@ public interface ExperimentDAO {
     // Add Metadata Profile  to DB
     public ValidationOutputData addMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry);
 
+    // Add Metadata Profile  to DB
+    public ValidationOutputData updateMetadataProfileFromDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry);
+
     // Add DataSource to DB
     ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry, ValidationOutputData validationOutputData);
 

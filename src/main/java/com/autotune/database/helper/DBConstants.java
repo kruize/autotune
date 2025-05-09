@@ -111,6 +111,10 @@ public class DBConstants {
                 " WHERE container->>'container_name' = :container_name" +
                 " AND container->>'container_image_name' = :container_image_name" +
                 " ))";
+        public static final String UPDATE_METADATA_PROFILE_FROM_DB = "UPDATE KruizeLMMetadataProfileEntry km "+
+                "SET km.api_version = :apiVersion, km.kind = :kind, km.metadata = :metadata, km.name = :name, km.profile_version = :profileVersion, " +
+                "km.k8s_type = :k8sType, km.datasource = :datasource, km.query_variables = :queryVariables " +
+                "WHERE km.name = :metadataProfileName";
     }
 
     public static final class TABLE_NAMES {
