@@ -15,24 +15,34 @@
  *******************************************************************************/
 package com.autotune.analyzer.metadataProfiles;
 
+import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.datasource.DataSourceCollection;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+
+import static com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil.checkResultIdentifiers;
+import static com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil.matchSumByClause;
 
 /**
  *  This class validates MetadataProfile fields and object
@@ -294,6 +304,9 @@ public class MetadataProfileValidation {
                 // Validates fields like k8s_type and slo object
                 validateCommonProfileFields(metadataProfile, errorString, validationOutputData);
 
+                // Validate Metric names and expected query patterns
+                validateMetricQueries(metadataProfile, errorString);
+
                 if (!errorString.toString().isEmpty()) {
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(errorString.toString());
@@ -308,5 +321,105 @@ public class MetadataProfileValidation {
             validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
+    }
+
+
+    /**
+     * Validates Metric names and expected query patterns before updating the metadata profile
+     *
+     * @param metadataProfile MetadataProfile object to be updated
+     * @param errorString     StringBuilder to collect error messages during validation of multiple fields
+     */
+    public void validateMetricQueries(MetadataProfile metadataProfile, StringBuilder errorString) {
+        for (Metric queryVariable : metadataProfile.getQueryVariables()) {
+            String metricName = queryVariable.getName();
+            String datasource = queryVariable.getDatasource();
+            DataSourceInfo dataSourceInfo = null;
+
+            try {
+                dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().values().iterator().next();
+                if (null == dataSourceInfo) {
+                    errorString.append(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.NO_DATASOURCE_FOUND_IN_DB);
+                    return;
+                }
+            } catch (Exception e) {
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_DB_LOAD_FAILED, datasource, e.getMessage());
+            }
+
+            if (!validateMetricQueryName(metricName)) {
+                errorString.append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INAVLID_QUERY_NAME).
+                        append(metricName).append(". ").append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.SUPPORTED_QUERY_NAME_PREFIXES);
+            }
+
+            HashMap<String, AggregationFunctions> aggr_funcs = queryVariable.getAggregationFunctionsMap();
+
+            for(Map.Entry<String, AggregationFunctions> aggregationFunctionsMap: aggr_funcs.entrySet()) {
+                AggregationFunctions aggr_func = aggregationFunctionsMap.getValue();
+                String query = aggr_func.getQuery();
+                validateMetricQueryPattern(query, metricName, errorString, dataSourceInfo);
+            }
+        }
+    }
+
+
+    /**
+     * Validates if the metricName to be updated has supported prefix like namespace, workload, container.
+     * @param metricName Name of the metric to be updated
+     * @return boolean output if the metric name has one of the supported prefixes
+     */
+    public boolean validateMetricQueryName(String metricName) {
+        List<String> supportedQueryPrefixes = Arrays.asList(AnalyzerConstants.NAMESPACE, AnalyzerConstants.WORKLOAD, AnalyzerConstants.CONTAINER);
+
+        String metricNameLowerCase = metricName.toLowerCase();
+        for (String queryPrefix : supportedQueryPrefixes) {
+            if (metricNameLowerCase.contains(queryPrefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Validates input metric query to be updated by matching the 'sum by' clause of the input query against the expected query patterns
+     *
+     * @param metricQuery Query to be updated
+     * @param metricName  Name of the Metric to be updated
+     * @param errorString StringBuilder to collect error messages during validation of multiple fields
+     * @param dataSourceInfo Datasource object with datasource details to run the queries
+     */
+    public void validateMetricQueryPattern(String metricQuery, String metricName, StringBuilder errorString, DataSourceInfo dataSourceInfo) {
+        AnalyzerConstants.MetadataProfileQueryPattern matchedPattern = matchSumByClause(metricQuery);
+        if (matchedPattern == null) {
+            errorString.append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_SUM_BY_CLAUSE).append(metricName).append(". ").append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.EXPECTED_IDENTIFIERS);
+            for (AnalyzerConstants.MetadataProfileQueryPattern pattern : AnalyzerConstants.MetadataProfileQueryPattern.values()) {
+                errorString.append(" - ").append(pattern.getExpectedIdentifiers());
+            }
+        } else {
+            queryValidator(metricQuery, metricName, errorString, dataSourceInfo, matchedPattern);
+        }
+    }
+
+    public void queryValidator(String metricQuery, String metricName, StringBuilder errorString, DataSourceInfo dataSourceInfo,
+                               AnalyzerConstants.MetadataProfileQueryPattern matchedPattern) {
+        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
+
+        metricQuery = metricQuery.replace(AnalyzerConstants.MetadataProfileConstants.ADDITIONAL_LABEL, "")
+                .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, String.valueOf(AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT));
+
+        try {
+            String identifier= MetadataProfileUtil.getIdentifier(metricName);
+            String filterString = MetadataProfileUtil.getFilterString(identifier);
+            String updatedQuery = MetadataProfileUtil.appendFiltersToQuery(metricQuery, filterString);
+
+            JsonArray resultArray = op.getResultArrayForQuery(dataSourceInfo, updatedQuery);
+
+            if(!checkResultIdentifiers(resultArray, matchedPattern)){
+                String errorMessage = String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_QUERY_NO_RESULT, metricName);
+                errorString.append(errorMessage);
+            }
+        } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+            LOGGER.error(e.getMessage());
+            errorString.append(e.getMessage()).append(String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.QUERY_SYNTAX_ERROR_MESSAGE, metricName));
+        }
     }
 }

@@ -327,6 +327,12 @@ public class AnalyzerErrorConstants {
             public static final String METADATA_PROFILE_NAMES_MISMATCH = "MetadataProfile name in URL: %s, does not match name in request body: %s";
             public static final String MISSING_INPUT_PAYLOAD = "MetadataProfile JSON payload cannot be empty";
             public static final String UPDATE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeLMMetadataProfileEntry not found with metadata profile name: ";
+            public static final String INAVLID_QUERY_NAME = "Invalid query name - ";
+            public static final String SUPPORTED_QUERY_NAME_PREFIXES = "Supported prefixes: namespace, workload, container.";
+            public static final String INVALID_SUM_BY_CLAUSE = "Invalid 'sum by ()' clause for ";
+            public static final String EXPECTED_IDENTIFIERS = "Expected one of the following identifier sets";
+            public static final String INVALID_QUERY_NO_RESULT = "Invalid query, no result returned by the metric query: %s.";
+            public static final String QUERY_SYNTAX_ERROR_MESSAGE = ". Please review the metric query: %s for syntax errors.";
         }
     }
 

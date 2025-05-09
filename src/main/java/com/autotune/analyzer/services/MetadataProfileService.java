@@ -265,16 +265,14 @@ public class MetadataProfileService extends HttpServlet{
                         if (validationOutputData.isSuccess()) {
                             ValidationOutputData updatedFromDB = new ExperimentDBService().updateMetadataProfileFromDB(metadataProfile);
                             if (updatedFromDB.isSuccess()) {
-                                // Store metadata profile in-memory collection
-                                MetadataProfileCollection metadataProfileCollection = MetadataProfileCollection.getInstance();
-                                metadataProfileCollection.removeMetadataProfileFromCollection(metadataProfileName);
+                                // Update metadata profile in-memory collection
+                                MetadataProfileCollection.getInstance().updateMetadataProfileFromCollection(metadataProfileName, metadataProfile);
 
                                 metadataProfilesMap.put(inputMetadataProfileName, metadataProfile);
                                 getServletContext().setAttribute(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_MAP, metadataProfilesMap);
                                 LOGGER.debug(KruizeConstants.MetadataProfileAPIMessages.UPDATE_METADATA_PROFILE_FROM_DB_WITH_VERSION,
                                         metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText(), metadataProfile.getProfile_version());
 
-                                metadataProfileCollection.addMetadataProfile(metadataProfile);
                                 sendSuccessResponse(response, String.format(KruizeConstants.MetadataProfileAPIMessages.UPDATE_METADATA_PROFILE_SUCCESS_MSG, metadataProfile.getMetadata().get("name").asText()));
                             } else {
                                 sendErrorResponseMessage(response, null, HttpServletResponse.SC_BAD_REQUEST, updatedFromDB.getMessage());

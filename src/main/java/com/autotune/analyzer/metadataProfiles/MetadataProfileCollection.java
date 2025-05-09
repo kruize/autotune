@@ -17,7 +17,6 @@ package com.autotune.analyzer.metadataProfiles;
 
 import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.serviceObjects.Converters;
-import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -150,18 +149,19 @@ public class MetadataProfileCollection {
     }
 
     /**
-     * Removes the specified metadataProfile from the collection
-     * @param metadataProfileName Name of the profile to be removed
+     * Updates the specified metadataProfile in the collection
+     * @param metadataProfileName Name of the profile to be updated
      */
-    public void removeMetadataProfileFromCollection(String metadataProfileName) {
+    public void updateMetadataProfileFromCollection(String metadataProfileName, MetadataProfile newMetadataProfile) {
 
-        LOGGER.debug(KruizeConstants.MetadataProfileConstants.REMOVING_METADATA_PROFILE, metadataProfileName);
+        LOGGER.debug(KruizeConstants.MetadataProfileConstants.UPDATING_METADATA_PROFILE, metadataProfileName);
 
         if(!metadataProfileCollection.containsKey(metadataProfileName)) {
             LOGGER.error(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_DOES_NOT_EXIST, metadataProfileName);
         } else {
-            LOGGER.info(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_REMOVED, metadataProfileName);
+            LOGGER.info(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_UPDATED, metadataProfileName);
             metadataProfileCollection.remove(metadataProfileName);
+            addMetadataProfile(newMetadataProfile);
         }
     }
 }
