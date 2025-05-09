@@ -127,7 +127,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
             double cpuRequestIntervalMax;
             double cpuRequestIntervalMin;
             double cpuUsagePod = 0;
-            int numPods = 0;
+            double numPods = 0;
 
             // Use the Max value when available, if not use the Avg
             double cpuUsage = (cpuUsageMax > 0) ? cpuUsageMax : cpuUsageAvg;
@@ -139,11 +139,11 @@ public class CostBasedRecommendationModel implements RecommendationModel {
                 cpuRequestIntervalMax = cpuUsageTotal;
             } else {
                 // Sum/Avg should give us the number of pods
-                if (0 != memUsageAvg) {
-                    numPods = (int) Math.round(memUsageSum / memUsageAvg);
+                if (0 != cpuUsageAvg) {
+                    numPods = cpuUsageSum / cpuUsageAvg;
                 }
-                if (0 == numPods && 0 != cpuUsageAvg) {
-                    numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+                if (0 == numPods && 0 != memUsageAvg) {
+                    numPods = memUsageSum / memUsageAvg;
                 }
                 if (0 < numPods) {
                     cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
@@ -248,13 +248,13 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         double memUsageMin = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
         double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
         double memUsage = 0;
-        int numPods = 0;
+        double numPods = 0;
 
-        if (0 != memUsageAvg) {
-            numPods = (int) Math.round(memUsageSum / memUsageAvg);
+        if (0 != cpuUsageAvg) {
+            numPods = cpuUsageSum / cpuUsageAvg;
         }
-        if (0 == numPods && 0 != cpuUsageAvg) {
-            numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+        if (0 == numPods && 0 != memUsageAvg) {
+            numPods = memUsageSum / memUsageAvg;
         }
         if (0 < numPods) {
             memUsage = (memUsageSum / numPods);
@@ -358,7 +358,7 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
         double cpuRequestInterval = 0.0;
         double cpuUsagePod = 0;
-        int numPods = 0;
+        double numPods = 0;
 
         double cpuUsage = (cpuUsageMax > 0) ? cpuUsageMax : cpuUsageAvg;
         double cpuThrottle = (cpuThrottleMax > 0) ? cpuThrottleMax : cpuThrottleAvg;
@@ -367,11 +367,11 @@ public class CostBasedRecommendationModel implements RecommendationModel {
         if (CPU_ONE_CORE > cpuUsageTotal) {
             cpuRequestInterval = cpuUsageTotal;
         } else {
-            if (0 != memUsageAvg) {
-                numPods = (int) Math.round(memUsageSum / memUsageAvg);
+            if (0 != cpuUsageAvg) {
+                numPods = cpuUsageSum / cpuUsageAvg;
             }
-            if (numPods ==0 & 0 != cpuUsageAvg) {
-                numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+            if (numPods ==0 & 0 != memUsageAvg) {
+                numPods = memUsageSum / memUsageAvg;
             }
             if (0 < numPods) {
                 cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
