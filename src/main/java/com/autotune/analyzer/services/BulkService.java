@@ -18,6 +18,9 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.serviceObjects.BulkInput;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.workerimpl.BulkJobManager;
+import com.autotune.common.bulk.BulkServiceValidation;
+import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.exceptions.bulk.BulkServiceException;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.table.lm.KruizeBulkJobEntry;
@@ -283,6 +286,11 @@ public class BulkService extends HttpServlet {
 
             // Generate a unique jobID
             String jobID = UUID.randomUUID().toString();
+            // validate the input params
+            ValidationOutputData validationOutputData = BulkServiceValidation.validate(payload, jobID);
+            if (!validationOutputData.isSuccess()) {
+                throw new Exception(validationOutputData.getMessage());
+            }
             BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now(), payload);
 
             if (KruizeDeploymentInfo.TEST_USE_ONLY_CACHE_JOB_IN_MEM)
@@ -303,6 +311,13 @@ public class BulkService extends HttpServlet {
             jsonObject.put(JOB_ID, jobID);
             response.getWriter().write(jsonObject.toString());
             statusValue = "success";
+        } catch (Exception e) {
+            sendErrorResponse(
+                    response,
+                    null,
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    e.getMessage()
+            );
         } finally {
             if (null != timerCreateBulkJob) {
                 MetricsConfig.timerCreateBulkJob = MetricsConfig.timerBCreateBulkJob.tag("status", statusValue).register(MetricsConfig.meterRegistry());
