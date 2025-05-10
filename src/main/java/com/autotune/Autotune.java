@@ -16,14 +16,14 @@
 package com.autotune;
 
 import com.autotune.analyzer.Analyzer;
+import com.autotune.analyzer.autoscaler.AutoscalerService;
+import com.autotune.analyzer.autoscaler.settings.AutoscalingSettings;
 import com.autotune.analyzer.exceptions.K8sTypeNotSupportedException;
 import com.autotune.analyzer.exceptions.KruizeErrorHandler;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotFoundException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
-import com.autotune.analyzer.autoscaler.AutoscalerService;
-import com.autotune.analyzer.autoscaler.settings.AutoscalingSettings;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -42,14 +42,16 @@ import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.ServerContext;
 import com.autotune.utils.filter.KruizeCORSFilter;
+import com.autotune.utils.filter.QueueSizeRateLimitFilter;
 import io.prometheus.client.exporter.MetricsServlet;
 import io.prometheus.client.hotspot.DefaultExports;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.core.config.Configurator;
-import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.ServerConnector;
+import org.eclipse.jetty.ee8.servlet.FilterHolder;
 import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 import org.eclipse.jetty.ee8.servlet.ServletHolder;
+import org.eclipse.jetty.server.Server;
+import org.eclipse.jetty.server.ServerConnector;
 import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -68,6 +70,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Scanner;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED;
 import static com.autotune.utils.KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.SET_UP_DEFAULT_METADATA_PROFILE_ERROR;
@@ -90,8 +94,12 @@ public class Autotune {
 
         disableServerLogging();
         // Create a thread pool with the desired number of threads
-        QueuedThreadPool threadPool = new QueuedThreadPool();
-        threadPool.setMaxThreads(KRUIZE_HTTP_THREAD_POOL_COUNT); // Set the maximum number of threads in the pool
+        BlockingQueue<Runnable> kruizeRequestQueue = new ArrayBlockingQueue<>(2);
+
+        QueuedThreadPool threadPool = new QueuedThreadPool(KRUIZE_HTTP_THREAD_POOL_COUNT, KRUIZE_HTTP_THREAD_POOL_COUNT, 1000, kruizeRequestQueue);
+        // threadPool.setMaxThreads(KRUIZE_HTTP_THREAD_POOL_COUNT); // Set the maximum number of threads in the pool
+
+
         Server server = new Server(threadPool);
         // Create a connector (e.g., HTTP)
         ServerConnector connector = new ServerConnector(server);
@@ -100,6 +108,9 @@ public class Autotune {
         server.addConnector(connector);
 
         context = new ServletContextHandler();
+        // 👇 Register the filter using the same queue
+        context.addFilter(new FilterHolder(new QueueSizeRateLimitFilter(kruizeRequestQueue)), KruizeConstants.CORSConstants.PATH_WILDCARD, EnumSet.of(DispatcherType.REQUEST));
+
         context.setContextPath(ServerContext.ROOT_CONTEXT);
         context.setErrorHandler(new KruizeErrorHandler());
         context.addFilter(
