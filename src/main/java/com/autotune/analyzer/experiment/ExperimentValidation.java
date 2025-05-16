@@ -262,6 +262,8 @@ public class ExperimentValidation {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         boolean missingDeploySelector = true;
         boolean missingLocalDatasource = false;
+        boolean missingNamespaceData = false;
+
         String errorMsg = "";
         mandatoryFields.forEach(
                 mField -> {
@@ -363,17 +365,29 @@ public class ExperimentValidation {
                 String depType = "";
                 if (expObj.getExperiment_usecase_type().isRemote_monitoring()) {
                     // In case of RM, kubernetes_obj is mandatory
-                    mandatoryDeploymentSelector = Collections.singletonList(AnalyzerConstants.KUBERNETES_OBJECTS);
-                    // check for valid k8stype
-                    for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
-                        AnalyzerConstants.K8S_OBJECT_TYPES type = Arrays.stream(AnalyzerConstants.K8S_OBJECT_TYPES.values())
-                                .filter(k8sType -> k8sType.equals(getApproriateK8sObjectType(k8sObject.getType())))
-                                .findFirst()
-                                .orElse(null);
-                        if (type == null) {
-                            depType = k8sObject.getType();
-                            invalidType = true;
-                            break;
+                    if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.CONTAINER)) {
+                        mandatoryDeploymentSelector = Collections.singletonList(AnalyzerConstants.KUBERNETES_OBJECTS);
+                        // check for valid k8stype
+                        for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
+                            AnalyzerConstants.K8S_OBJECT_TYPES type = Arrays.stream(AnalyzerConstants.K8S_OBJECT_TYPES.values())
+                                    .filter(k8sType -> k8sType.equals(getApproriateK8sObjectType(k8sObject.getType())))
+                                    .findFirst()
+                                    .orElse(null);
+                            if (type == null) {
+                                depType = k8sObject.getType();
+                                invalidType = true;
+                                break;
+                            }
+                        }
+                    } else if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)){
+                        for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
+                            if(null == k8sObject.getNamespaceData()) {
+                                errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE_DATA, expObj.getExperimentType().toString()));
+                                missingNamespaceData = true;
+                            } else if (null == k8sObject.getNamespaceData().getNamespace_name()) {
+                                errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE_NAME, expObj.getExperimentType().toString()));
+                                missingNamespaceData = true;
+                            }
                         }
                     }
                 } else if (expObj.getExperiment_usecase_type().isLocal_monitoring()) {
@@ -398,7 +412,7 @@ public class ExperimentValidation {
                     errorMsg = errorMsg.concat(String.format("Invalid deployment type: %s", depType));
                 if (missingDeploySelector)
                     errorMsg = errorMsg.concat(String.format("Either parameter should be present: %s", mandatoryDeploymentSelector));
-                if (invalidType || missingDeploySelector || missingLocalDatasource) {
+                if (invalidType || missingDeploySelector || missingLocalDatasource || missingNamespaceData) {
                     validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(errorMsg);
