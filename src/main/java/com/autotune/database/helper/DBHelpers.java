@@ -222,20 +222,20 @@ public class DBHelpers {
                         // Set namespace recommendations
                         if (null == kubernetesAPIObject.getNamespaceAPIObjects())
                             continue;
-                        if (null == kubernetesAPIObject.getNamespaceAPIObjects().getnamespaceRecommendations().getData())
+                        if (null == kubernetesAPIObject.getNamespaceAPIObjects().get(0).getnamespaceRecommendations().getData())
                             continue;
                         if (null == namespaceData.getNamespaceRecommendations()) {
-                            namespaceData.setNamespaceRecommendations(Utils.getClone(kubernetesAPIObject.getNamespaceAPIObjects().getnamespaceRecommendations(), NamespaceRecommendations.class));
+                            namespaceData.setNamespaceRecommendations(Utils.getClone(kubernetesAPIObject.getNamespaceAPIObjects().get(0).getnamespaceRecommendations(), NamespaceRecommendations.class));
                         } else {
                             NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
                             namespaceRecommendations.setVersion(listRecommendationsAPIObject.getApiVersion());
                             if (null == namespaceRecommendations.getData()) {
-                                namespaceData.setNamespaceRecommendations(Utils.getClone(kubernetesAPIObject.getNamespaceAPIObjects().getnamespaceRecommendations(), NamespaceRecommendations.class));
+                                namespaceData.setNamespaceRecommendations(Utils.getClone(kubernetesAPIObject.getNamespaceAPIObjects().get(0).getnamespaceRecommendations(), NamespaceRecommendations.class));
                             } else {
                                 namespaceRecommendations.getNotificationMap().clear();
-                                namespaceRecommendations.getNotificationMap().putAll(kubernetesAPIObject.getNamespaceAPIObjects().getnamespaceRecommendations().getNotificationMap());
+                                namespaceRecommendations.getNotificationMap().putAll(kubernetesAPIObject.getNamespaceAPIObjects().get(0).getnamespaceRecommendations().getNotificationMap());
                                 HashMap<Timestamp, MappedRecommendationForTimestamp> data = namespaceRecommendations.getData();
-                                data.putAll(kubernetesAPIObject.getNamespaceAPIObjects().getnamespaceRecommendations().getData());
+                                data.putAll(kubernetesAPIObject.getNamespaceAPIObjects().get(0).getnamespaceRecommendations().getData());
                             }
                         }
                     } else {
@@ -537,7 +537,7 @@ public class DBHelpers {
                     // todo : what happens if two k8 objects or Containers with different timestamp
                     for (KubernetesAPIObject k8sObject : listRecommendationsAPIObject.getKubernetesObjects()) {
                         if (listRecommendationsAPIObject.isNamespaceExperiment()) {
-                            endInterval = k8sObject.getNamespaceAPIObjects().getnamespaceRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
+                            endInterval = k8sObject.getNamespaceAPIObjects().get(0).getnamespaceRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
                         } else {
                             for (ContainerAPIObject containerAPIObject : k8sObject.getContainerAPIObjects()) {
                                 endInterval = containerAPIObject.getContainerRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
@@ -604,7 +604,7 @@ public class DBHelpers {
                     // todo : what happens if two k8 objects or Containers with different timestamp
                     for (KubernetesAPIObject k8sObject : listRecommendationsAPIObject.getKubernetesObjects()) {
                         if (listRecommendationsAPIObject.isNamespaceExperiment()) {
-                            endInterval = k8sObject.getNamespaceAPIObjects().getnamespaceRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
+                            endInterval = k8sObject.getNamespaceAPIObjects().get(0).getnamespaceRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
                         } else {
                             for (ContainerAPIObject containerAPIObject : k8sObject.getContainerAPIObjects()) {
                                 endInterval = containerAPIObject.getContainerRecommendations().getData().keySet().stream().max(Timestamp::compareTo).get();
@@ -685,7 +685,7 @@ public class DBHelpers {
                             namespaceAPIObject = new NamespaceAPIObject(clonedNamespaceData.getNamespace_name(),
                                     clonedNamespaceData.getNamespaceRecommendations(),
                                     null);
-                            kubernetesAPIObject.setNamespaceAPIObject(namespaceAPIObject);
+                            kubernetesAPIObject.setNamespaceAPIObject((List<NamespaceAPIObject>) namespaceAPIObject);
                         }
                     }
 
