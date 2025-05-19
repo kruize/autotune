@@ -161,6 +161,8 @@ public class ExperimentInitiator {
                 Set<ConstraintViolation<UpdateResultsAPIObject>> violations = new HashSet<>();
                 try {
                     violations = validator.validate(object, UpdateResultsAPIObject.FullValidationSequence.class);
+                    System.out.println("Violation at:      ***********        " + violations);
+//                    System.out.println("Message: " + violation.getMessage());
                     if (violations.isEmpty()) {
                         successUpdateResultsAPIObjects.add(object);
                     } else {
