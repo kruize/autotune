@@ -39,6 +39,7 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_CONFIG_DEFAULT_VALUE.DEL
  * Contains information about the current deployment by parsing the autotune config map
  */
 public class KruizeDeploymentInfo {
+    public static final boolean FOR_ONLY_TEST_DUMMY_VAR_DELAY = "true".equalsIgnoreCase(System.getenv("FOR_ONLY_TEST_DUMMY_VAR_DELAY"));
     private static final Logger LOGGER = LoggerFactory.getLogger(KruizeDeploymentInfo.class);
     public static String database_username;
     public static String database_password;
@@ -76,7 +77,6 @@ public class KruizeDeploymentInfo {
     public static String cloudwatch_logs_region;
     public static String cloudwatch_logs_log_level;
     public static String cloudwatch_logs_log_stream;
-
     public static Boolean settings_save_to_db;
     public static String em_only_mode;
     public static Integer bulk_update_results_limit = 100;
@@ -89,15 +89,12 @@ public class KruizeDeploymentInfo {
     public static int generate_recommendations_date_range_limit_in_days = 15;
     public static Integer delete_partition_threshold_in_days = DELETE_PARTITION_THRESHOLD_IN_DAYS;
     public static String experiment_name_format = "%datasource%|%clustername%|%namespace%|%workloadname%(%workloadtype%)|%containername%";
-    private static Hashtable<String, Class> tunableLayerPair;
-    //private static KubernetesClient kubernetesClient;
-    private static KubeEventLogger kubeEventLogger;
     public static Boolean is_ros_enabled = true;
     public static String datasource_via_env = null;
     public static Boolean is_kafka_enabled = false;
     public static String kafka_bootstrap_servers = System.getenv("KAFKA_BOOTSTRAP_SERVERS");
-    ;
     public static String bulk_input_topic = System.getenv("BULK_INPUT_TOPIC");
+    ;
     public static String kafka_group_id = System.getenv("KAFKA_CONSUMER_GROUP_ID");
     public static String metadata_profile_file_path;
     public static String metric_profile_file_path;
@@ -105,7 +102,13 @@ public class KruizeDeploymentInfo {
     public static String kafka_response_filter_include = System.getenv("KAFKA_RESPONSE_FILTER_INCLUDE");
     public static String kafka_response_filter_exclude = System.getenv("KAFKA_RESPONSE_FILTER_EXCLUDE");
     public static Integer kafka_thread_pool_size = 3;
-
+    public static String pod_name = System.getenv("POD_NAME");
+    public static String pod_namespace = System.getenv("POD_NAMESPACE");
+    public static String dummyExperimentsString = "{\"experiments\":{}}";
+    public static String started = "started";
+    private static Hashtable<String, Class> tunableLayerPair;
+    //private static KubernetesClient kubernetesClient;
+    private static KubeEventLogger kubeEventLogger;
 
     private KruizeDeploymentInfo() {
     }
