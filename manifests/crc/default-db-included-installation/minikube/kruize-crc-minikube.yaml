@@ -229,7 +229,7 @@ data:
         "c3p0timeout": 300,
         "c3p0maxstatements": 50,
         "hbm2ddlauto": "none",
-        "showsql": "false",
+        "showsql": "true",
         "timezone": "UTC"
       },
       "logging" : {
@@ -261,7 +261,7 @@ metadata:
     app: kruize
   namespace: monitoring
 spec:
-  replicas: 1
+  replicas: 5
   selector:
     matchLabels:
       name: kruize
@@ -285,7 +285,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.5
+          image: quay.io/vinakuma/autotune_operator:flags
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -317,6 +317,8 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: metadata.namespace
+            - name: FOR_ONLY_TEST_DUMMY_VAR_DELAY
+              value: "false"
           ports:
             - name: kruize-port
               containerPort: 8080
