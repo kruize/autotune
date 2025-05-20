@@ -374,6 +374,14 @@ spec:
               value: "experiments|status|apis|recommendations|response|status_history"
             - name: KAFKA_RESPONSE_FILTER_EXCLUDE
               value: ""
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
           resources:
             requests:
               memory: "768Mi"
