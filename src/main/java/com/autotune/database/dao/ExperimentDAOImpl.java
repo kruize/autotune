@@ -30,6 +30,8 @@ import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.Timer;
 import jakarta.persistence.NoResultException;
 import jakarta.persistence.PersistenceException;
@@ -759,29 +761,32 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      */
 
     @Override
-    public ValidationOutputData updateBulkJobByExperiment(String jobId, String experimentName, String notification, String recommendationJson) throws Exception {
+    public ValidationOutputData updateBulkJobByExperiment(String jobId, int totalCount, int processedCount, String experimentDetails) throws Exception {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         String statusValue = "failure";
+        ObjectMapper mapper = new ObjectMapper();
+        JsonNode rootNode = mapper.readTree(experimentDetails);
+        JsonNode experimentsNode = rootNode.get("experiments");
         Timer.Sample timerGetBulkJobDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            // Construct JSON paths for notification and recommendations fields
-            String notificationPath = "{experiments,\"" + experimentName + "\",notification}";
-            String recommendationPath = "{experiments,\"" + experimentName + "\",recommendations}";
+            tx = session.beginTransaction();
 
             // Native SQL query using jsonb_set for partial updates
             String sql = UPDATE_BULKJOB_BY_ID;
 
             // Execute the query
             session.createNativeQuery(sql)
-                    .setParameter("notificationPath", notificationPath)
-                    .setParameter("newNotification", notification == null ? "null" : "\"" + notification + "\"") // Handle null value
-                    .setParameter("recommendationPath", recommendationPath)
-                    .setParameter("newRecommendation", recommendationJson)
+                    .setParameter("newFragment", experimentsNode.toString())
                     .setParameter("jobId", jobId)
+                    .setParameter("processed_count", processedCount)
+                    .setParameter("total_count", totalCount)
                     .executeUpdate();
             validationOutputData.setSuccess(true);
             statusValue = "success";
+            tx.commit();
         } catch (Exception e) {
+            if (tx != null) tx.rollback();
             LOGGER.error(BULK_JOB_LOAD_ERROR, jobId, e.getMessage());
             validationOutputData.setMessage(e.getMessage());
             throw new Exception(e.getMessage());

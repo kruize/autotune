@@ -60,6 +60,7 @@ public class KruizeHibernateUtil {
             configuration.addAnnotatedClass(KruizeResultsEntry.class);
             configuration.addAnnotatedClass(KruizeRecommendationEntry.class);
             configuration.addAnnotatedClass(KruizePerformanceProfileEntry.class);
+            configuration.addAnnotatedClass(KruizePodStatus.class);
             if (KruizeDeploymentInfo.local) {
                 configuration.addAnnotatedClass(KruizeLMExperimentEntry.class);
                 configuration.addAnnotatedClass(KruizeLMRecommendationEntry.class);

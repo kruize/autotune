@@ -873,6 +873,11 @@ public class KruizeConstants {
         public static final String JOB_FILTER = "jobFilter";
         public static final String BULK_JOB_SAVE_ERROR = "Not able to save experiment due to {}";
         public static final String BULK_JOB_LOAD_ERROR = "Not able to load bulk JOB {} due to {}";
+        public static final String pod_name = System.getenv("POD_NAME");
+        public static final String pod_namespace = System.getenv("POD_NAMESPACE");
+        public static final String dummyExperimentsString = "{\"experiments\":{}}";
+        public static final String started = "started";
+        public static final boolean FOR_ONLY_TEST_DUMMY_VAR_DELAY = "true".equalsIgnoreCase(System.getenv("FOR_ONLY_TEST_DUMMY_VAR_DELAY"));
 
 
         // TODO : Bulk API Create Experiments defaults

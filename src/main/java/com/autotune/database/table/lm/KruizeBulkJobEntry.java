@@ -64,14 +64,19 @@ public class KruizeBulkJobEntry {
     private JsonNode metadata; // JSONB field for experiments data
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode payload; // JSONB field for experiments data
+    @Column(
+            name = "pod_name"
+    )
+    private String podName;
 
-    public KruizeBulkJobEntry(String jobId, String status, int totalExperiments, int processedExperiments, Timestamp jobStartTime, Timestamp jobEndTime, String webhook, String notifications, String experiments, String metadata, String payload) {
+    public KruizeBulkJobEntry(String jobId, String status, int totalExperiments, int processedExperiments, Timestamp jobStartTime, Timestamp jobEndTime, String webhook, String notifications, String experiments, String metadata, String payload, String podName) {
         this.jobId = jobId;
         this.status = status;
         this.totalExperiments = totalExperiments;
         this.processedExperiments = processedExperiments;
         this.jobStartTime = jobStartTime;
         this.jobEndTime = jobEndTime;
+        this.podName = podName;
         try {
             this.webhook = new ObjectMapper().readTree(webhook);
             this.notifications = new ObjectMapper().readTree(notifications);
@@ -176,6 +181,14 @@ public class KruizeBulkJobEntry {
 
     public void setPayload(JsonNode payload) {
         this.payload = payload;
+    }
+
+    public String getPodName() {
+        return podName;
+    }
+
+    public void setPodName(String podName) {
+        this.podName = podName;
     }
 
     @Override
