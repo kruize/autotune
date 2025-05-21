@@ -753,9 +753,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * <p>Performance metrics are recorded, and any errors encountered during execution are logged.</p>
      *
      * @param jobId
-     * @param experimentName
-     * @param notification
-     * @param recommendationJson
      * @return
      * @throws Exception
      */
