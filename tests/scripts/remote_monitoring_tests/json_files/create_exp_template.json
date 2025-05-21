@@ -1,28 +1,28 @@
 [{
-  	"version": "{{version}}",
-        "experiment_name": "{{experiment_name}}",
-        "cluster_name": "{{cluster_name}}",
-        "performance_profile": "{{performance_profile}}",
-        "mode": "{{mode}}",
-        "target_cluster": "{{target_cluster}}",
-  	"kubernetes_objects": [
-    	 {
+	"version": "{{version}}",
+	"experiment_name": "{{experiment_name}}",
+	"cluster_name": "{{cluster_name}}",
+	"performance_profile": "{{performance_profile}}",
+	"mode": "{{mode}}",
+	"target_cluster": "{{target_cluster}}",
+	"experiment_type": "{{experiment_type}}",
+	"kubernetes_objects": [{
 		"type": "{{kubernetes_obj_type}}",
-        	"name": "{{name}}",
-	        "namespace": "{{namespace}}",
-        	"containers": [
-            	  {
-                	"container_image_name": "{{container_image_name}}",
-	                "container_name": "{{container_name}}"
-                  }
-		]
-	 }
-	],
-        "trial_settings": {
-            "measurement_duration": "{{measurement_duration}}"
-        },
-        "recommendation_settings": {
-            "threshold": "{{threshold}}"
-        }
+		"name": "{{name}}",
+		"namespace": "{{namespace}}",
+		"namespaces": {
+			"namespace_name": "{{namespace_name}}"
+		},
+		"containers": [{
+			"container_image_name": "{{container_image_name}}",
+			"container_name": "{{container_name}}"
+		}]
+	}],
+	"trial_settings": {
+		"measurement_duration": "{{measurement_duration}}"
+	},
+	"recommendation_settings": {
+		"threshold": "{{threshold}}"
+	}
 }]
 

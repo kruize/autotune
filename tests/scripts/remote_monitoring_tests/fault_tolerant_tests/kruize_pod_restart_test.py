@@ -68,7 +68,8 @@ def main(argv):
         namespace = "openshift-tuning"
 
     # Create the performance profile
-    perf_profile_json_file = "../json_files/resource_optimization_openshift.json"
+    perf_profile_dir = get_metric_profile_dir()
+    perf_profile_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
     create_performance_profile(perf_profile_json_file)
 
     # Generate pay load 
