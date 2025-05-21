@@ -22,8 +22,10 @@ import com.autotune.analyzer.kruizeObject.RecommendationSettings;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
 import com.autotune.analyzer.serviceObjects.*;
+import com.autotune.analyzer.services.BulkService;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
@@ -172,33 +174,49 @@ public class BulkJobManager implements Runnable {
                     setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), notification, datasource);
                 }
 
-                String metadataProfileName = handleMetadataProfile(datasource);
-
-                int measurementDuration = handleMeasurementDuration(datasource);
-
+                String metadataProfileName = this.handleMetadataProfile(datasource);
+                int measurementDuration = this.handleMeasurementDuration(datasource);
                 if (null != datasource) {
-                    JSONObject daterange = processDateRange(this.bulkInput.getTime_range());
-                    if (null != daterange) {
-                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, (Long) daterange.get(START_TIME),
-                                (Long) daterange.get(END_TIME), (Integer) daterange.get(STEPS), measurementDuration, includeResourcesMap, excludeResourcesMap);
-                    } else {
-                        metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, 0, 0,
-                                0, measurementDuration, includeResourcesMap, excludeResourcesMap);
+                    JSONObject daterange = this.processDateRange(this.bulkInput.getTime_range());
+                    metadataInfo = this.jobData.getMetadata();
+                    if (metadataInfo == null) {
+                        if (null != daterange) {
+                            metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, (Long) daterange.get("start_time"), (Long) daterange.get("end_time"), (Integer) daterange.get("steps"), measurementDuration, includeResourcesMap, excludeResourcesMap);
+                        } else {
+                            metadataInfo = dataSourceManager.importMetadataFromDataSource(metadataProfileName, datasource, labelString, 0L, 0L, 0, measurementDuration, includeResourcesMap, excludeResourcesMap);
+                        }
+
+                        if (null == metadataInfo) {
+                            this.setFinalJobStatus("COMPLETED", String.valueOf(200), NotificationConstants.NOTHING_INFO, datasource);
+                        } else {
+                            this.jobData.setMetadata(metadataInfo);
+                            try {
+                                new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB(dummyExperimentsString));
+                            } catch (Exception e) {
+                                LOGGER.error("Not able to save jb details into DB {} due to {}", jobData, e.getMessage());
+                            }
+                        }
                     }
                     if (null == metadataInfo) {
                         setFinalJobStatus(COMPLETED, String.valueOf(HttpURLConnection.HTTP_OK), NOTHING_INFO, datasource);
                     } else {
-                        jobData.setMetadata(metadataInfo);
                         Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap = getExperimentMap(labelString, jobData, metadataInfo, datasource); //Todo Store this map in buffer and use it if BulkAPI pods restarts and support experiment_type
                         //  TODO: Remove getExperimentMap and instead collect all metadata, process it, and create experiments dynamically during metadata iteration.
                         jobData.getSummary().setTotal_experiments(createExperimentAPIObjectMap.size());
-                        jobData.getSummary().setProcessed_experiments(0);
+                        if (this.jobData.getExperiments() != null && !this.jobData.getExperiments().isEmpty()) {
+                            Set<String> processedKeys = jobData.getExperimentMap().entrySet().stream()
+                                    .filter(entry -> entry.getValue().getStatus() == KruizeConstants.KRUIZE_BULK_API.NotificationConstants.Status.PROCESSED)
+                                    .map(Map.Entry::getKey)
+                                    .collect(Collectors.toSet());
+                            this.jobData.getSummary().setProcessed_experiments(processedKeys.size());
+                            // Remove processed entries from createExperimentAPIObjectMap
+                            createExperimentAPIObjectMap.keySet().removeIf(processedKeys::contains);
+                        } else {
+                            this.jobData.getSummary().setProcessed_experiments(0);
+                        }
                         if (jobData.getSummary().getTotal_experiments() > KruizeDeploymentInfo.bulk_api_limit) {
                             setFinalJobStatus(FAILED, String.valueOf(HttpURLConnection.HTTP_BAD_REQUEST), LIMIT_INFO, datasource);
                         } else {
-                            if (!KruizeDeploymentInfo.TEST_USE_ONLY_CACHE_JOB_IN_MEM) {                       // Todo Try to avoid this check in multiple places
-                                new ExperimentDAOImpl().bulkJobSave(jobData.getBulkJobForDB("{}"));
-                            }
                             try {
                                 processExperiments(datasource, createExperimentAPIObjectMap);
                             } finally {
@@ -310,9 +328,21 @@ public class BulkJobManager implements Runnable {
 
 
     private void processExperiments(DataSourceInfo datasource, Map<String, CreateExperimentAPIObject> createExperimentAPIObjectMap) {
+        int count = 0;
         for (CreateExperimentAPIObject apiObject : createExperimentAPIObjectMap.values()) {
             DataSourceInfo finalDatasource = datasource;
             createExecutor.submit(() -> handleExperimentCreation(apiObject, finalDatasource));
+            if (FOR_ONLY_TEST_DUMMY_VAR_DELAY) {
+                ++count;
+                if (count == 3) {
+                    try {
+                        Thread.sleep(60000L);
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        System.err.println("Sleep was interrupted: " + e.getMessage());
+                    }
+                }
+            }
         }
     }
 
@@ -404,6 +434,21 @@ public class BulkJobManager implements Runnable {
                 if (kruizeKafkaManager != null) {
                     kruizeKafkaManager.publishKafkaMessage(KruizeConstants.KAFKA_CONSTANTS.SUMMARY_TOPIC, jobData,
                             experiment.getName(), experiment, kafkaIncludeFilter, kafkaExcludeFilter);
+                }
+            } else {
+                Set<String> includeFields = new HashSet(Arrays.asList(KruizeDeploymentInfo.job_filter_to_db));
+
+                try {
+                    String experimentJSONString = BulkService.filterJson(this.jobData, includeFields, Collections.emptySet(), experiment.getName());
+                    ValidationOutputData validationOutputData = (new ExperimentDAOImpl()).updateBulkJobByExperiment(this.jobData.getSummary().getJobID(),
+                            this.jobData.getSummary().getTotal_experiments(),
+                            this.jobData.getSummary().getProcessed_experiments().intValue(),
+                            experimentJSONString);
+                    if (!validationOutputData.isSuccess()) {
+                        LOGGER.error("Partial update failed due to {}", validationOutputData.getMessage());
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Partial update failed due to {}", e.getMessage());
                 }
             }
         }
