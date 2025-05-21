@@ -55,7 +55,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             String kubeObjTypeInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getType();
             String kubeObjTypeInResultData = resultData.getKubernetes_objects().get(0).getType();
 
-            if (!kubeObjTypeInKruizeObject.equals(kubeObjTypeInResultData)) {
+            if (kubeObjTypeInKruizeObject != null && !kubeObjTypeInKruizeObject.equals(kubeObjTypeInResultData)) {
                 kubeObjsMisMatch = true;
                 errorMsg = errorMsg.concat(
                         String.format(
@@ -70,7 +70,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             String kubeObjNameInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getName();
             String kubeObjNameInResultsData = resultData.getKubernetes_objects().get(0).getName();
 
-            if (!kubeObjNameInKruizeObject.equals(kubeObjNameInResultsData)) {
+            if (kubeObjNameInKruizeObject != null && !kubeObjNameInKruizeObject.equals(kubeObjNameInResultsData)) {
                 kubeObjsMisMatch = true;
                 errorMsg = errorMsg.concat(
                         String.format(
@@ -85,7 +85,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             String kubeObjNameSpaceInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getNamespace();
             String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
 
-            if (!kubeObjNameSpaceInKruizeObject.equals(kubeObjNameSpaceInResultsData)) {
+            if (kubeObjNameSpaceInKruizeObject != null && !kubeObjNameSpaceInKruizeObject.equals(kubeObjNameSpaceInResultsData)) {
                 kubeObjsMisMatch = true;
                 errorMsg = errorMsg.concat(
                         String.format(

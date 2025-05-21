@@ -31,7 +31,7 @@ public class KubernetesAPIObject {
     @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
     private List<ContainerAPIObject> containerAPIObjects;
     @SerializedName(KruizeConstants.JSONKeys.NAMESPACES)
-    private List<NamespaceAPIObject> namespaceAPIObject;
+    private NamespaceAPIObject namespaceAPIObject;
 
     public KubernetesAPIObject(String name, String type, String namespace) {
         this.name = name;
@@ -79,11 +79,11 @@ public class KubernetesAPIObject {
     }
 
     @JsonProperty(KruizeConstants.JSONKeys.NAMESPACES)
-    public List<NamespaceAPIObject> getNamespaceAPIObjects() {
+    public NamespaceAPIObject getNamespaceAPIObject() {
         return namespaceAPIObject;
     }
 
-    public void setNamespaceAPIObject(List<NamespaceAPIObject> namespaceAPIObject) {
+    public void setNamespaceAPIObject(NamespaceAPIObject namespaceAPIObject) {
         this.namespaceAPIObject = namespaceAPIObject;
     }
 
