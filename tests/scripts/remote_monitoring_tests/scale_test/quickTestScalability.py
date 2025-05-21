@@ -89,7 +89,9 @@ print("Number of results to create : %s" %(rescount))
 print("measurement mins : %s" %(measurement_mins))
 print("move minutes forward : %s" %(move_mins))
 
-perf_profile_json = "../json_files/resource_optimization_openshift.json"
+perf_profile_dir = get_metric_profile_dir()
+perf_profile_json = perf_profile_dir / 'resource_optimization_openshift.json'
+
 with open(perf_profile_json, "r") as f:
     profile_data = json.load(f)
 
