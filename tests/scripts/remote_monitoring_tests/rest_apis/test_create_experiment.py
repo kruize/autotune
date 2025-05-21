@@ -50,10 +50,10 @@ csvfile = "/tmp/create_exp_test_data.csv"
 
 @pytest.mark.negative
 @pytest.mark.parametrize(
-    "test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace, container_image_name, container_name, measurement_duration, threshold",
+    "test_name, expected_status_code, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, experiment_type, kubernetes_obj_type, name, namespace, container_image_name, container_name, measurement_duration, threshold",
     generate_test_data(csvfile, create_exp_test_data, "create_exp"))
 def test_create_exp_invalid_tests(test_name, expected_status_code, version, experiment_name, cluster_name,
-                                  performance_profile, mode, target_cluster, kubernetes_obj_type, name, namespace,
+                                  performance_profile, mode, target_cluster, experiment_type, kubernetes_obj_type, name, namespace,
                                   container_image_name, container_name, measurement_duration, threshold, cluster_type):
     """
     Test Description: This test validates the response status code of createExperiment API against 
@@ -86,6 +86,7 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, version, expe
         performance_profile=performance_profile,
         mode=mode,
         target_cluster=target_cluster,
+        experiment_type=experiment_type,
         kubernetes_obj_type=kubernetes_obj_type,
         name=name,
         namespace=namespace,
@@ -94,8 +95,16 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, version, expe
         measurement_duration=measurement_duration,
         threshold=threshold
     )
+
+    json_content = json.loads(content)
+
+    # remove namespace data for container experiment_type
+    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace_name"] == "":
+        json_content[0]["kubernetes_objects"][0].pop("namespaces")
+
+
     with open(tmp_json_file, mode="w", encoding="utf-8") as message:
-        message.write(content)
+        json.dump(json_content, message, indent=4)
 
     response = delete_experiment(tmp_json_file)
     print("delete exp = ", response.status_code)

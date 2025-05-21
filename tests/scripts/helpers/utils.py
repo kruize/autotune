@@ -192,6 +192,7 @@ create_exp_test_data = {
     "performance_profile": "resource-optimization-openshift",
     "mode": "monitor",
     "target_cluster": "remote",
+    "experiment_type": "container",
     "type": "deployment",
     "name": "tfb-qrh-sample",
     "namespace": "default",
@@ -290,7 +291,8 @@ def generate_test_data(csvfile, test_data, api_name):
 
                 test_name = t + "_" + key
                 status_code = 400
-                if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"):
+                if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"
+                                                 or test_name == "null_experiment_type"):
                     status_code = 201
 
                 if api_name == "import_metadata" and (test_name == "invalid_version" or test_name == "blank_version" or

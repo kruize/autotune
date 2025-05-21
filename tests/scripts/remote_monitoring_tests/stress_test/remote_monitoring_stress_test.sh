@@ -19,7 +19,7 @@
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO="${CURRENT_DIR}/../../../../"
-PERFORMANCE_PROFILE_DIR="${REMOTE_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
+PERFORMANCE_PROFILE_DIR="${KRUIZE_REPO}manifests/autotune/performance-profiles"
 
 
 # Source the common functions scripts
@@ -189,7 +189,7 @@ if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	cmd="curl http://${SERVER_IP_ADDR}/createPerformanceProfile -d @${RESOURCE_OPTIMIZATION_JSON}"
 	echo ""
 	echo "cmd = ${cmd}"
-	curl http://${SERVER_IP_ADDR}/createPerformanceProfile -d @${RESOURCE_OPTIMIZATION_JSON}
+	curl http://${SERVER_IP_ADDR}/createPerformanceProfile -d @"${RESOURCE_OPTIMIZATION_JSON}"
 else
 	echo ""
 	echo "./monitor-metrics-promql.sh ${ITER} ${TIMEOUT} ${METRICS_LOG_DIR} ${BENCHMARK_SERVER} ${APP_NAME} ${CLUSTER_TYPE} ${DEPLOYMENT_NAME} ${CONTAINER_NAME} ${NAMESPACE} &" | tee -a ${LOG}
@@ -199,7 +199,7 @@ else
 	cmd="curl http://${SERVER_IP_ADDR}:${port}/createPerformanceProfile -d @${RESOURCE_OPTIMIZATION_JSON}"
 	echo ""
 	echo "cmd = ${cmd}"
-	curl http://${SERVER_IP_ADDR}:${port}/createPerformanceProfile -d @${RESOURCE_OPTIMIZATION_JSON}
+	curl http://${SERVER_IP_ADDR}:${port}/createPerformanceProfile -d @"${RESOURCE_OPTIMIZATION_JSON}"
 fi
 
 echo | tee -a ${LOG}
