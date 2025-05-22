@@ -37,7 +37,7 @@
           },
           {
             "function": "sum",
-            "query": "avg by(container, namespace)(kube_pod_container_resource_limits{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\", resource=\"cpu\", unit=\"core\"})"
+            "query": "sum by(container, namespace)(kube_pod_container_resource_limits{container!=\"\", container!=\"POD\", pod!=\"\", container=\"$CONTAINER_NAME$\", namespace=\"$NAMESPACE$\", resource=\"cpu\", unit=\"core\"})"
           }
         ]
       },
