@@ -43,7 +43,7 @@ slo:
 
     # Show sum of cpu limits in bytes for a container in a deployment
     - function: sum
-      query: 'avg by(container, namespace)(kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
+      query: 'sum by(container, namespace)(kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
 
 
   # CPU Usage
