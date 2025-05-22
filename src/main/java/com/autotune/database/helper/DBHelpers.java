@@ -863,13 +863,15 @@ public class DBHelpers {
                             k8sObject.getNamespace()
                     );
                     List<ContainerAPIObject> containerAPIObjects = new ArrayList<>();
-                    for (Map.Entry<String, ContainerData> entry : k8sObject.getContainerDataMap().entrySet()) {
-                        containerAPIObjects.add(new ContainerAPIObject(
-                                entry.getKey(),
-                                entry.getValue().getContainer_image_name(),
-                                entry.getValue().getContainerRecommendations(),
-                                new ArrayList<>(entry.getValue().getMetrics().values())
-                        ));
+                    if (k8sObject.getContainerDataMap() != null) {
+                        for (Map.Entry<String, ContainerData> entry : k8sObject.getContainerDataMap().entrySet()) {
+                            containerAPIObjects.add(new ContainerAPIObject(
+                                    entry.getKey(),
+                                    entry.getValue().getContainer_image_name(),
+                                    entry.getValue().getContainerRecommendations(),
+                                    new ArrayList<>(entry.getValue().getMetrics().values())
+                            ));
+                        }
                     }
                     kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
                     kubernetesAPIObjects.add(kubernetesAPIObject);
