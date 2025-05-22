@@ -166,6 +166,88 @@ see [Create Experiment](/design/CreateExperiment.md)
 
 </details>
 
+**Request with `experiment_type` field**
+
+The `experiment_type` field in the JSON is optional and can be used to
+indicate whether the experiment is of type `namespace` or `container`.
+If no experiment type is specified, it will default to `container`.
+
+<details>
+  <summary><b>Example Request with experiment_type - `namespace`</b></summary>
+  The `experiment_type` field in the JSON is optional and can be used to 
+indicate whether the experiment is of type `namespace` or `container`. 
+If no experiment type is specified, it will default to `container`.
+
+### EXAMPLE REQUEST
+```json
+[
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-experiment-demo",
+    "cluster_name": "cluster-one-division-bell",
+    "performance_profile": "resource-optimization-openshift",
+    "mode": "monitor",
+    "target_cluster": "remote",
+    "experiment_type": "namespace",
+    "kubernetes_objects": [
+      {
+          "namespaces": {
+              "namespace_name": "namespace-demo"
+        }
+      }
+    ],
+    "trial_settings": {
+      "measurement_duration": "15min"
+    },
+    "recommendation_settings": {
+      "threshold": "0.1"
+    }
+  }
+]
+```
+</details>
+
+<details>
+  <summary><b>Example Request with experiment_type - `container`</b></summary>
+
+### EXAMPLE REQUEST
+```json
+[
+  {
+    "version": "v2.0",
+    "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
+    "cluster_name": "cluster-one-division-bell",
+    "performance_profile": "resource-optimization-openshift",
+    "mode": "monitor",
+    "target_cluster": "remote",
+    "experiment_type": "container",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-qrh-deployment",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-db:1.15",
+            "container_name": "tfb-server-0"
+          },
+          {
+            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
+            "container_name": "tfb-server-1"
+          }
+        ]
+      }
+    ],
+    "trial_settings": {
+      "measurement_duration": "15min"
+    },
+    "recommendation_settings": {
+      "threshold": "0.1"
+    }
+  }
+]
+```
+</details>
 
 **Response**
 
@@ -597,7 +679,7 @@ The acceptable formats are `Bytes, bytes, KiB, MiB, GiB, TiB, PiB, EiB, Ki, Mi, 
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?experiment_name=<experiment_name>`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&experiment_name=<experiment_name>`
 
 Returns the experiment details of the specified experiment
 <br><br><br>
@@ -605,7 +687,7 @@ Returns the experiment details of the specified experiment
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?results=true`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&results=true`
 
 Returns the latest result of all the experiments
 
@@ -625,6 +707,7 @@ Returns the latest result of all the experiments
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
+    "experiment_type": "container",
     "mode": "monitor",
     "target_cluster": "remote",
     "status": "IN_PROGRESS",
@@ -760,6 +843,7 @@ Returns the latest result of all the experiments
     "experiment_id": "ab0a31a522cebdde52561482300d078ed1448fa7b75834fa216677d1d9d5cda6",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1",
     "cluster_name": "cluster-one-division-bell",
+    "experiment_type": "container",
     "mode": "monitor",
     "target_cluster": "remote",
     "status": "IN_PROGRESS",
@@ -810,7 +894,7 @@ Returns the latest result of all the experiments
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?results=true&experiment_name=<experiment_name>`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&results=true&experiment_name=<experiment_name>`
 
 Returns the latest result of the specified experiment
 <br><br>
@@ -819,7 +903,7 @@ Returns the latest result of the specified experiment
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?results=true&latest=false`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&results=true&latest=false`
 
 Returns all the results of all the experiments
 
@@ -837,6 +921,7 @@ Returns all the results of all the experiments
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
+    "experiment_type": "container",
     "mode": "monitor",
     "target_cluster": "remote",
     "status": "IN_PROGRESS",
@@ -1066,7 +1151,7 @@ Returns all the results of all the experiments
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?results=true&latest=false&experiment_name=<experiment_name>`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&results=true&latest=false&experiment_name=<experiment_name>`
 
 Returns all the results of the specific experiment
 <br><br>
@@ -1074,7 +1159,7 @@ Returns all the results of the specific experiment
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?recommendations=true`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&recommendations=true`
 
 Returns the latest recommendations of all the experiments
 
@@ -1092,6 +1177,7 @@ Returns the latest recommendations of all the experiments
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
+    "experiment_type": "container",
     "mode": "monitor",
     "target_cluster": "remote",
     "status": "IN_PROGRESS",
@@ -1261,6 +1347,7 @@ Returns the latest recommendations of all the experiments
     "experiment_id": "ab0a31a522cebdde52561482300d078ed1448fa7b75834fa216677d1d9d5cda6",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_1",
     "cluster_name": "cluster-one-division-bell",
+    "experiment_type": "container",
     "mode": "monitor",
     "target_cluster": "remote",
     "status": "IN_PROGRESS",
@@ -1332,7 +1419,7 @@ Returns the latest recommendations of all the experiments
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?recommendations=true&experiment_name=<experiment_name>`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&recommendations=true&experiment_name=<experiment_name>`
 
 Returns the latest recommendations of the specified experiment with no results
 <br><br>
@@ -1341,7 +1428,7 @@ Returns the latest recommendations of the specified experiment with no results
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?recommendations=true&latest=false`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&recommendations=true&latest=false`
 
 Returns all the recommendations of all the experiments
 
@@ -1359,6 +1446,7 @@ Returns all the recommendations of all the experiments
     "experiment_id": "f0007796e65c999d843bebd447c2fbaa6aaf9127c614da55e333cd6bdb628a74",
     "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db_0",
     "cluster_name": "cluster-one-division-bell",
+    "experiment_type": "container",
     "mode": "monitor",
     "target_cluster": "remote",
     "status": "IN_PROGRESS",
@@ -1637,7 +1725,7 @@ Returns all the recommendations of all the experiments
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?recommendations=true&latest=false&experiment_name=<experiment_name>`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&recommendations=true&latest=false&experiment_name=<experiment_name>`
 
 Returns all the recommendations of the specified experiment
 <br><br>
@@ -1645,7 +1733,7 @@ Returns all the recommendations of the specified experiment
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?recommendations=true&results=true`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&recommendations=true&results=true`
 
 Returns the latest recommendations and the results of all the experiments.
 <br><br>
@@ -1653,7 +1741,7 @@ Returns the latest recommendations and the results of all the experiments.
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?recommendations=true&results=true&latest=false`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&recommendations=true&results=true&latest=false`
 
 Returns all the recommendations and all the results of all the experiments.
 <br><br>
@@ -1662,7 +1750,7 @@ name parameter**
 
 `GET /listExperiments`
 
-`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?recommendations=true&results=true&latest=false`
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listExperiments?rm=true&recommendations=true&results=true&latest=false`
 
 Returns all the recommendations and all the results of the specified experiment.
 <br><br>
