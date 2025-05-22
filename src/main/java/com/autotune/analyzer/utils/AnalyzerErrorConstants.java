@@ -195,6 +195,7 @@ public class AnalyzerErrorConstants {
             public static final String WHITESPACE_NOT_ALLOWED = "Whitespace can not be entered as a term or model value ";
             public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for %s experimentType";
             public static final String MISSING_NAMESPACE_NAME = "Missing `namespace_name` for %s experimentType";
+            public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
 
             private CreateExperimentAPI() {
 

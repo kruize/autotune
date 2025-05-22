@@ -32,6 +32,8 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,12 +149,12 @@ public class CreateExperiment extends HttpServlet {
                     sendErrorResponse(inputData, response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
                 }
             }
+        } catch (InvalidExperimentType | JsonParseException e) {
+            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught: " + e.getMessage());
             sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
-        } catch (InvalidExperimentType e) {
-            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } finally {
             if (null != timerCreateExp) {
                 MetricsConfig.timerCreateExp = MetricsConfig.timerBCreateExp.tag("status", statusValue).register(MetricsConfig.meterRegistry());
