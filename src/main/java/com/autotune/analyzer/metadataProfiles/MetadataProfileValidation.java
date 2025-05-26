@@ -41,7 +41,7 @@ import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-import static com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil.checkResultIdentifiers;
+import static com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil.validateResultIdentifiers;
 import static com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil.matchSumByClause;
 
 /**
@@ -347,7 +347,7 @@ public class MetadataProfileValidation {
             }
 
             if (!validateMetricQueryName(metricName)) {
-                errorString.append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INAVLID_QUERY_NAME).
+                errorString.append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_METRIC_NAME).
                         append(metricName).append(". ").append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.SUPPORTED_QUERY_NAME_PREFIXES);
             }
 
@@ -388,32 +388,41 @@ public class MetadataProfileValidation {
      * @param dataSourceInfo Datasource object with datasource details to run the queries
      */
     public void validateMetricQueryPattern(String metricQuery, String metricName, StringBuilder errorString, DataSourceInfo dataSourceInfo) {
-        AnalyzerConstants.MetadataProfileQueryPattern matchedPattern = matchSumByClause(metricQuery);
-        if (matchedPattern == null) {
+        AnalyzerConstants.MetadataProfileQueryIdentifier matchedIdentifier = matchSumByClause(metricQuery);
+        if (matchedIdentifier == null) {
             errorString.append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_SUM_BY_CLAUSE).append(metricName).append(". ").append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.EXPECTED_IDENTIFIERS);
-            for (AnalyzerConstants.MetadataProfileQueryPattern pattern : AnalyzerConstants.MetadataProfileQueryPattern.values()) {
+            for (AnalyzerConstants.MetadataProfileQueryIdentifier pattern : AnalyzerConstants.MetadataProfileQueryIdentifier.values()) {
                 errorString.append(" - ").append(pattern.getExpectedIdentifiers());
             }
         } else {
-            queryValidator(metricQuery, metricName, errorString, dataSourceInfo, matchedPattern);
+            queryValidator(metricQuery, metricName, errorString, dataSourceInfo, matchedIdentifier);
         }
     }
 
+    /**
+     * Validates the metric query by executing the query for `kruize` workload, container and verify for any syntax errors or unexpected query output
+     *
+     * @param metricQuery Query output to be validated
+     * @param metricName  Name of the metric to be validated
+     * @param errorString  StringBuilder to collect error messages during validation of multiple fields
+     * @param dataSourceInfo Datasource object with datasource details to run the queries
+     * @param queryIdentifier  Expected query identifier to be present in the query output
+     */
     public void queryValidator(String metricQuery, String metricName, StringBuilder errorString, DataSourceInfo dataSourceInfo,
-                               AnalyzerConstants.MetadataProfileQueryPattern matchedPattern) {
+                               AnalyzerConstants.MetadataProfileQueryIdentifier queryIdentifier) {
         DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
 
         metricQuery = metricQuery.replace(AnalyzerConstants.MetadataProfileConstants.ADDITIONAL_LABEL, "")
                 .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, String.valueOf(AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT));
 
         try {
-            String identifier= MetadataProfileUtil.getIdentifier(metricName);
-            String filterString = MetadataProfileUtil.getFilterString(identifier);
+            String metricIdentifier = MetadataProfileUtil.getMetricIdentifier(metricName);
+            String filterString = MetadataProfileUtil.formatMetricFilterString(metricIdentifier);
             String updatedQuery = MetadataProfileUtil.appendFiltersToQuery(metricQuery, filterString);
 
             JsonArray resultArray = op.getResultArrayForQuery(dataSourceInfo, updatedQuery);
 
-            if(!checkResultIdentifiers(resultArray, matchedPattern)){
+            if(!validateResultIdentifiers(resultArray, queryIdentifier)){
                 String errorMessage = String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_QUERY_NO_RESULT, metricName);
                 errorString.append(errorMessage);
             }

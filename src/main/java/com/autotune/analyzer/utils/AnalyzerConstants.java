@@ -16,7 +16,6 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.utils.KruizeConstants;
-import software.amazon.awssdk.services.cloudwatchlogs.endpoints.internal.Value;
 
 import java.util.Map;
 import java.util.*;
@@ -112,7 +111,7 @@ public class AnalyzerConstants {
     public static final String NAMESPACE_FILTER_IDENTIFIER = ", %s=~\"%s\"";
     public static final String WORKLOAD_FILTER_IDENTIFIER = ", %s=\"%s\"";
     public static final String METADATA_PROFILE_QUERY_MATCHER = "sum by \\((.*?)\\)";
-    public static final String commaSpaceRegex = "\\s*,\\s*";
+    public static final String COMMA_SPACE_REGEX = "\\s*,\\s*";
 
     private AnalyzerConstants() {
     }
@@ -266,7 +265,7 @@ public class AnalyzerConstants {
         APPLICATION // For application-specific experiments
     }
 
-    public enum MetadataProfileQueryPattern {
+    public enum MetadataProfileQueryIdentifier {
         NAMESPACE_QUERY_IDENTIFIER(new LinkedHashSet<>(List.of("namespace"))),
 
         WORKLOAD_QUERY_IDENTIFIER(new LinkedHashSet<>(List.of("namespace", "workload", "workload_type"))),
@@ -275,7 +274,7 @@ public class AnalyzerConstants {
 
         private final Set<String> expectedIdentifiers;
 
-        MetadataProfileQueryPattern(Set<String> expectedIdentifiers) {
+        MetadataProfileQueryIdentifier(Set<String> expectedIdentifiers) {
             this.expectedIdentifiers = expectedIdentifiers;
         }
 
