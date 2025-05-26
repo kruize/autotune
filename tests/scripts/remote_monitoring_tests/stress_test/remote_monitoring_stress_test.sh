@@ -21,7 +21,6 @@ CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO="${CURRENT_DIR}/../../../../"
 PERFORMANCE_PROFILE_DIR="${KRUIZE_REPO}manifests/autotune/performance-profiles"
 
-
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
 
@@ -38,17 +37,18 @@ users=100
 rampup=200
 num_res=30
 loop=1
+exp_type="container"
 
 RESOURCE_OPTIMIZATION_JSON="${PERFORMANCE_PROFILE_DIR}/resource_optimization_openshift.json"
 
 target="crc"
-KRUIZE_IMAGE="kruize/autotune_operator:test"
+KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
 
 jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_tyep[minikube|openshift] [-i Kruize image] [-u users] [-e No. of results] [-d ramp up time in seconds] [-r <resultsdir path> ] [-t TIMEOUT for metrics script]"
+	echo "Usage: -c cluster_type [minikube|openshift] [-i Kruize image] [-u users] [-e No. of results] [-d ramp up time in seconds] [-r <resultsdir path> ] [-t TIMEOUT for metrics script]"
 	exit -1
 }
 
@@ -78,7 +78,7 @@ function jmeter_setup() {
 	export PATH=${JMETER_HOME}/bin:${PATH}
 }
 
-while getopts c:r:i:u:d:t:e: gopts
+while getopts c:r:i:u:d:t:e:b: gopts
 do
 	case ${gopts} in
 	c)
@@ -102,10 +102,18 @@ do
 	t)
 		TIMEOUT="${OPTARG}"		
 		;;
+	b)
+		exp_type="${OPTARG}"
+		;;
 	esac
 done
 
 if [ -z "${CLUSTER_TYPE}" ]; then
+	usage
+fi
+
+if [[ "${exp_type}" != "container" && "${exp_type}" != "namespace" ]]; then
+	echo "-b option values should be container or namespace, if not specified default is container"
 	usage
 fi
 
@@ -220,11 +228,18 @@ if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 	echo ""
 	echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
 	jmx_file="jmx/kruize_remote_monitoring_stress_openshift.jmx"
+	if [ "${exp_type}" == "namespace" ]; then
+		jmx_file="jmx/kruize_ns_remote_monitoring_stress_openshift.jmx"
+	fi
+
 	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=$host -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}" | tee -a ${LOG}
 	exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jport="" -Jhost=${host} -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}
 
 else
 	echo ""
+	if [ "${exp_type}" == "namespace" ]; then
+		jmx_file="jmx/kruize_ns_remote_monitoring_stress.jmx"
+	fi
 	echo "Running jmeter load for kruize ${inst} with the following parameters" | tee -a ${LOG}
 	echo "jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}" | tee -a ${LOG}
 	#exec jmeter -n -t ${jmx_file} -j ${kruize_stats} -l ${kruize_log} -Jhost=${host} -Jport=${port} -Jusers=${users} -Jnum_res=${num_res} -Jlogdir=${JMETER_LOG_DIR} -Jrampup=${rampup} -Jloop=${loop} > ${JMETER_LOG}
