@@ -46,7 +46,6 @@ CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View r
 CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
 CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE = "Can not specify namespace data for container experiment"
 CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER = "Can not specify container data for namespace experiment"
-CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE = "Namespace experiment type is not supported for remote monitoring use case."
 CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE = "Auto or recreate mode is not supported for namespace experiment."
 CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case."
 CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA = "Kubernetes object type is not supported for auto or recreate mode."

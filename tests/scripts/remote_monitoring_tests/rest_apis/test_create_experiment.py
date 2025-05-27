@@ -575,7 +575,7 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
 def test_create_namespace_exp_invalid_tests(test_name, expected_status_code, expected_error_msg, version, experiment_name, cluster_name, performance_profile, mode, target_cluster, experiment_type, kubernetes_obj_type, name, namespace, namespace_name, container_image_name, container_name, measurement_duration, threshold, cluster_type):
     """
     Test Description: This test validates the response status code of createExperiment API
-    for namespace experiment by passing a valid input for the json
+    for namespace experiment by passing an invalid experiment type field.
     """
     # Generate a temporary JSON filename
     tmp_json_file = "/tmp/create_exp_" + test_name + ".json"
@@ -656,7 +656,7 @@ def test_create_namespace_exp_invalid_tests(test_name, expected_status_code, exp
 def test_create_multiple_namespace_exp(cluster_type):
     """
     Test Description: This test validates the response status code of createExperiment API
-    if multiple entries are presnet in create experiment json
+    if multiple entries are present in create experiment json
     """
     input_json_file = "../json_files/create_multiple_namespace_exp.json"
     form_kruize_url(cluster_type)
