@@ -292,6 +292,7 @@ see [Update results](/design/UpdateResults.md)
 <summary><b>Example Request</b></summary>
 
 ### Example Request
+For container experiment :
 
 ```json
 [
@@ -527,6 +528,129 @@ see [Update results](/design/UpdateResults.md)
 ]
 ```
 
+</details>
+
+<details>
+For namespace experiment:
+
+```json
+[
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:40:43.602Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": 
+          {
+            "namespace_name": "default",
+            "metrics": [
+              {
+                "name": "namespaceCpuRequest",
+                "results": {
+                  "aggregation_info": {
+                    "sum": 6,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "namespaceCpuLimit",
+                "results": {
+                  "aggregation_info": {
+                    "sum": 4.5,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "namespaceCpuUsage",
+                "results": {
+                  "aggregation_info": {
+                    "min": 0.14,
+                    "max": 0.84,
+                    "avg": 0.42,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "namespaceCpuThrottle",
+                "results": {
+                  "aggregation_info": {
+                    "min": 0.01,
+                    "max": 0.09,
+                    "avg": 0.037,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "namespaceMemoryRequest",
+                "results": {
+                  "aggregation_info": {
+                    "sum": 400,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "namespaceMemoryLimit",
+                "results": {
+                  "aggregation_info": {
+                    "sum": 600,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "namespaceMemoryUsage",
+                "results": {
+                  "aggregation_info": {
+                    "min": 60,
+                    "max": 180,
+                    "avg": 125,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "namespaceMemoryRSS",
+                "results": {
+                  "aggregation_info": {
+                    "min": 55,
+                    "max": 160,
+                    "avg": 120,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "namespaceTotalPods",
+                "results": {
+                  "aggregation_info": {
+                    "sum": 25
+                  }
+                }
+              },
+              {
+                "name": "namespaceRunningPods",
+                "results": {
+                  "aggregation_info": {
+                    "sum": 22
+                  }
+                }
+              }
+            ]
+          }
+      }
+    ]
+  }
+]
+
+
+```
 </details>
 
 **Response**
