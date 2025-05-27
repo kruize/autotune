@@ -212,7 +212,7 @@ see [Update results](/design/UpdateResults.md)
 `curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/updateResults`
 
 <details>
-<summary><b>Example Request</b></summary>
+<summary><b>Example Request Container Experiment</b></summary>
 
 ### Example Request
 For container experiment :
@@ -454,6 +454,8 @@ For container experiment :
 </details>
 
 <details>
+<summary><b>Example Request Namespace Experiment</b></summary>
+
 For namespace experiment:
 
 ```json
