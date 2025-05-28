@@ -193,6 +193,10 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_MODEL_NAME = " model name is not supported. Use cost or performance.";
             public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
             public static final String WHITESPACE_NOT_ALLOWED = "Whitespace can not be entered as a term or model value ";
+            public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
+            public static final String MISSING_NAMESPACE_NAME = "Missing namespace_name for experimentType: %s";
+            public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
+
             private CreateExperimentAPI() {
 
             }
@@ -225,7 +229,8 @@ public class AnalyzerErrorConstants {
             public static final String THRESHOLD_NOT_SET = "Threshold is not set, setting Default CPU Threshold : %s and Memory Threshold : %s";
             public static final String BOX_PLOTS_FAILURE = "Box plots Failed due to : %s";
             public static final String LOAD_EXPERIMENT_FAILURE = "Failed to load experiment from DB: %s";
-            public static final String GENERATE_RECOMMENDATION_FAILURE = "Not able to generate recommendation for expName : %s due to %s";
+            public static final String GENERATE_RECOMMENDATION_FAILURE = "Not able to generate recommendation for expName : {} due to {}";
+            public static final String RESULTS_SAVE_FAILURE = "Failed to add results to local storage due to: {}";
 
 
             private UpdateRecommendationsAPI() {

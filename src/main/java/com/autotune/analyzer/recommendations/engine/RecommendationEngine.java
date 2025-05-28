@@ -465,7 +465,7 @@ public class RecommendationEngine {
             // verify if the experiment type is namespace or container
             if (kruizeObject.isNamespaceExperiment()) {
                 String namespaceName = k8sObject.getNamespace();
-                NamespaceData namespaceData = k8sObject.getNamespaceData();
+                NamespaceData namespaceData = k8sObject.getNamespaceDataMap().get(namespaceName);
                 LOGGER.info("Generating recommendations for namespace: {}", namespaceName);
                 generateRecommendationsBasedOnNamespace(namespaceData, kruizeObject);
             } else if (kruizeObject.isContainerExperiment()) {
@@ -887,49 +887,53 @@ public class RecommendationEngine {
     }
 
     private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
-        Timestamp monitoringEndTime = namespaceData.getResults().keySet().stream().max(Timestamp::compareTo).get();
-        NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
-        if (null == namespaceRecommendations) {
-            namespaceRecommendations = new NamespaceRecommendations();
+        try {
+            Timestamp monitoringEndTime = namespaceData.getResults().keySet().stream().max(Timestamp::compareTo).get();
+            NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
+            if (null == namespaceRecommendations) {
+                namespaceRecommendations = new NamespaceRecommendations();
+            }
+
+            HashMap<Integer, RecommendationNotification> recommendationLevelNM = namespaceRecommendations.getNotificationMap();
+            if (null == recommendationLevelNM) {
+                recommendationLevelNM = new HashMap<>();
+            }
+
+            HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap = namespaceRecommendations.getData();
+            if (null == timestampBasedRecommendationMap) {
+                timestampBasedRecommendationMap = new HashMap<>();
+            }
+
+            MappedRecommendationForTimestamp timestampRecommendation;
+            if (timestampBasedRecommendationMap.containsKey(monitoringEndTime)) {
+                timestampRecommendation = timestampBasedRecommendationMap.get(monitoringEndTime);
+            } else {
+                timestampRecommendation = new MappedRecommendationForTimestamp();
+            }
+
+            timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
+
+            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = getCurrentNamespaceConfigData(namespaceData, monitoringEndTime, timestampRecommendation);
+            timestampRecommendation.setCurrentConfig(currentConfig);
+
+            boolean namespaceRecommendationAvailable = generateNamespaceRecommendationsBasedOnTerms(namespaceData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
+
+            RecommendationNotification recommendationsLevelNotifications;
+            if (namespaceRecommendationAvailable) {
+                timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);
+                recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
+            } else {
+                recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                timestampBasedRecommendationMap = new HashMap<>();
+            }
+
+            recommendationLevelNM.put(recommendationsLevelNotifications.getCode(), recommendationsLevelNotifications);
+            namespaceRecommendations.setNotificationMap(recommendationLevelNM);
+            namespaceRecommendations.setData(timestampBasedRecommendationMap);
+            namespaceData.setNamespaceRecommendations(namespaceRecommendations);
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.GENERATE_RECOMMENDATION_FAILURE, kruizeObject.getExperimentName(), e.getMessage());
         }
-
-        HashMap<Integer, RecommendationNotification> recommendationLevelNM = namespaceRecommendations.getNotificationMap();
-        if (null == recommendationLevelNM) {
-            recommendationLevelNM = new HashMap<>();
-        }
-
-        HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap = namespaceRecommendations.getData();
-        if (null == timestampBasedRecommendationMap) {
-            timestampBasedRecommendationMap = new HashMap<>();
-        }
-
-        MappedRecommendationForTimestamp timestampRecommendation;
-        if (timestampBasedRecommendationMap.containsKey(monitoringEndTime)) {
-            timestampRecommendation = timestampBasedRecommendationMap.get(monitoringEndTime);
-        } else {
-            timestampRecommendation = new MappedRecommendationForTimestamp();
-        }
-
-        timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
-
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = getCurrentNamespaceConfigData(namespaceData, monitoringEndTime, timestampRecommendation);
-        timestampRecommendation.setCurrentConfig(currentConfig);
-
-        boolean namespaceRecommendationAvailable = generateNamespaceRecommendationsBasedOnTerms(namespaceData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
-
-        RecommendationNotification recommendationsLevelNotifications;
-        if (namespaceRecommendationAvailable) {
-            timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);
-            recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
-        } else {
-            recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-            timestampBasedRecommendationMap = new HashMap<>();
-        }
-
-        recommendationLevelNM.put(recommendationsLevelNotifications.getCode(), recommendationsLevelNotifications);
-        namespaceRecommendations.setNotificationMap(recommendationLevelNM);
-        namespaceRecommendations.setData(timestampBasedRecommendationMap);
-        namespaceData.setNamespaceRecommendations(namespaceRecommendations);
     }
 
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentNamespaceConfigData(NamespaceData namespaceData,
@@ -1994,7 +1998,7 @@ public class RecommendationEngine {
             for (K8sObject k8sObject : kubernetes_objects) {
                 String namespace = k8sObject.getNamespace();
                 // fetch namespace related metrics if containerDataMap is empty
-                NamespaceData namespaceData = k8sObject.getNamespaceData();
+                NamespaceData namespaceData = k8sObject.getNamespaceDataMap().get(namespace);
                 // determine the max date query for namespace
                 String namespaceMaxDateQuery = maxDateQuery.replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace);
 
@@ -2043,7 +2047,8 @@ public class RecommendationEngine {
                 if (null == namespaceData) {
                     namespaceData = new NamespaceData();
                     namespaceData.setNamespace_name(namespace);
-                    k8sObject.setNamespaceData(namespaceData);
+                    k8sObject.getNamespaceDataMap().put(namespace, namespaceData);
+
                 }
 
                 List<Metric> namespaceMetricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
