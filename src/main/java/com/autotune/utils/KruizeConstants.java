@@ -294,6 +294,9 @@ public class KruizeConstants {
         // Config changes JSON Keys
         public static final String MODEL_SETTINGS = "model_settings";
         public static final String TERM_SETTINGS = "term_settings";
+        public static final String NODE = "node";
+        public static final String ACCELERATOR_MODEL_NAME = "accelerator_model_name";
+        public static final String ACCELERATOR_PROFILE_NAME = "accelerator_profile_name";
 
         private JSONKeys() {
         }

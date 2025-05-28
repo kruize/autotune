@@ -31,6 +31,8 @@ public class MetricResults {
     private String format;
     private boolean percentile_results_available;
 
+    private MetricMetadata metadata;
+
     public MetricResults() {
         metricAggregationInfoResults = new MetricAggregationInfoResults();
         metricPercentileResults = new MetricPercentileResults();
