@@ -309,7 +309,7 @@ public class Converters {
                 HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
                 HashMap<String, NamespaceData> namespaceDataHashMap = new HashMap<>();
 
-                if(containersList != null ) {
+                if(containersList != null && !containersList.isEmpty() ) {
                     for (ContainerAPIObject containerAPIObject : containersList) {
                         HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
                         HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
@@ -331,25 +331,25 @@ public class Converters {
                     k8sObject.setContainerDataMap(containerDataHashMap);
                     k8sObjectList.add(k8sObject);
                 }
-                else if (kubernetesAPIObject.getNamespaceAPIObject() != null){
+                else if (kubernetesAPIObject.getNamespaceAPIObject() != null) {
                     NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
 
                     HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
                     HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
                     NamespaceData namespaceData = new NamespaceData(namespaceAPIObject.getnamespace_name(), namespaceAPIObject.getnamespaceRecommendations(), metricsMap);
                     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
-                        for (Metric metric : namespaceAPIObject.getMetrics()) {
-                            metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
-                            MetricResults metricResults = metric.getMetricResult();
-                            metricResults.setName(metric.getName());
-                            IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.getStartTimestamp(),
+                    for (Metric metric : namespaceAPIObject.getMetrics()) {
+                        metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
+                        MetricResults metricResults = metric.getMetricResult();
+                        metricResults.setName(metric.getName());
+                        IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.getStartTimestamp(),
                                     updateResultsAPIObject.getEndTimestamp());
-                            metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
-                            intervalResults.setMetricResultsMap(metricResultsHashMap);
-                            resultsMap.put(updateResultsAPIObject.getEndTimestamp(), intervalResults);
-                        }
-                        namespaceData.setResults(resultsMap);
-                        namespaceDataHashMap.put(namespaceData.getNamespace_name(), namespaceData);
+                        metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                        intervalResults.setMetricResultsMap(metricResultsHashMap);
+                        resultsMap.put(updateResultsAPIObject.getEndTimestamp(), intervalResults);
+                    }
+                    namespaceData.setResults(resultsMap);
+                    namespaceDataHashMap.put(namespaceData.getNamespace_name(), namespaceData);
 
                     k8sObject.setNamespaceDataMap(namespaceDataHashMap);
                     k8sObjectList.add(k8sObject);

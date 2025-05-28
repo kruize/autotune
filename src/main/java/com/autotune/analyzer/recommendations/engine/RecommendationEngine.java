@@ -887,49 +887,53 @@ public class RecommendationEngine {
     }
 
     private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
-        Timestamp monitoringEndTime = namespaceData.getResults().keySet().stream().max(Timestamp::compareTo).get();
-        NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
-        if (null == namespaceRecommendations) {
-            namespaceRecommendations = new NamespaceRecommendations();
+        try {
+            Timestamp monitoringEndTime = namespaceData.getResults().keySet().stream().max(Timestamp::compareTo).get();
+            NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
+            if (null == namespaceRecommendations) {
+                namespaceRecommendations = new NamespaceRecommendations();
+            }
+
+            HashMap<Integer, RecommendationNotification> recommendationLevelNM = namespaceRecommendations.getNotificationMap();
+            if (null == recommendationLevelNM) {
+                recommendationLevelNM = new HashMap<>();
+            }
+
+            HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap = namespaceRecommendations.getData();
+            if (null == timestampBasedRecommendationMap) {
+                timestampBasedRecommendationMap = new HashMap<>();
+            }
+
+            MappedRecommendationForTimestamp timestampRecommendation;
+            if (timestampBasedRecommendationMap.containsKey(monitoringEndTime)) {
+                timestampRecommendation = timestampBasedRecommendationMap.get(monitoringEndTime);
+            } else {
+                timestampRecommendation = new MappedRecommendationForTimestamp();
+            }
+
+            timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
+
+            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = getCurrentNamespaceConfigData(namespaceData, monitoringEndTime, timestampRecommendation);
+            timestampRecommendation.setCurrentConfig(currentConfig);
+
+            boolean namespaceRecommendationAvailable = generateNamespaceRecommendationsBasedOnTerms(namespaceData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
+
+            RecommendationNotification recommendationsLevelNotifications;
+            if (namespaceRecommendationAvailable) {
+                timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);
+                recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
+            } else {
+                recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                timestampBasedRecommendationMap = new HashMap<>();
+            }
+
+            recommendationLevelNM.put(recommendationsLevelNotifications.getCode(), recommendationsLevelNotifications);
+            namespaceRecommendations.setNotificationMap(recommendationLevelNM);
+            namespaceRecommendations.setData(timestampBasedRecommendationMap);
+            namespaceData.setNamespaceRecommendations(namespaceRecommendations);
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.GENERATE_RECOMMENDATION_FAILURE, kruizeObject.getExperimentName(), e.getMessage());
         }
-
-        HashMap<Integer, RecommendationNotification> recommendationLevelNM = namespaceRecommendations.getNotificationMap();
-        if (null == recommendationLevelNM) {
-            recommendationLevelNM = new HashMap<>();
-        }
-
-        HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap = namespaceRecommendations.getData();
-        if (null == timestampBasedRecommendationMap) {
-            timestampBasedRecommendationMap = new HashMap<>();
-        }
-
-        MappedRecommendationForTimestamp timestampRecommendation;
-        if (timestampBasedRecommendationMap.containsKey(monitoringEndTime)) {
-            timestampRecommendation = timestampBasedRecommendationMap.get(monitoringEndTime);
-        } else {
-            timestampRecommendation = new MappedRecommendationForTimestamp();
-        }
-
-        timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
-
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = getCurrentNamespaceConfigData(namespaceData, monitoringEndTime, timestampRecommendation);
-        timestampRecommendation.setCurrentConfig(currentConfig);
-
-        boolean namespaceRecommendationAvailable = generateNamespaceRecommendationsBasedOnTerms(namespaceData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
-
-        RecommendationNotification recommendationsLevelNotifications;
-        if (namespaceRecommendationAvailable) {
-            timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);
-            recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
-        } else {
-            recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-            timestampBasedRecommendationMap = new HashMap<>();
-        }
-
-        recommendationLevelNM.put(recommendationsLevelNotifications.getCode(), recommendationsLevelNotifications);
-        namespaceRecommendations.setNotificationMap(recommendationLevelNM);
-        namespaceRecommendations.setData(timestampBasedRecommendationMap);
-        namespaceData.setNamespaceRecommendations(namespaceRecommendations);
     }
 
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentNamespaceConfigData(NamespaceData namespaceData,
