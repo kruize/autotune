@@ -380,26 +380,28 @@ public class ExperimentValidation {
                                 break;
                             }
                         }
-                    } else if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)){
-                        for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
-                            if (null == k8sObject.getNamespaceDataMap() || k8sObject.getNamespaceDataMap().isEmpty()) {
-                                errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE_DATA, expObj.getExperimentType().toString()));
-                                missingNamespaceData = true;
-                            } else {
-                                for (NamespaceData namespaceData : k8sObject.getNamespaceDataMap().values()) {
-                                    if (null == namespaceData.getNamespace_name()) {
-                                        errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE, expObj.getExperimentType().toString()));
-                                        missingNamespaceData = true;
-                                        break;
-                                    }
-                                }
-                            }
-                        }
                     }
                 } else if (expObj.getExperiment_usecase_type().isLocal_monitoring()) {
                     if (null == expObj.getDataSource()) {
                         errorMsg = errorMsg.concat(String.format(LOCAL_MONITORING_DATASOURCE_MANDATORY, expObj.getExperimentName()));
                         missingLocalDatasource = true;
+                    }
+                }
+                // Namespace experiment validation for both remote and local monitoring
+                if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)){
+                    for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
+                        if (null == k8sObject.getNamespaceDataMap() || k8sObject.getNamespaceDataMap().isEmpty()) {
+                            errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE_DATA, expObj.getExperimentType().toString()));
+                            missingNamespaceData = true;
+                        } else {
+                            for (NamespaceData namespaceData : k8sObject.getNamespaceDataMap().values()) {
+                                if (null == namespaceData.getNamespace_name()) {
+                                    errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE, expObj.getExperimentType().toString()));
+                                    missingNamespaceData = true;
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
 

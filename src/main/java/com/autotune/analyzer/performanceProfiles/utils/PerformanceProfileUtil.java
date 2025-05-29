@@ -196,7 +196,7 @@ public class PerformanceProfileUtil {
                     if (namespaceAPIObject.getMetrics() == null) {
                         errorReasons.add(String.format(
                                 AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
-                                namespaceAPIObject.getnamespace_name(),
+                                namespaceAPIObject.getNamespace(),
                                 updateResultsAPIObject.getExperimentName()
                         ));
                         continue;
@@ -210,7 +210,7 @@ public class PerformanceProfileUtil {
                             if (!errorMsg.isBlank()) {
                                 errorReasons.add(errorMsg.concat(String.format(
                                         AnalyzerErrorConstants.AutotuneObjectErrors.NAMESPACE_AND_EXPERIMENT,
-                                        namespaceAPIObject.getnamespace_name(),
+                                        namespaceAPIObject.getNamespace(),
                                         updateResultsAPIObject.getExperimentName())));
                                 break;
                             }
@@ -225,7 +225,7 @@ public class PerformanceProfileUtil {
                                     if (!errorMsg.isBlank()) {
                                         errorReasons.add(errorMsg.concat(String.format(
                                                 AnalyzerErrorConstants.AutotuneObjectErrors.NAMESPACE_AND_EXPERIMENT,
-                                                namespaceAPIObject.getnamespace_name(),
+                                                namespaceAPIObject.getNamespace(),
                                                 updateResultsAPIObject.getExperimentName())));
                                         break;
                                     }
