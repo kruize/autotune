@@ -134,11 +134,11 @@ public class Converters {
         // Generates K8sObject for namespace type experiments from KubernetesAPIObject
         public static K8sObject createNamespaceExperiment(KubernetesAPIObject kubernetesAPIObject) {
             K8sObject k8sObject = new K8sObject();
-            k8sObject.setNamespace(kubernetesAPIObject.getNamespaceAPIObjects().getnamespace());
+            k8sObject.setNamespace(kubernetesAPIObject.getNamespaceAPIObjects().getNamespace());
             HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
             k8sObject.setContainerDataMap(containerDataHashMap);
             NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObjects();
-            k8sObject.setNamespaceData(new NamespaceData(namespaceAPIObject.getnamespace(), new NamespaceRecommendations(), null));
+            k8sObject.setNamespaceData(new NamespaceData(namespaceAPIObject.getNamespace(), new NamespaceRecommendations(), null));
             return k8sObject;
         }
 

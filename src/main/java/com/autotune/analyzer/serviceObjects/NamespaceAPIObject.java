@@ -32,7 +32,7 @@ public class NamespaceAPIObject {
      * @return String containing the name of the namespace
      */
     @JsonProperty(KruizeConstants.JSONKeys.NAMESPACE)
-    public String getnamespace() {
+    public String getNamespace() {
         return namespace;
     }
 
@@ -41,7 +41,7 @@ public class NamespaceAPIObject {
      * @return namespace recommendations object containing the recommendations for a namespace
      */
     @JsonProperty(KruizeConstants.JSONKeys.RECOMMENDATIONS)
-    public NamespaceRecommendations getnamespaceRecommendations() {
+    public NamespaceRecommendations getNamespaceRecommendations() {
         return namespaceRecommendations;
     }
 

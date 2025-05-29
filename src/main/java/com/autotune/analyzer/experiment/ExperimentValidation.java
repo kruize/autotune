@@ -388,7 +388,7 @@ public class ExperimentValidation {
                 }
 
                 // Namespace experiment validation for both remote and local monitoring
-                if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)){
+                if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)) {
                     for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
                         if (null == k8sObject.getNamespaceData()) {
                             errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE_DATA, expObj.getExperimentType().toString()));
