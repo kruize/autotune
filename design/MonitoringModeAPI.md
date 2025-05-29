@@ -546,7 +546,7 @@ For namespace experiment:
       {
         "namespaces": 
           {
-            "namespace_name": "default",
+            "namespace": "default",
             "metrics": [
               {
                 "name": "namespaceCpuRequest",
