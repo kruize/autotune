@@ -140,7 +140,7 @@ public class Converters {
         public static K8sObject createNamespaceExperiment(KubernetesAPIObject kubernetesAPIObject) {
             K8sObject k8sObject = new K8sObject();
             NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
-            k8sObject.setNamespace(kubernetesAPIObject.getNamespaceAPIObject().getNamespace());
+            k8sObject.setNamespace(namespaceAPIObject.getNamespace());
             HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
             k8sObject.setContainerDataMap(containerDataHashMap);
             HashMap<String, NamespaceData> namespaceDataHashMap = new HashMap<>();
@@ -330,7 +330,7 @@ public class Converters {
                     k8sObject.setContainerDataMap(containerDataHashMap);
                     k8sObjectList.add(k8sObject);
                 }
-                else if (kubernetesAPIObject.getNamespaceAPIObject() != null){
+                else if (kubernetesAPIObject.getNamespaceAPIObject() != null) {
                     NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
 
                     HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();

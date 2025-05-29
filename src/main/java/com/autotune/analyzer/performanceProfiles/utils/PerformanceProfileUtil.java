@@ -161,10 +161,10 @@ public class PerformanceProfileUtil {
                                                 updateResultsAPIObject.getExperimentName())));
                                         break;
                                     }
-                                } catch(IllegalAccessException | InvocationTargetException e){
+                                } catch (IllegalAccessException | InvocationTargetException e) {
                                     throw new RuntimeException(e);
                                 }
-                            } else{
+                            } else {
                                 // check if query is also absent
                                 if (queryList.isEmpty()) {
                                     errorReasons.add(AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING);
@@ -209,7 +209,7 @@ public class PerformanceProfileUtil {
                             errorMsg = PerformanceProfileUtil.validateMetricsValues(metric.getName(), metric.getMetricResult());
                             if (!errorMsg.isBlank()) {
                                 errorReasons.add(errorMsg.concat(String.format(
-//                                        AnalyzerErrorConstants.AutotuneObjectErrors.NAMESPACE_AND_EXPERIMENT,
+                                        AnalyzerErrorConstants.AutotuneObjectErrors.NAMESPACE_AND_EXPERIMENT,
                                         namespaceAPIObject.getnamespace_name(),
                                         updateResultsAPIObject.getExperimentName())));
                                 break;
@@ -224,7 +224,7 @@ public class PerformanceProfileUtil {
                                     errorMsg = validateAggFunction(aggrInfoClassAsMap, perfProfileAggrFunctions);
                                     if (!errorMsg.isBlank()) {
                                         errorReasons.add(errorMsg.concat(String.format(
-//                                                AnalyzerErrorConstants.AutotuneObjectErrors.NAMESPACE_AND_EXPERIMENT,
+                                                AnalyzerErrorConstants.AutotuneObjectErrors.NAMESPACE_AND_EXPERIMENT,
                                                 namespaceAPIObject.getnamespace_name(),
                                                 updateResultsAPIObject.getExperimentName())));
                                         break;
