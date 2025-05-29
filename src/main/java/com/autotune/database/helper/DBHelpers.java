@@ -220,14 +220,11 @@ public class DBHelpers {
                         if (kubernetesAPIObject.getName().equalsIgnoreCase(k8sObject.getName())
                                 && kubernetesAPIObject.getType().equalsIgnoreCase(k8sObject.getType())) {
 
-                            NamespaceAPIObject namespaceAPIObject =kubernetesAPIObject.getNamespaceAPIObject();
-                            if (null == namespaceAPIObject)
-                                continue;
+                            NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
 
                             String namespaceName = namespaceAPIObject.getNamespace();
                             if (!k8sObject.getNamespaceDataMap().containsKey(namespaceName))
                                 continue;
-
                             NamespaceData namespaceData = k8sObject.getNamespaceDataMap().get(namespaceName);
 
                             // Set namespace recommendations
