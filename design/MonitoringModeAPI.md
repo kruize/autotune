@@ -192,7 +192,7 @@ If no experiment type is specified, it will default to `container`.
     "kubernetes_objects": [
       {
           "namespaces": {
-              "namespace_name": "namespace-demo"
+              "namespace": "namespace-demo"
         }
       }
     ],
