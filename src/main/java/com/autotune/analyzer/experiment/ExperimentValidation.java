@@ -385,7 +385,7 @@ public class ExperimentValidation {
                                 errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE_DATA, expObj.getExperimentType().toString()));
                                 missingNamespaceData = true;
                             } else if (null == k8sObject.getNamespaceData().getNamespace_name()) {
-                                errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE_NAME, expObj.getExperimentType().toString()));
+                                errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE, expObj.getExperimentType().toString()));
                                 missingNamespaceData = true;
                             }
                         }
