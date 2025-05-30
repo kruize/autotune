@@ -20,8 +20,8 @@ def loadData():
     performance_profile_dir = get_metric_profile_dir()
     profile_json_path = performance_profile_dir / 'resource_optimization_openshift.json'
 
-    with open(profile_json_path, 'r', encoding='utf-8') as f:
-        profile_data = json.load(f)
+    with open(profile_json_path, 'r', encoding='utf-8') as profile_file:
+        profile_data = json.load(profile_file)
 
     return (data, createdata, profile_data)
 
