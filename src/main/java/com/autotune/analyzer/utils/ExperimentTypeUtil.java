@@ -45,7 +45,11 @@ public class ExperimentTypeUtil {
         public AnalyzerConstants.ExperimentType deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
             String experimentType = json.getAsString();
             if (experimentType != null) {
-                return AnalyzerConstants.ExperimentType.valueOf(experimentType.toUpperCase());
+                try {
+                    return AnalyzerConstants.ExperimentType.valueOf(experimentType.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    throw new JsonParseException(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_EXPERIMENT_TYPE, experimentType), e);
+                }
             }
             return null;
         }
