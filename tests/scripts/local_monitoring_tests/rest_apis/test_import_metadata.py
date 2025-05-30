@@ -173,7 +173,7 @@ def test_repeated_metadata_import(cluster_type):
     print("delete metadata = ", response.status_code)
 
     create_namespace("testing")
-    time.sleep(30)
+    time.sleep(45)
 
     # Import metadata using the specified json
     response = import_metadata(input_json_file)
@@ -199,11 +199,11 @@ def test_repeated_metadata_import(cluster_type):
     validate_list_metadata_parameters(import_metadata_json, list_metadata_json, cluster_name=cluster_name, namespace="testing")
 
     delete_namespace("testing")
-    time.sleep(15)
+    time.sleep(45)
 
     create_namespace("repeated-metadata-import")
     create_namespace("local-monitoring-test")
-    time.sleep(30)
+    time.sleep(45)
 
     # Import metadata using the specified json
     response = import_metadata(input_json_file)

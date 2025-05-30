@@ -464,7 +464,7 @@ list_reco_namespace_json_local_monitoring_schema = {
                         "namespaces": {
                             "type": "object",
                             "properties": {
-                                "namespace_name": {
+                                "namespace": {
                                     "type": "string"
                                 },
                                 "recommendations": {
@@ -1179,7 +1179,7 @@ list_reco_namespace_json_local_monitoring_schema = {
                                 }
                             },
                             "required": [
-                                "namespace_name",
+                                "namespace",
                                 "recommendations"
                             ]
                         },

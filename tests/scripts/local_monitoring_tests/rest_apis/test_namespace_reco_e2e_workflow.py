@@ -185,7 +185,7 @@ def test_list_recommendations_namespace_exps(cluster_type):
     ns1_exp_json_file = tmp_json_file_1
 
     json_content[0]["experiment_name"] = "test-ns2"
-    json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace_name"] = "ns2"
+    json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace"] = "ns2"
 
     # Write the final JSON to the temp file
     with open(tmp_json_file_2, mode="w", encoding="utf-8") as message:
@@ -195,7 +195,7 @@ def test_list_recommendations_namespace_exps(cluster_type):
     ns2_exp_json_file = tmp_json_file_2
 
     json_content[0]["experiment_name"] = "test-ns3"
-    json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace_name"] = "ns3"
+    json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace"] = "ns3"
 
     # Write the final JSON to the temp file
     with open(tmp_json_file_3, mode="w", encoding="utf-8") as message:

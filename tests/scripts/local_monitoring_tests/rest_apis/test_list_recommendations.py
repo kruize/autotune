@@ -272,7 +272,7 @@ def test_accelerator_recommendation_if_exists(
 
     if json_content[0]["kubernetes_objects"][0]["type"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("type")
-    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace_name"] == "None":
+    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("namespaces")
     if json_content[0]["kubernetes_objects"][0]["containers"][0]["container_name"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("containers")
