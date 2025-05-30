@@ -19,6 +19,16 @@ Here are the test scenarios:
 - PerformanceProfile & Slo
 - Deployment name & selector
 - Validate error messages when the mandatory fields are missing
+- Create namespace experiment specifying namespace experiment type
+- Create namespace experiment without specifying experiment type
+- Create container experiment specifying container experiment type
+- Create container experiment without specifying experiment type
+- Create experiment specifying both namespaces and containers without specifying the experiment type
+- Create experiment specifying both namespaces and containers specifying the namespace experiment type
+- Create experiment specifying both namespaces and containers specifying the container experiment type
+- Create namespace experiment specifying containers
+- Create container experiment specifying namespaces
+- Create multiple namespace experiments with valid namespace
 
 ### **Update Results API tests**
 

@@ -5,7 +5,10 @@ import json
 import time
 
 import requests
+import sys
+sys.path.append("../../")
 
+from helpers.utils import get_metric_profile_dir
 
 def loadData():
     json_file = open("./json_files/create_exp.json", "r")
@@ -13,9 +16,12 @@ def loadData():
 
     json_file = open("./json_files/results.json", "r")
     data = json.loads(json_file.read())
-    
-    json_file = open("./json_files/profile.json", "r")
-    profile_data = json.loads(json_file.read())
+
+    performance_profile_dir = get_metric_profile_dir()
+    profile_json_path = performance_profile_dir / 'resource_optimization_openshift.json'
+
+    with open(profile_json_path, 'r', encoding='utf-8') as profile_file:
+        profile_data = json.load(profile_file)
 
     return (data, createdata, profile_data)
 
