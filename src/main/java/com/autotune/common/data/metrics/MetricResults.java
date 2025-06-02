@@ -31,6 +31,8 @@ public class MetricResults {
     private String format;
     private boolean percentile_results_available;
 
+    private MetricMetadata metadata;
+
     public MetricResults() {
         metricAggregationInfoResults = new MetricAggregationInfoResults();
         metricPercentileResults = new MetricPercentileResults();
@@ -95,6 +97,15 @@ public class MetricResults {
     public void setName(String name) {
         this.name = name;
     }
+
+    public void setMetadata(MetricMetadata metadata) {
+        this.metadata = metadata;
+    }
+
+    public MetricMetadata getMetadata() {
+        return metadata;
+    }
+
     @Override
     public String toString() {
         return "MetricResults{" +
