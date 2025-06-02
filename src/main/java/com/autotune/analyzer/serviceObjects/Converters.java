@@ -136,8 +136,7 @@ public class Converters {
         // Generates K8sObject for namespace type experiments from KubernetesAPIObject
         public static K8sObject createNamespaceExperiment(KubernetesAPIObject kubernetesAPIObject) {
             K8sObject k8sObject = new K8sObject();
-            HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
-            k8sObject.setContainerDataMap(containerDataHashMap);
+            k8sObject.setContainerDataMap(new HashMap<>());
 
             NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
             k8sObject.setNamespace(namespaceAPIObject.getNamespace());
@@ -183,7 +182,7 @@ public class Converters {
         private static void processNamespaceRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
                                                             boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
             NamespaceData clonedNamespaceData = null;
-            if(k8sObject.getNamespaceDataMap() != null && k8sObject.getNamespace() != null && k8sObject.getNamespaceDataMap().containsKey(k8sObject.getNamespace())){
+            if(k8sObject.getNamespaceDataMap() != null && k8sObject.getNamespace() != null && k8sObject.getNamespaceDataMap().containsKey(k8sObject.getNamespace())) {
                 clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceDataMap().get(k8sObject.getNamespace()), NamespaceData.class);
             }
             if (clonedNamespaceData != null && clonedNamespaceData.getNamespaceRecommendations() != null
