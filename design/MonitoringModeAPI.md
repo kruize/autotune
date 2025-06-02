@@ -117,6 +117,10 @@ or above the 98th percentile, and memory usage is at the 100th percentile.
 This is quick guide instructions to create experiments using input JSON as follows. For a more detailed guide,
 see [Create Experiment](/design/CreateExperiment.md)
 
+**Note :** The `experiment_type` field in the JSON is optional and can be used to
+indicate whether the experiment is of type `namespace` or `container`.
+If no experiment type is specified, it will default to `container`.
+
 **Request**
 `POST /createExperiment`
 
@@ -128,89 +132,6 @@ see [Create Experiment](/design/CreateExperiment.md)
 
 ### Example Request
 
-```json
-[
-  {
-    "version": "v2.0",
-    "experiment_name": "quarkus-resteasy-autotune-min-http-response-time-db",
-    "cluster_name": "cluster-one-division-bell",
-    "performance_profile": "resource-optimization-openshift",
-    "mode": "monitor",
-    "target_cluster": "remote",
-    "kubernetes_objects": [
-      {
-        "type": "deployment",
-        "name": "tfb-qrh-deployment",
-        "namespace": "default",
-        "containers": [
-          {
-            "container_image_name": "kruize/tfb-db:1.15",
-            "container_name": "tfb-server-0"
-          },
-          {
-            "container_image_name": "kruize/tfb-qrh:1.13.2.F_et17",
-            "container_name": "tfb-server-1"
-          }
-        ]
-      }
-    ],
-    "trial_settings": {
-      "measurement_duration": "15min"
-    },
-    "recommendation_settings": {
-      "threshold": "0.1"
-    }
-  }
-]
-```
-
-</details>
-
-**Request with `experiment_type` field**
-
-The `experiment_type` field in the JSON is optional and can be used to
-indicate whether the experiment is of type `namespace` or `container`.
-If no experiment type is specified, it will default to `container`.
-
-<details>
-  <summary><b>Example Request with experiment_type - `namespace`</b></summary>
-  The `experiment_type` field in the JSON is optional and can be used to 
-indicate whether the experiment is of type `namespace` or `container`. 
-If no experiment type is specified, it will default to `container`.
-
-### EXAMPLE REQUEST
-```json
-[
-  {
-    "version": "v2.0",
-    "experiment_name": "namespace-experiment-demo",
-    "cluster_name": "cluster-one-division-bell",
-    "performance_profile": "resource-optimization-openshift",
-    "mode": "monitor",
-    "target_cluster": "remote",
-    "experiment_type": "namespace",
-    "kubernetes_objects": [
-      {
-          "namespaces": {
-              "namespace": "namespace-demo"
-        }
-      }
-    ],
-    "trial_settings": {
-      "measurement_duration": "15min"
-    },
-    "recommendation_settings": {
-      "threshold": "0.1"
-    }
-  }
-]
-```
-</details>
-
-<details>
-  <summary><b>Example Request with experiment_type - `container`</b></summary>
-
-### EXAMPLE REQUEST
 ```json
 [
   {
@@ -247,7 +168,9 @@ If no experiment type is specified, it will default to `container`.
   }
 ]
 ```
+
 </details>
+
 
 **Response**
 
