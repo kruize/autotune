@@ -149,7 +149,7 @@ public class DBHelpers {
             }
 
             // Check if Container data map and namespace data both are not empty
-            if (containerDataMap.isEmpty() && null == k8sObject.getNamespaceDataMap()) {
+            if (containerDataMap.isEmpty() && (!k8sObject.getNamespaceDataMap().isEmpty() &&  null == k8sObject.getNamespaceDataMap())) {
                 throw new InvalidConversionOfRecommendationEntryException(
                         String.format(
                                 AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_EMPTY,
@@ -206,7 +206,9 @@ public class DBHelpers {
                     );
                 }
                 // Check for empty list
-                if (kubernetesAPIObject.getContainerAPIObjects().isEmpty() && null == kubernetesAPIObject.getNamespaceAPIObject()) {
+                if (kubernetesAPIObject.getContainerAPIObjects().isEmpty() && (kubernetesAPIObject.getNamespaceAPIObject() == null ||
+                        kubernetesAPIObject.getNamespaceAPIObject().getNamespace() == null ||
+                        kubernetesAPIObject.getNamespaceAPIObject().getNamespace().isEmpty())) {
                     throw new InvalidConversionOfRecommendationEntryException(
                             String.format(
                                     AnalyzerErrorConstants.ConversionErrors.KruizeRecommendationError.NOT_EMPTY,
@@ -228,9 +230,7 @@ public class DBHelpers {
                             NamespaceData namespaceData = k8sObject.getNamespaceDataMap().get(namespaceName);
 
                             // Set namespace recommendations
-                            if (null == namespaceAPIObject.getNamespaceRecommendations())
-                                continue;
-                            if (null == namespaceAPIObject.getNamespaceRecommendations().getData())
+                            if (null == namespaceAPIObject.getNamespaceRecommendations() || null == namespaceAPIObject.getNamespaceRecommendations().getData())
                                 continue;
                             if (null == namespaceData.getNamespaceRecommendations()) {
                                 namespaceData.setNamespaceRecommendations(Utils.getClone(namespaceAPIObject.getNamespaceRecommendations(), NamespaceRecommendations.class));
