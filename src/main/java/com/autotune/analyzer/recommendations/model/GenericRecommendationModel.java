@@ -66,8 +66,6 @@ public class GenericRecommendationModel implements RecommendationModel{
         RecommendationConfigItem recommendationConfigItem = null;
         String format = "";
         JSONArray cpuUsageList = getCPUUsageList(filteredResultsMap);
-        LOGGER.debug("cpuUsageList : {}", cpuUsageList);
-
 
         // Extract "max" values from cpuUsageList
         List<Double> cpuMaxValues = getCPUMaxValues(cpuUsageList);
@@ -142,11 +140,14 @@ public class GenericRecommendationModel implements RecommendationModel{
             double cpuThrottleMax = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMax()).orElse(0.0);
             double cpuThrottleSum = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
             double cpuThrottleMin = cpuThrottleResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
+            Optional<MetricResults> memoryUsageResults = Optional.ofNullable(intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.memoryUsage));
+            double memUsageAvg = memoryUsageResults.map(m -> m.getAggregationInfoResult().getAvg()).orElse(0.0);
+            double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
 
             double cpuRequestIntervalMax;
             double cpuRequestIntervalMin;
             double cpuUsagePod = 0;
-            int numPods;
+            double numPods = 0;
 
             // Use the Max value when available, if not use the Avg
             double cpuUsage = (cpuUsageMax > 0) ? cpuUsageMax : cpuUsageAvg;
@@ -159,10 +160,13 @@ public class GenericRecommendationModel implements RecommendationModel{
             } else {
                 // Sum/Avg should give us the number of pods
                 if (0 != cpuUsageAvg) {
-                    numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
-                    if (0 < numPods) {
-                        cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
-                    }
+                    numPods = cpuUsageSum / cpuUsageAvg;
+                }
+                if (0 == numPods && 0 != memUsageAvg) {
+                    numPods = memUsageSum / memUsageAvg;
+                }
+                if (0 < numPods) {
+                    cpuUsagePod = (cpuUsageSum + cpuThrottleSum) / numPods;
                 }
                 cpuRequestIntervalMax = Math.max(cpuUsagePod, cpuUsageTotal);
             }
@@ -233,17 +237,11 @@ public class GenericRecommendationModel implements RecommendationModel{
         // We'll use the minimum of the above two values
         Double memRec = Math.min(memRecUsageBuf, memRecSpikeBuf);
 
-        // Set notifications only if notification object is available
-        if (setNotification) {
-            // Check if the memory recommendation is 0
-            if (0.0 == memRec) {
-                // Add appropriate Notification - MEMORY_RECORDS_ARE_ZERO
-                notifications.add(new RecommendationNotification(
-                        RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_RECORDS_ARE_ZERO
-                ));
-                // Returning null will make sure that the map is not populated with values
-                return null;
-            }
+        if (setNotification && 0.0 == memRec) {
+            notifications.add(new RecommendationNotification(
+                    RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_RECORDS_ARE_ZERO
+            ));
+            return null;
         }
 
         format = getFormatValue(filteredResultsMap, AnalyzerConstants.MetricName.memoryUsage);
@@ -266,13 +264,13 @@ public class GenericRecommendationModel implements RecommendationModel{
         double memUsageMin = memoryUsageResults.map(m -> m.getAggregationInfoResult().getMin()).orElse(0.0);
         double memUsageSum = memoryUsageResults.map(m -> m.getAggregationInfoResult().getSum()).orElse(0.0);
         double memUsage = 0;
-        int numPods = 0;
+        double numPods = 0;
 
-        if (0 != memUsageAvg) {
-            numPods = (int) Math.round(memUsageSum / memUsageAvg);
+        if (0 != cpuUsageAvg) {
+            numPods = cpuUsageSum / cpuUsageAvg;
         }
-        if (0 == numPods && 0 != cpuUsageAvg) {
-            numPods = (int) Math.ceil(cpuUsageSum / cpuUsageAvg);
+        if (0 == numPods && 0 != memUsageAvg) {
+            numPods = memUsageSum / memUsageAvg;
         }
         if (0 < numPods) {
             memUsage = (memUsageSum / numPods);
@@ -441,16 +439,11 @@ public class GenericRecommendationModel implements RecommendationModel{
         Double namespaceMemRec = Math.min(namespaceMemRecUsageBuf, namespaceMemRecSpikeBuf);
 
         // Set notifications only if notification object is available
-        if (setNotification) {
-            // Check if the memory recommendation is 0
-            if (0.0 == namespaceMemRec) {
-                // Add appropriate Notification - MEMORY_RECORDS_ARE_ZERO
-                notifications.add(new RecommendationNotification(
-                        RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_RECORDS_ARE_ZERO
-                ));
-                // Returning null will make sure that the map is not populated with values
-                return null;
-            }
+        if (setNotification && 0.0 == namespaceMemRec) {
+            notifications.add(new RecommendationNotification(
+                    RecommendationConstants.RecommendationNotification.NOTICE_MEMORY_RECORDS_ARE_ZERO
+            ));
+            return null;
         }
 
         format = getFormatValue(filteredResultsMap, AnalyzerConstants.MetricName.namespaceMemoryUsage);
