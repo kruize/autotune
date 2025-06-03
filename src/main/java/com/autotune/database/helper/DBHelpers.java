@@ -223,16 +223,16 @@ public class DBHelpers {
                         if (null == namespaceAPIObject)
                             continue;
 
-                        String namespaceName = namespaceAPIObject.getnamespace_name();
+                        String namespaceName = namespaceAPIObject.getNamespace();
                         if (!k8sObject.getNamespaceDataMap().containsKey(namespaceName))
                             continue;
 
                         NamespaceData namespaceData = k8sObject.getNamespaceDataMap().get(namespaceName);
 
                         // Set namespace recommendations
-                        if (null == namespaceAPIObject.getnamespaceRecommendations())
+                        if (null == namespaceAPIObject.getNamespaceRecommendations())
                             continue;
-                        if (null == namespaceAPIObject.getnamespaceRecommendations().getData())
+                        if (null == namespaceAPIObject.getNamespaceRecommendations().getData())
                             continue;
                         if (null == namespaceData.getNamespaceRecommendations()) {
                             namespaceData.setNamespaceRecommendations(Utils.getClone(namespaceAPIObject.getNamespaceRecommendations(), NamespaceRecommendations.class));

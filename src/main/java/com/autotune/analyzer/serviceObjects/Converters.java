@@ -333,7 +333,7 @@ public class Converters {
 
                     HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
                     HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
-                    NamespaceData namespaceData = new NamespaceData(namespaceAPIObject.getnamespace_name(), namespaceAPIObject.getnamespaceRecommendations(), metricsMap);
+                    NamespaceData namespaceData = new NamespaceData(namespaceAPIObject.getNamespace(), namespaceAPIObject.getNamespaceRecommendations(), metricsMap);
                     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
                     for (Metric metric : namespaceAPIObject.getMetrics()) {
                         metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
