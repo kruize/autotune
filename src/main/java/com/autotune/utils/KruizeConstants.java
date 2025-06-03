@@ -181,7 +181,6 @@ public class KruizeConstants {
         // Deployments Section
         public static final String DEPLOYMENTS = "deployments";
         public static final String NAMESPACE = "namespace";
-        public static final String NAMESPACE_NAME = "namespace_name";
         public static final String POD_METRICS = "pod_metrics";
         public static final String CONTAINER_METRICS = "container_metrics";
         public static final String METRICS = "metrics";

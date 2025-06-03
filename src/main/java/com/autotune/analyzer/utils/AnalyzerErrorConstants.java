@@ -100,6 +100,7 @@ public class AnalyzerErrorConstants {
         public static final String UNSUPPORTED_FORMAT = " Format value should be among these values: ".concat(KruizeSupportedTypes.SUPPORTED_FORMATS.toString());
         public static final String UNSUPPORTED_METRIC = "Metric variable name should be among these values: ".concat(Arrays.toString(AnalyzerConstants.MetricName.values()));
         public static final String CONTAINER_AND_EXPERIMENT = " for container : %s for experiment: %s.";
+        public static final String NAMESPACE_AND_EXPERIMENT = " for namespace : %s for experiment: %s.";
         public static final String JSON_PARSING_ERROR = "Failed to parse the JSON. Please check the input payload ";
         public static final String AGGREGATION_INFO_INVALID_VALUE = "Invalid value type for aggregation_info objects. Expected a numeric value (Double).";
         public static final String VERSION_MISMATCH = "Version number mismatch found. Expected: %s , Found: %s";
@@ -194,7 +195,7 @@ public class AnalyzerErrorConstants {
             public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
             public static final String WHITESPACE_NOT_ALLOWED = "Whitespace can not be entered as a term or model value ";
             public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
-            public static final String MISSING_NAMESPACE_NAME = "Missing namespace_name for experimentType: %s";
+            public static final String MISSING_NAMESPACE = "Missing namespace for experimentType: %s";
             public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
 
             private CreateExperimentAPI() {

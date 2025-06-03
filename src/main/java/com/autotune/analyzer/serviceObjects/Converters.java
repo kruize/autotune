@@ -24,8 +24,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
+import org.apache.kafka.common.protocol.types.Field;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -120,15 +120,11 @@ public class Converters {
         // Generates K8sObject for container type experiments from KubernetesAPIObject
         public static K8sObject createContainerExperiment(KubernetesAPIObject kubernetesAPIObject) {
             K8sObject k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
-
             HashMap<String, NamespaceData> namespaceDataMap = new HashMap<>();
-            if(kubernetesAPIObject.getNamespace() != null && !kubernetesAPIObject.getNamespace().isEmpty()){
-                namespaceDataMap.put(kubernetesAPIObject.getNamespace(), new NamespaceData(kubernetesAPIObject.getNamespace(), new NamespaceRecommendations(), null));
-            }
             k8sObject.setNamespaceDataMap(namespaceDataMap);
-            List<ContainerAPIObject> containerAPIObjects = kubernetesAPIObject.getContainerAPIObjects();
+
             HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
-            for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
+            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
                 ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(),
                         containerAPIObject.getContainer_image_name(), new ContainerRecommendations(), null);
                 containerDataHashMap.put(containerData.getContainer_name(), containerData);
@@ -140,12 +136,13 @@ public class Converters {
         // Generates K8sObject for namespace type experiments from KubernetesAPIObject
         public static K8sObject createNamespaceExperiment(KubernetesAPIObject kubernetesAPIObject) {
             K8sObject k8sObject = new K8sObject();
+            k8sObject.setContainerDataMap(new HashMap<>());
+
             NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
-            k8sObject.setNamespace(kubernetesAPIObject.getNamespaceAPIObject().getnamespace_name());
-            HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
-            k8sObject.setContainerDataMap(containerDataHashMap);
+            k8sObject.setNamespace(namespaceAPIObject.getNamespace());
+
             HashMap<String, NamespaceData> namespaceDataHashMap = new HashMap<>();
-            namespaceDataHashMap.put(namespaceAPIObject.getnamespace_name(), new NamespaceData(namespaceAPIObject.getnamespace_name(),
+            namespaceDataHashMap.put(namespaceAPIObject.getNamespace(), new NamespaceData(namespaceAPIObject.getNamespace(),
                     new NamespaceRecommendations(), null));
             k8sObject.setNamespaceDataMap(namespaceDataHashMap);
             return k8sObject;
@@ -185,7 +182,7 @@ public class Converters {
         private static void processNamespaceRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
                                                             boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
             NamespaceData clonedNamespaceData = null;
-            if(k8sObject.getNamespaceDataMap() != null && k8sObject.getNamespace() != null && k8sObject.getNamespaceDataMap().containsKey(k8sObject.getNamespace())){
+            if(k8sObject.getNamespaceDataMap() != null && k8sObject.getNamespace() != null && k8sObject.getNamespaceDataMap().containsKey(k8sObject.getNamespace())) {
                 clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceDataMap().get(k8sObject.getNamespace()), NamespaceData.class);
             }
             if (clonedNamespaceData != null && clonedNamespaceData.getNamespaceRecommendations() != null

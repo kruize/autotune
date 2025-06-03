@@ -101,11 +101,9 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             }
             // Validate blank or null container names and image names
             List<ContainerData> resultContainers = new ArrayList<>();
-            if (resultData.getKubernetes_objects() != null && !resultData.getKubernetes_objects().isEmpty()) {
-                com.autotune.common.k8sObjects.K8sObject firstK8sObject = resultData.getKubernetes_objects().get(0);
-                if (firstK8sObject != null && firstK8sObject.getContainerDataMap() != null) {
-                    resultContainers = firstK8sObject.getContainerDataMap().values().stream().toList();
-                }
+            if (resultData.getKubernetes_objects() != null && !resultData.getKubernetes_objects().isEmpty() &&
+                    resultData.getKubernetes_objects().get(0) != null && resultData.getKubernetes_objects().get(0).getContainerDataMap() != null) {
+                resultContainers = resultData.getKubernetes_objects().get(0).getContainerDataMap().values().stream().toList();
             }
 
             List<String> validationErrors = resultContainers.stream()
