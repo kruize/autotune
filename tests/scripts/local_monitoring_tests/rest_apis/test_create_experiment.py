@@ -88,7 +88,7 @@ def test_create_exp_valid_tests(test_name, expected_status_code, version, experi
         json_content[0]["kubernetes_objects"][0].pop("namespace")
     if json_content[0]["kubernetes_objects"][0]["containers"][0]["container_image_name"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("containers")
-    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace_name"] == "None":
+    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("namespaces")
     if json_content[0]["experiment_type"] == "None":
         json_content[0].pop("experiment_type")
@@ -191,7 +191,7 @@ def test_create_exp_invalid_tests(test_name, expected_status_code, expected_erro
         json_content[0]["kubernetes_objects"][0].pop("namespace")
     if json_content[0]["kubernetes_objects"][0]["containers"][0]["container_image_name"] == "None":
         json_content[0]["kubernetes_objects"][0].pop("containers")
-    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace_name"] == "None":
+    if json_content[0]["kubernetes_objects"][0]["namespaces"]["namespace"] == "None":
             json_content[0]["kubernetes_objects"][0].pop("namespaces")
     if json_content[0]["experiment_type"] == "None":
         json_content[0].pop("experiment_type")

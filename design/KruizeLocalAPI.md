@@ -2685,7 +2685,7 @@ If no experiment type is specified, it will default to `container`.
   "kubernetes_objects": [
     {
         "namespaces": {
-            "namespace_name": "test-multiple-import"
+            "namespace": "test-multiple-import"
       }
     }
   ],
@@ -3993,7 +3993,7 @@ When `interval_end_time` is not specified, Kruize will determine the latest time
         "namespace": "default",
         "containers": [],
         "namespaces": {
-          "namespace_name": "default",
+          "namespace": "default",
           "recommendations": {
             "version": "1.0",
             "notifications": {

@@ -89,9 +89,9 @@ public class ListExperiments extends HttpServlet {
 
             // adding namespace recommendations to K8sObject
             NamespaceData namespaceData = new NamespaceData();
-            if (kubernetesAPIObject.getNamespaceAPIObjects() != null && kubernetesAPIObject.getNamespaceAPIObjects().getnamespaceRecommendations() != null) {
+            if (kubernetesAPIObject.getNamespaceAPIObjects() != null && kubernetesAPIObject.getNamespaceAPIObjects().getNamespaceRecommendations() != null) {
                 namespaceData.setNamespace_name(kubernetesAPIObject.getNamespace());
-                namespaceData.setNamespaceRecommendations(kubernetesAPIObject.getNamespaceAPIObjects().getnamespaceRecommendations());
+                namespaceData.setNamespaceRecommendations(kubernetesAPIObject.getNamespaceAPIObjects().getNamespaceRecommendations());
                 k8sObject.setNamespaceData(namespaceData);
             }
 

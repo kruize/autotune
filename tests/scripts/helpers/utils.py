@@ -549,7 +549,7 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
 def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
                             list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
     if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
-        assert list_reco_kubernetes_obj["namespaces"]["namespace_name"] == create_exp_kubernetes_obj["namespaces"]["namespace_name"]
+        assert list_reco_kubernetes_obj["namespaces"]["namespace"] == create_exp_kubernetes_obj["namespaces"]["namespace"]
         list_reco_namespace = list_reco_kubernetes_obj["namespaces"]
         create_exp_namespace = create_exp_kubernetes_obj["namespaces"]
         validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name)
@@ -771,8 +771,8 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
 def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name):
     # Validate namespace name
     if create_exp_namespace != None and list_reco_namespace != None:
-        assert create_exp_namespace["namespace_name"] == list_reco_namespace["namespace_name"], \
-            f"Namespace names did not match! Actual -  {list_reco_namespace['namespace_name']} Expected - {create_exp_namespace['namespace_name']}"
+        assert create_exp_namespace["namespace"] == list_reco_namespace["namespace"], \
+            f"Namespace names did not match! Actual -  {list_reco_namespace['namespace']} Expected - {create_exp_namespace['namespace']}"
 
     if expected_duration_in_hours == None:
         duration_in_hours = 0.0
