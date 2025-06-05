@@ -303,12 +303,12 @@ public class Converters {
                         metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
                         MetricResults metricResults = metric.getMetricResult();
                         metricResults.setName(metric.getName());
-                        IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.startTimestamp,
-                                updateResultsAPIObject.endTimestamp);
                         metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
-                        intervalResults.setMetricResultsMap(metricResultsHashMap);
-                        resultsMap.put(updateResultsAPIObject.getEndTimestamp(), intervalResults);
                     }
+                    IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.startTimestamp,
+                            updateResultsAPIObject.endTimestamp);
+                    intervalResults.setMetricResultsMap(metricResultsHashMap);
+                    resultsMap.put(updateResultsAPIObject.getEndTimestamp(), intervalResults);
                     containerData.setResults(resultsMap);
                     containerDataHashMap.put(containerData.getContainer_name(), containerData);
                 }
