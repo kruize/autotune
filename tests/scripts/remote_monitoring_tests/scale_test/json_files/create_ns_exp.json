@@ -9,7 +9,7 @@
   "kubernetes_objects": [
       {
         "namespaces": {
-          "namespace_name": "default"
+          "namespace": "default"
         }
       }
     ],
