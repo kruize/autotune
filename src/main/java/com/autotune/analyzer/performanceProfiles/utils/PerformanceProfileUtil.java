@@ -251,7 +251,18 @@ public class PerformanceProfileUtil {
                     if (!new HashSet<>(kruizeFunctionVariablesList).containsAll(mandatoryFields)) {
                         errorReasons.add(errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s",
                                 updateResultsAPIObject.getExperimentName(), mandatoryFields)));
+
                         break;
+                    } else {
+                        LOGGER.info("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
+                        // check if illegal fields are present or not
+                        List<AnalyzerConstants.MetricName> extraPresentMetrics = new ArrayList<>(kruizeFunctionVariablesList);
+                        extraPresentMetrics.removeAll(perfProfileFunctionVariablesList); // Remove all expected metrics
+                        if (!extraPresentMetrics.isEmpty()) {
+                            // Log the names of the extra/unexpected metrics == illegal metrics
+                            errorReasons.add(errorMsg.concat(String.format("Extra (non-mandatory and non-profile) metrics found for experiment - %s: %s",
+                                    updateResultsAPIObject.getExperimentName(), extraPresentMetrics)));
+                        }
                     }
                 }
             }
