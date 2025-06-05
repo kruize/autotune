@@ -44,6 +44,15 @@ Here are the test scenarios:
 - Test with invalid values such as blank, null or an invalid value for various keys in the updateResults json
 - Update the same results twice for the same experiment
 
+Namespace Related Test Scenarios:
+- Update results for a single valid namespace experiment
+- Update multiple results for a single valid namespace experiment
+- Update results for namespaces that are not present during creation of the namespace experiment [Fail]
+- Update results for an invalid namespace experiment or a non-existing namespace experiment.
+- Test with invalid values such as blank, null or an invalid value for various keys in the updateResults json [Check if redundant or not]
+- Update the same results twice for the same namespace experiment
+- 
+
 
 ### **List Recommendation API tests**
 
