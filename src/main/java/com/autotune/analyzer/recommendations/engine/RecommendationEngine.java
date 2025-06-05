@@ -171,13 +171,10 @@ public class RecommendationEngine {
                 PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
                 registerModel(performanceBasedRecommendationModel);
             } else {
-                // user input does not match standard models
-                // possibly user has entered a custom model
-                System.out.println("In loadcustomrecc model, trying to figure out if we got all the things or not Settings: " + settings);
+                // Create Custom model
                 RecommendationTunables genericTunables = settings.get(model);
                 GenericRecommendationModel genericRecommendationModel = new GenericRecommendationModel(model, genericTunables);
                 registerModel(genericRecommendationModel);
-                //                throw new InvalidModelException(model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
             }
         }
     }
@@ -696,7 +693,6 @@ public class RecommendationEngine {
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : getModels()) {
-
                     // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
                             monitoringStartTime,
@@ -716,34 +712,26 @@ public class RecommendationEngine {
                     if (null != rn) {
                         timestampRecommendation.addNotification(rn);
                     }
-
                     RecommendationNotification recommendationNotification = null;
-
                     if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
                         // Setting it as at least one recommendation available
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
+                    } else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
                         // Setting it as at least one recommendation available
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    else if (null != model.getModelName()  ) {
+                    } else if (null != model.getModelName()) {
                         // Setting it as at least one recommendation available
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_MODEL_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    if (null != recommendationNotification) {
+                    } if (null != recommendationNotification) {
                         termLevelNotifications.add(recommendationNotification);
                     } else {
                         recommendationNotification = new RecommendationNotification(
@@ -1064,13 +1052,11 @@ public class RecommendationEngine {
                     if (null == mappedRecommendationForModel) {
                         continue;
                     }
-
                     // Adding the term level recommendation availability after confirming the recommendation exists
                     RecommendationNotification rn = RecommendationNotification.getNotificationForTermAvailability(recommendationTerm);
                     if (null != rn) {
                         timestampRecommendation.addNotification(rn);
                     }
-
                     RecommendationNotification recommendationNotification = null;
 
                     if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
@@ -1079,24 +1065,19 @@ public class RecommendationEngine {
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
+                    } else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
                         // Setting it as at least one recommendation available
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-                    else if ( null != model.getModelName()) {
+                    } else if (null != model.getModelName()) {
                         // Setting it as at least one recommendation available
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_MODEL_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    if (null != recommendationNotification) {
+                    } if (null != recommendationNotification) {
                         termLevelNotifications.add(recommendationNotification);
                     } else {
                         recommendationNotification = new RecommendationNotification(
