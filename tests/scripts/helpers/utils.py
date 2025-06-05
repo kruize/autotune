@@ -26,6 +26,10 @@ from datetime import datetime, timedelta
 from kubernetes import client, config
 from pathlib import Path
 from helpers.kruize import get_bulk_job_status
+from helpers.import_metadata_json_validate import *
+from helpers.list_metadata_json_validate import *
+from helpers.list_metadata_json_schema import *
+from helpers.list_metadata_json_verbose_true_schema import *
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
@@ -82,6 +86,13 @@ INVALID_LIST_METADATA_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are in
 LIST_METADATA_PROFILES_INVALID_NAME = "Given metadata profile name - %s either does not exist or is not valid"
 CREATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
 CREATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
+UPDATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s updated successfully. View Metadata Profiles at /listMetadataProfiles"
+UPDATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "JSONObject[\"%s\"] not found."
+UPDATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Missing mandatory parameters: [%s] "
+INVALID_NAME_PARAMETER_UPDATE_METADATA_PROFILE = "Given metadata profile name - %s either does not exist or is not valid"
+MISMATCH_IN_METADATA_PROFILE_NAMES = "MetadataProfile name in URL: %s, does not match name in request body: %s"
+INVALID_QUERY_PARAMETER_UPDATE_METADATA_PROFILE = "The query param(s) - [%s] is/are invalid"
+MISSING_METADATA_PROFILE_NAME_PARAMETER = "Missing metadata profile 'name' parameter"
 
 
 # Kruize Recommendations Notification codes
@@ -1680,3 +1691,35 @@ def delete_and_create_metric_profile():
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
+
+
+def import_metadata_list_and_validate(input_json_file, verbose=None):
+
+    response = delete_metadata(input_json_file)
+    print("delete metadata = ", response.status_code)
+
+    # Import metadata using the specified json
+    response = import_metadata(input_json_file)
+    metadata_json = response.json()
+
+    # Validate the json against the json schema
+    errorMsg = validate_import_metadata_json(metadata_json, import_metadata_json_schema)
+    assert errorMsg == ""
+
+    json_data = json.load(open(input_json_file))
+    datasource = json_data['datasource_name']
+
+    if verbose is None:
+        verbose = "false"
+
+    response = list_metadata(datasource, verbose=verbose)
+
+    list_metadata_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    if verbose == "false":
+        errorMsg = validate_list_metadata_json(list_metadata_json, list_metadata_json_schema)
+    else :
+        errorMsg = validate_list_metadata_json(list_metadata_json, list_metadata_json_verbose_true_schema)
+    assert errorMsg == ""

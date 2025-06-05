@@ -598,3 +598,25 @@ def list_metadata_profiles(name=None, verbose=None, logging=True):
         print(response.text)
         print("\n************************************************************")
     return response
+
+# Description: This function updates a metadata profile using the Kruize updateMetadataProfile API
+# Input Parameters: name and metadata profile json
+def update_metadata_profile(metadata_profile_json_file, name=None, **kwargs):
+    json_file = open(metadata_profile_json_file, "r")
+    metric_profile_json = json.loads(json_file.read())
+
+    parameters = {}
+
+    if name is not None:
+        parameters['name'] = name
+
+    parameters.update(kwargs)
+
+    print("\nUpdating metadata profile...")
+    url = URL + "/updateMetadataProfile"
+    print("URL = ", url)
+
+    response = requests.put(url, params=parameters, json=metric_profile_json)
+    print("Response status code = ", response.status_code)
+    print(response.text)
+    return response
