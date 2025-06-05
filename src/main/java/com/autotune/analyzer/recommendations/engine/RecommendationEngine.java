@@ -173,7 +173,7 @@ public class RecommendationEngine {
                 registerModel(performanceBasedRecommendationModel);
             } else {
                 // user input does not matches standard models
-                throw new InvalidModelException(model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+                throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
             }
         }
     }
@@ -449,10 +449,10 @@ public class RecommendationEngine {
                         experimentName, interval_start_time, interval_end_time));
                 kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
             }
-        } catch (Exception | FetchMetricsError | InvalidModelException | InvalidTermException e) {
-            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_EXCEPTION,
-                    experimentName, interval_end_time, e.getMessage()));
-            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount));
+        } catch (FetchMetricsError | InvalidModelException | InvalidTermException | Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RECOMMENDATION_EXCEPTION,
+                    experimentName, interval_end_time, e.getMessage());
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.UPDATE_RECOMMENDATIONS_FAILED_COUNT, calCount);
             kruizeObject.setValidation_data(new ValidationOutputData(false, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR));
         }
         return kruizeObject;
