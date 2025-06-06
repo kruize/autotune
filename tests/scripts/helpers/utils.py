@@ -89,10 +89,12 @@ CREATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: M
 UPDATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s updated successfully. View Metadata Profiles at /listMetadataProfiles"
 UPDATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "JSONObject[\"%s\"] not found."
 UPDATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Missing mandatory parameters: [%s] "
-INVALID_NAME_PARAMETER_UPDATE_METADATA_PROFILE = "Given metadata profile name - %s either does not exist or is not valid"
+INVALID_NAME_PARAMETER_METADATA_PROFILE = "Given metadata profile name - %s either does not exist or is not valid"
 MISMATCH_IN_METADATA_PROFILE_NAMES = "MetadataProfile name in URL: %s, does not match name in request body: %s"
 INVALID_QUERY_PARAMETER_UPDATE_METADATA_PROFILE = "The query param(s) - [%s] is/are invalid"
 MISSING_METADATA_PROFILE_NAME_PARAMETER = "Missing metadata profile 'name' parameter"
+DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully. View Metadata Profiles at /listMetadataProfiles"
+IMPORT_METADATA_INVALID_METADATA_PROFILE_NAME = "MetadataProfile - %s either does not exist or is not valid"
 
 
 # Kruize Recommendations Notification codes

@@ -553,13 +553,16 @@ def create_metadata_profile(metadata_profile_json_file):
 
 # Description: This function deletes the metadata profile
 # Input Parameters: metadata profile input json
-def delete_metadata_profile(metadata_profile_name):
+def delete_metadata_profile(metadata_profile_name=None):
     print("\nDeleting the metadata profile...")
     url = URL + "/deleteMetadataProfile"
 
-    query_string = f"name={metadata_profile_name}"
+    query_string = None
 
-    if query_string:
+    if metadata_profile_name is not None:
+        query_string = f"name={metadata_profile_name}"
+
+    if query_string is not None:
         url += "?" + query_string
     print("URL = ", url)
 

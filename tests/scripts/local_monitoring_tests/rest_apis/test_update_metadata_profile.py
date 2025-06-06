@@ -199,7 +199,7 @@ def test_update_metadata_profile_invalid_profile_name(test_name, expected_status
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert data['message'] == INVALID_NAME_PARAMETER_UPDATE_METADATA_PROFILE % name
+    assert data['message'] == INVALID_NAME_PARAMETER_METADATA_PROFILE % name
 
     response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
