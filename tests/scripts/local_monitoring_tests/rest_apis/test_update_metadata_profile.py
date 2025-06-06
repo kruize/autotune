@@ -197,9 +197,14 @@ def test_update_metadata_profile_invalid_profile_name(test_name, expected_status
     response = update_metadata_profile(update_json_file, name=name)
     data = response.json()
 
+    if test_name == "blank_name":
+        errorMsg = MISSING_METADATA_PROFILE_NAME_PARAMETER
+    else:
+        errorMsg = INVALID_NAME_PARAMETER_METADATA_PROFILE % name
+
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert data['message'] == INVALID_NAME_PARAMETER_METADATA_PROFILE % name
+    assert data['message'] == errorMsg
 
     response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
@@ -263,7 +268,7 @@ def test_update_metadata_profile_mismatch_in_name(cluster_type):
 @pytest.mark.negative
 def test_update_metadata_profile_unsupported_query_parameter(cluster_type):
     """
-    Test Description: This test validates the response status code of updateMetadataProfile API by not passing
+    Test Description: This test validates the response status code of updateMetadataProfile API by passing
     unsupported query parameter other than "name"
     """
     input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
@@ -291,7 +296,7 @@ def test_update_metadata_profile_unsupported_query_parameter(cluster_type):
     profile_name = "profile_name"
 
     # Update metadata profile using the specified json
-    response = update_metadata_profile(update_json_file, profile_name=metadata_profile_name)
+    response = update_metadata_profile(update_json_file, name=metadata_profile_name, profile_name=metadata_profile_name)
     data = response.json()
 
     assert response.status_code == ERROR_STATUS_CODE
