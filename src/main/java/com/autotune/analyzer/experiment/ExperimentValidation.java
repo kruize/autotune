@@ -24,6 +24,7 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -393,16 +394,20 @@ public class ExperimentValidation {
                         missingLocalDatasource = true;
                     }
                 }
-
                 // Namespace experiment validation for both remote and local monitoring
-                if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)) {
+                if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)){
                     for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
-                        if (null == k8sObject.getNamespaceData()) {
+                        if (null == k8sObject.getNamespaceDataMap() || k8sObject.getNamespaceDataMap().isEmpty()) {
                             errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE_DATA, expObj.getExperimentType().toString()));
                             missingNamespaceData = true;
-                        } else if (null == k8sObject.getNamespaceData().getNamespace_name()) {
-                            errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE, expObj.getExperimentType().toString()));
-                            missingNamespaceData = true;
+                        } else {
+                            for (NamespaceData namespaceData : k8sObject.getNamespaceDataMap().values()) {
+                                if (null == namespaceData.getNamespace_name()) {
+                                    errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE, expObj.getExperimentType().toString()));
+                                    missingNamespaceData = true;
+                                    break;
+                                }
+                            }
                         }
                     }
                 }

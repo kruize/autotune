@@ -16,7 +16,7 @@ public class K8sObject {
     @SerializedName(KruizeConstants.JSONKeys.CONTAINERS)
     private HashMap<String, ContainerData> containerDataMap;
     @SerializedName(KruizeConstants.JSONKeys.NAMESPACES)
-    private NamespaceData namespaceData;
+    private HashMap<String, NamespaceData> namespaceDataMap;
 
     public K8sObject(String name, String type, String namespace) {
         this.name = name;
@@ -58,14 +58,12 @@ public class K8sObject {
     public void setContainerDataMap(HashMap<String, ContainerData> containerDataMap) {
         this.containerDataMap = containerDataMap;
     }
-
     @JsonProperty(KruizeConstants.JSONKeys.NAMESPACES)
-    public NamespaceData getNamespaceData() {
-        return namespaceData;
+    public HashMap<String, NamespaceData> getNamespaceDataMap() {
+        return namespaceDataMap;
     }
-
-    public void setNamespaceData(NamespaceData namespaceData) {
-        this.namespaceData = namespaceData;
+    public void setNamespaceDataMap(HashMap<String, NamespaceData> namespaceDataMap) {
+        this.namespaceDataMap = namespaceDataMap;
     }
 
     @Override
@@ -75,7 +73,7 @@ public class K8sObject {
                 ", name='" + name + '\'' +
                 ", namespace='" + namespace + '\'' +
                 ", containerDataMap=" + containerDataMap +
-                ", namespaceData=" + namespaceData +
+                ", namespaceDataMap=" + namespaceDataMap +
                 '}';
     }
 }

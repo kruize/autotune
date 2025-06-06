@@ -100,6 +100,7 @@ public class AnalyzerErrorConstants {
         public static final String UNSUPPORTED_FORMAT = " Format value should be among these values: ".concat(KruizeSupportedTypes.SUPPORTED_FORMATS.toString());
         public static final String UNSUPPORTED_METRIC = "Metric variable name should be among these values: ".concat(Arrays.toString(AnalyzerConstants.MetricName.values()));
         public static final String CONTAINER_AND_EXPERIMENT = " for container : %s for experiment: %s.";
+        public static final String NAMESPACE_AND_EXPERIMENT = " for namespace : %s for experiment: %s.";
         public static final String JSON_PARSING_ERROR = "Failed to parse the JSON. Please check the input payload ";
         public static final String AGGREGATION_INFO_INVALID_VALUE = "Invalid value type for aggregation_info objects. Expected a numeric value (Double).";
         public static final String VERSION_MISMATCH = "Version number mismatch found. Expected: %s , Found: %s";
@@ -112,6 +113,8 @@ public class AnalyzerErrorConstants {
         public static final String PARSE_ERROR_MESSAGE = "Exception occurred while parsing the data: %s";
         public static final String DELETED_METADATA_PROFILE = "Deleted metadata profile object: %s";
         public static final String INVALID_METADATA_PROFILE_NAME = "MetadataProfile 'name' field is either null or empty!";
+        public static final String INVALID_METRICS_FOUND = "Invalid metrics found for experiment - %s: %s";
+        public static final String MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment - %s : %s";
 
 
         private AutotuneObjectErrors() {
