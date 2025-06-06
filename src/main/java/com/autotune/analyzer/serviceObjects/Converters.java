@@ -106,7 +106,7 @@ public class Converters {
                     kruizeObject.setMetadataProfile(createExperimentAPIObject.getMetadataProfile());
                 }
                 if (null != createExperimentAPIObject.getValidationData()) {
-                    //Validation already done, and it is getting loaded back from db
+                    // Validation already done, and it is getting loaded back from db
                     kruizeObject.setValidation_data(createExperimentAPIObject.getValidationData());
                 }
             } catch (Exception e) {

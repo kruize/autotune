@@ -34,6 +34,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class PerformanceProfileUtil {
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileUtil.class);
@@ -180,9 +181,22 @@ public class PerformanceProfileUtil {
                     LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
                     LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
                     if (!new HashSet<>(kruizeFunctionVariablesList).containsAll(mandatoryFields)) {
-                        errorReasons.add(errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s",
+                        errorReasons.add(errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_MANDATORY_PARAMETERS,
                                 updateResultsAPIObject.getExperimentName(), mandatoryFields)));
                         break;
+                    } else {
+                        LOGGER.info("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
+                        List<String> invalidMetrics = kruizeFunctionVariablesList.stream()
+                                .map(AnalyzerConstants.MetricName::toString) // Convert MetricName to its String representation
+                                .collect(Collectors.toList());
+
+                        invalidMetrics.removeAll(perfProfileFunctionVariablesList); // Remove all expected metrics
+
+                        if (!invalidMetrics.isEmpty()) {
+                            // rare/impossible case as validations as validateMetricsValues function takes care of this
+                            errorReasons.add(errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_METRICS_FOUND,
+                                    updateResultsAPIObject.getExperimentName(), invalidMetrics)));
+                        }
                     }
                 }
             } else if (kubernetesAPIObject.getNamespaceAPIObject() != null) {
@@ -249,19 +263,21 @@ public class PerformanceProfileUtil {
                     LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
                     LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
                     if (!new HashSet<>(kruizeFunctionVariablesList).containsAll(mandatoryFields)) {
-                        errorReasons.add(errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s",
+                        errorReasons.add(errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_MANDATORY_PARAMETERS,
                                 updateResultsAPIObject.getExperimentName(), mandatoryFields)));
-
                         break;
                     } else {
                         LOGGER.info("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
-                        // check if illegal fields are present or not
-                        List<AnalyzerConstants.MetricName> extraPresentMetrics = new ArrayList<>(kruizeFunctionVariablesList);
-                        extraPresentMetrics.removeAll(perfProfileFunctionVariablesList); // Remove all expected metrics
-                        if (!extraPresentMetrics.isEmpty()) {
-                            // Log the names of the extra/unexpected metrics == illegal metrics
-                            errorReasons.add(errorMsg.concat(String.format("Extra (non-mandatory and non-profile) metrics found for experiment - %s: %s",
-                                    updateResultsAPIObject.getExperimentName(), extraPresentMetrics)));
+                        List<String> invalidMetrics = kruizeFunctionVariablesList.stream()
+                                .map(AnalyzerConstants.MetricName::toString) // Convert MetricName to its String representation
+                                .collect(Collectors.toList());
+
+                        invalidMetrics.removeAll(perfProfileFunctionVariablesList); // Remove all expected metrics
+
+                        if (!invalidMetrics.isEmpty()) {
+                            // rare/impossible case as validations as validateMetricsValues function takes care of this
+                            errorReasons.add(errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_METRICS_FOUND,
+                                    updateResultsAPIObject.getExperimentName(), invalidMetrics)));
                         }
                     }
                 }
