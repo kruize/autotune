@@ -187,12 +187,12 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_MODE_FOR_NAMESPACE_EXP = "Auto or recreate mode is not supported for namespace experiment.";
             public static final String INVALID_OBJECT_TYPE_FOR_AUTO_EXP = "Kubernetes object type is not supported for auto or recreate mode.";
             public static final String AUTO_EXP_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case.";
-            public static final String INVALID_TERM_NAME = " term name is not supported. Use short, medium or long term.";
+            public static final String INVALID_TERM_NAME = "Term name is not supported. Use short, medium or long term.";
             public static final String TERM_SETTINGS_UNDEFINED= "Term settings are not defined in the recommendation settings.";
             public static final String MULTIPLE_TERMS_UNSUPPORTED = "Multiple terms are currently not supported for auto or recreate mode.";
-            public static final String INVALID_MODEL_NAME = " model name is not supported. Use cost or performance.";
+            public static final String INVALID_MODEL_NAME = "Model name is not supported. Use cost or performance.";
             public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
-            public static final String WHITESPACE_NOT_ALLOWED = "Whitespace can not be entered as a term or model value ";
+            public static final String EMPTY_NOT_ALLOWED = "Empty term or model value.";
             public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
             public static final String MISSING_NAMESPACE = "Missing namespace for experimentType: %s";
             public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
@@ -214,7 +214,7 @@ public class AnalyzerErrorConstants {
             public static final String UPDATE_RECOMMENDATIONS_SUCCESS_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "success";
             public static final String UPDATE_RECOMMENDATIONS_COMPLETED_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "completed";
             public static final String RECOMMENDATION_ERROR = "Failed to create recommendation for experiment: %s and interval_start_time: %s and interval_end_time: %s";
-            public static final String RECOMMENDATION_EXCEPTION = "Exception occurred while generating recommendations for experiment: %s and interval_end_time: %s : %s ";
+            public static final String RECOMMENDATION_EXCEPTION = "Exception occurred while generating recommendations for experiment: {} and interval_end_time: {} : {} ";
             public static final String METRIC_EXCEPTION = "Exception occurred while fetching metrics from the datasource: ";
             public static final String FETCHING_RESULTS_FAILED = "Failed to fetch the results from the DB: %s";
             public static final String INTERNAL_MAP_EMPTY = "Internal map sent to populate method cannot be null or empty";

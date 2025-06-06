@@ -50,7 +50,6 @@ CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View r
 CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
 CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE = "Can not specify namespace data for container experiment"
 CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER = "Can not specify container data for namespace experiment"
-CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE = "Namespace experiment type is not supported for remote monitoring use case."
 CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE = "Auto or recreate mode is not supported for namespace experiment."
 CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case."
 CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA = "Kubernetes object type is not supported for auto or recreate mode."
@@ -205,6 +204,7 @@ create_exp_test_data = {
     "performance_profile": "resource-optimization-openshift",
     "mode": "monitor",
     "target_cluster": "remote",
+    "experiment_type": "container",
     "type": "deployment",
     "name": "tfb-qrh-sample",
     "namespace": "default",
@@ -303,7 +303,8 @@ def generate_test_data(csvfile, test_data, api_name):
 
                 test_name = t + "_" + key
                 status_code = 400
-                if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"):
+                if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"
+                                                 or test_name == "null_experiment_type"):
                     status_code = 201
 
                 if api_name == "import_metadata" and (test_name == "invalid_version" or test_name == "blank_version" or
