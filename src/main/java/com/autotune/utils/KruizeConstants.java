@@ -1000,7 +1000,7 @@ public class KruizeConstants {
         public static final String CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE = "Failed to convert input JSON to MetadataProfile object due to: {}";
         public static final String METADATA_PROFILE_FILE_PATH = "MetadataProfile file path: {}";
         public static final String UPDATING_METADATA_PROFILE = "Trying to update the metadata profile from collection: ";
-        public static final String METADATA_PROFILE_DOES_NOT_EXIST = "MetadataProfile does not exists: {}";
+        public static final String METADATA_PROFILE_DOES_NOT_EXIST = "MetadataProfile does not exist: {}";
         public static final String METADATA_PROFILE_UPDATED = "MetadataProfile updated in the collection successfully: {}";
         public static final String METADATA_PROFILE_VALIDATION_ERROR= "Validation of metadata profile failed: {}";
 
@@ -1032,7 +1032,7 @@ public class KruizeConstants {
         public static final String DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully.";
         public static final String DELETE_METADATA_PROFILE_FROM_DB_SUCCESS_MSG = "Metadata profile deleted successfully from the DB.";
         public static final String UPDATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s updated successfully.";
-        public static final String UPDATE_METADATA_PROFILE_FROM_DB_WITH_VERSION = "Updated Metadata Profile : {} into the DB with version: {}";
+        public static final String UPDATE_METADATA_PROFILE_TO_DB_WITH_VERSION = "Updated Metadata Profile : {} into the DB with version: {}";
 
         private MetadataProfileAPIMessages() {
         }

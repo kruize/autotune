@@ -151,6 +151,7 @@ public class MetadataProfileCollection {
     /**
      * Updates the specified metadataProfile in the collection
      * @param metadataProfileName Name of the profile to be updated
+     * @param newMetadataProfile MetadataProfile object to be added after removing the existing profile
      */
     public void updateMetadataProfileFromCollection(String metadataProfileName, MetadataProfile newMetadataProfile) {
 

@@ -212,6 +212,16 @@ public class MetadataProfileService extends HttpServlet{
 
         String inputData = request.getReader().lines().collect(Collectors.joining());
 
+        if (null == metadataProfileName || metadataProfileName.isEmpty()) {
+            sendErrorResponseMessage(
+                    response,
+                    new Exception(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.MISSING_METADATA_PROFILE_NAME_EXCPTN),
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.MISSING_METADATA_PROFILE_NAME_MSG)
+            );
+            return;
+        }
+
         if (inputData.isEmpty()) {
             sendErrorResponseMessage(
                     response,
@@ -236,19 +246,12 @@ public class MetadataProfileService extends HttpServlet{
                     loadMetadataProfilesFromCollection(metadataProfilesMap, metadataProfileName);
 
                     // Check if metadata profile exists
-                    if (null != metadataProfileName && !metadataProfilesMap.containsKey(metadataProfileName)) {
+                    if (!metadataProfilesMap.containsKey(metadataProfileName)) {
                         sendErrorResponseMessage(
                                 response,
                                 new Exception(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_METADATA_PROFILE_NAME_EXCPTN),
                                 HttpServletResponse.SC_BAD_REQUEST,
                                 String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_METADATA_PROFILE_NAME_MSG, metadataProfileName)
-                        );
-                    } else if (null == metadataProfileName && metadataProfilesMap.isEmpty()) {
-                        sendErrorResponseMessage(
-                                response,
-                                new Exception(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.NO_METADATA_PROFILES_EXCPTN),
-                                HttpServletResponse.SC_BAD_REQUEST,
-                                AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.NO_METADATA_PROFILES
                         );
                     } else {
                         MetadataProfile metadataProfile = Converters.KruizeObjectConverters.convertInputJSONToCreateMetadataProfile(inputData);
@@ -270,7 +273,7 @@ public class MetadataProfileService extends HttpServlet{
 
                                 metadataProfilesMap.put(inputMetadataProfileName, metadataProfile);
                                 getServletContext().setAttribute(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_MAP, metadataProfilesMap);
-                                LOGGER.debug(KruizeConstants.MetadataProfileAPIMessages.UPDATE_METADATA_PROFILE_FROM_DB_WITH_VERSION,
+                                LOGGER.debug(KruizeConstants.MetadataProfileAPIMessages.UPDATE_METADATA_PROFILE_TO_DB_WITH_VERSION,
                                         metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText(), metadataProfile.getProfile_version());
 
                                 sendSuccessResponse(response, String.format(KruizeConstants.MetadataProfileAPIMessages.UPDATE_METADATA_PROFILE_SUCCESS_MSG, metadataProfile.getMetadata().get("name").asText()));

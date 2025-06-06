@@ -333,6 +333,8 @@ public class AnalyzerErrorConstants {
             public static final String EXPECTED_IDENTIFIERS = "Expected one of the following identifier sets";
             public static final String INVALID_QUERY_NO_RESULT = "Invalid query, no result returned by the metric query: %s.";
             public static final String QUERY_SYNTAX_ERROR_MESSAGE = ". Please review the metric query: %s for syntax errors.";
+            public static final String MISSING_METADATA_PROFILE_NAME_EXCPTN = "Missing Metadata Profile Name";
+            public static final String MISSING_METADATA_PROFILE_NAME_MSG = "Missing metadata profile 'name' parameter";
         }
     }
 
