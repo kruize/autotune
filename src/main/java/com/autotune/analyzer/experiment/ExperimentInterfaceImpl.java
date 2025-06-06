@@ -19,11 +19,13 @@ import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryEx
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
+import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.helper.DBHelpers;
 import org.slf4j.Logger;
@@ -31,6 +33,7 @@ import org.slf4j.LoggerFactory;
 
 import java.sql.Timestamp;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class ExperimentInterfaceImpl implements ExperimentInterface {
     private static final long serialVersionUID = 1L;
@@ -59,68 +62,98 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
 
     @Override
     public boolean addResultsToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap, List<ExperimentResultData> experimentResultDataList) {
-        experimentResultDataList.forEach(
-                (resultData) -> {
-                    resultData.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
-                    KruizeObject ko = mainKruizeExperimentMap.get(resultData.getExperiment_name());
-                    // creating a temp map to store k8sdata
-                    HashMap<String, K8sObject> k8sObjectHashMap = new HashMap<>();
-                    for (K8sObject k8sObj : ko.getKubernetes_objects())
-                        k8sObjectHashMap.put(k8sObj.getName(), k8sObj);
+        try {
+            experimentResultDataList.forEach(resultData -> {
+                resultData.setStatus(AnalyzerConstants.ExperimentStatus.QUEUED);
+                KruizeObject ko = mainKruizeExperimentMap.get(resultData.getExperiment_name());
 
-                    List<K8sObject> resultK8sObjectList = resultData.getKubernetes_objects();
-                    for (K8sObject resultK8sObject : resultK8sObjectList) {
-                        String dName = resultK8sObject.getName();
-                        String dType = resultK8sObject.getType();
-                        String dNamespace = resultK8sObject.getNamespace();
-                        K8sObject k8sObject;
-                        HashMap<String, ContainerData> containerDataMap;
-                        if (null == k8sObjectHashMap.get(dName)) {
-                            k8sObject = new K8sObject(dName, dType, dNamespace);
-                            containerDataMap = new HashMap<>();
-                        } else {
-                            k8sObject = k8sObjectHashMap.get(dName);
-                            containerDataMap = k8sObject.getContainerDataMap();
-                        }
-                        HashMap<String, ContainerData> resultContainerDataMap = resultK8sObject.getContainerDataMap();
-                        for (ContainerData resultContainerData : resultContainerDataMap.values()) {
-                            String cName = resultContainerData.getContainer_name();
-                            String imgName = resultContainerData.getContainer_image_name();
-                            HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = resultContainerData.getMetrics();
-                            ContainerData containerData;
-                            if (null == containerDataMap.get(cName)) {
-                                containerData = new ContainerData(cName, imgName, resultContainerData.getContainerRecommendations(), metricsMap);
-                            } else {
-                                containerData = containerDataMap.get(cName);
-                            }
-                            HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
-                            for (IntervalResults intervalResults : resultContainerData.getResults().values()) {
-                                Collection<MetricResults> metricResultsList = intervalResults.getMetricResultsMap().values();
-                                for (MetricResults metricResults : metricResultsList)
-                                    metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metricResults.getName()), metricResults);
-                            }
-                            HashMap<Timestamp, IntervalResults> resultsIntervalMap = containerData.getResults();
+                // Build a lookup map for existing K8sObjects
+                Map<String, K8sObject> k8sObjectMap = ko.getKubernetes_objects().stream()
+                        .collect(Collectors.toMap(K8sObject::getName, k -> k, (a, b) -> b, HashMap::new));
 
-                            if (null == resultsIntervalMap) {
-                                resultsIntervalMap = new HashMap<>();
-                            }
-                            IntervalResults intervalResults = new IntervalResults(resultData.getIntervalStartTime(), resultData.getIntervalEndTime());
-                            intervalResults.setMetricResultsMap(metricResultsHashMap);
-                            resultsIntervalMap.put(resultData.getIntervalEndTime(), intervalResults);
+                for (K8sObject resultK8sObject : resultData.getKubernetes_objects()) {
+                    String name = resultK8sObject.getName();
+                    String type = resultK8sObject.getType();
+                    String namespace = resultK8sObject.getNamespace();
 
-                            containerData.setResults(resultsIntervalMap);
+                    K8sObject k8sObject = k8sObjectMap.getOrDefault(name, new K8sObject(name, type, namespace));
+                    HashMap<String, ContainerData> containerDataMap =
+                            k8sObject.getContainerDataMap() != null ? k8sObject.getContainerDataMap() : new HashMap<>();
+                    HashMap<String, NamespaceData> namespaceDataMap =
+                            k8sObject.getNamespaceDataMap() != null ? k8sObject.getNamespaceDataMap() : new HashMap<>();
+
+                    if (resultK8sObject.getContainerDataMap() != null && !resultK8sObject.getContainerDataMap().isEmpty()) {
+                        resultK8sObject.getContainerDataMap().forEach((cName, resultContainerData) -> {
+                            ContainerData containerData = containerDataMap.getOrDefault(
+                                    cName, new ContainerData(cName, resultContainerData.getContainer_image_name(),
+                                            resultContainerData.getContainerRecommendations(),
+                                            resultContainerData.getMetrics()));
+
+                            containerData.setResults(mergeResults(
+                                    containerData.getResults(),
+                                    resultContainerData.getResults(),
+                                    resultData.getIntervalStartTime(),
+                                    resultData.getIntervalEndTime()));
+
                             containerDataMap.put(cName, containerData);
-                        }
+                        });
                         k8sObject.setContainerDataMap(containerDataMap);
-                        k8sObjectHashMap.put(dName, k8sObject);
+                    } else if (resultK8sObject.getNamespaceDataMap() != null && !resultK8sObject.getNamespaceDataMap().isEmpty()) {
+                        resultK8sObject.getNamespaceDataMap().forEach((nsName, resultNamespaceData) -> {
+                            NamespaceData namespaceData = namespaceDataMap.getOrDefault(
+                                    nsName, new NamespaceData(nsName,
+                                            resultNamespaceData.getNamespaceRecommendations(),
+                                            resultNamespaceData.getMetrics()));
+
+                            namespaceData.setResults(mergeResults(
+                                    namespaceData.getResults(),
+                                    resultNamespaceData.getResults(),
+                                    resultData.getIntervalStartTime(),
+                                    resultData.getIntervalEndTime()));
+
+                            namespaceDataMap.put(nsName, namespaceData);
+                        });
+                        k8sObject.setNamespaceDataMap(namespaceDataMap);
                     }
-                    List<K8sObject> k8sObjectList = new ArrayList<>(k8sObjectHashMap.values());
-                    ko.setKubernetes_objects(k8sObjectList);
-                    LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.", ko.getExperimentName(), resultData.getIntervalEndTime());
+
+                    k8sObjectMap.put(name, k8sObject);
                 }
-        );
+                ko.setKubernetes_objects(new ArrayList<>(k8sObjectMap.values()));
+                LOGGER.debug("Added Results for Experiment name : {} with TimeStamp : {} into main map.",
+                        ko.getExperimentName(), resultData.getIntervalEndTime());
+            });
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.RESULTS_SAVE_FAILURE, e.getMessage());
+            return false;
+        }
         return true;
     }
+
+    private HashMap<Timestamp, IntervalResults> mergeResults(
+            HashMap<Timestamp, IntervalResults> existingResults,
+            Map<Timestamp, IntervalResults> newResults,
+            Timestamp startTime,
+            Timestamp endTime) {
+
+        HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+        for (IntervalResults intervalResults : newResults.values()) {
+            for (MetricResults metricResult : intervalResults.getMetricResultsMap().values()) {
+                metricResultsHashMap.put(
+                        AnalyzerConstants.MetricName.valueOf(metricResult.getName()), metricResult);
+            }
+        }
+
+        if (existingResults == null) {
+            existingResults = new HashMap<>();
+        }
+
+        IntervalResults newInterval = new IntervalResults(startTime, endTime);
+        newInterval.setMetricResultsMap(metricResultsHashMap);
+        existingResults.put(endTime, newInterval);
+
+        return existingResults;
+    }
+
 
     @Override
     public boolean addRecommendationsToLocalStorage(Map<String, KruizeObject> mainKruizeExperimentMap,
