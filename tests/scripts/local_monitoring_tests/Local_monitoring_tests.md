@@ -91,6 +91,30 @@ Here are the test scenarios:
 - Test with invalid values such as blank, null or an invalid value for name query parameter in listMetadataProfiles API
 - List metadata profiles without creating metadata profile
 
+### **Update Metadata Profile API tests**
+
+Here are the test scenarios:
+
+- Update a metadata profile with a valid json using the API, list and validate the metadata profiles before and after 
+calling /updateMetadataProfile API and validate the updated queries using /dsmetadata API.
+- Update metadata profile twice using the API, list and validate the updated profiles and validate the updated queries using /dsmetadata API.
+- Update metadata profile with a valid json using the API, omitting required `name` in the query parameter.
+- Update metadata profile by passing invalid `name` query parameter: Empty, NULL, invalid profile names.
+- Update metadata profile with an invalid json missing the mandatory fields, validate for appropriate error message.
+- Update metadata profile with a valid json using the API but pass invalid query parameter other than `name`.
+- Update metadata profile with mismatch in profile names of input JSON payload and query parameter.
+
+
+### **Delete Metadata Profile API tests**
+
+Here are the test scenarios:
+
+- Delete metadata profile passing a valid `name` parameter.
+- Delete metadata profile by missing `name` query parameter.
+- Delete metadata profile by passing invalid `name` query parameter: Empty, NULL, invalid profile names.
+- Multiple delete attempts: Delete same metadata profile multiple times and validate the expected error message.
+- Delete metadata profile, try to import cluster metadata and validate the expected error message.
+
 ### **Create Experiment API tests**
 
 Here are the test scenarios:
