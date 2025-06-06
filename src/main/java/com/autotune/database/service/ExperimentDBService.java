@@ -434,11 +434,11 @@ public class ExperimentDBService {
      * @param metadataProfile Metadata profile object to be updated
      * @return ValidationOutputData object
      */
-    public ValidationOutputData updateMetadataProfileFromDB(MetadataProfile metadataProfile) {
+    public ValidationOutputData updateMetadataProfileToDB(MetadataProfile metadataProfile) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
             KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileObjToMetadataProfileDBObj(metadataProfile);
-            validationOutputData = this.experimentDAO.updateMetadataProfileFromDB(kruizeMetadataProfileEntry);
+            validationOutputData = this.experimentDAO.updateMetadataProfileToDB(kruizeMetadataProfileEntry);
         } catch (Exception e) {
             LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.UPDATE_METADATA_PROFILE_FROM_DB_ERROR, e.getMessage());
         }

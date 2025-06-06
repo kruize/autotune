@@ -570,7 +570,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * @param kruizeMetadataProfileEntry Metadata Profile Database object to be updated
      * @return validationOutputData contains the status of the DB update operation
      */
-    public ValidationOutputData updateMetadataProfileFromDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry) {
+    public ValidationOutputData updateMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry) {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         String statusValue = "failure";
         Timer.Sample timerUpdateMetadataProfileDB = Timer.start(MetricsConfig.meterRegistry());
@@ -578,7 +578,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
             try {
                 tx = session.beginTransaction();
-                Query query = session.createQuery(UPDATE_METADATA_PROFILE_FROM_DB, null);
+                Query query = session.createQuery(UPDATE_METADATA_PROFILE_TO_DB, null);
                 query.setParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME_PARAMETER, kruizeMetadataProfileEntry.getMetadata().get("name").asText());
                 query.setParameter(AnalyzerConstants.API_VERSION, kruizeMetadataProfileEntry.getApi_version());
                 query.setParameter(AnalyzerConstants.KIND, kruizeMetadataProfileEntry.getKind());

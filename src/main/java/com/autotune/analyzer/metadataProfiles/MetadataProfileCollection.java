@@ -153,7 +153,7 @@ public class MetadataProfileCollection {
      * @param metadataProfileName Name of the profile to be updated
      * @param newMetadataProfile MetadataProfile object to be added after removing the existing profile
      */
-    public void updateMetadataProfileFromCollection(String metadataProfileName, MetadataProfile newMetadataProfile) {
+    public void updateMetadataProfileToCollection(String metadataProfileName, MetadataProfile newMetadataProfile) {
 
         LOGGER.debug(KruizeConstants.MetadataProfileConstants.UPDATING_METADATA_PROFILE, metadataProfileName);
 

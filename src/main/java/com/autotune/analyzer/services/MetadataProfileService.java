@@ -266,10 +266,10 @@ public class MetadataProfileService extends HttpServlet{
 
                         ValidationOutputData validationOutputData = MetadataProfileUtil.validateMetadataProfile(metadataProfilesMap, metadataProfile);
                         if (validationOutputData.isSuccess()) {
-                            ValidationOutputData updatedFromDB = new ExperimentDBService().updateMetadataProfileFromDB(metadataProfile);
+                            ValidationOutputData updatedFromDB = new ExperimentDBService().updateMetadataProfileToDB(metadataProfile);
                             if (updatedFromDB.isSuccess()) {
                                 // Update metadata profile in-memory collection
-                                MetadataProfileCollection.getInstance().updateMetadataProfileFromCollection(metadataProfileName, metadataProfile);
+                                MetadataProfileCollection.getInstance().updateMetadataProfileToCollection(metadataProfileName, metadataProfile);
 
                                 metadataProfilesMap.put(inputMetadataProfileName, metadataProfile);
                                 getServletContext().setAttribute(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_MAP, metadataProfilesMap);

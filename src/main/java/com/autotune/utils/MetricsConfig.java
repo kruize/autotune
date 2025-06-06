@@ -93,7 +93,7 @@ public class MetricsConfig {
         timerBAddMetadataProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addMetadataProfileToDB");
         timerBLoadMetadataProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadMetadataProfileByName");
         timerBLoadAllMetadataProfiles = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllMetadataProfiles");
-        timerBUpdateMetadataProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updateMetadataProfileFromDB");
+        timerBUpdateMetadataProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updateMetadataProfileToDB");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);

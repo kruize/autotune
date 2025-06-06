@@ -1013,7 +1013,7 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: {}";
         public static final String CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE = "Failed to convert input JSON to MetadataProfile object due to: {}";
         public static final String METADATA_PROFILE_FILE_PATH = "MetadataProfile file path: {}";
-        public static final String UPDATING_METADATA_PROFILE = "Trying to update the metadata profile from collection: ";
+        public static final String UPDATING_METADATA_PROFILE = "Trying to update the metadata profile to collection: ";
         public static final String METADATA_PROFILE_DOES_NOT_EXIST = "MetadataProfile does not exist: {}";
         public static final String METADATA_PROFILE_UPDATED = "MetadataProfile updated in the collection successfully: {}";
         public static final String METADATA_PROFILE_VALIDATION_ERROR= "Validation of metadata profile failed: {}";
