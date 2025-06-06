@@ -115,7 +115,7 @@ public class MetadataProfileValidation {
                 }
 
                 // Validates fields like k8s_type and slo object
-                validateCommonProfileFields(metadataProfile, errorString, validationOutputData);
+                validateCommonProfileFields(metadataProfile, errorString);
 
                 if (!errorString.toString().isEmpty()) {
                     validationOutputData.setSuccess(false);
@@ -218,9 +218,8 @@ public class MetadataProfileValidation {
      *  Validates fields like k8s_type and query_variables
      * @param metadataProfile Metadata Profile object to be validated
      * @param errorString   StringBuilder to collect error messages during validation of multiple fields
-     * @param validationOutputData ValidationOutputData containing the response based on the validation
      */
-    private void validateCommonProfileFields(MetadataProfile metadataProfile, StringBuilder errorString, ValidationOutputData validationOutputData){
+    private void validateCommonProfileFields(MetadataProfile metadataProfile, StringBuilder errorString){
         // Check if k8s type is supported
         String k8sType = metadataProfile.getK8s_type();
         if (!KruizeSupportedTypes.K8S_TYPES_SUPPORTED.contains(k8sType)) {
@@ -302,7 +301,7 @@ public class MetadataProfileValidation {
                 }
 
                 // Validates fields like k8s_type and slo object
-                validateCommonProfileFields(metadataProfile, errorString, validationOutputData);
+                validateCommonProfileFields(metadataProfile, errorString);
 
                 // Validate Metric names and expected query patterns
                 validateMetricQueries(metadataProfile, errorString);
