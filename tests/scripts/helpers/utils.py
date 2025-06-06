@@ -46,7 +46,6 @@ CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View r
 CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
 CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE = "Can not specify namespace data for container experiment"
 CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER = "Can not specify container data for namespace experiment"
-CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE = "Namespace experiment type is not supported for remote monitoring use case."
 CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE = "Auto or recreate mode is not supported for namespace experiment."
 CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case."
 CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA = "Kubernetes object type is not supported for auto or recreate mode."
@@ -192,6 +191,7 @@ create_exp_test_data = {
     "performance_profile": "resource-optimization-openshift",
     "mode": "monitor",
     "target_cluster": "remote",
+    "experiment_type": "container",
     "type": "deployment",
     "name": "tfb-qrh-sample",
     "namespace": "default",
@@ -290,7 +290,8 @@ def generate_test_data(csvfile, test_data, api_name):
 
                 test_name = t + "_" + key
                 status_code = 400
-                if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"):
+                if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"
+                                                 or test_name == "null_experiment_type"):
                     status_code = 201
 
                 if api_name == "import_metadata" and (test_name == "invalid_version" or test_name == "blank_version" or
@@ -548,7 +549,7 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
 def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
                             list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
     if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
-        assert list_reco_kubernetes_obj["namespaces"]["namespace_name"] == create_exp_kubernetes_obj["namespaces"]["namespace_name"]
+        assert list_reco_kubernetes_obj["namespaces"]["namespace"] == create_exp_kubernetes_obj["namespaces"]["namespace"]
         list_reco_namespace = list_reco_kubernetes_obj["namespaces"]
         create_exp_namespace = create_exp_kubernetes_obj["namespaces"]
         validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name)
@@ -770,8 +771,8 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
 def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name):
     # Validate namespace name
     if create_exp_namespace != None and list_reco_namespace != None:
-        assert create_exp_namespace["namespace_name"] == list_reco_namespace["namespace_name"], \
-            f"Namespace names did not match! Actual -  {list_reco_namespace['namespace_name']} Expected - {create_exp_namespace['namespace_name']}"
+        assert create_exp_namespace["namespace"] == list_reco_namespace["namespace"], \
+            f"Namespace names did not match! Actual -  {list_reco_namespace['namespace']} Expected - {create_exp_namespace['namespace']}"
 
     if expected_duration_in_hours == None:
         duration_in_hours = 0.0

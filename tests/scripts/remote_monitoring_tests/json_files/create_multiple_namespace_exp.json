@@ -2,12 +2,10 @@
   {
     "version": "v2.0",
     "experiment_name": "tfb-workload-namespace",
-    "cluster_name": "default",
-    "performance_profile": "resource-optimization-local-monitoring",
-    "metadata_profile": "cluster-metadata-local-monitoring",
+    "cluster_name": "cluster-one-division-bell",
+    "performance_profile": "resource-optimization-openshift",
     "mode": "monitor",
-    "target_cluster": "local",
-    "datasource": "prometheus-1",
+    "target_cluster": "remote",
     "experiment_type": "namespace",
     "kubernetes_objects": [
       {
@@ -26,12 +24,10 @@
   {
     "version": "v2.0",
     "experiment_name": "multiple-import-namespace",
-    "cluster_name": "default",
+    "cluster_name": "cluster-one-division-bell",
     "performance_profile": "resource-optimization-openshift",
-    "metadata_profile": "cluster-metadata-local-monitoring",
     "mode": "monitor",
-    "target_cluster": "local",
-    "datasource": "prometheus-1",
+    "target_cluster": "remote",
     "experiment_type": "namespace",
     "kubernetes_objects": [
       {

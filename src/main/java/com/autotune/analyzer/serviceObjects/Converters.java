@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,11 +134,11 @@ public class Converters {
         // Generates K8sObject for namespace type experiments from KubernetesAPIObject
         public static K8sObject createNamespaceExperiment(KubernetesAPIObject kubernetesAPIObject) {
             K8sObject k8sObject = new K8sObject();
-            k8sObject.setNamespace(kubernetesAPIObject.getNamespaceAPIObjects().getnamespace_name());
+            k8sObject.setNamespace(kubernetesAPIObject.getNamespaceAPIObjects().getNamespace());
             HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
             k8sObject.setContainerDataMap(containerDataHashMap);
             NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObjects();
-            k8sObject.setNamespaceData(new NamespaceData(namespaceAPIObject.getnamespace_name(), new NamespaceRecommendations(), null));
+            k8sObject.setNamespaceData(new NamespaceData(namespaceAPIObject.getNamespace(), new NamespaceRecommendations(), null));
             return k8sObject;
         }
 

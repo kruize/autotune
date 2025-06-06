@@ -39,6 +39,7 @@ import org.hibernate.type.SqlTypes;
  * status: An enum representing the status of the experiment, defined in AnalyzerConstants.ExperimentStatus.
  * extended_data: A JSON object representing extended data for the experiment.
  * meta_data: A string representing metadata for the experiment.
+ * experimentType: A string representing the type of the experiment
  * The ExperimentDetail class also has getters and setters for all its fields.
  */
 @Entity
@@ -63,6 +64,8 @@ public class KruizeExperimentEntry {
     private JsonNode extended_data;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode meta_data;
+    @Enumerated(EnumType.STRING)
+    private AnalyzerConstants.ExperimentType experiment_type;
 
 //    TODO: update KruizeDSMetadataEntry
 
@@ -173,5 +176,12 @@ public class KruizeExperimentEntry {
         this.datasource = datasource;
     }
 
+    public AnalyzerConstants.ExperimentType getExperiment_type() {
+        return experiment_type;
+    }
+
+    public void setExperiment_type(AnalyzerConstants.ExperimentType experiment_type) {
+        this.experiment_type = experiment_type;
+    }
 
 }

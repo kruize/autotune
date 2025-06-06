@@ -72,7 +72,6 @@ import java.util.Scanner;
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED;
 import static com.autotune.utils.KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.SET_UP_DEFAULT_METADATA_PROFILE_ERROR;
 import static com.autotune.utils.KruizeConstants.MetricProfileConstants.MetricProfileErrorMsgs.SET_UP_DEFAULT_METRIC_PROFILE_ERROR;
-import static com.autotune.utils.ServerContext.*;
 
 public class Autotune {
     private static final Logger LOGGER = LoggerFactory.getLogger(Autotune.class);
@@ -91,11 +90,11 @@ public class Autotune {
         disableServerLogging();
         // Create a thread pool with the desired number of threads
         QueuedThreadPool threadPool = new QueuedThreadPool();
-        threadPool.setMaxThreads(KRUIZE_HTTP_THREAD_POOL_COUNT); // Set the maximum number of threads in the pool
+        threadPool.setMaxThreads(ServerContext.KRUIZE_HTTP_THREAD_POOL_COUNT); // Set the maximum number of threads in the pool
         Server server = new Server(threadPool);
         // Create a connector (e.g., HTTP)
         ServerConnector connector = new ServerConnector(server);
-        connector.setPort(KRUIZE_SERVER_PORT);
+        connector.setPort(ServerContext.KRUIZE_SERVER_PORT);
         // Set the connector to the server
         server.addConnector(connector);
 
@@ -292,9 +291,12 @@ public class Autotune {
     }
 
     private static void addAutotuneServlets(ServletContextHandler context) {
-        context.addServlet(HealthService.class, HEALTH_SERVICE);
+        context.addServlet(HealthService.class, ServerContext.HEALTH_SERVICE);
         // Start the Prometheus end point (/metrics) for Autotune
-        context.addServlet(new ServletHolder(new MetricsServlet(MetricsConfig.meterRegistry().getPrometheusRegistry())), METRICS_SERVICE);
+        context.addServlet(
+                new ServletHolder(
+                    new MetricsServlet(MetricsConfig.meterRegistry().getPrometheusRegistry())
+                ), ServerContext.METRICS_SERVICE);
         DefaultExports.initialize();
     }
 
