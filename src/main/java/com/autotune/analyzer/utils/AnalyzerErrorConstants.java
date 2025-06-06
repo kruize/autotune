@@ -158,6 +158,10 @@ public class AnalyzerErrorConstants {
 
         public static final class generateRecommendationsAPI {
             public static final String ERROR_FETCHING_METRICS = "Error while fetching metrics.";
+            public static final String NULL_OR_EMPTY_MODEL_NAME = "Model name cannot be null or empty";
+            public static final String NULL_RECOMMENDATION_TUNABLES = "Recommendation Tunables cannot be null";
+            public static final String DATA_IRREGULARITY_DETECTED = "Data irregularity detected, " +
+                    "Notification needs to be added explaining we changed the memory usage to 100% as it's more than 100%";
 
             private generateRecommendationsAPI() {
 

@@ -4,7 +4,9 @@ import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
+import com.autotune.analyzer.services.UpdateRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.metrics.AcceleratorMetricResult;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
@@ -40,10 +42,10 @@ public class GenericRecommendationModel implements RecommendationModel{
     public GenericRecommendationModel( String name, RecommendationTunables recommendationTunables) {
         // null checks
         if (name == null || name.isEmpty()) {
-            throw new IllegalArgumentException("Name cannot be null or empty");
+            throw new IllegalArgumentException(AnalyzerErrorConstants.APIErrors.generateRecommendationsAPI.NULL_OR_EMPTY_MODEL_NAME);
         }
         if (recommendationTunables == null) {
-            throw new IllegalArgumentException("RecommendationTunables cannot be null");
+            throw new IllegalArgumentException(AnalyzerErrorConstants.APIErrors.generateRecommendationsAPI.NULL_RECOMMENDATION_TUNABLES);
         }
 
         this.name = name;
@@ -588,15 +590,13 @@ public class GenericRecommendationModel implements RecommendationModel{
          * so we mark it as 1 to give out full GPU as a recommendation.
          */
         if (coreFraction > 1) {
-            LOGGER.info("Data irregularity detected, " +
-                    "Notification needs to be added explaining we changed the core usage to 100% as it's more than 100%");
+            LOGGER.info(AnalyzerErrorConstants.APIErrors.generateRecommendationsAPI.DATA_IRREGULARITY_DETECTED);
             coreFraction = 1;
         }
         double memoryFraction = memoryAverage / 100;
         // TODO: Need to investigate why data is faulty
         if (memoryFraction > 1) {
-            LOGGER.info("Data irregularity detected, " +
-                    "Notification needs to be added explaining we changed the memory usage to 100% as it's more than 100%");
+            LOGGER.info(AnalyzerErrorConstants.APIErrors.generateRecommendationsAPI.DATA_IRREGULARITY_DETECTED);
             memoryFraction = 1;
         }
 
