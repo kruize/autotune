@@ -184,6 +184,19 @@ public class PerformanceProfileUtil {
                         errorReasons.add(errorMsg.concat(String.format("Missing one of the following mandatory parameters for experiment - %s : %s",
                                 updateResultsAPIObject.getExperimentName(), mandatoryFields)));
                         break;
+                    } else {
+                        LOGGER.info("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
+                        List<String> illegalMetrics = kruizeFunctionVariablesList.stream()
+                                .map(AnalyzerConstants.MetricName::toString) // Convert MetricName to its String representation
+                                .collect(Collectors.toList());
+
+                        illegalMetrics.removeAll(perfProfileFunctionVariablesList); // Remove all expected metrics
+
+                        if (!illegalMetrics.isEmpty()) {
+                            // rare/impossible case as validations as validateMetricsValues function takes care of this
+                            errorReasons.add(errorMsg.concat(String.format("Illegal/Invalid metrics found for experiment - %s: %s",
+                                    updateResultsAPIObject.getExperimentName(), illegalMetrics)));
+                        }
                     }
                 }
             } else if (kubernetesAPIObject.getNamespaceAPIObject() != null) {
