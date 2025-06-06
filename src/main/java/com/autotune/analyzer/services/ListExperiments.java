@@ -89,18 +89,18 @@ public class ListExperiments extends HttpServlet {
 
             // adding namespace recommendations to K8sObject
 
-            NamespaceAPIObject apiNamespaceObject = kubernetesAPIObject.getNamespaceAPIObject();
-            if (apiNamespaceObject != null && apiNamespaceObject.getNamespaceRecommendations() != null) {
+            NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
+            if (namespaceAPIObject != null && namespaceAPIObject.getNamespaceRecommendations() != null) {
                 NamespaceData namespaceData = new NamespaceData();
-                namespaceData.setNamespace_name(apiNamespaceObject.getNamespace());
-                namespaceData.setNamespaceRecommendations(apiNamespaceObject.getNamespaceRecommendations());
+                namespaceData.setNamespace_name(namespaceAPIObject.getNamespace());
+                namespaceData.setNamespaceRecommendations(namespaceAPIObject.getNamespaceRecommendations());
 
                 HashMap<String, NamespaceData> k8sNamespaceDataMap = k8sObject.getNamespaceDataMap();
                 if (k8sNamespaceDataMap == null) {
                     k8sNamespaceDataMap = new HashMap<>();
                     k8sObject.setNamespaceDataMap(k8sNamespaceDataMap);
                 }
-                k8sNamespaceDataMap.put(apiNamespaceObject.getNamespace(), namespaceData);
+                k8sNamespaceDataMap.put(namespaceAPIObject.getNamespace(), namespaceData);
             }
 
             k8sObjectList.add(k8sObject);
