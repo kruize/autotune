@@ -17,6 +17,7 @@
 package com.autotune.database.helper;
 
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
+import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
@@ -33,6 +34,7 @@ import com.autotune.analyzer.utils.GsonUTCDateAdapter;
 import com.autotune.common.auth.AuthenticationConfig;
 import com.autotune.common.data.dataSourceMetadata.*;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.data.metrics.MetricMetadata;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.NamespaceData;
@@ -478,6 +480,7 @@ public class DBHelpers {
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                         .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                         .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                        .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                         .create();
                 try {
                     kruizeResultsEntry = new KruizeResultsEntry();
@@ -523,6 +526,7 @@ public class DBHelpers {
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                         .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                         .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                        .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                         .create();
                 try {
                     ListRecommendationsAPIObject listRecommendationsAPIObject = getListRecommendationAPIObjectForDB(
@@ -534,6 +538,7 @@ public class DBHelpers {
                             .setPrettyPrinting()
                             .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                             .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                            .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                             .create()
                             .toJson(listRecommendationsAPIObject));
                     kruizeRecommendationEntry = new KruizeRecommendationEntry();
@@ -590,6 +595,7 @@ public class DBHelpers {
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                         .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                         .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                        .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                         .create();
                 try {
                     ListRecommendationsAPIObject listRecommendationsAPIObject = getListRecommendationAPIObjectForDB(
@@ -601,6 +607,7 @@ public class DBHelpers {
                             .setPrettyPrinting()
                             .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                             .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                            .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                             .create()
                             .toJson(listRecommendationsAPIObject));
                     kruizeRecommendationEntry = new KruizeLMRecommendationEntry();
@@ -817,6 +824,7 @@ public class DBHelpers {
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                         .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                         .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                        .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                         .create();
                 List<UpdateResultsAPIObject> updateResultsAPIObjects = new ArrayList<>();
                 for (KruizeResultsEntry kruizeResultsEntry : kruizeResultsEntries) {
@@ -890,6 +898,7 @@ public class DBHelpers {
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                         .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                         .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                        .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                         .create();
                 List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList = new ArrayList<>();
                 for (KruizeRecommendationEntry kruizeRecommendationEntry : kruizeRecommendationEntryList) {
@@ -958,6 +967,7 @@ public class DBHelpers {
                         .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                         .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                         .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                        .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                         .create();
                 List<ListRecommendationsAPIObject> listRecommendationsAPIObjectList = new ArrayList<>();
                 for (KruizeLMRecommendationEntry kruizeRecommendationEntry : kruizeRecommendationEntryList) {
