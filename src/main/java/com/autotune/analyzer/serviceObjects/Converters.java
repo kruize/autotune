@@ -24,7 +24,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
-import org.apache.kafka.common.protocol.types.Field;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -318,9 +317,9 @@ public class Converters {
                         HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
                         HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap = new HashMap<>();
                         for (Metric metric : containerAPIObject.getMetrics()) {
-                            boolean isAcceleratorMetric = metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.gpuCoreUsage.name())
-                                    || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.gpuMemoryUsage.name())
-                                    || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorMigMemoryUsage.name());
+                            boolean isAcceleratorMetric = metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorCoreUsage.name())
+                                    || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorMemoryUsage.name())
+                                    || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.name());
 
                             metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
                             MetricResults metricResults = metric.getMetricResult();
