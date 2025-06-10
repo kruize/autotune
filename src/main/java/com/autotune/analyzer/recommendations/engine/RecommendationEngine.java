@@ -470,7 +470,7 @@ public class RecommendationEngine {
             if (kruizeObject.isNamespaceExperiment()) {
                 String namespaceName = k8sObject.getNamespace();
                 NamespaceData namespaceData = k8sObject.getNamespaceDataMap().get(namespaceName);
-                LOGGER.info("Generating recommendations for namespace: {}", namespaceName);
+                LOGGER.debug("Generating recommendations for namespace: {}", namespaceName);
                 generateRecommendationsBasedOnNamespace(namespaceData, kruizeObject);
             } else if (kruizeObject.isContainerExperiment()) {
                 for (String containerName : k8sObject.getContainerDataMap().keySet()) {

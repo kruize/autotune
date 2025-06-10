@@ -327,8 +327,7 @@ public class Converters {
                     }
                     k8sObject.setContainerDataMap(containerDataHashMap);
                     k8sObjectList.add(k8sObject);
-                }
-                else if (kubernetesAPIObject.getNamespaceAPIObject() != null) {
+                } else if (kubernetesAPIObject.getNamespaceAPIObject() != null) {
                     NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
 
                     HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
@@ -350,6 +349,8 @@ public class Converters {
 
                     k8sObject.setNamespaceDataMap(namespaceDataHashMap);
                     k8sObjectList.add(k8sObject);
+                } else {
+                    LOGGER.debug("Missing container/namespace data from the input json {}", kubernetesAPIObject);
                 }
             }
             experimentResultData.setKubernetes_objects(k8sObjectList);
