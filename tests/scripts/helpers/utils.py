@@ -457,6 +457,7 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
     assert create_exp_json["version"] == list_reco_json["version"]
     assert create_exp_json["experiment_name"] == list_reco_json["experiment_name"]
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
+    experiment_type = create_exp_json.get("experiment_type")
 
     # Validate kubernetes objects
     if update_results_json is not None and len(update_results_json) > 0:
@@ -466,13 +467,13 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
             create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][i]
             list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][i]
             validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
-                                    list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
+                                    list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type)
     else:
         update_results_kubernetes_obj = None
         create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][0]
         list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
         validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
-                                list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
+                                list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type)
 
 def validate_local_monitoring_reco_json(create_exp_json, list_reco_json, expected_duration_in_hours=None, test_name=None):
     # Validate experiment
@@ -511,20 +512,30 @@ def count_results_objects(list_exp_json):
 
 
 def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
-                            list_reco_kubernetes_obj, expected_duration_in_hours, test_name):
-    # Validate type, name, namespace
-    if update_results_kubernetes_obj == None:
+                            list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
+
+    if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
+        assert list_reco_kubernetes_obj["namespaces"]["namespace"] == create_exp_kubernetes_obj["namespaces"]["namespace"]
+        list_reco_namespace = list_reco_kubernetes_obj["namespaces"]
+        create_exp_namespace = create_exp_kubernetes_obj["namespaces"]
+        validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name)
+    else:
+        # Validate type, name, namespace
         assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
         assert list_reco_kubernetes_obj["name"] == create_exp_kubernetes_obj["name"]
         assert list_reco_kubernetes_obj["namespace"] == create_exp_kubernetes_obj["namespace"]
 
-        exp_containers_length = len(create_exp_kubernetes_obj["containers"])
-        list_reco_containers_length = len(list_reco_kubernetes_obj["containers"])
+        # Validate type, name, namespace
+        if update_results_kubernetes_obj == None:
+            assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
+            assert list_reco_kubernetes_obj["name"] == create_exp_kubernetes_obj["name"]
+            assert list_reco_kubernetes_obj["namespace"] == create_exp_kubernetes_obj["namespace"]
 
-    else:
-        assert list_reco_kubernetes_obj["type"] == update_results_kubernetes_obj["type"]
-        assert list_reco_kubernetes_obj["name"] == update_results_kubernetes_obj["name"]
-        assert list_reco_kubernetes_obj["namespace"] == update_results_kubernetes_obj["namespace"]
+        else:
+            assert list_reco_kubernetes_obj["type"] == update_results_kubernetes_obj["type"]
+            assert list_reco_kubernetes_obj["name"] == update_results_kubernetes_obj["name"]
+            assert list_reco_kubernetes_obj["namespace"] == update_results_kubernetes_obj["namespace"]
+
 
         exp_containers_length = len(create_exp_kubernetes_obj["containers"])
         list_reco_containers_length = len(list_reco_kubernetes_obj["containers"])
@@ -534,17 +545,17 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
             f"list reco containers size not same as update results containers size - list_reco = {list_reco_containers_length} \
               create_exp = {exp_containers_length}"
 
-    # Validate if all the containers are present
-    for i in range(exp_containers_length):
-        list_reco_container = None
+        # Validate if all the containers are present
+        for i in range(exp_containers_length):
+            list_reco_container = None
 
-        for j in range(list_reco_containers_length):
-            if list_reco_kubernetes_obj["containers"][j]["container_name"] == \
-                    create_exp_kubernetes_obj["containers"][i]["container_name"]:
-                update_results_container = create_exp_kubernetes_obj["containers"][i]
-                list_reco_container = list_reco_kubernetes_obj["containers"][j]
-                validate_container(update_results_container, update_results_json, list_reco_container,
-                                   expected_duration_in_hours, test_name)
+            for j in range(list_reco_containers_length):
+                if list_reco_kubernetes_obj["containers"][j]["container_name"] == \
+                        create_exp_kubernetes_obj["containers"][i]["container_name"]:
+                    update_results_container = create_exp_kubernetes_obj["containers"][i]
+                    list_reco_container = list_reco_kubernetes_obj["containers"][j]
+                    validate_container(update_results_container, update_results_json, list_reco_container,
+                                       expected_duration_in_hours, test_name)
 
 def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
                             list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
@@ -901,7 +912,7 @@ def validate_config(reco_config, metrics):
 
 def validate_config_local_monitoring(reco_config):
     cpu_format_type = "cores"
-    memory_format_type = "bytes"
+    memory_format_type = "MiB"
 
     usage_list = ["requests", "limits"]
     for usage in usage_list:
