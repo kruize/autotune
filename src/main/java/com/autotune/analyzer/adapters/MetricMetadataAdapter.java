@@ -19,15 +19,21 @@ public class MetricMetadataAdapter extends TypeAdapter<MetricMetadata> {
 
     @Override
     public void write(JsonWriter out, MetricMetadata value) throws IOException {
-        out.beginObject();
-        out.name(KruizeConstants.JSONKeys.TYPE).value(value.getType());
+        if (null != value) {
+            out.beginObject();
+            if (null != value.getType())
+                out.name(KruizeConstants.JSONKeys.TYPE).value(value.getType());
 
-        if (value instanceof AcceleratorMetricMetadata accel) {
-            out.name(KruizeConstants.JSONKeys.ACCELERATOR_MODEL_NAME).value(accel.getModelName());
-            out.name(KruizeConstants.JSONKeys.ACCELERATOR_PROFILE_NAME).value(accel.getProfileName());
-            out.name(KruizeConstants.JSONKeys.NODE).value(accel.getNode());
+            if (value instanceof AcceleratorMetricMetadata accel) {
+                if (null != accel.getModelName())
+                    out.name(KruizeConstants.JSONKeys.ACCELERATOR_MODEL_NAME).value(accel.getModelName());
+                if (null != accel.getProfileName())
+                    out.name(KruizeConstants.JSONKeys.ACCELERATOR_PROFILE_NAME).value(accel.getProfileName());
+                if (null != accel.getNode())
+                    out.name(KruizeConstants.JSONKeys.NODE).value(accel.getNode());
+            }
+            out.endObject();
         }
-        out.endObject();
     }
 
     @Override
