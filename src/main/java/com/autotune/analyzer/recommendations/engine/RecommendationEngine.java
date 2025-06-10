@@ -1945,8 +1945,8 @@ public class RecommendationEngine {
 
             if (kruizeObject.isContainerExperiment()) {
                 maxDateQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.maxDate.name());
-                acceleratorDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.gpuMemoryUsage.name());
-                acceleratorMigDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.acceleratorMigMemoryUsage.name());
+                acceleratorDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.acceleratorMemoryUsage.name());
+                acceleratorMigDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.name());
 
                 fetchContainerMetricsBasedOnDataSourceAndProfile(kruizeObject,
                         interval_end_time,
@@ -2280,12 +2280,12 @@ public class RecommendationEngine {
                             AnalyzerConstants.MetricName.maxDate.name(), kruizeObject.getExperimentType());
 
                     List<String> acceleratorFunctions = Arrays.asList(
-                            AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
-                            AnalyzerConstants.MetricName.gpuMemoryUsage.toString()
+                            AnalyzerConstants.MetricName.acceleratorCoreUsage.toString(),
+                            AnalyzerConstants.MetricName.acceleratorMemoryUsage.toString()
                     );
 
                     List<String> acceleratorPartitionFunctions = Arrays.asList(
-                            AnalyzerConstants.MetricName.acceleratorMigMemoryUsage.toString()
+                            AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.toString()
                     );
                     // Iterate over metrics and aggregation functions
                     for (Metric metricEntry : metricList) {
