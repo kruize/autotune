@@ -469,8 +469,8 @@ public class RecommendationEngine {
             // verify if the experiment type is namespace or container
             if (kruizeObject.isNamespaceExperiment()) {
                 String namespaceName = k8sObject.getNamespace();
-                NamespaceData namespaceData = k8sObject.getNamespaceData();
-                LOGGER.info("Generating recommendations for namespace: {}", namespaceName);
+                NamespaceData namespaceData = k8sObject.getNamespaceDataMap().get(namespaceName);
+                LOGGER.debug("Generating recommendations for namespace: {}", namespaceName);
                 generateRecommendationsBasedOnNamespace(namespaceData, kruizeObject);
             } else if (kruizeObject.isContainerExperiment()) {
                 for (String containerName : k8sObject.getContainerDataMap().keySet()) {
@@ -1998,7 +1998,7 @@ public class RecommendationEngine {
             for (K8sObject k8sObject : kubernetes_objects) {
                 String namespace = k8sObject.getNamespace();
                 // fetch namespace related metrics if containerDataMap is empty
-                NamespaceData namespaceData = k8sObject.getNamespaceData();
+                NamespaceData namespaceData = k8sObject.getNamespaceDataMap().get(namespace);
                 // determine the max date query for namespace
                 String namespaceMaxDateQuery = maxDateQuery.replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace);
 
@@ -2047,7 +2047,8 @@ public class RecommendationEngine {
                 if (null == namespaceData) {
                     namespaceData = new NamespaceData();
                     namespaceData.setNamespace_name(namespace);
-                    k8sObject.setNamespaceData(namespaceData);
+                    k8sObject.getNamespaceDataMap().put(namespace, namespaceData);
+
                 }
 
                 List<Metric> namespaceMetricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
