@@ -541,9 +541,9 @@ public class GenericRecommendationModel implements RecommendationModel{
                 if (null == aggregationInfo.getMax() || aggregationInfo.getMax() <= 0.0)
                     continue;
 
-                boolean isCoreUsage = gpuEntry.getKey() == AnalyzerConstants.MetricName.gpuCoreUsage;
-                boolean isMemoryUsage = (gpuEntry.getKey() == AnalyzerConstants.MetricName.gpuMemoryUsage)
-                        || (gpuEntry.getKey() == AnalyzerConstants.MetricName.acceleratorMigMemoryUsage);
+                boolean isCoreUsage = gpuEntry.getKey() == AnalyzerConstants.MetricName.acceleratorCoreUsage;
+                boolean isMemoryUsage = (gpuEntry.getKey() == AnalyzerConstants.MetricName.acceleratorMemoryUsage)
+                        || (gpuEntry.getKey() == AnalyzerConstants.MetricName.acceleratorFrameBufferUsage);
 
                 // Skip if it's none of the Accelerator metrics
                 if (!isCoreUsage && !isMemoryUsage)
