@@ -185,7 +185,7 @@ public class PerformanceProfileUtil {
                                 updateResultsAPIObject.getExperimentName(), mandatoryFields)));
                         break;
                     } else {
-                        LOGGER.info("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
+                        LOGGER.debug("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
                         List<String> invalidMetrics = kruizeFunctionVariablesList.stream()
                                 .map(AnalyzerConstants.MetricName::toString) // Convert MetricName to its String representation
                                 .collect(Collectors.toList());
@@ -267,7 +267,7 @@ public class PerformanceProfileUtil {
                                 updateResultsAPIObject.getExperimentName(), mandatoryFields)));
                         break;
                     } else {
-                        LOGGER.info("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
+                        LOGGER.debug("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
                         List<String> invalidMetrics = kruizeFunctionVariablesList.stream()
                                 .map(AnalyzerConstants.MetricName::toString) // Convert MetricName to its String representation
                                 .collect(Collectors.toList());
