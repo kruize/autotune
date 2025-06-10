@@ -16,7 +16,7 @@
 ##########################################################
 #            Build Docker Image
 ##########################################################
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1745855087 as mvnbuild-jdk21
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.6-1747218906 as mvnbuild-jdk21
 ARG USER=autotune
 ARG AUTOTUNE_HOME=/home/$USER
 
@@ -25,7 +25,7 @@ RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y jav
      && microdnf clean all 
 
 RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
-  && curl -fsSL -o /tmp/apache-maven.tar.gz https://dlcdn.apache.org/maven/maven-3/3.9.9/binaries/apache-maven-3.9.9-bin.tar.gz \
+  && curl -fsSL -o /tmp/apache-maven.tar.gz https://dlcdn.apache.org/maven/maven-3/3.9.10/binaries/apache-maven-3.9.10-bin.tar.gz \
   && tar -xzf /tmp/apache-maven.tar.gz -C /usr/share/maven --strip-components=1 \
   && rm -f /tmp/apache-maven.tar.gz \
   && ln -s /usr/share/maven/bin/mvn /usr/bin/mvn
@@ -48,7 +48,7 @@ RUN jlink --strip-debug --compress 2 --no-header-files --no-man-pages --module-p
 #            Runtime Docker Image
 ##########################################################
 # Use ubi-minimal as the base image
-FROM registry.access.redhat.com/ubi9/ubi-minimal:9.5-1745855087
+FROM registry.access.redhat.com/ubi9/ubi-minimal:9.6-1747218906
 
 ARG AUTOTUNE_VERSION
 ARG USER=autotune

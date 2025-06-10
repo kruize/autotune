@@ -18,6 +18,7 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
+import com.autotune.analyzer.recommendations.model.RecommendationTunables;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.apache.kafka.common.protocol.types.Field;
@@ -25,6 +26,8 @@ import org.apache.kafka.common.protocol.types.Field;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.*;
 
 /**
  * Constants for Autotune module
@@ -136,6 +139,17 @@ public class KruizeConstants {
 
         private ExponentialBackOff() {
         }
+    }
+
+    public static final class CostBasedRecommendationConstants {
+
+        public static final RecommendationTunables COST_RECOMMENDATION_TUNABLES = new RecommendationTunables(COST_CPU_PERCENTILE, COST_MEMORY_PERCENTILE, COST_ACCELERATOR_PERCENTILE);
+
+    }
+    public static final class PerformanceBasedRecommendationConstants {
+
+        public static final RecommendationTunables PERFORMANCE_RECOMMENDATION_TUNABLES = new RecommendationTunables(PERFORMANCE_CPU_PERCENTILE, PERFORMANCE_MEMORY_PERCENTILE, PERFORMANCE_ACCELERATOR_PERCENTILE);
+
     }
 
     public static final class JSONKeys {
@@ -647,6 +661,7 @@ public class KruizeConstants {
             public static final String INPUT_NULL = "Input object cannot be null";
             public static final String VALUE_NEGATIVE = "Value cannot be negative";
             public static final String INVALID_MEM_FORMAT = "Invalid format: Supported formats are bytes, KB, KiB, MB, MiB, GB, GiB, etc.";
+            public static final String EMPTY_NOTIFICATIONS_OBJECT ="Notifications Object passed is empty. The notifications are not sent as part of recommendation.";
         }
     }
 

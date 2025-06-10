@@ -1,6 +1,7 @@
 package com.autotune.analyzer.plots;
 
 import com.autotune.analyzer.recommendations.model.CostBasedRecommendationModel;
+import com.autotune.analyzer.recommendations.model.GenericRecommendationModel;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.IntervalResults;
@@ -96,12 +97,11 @@ public class PlotManager {
 
             } else {
                 // loop through the results value and extract the memory values
-                CostBasedRecommendationModel costBasedRecommendationModel  = new CostBasedRecommendationModel();
                 List<Double> memUsageMinList = new ArrayList<>();
                 List<Double> memUsageMaxList = new ArrayList<>();
                 boolean memDataAvailable = false;
                 for (IntervalResults intervalResults: resultInRange.values()) {
-                    JSONObject jsonObject = costBasedRecommendationModel.calculateMemoryUsage(intervalResults);
+                    JSONObject jsonObject = GenericRecommendationModel.calculateMemoryUsage(intervalResults);
                     if (!jsonObject.isEmpty()) {
                         memDataAvailable = true;
                         Double memUsageMax = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);

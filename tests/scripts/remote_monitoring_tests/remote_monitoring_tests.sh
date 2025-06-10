@@ -21,6 +21,7 @@
 # Get the absolute path of current directory
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 REMOTE_MONITORING_TEST_DIR="${CURRENT_DIR}/remote_monitoring_tests"
+PERF_PROFILE_DIR="${REMOTE_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
 . ${REMOTE_MONITORING_TEST_DIR}/../common/common_functions.sh
@@ -40,7 +41,7 @@ function remote_monitoring_tests() {
 	err_exit "ERROR: python3 not installed"
 
 	target="crc"
-	perf_profile_json="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
+	perf_profile_json="${PERF_PROFILE_DIR}/resource_optimization_openshift.json"
 
 	remote_monitoring_tests=("test_e2e" "sanity" "negative" "extended")
 	
