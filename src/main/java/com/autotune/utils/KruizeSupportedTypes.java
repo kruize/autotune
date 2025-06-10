@@ -62,7 +62,7 @@ public class KruizeSupportedTypes {
             "datasource", "cluster_name", "namespace", "verbose"
     ));
     public static final Set<String> SUPPORTED_FORMATS =
-            new HashSet<>(Arrays.asList("cores", "m", "Bytes", "bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "kB", "KB", "MB", "GB", "TB", "PB", "EB", "K", "k", "M", "G", "T", "P", "E"));
+            new HashSet<>(Arrays.asList("percentage", "cores", "m", "Bytes", "bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "kB", "KB", "MB", "GB", "TB", "PB", "EB", "K", "k", "M", "G", "T", "P", "E"));
     public static final Set<String> QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
             "experiment_name", "results", "recommendations", "latest", "rm"
     ));
