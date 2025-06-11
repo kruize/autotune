@@ -879,6 +879,12 @@ public class DBHelpers {
                 return kubernetesAPIObjects;
             }
 
+            /***
+             * Extract the namespaceAPIObject object from the K8sObject object and return
+             *
+             * @param k8sObject Kubernetes Object from which the namespace data is extracted
+             * @return Namespace object containing the namespace details
+             */
             private static NamespaceAPIObject getNamespaceAPIObject(K8sObject k8sObject) {
                 NamespaceAPIObject namespaceAPIObject = null;
                 for (Map.Entry<String, NamespaceData> entry : k8sObject.getNamespaceDataMap().entrySet()) {

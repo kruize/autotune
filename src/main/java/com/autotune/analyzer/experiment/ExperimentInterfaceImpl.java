@@ -129,6 +129,15 @@ public class ExperimentInterfaceImpl implements ExperimentInterface {
         return true;
     }
 
+    /**
+     * Merges two maps of IntervalResults, combining existing results with new results for the specified time range.
+     *
+     * @param existingResults The current map of interval results, which will be updated.
+     * @param newResults      The new map of interval results to merge into the existing results.
+     * @param startTime       The start of the interval range (inclusive).
+     * @param endTime         The end of the interval range (inclusive).
+     * @return A merged map of Timestamp to IntervalResults, containing updated data in the specified time range.
+     */
     private HashMap<Timestamp, IntervalResults> mergeResults(
             HashMap<Timestamp, IntervalResults> existingResults,
             Map<Timestamp, IntervalResults> newResults,
