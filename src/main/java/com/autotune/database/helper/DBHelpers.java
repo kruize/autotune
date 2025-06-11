@@ -871,7 +871,7 @@ public class DBHelpers {
                             ));
                         }
                         kubernetesAPIObject.setContainerAPIObjects(containerAPIObjects);
-                    } else if (k8sObject.getNamespaceDataMap() !=null && !k8sObject.getNamespaceDataMap().isEmpty()) {
+                    } else if (k8sObject.getNamespaceDataMap() != null && !k8sObject.getNamespaceDataMap().isEmpty()) {
                         kubernetesAPIObject.setNamespaceAPIObject(getNamespaceAPIObject(k8sObject));
                     }
                     kubernetesAPIObjects.add(kubernetesAPIObject);

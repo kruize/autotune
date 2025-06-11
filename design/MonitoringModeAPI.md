@@ -2288,7 +2288,7 @@ If no parameter is passed API returns all the latest recommendations available f
         "namespace": "namespace-demo",
         "containers": [],
         "namespaces": {
-          "namespace_name": "namespace-demo",
+          "namespace": "namespace-demo",
           "recommendations": {
             "version": "1.0",
             "notifications": {
@@ -2497,7 +2497,7 @@ If no parameter is passed API returns all the latest recommendations available f
         "namespace": "namespace-demo",
         "containers": [],
         "namespaces": {
-          "namespace_name": "namespace-demo",
+          "namespace": "namespace-demo",
           "recommendations": {
             "version": "1.0",
             "notifications": {
@@ -4359,7 +4359,7 @@ The response will contain an array of JSON object with the updated recommendatio
         "namespace": "namespace-demo",
         "containers": [],
         "namespaces": {
-          "namespace_name": "namespace-demo",
+          "namespace": "namespace-demo",
           "recommendations": {
             "version": "1.0",
             "notifications": {
