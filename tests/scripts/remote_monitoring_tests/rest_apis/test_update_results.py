@@ -445,6 +445,63 @@ def test_update_multiple_valid_results_after_create_exp(cluster_type):
     print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
+def test_update_multiple_valid_results_after_create_namespace_exp(cluster_type):
+    """
+    Test Description: This test validates update results for a valid namespace experiment
+    """
+    input_json_file = "../json_files/create_namespace_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    # Update results for the experiment
+    num_res = 5
+    find_start_ts = "2022-01-23T18:25:43.511Z"
+    find_end_ts = "2022-01-23T18:40:43.570Z"
+
+    result_json_file = "../json_files/update_results_namespace.json"
+    filename = "/tmp/result.json"
+    for i in range(num_res):
+
+        with open(result_json_file, 'r') as file:
+            data = file.read()
+
+        if i == 0:
+            start_ts = get_datetime()
+        else:
+            start_ts = end_ts
+
+        print("start_ts = ", start_ts)
+        data = data.replace(find_start_ts, start_ts)
+
+        end_ts = increment_timestamp_by_given_mins(start_ts, 15)
+        print("end_ts = ", end_ts)
+        data = data.replace(find_end_ts, end_ts)
+
+        with open(filename, 'w') as file:
+            file.write(data)
+
+        response = update_results(filename, False)
+
+        data = response.json()
+        print("message = ", data['message'])
+
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+@pytest.mark.sanity
 @pytest.mark.parametrize("format_type", ["cores", "m"])
 def test_update_multiple_valid_results_with_supported_cpu_format_types(format_type, cluster_type):
     """
@@ -502,6 +559,66 @@ def test_update_multiple_valid_results_with_supported_cpu_format_types(format_ty
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data['status'] == SUCCESS_STATUS
 
+
+@pytest.mark.sanity
+@pytest.mark.parametrize("format_type", ["cores", "m"])
+def test_update_multiple_valid_results_for_namespace_experiment_with_supported_cpu_format_types(format_type, cluster_type):
+    """
+    Test Description: This test validates update results for a valid namespace experiment
+    """
+    input_json_file = "../json_files/create_namespace_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    # Update results for the experiment
+    num_res = 96
+    find_start_ts = "2022-01-23T18:25:43.511Z"
+    find_end_ts = "2022-01-23T18:40:43.570Z"
+
+    cpu_format = "cores"
+
+    result_json_file = "../json_files/update_results_namespace.json"
+    filename = "/tmp/result.json"
+    for i in range(num_res):
+
+        with open(result_json_file, 'r') as file:
+            data = file.read()
+
+        if i == 0:
+            start_ts = get_datetime()
+        else:
+            start_ts = end_ts
+
+        print("start_ts = ", start_ts)
+        data = data.replace(find_start_ts, start_ts)
+
+        end_ts = increment_timestamp_by_given_mins(start_ts, 15)
+        print("end_ts = ", end_ts)
+        data = data.replace(find_end_ts, end_ts)
+
+        data = data.replace(cpu_format, format_type)
+
+        with open(filename, 'w') as file:
+            file.write(data)
+
+        response = update_results(filename, False)
+
+        data = response.json()
+        print("message = ", data['message'])
+
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+
+
 @pytest.mark.sanity
 @pytest.mark.parametrize("format_type", ["bytes", "Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "kB", "KB", "MB", "GB", "TB", "PB", "EB", "K", "k", "M", "G", "T", "P", "E"])
 def test_update_multiple_valid_results_with_supported_mem_format_types(format_type, cluster_type):
@@ -529,6 +646,69 @@ def test_update_multiple_valid_results_with_supported_mem_format_types(format_ty
     memory_format = "MiB"
 
     result_json_file = "../json_files/update_results.json"
+    filename = "/tmp/result.json"
+    for i in range(num_res):
+
+        with open(result_json_file, 'r') as file:
+            data = file.read()
+
+        if i == 0:
+            start_ts = get_datetime()
+        else:
+            start_ts = end_ts
+
+        print("start_ts = ", start_ts)
+        data = data.replace(find_start_ts, start_ts)
+
+        end_ts = increment_timestamp_by_given_mins(start_ts, 15)
+        print("end_ts = ", end_ts)
+        data = data.replace(find_end_ts, end_ts)
+
+        data = data.replace(memory_format, format_type)
+
+        with open(filename, 'w') as file:
+            file.write(data)
+
+        response = update_results(filename, False)
+
+        data = response.json()
+        print("message = ", data['message'])
+
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+@pytest.mark.parametrize("format_type", ["bytes", "Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "kB", "KB", "MB", "GB", "TB", "PB", "EB", "K", "k", "M", "G", "T", "P", "E"])
+def test_update_multiple_valid_results_for_namespace_experiment_with_supported_mem_format_types(format_type, cluster_type):
+    """
+    Test Description: This test validates update results for a valid namespace experiment
+    """
+    input_json_file = "../json_files/create_namespace_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    # Update results for the experiment
+    num_res = 96
+    find_start_ts = "2022-01-23T18:25:43.511Z"
+    find_end_ts = "2022-01-23T18:40:43.570Z"
+
+    memory_format = "MiB"
+
+    result_json_file = "../json_files/update_results_namespace.json"
     filename = "/tmp/result.json"
     for i in range(num_res):
 
@@ -806,6 +986,60 @@ def test_update_results_with_same_result(cluster_type):
 
 
 @pytest.mark.sanity
+def test_update_results_with_same_result_for_namespace_experiment(cluster_type):
+    """
+    Test Description: This test validates update results for a valid namespace experiment
+                        by posting the same results twice.
+    """
+    input_json_file = "../json_files/create_namespace_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/update_results_namespace.json"
+    response = update_results(result_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    # Post the same result again
+    response = update_results(result_json_file)
+
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+
+    exp_json_data = read_json_data_from_file(input_json_file)
+    experiment_name = exp_json_data[0]['experiment_name']
+
+    result_json_data = read_json_data_from_file(result_json_file)
+    interval_end_time = result_json_data[0]['interval_end_time']
+    interval_start_time = result_json_data[0]['interval_start_time']
+
+    TIMESTAMP_PRESENT_MSG = 'An entry for this record already exists!'
+
+    print(TIMESTAMP_PRESENT_MSG)
+    print(data['data'][0]['errors'][0]['message'])
+    assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
+    assert data['data'][0]['errors'][0]['message'] == TIMESTAMP_PRESENT_MSG
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
 @pytest.mark.parametrize("test_name, interval_end_time", interval_end_times)
 def test_update_results_with_valid_and_invalid_interval_duration(test_name, interval_end_time, cluster_type):
     """
@@ -857,6 +1091,58 @@ def test_update_results_with_valid_and_invalid_interval_duration(test_name, inte
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+
+@pytest.mark.sanity
+@pytest.mark.parametrize("test_name, interval_end_time", interval_end_times)
+def test_update_results_with_valid_and_invalid_interval_duration_for_namespace_experiment(test_name, interval_end_time, cluster_type):
+    """
+    Test Description: This test validates update results by posting results with interval time difference that is not valid for
+    the given measurement duration
+    """
+    input_json_file = "../json_files/create_namespace_exp.json"
+
+    form_kruize_url(cluster_type)
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/update_results_namespace.json"
+
+    json_data = read_json_data_from_file(result_json_file)
+    json_data[0]['interval_end_time'] = interval_end_time
+    json_file = "/tmp/update_results_namespace.json"
+
+    write_json_data_to_file(json_file, json_data)
+
+    response = update_results(json_file)
+
+    data = response.json()
+    if test_name == "valid_plus_30s" or test_name == "valid_minus_30s":
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+    elif test_name == "invalid_zero_diff":
+        assert response.status_code == ERROR_STATUS_CODE
+        assert data['status'] == ERROR_STATUS
+        assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
+        assert data['data'][0]['errors'][0]['message'] == UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG
+    else:
+        assert response.status_code == ERROR_STATUS_CODE
+        assert data['status'] == ERROR_STATUS
+        assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
+        assert data['data'][0]['errors'][0]['message'] == INVALID_INTERVAL_DURATION_MSG
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.negative
 def test_update_results__duplicate_records_with_single_exp_multiple_results(cluster_type):
