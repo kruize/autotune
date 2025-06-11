@@ -185,7 +185,7 @@ public class PerformanceProfileUtil {
                                 updateResultsAPIObject.getExperimentName(), mandatoryFields)));
                         break;
                     } else {
-                        LOGGER.info("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
+                        LOGGER.debug("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
                         List<String> invalidMetrics = kruizeFunctionVariablesList.stream()
                                 .map(AnalyzerConstants.MetricName::toString) // Convert MetricName to its String representation
                                 .collect(Collectors.toList());
@@ -206,82 +206,84 @@ public class PerformanceProfileUtil {
                         AnalyzerConstants.MetricName.namespaceMemoryRSS
                 );
                 NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
-                    // if the metrics data is not present, set corresponding validation message and skip adding the current namespace data
-                    if (namespaceAPIObject.getMetrics() == null) {
-                        errorReasons.add(String.format(
-                                AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
-                                namespaceAPIObject.getNamespace(),
-                                updateResultsAPIObject.getExperimentName()
-                        ));
-                        continue;
-                    }
-                    List<Metric> metrics = namespaceAPIObject.getMetrics();
-                    List<AnalyzerConstants.MetricName> kruizeFunctionVariablesList = new ArrayList<>();
-                    for (Metric metric : metrics) {
-                        try {
-                            // validate the metric values
-                            errorMsg = PerformanceProfileUtil.validateMetricsValues(metric.getName(), metric.getMetricResult());
-                            if (!errorMsg.isBlank()) {
-                                errorReasons.add(errorMsg.concat(String.format(
-                                        AnalyzerErrorConstants.AutotuneObjectErrors.NAMESPACE_AND_EXPERIMENT,
-                                        namespaceAPIObject.getNamespace(),
-                                        updateResultsAPIObject.getExperimentName())));
-                                break;
-                            }
-                            AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metric.getName());
-                            kruizeFunctionVariablesList.add(metricName);
-                            MetricResults metricResults = metric.getMetricResult();
-                            Map<String, Object> aggrInfoClassAsMap;
-                            if (!perfProfileAggrFunctions.isEmpty()) {
-                                try {
-                                    aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
-                                    errorMsg = validateAggFunction(aggrInfoClassAsMap, perfProfileAggrFunctions);
-                                    if (!errorMsg.isBlank()) {
-                                        errorReasons.add(errorMsg.concat(String.format(
-                                                AnalyzerErrorConstants.AutotuneObjectErrors.NAMESPACE_AND_EXPERIMENT,
-                                                namespaceAPIObject.getNamespace(),
-                                                updateResultsAPIObject.getExperimentName())));
-                                        break;
-                                    }
-                                } catch (IllegalAccessException | InvocationTargetException e) {
-                                    throw new RuntimeException(e);
-                                }
-                            } else {
-                                // check if query is also absent
-                                if (queryList.isEmpty()) {
-                                    errorReasons.add(AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING);
+                // if the metrics data is not present, set corresponding validation message and skip adding the current namespace data
+                if (namespaceAPIObject.getMetrics() == null) {
+                    errorReasons.add(String.format(
+                            AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
+                            namespaceAPIObject.getNamespace(),
+                            updateResultsAPIObject.getExperimentName()
+                    ));
+                    continue;
+                }
+                List<Metric> metrics = namespaceAPIObject.getMetrics();
+                List<AnalyzerConstants.MetricName> kruizeFunctionVariablesList = new ArrayList<>();
+                for (Metric metric : metrics) {
+                    try {
+                        // validate the metric values
+                        errorMsg = PerformanceProfileUtil.validateMetricsValues(metric.getName(), metric.getMetricResult());
+                        if (!errorMsg.isBlank()) {
+                            errorReasons.add(errorMsg.concat(String.format(
+                                    AnalyzerErrorConstants.AutotuneObjectErrors.NAMESPACE_AND_EXPERIMENT,
+                                    namespaceAPIObject.getNamespace(),
+                                    updateResultsAPIObject.getExperimentName())));
+                            break;
+                        }
+                        AnalyzerConstants.MetricName metricName = AnalyzerConstants.MetricName.valueOf(metric.getName());
+                        kruizeFunctionVariablesList.add(metricName);
+                        MetricResults metricResults = metric.getMetricResult();
+                        Map<String, Object> aggrInfoClassAsMap;
+                        if (!perfProfileAggrFunctions.isEmpty()) {
+                            try {
+                                aggrInfoClassAsMap = convertObjectToMap(metricResults.getAggregationInfoResult());
+                                errorMsg = validateAggFunction(aggrInfoClassAsMap, perfProfileAggrFunctions);
+                                if (!errorMsg.isBlank()) {
+                                    errorReasons.add(errorMsg.concat(String.format(
+                                            AnalyzerErrorConstants.AutotuneObjectErrors.NAMESPACE_AND_EXPERIMENT,
+                                            namespaceAPIObject.getNamespace(),
+                                            updateResultsAPIObject.getExperimentName())));
                                     break;
                                 }
+                            } catch (IllegalAccessException | InvocationTargetException e) {
+                                throw new RuntimeException(e);
                             }
-                        } catch (IllegalArgumentException e) {
-                            LOGGER.error("Error occurred in metrics validation: " + errorMsg);
+                        } else {
+                            // check if query is also absent
+                            if (queryList.isEmpty()) {
+                                errorReasons.add(AnalyzerErrorConstants.AutotuneObjectErrors.QUERY_FUNCTION_MISSING);
+                                break;
+                            }
                         }
-                    }
-                    if (!errorReasons.isEmpty())
-                        break;
-
-                    LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
-                    LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
-                    if (!new HashSet<>(kruizeFunctionVariablesList).containsAll(mandatoryFields)) {
-                        errorReasons.add(errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_MANDATORY_PARAMETERS,
-                                updateResultsAPIObject.getExperimentName(), mandatoryFields)));
-                        break;
-                    } else {
-                        LOGGER.info("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
-                        List<String> invalidMetrics = kruizeFunctionVariablesList.stream()
-                                .map(AnalyzerConstants.MetricName::toString) // Convert MetricName to its String representation
-                                .collect(Collectors.toList());
-
-                        invalidMetrics.removeAll(perfProfileFunctionVariablesList); // Remove all expected metrics
-
-                        if (!invalidMetrics.isEmpty()) {
-                            // rare/impossible case as validations as validateMetricsValues function takes care of this
-                            errorReasons.add(errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_METRICS_FOUND,
-                                    updateResultsAPIObject.getExperimentName(), invalidMetrics)));
-                        }
+                    } catch (IllegalArgumentException e) {
+                        LOGGER.error("Error occurred in metrics validation: " + errorMsg);
                     }
                 }
+                if (!errorReasons.isEmpty())
+                    break;
+
+                LOGGER.debug("perfProfileFunctionVariablesList: {}", perfProfileFunctionVariablesList);
+                LOGGER.debug("kruizeFunctionVariablesList: {}", kruizeFunctionVariablesList);
+                if (!new HashSet<>(kruizeFunctionVariablesList).containsAll(mandatoryFields)) {
+                    errorReasons.add(errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_MANDATORY_PARAMETERS,
+                            updateResultsAPIObject.getExperimentName(), mandatoryFields)));
+                    break;
+                } else {
+                    LOGGER.debug("All mandatory fields are present for experiment: {}", updateResultsAPIObject.getExperimentName());
+                    List<String> invalidMetrics = kruizeFunctionVariablesList.stream()
+                            .map(AnalyzerConstants.MetricName::toString) // Convert MetricName to its String representation
+                            .collect(Collectors.toList());
+
+                    invalidMetrics.removeAll(perfProfileFunctionVariablesList); // Remove all expected metrics
+
+                    if (!invalidMetrics.isEmpty()) {
+                        // rare/impossible case as validations as validateMetricsValues function takes care of this
+                        errorReasons.add(errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.INVALID_METRICS_FOUND,
+                                updateResultsAPIObject.getExperimentName(), invalidMetrics)));
+                    }
+                }
+            } else {
+                LOGGER.debug("Missing container/namespace data from the input json {}", kubernetesAPIObject);
             }
+        }
         return errorReasons;
     }
 

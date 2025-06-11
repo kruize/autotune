@@ -119,6 +119,8 @@ public class CreateExperiment extends HttpServlet {
                             if (null != kubernetesAPIObject.getContainerAPIObjects()) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP);
                             }
+                        } else {
+                            LOGGER.debug("Missing container/namespace data from the input json {}", createExperimentAPIObject);
                         }
                     }
                     KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
