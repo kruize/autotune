@@ -15,24 +15,34 @@
  *******************************************************************************/
 package com.autotune.analyzer.metadataProfiles;
 
+import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
+import com.autotune.common.datasource.DataSourceCollection;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.security.KeyManagementException;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.util.*;
+
+import static com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil.validateResultIdentifiers;
+import static com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil.matchSumByClause;
 
 /**
  *  This class validates MetadataProfile fields and object
@@ -105,7 +115,7 @@ public class MetadataProfileValidation {
                 }
 
                 // Validates fields like k8s_type and slo object
-                validateCommonProfileFields(metadataProfile, errorString, validationOutputData);
+                validateCommonProfileFields(metadataProfile, errorString);
 
                 if (!errorString.toString().isEmpty()) {
                     validationOutputData.setSuccess(false);
@@ -208,9 +218,8 @@ public class MetadataProfileValidation {
      *  Validates fields like k8s_type and query_variables
      * @param metadataProfile Metadata Profile object to be validated
      * @param errorString   StringBuilder to collect error messages during validation of multiple fields
-     * @param validationOutputData ValidationOutputData containing the response based on the validation
      */
-    private void validateCommonProfileFields(MetadataProfile metadataProfile, StringBuilder errorString, ValidationOutputData validationOutputData){
+    private void validateCommonProfileFields(MetadataProfile metadataProfile, StringBuilder errorString){
         // Check if k8s type is supported
         String k8sType = metadataProfile.getK8s_type();
         if (!KruizeSupportedTypes.K8S_TYPES_SUPPORTED.contains(k8sType)) {
@@ -266,4 +275,159 @@ public class MetadataProfileValidation {
                 '}';
     }
 
+    /**
+     * Validates the fields of the metadata profile object before updating it
+     * @param metadataProfile Metadata Profile Object to be validated
+     * @return Returns the ValidationOutputData containing the response based on the validation
+     */
+    public ValidationOutputData validateProfileData(MetadataProfile metadataProfile) {
+        return validateMetadataProfile(metadataProfile);
+    }
+
+    private ValidationOutputData validateMetadataProfile(MetadataProfile metadataProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        StringBuilder errorString = new StringBuilder();
+        try {
+            // validate the mandatory values first
+            validationOutputData = validateMandatoryMetadataProfileFieldsAndData(metadataProfile);
+
+            // If the mandatory values are present,proceed for further validation else return the validation object directly
+            if (validationOutputData.isSuccess()) {
+
+                // Check if profile metadata exists
+                JsonNode metadata = metadataProfile.getMetadata();
+                if (null == metadata) {
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_METADATA);
+                }
+
+                // Validates fields like k8s_type and slo object
+                validateCommonProfileFields(metadataProfile, errorString);
+
+                // Validate Metric names and expected query patterns
+                validateMetricQueries(metadataProfile, errorString);
+
+                if (!errorString.toString().isEmpty()) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(errorString.toString());
+                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                } else {
+                    validationOutputData.setSuccess(true);
+                }
+            }
+        } catch (Exception e){
+            validationOutputData.setSuccess(false);
+            validationOutputData.setMessage(errorString.toString());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        return validationOutputData;
+    }
+
+
+    /**
+     * Validates Metric names and expected query patterns before updating the metadata profile
+     *
+     * @param metadataProfile MetadataProfile object to be updated
+     * @param errorString     StringBuilder to collect error messages during validation of multiple fields
+     */
+    public void validateMetricQueries(MetadataProfile metadataProfile, StringBuilder errorString) {
+        for (Metric queryVariable : metadataProfile.getQueryVariables()) {
+            String metricName = queryVariable.getName();
+            String datasource = queryVariable.getDatasource();
+            DataSourceInfo dataSourceInfo = null;
+
+            try {
+                dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().values().iterator().next();
+                if (null == dataSourceInfo) {
+                    errorString.append(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.NO_DATASOURCE_FOUND_IN_DB);
+                    return;
+                }
+            } catch (Exception e) {
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_DB_LOAD_FAILED, datasource, e.getMessage());
+            }
+
+            if (!validateMetricQueryName(metricName)) {
+                errorString.append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_METRIC_NAME).
+                        append(metricName).append(". ").append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.SUPPORTED_QUERY_NAME_PREFIXES);
+            }
+
+            HashMap<String, AggregationFunctions> aggr_funcs = queryVariable.getAggregationFunctionsMap();
+
+            for(Map.Entry<String, AggregationFunctions> aggregationFunctionsMap: aggr_funcs.entrySet()) {
+                AggregationFunctions aggr_func = aggregationFunctionsMap.getValue();
+                String query = aggr_func.getQuery();
+                validateMetricQueryPattern(query, metricName, errorString, dataSourceInfo);
+            }
+        }
+    }
+
+
+    /**
+     * Validates if the metricName to be updated has supported prefix like namespace, workload, container.
+     * @param metricName Name of the metric to be updated
+     * @return boolean output if the metric name has one of the supported prefixes
+     */
+    public boolean validateMetricQueryName(String metricName) {
+        List<String> supportedQueryPrefixes = Arrays.asList(AnalyzerConstants.NAMESPACE, AnalyzerConstants.WORKLOAD, AnalyzerConstants.CONTAINER);
+
+        String metricNameLowerCase = metricName.toLowerCase();
+        for (String queryPrefix : supportedQueryPrefixes) {
+            if (metricNameLowerCase.contains(queryPrefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Validates input metric query to be updated by matching the 'sum by' clause of the input query against the expected query patterns
+     *
+     * @param metricQuery Query to be updated
+     * @param metricName  Name of the Metric to be updated
+     * @param errorString StringBuilder to collect error messages during validation of multiple fields
+     * @param dataSourceInfo Datasource object with datasource details to run the queries
+     */
+    public void validateMetricQueryPattern(String metricQuery, String metricName, StringBuilder errorString, DataSourceInfo dataSourceInfo) {
+        AnalyzerConstants.MetadataProfileQueryIdentifier matchedIdentifier = matchSumByClause(metricQuery);
+        if (matchedIdentifier == null) {
+            errorString.append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_SUM_BY_CLAUSE).append(metricName).append(". ").append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.EXPECTED_IDENTIFIERS);
+            for (AnalyzerConstants.MetadataProfileQueryIdentifier pattern : AnalyzerConstants.MetadataProfileQueryIdentifier.values()) {
+                errorString.append(" - ").append(pattern.getExpectedIdentifiers());
+            }
+        } else {
+            queryValidator(metricQuery, metricName, errorString, dataSourceInfo, matchedIdentifier);
+        }
+    }
+
+    /**
+     * Validates the metric query by executing the query for `kruize` workload, container and verify for any syntax errors or unexpected query output
+     *
+     * @param metricQuery Query output to be validated
+     * @param metricName  Name of the metric to be validated
+     * @param errorString  StringBuilder to collect error messages during validation of multiple fields
+     * @param dataSourceInfo Datasource object with datasource details to run the queries
+     * @param queryIdentifier  Expected query identifier to be present in the query output
+     */
+    public void queryValidator(String metricQuery, String metricName, StringBuilder errorString, DataSourceInfo dataSourceInfo,
+                               AnalyzerConstants.MetadataProfileQueryIdentifier queryIdentifier) {
+        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(dataSourceInfo.getProvider());
+
+        metricQuery = metricQuery.replace(AnalyzerConstants.MetadataProfileConstants.ADDITIONAL_LABEL, "")
+                .replace(AnalyzerConstants.MEASUREMENT_DURATION_IN_MIN_VARAIBLE, String.valueOf(AnalyzerConstants.DEFAULT_MEASUREMENT_DURATION_INT));
+
+        try {
+            String metricIdentifier = MetadataProfileUtil.getMetricIdentifier(metricName);
+            String filterString = MetadataProfileUtil.formatMetricFilterString(metricIdentifier);
+            String updatedQuery = MetadataProfileUtil.appendFiltersToQuery(metricQuery, filterString);
+
+            JsonArray resultArray = op.getResultArrayForQuery(dataSourceInfo, updatedQuery);
+
+            if(!validateResultIdentifiers(resultArray, queryIdentifier)){
+                String errorMessage = String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_QUERY_NO_RESULT, metricName);
+                errorString.append(errorMessage);
+            }
+        } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
+            LOGGER.error(e.getMessage());
+            errorString.append(e.getMessage()).append(String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.QUERY_SYNTAX_ERROR_MESSAGE, metricName));
+        }
+    }
 }

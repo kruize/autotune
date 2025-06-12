@@ -74,6 +74,10 @@ public class KruizeSupportedTypes {
             "name", "verbose"
     ));
 
+    public static final Set<String> UPDATE_METADATA_PROFILES_QUERY_PARAMS_SUPPORTED = new HashSet<>(Arrays.asList(
+            "name"
+    ));
+
     private KruizeSupportedTypes() {
     }
 }
