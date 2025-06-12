@@ -559,7 +559,11 @@ def test_update_multiple_valid_results_for_namespace_experiment_with_supported_c
         print("message = ", data['message'])
 
         assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
         assert data['status'] == SUCCESS_STATUS
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
 
 
 @pytest.mark.sanity
@@ -719,7 +723,7 @@ def test_update_results_multiple_exps_from_same_json_file(cluster_type):
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert data['message'] == 'Out of a total of 3 records, 3 failed to save'
+    assert data['message'] == THREE_FAILED_RECORDS_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -756,7 +760,7 @@ def test_update_results_multiple_exps_multiple_containers_from_same_json_file(cl
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert data['message'] == 'Out of a total of 3 records, 3 failed to save'
+    assert data['message'] == THREE_FAILED_RECORDS_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -792,7 +796,7 @@ def test_update_results_for_containers_not_present(cluster_type):
     print("message = ", data['message'])
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert data['message'] == 'Out of a total of 3 records, 3 failed to save'
+    assert data['message'] == THREE_FAILED_RECORDS_MSG
 
 
 @pytest.mark.sanity
@@ -868,7 +872,6 @@ def test_update_valid_results_without_create_exp(cluster_type):
     print("message = ", data['message'])
 
     EXP_NAME_NOT_FOUND_MSG = UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND + experiment_name
-    FAILED_RECORDS_MSG = "Out of a total of 1 records, 1 failed to save"
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
     assert data['message'] == FAILED_RECORDS_MSG
@@ -917,12 +920,10 @@ def test_update_results_with_same_result(cluster_type):
     interval_end_time = result_json_data[0]['interval_end_time']
     interval_start_time = result_json_data[0]['interval_start_time']
 
-    TIMESTAMP_PRESENT_MSG = 'An entry for this record already exists!'
-
-    print(TIMESTAMP_PRESENT_MSG)
+    print(DUPLICATE_RECORDS_MSG)
     print(data['data'][0]['errors'][0]['message'])
-    assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
-    assert data['data'][0]['errors'][0]['message'] == TIMESTAMP_PRESENT_MSG
+    assert data['message'] == FAILED_RECORDS_MSG
+    assert data['data'][0]['errors'][0]['message'] == DUPLICATE_RECORDS_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -971,12 +972,10 @@ def test_update_results_with_same_result_for_namespace_experiment(cluster_type):
     interval_end_time = result_json_data[0]['interval_end_time']
     interval_start_time = result_json_data[0]['interval_start_time']
 
-    TIMESTAMP_PRESENT_MSG = 'An entry for this record already exists!'
-
-    print(TIMESTAMP_PRESENT_MSG)
+    print(DUPLICATE_RECORDS_MSG)
     print(data['data'][0]['errors'][0]['message'])
-    assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
-    assert data['data'][0]['errors'][0]['message'] == TIMESTAMP_PRESENT_MSG
+    assert data['message'] == FAILED_RECORDS_MSG
+    assert data['data'][0]['errors'][0]['message'] == DUPLICATE_RECORDS_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -1023,12 +1022,12 @@ def test_update_results_with_valid_and_invalid_interval_duration(test_name, inte
     elif test_name == "invalid_zero_diff":
         assert response.status_code == ERROR_STATUS_CODE
         assert data['status'] == ERROR_STATUS
-        assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
+        assert data['message'] == FAILED_RECORDS_MSG
         assert data['data'][0]['errors'][0]['message'] == UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG
     else:
         assert response.status_code == ERROR_STATUS_CODE
         assert data['status'] == ERROR_STATUS
-        assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
+        assert data['message'] == FAILED_RECORDS_MSG
         assert data['data'][0]['errors'][0]['message'] == INVALID_INTERVAL_DURATION_MSG
 
     response = delete_experiment(input_json_file)
@@ -1076,12 +1075,12 @@ def test_update_results_with_valid_and_invalid_interval_duration_for_namespace_e
     elif test_name == "invalid_zero_diff":
         assert response.status_code == ERROR_STATUS_CODE
         assert data['status'] == ERROR_STATUS
-        assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
+        assert data['message'] == FAILED_RECORDS_MSG
         assert data['data'][0]['errors'][0]['message'] == UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG
     else:
         assert response.status_code == ERROR_STATUS_CODE
         assert data['status'] == ERROR_STATUS
-        assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
+        assert data['message'] == FAILED_RECORDS_MSG
         assert data['data'][0]['errors'][0]['message'] == INVALID_INTERVAL_DURATION_MSG
 
     response = delete_experiment(input_json_file)
