@@ -2760,7 +2760,7 @@ In auto or recreate mode, only one model and one term can be set—defaulting to
 
 Under model_settings:
 
-- "models": ["balance"] defines the name of your custom model, as opposed to using the default performance or cost models.
+- "models": ["balance"] defines the name of your custom model. This list can have multiple model names as well.
 - "model_tunables" specifies how the model behaves.  For instance, in this example, the model prioritizes CPU usage at 92%, memory at 89%, and GPU (accelerator) usage at 100% when generating recommendations.
 
 ```json
