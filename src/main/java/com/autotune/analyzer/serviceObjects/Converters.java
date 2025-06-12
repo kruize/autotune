@@ -306,7 +306,7 @@ public class Converters {
                 HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
                 HashMap<String, NamespaceData> namespaceDataHashMap = new HashMap<>();
 
-                if(containersList != null ) {
+                if(containersList != null && !containersList.isEmpty()) {
                     for (ContainerAPIObject containerAPIObject : containersList) {
                         HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
                         HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();

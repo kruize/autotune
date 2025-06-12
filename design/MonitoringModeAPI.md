@@ -1864,7 +1864,7 @@ If no parameter is passed API returns all the latest recommendations available f
 **Response**
 
 <details>
-<summary><b>Example Response</b></summary>
+<summary><b>Example Response with experiment_type as `container` </b></summary>
 
 ### Example Response
 
@@ -2267,6 +2267,436 @@ If no parameter is passed API returns all the latest recommendations available f
         ]
       }
     ]
+  }
+]
+```
+
+</details>
+
+<details>
+<summary><b>Example Response with experiment_type as `namespace` </b></summary>
+
+### Example Response
+
+```json
+[
+  {
+    "cluster_name": "cluster-one-division-bell",
+    "experiment_type": "namespace",
+    "kubernetes_objects": [
+      {
+        "namespace": "namespace-demo",
+        "containers": [],
+        "namespaces": {
+          "namespace": "namespace-demo",
+          "recommendations": {
+            "version": "1.0",
+            "notifications": {
+              "111000": {
+                "type": "info",
+                "message": "Recommendations Are Available",
+                "code": 111000
+              }
+            },
+            "data": {
+              "2022-01-24T19:55:43.602Z": {
+                "notifications": {
+                  "111101": {
+                    "type": "info",
+                    "message": "Short Term Recommendations Available",
+                    "code": 111101
+                  }
+                },
+                "monitoring_end_time": "2022-01-24T19:55:43.602Z",
+                "current": {
+                  "limits": {
+                    "cpu": {
+                      "amount": 4.5,
+                      "format": "cores"
+                    },
+                    "memory": {
+                      "amount": 600.0,
+                      "format": "MiB"
+                    }
+                  },
+                  "requests": {
+                    "cpu": {
+                      "amount": 6.0,
+                      "format": "cores"
+                    },
+                    "memory": {
+                      "amount": 400.0,
+                      "format": "MiB"
+                    }
+                  }
+                },
+                "recommendation_terms": {
+                  "short_term": {
+                    "duration_in_hours": 0.5,
+                    "notifications": {
+                      "112101": {
+                        "type": "info",
+                        "message": "Cost Recommendations Available",
+                        "code": 112101
+                      },
+                      "112102": {
+                        "type": "info",
+                        "message": "Performance Recommendations Available",
+                        "code": 112102
+                      }
+                    },
+                    "monitoring_start_time": "2022-01-23T19:55:43.602Z",
+                    "recommendation_engines": {
+                      "cost": {
+                        "pods_count": 0,
+                        "confidence_level": 0.0,
+                        "config": {
+                          "limits": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216.0,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216.0,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "variation": {
+                          "limits": {
+                            "cpu": {
+                              "amount": -3.5700000000000003,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -384.0,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": -5.07,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -184.0,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "notifications": {
+                          "221001": {
+                            "type": "error",
+                            "message": "Number of pods cannot be zero",
+                            "code": 221001
+                          }
+                        }
+                      },
+                      "performance": {
+                        "pods_count": 0,
+                        "confidence_level": 0.0,
+                        "config": {
+                          "limits": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216.0,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216.0,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "variation": {
+                          "limits": {
+                            "cpu": {
+                              "amount": -3.5700000000000003,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -384.0,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": -5.07,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -184.0,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "notifications": {
+                          "221001": {
+                            "type": "error",
+                            "message": "Number of pods cannot be zero",
+                            "code": 221001
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "medium_term": {
+                    "duration_in_hours": 0.5,
+                    "notifications": {
+                      "120001": {
+                        "type": "info",
+                        "message": "There is not enough data available to generate a recommendation.",
+                        "code": 120001
+                      }
+                    }
+                  },
+                  "long_term": {
+                    "duration_in_hours": 0.5,
+                    "notifications": {
+                      "120001": {
+                        "type": "info",
+                        "message": "There is not enough data available to generate a recommendation.",
+                        "code": 120001
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "namespace-experiment-1"
+  },
+  {
+    "cluster_name": "cluster-one-division-bell",
+    "experiment_type": "namespace",
+    "kubernetes_objects": [
+      {
+        "namespace": "namespace-demo",
+        "containers": [],
+        "namespaces": {
+          "namespace": "namespace-demo",
+          "recommendations": {
+            "version": "1.0",
+            "notifications": {
+              "111000": {
+                "type": "info",
+                "message": "Recommendations Are Available",
+                "code": 111000
+              }
+            },
+            "data": {
+              "2022-01-24T19:55:43.602Z": {
+                "notifications": {
+                  "111101": {
+                    "type": "info",
+                    "message": "Short Term Recommendations Available",
+                    "code": 111101
+                  }
+                },
+                "monitoring_end_time": "2022-01-24T19:55:43.602Z",
+                "current": {
+                  "limits": {
+                    "cpu": {
+                      "amount": 4.5,
+                      "format": "cores"
+                    },
+                    "memory": {
+                      "amount": 600.0,
+                      "format": "MiB"
+                    }
+                  },
+                  "requests": {
+                    "cpu": {
+                      "amount": 6.0,
+                      "format": "cores"
+                    },
+                    "memory": {
+                      "amount": 400.0,
+                      "format": "MiB"
+                    }
+                  }
+                },
+                "recommendation_terms": {
+                  "short_term": {
+                    "duration_in_hours": 0.5,
+                    "notifications": {
+                      "112101": {
+                        "type": "info",
+                        "message": "Cost Recommendations Available",
+                        "code": 112101
+                      },
+                      "112102": {
+                        "type": "info",
+                        "message": "Performance Recommendations Available",
+                        "code": 112102
+                      }
+                    },
+                    "monitoring_start_time": "2022-01-23T19:55:43.602Z",
+                    "recommendation_engines": {
+                      "cost": {
+                        "pods_count": 0,
+                        "confidence_level": 0.0,
+                        "config": {
+                          "limits": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216.0,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216.0,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "variation": {
+                          "limits": {
+                            "cpu": {
+                              "amount": -3.5700000000000003,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -384.0,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": -5.07,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -184.0,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "notifications": {
+                          "221001": {
+                            "type": "error",
+                            "message": "Number of pods cannot be zero",
+                            "code": 221001
+                          }
+                        }
+                      },
+                      "performance": {
+                        "pods_count": 0,
+                        "confidence_level": 0.0,
+                        "config": {
+                          "limits": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216.0,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216.0,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "variation": {
+                          "limits": {
+                            "cpu": {
+                              "amount": -3.5700000000000003,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -384.0,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": -5.07,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -184.0,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "notifications": {
+                          "221001": {
+                            "type": "error",
+                            "message": "Number of pods cannot be zero",
+                            "code": 221001
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "medium_term": {
+                    "duration_in_hours": 0.5,
+                    "notifications": {
+                      "120001": {
+                        "type": "info",
+                        "message": "There is not enough data available to generate a recommendation.",
+                        "code": 120001
+                      }
+                    }
+                  },
+                  "long_term": {
+                    "duration_in_hours": 0.5,
+                    "notifications": {
+                      "120001": {
+                        "type": "info",
+                        "message": "There is not enough data available to generate a recommendation.",
+                        "code": 120001
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "namespace-experiment-2"
   }
 ]
 ```
@@ -3689,10 +4119,10 @@ success status code : 201
 
 **Response**
 
-The response will contain a array of JSON object with the updated recommendations for the specified experiment.
+The response will contain an array of JSON object with the updated recommendations for the specified experiment.
 
 <details>
-<summary><b>Example Response Body</b></summary>
+<summary><b>Example Response Body with experiment_type as `container` </b></summary>
 
 ```json
 [
@@ -3910,6 +4340,225 @@ The response will contain a array of JSON object with the updated recommendation
     ],
     "version": "v2.0",
     "experiment_name": "temp_1"
+  }
+]
+```
+
+</details>
+
+<details>
+<summary><b>Example Response Body with experiment_type as `namespace` </b></summary>
+
+```json
+[
+  {
+    "cluster_name": "cluster-one-division-bell",
+    "experiment_type": "namespace",
+    "kubernetes_objects": [
+      {
+        "namespace": "namespace-demo",
+        "containers": [],
+        "namespaces": {
+          "namespace": "namespace-demo",
+          "recommendations": {
+            "version": "1.0",
+            "notifications": {
+              "111000": {
+                "type": "info",
+                "message": "Recommendations Are Available",
+                "code": 111000
+              }
+            },
+            "data": {
+              "2022-01-24T19:55:43.602Z": {
+                "notifications": {
+                  "111101": {
+                    "type": "info",
+                    "message": "Short Term Recommendations Available",
+                    "code": 111101
+                  }
+                },
+                "monitoring_end_time": "2022-01-24T19:55:43.602Z",
+                "current": {
+                  "limits": {
+                    "cpu": {
+                      "amount": 4.5,
+                      "format": "cores"
+                    },
+                    "memory": {
+                      "amount": 600,
+                      "format": "MiB"
+                    }
+                  },
+                  "requests": {
+                    "cpu": {
+                      "amount": 6,
+                      "format": "cores"
+                    },
+                    "memory": {
+                      "amount": 400,
+                      "format": "MiB"
+                    }
+                  }
+                },
+                "recommendation_terms": {
+                  "short_term": {
+                    "duration_in_hours": 0.5,
+                    "notifications": {
+                      "112101": {
+                        "type": "info",
+                        "message": "Cost Recommendations Available",
+                        "code": 112101
+                      },
+                      "112102": {
+                        "type": "info",
+                        "message": "Performance Recommendations Available",
+                        "code": 112102
+                      }
+                    },
+                    "monitoring_start_time": "2022-01-23T19:55:43.602Z",
+                    "recommendation_engines": {
+                      "cost": {
+                        "pods_count": 0,
+                        "confidence_level": 0,
+                        "config": {
+                          "limits": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "variation": {
+                          "limits": {
+                            "cpu": {
+                              "amount": -3.5700000000000003,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -384,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": -5.07,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -184,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "notifications": {
+                          "221001": {
+                            "type": "error",
+                            "message": "Number of pods cannot be zero",
+                            "code": 221001
+                          }
+                        }
+                      },
+                      "performance": {
+                        "pods_count": 0,
+                        "confidence_level": 0,
+                        "config": {
+                          "limits": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": 0.9299999999999999,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": 216,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "variation": {
+                          "limits": {
+                            "cpu": {
+                              "amount": -3.5700000000000003,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -384,
+                              "format": "MiB"
+                            }
+                          },
+                          "requests": {
+                            "cpu": {
+                              "amount": -5.07,
+                              "format": "cores"
+                            },
+                            "memory": {
+                              "amount": -184,
+                              "format": "MiB"
+                            }
+                          }
+                        },
+                        "notifications": {
+                          "221001": {
+                            "type": "error",
+                            "message": "Number of pods cannot be zero",
+                            "code": 221001
+                          }
+                        }
+                      }
+                    }
+                  },
+                  "medium_term": {
+                    "duration_in_hours": 0.5,
+                    "notifications": {
+                      "120001": {
+                        "type": "info",
+                        "message": "There is not enough data available to generate a recommendation.",
+                        "code": 120001
+                      }
+                    }
+                  },
+                  "long_term": {
+                    "duration_in_hours": 0.5,
+                    "notifications": {
+                      "120001": {
+                        "type": "info",
+                        "message": "There is not enough data available to generate a recommendation.",
+                        "code": 120001
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    ],
+    "version": "v2.0",
+    "experiment_name": "namespace-experiment-demo"
   }
 ]
 ```
