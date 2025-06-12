@@ -27,7 +27,7 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
-import com.autotune.common.data.system.info.device.accelerator.AcceleratorDeviceData;
+import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -2426,18 +2426,18 @@ public class RecommendationEngine {
                                         // Same changes need to be applied at the time of adding the device in
                                         // DeviceHandler
                                         DeviceDetails deviceDetail = deviceDetails.get(0);
-                                        AcceleratorDeviceData containerAcceleratorDeviceData = (AcceleratorDeviceData) deviceDetail;
+                                        NvidiaAcceleratorDeviceData containerAcceleratorDeviceData = (NvidiaAcceleratorDeviceData) deviceDetail;
 
                                         // Skip non-matching Accelerator entries
                                         if (!metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString().equalsIgnoreCase(containerAcceleratorDeviceData.getModelName()))
                                             continue;
 
-                                        AcceleratorDeviceData acceleratorDeviceData = new AcceleratorDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
+                                        NvidiaAcceleratorDeviceData acceleratorDeviceData = new NvidiaAcceleratorDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
                                                 metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
                                                 metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
                                                 metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
                                                 containerAcceleratorDeviceData.getProfile(),
-                                                true, containerAcceleratorDeviceData.isMIGPartition());
+                                                true, containerAcceleratorDeviceData.isPartition());
 
                                         JsonArray valuesArray = resultObject.getAsJsonArray(KruizeConstants.DataSourceConstants
                                                 .DataSourceQueryJSONKeys.VALUES);
