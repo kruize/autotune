@@ -11,9 +11,7 @@ import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.plots.PlotManager;
 import com.autotune.analyzer.recommendations.*;
-import com.autotune.analyzer.recommendations.model.CostBasedRecommendationModel;
-import com.autotune.analyzer.recommendations.model.PerformanceBasedRecommendationModel;
-import com.autotune.analyzer.recommendations.model.RecommendationModel;
+import com.autotune.analyzer.recommendations.model.*;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
@@ -74,6 +72,7 @@ public class RecommendationEngine {
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
     private List<String> modelNames;
+    private Map<String, RecommendationTunables> modelTunable;
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
@@ -157,7 +156,7 @@ public class RecommendationEngine {
 
     }
 
-    private void loadCustomRecommendationModels(List<String> modelName) throws InvalidModelException {
+    private void loadCustomRecommendationModels(List<String> modelName,  Map<String, RecommendationTunables> settings) throws InvalidModelException {
         // Add new models
         recommendationModels = new ArrayList<>();
         for (String model : modelName) {
@@ -172,8 +171,10 @@ public class RecommendationEngine {
                 PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
                 registerModel(performanceBasedRecommendationModel);
             } else {
-                // user input does not matches standard models
-                throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+                // Create Custom model
+                RecommendationTunables genericTunables = settings.get(model);
+                GenericRecommendationModel genericRecommendationModel = new GenericRecommendationModel(model, genericTunables);
+                registerModel(genericRecommendationModel);
             }
         }
     }
@@ -212,6 +213,10 @@ public class RecommendationEngine {
 
     public List<String> getModelNames() {
         return modelNames;
+    }
+
+    private void setModelTunable(Map<String, RecommendationTunables> modelTunable) {
+        this.modelTunable = modelTunable;
     }
 
     public void setModelNames(List<String> modelNames) {
@@ -388,7 +393,8 @@ public class RecommendationEngine {
                 } else {
                     // models present
                     setModelNames(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
-                    loadCustomRecommendationModels(modelNames);
+                    setModelTunable(kruizeObject.getRecommendation_settings().getModelSettings().getModelTunable());
+                    loadCustomRecommendationModels(modelNames, modelTunable );
                 }
             } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
                 // auto or recreate mode
@@ -402,7 +408,7 @@ public class RecommendationEngine {
                         // check for single model
                         if (kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
                             // call for that one model
-                            loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
+                            loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels(),kruizeObject.getRecommendation_settings().getModelSettings().getModelTunable());
                         } else {
                             // multiple model throw error
                             throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED);
@@ -687,16 +693,6 @@ public class RecommendationEngine {
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : getModels()) {
-                    boolean isCostModel = false;
-                    boolean isPerfModel = false;
-
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
-                        isCostModel = true;
-                    }
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
-                        isPerfModel = true;
-                    }
-
                     // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
                             monitoringStartTime,
@@ -716,25 +712,26 @@ public class RecommendationEngine {
                     if (null != rn) {
                         timestampRecommendation.addNotification(rn);
                     }
-
                     RecommendationNotification recommendationNotification = null;
-                    if (isCostModel) {
+                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
                         // Setting it as at least one recommendation available
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    if (isPerfModel) {
+                    } else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
                         // Setting it as at least one recommendation available
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    if (null != recommendationNotification) {
+                    } else if (null != model.getModelName()) {
+                        // Setting it as at least one recommendation available
+                        recommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_MODEL_RECOMMENDATIONS_AVAILABLE
+                        );
+                    } if (null != recommendationNotification) {
                         termLevelNotifications.add(recommendationNotification);
                     } else {
                         recommendationNotification = new RecommendationNotification(
@@ -1045,15 +1042,6 @@ public class RecommendationEngine {
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : getModels()) {
-                    boolean isCostModel = false;
-                    boolean isPerfModel = false;
-
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
-                        isCostModel = true;
-                    }
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
-                        isPerfModel = true;
-                    }
 
                     // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                     MappedRecommendationForModel mappedRecommendationForModel = generateNamespaceRecommendationBasedOnModel(
@@ -1068,31 +1056,32 @@ public class RecommendationEngine {
                     if (null == mappedRecommendationForModel) {
                         continue;
                     }
-
                     // Adding the term level recommendation availability after confirming the recommendation exists
                     RecommendationNotification rn = RecommendationNotification.getNotificationForTermAvailability(recommendationTerm);
                     if (null != rn) {
                         timestampRecommendation.addNotification(rn);
                     }
-
                     RecommendationNotification recommendationNotification = null;
-                    if (isCostModel) {
+
+                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
                         // Setting it as at least one recommendation available
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    if (isPerfModel) {
+                    } else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
                         // Setting it as at least one recommendation available
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    if (null != recommendationNotification) {
+                    } else if (null != model.getModelName()) {
+                        // Setting it as at least one recommendation available
+                        namespaceRecommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_MODEL_RECOMMENDATIONS_AVAILABLE
+                        );
+                    } if (null != recommendationNotification) {
                         termLevelNotifications.add(recommendationNotification);
                     } else {
                         recommendationNotification = new RecommendationNotification(
