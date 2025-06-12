@@ -2745,14 +2745,42 @@ If no experiment type is specified, it will default to `container`.
 
 **Request with `model_settings` and `term_settings` field**
 
-Under `recommendation_settings`, the `model_settings` and `term_settings` fields are optional 
-but can be used to specify model and term details. Currently, for monitoring mode user can either set
-model as cost and/or performance or can specify a custom model by defining cpu, memory and gpu percentiles.
-Terms can be set to short, medium and/or long term.
-By default, it provides recommendations for all three terms and both models.
+Kruize provides both cost and performance recommendations by default,
+but users often have specific optimization goals. For example, if you're only focused on performance, 
+showing cost-related suggestions can lead to confusion and clutter.
 
-If mode is set to auto or recreate then there can only be one term and one model chosen.
-By default, model will be `performance` and term will be set to `short` term.
+So to streamline the user experience, you can now customize the recommendation_settings in your YAML to specify:
+- Models: performance, cost, or a custom model using CPU, memory, and GPU percentiles
+- Terms: short_term, medium_term, or long_term
+
+In monitoring mode, multiple models and terms are supported. By default, it provides recommendations for both models across all three terms.
+In auto or recreate mode, only one model and one term can be set—defaulting to performance and short_term if omitted.
+
+#### How to specify your Custom Model
+
+Under model_settings:
+
+- "models": ["balance"] defines the name of your custom model, as opposed to using the default performance or cost models.
+- "model_tunables" specifies how the model behaves.  For instance, in this example, the model prioritizes CPU usage at 92%, memory at 89%, and GPU (accelerator) usage at 100% when generating recommendations.
+
+```json
+"recommendation_settings": {
+  "threshold": "0.1",
+  "model_settings": {
+    "models": ["balance"],
+    "model_tunables": {
+      "balance": {
+        "memory_percentile": 89,
+        "cpu_percentile": 92,
+        "accelerator_percentile": 100
+      }
+    }
+  },
+  "term_settings": {
+    "terms": ["short"]
+  }
+}
+```
 
 <details>
   <summary><b>Example Request with custom model_settings and term_settings </b></summary>
