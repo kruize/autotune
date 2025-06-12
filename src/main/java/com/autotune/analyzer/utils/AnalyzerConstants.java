@@ -16,7 +16,6 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.utils.KruizeConstants;
-import software.amazon.awssdk.services.cloudwatchlogs.endpoints.internal.Value;
 
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -215,9 +214,9 @@ public class AnalyzerConstants {
         namespaceTotalPods,
         namespaceRunningPods,
         namespaceMaxDate,
-        gpuCoreUsage,
-        gpuMemoryUsage,
-        acceleratorMigMemoryUsage
+        acceleratorCoreUsage,
+        acceleratorMemoryUsage,
+        acceleratorFrameBufferUsage
     }
 
     public enum K8S_OBJECT_TYPES {
