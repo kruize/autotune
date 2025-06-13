@@ -128,6 +128,11 @@ public class RecommendationConstants {
                 RecommendationNotificationMsgConstant.PERFORMANCE_RECOMMENDATIONS_AVAILABLE,
                 RecommendationNotificationTypes.INFO
         ),
+        INFO_MODEL_RECOMMENDATIONS_AVAILABLE(
+                RecommendationConstants.NotificationCodes.INFO_MODEL_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationMsgConstant.MODEL_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
         INFO_NOT_ENOUGH_DATA(
                 RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA,
                 RecommendationConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,
@@ -318,6 +323,8 @@ public class RecommendationConstants {
         public static final int INFO_LONG_TERM_RECOMMENDATIONS_AVAILABLE = 111103; // TODO: need to discuss the code;
         public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
         public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
+        public static final int INFO_MODEL_RECOMMENDATIONS_AVAILABLE = 112103;
+
         public static final int COST_ENGINE_END = 112199;
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 112999;
         // Subsystem subsection: Profile Based Engine
@@ -641,6 +648,7 @@ public class RecommendationConstants {
         public static final String NOT_ENOUGH_DATA = "There is not enough data available to generate a recommendation.";
         public static final String COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available";
         public static final String PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available";
+        public static final String MODEL_RECOMMENDATIONS_AVAILABLE = "Model Recommendations Available";
         public static final String RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available";
         public static final String SHORT_TERM_RECOMMENDATIONS_AVAILABLE = "Short Term Recommendations Available";
         public static final String MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "Medium Term Recommendations Available";

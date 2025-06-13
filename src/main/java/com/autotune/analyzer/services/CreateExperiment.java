@@ -107,7 +107,7 @@ public class CreateExperiment extends HttpServlet {
                         if (createExperimentAPIObject.isContainerExperiment()) {
                             createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentType.CONTAINER);
                             // check if namespace data is also set for container-type experiments
-                            if (null != kubernetesAPIObject.getNamespaceAPIObjects()) {
+                            if (null != kubernetesAPIObject.getNamespaceAPIObject()) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP);
                             }
                             if ((AnalyzerConstants.AUTO.equalsIgnoreCase(createExperimentAPIObject.getMode())
@@ -119,6 +119,8 @@ public class CreateExperiment extends HttpServlet {
                             if (null != kubernetesAPIObject.getContainerAPIObjects()) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP);
                             }
+                        } else {
+                            LOGGER.debug("Missing container/namespace data from the input json {}", createExperimentAPIObject);
                         }
                     }
                     KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
