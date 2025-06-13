@@ -21,7 +21,7 @@ from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.list_reco_json_validate import *
 from helpers.utils import *
-from helpers.namespace_list_reco_json_schema import namespace_list_reco_json_schema
+from helpers.list_reco_json_local_monitoring_schema import list_reco_namespace_json_local_monitoring_schema
 
 
 @pytest.mark.sanity
@@ -647,7 +647,7 @@ def test_update_valid_namespace_recommendations(cluster_type):
         list_reco_json = response.json()
 
         # Validate the json against the json schema
-        error_msg = validate_list_reco_json(list_reco_json, namespace_list_reco_json_schema)
+        error_msg = validate_list_reco_json(list_reco_json, list_reco_namespace_json_local_monitoring_schema)
         assert error_msg == ""
 
         # Validate the json values

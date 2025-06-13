@@ -450,7 +450,6 @@ def term_based_start_time(input_date_str, term):
 
     return output_date_str
 
-
 def validate_reco_json(create_exp_json, update_results_json, list_reco_json, expected_duration_in_hours=None,
                        test_name=None):
     # Validate experiment
@@ -516,9 +515,9 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
 
     if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
         assert list_reco_kubernetes_obj["namespaces"]["namespace"] == create_exp_kubernetes_obj["namespaces"]["namespace"]
+        update_results_namespace = create_exp_kubernetes_obj["namespaces"]
         list_reco_namespace = list_reco_kubernetes_obj["namespaces"]
-        create_exp_namespace = create_exp_kubernetes_obj["namespaces"]
-        validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name)
+        validate_namespace(update_results_namespace, update_results_json, list_reco_namespace, expected_duration_in_hours, test_name, experiment_type)
     else:
         # Validate type, name, namespace
         assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
@@ -555,7 +554,7 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                     update_results_container = create_exp_kubernetes_obj["containers"][i]
                     list_reco_container = list_reco_kubernetes_obj["containers"][j]
                     validate_container(update_results_container, update_results_json, list_reco_container,
-                                       expected_duration_in_hours, test_name)
+                                       expected_duration_in_hours, test_name, experiment_type)
 
 def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
                             list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
@@ -586,7 +585,7 @@ def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
                     validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name)
 
 def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours,
-                       test_name):
+                       test_name, experiment_type):
     # Validate container image name and container name
     if update_results_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == update_results_container["container_image_name"], \
@@ -672,7 +671,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             for engine_entry in engines_list:
                                 if engine_entry in terms_obj[term]["recommendation_engines"]:
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                                    validate_config(engine_obj["config"], metrics)
+                                    validate_config(engine_obj["config"], metrics, experiment_type)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
                         # validate Plots data
                         validate_plots(terms_obj, duration_terms, term)
@@ -687,6 +686,107 @@ def validate_container(update_results_container, update_results_json, list_reco_
         print("Checking for recommendation notifications message...")
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
+
+
+#TODO: Extract out the common part from this method which matches with container one to remove redundancy
+def validate_namespace(update_results_namespace, update_results_json, list_reco_namespace, expected_duration_in_hours,
+                       test_name, experiment_type):
+    # Validate container image name and container name
+    if update_results_namespace != None and list_reco_namespace != None:
+        assert list_reco_namespace["namespace"] == update_results_namespace["namespace"], \
+            f"Namespace names did not match! Actual -  {list_reco_namespace['namespace']} Expected - {update_results_namespace['namespace']}"
+
+    # default term value
+    term = SHORT_TERM
+    # Validate timestamps
+    if update_results_json != None:
+        if expected_duration_in_hours == None:
+            duration_in_hours = 0.0
+        else:
+            duration_in_hours = expected_duration_in_hours
+
+        for update_results in update_results_json:
+            interval_end_time = update_results["interval_end_time"]
+            interval_start_time = update_results["interval_start_time"]
+            print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
+
+            # Obtain the metrics
+            metrics = ""
+            namespaces = update_results['kubernetes_objects'][0]['namespaces']
+            if update_results_namespace["namespace"] == namespaces['namespace']:
+                metrics = namespaces["metrics"]
+            if check_if_recommendations_are_present(list_reco_namespace["recommendations"]):
+                terms_obj = list_reco_namespace["recommendations"]["data"][interval_end_time]["recommendation_terms"]
+                current_config = list_reco_namespace["recommendations"]["data"][interval_end_time]["current"]
+
+                duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+                for term in duration_terms.keys():
+                    if check_if_recommendations_are_present(terms_obj[term]):
+                        print(f"reco present for term {term}")
+                        # Validate timestamps [deprecated as monitoring end time is moved to higher level]
+                        # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
+                        #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
+
+                        # Validate the precision of the valid duration
+                        duration = terms_obj[term]["duration_in_hours"]
+                        assert validate_duration_in_hours_decimal_precision(duration), f"The value '{duration}' for " \
+                                                                                       f"'{term}' has more than two decimal places"
+
+                        monitoring_start_time = term_based_start_time(interval_end_time, term)
+                        assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
+                            f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
+
+                        # Validate duration in hrs
+                        if expected_duration_in_hours is None:
+                            duration_in_hours = set_duration_based_on_terms(duration_in_hours, term,
+                                                                            interval_start_time, interval_end_time)
+
+                        if test_name is not None:
+
+                            if MEDIUM_TERM_TEST in test_name and term == MEDIUM_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            elif SHORT_TERM_TEST in test_name and term == SHORT_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            elif LONG_TERM_TEST in test_name and term == LONG_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                        else:
+                            print(
+                                f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time,
+                                                                            interval_end_time)
+
+                        # Get engine objects
+                        engines_list = ["cost", "performance"]
+
+                        # Extract recommendation engine objects
+                        recommendation_engines_object = None
+                        if "recommendation_engines" in terms_obj[term]:
+                            recommendation_engines_object = terms_obj[term]["recommendation_engines"]
+                        if recommendation_engines_object is not None:
+                            for engine_entry in engines_list:
+                                if engine_entry in terms_obj[term]["recommendation_engines"]:
+                                    engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                                    validate_config(engine_obj["config"], metrics, experiment_type)
+                                    validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
+                        # TODO: validate Plots data for namespace experiment_type
+                        # validate_plots(terms_obj, duration_terms, term)
+                    # verify that plots isn't generated in case of no recommendations
+                    else:
+                        assert PLOTS not in terms_obj[term], f"Expected plots to be absent in case of no recommendations"
+            else:
+                data = list_reco_namespace["recommendations"]["data"]
+                assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
+
+    else:
+        print("Checking for recommendation notifications message...")
+        result = check_if_recommendations_are_present(list_reco_namespace["recommendations"])
+        assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
+
 
 def validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name):
     # Validate container image name and container name
@@ -888,15 +988,28 @@ def set_duration_based_on_terms(duration_in_hours, term, interval_start_time, in
     return duration_in_hours
 
 
-def validate_config(reco_config, metrics):
+def validate_config(reco_config, metrics, experiment_type):
     cpu_format_type = ""
     memory_format_type = ""
+    # default values corresponds to container experiment type
+    cpu_usage = "cpuUsage"
+    memory_usage = "memoryUsage"
+    filtered_metrics = metrics
 
-    for metric in metrics:
-        if "cpuUsage" == metric["name"]:
+    if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
+        cpu_usage = "namespaceCpuUsage"
+        memory_usage = "namespaceMemoryUsage"
+        # filter out metrics which do not have 'format' value
+        filtered_metrics = [
+            metric for metric in metrics
+            if metric["name"] not in ("namespaceRunningPods", "namespaceTotalPods")
+        ]
+
+    for metric in filtered_metrics:
+        if cpu_usage == metric["name"]:
             cpu_format_type = metric['results']['aggregation_info']['format']
 
-        if "memoryUsage" == metric["name"]:
+        if memory_usage == metric["name"]:
             memory_format_type = metric['results']['aggregation_info']['format']
 
     usage_list = ["requests", "limits"]
