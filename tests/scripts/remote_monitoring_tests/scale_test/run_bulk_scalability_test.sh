@@ -280,8 +280,6 @@ while [[ ${total_results_count} != ${actual_results_count} ]]; do
 	echo "expected results count = $expected_results_count actual_results_count = $actual_results_count"
 	actual_results_count=$(kubectl exec `kubectl get pods -o=name -n openshift-tuning | grep kruize-db` -n openshift-tuning -- psql -U admin -d kruizeDB -c "SELECT count(*) from public.kruize_results ;" | tail -3 | head -1 | tr -d '[:space:]')
 
-	#expected_results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
-	#total_results_count=$((${expected_results_count} + ${total_results_count}))
 	if [ ${j} == 2 ]; then
 		break
 	else

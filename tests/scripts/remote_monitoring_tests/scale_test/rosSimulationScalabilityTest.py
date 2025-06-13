@@ -117,9 +117,9 @@ if __name__ == "__main__":
     }
     timeout = (60, 60)
     if exptype == "container":
-    	data, createdata, profile_data = loadData()
+        data, createdata, profile_data = loadData()
     elif exptype == "namespace":
-    	data, createdata, profile_data = loadNSData()
+        data, createdata, profile_data = loadNSData()
 
     if args.startdate:
         print(args.startdate)
@@ -156,9 +156,6 @@ if __name__ == "__main__":
             experiment_name = "%s_%s" % (expnameprfix, i)
             createdata['experiment_name'] = experiment_name
             create_json_payload = json.dumps([createdata])
-            print("****************&&&&&&&&&&&&&&&&&&&&&&&&&&")
-            print(createdata)
-            print("****************&&&&&&&&&&&&&&&&&&&&&&&&&&")
             # Create experiment
             #requests.post(createProfileURL, data=profile_json_payload, headers=headers)
             createExp_start_time = time.time()
