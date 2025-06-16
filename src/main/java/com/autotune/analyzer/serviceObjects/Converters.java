@@ -344,6 +344,8 @@ public class Converters {
                                         );
                                         AcceleratorMetricResult acceleratorMetricResult = new AcceleratorMetricResult(acceleratorDeviceData, metricResults);
                                         acceleratorMetricResultHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), acceleratorMetricResult);
+                                        // Storing in metrics to avoid the data irregular conversion from DB
+                                        metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
                                     }
                                 }
                             } else {

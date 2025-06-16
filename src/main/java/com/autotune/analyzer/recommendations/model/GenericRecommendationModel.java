@@ -4,9 +4,9 @@ import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
-import com.autotune.analyzer.services.UpdateRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.metrics.AcceleratorMetricMetadata;
 import com.autotune.common.data.metrics.AcceleratorMetricResult;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
 import com.autotune.common.data.metrics.MetricResults;
@@ -505,54 +505,110 @@ public class GenericRecommendationModel implements RecommendationModel{
         for (Map.Entry<Timestamp, IntervalResults> entry : filteredResultsMap.entrySet()) {
             IntervalResults intervalResults = entry.getValue();
 
-            // Skip if accelerator map is null
-            if (null == intervalResults.getAcceleratorMetricResultHashMap())
-                continue;
+            // Check for accelerator metric map
+            if (null == intervalResults.getAcceleratorMetricResultHashMap() || intervalResults.getAcceleratorMetricResultHashMap().isEmpty()) {
+                if (!intervalResults.getMetricResultsMap().isEmpty()) {
+                    // Iterate for accelerator metrics in the interval result
+                    for (Map.Entry<AnalyzerConstants.MetricName, MetricResults> metricResultsEntry: intervalResults.getMetricResultsMap().entrySet()) {
+                        MetricResults metricResults = metricResultsEntry.getValue();
 
-            // Skip if map is empty
-            if (intervalResults.getAcceleratorMetricResultHashMap().isEmpty())
-                continue;
+                        if (null == metricResults)
+                            continue;
 
-            isGpuWorkload = true;
-            for (Map.Entry<AnalyzerConstants.MetricName, AcceleratorMetricResult> gpuEntry : intervalResults.getAcceleratorMetricResultHashMap().entrySet()) {
-                AcceleratorMetricResult gpuMetricResult = gpuEntry.getValue();
+                        if (null == metricResults.getAggregationInfoResult())
+                            continue;
 
-                // Set Accelerator name
-                if (null == acceleratorModel
-                        && null != gpuMetricResult.getAcceleratorDeviceData().getModelName()
-                        && !gpuMetricResult.getAcceleratorDeviceData().getModelName().isEmpty()
-                        && RecommendationUtils.checkIfModelIsKruizeSupportedMIG(gpuMetricResult.getAcceleratorDeviceData().getModelName())
-                ) {
-                    String obtainedAcceleratorName = RecommendationUtils.getSupportedModelBasedOnModelName(gpuMetricResult.getAcceleratorDeviceData().getModelName());
+                        AnalyzerConstants.MetricName metricName = metricResultsEntry.getKey();
 
-                    if (null != obtainedAcceleratorName)
-                        acceleratorModel = obtainedAcceleratorName;
+                        // Check for accelerator related metrics
+                        if (metricName == AnalyzerConstants.MetricName.acceleratorCoreUsage ||
+                            metricName == AnalyzerConstants.MetricName.acceleratorMemoryUsage ||
+                            metricName == AnalyzerConstants.MetricName.acceleratorFrameBufferUsage) {
+
+                            // Check to set the accelerator model
+                            if (null == acceleratorModel) {
+                                AcceleratorMetricMetadata acceleratorMetricMetadata = (AcceleratorMetricMetadata) metricResults.getMetadata();
+                                if (null != acceleratorMetricMetadata.getModelName() &&
+                                        !acceleratorMetricMetadata.getModelName().isEmpty() &&
+                                        !acceleratorMetricMetadata.getModelName().isBlank() &&
+                                        RecommendationUtils.checkIfModelIsKruizeSupportedMIG(acceleratorMetricMetadata.getModelName().strip())
+                                ) {
+                                    isGpuWorkload = true;
+                                    String obtainedAcceleratorName = RecommendationUtils.getSupportedModelBasedOnModelName(acceleratorMetricMetadata.getModelName().strip());
+
+                                    if (null != obtainedAcceleratorName)
+                                        acceleratorModel = obtainedAcceleratorName;
+                                }
+                            }
+                            MetricAggregationInfoResults aggregationInfo = metricResults.getAggregationInfoResult();
+
+                            // Skip if max is null or zero or negative
+                            if (null == aggregationInfo.getMax() || aggregationInfo.getMax() <= 0.0)
+                                continue;
+
+                            boolean isCoreUsage = metricName == AnalyzerConstants.MetricName.acceleratorCoreUsage;
+                            boolean isMemoryUsage = metricName == AnalyzerConstants.MetricName.acceleratorMemoryUsage;
+
+                            if (isCoreUsage) {
+                                acceleratorCoreMaxValues.add(aggregationInfo.getMax());
+                            } else if (isMemoryUsage) {
+                                acceleratorMemoryMaxValues.add(aggregationInfo.getMax());
+                            } else {
+                                // Convert absolutes to percentages to get the recommendation
+                                Double value = aggregationInfo.getMax();
+                                if (value > 100) {
+                                    double cardFrameBuffer = RecommendationUtils.getFrameBufferBasedOnModel(acceleratorModel);
+                                    if (cardFrameBuffer != -1) {
+                                        if (cardFrameBuffer > 0)
+                                            acceleratorMemoryMaxValues.add((value / cardFrameBuffer) * 100);
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
+            } else {
+                isGpuWorkload = true;
+                for (Map.Entry<AnalyzerConstants.MetricName, AcceleratorMetricResult> gpuEntry : intervalResults.getAcceleratorMetricResultHashMap().entrySet()) {
+                    AcceleratorMetricResult gpuMetricResult = gpuEntry.getValue();
 
-                MetricResults metricResults = gpuMetricResult.getMetricResults();
+                    // Set Accelerator name
+                    if (null == acceleratorModel
+                            && null != gpuMetricResult.getAcceleratorDeviceData().getModelName()
+                            && !gpuMetricResult.getAcceleratorDeviceData().getModelName().isEmpty()
+                            && RecommendationUtils.checkIfModelIsKruizeSupportedMIG(gpuMetricResult.getAcceleratorDeviceData().getModelName())
+                    ) {
+                        String obtainedAcceleratorName = RecommendationUtils.getSupportedModelBasedOnModelName(gpuMetricResult.getAcceleratorDeviceData().getModelName());
 
-                // Skip if metric results is null
-                if (null == metricResults || null == metricResults.getAggregationInfoResult())
-                    continue;
+                        if (null != obtainedAcceleratorName)
+                            acceleratorModel = obtainedAcceleratorName;
+                    }
 
-                MetricAggregationInfoResults aggregationInfo = metricResults.getAggregationInfoResult();
+                    MetricResults metricResults = gpuMetricResult.getMetricResults();
 
-                // Skip if max is null or zero or negative
-                if (null == aggregationInfo.getMax() || aggregationInfo.getMax() <= 0.0)
-                    continue;
+                    // Skip if metric results is null
+                    if (null == metricResults || null == metricResults.getAggregationInfoResult())
+                        continue;
 
-                boolean isCoreUsage = gpuEntry.getKey() == AnalyzerConstants.MetricName.acceleratorCoreUsage;
-                boolean isMemoryUsage = (gpuEntry.getKey() == AnalyzerConstants.MetricName.acceleratorMemoryUsage)
-                        || (gpuEntry.getKey() == AnalyzerConstants.MetricName.acceleratorFrameBufferUsage);
+                    MetricAggregationInfoResults aggregationInfo = metricResults.getAggregationInfoResult();
 
-                // Skip if it's none of the Accelerator metrics
-                if (!isCoreUsage && !isMemoryUsage)
-                    continue;
+                    // Skip if max is null or zero or negative
+                    if (null == aggregationInfo.getMax() || aggregationInfo.getMax() <= 0.0)
+                        continue;
 
-                if (isCoreUsage) {
-                    acceleratorCoreMaxValues.add(aggregationInfo.getMax());
-                } else {
-                    acceleratorMemoryMaxValues.add(aggregationInfo.getMax());
+                    boolean isCoreUsage = gpuEntry.getKey() == AnalyzerConstants.MetricName.acceleratorCoreUsage;
+                    boolean isMemoryUsage = (gpuEntry.getKey() == AnalyzerConstants.MetricName.acceleratorMemoryUsage)
+                            || (gpuEntry.getKey() == AnalyzerConstants.MetricName.acceleratorFrameBufferUsage);
+
+                    // Skip if it's none of the Accelerator metrics
+                    if (!isCoreUsage && !isMemoryUsage)
+                        continue;
+
+                    if (isCoreUsage) {
+                        acceleratorCoreMaxValues.add(aggregationInfo.getMax());
+                    } else {
+                        acceleratorMemoryMaxValues.add(aggregationInfo.getMax());
+                    }
                 }
             }
         }
