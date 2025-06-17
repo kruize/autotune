@@ -30,6 +30,15 @@ public class MetricResults {
     private Double value;
     private String format;
     private boolean percentile_results_available;
+    private MetricMetadata metadata;
+
+    public MetricMetadata getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(MetricMetadata metadata) {
+        this.metadata = metadata;
+    }
 
     public MetricResults() {
         metricAggregationInfoResults = new MetricAggregationInfoResults();
