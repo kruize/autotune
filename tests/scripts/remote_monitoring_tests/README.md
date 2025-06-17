@@ -20,7 +20,7 @@ Kruize Remote monitoring stress test validates the behaviour of [Kruize remote m
 Use the below command to test :
 
 ```
-<KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/stress_test/remote_monitoring_stress_test.sh -c [minikube|openshift] [-i Kruize image] [-r results directory path] [ -u users ] [ -e No. of results to be updated ] [ -d rampup time in seconds ] [ -t timeout in seconds ]
+<KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/stress_test/remote_monitoring_stress_test.sh -c [minikube|openshift] [-i Kruize image] [-r results directory path] [ -u users ] [ -e No. of results to be updated ] [ -d rampup time in seconds ] [ -t timeout in seconds ] [-b Experiment type [container|namespace] default - container]
 ```
 
 Where values for remote_monitoring_stress_test.sh are:
@@ -35,19 +35,19 @@ usage: remote_monitoring_stress_test.sh
 	[ -e ] : No. of results to be updated
 	[ -d ] : Jmeter Rampup time in seconds
 	[ -t ] : Monitoring metrics timeout duration in seconds
+	[ -b ] : optional. Specify the experiment type - container, namespace. Default - container
 ```
 
 For example,
 
 ```
-<AUTOTUNE_REPO>/tests/scripts/remote_monitoring_tests/stress_test/remote_monitoring_stress_test.sh -r /tmp/stress-test-results -i kruize/autotune_operator:0.0.10_mvp -u 1000 -e 100 -t 900
+<AUTOTUNE_REPO>/tests/scripts/remote_monitoring_tests/stress_test/remote_monitoring_stress_test.sh -r /tmp/stress-test-results -i kruize/autotune_operator:0.6 -u 10 -e 15 -d 120 -t 1800
 ```
 
-Test with the following inputs:
-100 exps / 100 results
-100 exps / 1500 results
-1000 exps / 100 results
-1000 exps / 1500 results
-10000 exps / 100 results
+To test namespace experiments (introduced in release 0.7),
+
+```
+<AUTOTUNE_REPO>/tests/scripts/remote_monitoring_tests/stress_test/remote_monitoring_stress_test.sh -r /tmp/stress-test-results -i kruize/autotune_operator:0.7 -u 10 -e 15 -d 120 -t 1800 -b namespace
+```
 
 Once the tests are complete, verify if there are no errors or exceptions in jmeter logs. Kruize resource usage metrics can be found in monitoring_metrics.csv in the results directory.

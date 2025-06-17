@@ -48,7 +48,7 @@ jmx_file="jmx/kruize_remote_monitoring_stress.jmx"
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type [minikube|openshift] [-i Kruize image] [-u users] [-e No. of results] [-d ramp up time in seconds] [-r <resultsdir path> ] [-t TIMEOUT for metrics script]"
+	echo "Usage: -c cluster_type [minikube|openshift] [-i Kruize image] [-u users] [-e No. of results] [-d ramp up time in seconds] [-r <resultsdir path> ] [-t TIMEOUT for metrics script] [-b Experiment type [container|namespace] default - container]"
 	exit -1
 }
 
