@@ -516,6 +516,10 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
                             list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
 
     if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
+        # validate the containers list, should be empty
+        containers = list_reco_kubernetes_obj["containers"]
+        assert containers == [] or isinstance(containers, list), f"'containers' object should be empty"
+
         assert list_reco_kubernetes_obj["namespaces"]["namespace"] == create_exp_kubernetes_obj["namespaces"]["namespace"]
         update_results_namespace = create_exp_kubernetes_obj["namespaces"]
         list_reco_namespace = list_reco_kubernetes_obj["namespaces"]

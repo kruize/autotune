@@ -10,7 +10,7 @@
     "kubernetes_objects": [
       {
         "namespaces": {
-          "namespace": "namespace-demo"
+          "namespace": "default"
         }
       }
     ],
