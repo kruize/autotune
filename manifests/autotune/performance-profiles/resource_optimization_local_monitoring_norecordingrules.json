@@ -391,7 +391,7 @@
         ]
       },
       {
-        "name": "gpuCoreUsage",
+        "name": "acceleratorCoreUsage",
         "datasource": "prometheus",
         "value_type": "double",
         "kubernetes_object": "container",
@@ -411,7 +411,7 @@
         ]
       },
       {
-        "name": "gpuMemoryUsage",
+        "name": "acceleratorMemoryUsage",
         "datasource": "prometheus",
         "value_type": "double",
         "kubernetes_object": "container",
@@ -427,6 +427,26 @@
           {
             "function": "min",
             "query": "min by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (min_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace=\"$NAMESPACE$\",exported_container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          }
+        ]
+      },
+      {
+        "name": "acceleratorFrameBufferUsage",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg by (Hostname,device,GPU_I_PROFILE,modelName,UUID) (avg_over_time(DCGM_FI_DEV_FB_USED{UUID=\"$UUID$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "max",
+            "query": "max by (Hostname,device,GPU_I_PROFILE,modelName,UUID) (max_over_time(DCGM_FI_DEV_FB_USED{UUID=\"$UUID$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "min",
+            "query": "min by (Hostname,device,GPU_I_PROFILE,modelName,UUID) (min_over_time(DCGM_FI_DEV_FB_USED{UUID=\"$UUID$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
           }
         ]
       }
