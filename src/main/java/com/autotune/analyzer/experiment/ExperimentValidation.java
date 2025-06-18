@@ -329,7 +329,7 @@ public class ExperimentValidation {
                     Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG);
 
                     for(String term: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
-                        // Check for empty in terms
+                        // Check for whitespace in terms
                         if (term == null || term.trim().isEmpty()) {
                             errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.EMPTY_NOT_ALLOWED;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
