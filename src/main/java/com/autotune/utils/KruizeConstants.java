@@ -311,8 +311,9 @@ public class KruizeConstants {
         public static final String CPU_PERCENTILE = "cpu_percentile";
         public static final String ACCELERATOR_PERCENTILE = "accelerator_percentile";
         public static final String MODEL_TUNABLE = "model_tunables";
-
-
+        public static final String ACCELERATOR_MODEL_NAME = "accelerator_model_name";
+        public static final String ACCELERATOR_PROFILE_NAME = "accelerator_profile_name";
+        public static final String NODE = "node";
 
         private JSONKeys() {
         }

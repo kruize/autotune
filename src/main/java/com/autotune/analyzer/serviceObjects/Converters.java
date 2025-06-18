@@ -7,15 +7,15 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.metrics.AggregationFunctions;
-import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.data.metrics.*;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
+import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
@@ -24,7 +24,6 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
-import org.apache.kafka.common.protocol.types.Field;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -310,16 +309,50 @@ public class Converters {
                     for (ContainerAPIObject containerAPIObject : containersList) {
                         HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
                         HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
-                        ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(), containerAPIObject.getContainer_image_name(), containerAPIObject.getContainerRecommendations(), metricsMap);
+                        ContainerData containerData = new ContainerData(
+                                containerAPIObject.getContainer_name(),
+                                containerAPIObject.getContainer_image_name(),
+                                containerAPIObject.getContainerRecommendations(),
+                                metricsMap);
                         HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                        HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap = new HashMap<>();
                         for (Metric metric : containerAPIObject.getMetrics()) {
+                            boolean isAcceleratorMetric = metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorCoreUsage.name())
+                                    || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorMemoryUsage.name())
+                                    || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.name());
+
                             metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
                             MetricResults metricResults = metric.getMetricResult();
                             metricResults.setName(metric.getName());
                             IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.startTimestamp,
                                     updateResultsAPIObject.endTimestamp);
-                            metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+
+                            if (isAcceleratorMetric) {
+                                if (null != metricResults.getMetadata()
+                                        && metricResults.getMetadata() instanceof AcceleratorMetricMetadata acceleratorMetricMetadata) {
+                                    if (null != acceleratorMetricMetadata.getModelName()) {
+                                        boolean isPartitionSupported = RecommendationUtils.checkIfModelIsKruizeSupportedMIG(acceleratorMetricMetadata.getModelName());
+                                        boolean isPartition = (null != acceleratorMetricMetadata.getProfileName());
+                                        NvidiaAcceleratorDeviceData acceleratorDeviceData = new NvidiaAcceleratorDeviceData(
+                                                acceleratorMetricMetadata.getModelName(),
+                                                acceleratorMetricMetadata.getNode(),
+                                                null,
+                                                null,
+                                                acceleratorMetricMetadata.getProfileName(),
+                                                isPartitionSupported,
+                                                isPartition
+                                        );
+                                        AcceleratorMetricResult acceleratorMetricResult = new AcceleratorMetricResult(acceleratorDeviceData, metricResults);
+                                        acceleratorMetricResultHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), acceleratorMetricResult);
+                                        // Storing in metrics to avoid the data irregular conversion from DB
+                                        metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                                    }
+                                }
+                            } else {
+                                metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                            }
                             intervalResults.setMetricResultsMap(metricResultsHashMap);
+                            intervalResults.setAcceleratorMetricResultHashMap(acceleratorMetricResultHashMap);
                             resultsMap.put(updateResultsAPIObject.getEndTimestamp(), intervalResults);
                         }
                         containerData.setResults(resultsMap);
