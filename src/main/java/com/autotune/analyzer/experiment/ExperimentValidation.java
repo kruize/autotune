@@ -329,9 +329,9 @@ public class ExperimentValidation {
                     Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG);
 
                     for(String term: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
-                        // Check for whitespace in terms
+                        // Check for empty in terms
                         if (term == null || term.trim().isEmpty()) {
-                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.WHITESPACE_NOT_ALLOWED;
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.EMPTY_NOT_ALLOWED;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
                             validationOutputData.setMessage(errorMsg);
@@ -339,7 +339,11 @@ public class ExperimentValidation {
                         }
                         // Check for correct term in terms
                         if (!validTerms.contains(term)) {
-                            throw new IllegalArgumentException(term + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
                         }
                     }
                 }
@@ -350,14 +354,18 @@ public class ExperimentValidation {
 
                     for (String model: expObj.getRecommendation_settings().getModelSettings().getModels()) {
                         if (model == null || model.trim().isEmpty()) {
-                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.WHITESPACE_NOT_ALLOWED;
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.EMPTY_NOT_ALLOWED;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
                             validationOutputData.setMessage(errorMsg);
                             return validationOutputData;
                         }
                         if (!validModels.contains(model)) {
-                            throw new IllegalArgumentException( model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
                         }
                     }
                 }
