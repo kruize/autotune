@@ -19,6 +19,7 @@ import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
@@ -55,7 +56,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             String kubeObjTypeInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getType();
             String kubeObjTypeInResultData = resultData.getKubernetes_objects().get(0).getType();
 
-            if (!kubeObjTypeInKruizeObject.equals(kubeObjTypeInResultData)) {
+            if (kubeObjTypeInKruizeObject != null && !kubeObjTypeInKruizeObject.equals(kubeObjTypeInResultData)) {
                 kubeObjsMisMatch = true;
                 errorMsg = errorMsg.concat(
                         String.format(
@@ -70,7 +71,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             String kubeObjNameInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getName();
             String kubeObjNameInResultsData = resultData.getKubernetes_objects().get(0).getName();
 
-            if (!kubeObjNameInKruizeObject.equals(kubeObjNameInResultsData)) {
+            if (kubeObjNameInKruizeObject != null && !kubeObjNameInKruizeObject.equals(kubeObjNameInResultsData)) {
                 kubeObjsMisMatch = true;
                 errorMsg = errorMsg.concat(
                         String.format(
@@ -81,23 +82,30 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
                         ));
             }
 
+
             // Check if Kubernetes Object NameSpace is matched
             String kubeObjNameSpaceInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getNamespace();
             String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
 
-            if (!kubeObjNameSpaceInKruizeObject.equals(kubeObjNameSpaceInResultsData)) {
-                kubeObjsMisMatch = true;
-                errorMsg = errorMsg.concat(
-                        String.format(
-                                "Kubernetes Object Namespaces MisMatched. Expected Namespace: %s, Found: %s in Results for experiment: %s \n",
-                                kubeObjNameSpaceInKruizeObject,
-                                kubeObjNameSpaceInResultsData,
-                                expName
-                        ));
+            if (kruizeObject.getExperimentType().equals(AnalyzerConstants.ExperimentType.CONTAINER)) {
+                if (kubeObjNameSpaceInKruizeObject != null && !kubeObjNameSpaceInKruizeObject.equals(kubeObjNameSpaceInResultsData)) {
+                    kubeObjsMisMatch = true;
+                    errorMsg = errorMsg.concat(
+                            String.format(
+                                    "Kubernetes Object Namespaces MisMatched. Expected Namespace: %s, Found: %s in Results for experiment: %s \n",
+                                    kubeObjNameSpaceInKruizeObject,
+                                    kubeObjNameSpaceInResultsData,
+                                    expName
+                            ));
+                }
+            }
+            // Validate blank or null container names and image names
+            List<ContainerData> resultContainers = new ArrayList<>();
+            if (resultData.getKubernetes_objects() != null && !resultData.getKubernetes_objects().isEmpty() &&
+                    resultData.getKubernetes_objects().get(0) != null && resultData.getKubernetes_objects().get(0).getContainerDataMap() != null) {
+                resultContainers = resultData.getKubernetes_objects().get(0).getContainerDataMap().values().stream().toList();
             }
 
-            // Validate blank or null container names and image names
-            List<ContainerData> resultContainers = resultData.getKubernetes_objects().get(0).getContainerDataMap().values().stream().toList();
             List<String> validationErrors = resultContainers.stream()
                     .flatMap(containerData -> validateContainerData(containerData).stream())
                     .toList();

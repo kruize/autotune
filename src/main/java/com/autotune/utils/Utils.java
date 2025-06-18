@@ -17,9 +17,11 @@ package com.autotune.utils;
 
 
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
+import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
+import com.autotune.common.data.metrics.MetricMetadata;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.google.gson.ExclusionStrategy;
@@ -174,6 +176,7 @@ public class Utils {
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
                 .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                 .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                 .create();
 
         String serialisedString = gson.toJson(object);

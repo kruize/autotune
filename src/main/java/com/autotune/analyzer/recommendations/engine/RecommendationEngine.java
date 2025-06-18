@@ -11,9 +11,7 @@ import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.plots.PlotManager;
 import com.autotune.analyzer.recommendations.*;
-import com.autotune.analyzer.recommendations.model.CostBasedRecommendationModel;
-import com.autotune.analyzer.recommendations.model.PerformanceBasedRecommendationModel;
-import com.autotune.analyzer.recommendations.model.RecommendationModel;
+import com.autotune.analyzer.recommendations.model.*;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForModel;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.objects.TermRecommendations;
@@ -27,7 +25,7 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
-import com.autotune.common.data.system.info.device.accelerator.AcceleratorDeviceData;
+import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -74,6 +72,7 @@ public class RecommendationEngine {
     private KruizeObject kruizeObject;
     private Timestamp interval_end_time;
     private List<String> modelNames;
+    private Map<String, RecommendationTunables> modelTunable;
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
@@ -157,7 +156,7 @@ public class RecommendationEngine {
 
     }
 
-    private void loadCustomRecommendationModels(List<String> modelName) throws InvalidModelException {
+    private void loadCustomRecommendationModels(List<String> modelName,  Map<String, RecommendationTunables> settings) throws InvalidModelException {
         // Add new models
         recommendationModels = new ArrayList<>();
         for (String model : modelName) {
@@ -172,8 +171,10 @@ public class RecommendationEngine {
                 PerformanceBasedRecommendationModel performanceBasedRecommendationModel = new PerformanceBasedRecommendationModel(PERFORMANCE_RECOMMENDATION_TUNABLES);
                 registerModel(performanceBasedRecommendationModel);
             } else {
-                // user input does not matches standard models
-                throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+                // Create Custom model
+                RecommendationTunables genericTunables = settings.get(model);
+                GenericRecommendationModel genericRecommendationModel = new GenericRecommendationModel(model, genericTunables);
+                registerModel(genericRecommendationModel);
             }
         }
     }
@@ -212,6 +213,10 @@ public class RecommendationEngine {
 
     public List<String> getModelNames() {
         return modelNames;
+    }
+
+    private void setModelTunable(Map<String, RecommendationTunables> modelTunable) {
+        this.modelTunable = modelTunable;
     }
 
     public void setModelNames(List<String> modelNames) {
@@ -388,7 +393,8 @@ public class RecommendationEngine {
                 } else {
                     // models present
                     setModelNames(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
-                    loadCustomRecommendationModels(modelNames);
+                    setModelTunable(kruizeObject.getRecommendation_settings().getModelSettings().getModelTunable());
+                    loadCustomRecommendationModels(modelNames, modelTunable );
                 }
             } else if (kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.AUTO) || kruizeObject.getMode().equalsIgnoreCase(AnalyzerConstants.RECREATE)) {
                 // auto or recreate mode
@@ -402,7 +408,7 @@ public class RecommendationEngine {
                         // check for single model
                         if (kruizeObject.getRecommendation_settings().getModelSettings().getModels().size() == 1) {
                             // call for that one model
-                            loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels());
+                            loadCustomRecommendationModels(kruizeObject.getRecommendation_settings().getModelSettings().getModels(),kruizeObject.getRecommendation_settings().getModelSettings().getModelTunable());
                         } else {
                             // multiple model throw error
                             throw new InvalidModelException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MULTIPLE_MODELS_UNSUPPORTED);
@@ -469,8 +475,8 @@ public class RecommendationEngine {
             // verify if the experiment type is namespace or container
             if (kruizeObject.isNamespaceExperiment()) {
                 String namespaceName = k8sObject.getNamespace();
-                NamespaceData namespaceData = k8sObject.getNamespaceData();
-                LOGGER.info("Generating recommendations for namespace: {}", namespaceName);
+                NamespaceData namespaceData = k8sObject.getNamespaceDataMap().get(namespaceName);
+                LOGGER.debug("Generating recommendations for namespace: {}", namespaceName);
                 generateRecommendationsBasedOnNamespace(namespaceData, kruizeObject);
             } else if (kruizeObject.isContainerExperiment()) {
                 for (String containerName : k8sObject.getContainerDataMap().keySet()) {
@@ -687,16 +693,6 @@ public class RecommendationEngine {
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : getModels()) {
-                    boolean isCostModel = false;
-                    boolean isPerfModel = false;
-
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
-                        isCostModel = true;
-                    }
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
-                        isPerfModel = true;
-                    }
-
                     // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                     MappedRecommendationForModel mappedRecommendationForModel = generateRecommendationBasedOnModel(
                             monitoringStartTime,
@@ -716,25 +712,26 @@ public class RecommendationEngine {
                     if (null != rn) {
                         timestampRecommendation.addNotification(rn);
                     }
-
                     RecommendationNotification recommendationNotification = null;
-                    if (isCostModel) {
+                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
                         // Setting it as at least one recommendation available
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    if (isPerfModel) {
+                    } else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
                         // Setting it as at least one recommendation available
                         recommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    if (null != recommendationNotification) {
+                    } else if (null != model.getModelName()) {
+                        // Setting it as at least one recommendation available
+                        recommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_MODEL_RECOMMENDATIONS_AVAILABLE
+                        );
+                    } if (null != recommendationNotification) {
                         termLevelNotifications.add(recommendationNotification);
                     } else {
                         recommendationNotification = new RecommendationNotification(
@@ -891,49 +888,53 @@ public class RecommendationEngine {
     }
 
     private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
-        Timestamp monitoringEndTime = namespaceData.getResults().keySet().stream().max(Timestamp::compareTo).get();
-        NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
-        if (null == namespaceRecommendations) {
-            namespaceRecommendations = new NamespaceRecommendations();
+        try {
+            Timestamp monitoringEndTime = namespaceData.getResults().keySet().stream().max(Timestamp::compareTo).get();
+            NamespaceRecommendations namespaceRecommendations = namespaceData.getNamespaceRecommendations();
+            if (null == namespaceRecommendations) {
+                namespaceRecommendations = new NamespaceRecommendations();
+            }
+
+            HashMap<Integer, RecommendationNotification> recommendationLevelNM = namespaceRecommendations.getNotificationMap();
+            if (null == recommendationLevelNM) {
+                recommendationLevelNM = new HashMap<>();
+            }
+
+            HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap = namespaceRecommendations.getData();
+            if (null == timestampBasedRecommendationMap) {
+                timestampBasedRecommendationMap = new HashMap<>();
+            }
+
+            MappedRecommendationForTimestamp timestampRecommendation;
+            if (timestampBasedRecommendationMap.containsKey(monitoringEndTime)) {
+                timestampRecommendation = timestampBasedRecommendationMap.get(monitoringEndTime);
+            } else {
+                timestampRecommendation = new MappedRecommendationForTimestamp();
+            }
+
+            timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
+
+            HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = getCurrentNamespaceConfigData(namespaceData, monitoringEndTime, timestampRecommendation);
+            timestampRecommendation.setCurrentConfig(currentConfig);
+
+            boolean namespaceRecommendationAvailable = generateNamespaceRecommendationsBasedOnTerms(namespaceData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
+
+            RecommendationNotification recommendationsLevelNotifications;
+            if (namespaceRecommendationAvailable) {
+                timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);
+                recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
+            } else {
+                recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
+                timestampBasedRecommendationMap = new HashMap<>();
+            }
+
+            recommendationLevelNM.put(recommendationsLevelNotifications.getCode(), recommendationsLevelNotifications);
+            namespaceRecommendations.setNotificationMap(recommendationLevelNM);
+            namespaceRecommendations.setData(timestampBasedRecommendationMap);
+            namespaceData.setNamespaceRecommendations(namespaceRecommendations);
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.GENERATE_RECOMMENDATION_FAILURE, kruizeObject.getExperimentName(), e.getMessage());
         }
-
-        HashMap<Integer, RecommendationNotification> recommendationLevelNM = namespaceRecommendations.getNotificationMap();
-        if (null == recommendationLevelNM) {
-            recommendationLevelNM = new HashMap<>();
-        }
-
-        HashMap<Timestamp, MappedRecommendationForTimestamp> timestampBasedRecommendationMap = namespaceRecommendations.getData();
-        if (null == timestampBasedRecommendationMap) {
-            timestampBasedRecommendationMap = new HashMap<>();
-        }
-
-        MappedRecommendationForTimestamp timestampRecommendation;
-        if (timestampBasedRecommendationMap.containsKey(monitoringEndTime)) {
-            timestampRecommendation = timestampBasedRecommendationMap.get(monitoringEndTime);
-        } else {
-            timestampRecommendation = new MappedRecommendationForTimestamp();
-        }
-
-        timestampRecommendation.setMonitoringEndTime(monitoringEndTime);
-
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentConfig = getCurrentNamespaceConfigData(namespaceData, monitoringEndTime, timestampRecommendation);
-        timestampRecommendation.setCurrentConfig(currentConfig);
-
-        boolean namespaceRecommendationAvailable = generateNamespaceRecommendationsBasedOnTerms(namespaceData, kruizeObject, monitoringEndTime, currentConfig, timestampRecommendation);
-
-        RecommendationNotification recommendationsLevelNotifications;
-        if (namespaceRecommendationAvailable) {
-            timestampBasedRecommendationMap.put(monitoringEndTime, timestampRecommendation);
-            recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RECOMMENDATIONS_AVAILABLE);
-        } else {
-            recommendationsLevelNotifications = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_NOT_ENOUGH_DATA);
-            timestampBasedRecommendationMap = new HashMap<>();
-        }
-
-        recommendationLevelNM.put(recommendationsLevelNotifications.getCode(), recommendationsLevelNotifications);
-        namespaceRecommendations.setNotificationMap(recommendationLevelNM);
-        namespaceRecommendations.setData(timestampBasedRecommendationMap);
-        namespaceData.setNamespaceRecommendations(namespaceRecommendations);
     }
 
     private HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> getCurrentNamespaceConfigData(NamespaceData namespaceData,
@@ -1041,15 +1042,6 @@ public class RecommendationEngine {
             } else {
                 ArrayList<RecommendationNotification> termLevelNotifications = new ArrayList<>();
                 for (RecommendationModel model : getModels()) {
-                    boolean isCostModel = false;
-                    boolean isPerfModel = false;
-
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
-                        isCostModel = true;
-                    }
-                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
-                        isPerfModel = true;
-                    }
 
                     // Now generate a new recommendation for the new data corresponding to the monitoringEndTime
                     MappedRecommendationForModel mappedRecommendationForModel = generateNamespaceRecommendationBasedOnModel(
@@ -1064,31 +1056,32 @@ public class RecommendationEngine {
                     if (null == mappedRecommendationForModel) {
                         continue;
                     }
-
                     // Adding the term level recommendation availability after confirming the recommendation exists
                     RecommendationNotification rn = RecommendationNotification.getNotificationForTermAvailability(recommendationTerm);
                     if (null != rn) {
                         timestampRecommendation.addNotification(rn);
                     }
-
                     RecommendationNotification recommendationNotification = null;
-                    if (isCostModel) {
+
+                    if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.COST)) {
                         // Setting it as at least one recommendation available
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_COST_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    if (isPerfModel) {
+                    } else if (model.getModelName().equalsIgnoreCase(RecommendationConstants.RecommendationEngine.ModelNames.PERFORMANCE)) {
                         // Setting it as at least one recommendation available
                         namespaceRecommendationAvailable = true;
                         recommendationNotification = new RecommendationNotification(
                                 RecommendationConstants.RecommendationNotification.INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE
                         );
-                    }
-
-                    if (null != recommendationNotification) {
+                    } else if (null != model.getModelName()) {
+                        // Setting it as at least one recommendation available
+                        namespaceRecommendationAvailable = true;
+                        recommendationNotification = new RecommendationNotification(
+                                RecommendationConstants.RecommendationNotification.INFO_MODEL_RECOMMENDATIONS_AVAILABLE
+                        );
+                    } if (null != recommendationNotification) {
                         termLevelNotifications.add(recommendationNotification);
                     } else {
                         recommendationNotification = new RecommendationNotification(
@@ -1952,8 +1945,8 @@ public class RecommendationEngine {
 
             if (kruizeObject.isContainerExperiment()) {
                 maxDateQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.maxDate.name());
-                acceleratorDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.gpuMemoryUsage.name());
-                acceleratorMigDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.acceleratorMigMemoryUsage.name());
+                acceleratorDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.acceleratorMemoryUsage.name());
+                acceleratorMigDetectionQuery = getMaxQueryByName(metricProfile, AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.name());
 
                 fetchContainerMetricsBasedOnDataSourceAndProfile(kruizeObject,
                         interval_end_time,
@@ -1998,7 +1991,7 @@ public class RecommendationEngine {
             for (K8sObject k8sObject : kubernetes_objects) {
                 String namespace = k8sObject.getNamespace();
                 // fetch namespace related metrics if containerDataMap is empty
-                NamespaceData namespaceData = k8sObject.getNamespaceData();
+                NamespaceData namespaceData = k8sObject.getNamespaceDataMap().get(namespace);
                 // determine the max date query for namespace
                 String namespaceMaxDateQuery = maxDateQuery.replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace);
 
@@ -2047,7 +2040,8 @@ public class RecommendationEngine {
                 if (null == namespaceData) {
                     namespaceData = new NamespaceData();
                     namespaceData.setNamespace_name(namespace);
-                    k8sObject.setNamespaceData(namespaceData);
+                    k8sObject.getNamespaceDataMap().put(namespace, namespaceData);
+
                 }
 
                 List<Metric> namespaceMetricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
@@ -2286,12 +2280,12 @@ public class RecommendationEngine {
                             AnalyzerConstants.MetricName.maxDate.name(), kruizeObject.getExperimentType());
 
                     List<String> acceleratorFunctions = Arrays.asList(
-                            AnalyzerConstants.MetricName.gpuCoreUsage.toString(),
-                            AnalyzerConstants.MetricName.gpuMemoryUsage.toString()
+                            AnalyzerConstants.MetricName.acceleratorCoreUsage.toString(),
+                            AnalyzerConstants.MetricName.acceleratorMemoryUsage.toString()
                     );
 
                     List<String> acceleratorPartitionFunctions = Arrays.asList(
-                            AnalyzerConstants.MetricName.acceleratorMigMemoryUsage.toString()
+                            AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.toString()
                     );
                     // Iterate over metrics and aggregation functions
                     for (Metric metricEntry : metricList) {
@@ -2425,18 +2419,18 @@ public class RecommendationEngine {
                                         // Same changes need to be applied at the time of adding the device in
                                         // DeviceHandler
                                         DeviceDetails deviceDetail = deviceDetails.get(0);
-                                        AcceleratorDeviceData containerAcceleratorDeviceData = (AcceleratorDeviceData) deviceDetail;
+                                        NvidiaAcceleratorDeviceData containerAcceleratorDeviceData = (NvidiaAcceleratorDeviceData) deviceDetail;
 
                                         // Skip non-matching Accelerator entries
                                         if (!metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString().equalsIgnoreCase(containerAcceleratorDeviceData.getModelName()))
                                             continue;
 
-                                        AcceleratorDeviceData acceleratorDeviceData = new AcceleratorDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
+                                        NvidiaAcceleratorDeviceData acceleratorDeviceData = new NvidiaAcceleratorDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
                                                 metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
                                                 metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
                                                 metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
                                                 containerAcceleratorDeviceData.getProfile(),
-                                                true, containerAcceleratorDeviceData.isMIGPartition());
+                                                true, containerAcceleratorDeviceData.isPartition());
 
                                         JsonArray valuesArray = resultObject.getAsJsonArray(KruizeConstants.DataSourceConstants
                                                 .DataSourceQueryJSONKeys.VALUES);

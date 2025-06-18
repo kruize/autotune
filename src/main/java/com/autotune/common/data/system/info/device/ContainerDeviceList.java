@@ -1,7 +1,7 @@
 package com.autotune.common.data.system.info.device;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.system.info.device.accelerator.AcceleratorDeviceData;
+import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -103,7 +103,7 @@ public class ContainerDeviceList implements DeviceHandler, DeviceComponentDetect
         // Todo: Need to add extractors for each device type currently implementing for GPU
         if (deviceType == AnalyzerConstants.DeviceType.ACCELERATOR) {
             for (DeviceDetails deviceDetails: deviceMap.get(deviceType)) {
-                AcceleratorDeviceData deviceData = (AcceleratorDeviceData) deviceDetails;
+                NvidiaAcceleratorDeviceData deviceData = (NvidiaAcceleratorDeviceData) deviceDetails;
                 if (deviceParameters == AnalyzerConstants.DeviceParameters.MODEL_NAME) {
                     if (deviceData.getModelName().equalsIgnoreCase(matchIdentifier)) {
                         return deviceData;
