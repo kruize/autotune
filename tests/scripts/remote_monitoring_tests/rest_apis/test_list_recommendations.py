@@ -3188,3 +3188,43 @@ def test_list_recommendations_for_namespace_for_diff_reco_terms_with_only_latest
 
         response = delete_experiment(json_file)
         print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+def test_list_recommendations_namespace_without_results(cluster_type):
+    """
+    Test Description: This test validates listRecommendations when there was no updation of results
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Get the experiment name
+    json_data = json.load(open(input_json_file))
+    experiment_name = json_data[0]['experiment_name']
+
+    response = list_recommendations(experiment_name, rm=True)
+
+    list_reco_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json values
+    create_exp_json = read_json_data_from_file(input_json_file)
+
+    # Validate recommendation message
+    update_results_json = None
+    validate_reco_json(create_exp_json[0], update_results_json, list_reco_json[0])
+
+    # Delete the experiment
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
