@@ -69,10 +69,15 @@ public class MetadataProfileUtil {
         LOGGER.debug(KruizeConstants.MetadataProfileConstants.ADD_METADATA_PROFILE, metadataProfile.getMetadata().get("name"));
     }
 
+    /**
+     * Validates the metadata profile fields and the data before updating the existing profile
+     * @param metadataProfile MetadataProfile object to be validated
+     * @return A ValidationOutputData object indicating the success/failure of validations.
+     */
     public static ValidationOutputData validateMetadataProfile(Map<String, MetadataProfile> metadataProfileMapProfilesMap, MetadataProfile metadataProfile) {
         ValidationOutputData validationOutputData;
         try {
-            validationOutputData = new MetadataProfileValidation(metadataProfileMapProfilesMap).validateProfileData(metadataProfile);
+            validationOutputData = new MetadataProfileValidation(metadataProfileMapProfilesMap).validateProfileDataBeforeUpdating(metadataProfile);
             if (!validationOutputData.isSuccess()) {
                 validationOutputData.setMessage(KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_FAILURE + validationOutputData.getMessage());
             }
@@ -89,9 +94,12 @@ public class MetadataProfileUtil {
      * This function extracts the identifiers within the parentheses of the 'sum by' clause and checks if the set of these
      * identifiers matches the expected set for any of the MetadataProfileQueryPattern enum constants.
      * The order of identifiers in the input 'sum by' clause does not affect the matching process.
+     *
+     * @param inputQuery MetricQuery from which the 'sum by' clause is extracted and validated against expected identifiers
+     * @return The identifier of input query
      */
-    public static AnalyzerConstants.MetadataProfileQueryIdentifier matchSumByClause(String input) {
-        Matcher matcher = Pattern.compile(AnalyzerConstants.METADATA_PROFILE_QUERY_MATCHER).matcher(input);
+    public static AnalyzerConstants.MetadataProfileQueryIdentifier matchSumByClause(String inputQuery) {
+        Matcher matcher = Pattern.compile(AnalyzerConstants.METADATA_PROFILE_QUERY_MATCHER).matcher(inputQuery);
         if (matcher.find()) {
             String identifiersPart = matcher.group(1);
             String[] inputIdentifiers = identifiersPart.split(AnalyzerConstants.COMMA_SPACE_REGEX);
@@ -114,13 +122,13 @@ public class MetadataProfileUtil {
      * @param metricName MetricName from which to extract the identifier.
      * @return The identified constant string (NAMESPACE, WORKLOAD, or CONTAINER)
      */
-    public static String getMetricIdentifier(String metricName){
+    public static String getMetricIdentifier(String metricName) {
         String identifier = null;
-        if(metricName.contains(AnalyzerConstants.NAMESPACE)){
+        if (metricName.contains(AnalyzerConstants.NAMESPACE)) {
             identifier = AnalyzerConstants.NAMESPACE;
-        } else if(metricName.contains(AnalyzerConstants.WORKLOAD)) {
+        } else if (metricName.contains(AnalyzerConstants.WORKLOAD)) {
             identifier = AnalyzerConstants.WORKLOAD;
-        } else if(metricName.contains(AnalyzerConstants.CONTAINER)) {
+        } else if (metricName.contains(AnalyzerConstants.CONTAINER)) {
             identifier = AnalyzerConstants.CONTAINER;
         }
         return identifier;
@@ -141,7 +149,7 @@ public class MetadataProfileUtil {
         String workloadAndContainerIdentifierToFilter = AnalyzerConstants.KRUIZE_PROFILE_FILTER;
         String namespaceIdentifierToFilter = AnalyzerConstants.NAMESPACE_PROFILE_FILTER;
         String filterString;
-        if(metricIdentifier.equals(AnalyzerConstants.NAMESPACE)) {
+        if (metricIdentifier.equals(AnalyzerConstants.NAMESPACE)) {
             filterString = String.format(AnalyzerConstants.NAMESPACE_FILTER_IDENTIFIER, metricIdentifier, namespaceIdentifierToFilter);
         } else {
             filterString = String.format(AnalyzerConstants.WORKLOAD_FILTER_IDENTIFIER, metricIdentifier, workloadAndContainerIdentifierToFilter);

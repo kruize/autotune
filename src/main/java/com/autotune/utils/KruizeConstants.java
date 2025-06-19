@@ -516,6 +516,7 @@ public class KruizeConstants {
             public static final String DATASOURCE_AUTH_DB_INSERTION_FAILED = "Failed to add auth details to DB: {}";
             public static final String DATASOURCE_AUTH_DB_UPDATE_FAILED = "Failed to update auth details in the DB: {}";
             public static final String DATASOURCE_AUTH_UPDATE_INVALID = "The updated authentication configuration is invalid. Reverting to the previous configuration.";
+            public static final String DATASOURCE_ACCESS_ERROR_MESSAGE = "An unexpected error occurred while accessing datasource {} details: {}";
 
             private DataSourceErrorMsgs() {
             }

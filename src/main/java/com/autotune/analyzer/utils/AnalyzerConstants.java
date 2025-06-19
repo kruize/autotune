@@ -283,6 +283,25 @@ public class AnalyzerConstants {
         }
     }
 
+    /**
+     * Validates if the metricName to be updated has supported prefix like namespace, workload, container.
+     * @param metricName Name of the metric to be updated
+     * @return boolean output if the metric name has one of the supported prefixes
+     */
+    public static boolean validateMetricQueryName(String metricName) {
+        List<String> supportedQueryPrefixes = Arrays.asList(AnalyzerConstants.NAMESPACE,
+                AnalyzerConstants.WORKLOAD, AnalyzerConstants.CONTAINER);
+
+        String metricNameLowerCase = metricName.toLowerCase();
+        for (String queryPrefix : supportedQueryPrefixes) {
+            if (metricNameLowerCase.contains(queryPrefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     public static final class AcceleratorConstants {
         private AcceleratorConstants() {
 
@@ -392,7 +411,7 @@ public class AnalyzerConstants {
         public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
         public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
         public static final String FUNCTION_VARIABLE = "function_variable: ";
-        public static final String QUERY_VARIABLE = "query_variable: ";
+        public static final String QUERY_VARIABLE = "For query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String QUERY_VARIABLES = "query_variables";
 

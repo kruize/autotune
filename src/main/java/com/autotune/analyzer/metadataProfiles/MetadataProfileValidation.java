@@ -88,47 +88,32 @@ public class MetadataProfileValidation {
      * @return Returns the ValidationOutputData containing the response based on the validation
      */
     private ValidationOutputData validateMetadataProfileData(MetadataProfile metadataProfile) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        ValidationOutputData validationOutputData;
         StringBuilder errorString = new StringBuilder();
-        try {
-            // validate the mandatory values first
-            validationOutputData = validateMandatoryMetadataProfileFieldsAndData(metadataProfile);
 
-            // If the mandatory values are present,proceed for further validation else return the validation object directly
-            if (validationOutputData.isSuccess()) {
+        validationOutputData = commonMetadataProfileValidation(metadataProfile, errorString);
 
-                try {
-                    new ExperimentDBService().loadAllMetadataProfiles(metadataProfilesMap);
-                } catch (Exception e) {
-                    LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.LOAD_METADATA_PROFILES_FROM_DB_FAILURE, e.getMessage());
-                }
-
-                // Check if profile metadata exists
-                JsonNode metadata = metadataProfile.getMetadata();
-                if (null == metadata) {
-                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_METADATA);
-                }
-                // check if the metadata profile already exists
-                if (null != metadataProfilesMap.get(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText())) {
-                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METADATA_PROFILE).append(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText());
-                    return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
-                }
-
-                // Validates fields like k8s_type and slo object
-                validateCommonProfileFields(metadataProfile, errorString);
-
-                if (!errorString.toString().isEmpty()) {
-                    validationOutputData.setSuccess(false);
-                    validationOutputData.setMessage(errorString.toString());
-                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                } else {
-                    validationOutputData.setSuccess(true);
-                }
+        if (validationOutputData.isSuccess() && errorString.isEmpty()) {
+            try {
+                new ExperimentDBService().loadAllMetadataProfiles(metadataProfilesMap);
+            } catch (Exception e) {
+                LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.LOAD_METADATA_PROFILES_FROM_DB_FAILURE, e.getMessage());
             }
-        } catch (Exception e){
+
+            // Check if the metadata profile already exists
+            if (null != metadataProfile.getMetadata() && null != metadataProfilesMap.get(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText())) {
+                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METADATA_PROFILE)
+                        .append(metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText());
+                return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
+            }
+        }
+
+        if (!errorString.toString().isEmpty()) {
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage(errorString.toString());
-            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+        } else if (validationOutputData.isSuccess()) {
+            validationOutputData.setSuccess(true);
         }
         return validationOutputData;
     }
@@ -254,7 +239,7 @@ public class MetadataProfileValidation {
                 queryVariable.setKubernetesObject(KruizeConstants.JSONKeys.CONTAINER);
             else {
                 if (!KruizeSupportedTypes.KUBERNETES_OBJECTS_SUPPORTED.contains(kubernetes_object.toLowerCase()))
-                    errorString.append(AnalyzerConstants.KUBERNETES_OBJECTS).append(kubernetes_object)
+                    errorString.append(AnalyzerConstants.KUBERNETES_OBJECTS).append(" ").append(kubernetes_object)
                             .append(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED);
             }
         }
@@ -276,48 +261,40 @@ public class MetadataProfileValidation {
     }
 
     /**
-     * Validates the fields of the metadata profile object before updating it
+     * Validates the fields of the metadata profile object before updating the existing profile
      * @param metadataProfile Metadata Profile Object to be validated
      * @return Returns the ValidationOutputData containing the response based on the validation
      */
-    public ValidationOutputData validateProfileData(MetadataProfile metadataProfile) {
-        return validateMetadataProfile(metadataProfile);
+    public ValidationOutputData validateProfileDataBeforeUpdating(MetadataProfile metadataProfile) {
+        return validateMetadataProfileToBeUpdated(metadataProfile);
     }
 
-    private ValidationOutputData validateMetadataProfile(MetadataProfile metadataProfile) {
-        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+    /**
+     * Validates the metadata profile object before updating the existing profile
+     * After performing the common validation of mandatory fields has an additional step of Query validations before
+     * updating the existing queries
+     *
+     * @param metadataProfile Metadata Profile Object to be validated
+     * @return Returns the ValidationOutputData containing the response based on the validation
+     */
+    private ValidationOutputData validateMetadataProfileToBeUpdated(MetadataProfile metadataProfile) {
+        ValidationOutputData validationOutputData;
         StringBuilder errorString = new StringBuilder();
-        try {
-            // validate the mandatory values first
-            validationOutputData = validateMandatoryMetadataProfileFieldsAndData(metadataProfile);
 
-            // If the mandatory values are present,proceed for further validation else return the validation object directly
-            if (validationOutputData.isSuccess()) {
+        // Perform common validations first
+        validationOutputData = commonMetadataProfileValidation(metadataProfile, errorString);
 
-                // Check if profile metadata exists
-                JsonNode metadata = metadataProfile.getMetadata();
-                if (null == metadata) {
-                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_METADATA);
-                }
+        if (validationOutputData.isSuccess() && errorString.isEmpty()) {
+            // Validate Metric names and expected query patterns
+            validateMetricQueries(metadataProfile, errorString);
+        }
 
-                // Validates fields like k8s_type and slo object
-                validateCommonProfileFields(metadataProfile, errorString);
-
-                // Validate Metric names and expected query patterns
-                validateMetricQueries(metadataProfile, errorString);
-
-                if (!errorString.toString().isEmpty()) {
-                    validationOutputData.setSuccess(false);
-                    validationOutputData.setMessage(errorString.toString());
-                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                } else {
-                    validationOutputData.setSuccess(true);
-                }
-            }
-        } catch (Exception e){
+        if (!errorString.toString().isEmpty()) {
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage(errorString.toString());
-            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+        } else if (validationOutputData.isSuccess()) {
+            validationOutputData.setSuccess(true);
         }
         return validationOutputData;
     }
@@ -338,14 +315,14 @@ public class MetadataProfileValidation {
             try {
                 dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().values().iterator().next();
                 if (null == dataSourceInfo) {
-                    errorString.append(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.NO_DATASOURCE_FOUND_IN_DB);
+                    errorString.append(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.INVALID_DATASOURCE_INFO);
                     return;
                 }
             } catch (Exception e) {
-                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_DB_LOAD_FAILED, datasource, e.getMessage());
+                LOGGER.error(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_ACCESS_ERROR_MESSAGE, datasource, e.getMessage());
             }
 
-            if (!validateMetricQueryName(metricName)) {
+            if (!AnalyzerConstants.validateMetricQueryName(metricName)) {
                 errorString.append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_METRIC_NAME).
                         append(metricName).append(". ").append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.SUPPORTED_QUERY_NAME_PREFIXES);
             }
@@ -360,23 +337,6 @@ public class MetadataProfileValidation {
         }
     }
 
-
-    /**
-     * Validates if the metricName to be updated has supported prefix like namespace, workload, container.
-     * @param metricName Name of the metric to be updated
-     * @return boolean output if the metric name has one of the supported prefixes
-     */
-    public boolean validateMetricQueryName(String metricName) {
-        List<String> supportedQueryPrefixes = Arrays.asList(AnalyzerConstants.NAMESPACE, AnalyzerConstants.WORKLOAD, AnalyzerConstants.CONTAINER);
-
-        String metricNameLowerCase = metricName.toLowerCase();
-        for (String queryPrefix : supportedQueryPrefixes) {
-            if (metricNameLowerCase.contains(queryPrefix)) {
-                return true;
-            }
-        }
-        return false;
-    }
 
     /**
      * Validates input metric query to be updated by matching the 'sum by' clause of the input query against the expected query patterns
@@ -430,4 +390,38 @@ public class MetadataProfileValidation {
             errorString.append(e.getMessage()).append(String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.QUERY_SYNTAX_ERROR_MESSAGE, metricName));
         }
     }
+
+    /**
+     * Common validation logic for MetadataProfile objects.
+     * Handles mandatory field validation, metadata existence, and common profile field validation.
+     *
+     * @param metadataProfile The MetadataProfile object to validate.
+     * @param errorString     A StringBuilder to append validation errors to.
+     * @return A ValidationOutputData object indicating the initial success/failure of common validations.
+     */
+    private ValidationOutputData commonMetadataProfileValidation (MetadataProfile metadataProfile, StringBuilder errorString) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            // Validate mandatory fields first
+            validationOutputData = validateMandatoryMetadataProfileFieldsAndData(metadataProfile);
+
+            // If mandatory values are present, proceed for further validation
+            if (validationOutputData.isSuccess()) {
+                // Check if profile metadata exists
+                JsonNode metadata = metadataProfile.getMetadata();
+                if (null == metadata) {
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_METADATA);
+                }
+
+                // Validates fields like k8s_type and slo object
+                validateCommonProfileFields(metadataProfile, errorString);
+            }
+        } catch (Exception e) {
+            validationOutputData.setSuccess(false);
+            validationOutputData.setMessage(errorString.toString());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        }
+        return validationOutputData;
+    }
+
 }
