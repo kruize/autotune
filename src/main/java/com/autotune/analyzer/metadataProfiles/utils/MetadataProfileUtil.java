@@ -71,6 +71,8 @@ public class MetadataProfileUtil {
 
     /**
      * Validates the metadata profile fields and the data before updating the existing profile
+     *
+     * @param metadataProfileMapProfilesMap Map storing MetadataProfile name and the corresponding object
      * @param metadataProfile MetadataProfile object to be validated
      * @return A ValidationOutputData object indicating the success/failure of validations.
      */

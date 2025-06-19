@@ -329,7 +329,7 @@ public class MetadataProfileValidation {
 
             HashMap<String, AggregationFunctions> aggr_funcs = queryVariable.getAggregationFunctionsMap();
 
-            for(Map.Entry<String, AggregationFunctions> aggregationFunctionsMap: aggr_funcs.entrySet()) {
+            for (Map.Entry<String, AggregationFunctions> aggregationFunctionsMap: aggr_funcs.entrySet()) {
                 AggregationFunctions aggr_func = aggregationFunctionsMap.getValue();
                 String query = aggr_func.getQuery();
                 validateMetricQueryPattern(query, metricName, errorString, dataSourceInfo);
@@ -349,7 +349,10 @@ public class MetadataProfileValidation {
     public void validateMetricQueryPattern(String metricQuery, String metricName, StringBuilder errorString, DataSourceInfo dataSourceInfo) {
         AnalyzerConstants.MetadataProfileQueryIdentifier matchedIdentifier = matchSumByClause(metricQuery);
         if (matchedIdentifier == null) {
-            errorString.append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_SUM_BY_CLAUSE).append(metricName).append(". ").append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.EXPECTED_IDENTIFIERS);
+            errorString.append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_SUM_BY_CLAUSE)
+                    .append(metricName)
+                    .append(". ")
+                    .append(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.EXPECTED_IDENTIFIERS);
             for (AnalyzerConstants.MetadataProfileQueryIdentifier pattern : AnalyzerConstants.MetadataProfileQueryIdentifier.values()) {
                 errorString.append(" - ").append(pattern.getExpectedIdentifiers());
             }
@@ -381,13 +384,14 @@ public class MetadataProfileValidation {
 
             JsonArray resultArray = op.getResultArrayForQuery(dataSourceInfo, updatedQuery);
 
-            if(!validateResultIdentifiers(resultArray, queryIdentifier)){
+            if (!validateResultIdentifiers(resultArray, queryIdentifier)) {
                 String errorMessage = String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_QUERY_NO_RESULT, metricName);
                 errorString.append(errorMessage);
             }
         } catch (IOException | NoSuchAlgorithmException | KeyStoreException | KeyManagementException e) {
             LOGGER.error(e.getMessage());
-            errorString.append(e.getMessage()).append(String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.QUERY_SYNTAX_ERROR_MESSAGE, metricName));
+            errorString.append(e.getMessage())
+                    .append(String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.QUERY_SYNTAX_ERROR_MESSAGE, metricName));
         }
     }
 
