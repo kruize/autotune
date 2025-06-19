@@ -202,8 +202,10 @@ fi
 echo ""
 echo "Running scale test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 echo ""
-echo "nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" | tee -a ${LOG} "
-nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" | tee -a ${LOG}
+echo "nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" > >(tee -a ${LOG}) 2>&1 & "
+nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" > >(tee -a ${LOG}) 2>&1 &
+
+wait $!
 
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")
