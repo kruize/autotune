@@ -136,7 +136,6 @@ function container_ns_scale_test() {
 			echo "#####################################################################################"
 			echo
 		fi
-		query_db &
 		sleep 60
 	done
 
