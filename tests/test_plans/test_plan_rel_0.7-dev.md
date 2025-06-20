@@ -1,4 +1,4 @@
-# KRUIZE TEST PLAN RELEASE 0.7
+# KRUIZE TEST PLAN RELEASE 0.7-dev
 
 - [INTRODUCTION](#introduction)
 - [FEATURES TO BE TESTED](#features-to-be-tested)
@@ -17,7 +17,7 @@
 
 ## INTRODUCTION
 
-This document describes the test plan for Kruize release 0.7
+This document describes the test plan for Kruize release 0.7-dev
 
 ----
 
@@ -78,13 +78,13 @@ Short Scalability run
 - Kruize DB resources - requests - 10Gi / 2 cores, limits - 30Gi / 2 cores
 - Kruize resources - requests - 4Gi / 2 cores, limits - 8Gi / 2 cores
 
-| Kruize Release                      | Exps / Results / Recos                             | Execution time | Latency (Max/ Avg) in seconds |               |                      | Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB) |
-|-------------------------------------|----------------------------------------------------|----------------|------------------------------|---------------|----------------------|----------------------|----------------|------------------------|
-|                                     |                                                    |                | UpdateRecommendations        | UpdateResults | LoadResultsByExpName |                      |                |                        |
-| 0.6 (on aws cluster 9th May 2025)   | 5K container exps / 72L / 3L                       | 4h 25 mins     | 0.87 / 0.49                  | 0.12 / 0.1    | 0.38 / 0.26          | 21756                | 7.39           | 35.11                  |
-| 0.7 (on aws cluster 18th June 2025) | 5K container exps / 72L / 3L                       | 5h             | 1.03 / 0.56                  | 0.12 / 0.1    | 0.33 / 0.22          | 21757                | 9.47           | 42.45                  |
-| 0.7 (on aws cluster 18th June 2025) | 5K namespace exps / 72L / 3L                       | 3h 17 mins     | 0.62 / 0.35                  | 0.11 / 0.08   | 0.26 / 0.16          | 10524                | 5.37           | 28.48                  |
-| 0.7 (on aws cluster 18th June 2025) | 4.5k container exps, 500 namespace exps / 72L / 3L | 4h 59 mins     | 0.98 / 0.54                  | 0.12 / 0.1    | 0.31 / 0.22          | 20631                | 9.13           | 34.45                  |
+| Kruize Release                          | Exps / Results / Recos                             | Execution time | Latency (Max/ Avg) in seconds |               |                      | Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB) |
+|-----------------------------------------|----------------------------------------------------|----------------|------------------------------|---------------|----------------------|----------------------|----------------|------------------------|
+|                                         |                                                    |                | UpdateRecommendations        | UpdateResults | LoadResultsByExpName |                      |                |                        |
+| 0.6 (on aws cluster 9th May 2025)       | 5K container exps / 72L / 3L                       | 4h 25 mins     | 0.87 / 0.49                  | 0.12 / 0.1    | 0.38 / 0.26          | 21756                | 7.39           | 35.11                  |
+| 0.7-dev (on aws cluster 18th June 2025) | 5K container exps / 72L / 3L                       | 5h             | 1.03 / 0.56                  | 0.12 / 0.1    | 0.33 / 0.22          | 21757                | 9.47           | 42.45                  |
+| 0.7-dev (on aws cluster 18th June 2025) | 5K namespace exps / 72L / 3L                       | 3h 17 mins     | 0.62 / 0.35                  | 0.11 / 0.08   | 0.26 / 0.16          | 10524                | 5.37           | 28.48                  |
+| 0.7-dev (on aws cluster 18th June 2025) | 4.5k container exps, 500 namespace exps / 72L / 3L | 4h 59 mins     | 0.98 / 0.54                  | 0.12 / 0.1    | 0.31 / 0.22          | 20631                | 9.13           | 34.45                  |
 
  
 ----
