@@ -1031,7 +1031,7 @@ def validate_config(reco_config, metrics, experiment_type):
 
 def validate_config_local_monitoring(reco_config):
     cpu_format_type = "cores"
-    memory_format_type = "MiB"
+    memory_format_type = "bytes"
 
     usage_list = ["requests", "limits"]
     for usage in usage_list:
