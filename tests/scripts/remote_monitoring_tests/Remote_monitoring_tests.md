@@ -127,10 +127,9 @@ Here are the test scenarios:
 Namespace Related Test Scenarios:
 Sanity Tests
 - Update recommendations with valid short term recommendations. Also, Validate the container array, should be blank.
-- Update recommendations with valid Short, Medium and Long term recommendations
 
 Negative Tests
-- Update recommendations with mix of container and namespace results
+- _To be updated_
 
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
    - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
