@@ -21,7 +21,7 @@ Use the below command to test :
 
 ```
 cd <KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/scale_test
-./remote_monitoring_tests/scale_test/remote_monitoring_scale_test_bulk.sh [-i Kruize image] [-r results directory path] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)]
+./remote_monitoring_scale_test_bulk.sh [-i Kruize image] [-r results directory path] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-c Experiment type [container|namespace|container_ns] (default - container)]
 ```
 
 Where values for remote_monitoring_scale_test_bulk.sh are:
@@ -38,15 +38,33 @@ usage: remote_monitoring_fault_tolerant_tests.sh
 	[-t interval hours (default - 6)]
 	[-s Initial start date (default - 2023-01-10T00:00:00.000Z)]
 	[-q query db interval in mins, (default - 10)]
+        [-c Experiment type [container|namespace|container_ns] (default - container)]
 ```
 
 For example,
 
 ```
 cd <KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/scale_test
-./remote_monitoring_tests/scale_test/remote_monitoring_scale_test_bulk.sh -i quay.io/kruize/autotune_operator:0.0.20_mvp  -u 250  -d 15  -n 20 -t 6  -q 10  -s 2023-01-10T00:00:00.000Z  -r /tmp/scale_test_results
+./remote_monitoring_scale_test_bulk.sh -i quay.io/kruize/autotune_operator:0.6  -u 250  -d 15  -n 20 -t 6  -q 10  -s 2023-01-10T00:00:00.000Z  -r /tmp/scale_test_results
 
 ```
+
+To test namespace experiments (Namespace exps is supported from kruize rel 0.7):
+
+```
+cd <KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/scale_test
+./remote_monitoring_scale_test_bulk.sh -i quay.io/kruize/autotune_operator:0.7  -u 250  -d 15  -n 20 -t 6  -q 10  -s 2023-01-10T00:00:00.000Z  -r /tmp/scale_test_results -c namespace
+
+```
+
+To test with a mix of container & namespace experiments (Namespace exps is supported from kruize rel 0.7):
+
+```
+cd <KRUIZE_REPO>/tests/scripts/remote_monitoring_tests/scale_test
+./remote_monitoring_scale_test_bulk.sh -i quay.io/kruize/autotune_operator:0.7  -u 250  -d 15  -n 20 -t 6  -q 10  -s 2023-01-10T00:00:00.000Z  -r /tmp/scale_test_results -c container_ns
+
+```
+
 
 Once the tests are complete, manually check the logs for any exceptions or errors or crashes. Verify if the execution times captured in exec_time.log are as expected.
 
