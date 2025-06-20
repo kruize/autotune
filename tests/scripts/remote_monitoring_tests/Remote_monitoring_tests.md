@@ -106,7 +106,7 @@ Sanity Tests
 - List recommendations without results
 
 Negative Tests
-- List recommendations with missing metrics data
+- _To be updated_
 
 
 ### **Update Recommendation API tests**
