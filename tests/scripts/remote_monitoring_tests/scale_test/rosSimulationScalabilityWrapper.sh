@@ -18,6 +18,7 @@
 ip=""
 port=""
 count=""
+exp_type="container"
 minutesjump=""
 name_prefix=""
 initial_startdate="2023-01-01T00:00:00.000Z"
@@ -42,6 +43,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --minutesjump)
             minutesjump="$2"
+            shift 2
+            ;;
+        --exptype)
+            exp_type="$2"
             shift 2
             ;;
         --name)
@@ -81,7 +86,7 @@ done
 
 if [[ -z "$ip" || -z "$port" || -z "$count" || -z "$minutesjump" || -z "$name_prefix" ]]; then
     echo "Missing required arguments."
-    echo "Usage: $0 --ip <IP> --port <port> --count <count> --minutesjump <minutesjump> --name <name_prefix> --initialstartdate <initial_startdate> --limitdays <limit_days> --intervalhours <interval_hours>"
+    echo "Usage: $0 --ip <IP> --port <port> --count <count> --exptype <exp_type> --minutesjump <minutesjump> --name <name_prefix> --initialstartdate <initial_startdate> --limitdays <limit_days> --intervalhours <interval_hours>"
     exit 1
 fi
 
@@ -94,7 +99,7 @@ for (( i = 0; i < $iterations; i++ )); do
     current_startdate=$(date -u -d "$initial_startdate + $(( i * interval_hours )) hours" +"%Y-%m-%dT%H:%M:%S.%3NZ")
 
     # Build the full command
-    full_command="python3 -u rosSimulationScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate $current_startdate --name ${name_prefix}"
+    full_command="python3 -u rosSimulationScalabilityTest.py --ip $ip --port $port --count $count --minutesjump $minutesjump --startdate $current_startdate --name ${name_prefix} --exptype ${exp_type}"
 
     # Execute the command
     echo "Executing: $full_command"

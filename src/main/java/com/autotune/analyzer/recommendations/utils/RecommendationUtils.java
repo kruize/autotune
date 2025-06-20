@@ -9,7 +9,7 @@ import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.system.info.device.ContainerDeviceList;
-import com.autotune.common.data.system.info.device.accelerator.AcceleratorDeviceData;
+import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
 import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorMetaDataService;
 import com.autotune.common.data.system.info.device.accelerator.metadata.AcceleratorProfile;
 import com.autotune.common.datasource.DataSourceInfo;
@@ -252,7 +252,7 @@ public class RecommendationUtils {
 
                     boolean isSupportedMig = checkIfModelIsKruizeSupportedMIG(modelName);
                     if (isSupportedMig) {
-                        AcceleratorDeviceData acceleratorDeviceData = new AcceleratorDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
+                        NvidiaAcceleratorDeviceData acceleratorDeviceData = new NvidiaAcceleratorDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
                                 metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
                                 metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
                                 metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),
@@ -376,7 +376,7 @@ public class RecommendationUtils {
 
                     boolean isSupportedMig = checkIfModelIsKruizeSupportedMIG(modelName);
                     if (isSupportedMig) {
-                        AcceleratorDeviceData acceleratorDeviceData = new AcceleratorDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
+                        NvidiaAcceleratorDeviceData acceleratorDeviceData = new NvidiaAcceleratorDeviceData(metricObject.get(KruizeConstants.JSONKeys.MODEL_NAME).getAsString(),
                                 metricObject.get(KruizeConstants.JSONKeys.HOSTNAME).getAsString(),
                                 metricObject.get(KruizeConstants.JSONKeys.UUID).getAsString(),
                                 metricObject.get(KruizeConstants.JSONKeys.DEVICE).getAsString(),

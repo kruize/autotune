@@ -16,7 +16,6 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.utils.KruizeConstants;
-import software.amazon.awssdk.services.cloudwatchlogs.endpoints.internal.Value;
 
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -215,9 +214,9 @@ public class AnalyzerConstants {
         namespaceTotalPods,
         namespaceRunningPods,
         namespaceMaxDate,
-        gpuCoreUsage,
-        gpuMemoryUsage,
-        acceleratorMigMemoryUsage
+        acceleratorCoreUsage,
+        acceleratorMemoryUsage,
+        acceleratorFrameBufferUsage
     }
 
     public enum K8S_OBJECT_TYPES {
@@ -750,6 +749,9 @@ public class AnalyzerConstants {
 
         public static final int DEFAULT_SLEEP_INTERVAL = 60;
         public static final int DEFAULT_INITIAL_DELAY = 30;
+
+        public static final String REGEX_FOR_DRY_RUN_ERROR = "Message: (.*?)(?=\\. Received status:)";
+
         public static final class SupportedUpdaters {
             public static final String VPA = "vpa";
             public static final String ACCELERATOR = "accelerator";
@@ -790,6 +792,7 @@ public class AnalyzerConstants {
             public static final String CHECKING_AUTO_EXP = "Searching for experiments with auto or recreate mode.";
             public static final String FOUND_INSTASLICE = "Found Instaslice: {}";
             public static final String NO_INSTASLICE_OBJECTS = "No Instaslice objects found in namespace: {}";
+            public static final String POD_READY = "Pod is ready to schedule.";
             private InfoMsgs() {
 
             }

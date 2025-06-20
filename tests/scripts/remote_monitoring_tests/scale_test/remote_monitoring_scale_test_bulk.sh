@@ -29,6 +29,7 @@ APP_NAME=kruize
 CLUSTER_TYPE=openshift
 DEPLOYMENT_NAME=kruize
 CONTAINER_NAME=kruize
+EXP_TYPE=container
 NAMESPACE=openshift-tuning
 num_exps=5000
 num_days_of_res=15
@@ -51,7 +52,7 @@ total_results_count=0
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)]"
+	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns] (default - container)]"
 	exit -1
 }
 
@@ -82,7 +83,7 @@ function get_kruize_service_log() {
         kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
-while getopts r:i:u:d:t:n:m:s:l:f:b:e:q:h gopts
+while getopts r:i:u:d:t:n:m:s:l:f:b:e:q:c:h gopts
 do
 	case ${gopts} in
 	r)
@@ -90,6 +91,9 @@ do
 		;;
 	i)
 		KRUIZE_IMAGE="${OPTARG}"		
+		;;
+	c)
+		EXP_TYPE="${OPTARG}"		
 		;;
 	u)
 		num_exps="${OPTARG}"		
@@ -198,8 +202,10 @@ fi
 echo ""
 echo "Running scale test for kruize on ${CLUSTER_TYPE}" | tee -a ${LOG}
 echo ""
-echo "nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" | tee -a ${LOG} "
-nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" | tee -a ${LOG}
+echo "nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" > >(tee -a ${LOG}) 2>&1 & "
+nohup ./run_bulk_scalability_test.sh -c "${CLUSTER_TYPE}" -f "${EXP_TYPE}" -a "${SERVER_IP_ADDR}" -p "${port}" -u "${num_exps}" -d "${num_days_of_res}" -n "${num_clients}" -m "${minutes_jump}" -i "${interval_hours}" -s "${initial_start_date}" -q "${query_db_interval}" -r "${LOG_DIR}" -e "${total_results_count}" > >(tee -a ${LOG}) 2>&1 &
+
+wait $!
 
 end_time=$(get_date)
 elapsed_time=$(time_diff "${start_time}" "${end_time}")

@@ -23,11 +23,11 @@ slo:
 
     aggregation_functions:
     - function: 'avg'
-      query: 'avg(kube_pod_container_resource_requests{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", container="$CONTAINER_NAME$", namespace="$NAMESPACE", resource="cpu", unit="core"})'
+      query: 'avg by(container, namespace)(kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
 
     # Show sum of cpu requests in bytes for a container in a deployment
     - function: 'sum'
-      query: 'sum(kube_pod_container_resource_requests{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", container="$CONTAINER_NAME$", namespace="$NAMESPACE", resource="cpu", unit="core"})'
+      query: 'sum by(container, namespace)(kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
 
 
   # CPU Limit
@@ -39,11 +39,11 @@ slo:
 
     aggregation_functions:
     - function: avg
-      query: 'avg(kube_pod_container_resource_limits{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", container="$CONTAINER_NAME$", namespace="$NAMESPACE", resource="cpu", unit="core"})'
+      query: 'avg by(container, namespace)(kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
 
     # Show sum of cpu limits in bytes for a container in a deployment
     - function: sum
-      query: 'sum(kube_pod_container_resource_limits{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", container="$CONTAINER_NAME$", namespace="$NAMESPACE$", resource="cpu", unit="core"})'
+      query: 'sum by(container, namespace)(kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="cpu", unit="core", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
 
 
   # CPU Usage
@@ -65,45 +65,45 @@ slo:
     # For openshift versions <=4.8
     aggregation_functions:
     - function: avg
-      query: 'avg(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
+      query: 'avg by(container, namespace)(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
       versions: "<=4.8"
 
     # For openshift versions >=4.9
     - function: avg
-      query: 'avg(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
+      query: 'avg by(container, namespace)(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
       versions: ">4.9"
 
     # Approx minimum CPU per container in a deployment
     # For openshift versions <=4.8
     - function: min
-      query: 'min(min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
+      query: 'min by(container, namespace)(min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
       versions: "<=4.8"
 
     # For openshift versions >=4.9
     - function: min
-      query: 'min(min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
+      query: 'min by(container, namespace)(min_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
       versions: ">4.9"
 
     # Approx maximum CPU per container in a deployment
     # For openshift versions <=4.8
     - function: max
-      query: 'max(max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
+      query: 'max by(container, namespace)(max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
       versions: "<=4.8"
 
     # For openshift versions >=4.9
     - function: max
-      query: 'max(max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
+      query: 'max by(container, namespace)(max_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
       versions: ">4.9"
 
     # Sum of CPU usage for a container in all pods of a deployment
     # For openshift versions <=4.8
     - function: sum
-      query: 'sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
+      query: 'sum by(container, namespace)(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_rate{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
       versions: "<=4.8"
 
     # For openshift versions >=4.9
     - function: sum
-      query: 'sum(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
+      query: 'sum by(container, namespace)(avg_over_time(node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"}[15m]))'
       versions: ">4.9"
 
 
@@ -116,15 +116,15 @@ slo:
     aggregation_functions:
     # Average CPU throttling per container in a deployment
     - function: avg
-      query: 'avg(rate(container_cpu_cfs_throttled_seconds_total{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
+      query: 'avg by(container, namespace)(rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
 
     # Maximum CPU throttling per container in a deployment
     - function: max
-      query: 'max(rate(container_cpu_cfs_throttled_seconds_total{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
+      query: 'max by(container, namespace)(rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
 
     # Sum of CPU throttling for a container in all pods of a deployment
     - function: sum
-      query: 'sum(rate(container_cpu_cfs_throttled_seconds_total{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
+      query: 'sum by(container, namespace)(rate(container_cpu_cfs_throttled_seconds_total{container!="", container!="POD", pod!="", namespace="$NAMESPACE$", container=”$CONTAINER_NAME$”}[15m]))'
 
 
 
@@ -139,11 +139,11 @@ slo:
 
     aggregation_functions:
     - function: avg
-      query: 'avg(kube_pod_container_resource_requests{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource="memory", unit="byte"})'
+      query: 'avg by(container, namespace)(kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
 
     # Show sum of memory requests in bytes for a container in a deployment
     - function: sum
-      query: 'sum(kube_pod_container_resource_requests{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource="memory", unit="byte"})'
+      query: 'sum by(container, namespace)(kube_pod_container_resource_requests{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
 
 
   # Memory Limit
@@ -155,11 +155,11 @@ slo:
 
     aggregation_functions:
     - function: avg
-      query: 'avg(kube_pod_container_resource_limits{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", container="$CONTAINER_NAME$", namespace="$NAMESPACE", resource="memory", unit="byte"})'
+      query: 'avg by(container, namespace)(kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
 
     # Show sum of memory limits in bytes for a container in a deployment
     - function: sum
-      query: 'sum(kube_pod_container_resource_limits{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", container=”$CONTAINER_NAME$”, namespace=”$NAMESPACE”, resource="memory", unit="byte"})'
+      query: 'sum by(container, namespace)(kube_pod_container_resource_limits{container!="", container!="POD", pod!="", resource="memory", unit="byte", namespace="$NAMESPACE$", container="$CONTAINER_NAME$"})'
 
 
   # Memory Usage
@@ -171,19 +171,19 @@ slo:
 
     aggregation_functions:
     - function: avg
-      query: 'avg(avg_over_time(container_memory_working_set_bytes{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))'
+      query: 'avg by(container, namespace)(avg_over_time(container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))'
 
     # Approx minimum memory per container in a deployment
     - function: min
-      query: 'min(min_over_time(container_memory_working_set_bytes{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace=$NAMESPACE$, container="$CONTAINER_NAME$"}[15m]))'
+      query: 'min by(container, namespace)(min_over_time(container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace=$NAMESPACE$, container="$CONTAINER_NAME$"}[15m]))'
 
     # Approx maximum memory per container in a deployment
     - function: max
-      query: 'max(max_over_time(container_memory_working_set_bytes{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace=$NAMESPACE$, container="$CONTAINER_NAME$"}[15m]))'
+      query: 'max by(container, namespace)(max_over_time(container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace=$NAMESPACE$, container="$CONTAINER_NAME$"}[15m]))'
 
     # Sum of memory usage for a contianer in all pods of a deployment
     - function: sum
-      query: 'sum(avg_over_time(container_memory_working_set_bytes{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace=$NAMESPACE$, container="$CONTAINER_NAME$"}[15m]))'
+      query: 'sum by(container, namespace)(avg_over_time(container_memory_working_set_bytes{container!="", container!="POD", pod!="", namespace=$NAMESPACE$, container="$CONTAINER_NAME$"}[15m]))'
 
 
   # 2.4 Memory RSS
@@ -195,17 +195,223 @@ slo:
     aggregation_functions:
     # Average memory RSS per container in a deployment
     - function: avg
-      query: 'avg(avg_over_time(container_memory_rss{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))'
+      query: 'avg by(container, namespace)(avg_over_time(container_memory_rss{container!="", container!="POD", pod!="", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))'
 
     # Approx minimum memory RSS per container in a deployment
     - function: min
-      query: 'min(min_over_time(container_memory_rss{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace=$NAMESPACE$, container="$CONTAINER_NAME$"}[15m]))'
+      query: 'min by(container, namespace)(min_over_time(container_memory_rss{container!="", container!="POD", pod!="", namespace=$NAMESPACE$, container="$CONTAINER_NAME$"}[15m]))'
 
 
     # Approx maximum memory RSS per container in a deployment
     - function: max
-      query: 'max(max_over_time(container_memory_rss{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace=$NAMESPACE$, container="$CONTAINER_NAME$"}[15m]))'
+      query: 'max by(container, namespace)(max_over_time(container_memory_rss{container!="", container!="POD", pod!="", namespace=$NAMESPACE$, container="$CONTAINER_NAME$"}[15m]))'
 
     # Sum of memory RSS for a contianer in all pods of a deployment
     - function: sum
-      query: 'sum(avg_over_time(container_memory_rss{pod=~"$DEPLOYMENT_NAME$-[^-]*-[^-]*$", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))'
+      query: 'sum by(container, namespace)(avg_over_time(container_memory_rss{container!="", container!="POD", pod!="", namespace=$NAMESPACE$, container=”$CONTAINER_NAME$”}[15m]))'
+
+    ## namespace related queries
+
+    # Namespace quota for CPU requests
+    # Show namespace quota for CPU requests in cores for a namespace
+  - name: namespaceCpuRequest
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "namespace"
+    aggregation_functions:
+    # sum of all cpu request quotas for a namespace in cores
+    - function: sum
+      query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="requests.cpu", type="hard"})'
+
+    # Namespace quota for CPU limits
+    # Show namespace quota for CPU limits in cores for a namespace
+  - name: namespaceCpuLimit
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "namespace"
+    aggregation_functions:
+    # sum of all cpu limits quotas for a namespace in cores
+    - function: sum
+      query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="limits.cpu", type="hard"})'
+
+
+    # Namespace quota for memory requests
+    # Show namespace quota for memory requests in bytes for a namespace
+  - name: namespaceMemoryRequest
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "namespace"
+    aggregation_functions:
+    # sum of all memory requests quotas for a namespace in bytes
+    - function: sum
+      query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="requests.memory", type="hard"})'
+
+
+    # Namespace quota for memory limits
+    # Show namespace quota for memory limits in bytes for a namespace
+  - name: namespaceMemoryLimit
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "namespace"
+    aggregation_functions:
+    # sum of all memory limits quotas for a namespace in bytes
+    - function: sum
+      query: 'sum by (namespace) (kube_resourcequota{namespace="$NAMESPACE$", resource="limits.memory", type="hard"})'
+
+
+    # Namespace CPU usage
+    # Show cpu usages in cores for a namespace
+  - name: namespaceCpuUsage
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "namespace"
+    aggregation_functions:
+    # average cpu usages in cores for a namespace
+    - function: avg
+      query: 'avg_over_time(sum by(namespace) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[15m:])'
+
+    # maximum cpu usages in cores for a namespace
+    - function: max
+      query: 'max_over_time(sum by(namespace) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[15m:])'
+
+    # minimum cpu usages in cores for a namespace
+    - function: min
+      query: 'min_over_time(sum by(namespace) (node_namespace_pod_container:container_cpu_usage_seconds_total:sum_irate{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[15m:])'
+
+
+    # Namespace CPU Throttle
+    # Show cpu throttle in cores for a namespace
+  - name: namespaceCpuThrottle
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "namespace"
+    aggregation_functions:
+    # average cpu throttle in cores for a namespace
+    - function: avg
+      query: 'avg_over_time(sum by(namespace) (rate(container_cpu_cfs_throttled_seconds_total{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""}[5m]))[15m:])'
+
+    # maximum cpu throttle in cores for a namespace
+    - function: max
+      query: 'max_over_time(sum by(namespace) (rate(container_cpu_cfs_throttled_seconds_total{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""}[5m]))[15m:])'
+
+    # minimum cpu throttle in cores for a namespace
+    - function: min
+      query: 'min_over_time(sum by(namespace) (rate(container_cpu_cfs_throttled_seconds_total{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""}[5m]))[15m:])'
+
+
+    # Namespace memory usage
+    # Show memory usages in bytes for a namespace
+  - name: namespaceMemoryUsage
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "namespace"
+    aggregation_functions:
+    # average memory usage in bytes for a namespace
+    - function: avg
+      query: 'avg_over_time(sum by(namespace) (container_memory_working_set_bytes{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[15m:])'
+
+    # maximum memory usage in bytes for a namespace
+    - function: max
+      query: 'max_over_time(sum by(namespace) (container_memory_working_set_bytes{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[15m:])'
+
+    # minimum memory usage in bytes for a namespace
+    - function: min
+      query: 'min_over_time(sum by(namespace) (container_memory_working_set_bytes{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[15m:])'
+
+
+    # Namespace memory rss value
+    # Show memory rss in bytes for a namespace
+  - name: namespaceMemoryRSS
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "namespace"
+    aggregation_functions:
+    # average memory rss in bytes for a namespace
+    - function: avg
+      query: 'avg_over_time(sum by(namespace) (container_memory_rss{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[15m:])'
+
+    # maximum memory rss in bytes for a namespace
+    - function: max
+      query: 'max_over_time(sum by(namespace) (container_memory_rss{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[15m:])'
+
+    # minimum memory rss in bytes for a namespace
+    - function: min
+      query: 'min_over_time(sum by(namespace) (container_memory_rss{namespace="$NAMESPACE$", container!="", container!="POD", pod!=""})[15m:])'
+
+
+    # Show total pods in a namespace
+  - name: namespaceTotalPods
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "namespace"
+    aggregation_functions:
+    # maximum total pods in a namespace
+    - function: max
+      query: 'max_over_time(sum by(namespace) ((kube_pod_info{namespace="$NAMESPACE$"}))[15m:])'
+    # average total pods in a namespace
+    - function: avg
+      query: 'avg_over_time(sum by(namespace) ((kube_pod_info{namespace="$NAMESPACE$"}))[15m:])'
+
+
+    # Show total running pods in a namespace
+  - name: namespaceRunningPods
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "namespace"
+    aggregation_functions:
+    # maximum total pods in a namespace
+    - function: max
+      query: 'max_over_time(sum by(namespace) ((kube_pod_status_phase{phase="Running"}))[15m:])'
+    # average total pods in a namespace
+    - function: avg
+      query: 'avg_over_time(sum by(namespace) ((kube_pod_status_phase{phase="Running"}))[15m:])'
+
+    # Show last activity for a namespace
+  - name: namespaceMaxDate
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "namespace"
+    aggregation_functions:
+    - function: max
+      query: 'max(last_over_time(timestamp((sum by (namespace) (container_cpu_usage_seconds_total{namespace="$NAMESPACE$"})) > 0 )[15d:]))'
+
+    # GPU Related metrics
+
+    # Accelerator Core Usage
+  - name: acceleratorCoreUsage
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "container"
+    aggregation_functions:
+      - function: min
+        query: 'min(min_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace != "", exported_container != "", exported_pod != ""}[15m])) by (modelName, exported_container, exported_namespace, exported_pod, Hostname)'
+      - function: max
+        query: 'max(max_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace != "", exported_container != "", exported_pod != ""}[15m])) by (modelName, exported_container, exported_namespace, exported_pod, Hostname)'
+      - function: avg
+        query: 'avg(avg_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace != "", exported_container != "", exported_pod != ""}[15m])) by (modelName, exported_container, exported_namespace, exported_pod, Hostname)'
+
+    # Accelerator Memory Usage
+  - name: acceleratorMemoryUsage
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "container"
+    aggregation_functions:
+      - function: min
+        query: 'min(min_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace != "", exported_container != "", exported_pod != ""}[15m])) by (modelName, exported_container, exported_namespace, exported_pod, Hostname)'
+      - function: max
+        query: 'max(max_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace != "", exported_container != "", exported_pod != ""}[15m])) by (modelName, exported_container, exported_namespace, exported_pod, Hostname)'
+      - function: avg
+        query: 'avg(avg_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace != "", exported_container != "", exported_pod != ""}[15m])) by (modelName, exported_container, exported_namespace, exported_pod, Hostname)'
+
+    # Accelerator Frame Buffer Usage
+  - name: acceleratorFrameBufferUsage
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "container"
+    aggregation_functions:
+      - function: min
+        query: 'min(min_over_time(DCGM_FI_DEV_FB_USED{exported_namespace != "", exported_container != "", exported_pod != ""}[15m])) by (modelName, GPU_I_PROFILE, exported_container, exported_namespace, exported_pod, Hostname)'
+      - function: max
+        query: 'max(max_over_time(DCGM_FI_DEV_FB_USED{exported_namespace != "", exported_container != "", exported_pod != ""}[15m])) by (modelName, GPU_I_PROFILE, exported_container, exported_namespace, exported_pod, Hostname)'
+      - function: avg
+        query: 'avg(avg_over_time(DCGM_FI_DEV_FB_USED{exported_namespace != "", exported_container != "", exported_pod != ""}[15m])) by (modelName, GPU_I_PROFILE, exported_container, exported_namespace, exported_pod, Hostname)'

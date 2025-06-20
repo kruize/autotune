@@ -32,6 +32,8 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonSyntaxException;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -105,7 +107,7 @@ public class CreateExperiment extends HttpServlet {
                         if (createExperimentAPIObject.isContainerExperiment()) {
                             createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentType.CONTAINER);
                             // check if namespace data is also set for container-type experiments
-                            if (null != kubernetesAPIObject.getNamespaceAPIObjects()) {
+                            if (null != kubernetesAPIObject.getNamespaceAPIObject()) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP);
                             }
                             if ((AnalyzerConstants.AUTO.equalsIgnoreCase(createExperimentAPIObject.getMode())
@@ -117,9 +119,8 @@ public class CreateExperiment extends HttpServlet {
                             if (null != kubernetesAPIObject.getContainerAPIObjects()) {
                                 throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP);
                             }
-                            if (AnalyzerConstants.REMOTE.equalsIgnoreCase(createExperimentAPIObject.getTargetCluster())) {
-                                throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE);
-                            }
+                        } else {
+                            LOGGER.debug("Missing container/namespace data from the input json {}", createExperimentAPIObject);
                         }
                     }
                     KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
@@ -150,12 +151,12 @@ public class CreateExperiment extends HttpServlet {
                     sendErrorResponse(inputData, response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
                 }
             }
+        } catch (InvalidExperimentType | JsonParseException e) {
+            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught: " + e.getMessage());
             sendErrorResponse(inputData, response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
-        } catch (InvalidExperimentType e) {
-            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
         } finally {
             if (null != timerCreateExp) {
                 MetricsConfig.timerCreateExp = MetricsConfig.timerBCreateExp.tag("status", statusValue).register(MetricsConfig.meterRegistry());

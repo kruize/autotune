@@ -79,7 +79,7 @@ public class KubernetesAPIObject {
     }
 
     @JsonProperty(KruizeConstants.JSONKeys.NAMESPACES)
-    public NamespaceAPIObject getNamespaceAPIObjects() {
+    public NamespaceAPIObject getNamespaceAPIObject() {
         return namespaceAPIObject;
     }
 

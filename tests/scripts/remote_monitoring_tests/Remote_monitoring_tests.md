@@ -19,6 +19,16 @@ Here are the test scenarios:
 - PerformanceProfile & Slo
 - Deployment name & selector
 - Validate error messages when the mandatory fields are missing
+- Create namespace experiment specifying namespace experiment type
+- Create namespace experiment without specifying experiment type
+- Create container experiment specifying container experiment type
+- Create container experiment without specifying experiment type
+- Create experiment specifying both namespaces and containers without specifying the experiment type
+- Create experiment specifying both namespaces and containers specifying the namespace experiment type
+- Create experiment specifying both namespaces and containers specifying the container experiment type
+- Create namespace experiment specifying containers
+- Create container experiment specifying namespaces
+- Create multiple namespace experiments with valid namespace
 
 ### **Update Results API tests**
 
@@ -33,6 +43,21 @@ Here are the test scenarios:
 - Update results for an invalid experiment or a non-existing experiment
 - Test with invalid values such as blank, null or an invalid value for various keys in the updateResults json
 - Update the same results twice for the same experiment
+
+Namespace Related Test Scenarios:
+Sanity Tests
+- Update results for a single valid namespace experiment
+- Update multiple valid results in a single json for a single namespace experiment
+- Update multiple valid results for a namespace experiment (uses a loop)
+- Update results test with supported cpu and memory format types
+- Update the same results twice for the same namespace experiment
+- Update results with valid invalid interval duration
+
+Negative Tests
+- Update results for namespaces that are not present during creation of the namespace experiment [Fail]
+- Update results for an invalid namespace experiment or a non-existing namespace experiment.
+- Test with invalid values such as blank, null or an invalid value for various keys in the updateResults json [Check if redundant or not]
+
 
 
 ### **List Recommendation API tests**
@@ -75,6 +100,14 @@ Here are the test scenarios:
 	- for non-contiguous data:
 		- similar tests as mentioned above for contiguous
 
+Namespace Related Test Scenarios:
+Sanity Tests
+- List recommendations with valid recommendations for all terms
+- List recommendations without results
+
+Negative Tests
+- _To be updated_
+
 
 ### **Update Recommendation API tests**
 
@@ -90,6 +123,13 @@ Here are the test scenarios:
 - Update recommendations with unknown experiment_name
 - Update recommendations with unknown end_time
 - Update recommendations with end_time preceding start_time
+
+Namespace Related Test Scenarios:
+Sanity Tests
+- Update recommendations with valid short term recommendations. Also, Validate the container array, should be blank.
+
+Negative Tests
+- _To be updated_
 
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
    - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo

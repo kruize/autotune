@@ -100,6 +100,7 @@ public class AnalyzerErrorConstants {
         public static final String UNSUPPORTED_FORMAT = " Format value should be among these values: ".concat(KruizeSupportedTypes.SUPPORTED_FORMATS.toString());
         public static final String UNSUPPORTED_METRIC = "Metric variable name should be among these values: ".concat(Arrays.toString(AnalyzerConstants.MetricName.values()));
         public static final String CONTAINER_AND_EXPERIMENT = " for container : %s for experiment: %s.";
+        public static final String NAMESPACE_AND_EXPERIMENT = " for namespace : %s for experiment: %s.";
         public static final String JSON_PARSING_ERROR = "Failed to parse the JSON. Please check the input payload ";
         public static final String AGGREGATION_INFO_INVALID_VALUE = "Invalid value type for aggregation_info objects. Expected a numeric value (Double).";
         public static final String VERSION_MISMATCH = "Version number mismatch found. Expected: %s , Found: %s";
@@ -112,6 +113,8 @@ public class AnalyzerErrorConstants {
         public static final String PARSE_ERROR_MESSAGE = "Exception occurred while parsing the data: %s";
         public static final String DELETED_METADATA_PROFILE = "Deleted metadata profile object: %s";
         public static final String INVALID_METADATA_PROFILE_NAME = "MetadataProfile 'name' field is either null or empty!";
+        public static final String INVALID_METRICS_FOUND = "Invalid metrics found for experiment - %s: %s";
+        public static final String MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment - %s : %s";
 
 
         private AutotuneObjectErrors() {
@@ -158,6 +161,10 @@ public class AnalyzerErrorConstants {
 
         public static final class generateRecommendationsAPI {
             public static final String ERROR_FETCHING_METRICS = "Error while fetching metrics.";
+            public static final String NULL_OR_EMPTY_MODEL_NAME = "Model name cannot be null or empty";
+            public static final String NULL_RECOMMENDATION_TUNABLES = "Recommendation Tunables cannot be null";
+            public static final String DATA_IRREGULARITY_DETECTED = "Data irregularity detected, " +
+                    "Notification needs to be added explaining we changed the memory usage to 100% as it's more than 100%";
 
             private generateRecommendationsAPI() {
 
@@ -187,12 +194,16 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_MODE_FOR_NAMESPACE_EXP = "Auto or recreate mode is not supported for namespace experiment.";
             public static final String INVALID_OBJECT_TYPE_FOR_AUTO_EXP = "Kubernetes object type is not supported for auto or recreate mode.";
             public static final String AUTO_EXP_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case.";
-            public static final String INVALID_TERM_NAME = " term name is not supported. Use short, medium or long term.";
+            public static final String INVALID_TERM_NAME = "Term name is not supported. Use short, medium or long term.";
             public static final String TERM_SETTINGS_UNDEFINED= "Term settings are not defined in the recommendation settings.";
             public static final String MULTIPLE_TERMS_UNSUPPORTED = "Multiple terms are currently not supported for auto or recreate mode.";
-            public static final String INVALID_MODEL_NAME = " model name is not supported. Use cost or performance.";
+            public static final String INVALID_MODEL_NAME = "Model name is not supported. Use cost or performance.";
             public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
-            public static final String WHITESPACE_NOT_ALLOWED = "Whitespace can not be entered as a term or model value ";
+            public static final String EMPTY_NOT_ALLOWED = "Empty term or model value.";
+            public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
+            public static final String MISSING_NAMESPACE = "Missing namespace for experimentType: %s";
+            public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
+
             private CreateExperimentAPI() {
 
             }
@@ -210,7 +221,7 @@ public class AnalyzerErrorConstants {
             public static final String UPDATE_RECOMMENDATIONS_SUCCESS_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "success";
             public static final String UPDATE_RECOMMENDATIONS_COMPLETED_COUNT = UPDATE_RECOMMENDATIONS_COUNT + "completed";
             public static final String RECOMMENDATION_ERROR = "Failed to create recommendation for experiment: %s and interval_start_time: %s and interval_end_time: %s";
-            public static final String RECOMMENDATION_EXCEPTION = "Exception occurred while generating recommendations for experiment: %s and interval_end_time: %s : %s ";
+            public static final String RECOMMENDATION_EXCEPTION = "Exception occurred while generating recommendations for experiment: {} and interval_end_time: {} : {} ";
             public static final String METRIC_EXCEPTION = "Exception occurred while fetching metrics from the datasource: ";
             public static final String FETCHING_RESULTS_FAILED = "Failed to fetch the results from the DB: %s";
             public static final String INTERNAL_MAP_EMPTY = "Internal map sent to populate method cannot be null or empty";
@@ -225,7 +236,8 @@ public class AnalyzerErrorConstants {
             public static final String THRESHOLD_NOT_SET = "Threshold is not set, setting Default CPU Threshold : %s and Memory Threshold : %s";
             public static final String BOX_PLOTS_FAILURE = "Box plots Failed due to : %s";
             public static final String LOAD_EXPERIMENT_FAILURE = "Failed to load experiment from DB: %s";
-            public static final String GENERATE_RECOMMENDATION_FAILURE = "Not able to generate recommendation for expName : %s due to %s";
+            public static final String GENERATE_RECOMMENDATION_FAILURE = "Not able to generate recommendation for expName : {} due to {}";
+            public static final String RESULTS_SAVE_FAILURE = "Failed to add results to local storage due to: {}";
 
 
             private UpdateRecommendationsAPI() {
@@ -343,8 +355,9 @@ public class AnalyzerErrorConstants {
         public static final String UNSUPPORTED_UPDATER_TYPE = "Updater type %s is not supported.";
         public static final String GENERATE_RECOMMENDATION_FAILED = "Failed to generate recommendations for experiment: {}";
         public static final String UPDATER_NOT_INSTALLED = "Updater is not installed.";
-        public static final String RECOMMENDATION_DATA_NOT_PRESENT = "Recommendations are not present for the experiment.";
+        public static final String RECOMMENDATION_DATA_NOT_PRESENT = "Recommendations are not present for the experiment: {}";
         public static final String INVALID_VPA_NAME = "VPA name cannot be null or empty.";
+        public static final String MISSING_REQUIRED_VALUES = "Recommended resource values (CPU or Memory) are missing in resourceMap";
 
         public static final class AcceleratorAutoscaler {
             private AcceleratorAutoscaler() {

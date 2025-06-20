@@ -7,15 +7,15 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.metrics.AggregationFunctions;
-import com.autotune.common.data.metrics.Metric;
-import com.autotune.common.data.metrics.MetricResults;
+import com.autotune.common.data.metrics.*;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
+import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
@@ -25,7 +25,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -106,7 +105,7 @@ public class Converters {
                     kruizeObject.setMetadataProfile(createExperimentAPIObject.getMetadataProfile());
                 }
                 if (null != createExperimentAPIObject.getValidationData()) {
-                    //Validation already done and it is getting loaded back from db
+                    // Validation already done, and it is getting loaded back from db
                     kruizeObject.setValidation_data(createExperimentAPIObject.getValidationData());
                 }
             } catch (Exception e) {
@@ -120,10 +119,11 @@ public class Converters {
         // Generates K8sObject for container type experiments from KubernetesAPIObject
         public static K8sObject createContainerExperiment(KubernetesAPIObject kubernetesAPIObject) {
             K8sObject k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
-            k8sObject.setNamespaceData(new NamespaceData());
-            List<ContainerAPIObject> containerAPIObjects = kubernetesAPIObject.getContainerAPIObjects();
+            HashMap<String, NamespaceData> namespaceDataMap = new HashMap<>();
+            k8sObject.setNamespaceDataMap(namespaceDataMap);
+
             HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
-            for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
+            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
                 ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(),
                         containerAPIObject.getContainer_image_name(), new ContainerRecommendations(), null);
                 containerDataHashMap.put(containerData.getContainer_name(), containerData);
@@ -135,11 +135,15 @@ public class Converters {
         // Generates K8sObject for namespace type experiments from KubernetesAPIObject
         public static K8sObject createNamespaceExperiment(KubernetesAPIObject kubernetesAPIObject) {
             K8sObject k8sObject = new K8sObject();
-            k8sObject.setNamespace(kubernetesAPIObject.getNamespaceAPIObjects().getnamespace_name());
-            HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
-            k8sObject.setContainerDataMap(containerDataHashMap);
-            NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObjects();
-            k8sObject.setNamespaceData(new NamespaceData(namespaceAPIObject.getnamespace_name(), new NamespaceRecommendations(), null));
+            k8sObject.setContainerDataMap(new HashMap<>());
+
+            NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
+            k8sObject.setNamespace(namespaceAPIObject.getNamespace());
+
+            HashMap<String, NamespaceData> namespaceDataHashMap = new HashMap<>();
+            namespaceDataHashMap.put(namespaceAPIObject.getNamespace(), new NamespaceData(namespaceAPIObject.getNamespace(),
+                    new NamespaceRecommendations(), null));
+            k8sObject.setNamespaceDataMap(namespaceDataHashMap);
             return k8sObject;
         }
 
@@ -176,8 +180,12 @@ public class Converters {
 
         private static void processNamespaceRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
                                                             boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
-            NamespaceData clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceData(), NamespaceData.class);
-            if (clonedNamespaceData != null) {
+            NamespaceData clonedNamespaceData = null;
+            if(k8sObject.getNamespaceDataMap() != null && k8sObject.getNamespace() != null && k8sObject.getNamespaceDataMap().containsKey(k8sObject.getNamespace())) {
+                clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceDataMap().get(k8sObject.getNamespace()), NamespaceData.class);
+            }
+            if (clonedNamespaceData != null && clonedNamespaceData.getNamespaceRecommendations() != null
+            && clonedNamespaceData.getNamespaceRecommendations().getData() != null) {
                 HashMap<Timestamp, MappedRecommendationForTimestamp> namespaceRecommendations = clonedNamespaceData.getNamespaceRecommendations().getData();
 
                 if (checkForTimestamp) {
@@ -295,26 +303,88 @@ public class Converters {
                 K8sObject k8sObject = new K8sObject(kubernetesAPIObject.getName(), kubernetesAPIObject.getType(), kubernetesAPIObject.getNamespace());
                 List<ContainerAPIObject> containersList = kubernetesAPIObject.getContainerAPIObjects();
                 HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
-                for (ContainerAPIObject containerAPIObject : containersList) {
+                HashMap<String, NamespaceData> namespaceDataHashMap = new HashMap<>();
+
+                if(containersList != null && !containersList.isEmpty()) {
+                    for (ContainerAPIObject containerAPIObject : containersList) {
+                        HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
+                        HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
+                        ContainerData containerData = new ContainerData(
+                                containerAPIObject.getContainer_name(),
+                                containerAPIObject.getContainer_image_name(),
+                                containerAPIObject.getContainerRecommendations(),
+                                metricsMap);
+                        HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
+                        HashMap<AnalyzerConstants.MetricName, AcceleratorMetricResult> acceleratorMetricResultHashMap = new HashMap<>();
+                        for (Metric metric : containerAPIObject.getMetrics()) {
+                            boolean isAcceleratorMetric = metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorCoreUsage.name())
+                                    || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorMemoryUsage.name())
+                                    || metric.getName().equalsIgnoreCase(AnalyzerConstants.MetricName.acceleratorFrameBufferUsage.name());
+
+                            metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
+                            MetricResults metricResults = metric.getMetricResult();
+                            metricResults.setName(metric.getName());
+                            IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.startTimestamp,
+                                    updateResultsAPIObject.endTimestamp);
+
+                            if (isAcceleratorMetric) {
+                                if (null != metricResults.getMetadata()
+                                        && metricResults.getMetadata() instanceof AcceleratorMetricMetadata acceleratorMetricMetadata) {
+                                    if (null != acceleratorMetricMetadata.getModelName()) {
+                                        boolean isPartitionSupported = RecommendationUtils.checkIfModelIsKruizeSupportedMIG(acceleratorMetricMetadata.getModelName());
+                                        boolean isPartition = (null != acceleratorMetricMetadata.getProfileName());
+                                        NvidiaAcceleratorDeviceData acceleratorDeviceData = new NvidiaAcceleratorDeviceData(
+                                                acceleratorMetricMetadata.getModelName(),
+                                                acceleratorMetricMetadata.getNode(),
+                                                null,
+                                                null,
+                                                acceleratorMetricMetadata.getProfileName(),
+                                                isPartitionSupported,
+                                                isPartition
+                                        );
+                                        AcceleratorMetricResult acceleratorMetricResult = new AcceleratorMetricResult(acceleratorDeviceData, metricResults);
+                                        acceleratorMetricResultHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), acceleratorMetricResult);
+                                        // Storing in metrics to avoid the data irregular conversion from DB
+                                        metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                                    }
+                                }
+                            } else {
+                                metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                            }
+                            intervalResults.setMetricResultsMap(metricResultsHashMap);
+                            intervalResults.setAcceleratorMetricResultHashMap(acceleratorMetricResultHashMap);
+                            resultsMap.put(updateResultsAPIObject.getEndTimestamp(), intervalResults);
+                        }
+                        containerData.setResults(resultsMap);
+                        containerDataHashMap.put(containerData.getContainer_name(), containerData);
+                    }
+                    k8sObject.setContainerDataMap(containerDataHashMap);
+                    k8sObjectList.add(k8sObject);
+                } else if (kubernetesAPIObject.getNamespaceAPIObject() != null) {
+                    NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
+
                     HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
                     HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
-                    ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(), containerAPIObject.getContainer_image_name(), containerAPIObject.getContainerRecommendations(), metricsMap);
+                    NamespaceData namespaceData = new NamespaceData(namespaceAPIObject.getNamespace(), namespaceAPIObject.getNamespaceRecommendations(), metricsMap);
                     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
-                    for (Metric metric : containerAPIObject.getMetrics()) {
-                        metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
-                        MetricResults metricResults = metric.getMetricResult();
-                        metricResults.setName(metric.getName());
-                        IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.startTimestamp,
-                                updateResultsAPIObject.endTimestamp);
-                        metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
-                        intervalResults.setMetricResultsMap(metricResultsHashMap);
-                        resultsMap.put(updateResultsAPIObject.getEndTimestamp(), intervalResults);
-                    }
-                    containerData.setResults(resultsMap);
-                    containerDataHashMap.put(containerData.getContainer_name(), containerData);
+                        for (Metric metric : namespaceAPIObject.getMetrics()) {
+                            metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
+                            MetricResults metricResults = metric.getMetricResult();
+                            metricResults.setName(metric.getName());
+                            IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.getStartTimestamp(),
+                                    updateResultsAPIObject.getEndTimestamp());
+                            metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                            intervalResults.setMetricResultsMap(metricResultsHashMap);
+                            resultsMap.put(updateResultsAPIObject.getEndTimestamp(), intervalResults);
+                        }
+                        namespaceData.setResults(resultsMap);
+                        namespaceDataHashMap.put(namespaceData.getNamespace_name(), namespaceData);
+
+                    k8sObject.setNamespaceDataMap(namespaceDataHashMap);
+                    k8sObjectList.add(k8sObject);
+                } else {
+                    LOGGER.debug("Missing container/namespace data from the input json {}", kubernetesAPIObject);
                 }
-                k8sObject.setContainerDataMap(containerDataHashMap);
-                k8sObjectList.add(k8sObject);
             }
             experimentResultData.setKubernetes_objects(k8sObjectList);
             experimentResultData.setValidationOutputData(new ValidationOutputData(true, null, null));

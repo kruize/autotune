@@ -18,6 +18,7 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
+import com.autotune.analyzer.recommendations.model.RecommendationTunables;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.apache.kafka.common.protocol.types.Field;
@@ -25,6 +26,8 @@ import org.apache.kafka.common.protocol.types.Field;
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.*;
 
 /**
  * Constants for Autotune module
@@ -138,6 +141,17 @@ public class KruizeConstants {
         }
     }
 
+    public static final class CostBasedRecommendationConstants {
+
+        public static final RecommendationTunables COST_RECOMMENDATION_TUNABLES = new RecommendationTunables(COST_CPU_PERCENTILE, COST_MEMORY_PERCENTILE, COST_ACCELERATOR_PERCENTILE);
+
+    }
+    public static final class PerformanceBasedRecommendationConstants {
+
+        public static final RecommendationTunables PERFORMANCE_RECOMMENDATION_TUNABLES = new RecommendationTunables(PERFORMANCE_CPU_PERCENTILE, PERFORMANCE_MEMORY_PERCENTILE, PERFORMANCE_ACCELERATOR_PERCENTILE);
+
+    }
+
     public static final class JSONKeys {
         public static final String QUESTION_MARK = "?";
         public static final String AMPERSAND = "&";
@@ -181,7 +195,6 @@ public class KruizeConstants {
         // Deployments Section
         public static final String DEPLOYMENTS = "deployments";
         public static final String NAMESPACE = "namespace";
-        public static final String NAMESPACE_NAME = "namespace_name";
         public static final String POD_METRICS = "pod_metrics";
         public static final String CONTAINER_METRICS = "container_metrics";
         public static final String METRICS = "metrics";
@@ -294,6 +307,13 @@ public class KruizeConstants {
         // Config changes JSON Keys
         public static final String MODEL_SETTINGS = "model_settings";
         public static final String TERM_SETTINGS = "term_settings";
+        public static final String MEMORY_PERCENTILE = "memory_percentile";
+        public static final String CPU_PERCENTILE = "cpu_percentile";
+        public static final String ACCELERATOR_PERCENTILE = "accelerator_percentile";
+        public static final String MODEL_TUNABLE = "model_tunables";
+        public static final String ACCELERATOR_MODEL_NAME = "accelerator_model_name";
+        public static final String ACCELERATOR_PROFILE_NAME = "accelerator_profile_name";
+        public static final String NODE = "node";
 
         private JSONKeys() {
         }
@@ -648,6 +668,7 @@ public class KruizeConstants {
             public static final String INPUT_NULL = "Input object cannot be null";
             public static final String VALUE_NEGATIVE = "Value cannot be negative";
             public static final String INVALID_MEM_FORMAT = "Invalid format: Supported formats are bytes, KB, KiB, MB, MiB, GB, GiB, etc.";
+            public static final String EMPTY_NOTIFICATIONS_OBJECT ="Notifications Object passed is empty. The notifications are not sent as part of recommendation.";
         }
     }
 
