@@ -100,6 +100,14 @@ Here are the test scenarios:
 	- for non-contiguous data:
 		- similar tests as mentioned above for contiguous
 
+Namespace Related Test Scenarios:
+Sanity Tests
+- List recommendations with valid recommendations for all terms
+- List recommendations without results
+
+Negative Tests
+- List recommendations with missing metrics data
+
 
 ### **Update Recommendation API tests**
 
@@ -115,6 +123,14 @@ Here are the test scenarios:
 - Update recommendations with unknown experiment_name
 - Update recommendations with unknown end_time
 - Update recommendations with end_time preceding start_time
+
+Namespace Related Test Scenarios:
+Sanity Tests
+- Update recommendations with valid short term recommendations. Also, Validate the container array, should be blank.
+- Update recommendations with valid Short, Medium and Long term recommendations
+
+Negative Tests
+- Update recommendations with mix of container and namespace results
 
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
    - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
