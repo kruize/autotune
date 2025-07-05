@@ -6,5 +6,8 @@ alter table kruize_lm_experiments  add column metadata_id bigint references krui
 alter table if exists kruize_lm_experiments add constraint UK_lm_experiment_name unique (experiment_name);
 create table IF NOT EXISTS kruize_metric_profiles (api_version varchar(255), kind varchar(255), metadata jsonb, name varchar(255) not null, k8s_type varchar(255), profile_version float(53) not null, slo jsonb, primary key (name));
 create table IF NOT EXISTS kruize_lm_recommendations (interval_end_time timestamp(6) not null, experiment_name varchar(255) not null, cluster_name varchar(255), extended_data jsonb, version varchar(255),experiment_type varchar(255), primary key (experiment_name, interval_end_time)) PARTITION BY RANGE (interval_end_time);
-create table IF NOT EXISTS kruize_bulkjobs (job_id VARCHAR(36) not null, experiments jsonb, end_time timestamp(6), start_time timestamp(6), metadata jsonb, notifications jsonb, payload jsonb, processed_count integer, status varchar(255), total_count integer, webhook jsonb, primary key (job_id))
+create table IF NOT EXISTS kruize_bulkjobs (job_id VARCHAR(36) not null,pod_name varchar(255) not null, experiments jsonb, end_time timestamp(6), start_time timestamp(6), metadata jsonb, notifications jsonb, payload jsonb, processed_count integer, status varchar(255), total_count integer, webhook jsonb, primary key (job_id))
 create table IF NOT EXISTS kruize_lm_metadata_profiles (api_version varchar(255), kind varchar(255), metadata jsonb, name varchar(255) not null, k8s_type varchar(255), profile_version float(53) not null, datasource varchar(255) not null, query_variables jsonb, primary key (name));
+create table IF NOT EXISTS kruize_pod_status (pod_name varchar(255) not null, last_checked timestamp(6), reason varchar(255), status varchar(255), updated_at timestamp(6), primary key (pod_name))
+CREATE INDEX IF NOT EXISTS idx_kruize_bulkjobs_pod_name ON kruize_bulkjobs(pod_name);
+
