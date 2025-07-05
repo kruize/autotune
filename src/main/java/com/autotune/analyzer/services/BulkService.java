@@ -59,8 +59,8 @@ import static com.autotune.utils.KruizeConstants.KRUIZE_BULK_API.*;
 public class BulkService extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(BulkService.class);
+    public static ExecutorService executorService = Executors.newFixedThreadPool(10);
     private static Map<String, BulkJobStatus> jobStatusMap = new ConcurrentHashMap<>();
-    private ExecutorService executorService = Executors.newFixedThreadPool(10);
 
     /**
      * Filters the JSON representation of a BulkJobStatus object based on the specified include and exclude fields.
@@ -289,7 +289,7 @@ public class BulkService extends HttpServlet {
                 jobStatusMap.put(jobID, jobStatus);
             else {
                 try {
-                    new ExperimentDAOImpl().bulkJobSave(jobStatus.getBulkJobForDB("{}"));
+                    new ExperimentDAOImpl().bulkJobSave(jobStatus.getBulkJobForDB(dummyExperimentsString));
                 } catch (Exception e) {
                     LOGGER.error("Not able to save jb details into DB {} due to {}", jobStatus, e.getMessage());
                 }
