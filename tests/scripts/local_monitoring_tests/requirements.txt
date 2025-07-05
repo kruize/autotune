@@ -4,3 +4,5 @@ jinja2
 pytest-html==3.2.0
 kubernetes
 docker
+kafka-python
+six
