@@ -35,7 +35,9 @@ See the [Autotune Architecture](/design/README.md) for more details on the archi
 
 ## Contributing
 
-We welcome your contributions! See [CONTRIBUTING.md](/CONTRIBUTING.md) for more details.
+We welcome your contributions! See [CONTRIBUTING.md](/CONTRIBUTING.md) for more details. 
+
+Join the [Kruize Slack](http://kruizeworkspace.slack.com/) to connect with the community, ask questions, and collaborate!
 
 ## License
 
