@@ -28,8 +28,68 @@ public class ExperimentTypeUtil {
         return experimentType == null || AnalyzerConstants.ExperimentType.CONTAINER.equals(experimentType);
     }
 
+    public static boolean isContainerExperiment(long experimentBitset) {
+        return AnalyzerConstants.ExperimentBitMask.CONTAINER_BIT.isSet(experimentBitset);
+    }
+
     public static boolean isNamespaceExperiment(AnalyzerConstants.ExperimentType experimentType) {
         return experimentType != null && AnalyzerConstants.ExperimentType.NAMESPACE.equals(experimentType);
+    }
+
+    public static boolean isNamespaceExperiment(long experimentBitset) {
+        return AnalyzerConstants.ExperimentBitMask.NAMESPACE_BIT.isSet(experimentBitset);
+    }
+
+    public static long getBitMaskForExperimentType(AnalyzerConstants.ExperimentType type) {
+        if (type == null) return 0L;
+
+        switch (type) {
+            case CONTAINER:
+                return AnalyzerConstants.ExperimentBitMask.CONTAINER_BIT.getMask();
+            case WORKLOAD:
+                return AnalyzerConstants.ExperimentBitMask.WORKLOAD_BIT.getMask();
+            case NAMESPACE:
+                return AnalyzerConstants.ExperimentBitMask.NAMESPACE_BIT.getMask();
+            case CLUSTER:
+                return AnalyzerConstants.ExperimentBitMask.CLUSTER_BIT.getMask();
+            default:
+                return 0L;
+        }
+    }
+
+    public static AnalyzerConstants.ExperimentType getExperimentTypeFromBitMask(long bitMask) {
+        if  (bitMask == 0) return AnalyzerConstants.ExperimentType.CONTAINER;
+
+        if (AnalyzerConstants.ExperimentBitMask.CONTAINER_BIT.isSet(bitMask)) {
+            return AnalyzerConstants.ExperimentType.CONTAINER;
+        }
+
+        if (AnalyzerConstants.ExperimentBitMask.WORKLOAD_BIT.isSet(bitMask)) {
+            return AnalyzerConstants.ExperimentType.WORKLOAD;
+        }
+
+        if (AnalyzerConstants.ExperimentBitMask.NAMESPACE_BIT.isSet(bitMask)) {
+            return AnalyzerConstants.ExperimentType.NAMESPACE;
+        }
+
+        if (AnalyzerConstants.ExperimentBitMask.CLUSTER_BIT.isSet(bitMask)) {
+            return AnalyzerConstants.ExperimentType.CLUSTER;
+        }
+
+        return null;
+    }
+
+    public static long setExperimentBit(long currentMask, AnalyzerConstants.ExperimentType type) {
+        return currentMask | getBitMaskForExperimentType(type);
+    }
+
+    // TODO: Need to be updated when we need to generate the bitset based on many attributes
+    // other than just container or namespace type, Method signature changes, after you pass more args for deciding the
+    // bitset, Please proceed changing all the callers if the signature is changed.
+    public static long getExperimentType(AnalyzerConstants.ExperimentType experimentType) {
+        long bitset = 0L;
+        bitset = setExperimentBit(bitset, experimentType);
+        return bitset;
     }
 
     public class ExperimentTypeSerializer implements JsonSerializer<AnalyzerConstants.ExperimentType>, JsonDeserializer<AnalyzerConstants.ExperimentType> {

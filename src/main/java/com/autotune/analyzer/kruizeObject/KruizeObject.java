@@ -41,7 +41,7 @@ import java.util.Map;
  * <p>
  * Refer to examples dir for a reference AutotuneObject yaml.
  */
-public final class KruizeObject implements ExperimentTypeAware {
+public final class KruizeObject {
 
     @SerializedName("version")
     private String apiVersion;
@@ -53,8 +53,7 @@ public final class KruizeObject implements ExperimentTypeAware {
     @SerializedName("datasource")
     private String datasource;
     @SerializedName(KruizeConstants.JSONKeys.EXPERIMENT_TYPE) //TODO: to be used in future
-    @JsonAdapter(ExperimentTypeUtil.ExperimentTypeSerializer.class)
-    private AnalyzerConstants.ExperimentType experimentType;
+    private long experimentType;
     @SerializedName("default_updater")
     private String defaultUpdater;
     private String namespace;               // TODO: Currently adding it at this level with an assumption that there is only one entry in k8s object needs to be changed
@@ -370,11 +369,11 @@ public final class KruizeObject implements ExperimentTypeAware {
         this.datasource = datasource;
     }
 
-    public AnalyzerConstants.ExperimentType getExperimentType() {
+    public long getExperimentType() {
         return experimentType;
     }
 
-    public void setExperimentType(AnalyzerConstants.ExperimentType experimentType) {
+    public void setExperimentType(long experimentType) {
         this.experimentType = experimentType;
     }
 
@@ -425,12 +424,10 @@ public final class KruizeObject implements ExperimentTypeAware {
                 '}';
     }
 
-    @Override
     public boolean isNamespaceExperiment() {
         return ExperimentTypeUtil.isNamespaceExperiment(experimentType);
     }
 
-    @Override
     public boolean isContainerExperiment() {
         return ExperimentTypeUtil.isContainerExperiment(experimentType);
     }

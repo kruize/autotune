@@ -256,7 +256,58 @@ public class AnalyzerConstants {
         CONTAINER,  // For container-level experiments
         NAMESPACE,  // For namespace-level experiments
         CLUSTER,    // For cluster-wide experiments
-        APPLICATION // For application-specific experiments
+        WORKLOAD // For workload-specific experiments
+    }
+
+    public enum ExperimentBitMask {
+        // Infra Bits [0-15]
+        CONTAINER_BIT(0),
+        POD_BIT(1),
+        WORKLOAD_BIT(2),
+        NAMESPACE_BIT(3),
+        NAMESPACE_GROUP_BIT(4),
+        CLUSTER_BIT(5),
+
+        // Resource Bits [16-31]
+        CPU_BIT(16),
+        MEMORY_BIT(17),
+        STORAGE_BIT(18),
+        NETWORK_BIT(19),
+        ACCELERATOR_BIT(20),
+
+        // Runtime Bits [32-47]
+        JVM_BIT(32);
+
+        private final int position;
+
+        ExperimentBitMask(int position) {
+            this.position = position;
+        }
+
+        public int getPosition() {
+            return position;
+        }
+
+        /**
+         * Returns a long with this bit set: 1L << position
+         */
+        public long getMask() {
+            return 1L << position;
+        }
+
+        /**
+         * Checks if this bit is set in the given long value.
+         */
+        public boolean isSet(long value) {
+            return (value & getMask()) != 0;
+        }
+
+        /**
+         * Sets this bit in the given value and returns the updated long.
+         */
+        public long setBit(long value) {
+            return value | getMask();
+        }
     }
 
     public static final class AcceleratorConstants {
