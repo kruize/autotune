@@ -85,7 +85,13 @@ def test_update_metadata_profile(cluster_type):
     assert data['message'] == UPDATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
 
     dsmetadata_json_file = "../json_files/import_metadata.json"
-    import_metadata_list_and_validate(dsmetadata_json_file)
+
+    if cluster_type == "openshift":
+        import_metadata_list_and_validate(dsmetadata_json_file, verbose="true", validate_workload="true", 
+                                        namespace="openshift-tuning", workload="kruize", container="kruize")
+    else :
+        import_metadata_list_and_validate(dsmetadata_json_file, verbose="true", validate_workload="true", 
+                                        namespace="monitoring", workload="kruize", container="kruize")
 
     response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
@@ -105,7 +111,7 @@ def test_update_metadata_profiles_mandatory_fields(cluster_type, field, expected
 
     # Create metadata profile using the specified json
     json_file = "/tmp/create_metadata_profile.json"
-    input_json_file = metadata_profile_dir / 'cluster_metadata_local_monitoring.json'
+    input_json_file = "../json_files/update_cluster_metadata_local_monitoring.json"
     json_data = json.load(open(input_json_file))
     metadata_profile_name = json_data['metadata']['name']
 
@@ -132,18 +138,16 @@ def test_update_metadata_profiles_mandatory_fields(cluster_type, field, expected
     elif field == "query":
         json_data['query_variables'][0]['aggregation_functions'][0].pop("query", None)
 
+    data = json.dumps(json_data, indent=2)
     print("\n*****************************************")
-    print(json_data)
+    print(data)
     print("*****************************************\n")
-    data = json.dumps(json_data)
     with open(json_file, 'w') as file:
         file.write(data)
 
-    # update_json_file = "../json_files/update_cluster_metadata_local_monitoring.json"
     # Update metadata profile using the specified json
     response = update_metadata_profile(json_file, name=metadata_profile_name)
     data = response.json()
-    print(data['message'])
 
     assert response.status_code == expected_status_code, \
         f"Mandatory field check failed for {field} actual - {response.status_code} expected - {expected_status_code}"
@@ -346,7 +350,12 @@ def test_multiple_update_metadata_profile(cluster_type):
     assert data['message'] == UPDATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
 
     dsmetadata_json_file = "../json_files/import_metadata.json"
-    import_metadata_list_and_validate(dsmetadata_json_file, verbose="true")
+    if cluster_type == "openshift":
+        import_metadata_list_and_validate(dsmetadata_json_file, verbose="true", validate_workload="true", 
+                                        namespace="openshift-tuning", workload="kruize", container="kruize")
+    else :
+        import_metadata_list_and_validate(dsmetadata_json_file, verbose="true", validate_workload="true", 
+                                        namespace="monitoring", workload="kruize", container="kruize")
 
     # Update metadata profile using the specified json
     response = update_metadata_profile(update_json_file, name=metadata_profile_name)
@@ -357,7 +366,12 @@ def test_multiple_update_metadata_profile(cluster_type):
     assert data['message'] == UPDATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
 
     dsmetadata_json_file = "../json_files/import_metadata.json"
-    import_metadata_list_and_validate(dsmetadata_json_file, verbose="true")
+    if cluster_type == "openshift":
+        import_metadata_list_and_validate(dsmetadata_json_file, verbose="true", validate_workload="true", 
+                                        namespace="openshift-tuning", workload="kruize", container="kruize")
+    else :
+        import_metadata_list_and_validate(dsmetadata_json_file, verbose="true", validate_workload="true", 
+                                        namespace="monitoring", workload="kruize", container="kruize")
 
     response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)

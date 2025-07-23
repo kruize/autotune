@@ -1668,7 +1668,6 @@ def delete_and_create_metadata_profile():
     response = create_metadata_profile(metadata_profile_json_file)
 
     data = response.json()
-    print(data['message'])
 
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
@@ -1696,7 +1695,7 @@ def delete_and_create_metric_profile():
     assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
 
 
-def import_metadata_list_and_validate(input_json_file, verbose=None):
+def import_metadata_list_and_validate(input_json_file, verbose=None, validate_workload=None, namespace=None, workload=None, container=None):
 
     response = delete_metadata(input_json_file)
     print("delete metadata = ", response.status_code)
@@ -1726,3 +1725,40 @@ def import_metadata_list_and_validate(input_json_file, verbose=None):
     else :
         errorMsg = validate_list_metadata_json(list_metadata_json, list_metadata_json_verbose_true_schema)
     assert errorMsg == ""
+
+    # Validates if the specified namespace, workload and container are present in the metadata json
+    if validate_workload is not None:
+        assert namespace is not None, "namespace must be provided when validate_workload is True."
+        assert workload is not None, "workload must be provided when validate_workload is True."
+        assert container is not None, "container must be provided when validate_workload is True."
+        validate_metadata_workloads(list_metadata_json, namespace, workload, container)
+
+
+# Validates the metadata json if a container exists within the specified namespace and workload.
+def validate_metadata_workloads(metadata_json, namespace, workload, container):
+    print(f"\nValidating workload '{workload}' in metadata json")
+
+    datasources = metadata_json.get('datasources', {})
+    for ds_value in datasources.values():
+        clusters = ds_value.get('clusters', {})
+        for cl_value in clusters.values():
+            namespaces = cl_value.get('namespaces', {})
+            for ns_value in namespaces.values():
+                # Check if the current namespace matches
+                if ns_value.get('namespace') == namespace:
+                    workloads = ns_value.get('workloads', {})
+                    for wl_value in workloads.values():
+                        # Check if the current workload matches
+                        if wl_value.get('workload_name') == workload:
+                            containers = wl_value.get('containers', {})
+                            for c_value in containers.values():
+                                # If a full match is found, return successfully.
+                                if c_value.get('container_name') == container:
+                                    print(f"Validating workload '{workload}' in metadata json..done")
+                                    return
+
+    # Raise an error if no match was found.
+    raise AssertionError(
+        f"Validation failed: No entry found for namespace='{namespace}', "
+        f"workload='{workload}', and container='{container}'."
+    )

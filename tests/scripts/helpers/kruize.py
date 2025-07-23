@@ -621,5 +621,5 @@ def update_metadata_profile(metadata_profile_json_file, name=None, **kwargs):
 
     response = requests.put(url, params=parameters, json=metric_profile_json)
     print("Response status code = ", response.status_code)
-    print(response.text)
+    print(response.json())
     return response
