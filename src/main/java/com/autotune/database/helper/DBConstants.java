@@ -16,6 +16,8 @@ public class DBConstants {
                 "    :recommendationPath, :newRecommendation::jsonb, true" +
                 ") " +
                 "WHERE job_id = :jobId";
+        public static final String UPDATE_EXPERIMENTS_DATE = "UPDATE kruize_experiments " +
+                "SET updated_date = :updatedDate WHERE experiment_name IN (:experimentNames) ";
         public static final String SELECT_FROM_RESULTS = "from KruizeResultsEntry";
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME = "from KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_DATASOURCE = "from KruizeDataSourceEntry";

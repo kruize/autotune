@@ -18,10 +18,14 @@ package com.autotune.database.table;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.database.helper.GenerateExperimentID;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+
+import java.sql.Timestamp;
+import java.time.Instant;
 
 /**
  * This is a Java class named KruizeExperimentEntry annotated with JPA annotations.
@@ -66,6 +70,12 @@ public class KruizeExperimentEntry {
     private JsonNode meta_data;
     @Enumerated(EnumType.STRING)
     private AnalyzerConstants.ExperimentType experiment_type;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = KruizeConstants.JSONKeys.CREATION_DATE, updatable = false)
+    private Timestamp creation_date;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = KruizeConstants.JSONKeys.UPDATED_DATE)
+    private Timestamp updated_date;
 
 //    TODO: update KruizeDSMetadataEntry
 
@@ -82,6 +92,8 @@ public class KruizeExperimentEntry {
         this.datasource = kruizeLMExperimentEntry.getDatasource();
         this.extended_data = kruizeLMExperimentEntry.getExtended_data();
         this.meta_data = kruizeLMExperimentEntry.getMeta_data();
+        this.creation_date = Timestamp.from(Instant.now());
+        this.updated_date = Timestamp.from(Instant.now());
     }
 
     public KruizeExperimentEntry() {

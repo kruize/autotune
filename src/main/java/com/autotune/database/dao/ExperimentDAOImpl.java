@@ -46,10 +46,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
@@ -797,6 +794,42 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public void deleteBulkJobByID(String jobId) {
         //todo
+    }
+
+    /**
+     * @param experimentNames 
+     * @param currentTimestamp
+     * @return
+     */
+    @Override
+    public boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception {
+        if (experimentNames == null || experimentNames.isEmpty()) {
+            return false;
+        }
+
+        String statusValue = "failure";
+        Timer.Sample timerUpdateExperiment = Timer.start(MetricsConfig.meterRegistry());
+
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+
+            session.beginTransaction();
+            session.createNativeQuery(UPDATE_EXPERIMENTS_DATE)
+                    .setParameter("updatedDate", currentTimestamp)
+                    .setParameterList("experimentNames", experimentNames)
+                    .executeUpdate();
+
+            session.getTransaction().commit();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Failed to update updated_date for experiments: {}", e.getMessage());
+            throw new Exception(e.getMessage());
+        } finally {
+            if (null != timerUpdateExperiment) {
+                MetricsConfig.timerUpdateExpDate = MetricsConfig.timerBUpdateExpDate.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateExperiment.stop(MetricsConfig.timerUpdateResults);
+            }
+        }
+        return true;
     }
 
 

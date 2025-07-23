@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MetricsConfig {
     
     public static Timer timerListRec, timerListExp, timerCreateExp, timerUpdateResults, timerUpdateRecomendations;
-    public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName, timerLoadRecExpNameDate, timerLoadBulkJobId, timerUpdateBulkJobId,  timerBoxPlots;
+    public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName, timerLoadRecExpNameDate, timerLoadBulkJobId, timerUpdateBulkJobId,  timerBoxPlots, timerUpdateExpDate;
     public static Timer timerLoadAllRec, timerLoadAllExp, timerLoadAllResults;
     public static Timer timerAddRecDB, timerAddResultsDB, timerAddExpDB, timerAddBulkResultsDB, timerSaveBulkJobDB, timerAddBulkJob;
     public static Timer timerAddPerfProfileDB, timerLoadPerfProfileName, timerLoadAllPerfProfiles;
@@ -25,7 +25,7 @@ public class MetricsConfig {
     public static Timer timerImportMetadata, timerGetMetadata;
     public static Timer timerJobStatus, timerCreateBulkJob, timerGetExpMap, timerCreateBulkExp, timerGenerateBulkRec, timerRunJob;
     public static Counter timerKruizeNotifications , timerBulkJobs;
-    public static Timer.Builder timerBListRec, timerBListExp, timerBCreateExp, timerBUpdateResults, timerBUpdateRecommendations;
+    public static Timer.Builder timerBListRec, timerBListExp, timerBCreateExp, timerBUpdateResults, timerBUpdateRecommendations, timerBUpdateExpDate;
     public static Timer.Builder timerBLoadRecExpName, timerBLoadResultsExpName, timerBLoadExpName, timerBLoadRecExpNameDate, timerBBoxPlots;
     public static Timer.Builder timerBLoadAllRec, timerBLoadAllExp, timerBLoadAllResults;
     public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB, timerBLoadBulkJobId, timerBUpdateBulkJobId, timerBSaveBulkJobDB, timerBaddBulkJob;
@@ -51,6 +51,7 @@ public class MetricsConfig {
         timerBListRec = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "listRecommendations").tag("method", "GET");
         timerBListExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "listExperiments").tag("method", "GET");
         timerBCreateExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "createExperiment").tag("method", "POST");
+        timerBUpdateExpDate = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateResults").tag("method", "POST");
         timerBUpdateResults = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateResults").tag("method", "POST");
         timerBUpdateRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateRecommendations").tag("method", "POST");
 

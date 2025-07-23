@@ -805,4 +805,8 @@ public class ExperimentDBService {
         else
             return dataSourceMetadataInfoList.get(0);
     }
+
+    public boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception {
+        return experimentDAO.updateExperimentDates(experimentNames, currentTimestamp);
+    }
 }
