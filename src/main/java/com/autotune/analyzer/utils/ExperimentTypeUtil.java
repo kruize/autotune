@@ -58,6 +58,7 @@ public class ExperimentTypeUtil {
     }
 
     public static AnalyzerConstants.ExperimentType getExperimentTypeFromBitMask(long bitMask) {
+        // Should Ideally return NULL but assumes that it's container if nothing set
         if  (bitMask == 0) return AnalyzerConstants.ExperimentType.CONTAINER;
 
         if (AnalyzerConstants.ExperimentBitMask.CONTAINER_BIT.isSet(bitMask)) {
@@ -75,8 +76,8 @@ public class ExperimentTypeUtil {
         if (AnalyzerConstants.ExperimentBitMask.CLUSTER_BIT.isSet(bitMask)) {
             return AnalyzerConstants.ExperimentType.CLUSTER;
         }
-
-        return null;
+        // Should Ideally return NULL but assumes that it's container if nothing set
+        return AnalyzerConstants.ExperimentType.CONTAINER;
     }
 
     public static long setExperimentBit(long currentMask, AnalyzerConstants.ExperimentType type) {
