@@ -1742,20 +1742,33 @@ def validate_metadata_workloads(metadata_json, namespace, workload, container):
     for ds_value in datasources.values():
         clusters = ds_value.get('clusters', {})
         for cl_value in clusters.values():
-            namespaces = cl_value.get('namespaces', {})
-            for ns_value in namespaces.values():
-                # Check if the current namespace matches
-                if ns_value.get('namespace') == namespace:
-                    workloads = ns_value.get('workloads', {})
-                    for wl_value in workloads.values():
-                        # Check if the current workload matches
-                        if wl_value.get('workload_name') == workload:
-                            containers = wl_value.get('containers', {})
-                            for c_value in containers.values():
-                                # If a full match is found, return successfully.
-                                if c_value.get('container_name') == container:
-                                    print(f"Validating workload '{workload}' in metadata json..done")
-                                    return
+            namespaces_dict = cl_value.get('namespaces', {})
+
+            assert len(namespaces_dict) == 1, \
+                f"Validation failed: Expected 1 namespace, but found {len(namespaces_dict)}."
+
+            # Check for the specific namespace key
+            namespace_obj = namespaces_dict.get(namespace)
+            if not namespace_obj:
+                continue
+
+            workloads_dict = namespace_obj.get('workloads', {})
+            assert len(workloads_dict) == 1, \
+                f"Validation failed: Expected 1 workload in '{namespace}', but found {len(workloads_dict)}."
+
+            # Check for the specific workload key
+            workload_obj = workloads_dict.get(workload)
+            if not workload_obj:
+                continue
+            
+            # Check for the specific container key
+            containers_dict = workload_obj.get('containers', {})
+            assert len(containers_dict) == 1, \
+                f"Validation failed: Expected 1 container in '{workload}', but found {len(containers_dict)}."
+
+            if containers_dict.get(container):
+                print(f"Validating workload '{workload}' in metadata json..done")
+                return
 
     # Raise an error if no match was found.
     raise AssertionError(
