@@ -349,6 +349,9 @@ def test_multiple_update_metadata_profile(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_METADATA_PROFILE_SUCCESS_MSG % metadata_profile_name
 
+    response = list_metadata_profiles(name=metadata_profile_name)
+    metadata_profile_json = response.json()
+
     dsmetadata_json_file = "../json_files/import_metadata.json"
     if cluster_type == "openshift":
         import_metadata_list_and_validate(dsmetadata_json_file, verbose="true", validate_workload="true", 
@@ -357,8 +360,30 @@ def test_multiple_update_metadata_profile(cluster_type):
         import_metadata_list_and_validate(dsmetadata_json_file, verbose="true", validate_workload="true", 
                                         namespace="monitoring", workload="kruize", container="kruize")
 
+    json_file = "/tmp/update_metadata_profile.json"
+    input_json_file = "../json_files/update_cluster_metadata_local_monitoring.json"
+    json_data = json.load(open(input_json_file))
+    
+    new_db_workload = "kruize-db-deployment"
+    workload_query = json_data['query_variables'][1]['aggregation_functions'][0]['query']
+    updated_workload_query = workload_query.replace('"kruize"', f'"{new_db_workload}"')
+    json_data['query_variables'][1]['aggregation_functions'][0]['query'] = updated_workload_query
+
+    new_db_container = "kruize-db"
+    container_query = json_data['query_variables'][2]['aggregation_functions'][0]['query']
+    updated_container_query = container_query.replace('"kruize"', f'"{new_db_container}"')
+    json_data['query_variables'][2]['aggregation_functions'][0]['query'] = updated_container_query
+
+    data = json.dumps(json_data, indent=2)
+    print("\n*****************************************")
+    print(data)
+    print("*****************************************\n")
+    with open(json_file, 'w') as file:
+        file.write(data)
+
+
     # Update metadata profile using the specified json
-    response = update_metadata_profile(update_json_file, name=metadata_profile_name)
+    response = update_metadata_profile(json_file, name=metadata_profile_name)
     data = response.json()
 
     assert response.status_code == SUCCESS_STATUS_CODE
@@ -368,10 +393,10 @@ def test_multiple_update_metadata_profile(cluster_type):
     dsmetadata_json_file = "../json_files/import_metadata.json"
     if cluster_type == "openshift":
         import_metadata_list_and_validate(dsmetadata_json_file, verbose="true", validate_workload="true", 
-                                        namespace="openshift-tuning", workload="kruize", container="kruize")
+                                        namespace="openshift-tuning", workload=new_db_workload, container=new_db_container)
     else :
         import_metadata_list_and_validate(dsmetadata_json_file, verbose="true", validate_workload="true", 
-                                        namespace="monitoring", workload="kruize", container="kruize")
+                                        namespace="monitoring", workload=new_db_workload, container=new_db_container)
 
     response = delete_metadata_profile(metadata_profile_name)
     print("delete metadata profile = ", response.status_code)
