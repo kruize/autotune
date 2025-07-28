@@ -1,12 +1,14 @@
 # **Kruize Remote monitoring tests**
 
-Kruize Remote monitoring tests validates the behaviour of [Kruize remote monitoring APIs](/design/MonitoringModeAPI.md) 
-using various positive and negative scenarios. These tests are developed using pytest framework. 
+Kruize Remote monitoring tests validates the behaviour of [Kruize remote monitoring APIs](/design/MonitoringModeAPI.md)
+using various positive and negative scenarios. These tests are developed using pytest framework.
 
 ## Tests description
+
 ### **Create Experiment API tests**
-   
+
 Here are the test scenarios:
+
 - Create a single valid experiment json to the API
 - Create multiple valid experiments using a single json
 - Create multiple valid experiments using different jsons
@@ -34,7 +36,7 @@ Here are the test scenarios:
 
 Here are the test scenarios:
 
-- Update results for a single valid experiment 
+- Update results for a single valid experiment
 - Update multiple results for a single valid experiment
 - Update results for multiple experiments using a single json
 - Update results for multiple experiments using multiple jsons
@@ -46,6 +48,7 @@ Here are the test scenarios:
 
 Namespace Related Test Scenarios:
 Sanity Tests
+
 - Update results for a single valid namespace experiment
 - Update multiple valid results in a single json for a single namespace experiment
 - Update multiple valid results for a namespace experiment (uses a loop)
@@ -54,14 +57,16 @@ Sanity Tests
 - Update results with valid invalid interval duration
 
 Negative Tests
-- Update results for namespaces that are not present during creation of the namespace experiment [Fail]
-- Update results for an invalid namespace experiment or a non-existing namespace experiment.
-- Test with invalid values such as blank, null or an invalid value for various keys in the updateResults json [Check if redundant or not]
 
-
+- Update Results Namespace experiment for invalid tests
+- Update Results Namespace experiment for missing metrics
+- Update results with metric values as 0 and generate recommendations
+- Create a container experiment and upload namespace results for this exp
+- Create a namespace experiment and upload container results for this exp
+- Create a container experiment and upload bulk results with a few of them containing namespace results
+- Create a namespace experiment and upload bulk results with a few of them containing container results
 
 ### **List Recommendation API tests**
-
 
 Here are the test scenarios:
 
@@ -69,48 +74,28 @@ Here are the test scenarios:
 - List recommendations without specifying any parameters
 - List recommendations for a single experiment with multiple results posted in a single json
 - List recommendations for multiple experiments created using multiple jsons and results from multiple jsons
-- List recommendations for multiple experiments after updating results with 
-	- some of the non-mandatory metrics (for example, memoryLimit/memoryRequest etc) missing
-	- with invalid kubernetes object type
+- List recommendations for multiple experiments after updating results with
+  - some of the non-mandatory metrics (for example, memoryLimit/memoryRequest etc) missing
+  - with invalid kubernetes object type
 - List recommendations with parameters by specifying the following parameters:
-	/listRecommendations?experiment_name=<experiment_name>&latest=false
-	/listRecommendations?experiment_name=<experiment_name>&latest=true
-	/listRecommendations?experiment_name=<experiment_name>&monitoring_end_time=<valid_timestamp>
+  /listRecommendations?experiment_name=<experiment_name>&latest=false
+  /listRecommendations?experiment_name=<experiment_name>&latest=true
+  /listRecommendations?experiment_name=<experiment_name>&monitoring_end_time=<valid_timestamp>
 - List recommendations after creating an experiment but without updating results
 - List recommendations with invalid parameter values for experiment_name & monitoring_end_time
-	- Non-existing experiment_name
-	- Non-existing time stamp, incorrect timestamp format
+  - Non-existing experiment_name
+  - Non-existing time stamp, incorrect timestamp format
 - List recommendations after sending 15 days of constant results matching requests and limits
 - List recommendations with valid and invalid notification codes
 - List recommendations with valid and invalid minimum data threshold
-	- Valid contiguous and non-contiguous minimum data points for each term
-	- Invalid minimum data points for each term
+  - Valid contiguous and non-contiguous minimum data points for each term
+  - Invalid minimum data points for each term
 - List recommendations with minimum data threshold exceeding the max duration for each term
-	- with non-contiguous data points exceeding the max duration fixed for each term
+  - with non-contiguous data points exceeding the max duration fixed for each term
 - List recommendations with data available for some terms
-	- for contiguous data: 
-		- no data available
-		- all data available
-		- only short_term data available
-		- only medium_term data available
-		- only long_term data available
-		- short_term and medium_term data available
-		- short_term and long_term data available
-		- medium_term and long_term data available
-	- for non-contiguous data:
-		- similar tests as mentioned above for contiguous
-
-Namespace Related Test Scenarios:
-Sanity Tests
-- List recommendations with valid recommendations for all terms
-- List recommendations without results
-
-Negative Tests
-- _To be updated_
-
+  <<<<<<< HEAD - for contiguous data: - no data available - all data available - only short_term data available - only medium_term data available - only long_term data available - short_term and medium_term data available - short_term and long_term data available - medium_term and long_term data available - for non-contiguous data: - similar tests as mentioned above for contiguous
 
 ### **Update Recommendation API tests**
-
 
 Here are the test scenarios:
 
@@ -126,17 +111,21 @@ Here are the test scenarios:
 
 Namespace Related Test Scenarios:
 Sanity Tests
+
 - Update recommendations with valid short term recommendations. Also, Validate the container array, should be blank.
 
 Negative Tests
+
 - _To be updated_
 
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
-   - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
-   - Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md) 
-   - Runs the above tests using pytest
-  
+
+- Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
+- Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md)
+- Runs the above tests using pytest
+
 ## Prerequisites for running the tests:
+
 - Minikube setup or access to Openshift cluster
 - Tools like kubectl, oc, curl, jq, python
 - Various python modules pytest, json, pytest-html, requests, jinja2
@@ -189,17 +178,21 @@ Remote monitoring tests can also be run without using the test_autotune.sh. To d
 - python3 -m pip install --user -r requirements.txt
 - cd rest_apis
 - To run all sanity tests
+
 ```
 	pytest -m sanity --html=<dir>/report.html --cluster_type <minikube|openshift>
 ```
+
 - To run only sanity tests for listRecommendations API --cluster_type <minikube|openshift>
+
 ```
 	pytest -m sanity --html=<dir>/report.html test_list_recommendations.py
 ```
+
 - To run only a specific test within listRecommendations API
+
 ```
 	pytest -s test_list_recommendations.py::test_list_recommendations_single_exp --cluster_type <minikube|openshift>
 ```
 
 Note: You can check the report.html for the results as it provides better readability
-

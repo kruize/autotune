@@ -22,7 +22,7 @@ from helpers.utils import *
 from jinja2 import Environment, FileSystemLoader
 
 csvfile = "/tmp/update_results_test_data.csv"
-csvfilen = "/tmp/update_results_namespace_invalid_test_data.csv"
+# csvfilen = "/tmp/update_results_namespace_test_data.csv"
 
 
 # Interval end time that is acceptable is measurement_duration + or - 30s
@@ -160,7 +160,7 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
 @pytest.mark.negative
 @pytest.mark.parametrize(
     "test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, namespace, namespaceCpuRequest_name, namespaceCpuRequest_sum, namespaceCpuRequest_format, namespaceCpuLimit_name, namespaceCpuLimit_sum, namespaceCpuLimit_format, namespaceCpuUsage_name, namespaceCpuUsage_min, namespaceCpuUsage_max, namespaceCpuUsage_avg, namespaceCpuUsage_format, namespaceCpuThrottle_name, namespaceCpuThrottle_min, namespaceCpuThrottle_max, namespaceCpuThrottle_avg, namespaceCpuThrottle_format, namespaceMemoryRequest_name, namespaceMemoryRequest_sum, namespaceMemoryRequest_format, namespaceMemoryLimit_name, namespaceMemoryLimit_sum, namespaceMemoryLimit_format, namespaceMemoryUsage_name, namespaceMemoryUsage_min, namespaceMemoryUsage_max, namespaceMemoryUsage_avg, namespaceMemoryUsage_format, namespaceMemoryRSS_name, namespaceMemoryRSS_min, namespaceMemoryRSS_max, namespaceMemoryRSS_avg, namespaceMemoryRSS_format, namespaceTotalPods_name, namespaceTotalPods_sum, namespaceRunningPods_name, namespaceRunningPods_sum",
-    generate_test_data(csvfilen, update_results_namespace_invalid_test_data, "update_results_namespace_invalid"))
+    generate_test_data(csvfile, update_results_test_data, "update_results"))
 def test_update_results_invalid_namespace_tests(
     test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, namespace,
     namespaceCpuRequest_name, namespaceCpuRequest_sum, namespaceCpuRequest_format,
@@ -237,19 +237,21 @@ def test_update_results_invalid_namespace_tests(
         namespaceRunningPods_name=namespaceRunningPods_name,
         namespaceRunningPods_sum=namespaceRunningPods_sum
     )
-    
     tmp_json_file = f"/tmp/update_results_namespace_{test_name}.json"
     with open(tmp_json_file, mode="w", encoding="utf-8") as message:
         message.write(content)
 
     response = update_results(tmp_json_file)
     data = response.json()
-    print(f"Update Results Response: {data.get('message')}")
+    # print(data['message'])
 
-    assert response.status_code == int(expected_status_code), f"Expected status code {expected_status_code} but got {response.status_code}"
+    assert response.status_code == int(expected_status_code)
+    actual_message == data['message']
+    assert expected_error_message in actual_message, f"Expected message '{expected_error_message}' but got '{actual_message}'"
+    
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
 
-    delete_experiment(create_exp_json_file)
-    print(f"Experiment deleted. Status code: {response.status_code}")
 
 @pytest.mark.negative
 @pytest.mark.parametrize("test_name, result_json_file, expected_message, error_message", missing_metrics)
@@ -337,6 +339,7 @@ def test_update_results_with_missing_metrics_section_namespace(test_name, result
     
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+    
 
 @pytest.mark.negative
 def test_upload_namespace_results_for_container_experiment(cluster_type):
@@ -363,7 +366,7 @@ def test_upload_namespace_results_for_container_experiment(cluster_type):
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert "Unsupported object type" in data['data'][0]['errors'][0]['message']
+    assert UNSUPPORTED_OBJECT_TYPE in data['data'][0]['errors'][0]['message']
     
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -393,7 +396,7 @@ def test_upload_container_results_for_namespace_experiment(cluster_type):
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert "container data not supported" in data['data'][0]['errors'][0]['message']
+    assert CONTAINER_DATA_NOT_SUPPORTED in data['data'][0]['errors'][0]['message']
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -435,7 +438,7 @@ def test_upload_bulk_namespace_results_for_container_experiment(cluster_type):
         if error_found:
             break
     
-    assert error_found, "Expected error for namespace result not found"
+    assert error_found, UPDATE_RESULTS_NAMESPACE_NOT_FOUND
     
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -477,7 +480,7 @@ def test_upload_bulk_container_results_for_namespace_experiment(cluster_type):
         if error_found:
             break
             
-    assert error_found, "Expected error for container result not found"
+    assert error_found, UPDATE_RESULTS_CONTAINER_NOT_FOUND
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -492,7 +495,6 @@ def test_update_results_with_zero_metric_values_fails(cluster_type):
 
     form_kruize_url(cluster_type)
 
-    # Setup: Create a valid namespace experiment
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
@@ -501,7 +503,6 @@ def test_update_results_with_zero_metric_values_fails(cluster_type):
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
 
-    # Prepare the update_results payload with all zero values using the template
     environment = Environment(loader=FileSystemLoader("../json_files/"))
     template = environment.get_template("update_results_template_namespace.json")
 
@@ -528,18 +529,14 @@ def test_update_results_with_zero_metric_values_fails(cluster_type):
     with open(tmp_json_file, mode="w", encoding="utf-8") as message:
         message.write(content)
 
-    # Execute: Update results with zero values
     response = update_results(tmp_json_file)
     data = response.json()
     print(f"Update Results Response: {data.get('message')}")
     
-    # Assert: Check for the expected error
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    # This assumes a specific error message for this failure condition.
     assert "Cannot process results with all zero metric values" in data['data'][0]['errors'][0]['message']
 
-    # Teardown: Delete the experiment
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
