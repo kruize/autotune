@@ -814,19 +814,19 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
             session.beginTransaction();
             session.createNativeQuery(UPDATE_EXPERIMENTS_DATE)
-                    .setParameter("updatedDate", currentTimestamp)
+                    .setParameter("updateDate", currentTimestamp)
                     .setParameterList("experimentNames", experimentNames)
                     .executeUpdate();
 
             session.getTransaction().commit();
             statusValue = "success";
         } catch (Exception e) {
-            LOGGER.error("Failed to update updated_date for experiments: {}", e.getMessage());
+            LOGGER.error("Failed to update update_date for experiments: {}", e.getMessage());
             throw new Exception(e.getMessage());
         } finally {
             if (null != timerUpdateExperiment) {
                 MetricsConfig.timerUpdateExpDate = MetricsConfig.timerBUpdateExpDate.tag("status", statusValue).register(MetricsConfig.meterRegistry());
-                timerUpdateExperiment.stop(MetricsConfig.timerUpdateResults);
+                timerUpdateExperiment.stop(MetricsConfig.timerUpdateExpDate);
             }
         }
         return true;

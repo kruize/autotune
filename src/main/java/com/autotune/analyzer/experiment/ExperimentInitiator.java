@@ -39,6 +39,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -212,7 +213,7 @@ public class ExperimentInitiator {
                 .collect(Collectors.toSet());
 
         if (!successfulExperimentNames.isEmpty()) {
-            Timestamp currentTimestamp = Timestamp.from(Instant.now());
+            Timestamp currentTimestamp = Timestamp.from(Instant.now().truncatedTo(ChronoUnit.MILLIS));
             boolean isUpdated = new ExperimentDBService().updateExperimentDates(successfulExperimentNames, currentTimestamp);
             if (!isUpdated) {
                 LOGGER.error("Failed to update the date in the experiments table");

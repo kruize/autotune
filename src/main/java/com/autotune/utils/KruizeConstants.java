@@ -305,7 +305,7 @@ public class KruizeConstants {
         public static final String GPU_PROFILE = "GPU_I_PROFILE";
 
         public static final String CREATION_DATE = "creation_date";
-        public static final String UPDATED_DATE = "updated_date";
+        public static final String UPDATE_DATE = "update_date";
 
         // Config changes JSON Keys
         public static final String MODEL_SETTINGS = "model_settings";
