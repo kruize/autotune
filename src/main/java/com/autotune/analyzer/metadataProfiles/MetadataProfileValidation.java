@@ -379,8 +379,11 @@ public class MetadataProfileValidation {
 
         try {
             String metricIdentifier = MetadataProfileUtil.getMetricIdentifier(metricName);
-            String filterString = MetadataProfileUtil.formatMetricFilterString(metricIdentifier);
-            String updatedQuery = MetadataProfileUtil.appendFiltersToQuery(metricQuery, filterString);
+            String updatedQuery = metricQuery;
+            if (!metricQuery.contains(metricIdentifier + "=")) {
+                String filterString = MetadataProfileUtil.formatMetricFilterString(metricIdentifier);
+                updatedQuery = MetadataProfileUtil.appendFiltersToQuery(metricQuery, filterString);
+            }
 
             JsonArray resultArray = op.getResultArrayForQuery(dataSourceInfo, updatedQuery);
 
