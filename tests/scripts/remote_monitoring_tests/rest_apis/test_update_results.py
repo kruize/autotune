@@ -22,7 +22,7 @@ from helpers.utils import *
 from jinja2 import Environment, FileSystemLoader
 
 csvfile = "/tmp/update_results_test_data.csv"
-# csvfilen = "/tmp/update_results_namespace_test_data.csv"
+csvfilen = "/tmp/update_results_namespace_test_data.csv"
 
 
 # Interval end time that is acceptable is measurement_duration + or - 30s
@@ -160,7 +160,7 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
 @pytest.mark.negative
 @pytest.mark.parametrize(
     "test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, namespace, namespaceCpuRequest_name, namespaceCpuRequest_sum, namespaceCpuRequest_format, namespaceCpuLimit_name, namespaceCpuLimit_sum, namespaceCpuLimit_format, namespaceCpuUsage_name, namespaceCpuUsage_min, namespaceCpuUsage_max, namespaceCpuUsage_avg, namespaceCpuUsage_format, namespaceCpuThrottle_name, namespaceCpuThrottle_min, namespaceCpuThrottle_max, namespaceCpuThrottle_avg, namespaceCpuThrottle_format, namespaceMemoryRequest_name, namespaceMemoryRequest_sum, namespaceMemoryRequest_format, namespaceMemoryLimit_name, namespaceMemoryLimit_sum, namespaceMemoryLimit_format, namespaceMemoryUsage_name, namespaceMemoryUsage_min, namespaceMemoryUsage_max, namespaceMemoryUsage_avg, namespaceMemoryUsage_format, namespaceMemoryRSS_name, namespaceMemoryRSS_min, namespaceMemoryRSS_max, namespaceMemoryRSS_avg, namespaceMemoryRSS_format, namespaceTotalPods_name, namespaceTotalPods_sum, namespaceRunningPods_name, namespaceRunningPods_sum",
-    generate_test_data(csvfile, update_results_test_data, "update_results"))
+    generate_test_data(csvfilen, update_results_namespace_test_data, "update_results"))
 def test_update_results_invalid_namespace_tests(
     test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, namespace,
     namespaceCpuRequest_name, namespaceCpuRequest_sum, namespaceCpuRequest_format,

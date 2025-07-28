@@ -259,6 +259,50 @@ update_results_test_data = {
     "memoryRSS_format": "MiB"
 }
 
+update_results_namespace_test_data = {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:40:43.511Z",
+    "namespace": "default",
+    "namespaceCpuRequest_name": "namespaceCpuRequest", 
+    "namespaceCpuRequest_sum": 4.4, 
+    "namespaceCpuRequest_format": "cores",
+    "namespaceCpuLimit_name": "namespaceCpuLimit", 
+    "namespaceCpuLimit_sum": 5.4, 
+    "namespaceCpuLimit_format": "cores",
+    "namespaceCpuUsage_name": "namespaceCpuUsage", 
+    "namespaceCpuUsage_min": 0.5, 
+    "namespaceCpuUsage_max": 2.4, 
+    "namespaceCpuUsage_avg": 1.5, 
+    "namespaceCpuUsage_format": "cores",
+    "namespaceCpuThrottle_name": "namespaceCpuThrottle", 
+    "namespaceCpuThrottle_min": 0.045, 
+    "namespaceCpuThrottle_max": 1.09, 
+    "namespaceCpuThrottle_avg": 0.09, 
+    "namespaceCpuThrottle_format": "cores",
+    "namespaceMemoryRequest_name": "namespaceMemoryRequest", 
+    "namespaceMemoryRequest_sum": 250.85, 
+    "namespaceMemoryRequest_format": "MiB",
+    "namespaceMemoryLimit_name": "namespaceMemoryLimit", 
+    "namespaceMemoryLimit_sum": 500, 
+    "namespaceMemoryLimit_format": "MiB",
+    "namespaceMemoryUsage_name": "namespaceMemoryUsage", 
+    "namespaceMemoryUsage_min": 21.5, 
+    "namespaceMemoryUsage_max": 198.4, 
+    "namespaceMemoryUsage_avg": 41.5, 
+    "namespaceMemoryUsage_format": "MiB",
+    "namespaceMemoryRSS_name": "namespaceMemoryRSS", 
+    "namespaceMemoryRSS_min": 26.5, 
+    "namespaceMemoryRSS_max": 125.54, 
+    "namespaceMemoryRSS_avg": 46.5, 
+    "namespaceMemoryRSS_format": "MiB",
+    "namespaceTotalPods_name": "namespaceTotalPods", 
+    "namespaceTotalPods_sum": 10,
+    "namespaceRunningPods_name": "namespaceRunningPods", 
+    "namespaceRunningPods_sum": 8
+}
+
 # version, datasource_name
 import_metadata_test_data = {
     "version": "v1.0",
