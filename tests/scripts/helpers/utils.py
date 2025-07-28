@@ -708,7 +708,6 @@ def validate_container(update_results_container, update_results_json, list_reco_
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
 
-<<<<<<< HEAD
 
 #TODO: Extract out the common part from this method which matches with container one to remove redundancy
 def validate_namespace(update_results_namespace, update_results_json, list_reco_namespace, expected_duration_in_hours,
@@ -809,11 +808,7 @@ def validate_namespace(update_results_namespace, update_results_json, list_reco_
         result = check_if_recommendations_are_present(list_reco_namespace["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
 
-
-def validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name):
-=======
 def validate_local_monitoring_container(create_exp_recommendation_settings, create_exp_container, list_reco_container, expected_duration_in_hours, test_name):
->>>>>>> 4bca0493 (makes duration terms dynamic)
     # Validate container image name and container name
     if create_exp_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == create_exp_container["container_image_name"], \
