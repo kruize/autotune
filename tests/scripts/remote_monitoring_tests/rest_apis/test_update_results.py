@@ -300,7 +300,7 @@ def test_update_results_with_missing_metrics_section(test_name, result_json_file
 
 
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, result_json_file, expected_message, error_message", missing_metrics_namespace)
+@pytest.mark.parametrize("test_name, result_json_file, expected_message, error_message", missing_metrics)
 def test_update_results_with_missing_metrics_section_namespace(test_name, result_json_file, expected_message, error_message, cluster_type):
     """
     Test Description: This test validates update results for a valid namespace experiment
