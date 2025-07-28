@@ -300,7 +300,7 @@ Returns list of all the metadata profile created with all the metadata queries
 ```
 </details>
 
-## Delete Metadata Profile API
+### Delete Metadata Profile API
 
 This is quick guide instructions to delete metadata profile created as follows.
 
@@ -327,102 +327,6 @@ Deletes the specified metadata profile name, provided metadata profile already i
 ```json
 {
   "message": "Metadata profile: cluster-metadata-local-monitoring deleted successfully. View Metadata Profiles at /listMetadataProfiles",
-  "httpcode": 201,
-  "documentationLink": "",
-  "status": "SUCCESS"
-}
-```
-
-</details>
-
-<br>
-
-## Update Metadata Profile API
-
-This is quick guide instructions to update metadata profile created as follows.
-
-**Request Parameters**
-
-| Parameter | Type   | Required | Description                      |
-|-----------|--------|----------|----------------------------------|
-| name      | string | required | The name of the metadata profile |
-
-
-**Request with name query parameter**
-
-`PUT /updateMetadataProfile`
-
-`curl -H 'Accept: application/json' -X PUT --data 'copy paste below JSON' http://<URL>:<PORT>/updateMetadataProfile?name=cluster-metadata-local-monitoring`
-
-<details>
-
-<summary><b>Request</b></summary>
-
-Updates the specified metadata profile name, provided metadata profile already is created
-
-### Example Request
-
-```json
-{
-  "apiVersion": "recommender.com/v1",
-  "kind": "KruizeMetadataProfile",
-  "metadata": {
-    "name": "cluster-metadata-local-monitoring"
-  },
-  "profile_version": 1,
-  "k8s_type": "openshift",
-  "datasource": "prometheus",
-  "query_variables": [
-    {
-      "name": "namespacesForAdditionalLabel",
-      "datasource": "prometheus",
-      "value_type": "double",
-      "kubernetes_object": "container",
-      "aggregation_functions": [
-        {
-          "function": "sum",
-          "query": "sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=\"\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]))"
-        }
-      ]
-    },
-    {
-      "name": "workloadsForAdditionalLabel",
-      "datasource": "prometheus",
-      "value_type": "double",
-      "kubernetes_object": "container",
-      "aggregation_functions": [
-        {
-          "function": "sum",
-          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]))"
-        }
-      ]
-    },
-    {
-      "name": "containerForAdditionalLabel",
-      "datasource": "prometheus",
-      "value_type": "double",
-      "kubernetes_object": "container",
-      "aggregation_functions": [
-        {
-          "function": "sum",
-          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]))"
-        }
-      ]
-    }
-  ]
-}
-```
-
-</details>
-
-<details>
-<summary><b>Response</b></summary>
-
-### Example Response
-
-```json
-{
-  "message": "Metadata profile: cluster-metadata-local-monitoring updated successfully. View Metadata Profiles at /listMetadataProfiles",
   "httpcode": 201,
   "documentationLink": "",
   "status": "SUCCESS"
