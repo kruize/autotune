@@ -189,6 +189,13 @@ public class ExperimentValidation {
                             }
                         }
                     }
+
+                    // validate request_id, if present
+                    if (kruizeObject.getRequestId() != null) {
+                        errorMsg = ExperimentInitiator.validateRequestId(kruizeObject.getRequestId());
+                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                    }
+
                 } else {
                     errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_EXPERIMENT)).concat(expName);
                     validationOutputData.setErrorCode(HttpServletResponse.SC_CONFLICT);

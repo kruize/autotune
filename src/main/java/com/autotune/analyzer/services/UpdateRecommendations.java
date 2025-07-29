@@ -92,6 +92,7 @@ public class UpdateRecommendations extends HttpServlet {
         // Get the values from the request parameters
         String experiment_name = request.getParameter(KruizeConstants.JSONKeys.EXPERIMENT_NAME);
         String intervalEndTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_END_TIME);
+        String requestId = request.getParameter(KruizeConstants.JSONKeys.REQUEST_ID); // this gets logged to uniquely identify each request
 
         String intervalStartTimeStr = request.getParameter(KruizeConstants.JSONKeys.INTERVAL_START_TIME);
         Timestamp interval_end_time;
@@ -100,7 +101,7 @@ public class UpdateRecommendations extends HttpServlet {
             LOGGER.info(String.format(KruizeConstants.APIMessages.UPDATE_RECOMMENDATIONS_INPUT_PARAMS, experiment_name, intervalStartTimeStr, intervalEndTimeStr));
         try {
             // create recommendation engine object
-            RecommendationEngine recommendationEngine = new RecommendationEngine(experiment_name, intervalEndTimeStr, intervalStartTimeStr);
+            RecommendationEngine recommendationEngine = new RecommendationEngine(experiment_name, intervalEndTimeStr, intervalStartTimeStr, requestId);
             // validate and create KruizeObject if successful
             String validationMessage = recommendationEngine.validate();
             if (validationMessage.isEmpty()) {
@@ -134,6 +135,10 @@ public class UpdateRecommendations extends HttpServlet {
             if (null != timerBUpdateRecommendations) {
                 MetricsConfig.timerUpdateRecomendations = MetricsConfig.timerBUpdateRecommendations.tag(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.STATUS, statusValue).register(MetricsConfig.meterRegistry());
                 timerBUpdateRecommendations.stop(MetricsConfig.timerUpdateRecomendations);
+            }
+            // log request_id if available
+            if (requestId != null) {
+                LOGGER.info("request_id : {}", requestId);
             }
         }
     }

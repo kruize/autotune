@@ -270,6 +270,7 @@ public class KruizeConstants {
         public static final String CONTAINER_IMAGE_NAME = "container_image_name";
         public static final String RECOMMENDATION_SETTINGS = "recommendation_settings";
         public static final String INTERVAL_START_TIME = "interval_start_time";
+        public static final String REQUEST_ID = "request_id";
 
         public static final String CALCULATED_START_TIME = "calculated_start_time";
         public static final String INTERVAL_END_TIME = "interval_end_time";
@@ -646,6 +647,7 @@ public class KruizeConstants {
         public static class APIErrorMsgs {
             private APIErrorMsgs() {
             }
+            public static final String INVALID_REQUEST_ID = "Invalid requestId format. Should be a "+KRUIZE_CONFIG_DEFAULT_VALUE.REQUEST_ID_LENGTH+"-character alphanumeric";
 
             public static class ListDeploymentsInNamespace {
                 public static final String INVALID_NAMESPACE = "Given Namespace is invalid";
@@ -840,6 +842,7 @@ public class KruizeConstants {
 
     public static final class KRUIZE_CONFIG_DEFAULT_VALUE {
         public static final int DELETE_PARTITION_THRESHOLD_IN_DAYS = 16;
+        public static final int REQUEST_ID_LENGTH = 32;
     }
 
     public static final class KRUIZE_RECOMMENDATION_METRICS {

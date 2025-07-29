@@ -26,6 +26,7 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -157,6 +158,18 @@ public class ExperimentInitiator {
                     failedUpdateResultsAPIObjects.add(object);
                     continue;
                 }
+                // log and validate requestId
+                String requestId = object.getRequest_id();
+                if (requestId != null) {
+                    LOGGER.info("request_id : {}", requestId);
+                    errorMsg = validateRequestId(requestId);
+                    if (!errorMsg.isEmpty()) {
+                        errorReasons.add(errorMsg);
+                        object.setErrors(getErrorMap(errorReasons));
+                        failedUpdateResultsAPIObjects.add(object);
+                        continue;
+                    }
+                }
                 object.setKruizeObject(mainKruizeExperimentMAP.get(object.getExperimentName()));
                 Set<ConstraintViolation<UpdateResultsAPIObject>> violations = new HashSet<>();
                 try {
@@ -239,6 +252,15 @@ public class ExperimentInitiator {
 
     public List<UpdateResultsAPIObject> getFailedUpdateResultsAPIObjects() {
         return failedUpdateResultsAPIObjects;
+    }
+
+    public static String validateRequestId(String requestId) {
+        String errorMessage = "";
+        String pattern = "^[a-zA-Z0-9]{" + KruizeConstants.KRUIZE_CONFIG_DEFAULT_VALUE.REQUEST_ID_LENGTH + "}$";
+        if (!requestId.matches(pattern)) {
+            errorMessage = KruizeConstants.ErrorMsgs.APIErrorMsgs.INVALID_REQUEST_ID;
+        }
+        return errorMessage;
     }
 
 

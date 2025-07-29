@@ -126,6 +126,10 @@ public class CreateExperiment extends HttpServlet {
                     KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
                     if (null != kruizeObject)
                         kruizeExpList.add(kruizeObject);
+                    // log request_id if available
+                    if (createExperimentAPIObject.getRequest_id() != null) {
+                        LOGGER.info("request_id : {}", createExperimentAPIObject.getRequest_id());
+                    }
                 }
                 new ExperimentInitiator().validateAndAddNewExperiments(mKruizeExperimentMap, kruizeExpList);
                 //TODO: UX needs to be modified - Handle response for the multiple objects
