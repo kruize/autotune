@@ -16,6 +16,7 @@
 package com.autotune.database.table;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.database.helper.GenerateExperimentID;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -64,8 +65,7 @@ public class KruizeExperimentEntry {
     private JsonNode extended_data;
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode meta_data;
-    @Enumerated(EnumType.STRING)
-    private AnalyzerConstants.ExperimentType experiment_type;
+    private long experiment_type;
 
 //    TODO: update KruizeDSMetadataEntry
 
@@ -82,6 +82,7 @@ public class KruizeExperimentEntry {
         this.datasource = kruizeLMExperimentEntry.getDatasource();
         this.extended_data = kruizeLMExperimentEntry.getExtended_data();
         this.meta_data = kruizeLMExperimentEntry.getMeta_data();
+        this.experiment_type = ExperimentTypeUtil.getBitMaskForExperimentType(kruizeLMExperimentEntry.getExperiment_type());
     }
 
     public KruizeExperimentEntry() {
@@ -176,11 +177,11 @@ public class KruizeExperimentEntry {
         this.datasource = datasource;
     }
 
-    public AnalyzerConstants.ExperimentType getExperiment_type() {
+    public long getExperiment_type() {
         return experiment_type;
     }
 
-    public void setExperiment_type(AnalyzerConstants.ExperimentType experiment_type) {
+    public void setExperiment_type(long experiment_type) {
         this.experiment_type = experiment_type;
     }
 
