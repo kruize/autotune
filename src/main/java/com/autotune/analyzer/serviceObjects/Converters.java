@@ -9,6 +9,7 @@ import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.*;
 import com.autotune.common.data.result.ContainerData;
@@ -79,7 +80,7 @@ public class Converters {
                 kruizeObject.setMode(createExperimentAPIObject.getMode());
                 kruizeObject.setPerformanceProfile(createExperimentAPIObject.getPerformanceProfile());
                 kruizeObject.setDataSource(createExperimentAPIObject.getDatasource());
-                kruizeObject.setExperimentType(createExperimentAPIObject.getExperimentType());
+                kruizeObject.setExperimentType(ExperimentTypeUtil.getExperimentType(createExperimentAPIObject.getExperimentType()));
                 kruizeObject.setSloInfo(createExperimentAPIObject.getSloInfo());
                 kruizeObject.setTrial_settings(createExperimentAPIObject.getTrialSettings());
                 RecommendationSettings recommendationSettings = new RecommendationSettings();
@@ -158,7 +159,9 @@ public class Converters {
                 listRecommendationsAPIObject.setApiVersion(AnalyzerConstants.VersionConstants.APIVersionConstants.CURRENT_LIST_RECOMMENDATIONS_VERSION);
                 listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                 listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
-                listRecommendationsAPIObject.setExperimentType(kruizeObject.getExperimentType());
+                listRecommendationsAPIObject.setExperimentType(
+                        ExperimentTypeUtil.getExperimentTypeFromBitMask(kruizeObject.getExperimentType())
+                );
                 List<KubernetesAPIObject> kubernetesAPIObjects = new ArrayList<>();
                 KubernetesAPIObject kubernetesAPIObject;
 

@@ -87,7 +87,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             String kubeObjNameSpaceInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getNamespace();
             String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
 
-            if (kruizeObject.getExperimentType().equals(AnalyzerConstants.ExperimentType.CONTAINER)) {
+            if (AnalyzerConstants.ExperimentBitMask.CONTAINER_BIT.isSet(kruizeObject.getExperimentType())) {
                 if (kubeObjNameSpaceInKruizeObject != null && !kubeObjNameSpaceInKruizeObject.equals(kubeObjNameSpaceInResultsData)) {
                     kubeObjsMisMatch = true;
                     errorMsg = errorMsg.concat(

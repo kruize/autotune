@@ -17,6 +17,7 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
+import com.autotune.analyzer.adapters.KruizeObjectAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
@@ -196,7 +197,7 @@ public class ListExperiments extends HttpServlet {
                             }
                             if (!error) {
                                 // create Gson Object
-                                Gson gsonObj = createGsonObject();
+                                Gson gsonObj = createGsonObject(rmTable);
 
                                 // Modify the JSON response here based on query params.
                                 gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName, rmTable);
@@ -324,12 +325,41 @@ public class ListExperiments extends HttpServlet {
         }
     }
 
-    private Gson createGsonObject() {
+    private Gson createGsonObject(boolean rmtable) {
+        if (!rmtable) {
+            return new GsonBuilder()
+                    .disableHtmlEscaping()
+                    .setPrettyPrinting()
+                    .enableComplexMapKeySerialization()
+                    .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                    .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
+                    .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
+                    .setExclusionStrategies(new ExclusionStrategy() {
+                        @Override
+                        public boolean shouldSkipField(FieldAttributes f) {
+                            return f.getDeclaringClass() == Metric.class && (
+                                    f.getName().equals("trialSummaryResult")
+                                            || f.getName().equals("cycleDataMap")
+                            ) ||
+                                    f.getDeclaringClass() == ContainerData.class && (
+                                            f.getName().equalsIgnoreCase("metrics")
+                                    );
+                        }
+
+                        @Override
+                        public boolean shouldSkipClass(Class<?> aClass) {
+                            return false;
+                        }
+                    })
+                    .create();
+        }
+
         return new GsonBuilder()
                 .disableHtmlEscaping()
                 .setPrettyPrinting()
                 .enableComplexMapKeySerialization()
                 .registerTypeAdapter(Date.class, new GsonUTCDateAdapter())
+                .registerTypeAdapter(KruizeObject.class, new KruizeObjectAdapter())
                 .registerTypeAdapter(AnalyzerConstants.RecommendationItem.class, new RecommendationItemAdapter())
                 .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                 .setExclusionStrategies(new ExclusionStrategy() {
@@ -350,6 +380,7 @@ public class ListExperiments extends HttpServlet {
                     }
                 })
                 .create();
+
     }
 
     private void checkPercentileInfo(Map<String, KruizeObject> mainKruizeExperimentMap) {
