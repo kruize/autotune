@@ -735,7 +735,13 @@ def test_create_exp_exptype_dates_columns(cluster_type):
         if response.status_code == SUCCESS_200_STATUS_CODE:
             list_exp_after = response.json()
             new_update_date = list_exp_after[0]["update_date"]
-            assert new_update_date != old_update_date, f"update_date did not change: {new_update_date} == {old_update_date}"
+            # Parse into datetime objects
+            old_update_date = datetime.strptime(old_update_date, "%Y-%m-%dT%H:%M:%S.%fZ")
+            new_update_date = datetime.strptime(new_update_date, "%Y-%m-%dT%H:%M:%S.%fZ")
+            # Assert that the new date is greater
+            assert new_update_date > old_update_date, (
+                f"update_date not updated correctly: {new_update_date} <= {old_update_date}"
+            )
         else:
             print(f"listExperiments failed in the second call!")
             sys.exit(1)
