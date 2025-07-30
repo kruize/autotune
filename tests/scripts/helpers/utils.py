@@ -26,6 +26,10 @@ from datetime import datetime, timedelta
 from kubernetes import client, config
 from pathlib import Path
 from helpers.kruize import get_bulk_job_status
+from helpers.import_metadata_json_validate import *
+from helpers.list_metadata_json_validate import *
+from helpers.list_metadata_json_schema import *
+from helpers.list_metadata_json_verbose_true_schema import *
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
@@ -83,6 +87,15 @@ INVALID_LIST_METADATA_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are in
 LIST_METADATA_PROFILES_INVALID_NAME = "Given metadata profile name - %s either does not exist or is not valid"
 CREATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
 CREATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
+UPDATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s updated successfully. View Metadata Profiles at /listMetadataProfiles"
+UPDATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "JSONObject[\"%s\"] not found."
+UPDATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Missing mandatory parameters: [%s] "
+INVALID_NAME_PARAMETER_METADATA_PROFILE = "Given metadata profile name - %s either does not exist or is not valid"
+MISMATCH_IN_METADATA_PROFILE_NAMES = "MetadataProfile name in URL: %s, does not match name in request body: %s"
+INVALID_QUERY_PARAMETER_UPDATE_METADATA_PROFILE = "The query param(s) - [%s] is/are invalid"
+MISSING_METADATA_PROFILE_NAME_PARAMETER = "Missing metadata profile 'name' parameter"
+DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully. View Metadata Profiles at /listMetadataProfiles"
+IMPORT_METADATA_INVALID_METADATA_PROFILE_NAME = "MetadataProfile - %s either does not exist or is not valid"
 
 
 # Kruize Recommendations Notification codes
@@ -1785,7 +1798,6 @@ def delete_and_create_metadata_profile():
     response = create_metadata_profile(metadata_profile_json_file)
 
     data = response.json()
-    print(data['message'])
 
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
@@ -1811,3 +1823,85 @@ def delete_and_create_metric_profile():
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
+
+
+def import_metadata_list_and_validate(input_json_file, verbose=None, validate_workload=None, namespace=None, workload=None, container=None):
+
+    response = delete_metadata(input_json_file)
+    print("delete metadata = ", response.status_code)
+
+    # Import metadata using the specified json
+    response = import_metadata(input_json_file)
+    metadata_json = response.json()
+
+    # Validate the json against the json schema
+    errorMsg = validate_import_metadata_json(metadata_json, import_metadata_json_schema)
+    assert errorMsg == ""
+
+    json_data = json.load(open(input_json_file))
+    datasource = json_data['datasource_name']
+
+    if verbose is None:
+        verbose = "false"
+
+    response = list_metadata(datasource, verbose=verbose)
+
+    list_metadata_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    if verbose == "false":
+        errorMsg = validate_list_metadata_json(list_metadata_json, list_metadata_json_schema)
+    else :
+        errorMsg = validate_list_metadata_json(list_metadata_json, list_metadata_json_verbose_true_schema)
+    assert errorMsg == ""
+
+    # Validates if the specified namespace, workload and container are present in the metadata json
+    if validate_workload is not None:
+        assert namespace is not None, "namespace must be provided when validate_workload is True."
+        assert workload is not None, "workload must be provided when validate_workload is True."
+        assert container is not None, "container must be provided when validate_workload is True."
+        validate_metadata_workloads(list_metadata_json, namespace, workload, container)
+
+
+# Validates the metadata json if a container exists within the specified namespace and workload.
+def validate_metadata_workloads(metadata_json, namespace, workload, container):
+    print(f"\nValidating workload '{workload}' in metadata json")
+
+    datasources = metadata_json.get('datasources', {})
+    for ds_value in datasources.values():
+        clusters = ds_value.get('clusters', {})
+        for cl_value in clusters.values():
+            namespaces_dict = cl_value.get('namespaces', {})
+
+            assert len(namespaces_dict) == 1, \
+                f"Validation failed: Expected 1 namespace, but found {len(namespaces_dict)}."
+
+            # Check for the specific namespace key
+            namespace_obj = namespaces_dict.get(namespace)
+            if not namespace_obj:
+                continue
+
+            workloads_dict = namespace_obj.get('workloads', {})
+            assert len(workloads_dict) == 1, \
+                f"Validation failed: Expected 1 workload in '{namespace}', but found {len(workloads_dict)}."
+
+            # Check for the specific workload key
+            workload_obj = workloads_dict.get(workload)
+            if not workload_obj:
+                continue
+            
+            # Check for the specific container key
+            containers_dict = workload_obj.get('containers', {})
+            assert len(containers_dict) == 1, \
+                f"Validation failed: Expected 1 container in '{workload}', but found {len(containers_dict)}."
+
+            if containers_dict.get(container):
+                print(f"Validating workload '{workload}' in metadata json..done")
+                return
+
+    # Raise an error if no match was found.
+    raise AssertionError(
+        f"Validation failed: No entry found for namespace='{namespace}', "
+        f"workload='{workload}', and container='{container}'."
+    )

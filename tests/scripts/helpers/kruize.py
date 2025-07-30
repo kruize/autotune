@@ -553,13 +553,16 @@ def create_metadata_profile(metadata_profile_json_file):
 
 # Description: This function deletes the metadata profile
 # Input Parameters: metadata profile input json
-def delete_metadata_profile(metadata_profile_name):
+def delete_metadata_profile(metadata_profile_name=None):
     print("\nDeleting the metadata profile...")
     url = URL + "/deleteMetadataProfile"
 
-    query_string = f"name={metadata_profile_name}"
+    query_string = None
 
-    if query_string:
+    if metadata_profile_name is not None:
+        query_string = f"name={metadata_profile_name}"
+
+    if query_string is not None:
         url += "?" + query_string
     print("URL = ", url)
 
@@ -597,4 +600,26 @@ def list_metadata_profiles(name=None, verbose=None, logging=True):
         print("\n************************************************************")
         print(response.text)
         print("\n************************************************************")
+    return response
+
+# Description: This function updates a metadata profile using the Kruize updateMetadataProfile API
+# Input Parameters: name and metadata profile json
+def update_metadata_profile(metadata_profile_json_file, name=None, **kwargs):
+    json_file = open(metadata_profile_json_file, "r")
+    metric_profile_json = json.loads(json_file.read())
+
+    parameters = {}
+
+    if name is not None:
+        parameters['name'] = name
+
+    parameters.update(kwargs)
+
+    print("\nUpdating metadata profile...")
+    url = URL + "/updateMetadataProfile"
+    print("URL = ", url)
+
+    response = requests.put(url, params=parameters, json=metric_profile_json)
+    print("Response status code = ", response.status_code)
+    print(response.json())
     return response
