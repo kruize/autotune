@@ -32,11 +32,6 @@ public class ExperimentTypeUtil {
         return experimentType != null && AnalyzerConstants.ExperimentType.NAMESPACE.equals(experimentType);
     }
 
-    public static long getBitMaskForExperimentType(AnalyzerConstants.ExperimentType type) {
-        // TODO: to be updated as part of bharath's PR
-        return 0L;
-    }
-
     public class ExperimentTypeSerializer implements JsonSerializer<AnalyzerConstants.ExperimentType>, JsonDeserializer<AnalyzerConstants.ExperimentType> {
         @Override
         public JsonElement serialize(AnalyzerConstants.ExperimentType experimentType, Type typeOfT, JsonSerializationContext context) {
