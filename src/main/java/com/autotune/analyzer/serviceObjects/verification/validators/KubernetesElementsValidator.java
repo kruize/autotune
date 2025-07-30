@@ -23,6 +23,8 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
+import com.autotune.common.data.result.NamespaceData;
+import com.autotune.common.k8sObjects.K8sObject;
 import jakarta.validation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,6 +53,9 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             String expName = kruizeObject.getExperimentName();
             String errorMsg = "";
             boolean kubeObjsMisMatch = false;
+
+            
+
 
             // Check if Kubernetes Object Type is matched
             String kubeObjTypeInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getType();
@@ -124,6 +129,34 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             } else {
                 success = true;
             }
+
+            // Validate for blank or null Namespace Name
+
+            List<NamespaceData> resultNamespaces = new ArrayList<>();
+            if (resultData.getKubernetes_objects() != null && !resultData.getKubernetes_objects().isEmpty() &&
+                    resultData.getKubernetes_objects().get(0) != null && resultData.getKubernetes_objects().get(0).getNamespaceDataMap() != null) {
+                resultNamespaces = resultData.getKubernetes_objects().get(0).getNamespaceDataMap().values().stream().toList();
+            }
+
+            List<String> validationErrorsNamespace = resultNamespaces.stream()
+                    .flatMap(namespaceData -> validateNamespaceData(namespaceData).stream())
+                    .toList();
+
+            if (!validationErrorsNamespace.isEmpty()) {
+                kubeObjsMisMatch = true;
+                errorMsg = errorMsg.concat(validationErrorsNamespace.toString());
+            }
+
+
+            if (kubeObjsMisMatch) {
+                context.disableDefaultConstraintViolation();
+                context.buildConstraintViolationWithTemplate(errorMsg)
+                        .addPropertyNode("kubernetes_objects ")
+                        .addConstraintViolation();
+            } else {
+                success = true;
+            }
+
         } catch (Exception e) {
             LOGGER.error(e.toString());
             StringWriter sw = new StringWriter();
@@ -156,6 +189,13 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
         List<String> errors = new ArrayList<>();
         if (containerData.getContainer_name() == null || containerData.getContainer_name().trim().isEmpty()) {
             errors.add(AnalyzerErrorConstants.AutotuneObjectErrors.NULL_OR_BLANK_CONTAINER_NAME);
+        }
+        return errors;
+    }
+    private static List<String> validateNamespaceData(NamespaceData namespaceData) {
+        List<String> errors = new ArrayList<>();
+        if (namespaceData.getNamespace_name() == null || namespaceData.getNamespace_name().trim().isEmpty()) {
+            errors.add(AnalyzerErrorConstants.AutotuneObjectErrors.NULL_OR_BLANK_NAMESPACE_NAME);
         }
         return errors;
     }

@@ -106,6 +106,7 @@ public class AnalyzerErrorConstants {
         public static final String VERSION_MISMATCH = "Version number mismatch found. Expected: %s , Found: %s";
         public static final String NULL_OR_BLANK_CONTAINER_IMAGE_NAME = "container_image_name cannot be null or blank";
         public static final String NULL_OR_BLANK_CONTAINER_NAME = "container_name cannot be null or blank";
+        public static final String NULL_OR_BLANK_NAMESPACE_NAME = "namespace_name cannot be null or blank";
         public static final String EXPERIMENT_AND_INTERVAL_END_TIME = " for experiment : %s interval_end_time: %s";
         public static final String LOCAL_MONITORING_DATASOURCE_MANDATORY = "Experiment %s: datasource mandatory for Local Monitoring type";
         public static final String LOAD_METADATA_PROFILE_FAILURE = "Loading saved Metadata Profile %s failed: %s";
