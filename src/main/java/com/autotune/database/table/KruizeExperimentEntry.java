@@ -201,4 +201,12 @@ public class KruizeExperimentEntry {
         this.experiment_type = experiment_type;
     }
 
+    public Timestamp getCreation_date() {
+        return creation_date;
+    }
+
+    public Timestamp getUpdate_date() {
+        return update_date;
+    }
+
 }
