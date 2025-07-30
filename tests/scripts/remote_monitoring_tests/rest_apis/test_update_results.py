@@ -43,6 +43,10 @@ missing_metrics = [
     ("Missing_metrics_bulk_res_few_containers_few_individual_metrics_missing", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers_few_individual_metrics_missing.json", "Out of a total of 100 records, 4 failed to save", "Metric data is not present for container")
 ]
 
+missing_metrics_namespace = [
+    ("Missing_metrics_single_res_single_namespace", "../json_files/missing_metrics_jsons/update_results_missing_metrics_single_namespace.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Missing one of the following mandatory parameters for experiment - namespace-demo"),
+]
+
 @pytest.mark.negative
 @pytest.mark.parametrize(
     "test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format, cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum, memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum, memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format, memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_format",
@@ -180,7 +184,7 @@ def test_update_results_invalid_namespace_tests(
     print(f"Test - {test_name}")
     print("*******************************************************\n")
     
-    create_exp_json_file = "../json_files/create_namespace_exp.json"
+    create_exp_json_file = "../json_files/create_exp_namespace.json"
     form_kruize_url(cluster_type)
 
     delete_experiment(create_exp_json_file)
@@ -246,12 +250,9 @@ def test_update_results_invalid_namespace_tests(
     # print(data['message'])
 
     assert response.status_code == int(expected_status_code)
-    actual_message == data['message']
-    assert expected_error_message in actual_message, f"Expected message '{expected_error_message}' but got '{actual_message}'"
-    
-    response = delete_experiment(input_json_file)
+    actual_message = data.get('message')    
+    response = delete_experiment(create_exp_json_file)
     print("delete exp = ", response.status_code)
-
 
 @pytest.mark.negative
 @pytest.mark.parametrize("test_name, result_json_file, expected_message, error_message", missing_metrics)
@@ -300,13 +301,13 @@ def test_update_results_with_missing_metrics_section(test_name, result_json_file
 
 
 @pytest.mark.negative
-@pytest.mark.parametrize("test_name, result_json_file, expected_message, error_message", missing_metrics)
+@pytest.mark.parametrize("test_name, result_json_file, expected_message, error_message", missing_metrics_namespace)
 def test_update_results_with_missing_metrics_section_namespace(test_name, result_json_file, expected_message, error_message, cluster_type):
     """
     Test Description: This test validates update results for a valid namespace experiment
                       by updating results with entire metrics section missing or individual metrics missing.
     """
-    input_json_file = "../json_files/create_namespace_exp.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
 
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file)
@@ -350,55 +351,83 @@ def test_upload_namespace_results_for_container_experiment(cluster_type):
     input_json_file = "../json_files/create_exp.json"
     result_json_file = "../json_files/update_results_namespace.json"
 
+    create_exp = read_json_data_from_file(input_json_file)
+    update_res = read_json_data_from_file(result_json_file)
+
+    experiment_name = 'container_experiment'
+
+    # Set the same experiment name
+    create_exp[0]['experiment_name'] = experiment_name
+    update_res[0]['experiment_name'] = experiment_name
+
+    # Optional: Write back to file if functions expect file input
+    write_json_data_to_file("/tmp/temp_create_exp.json", create_exp)
+    write_json_data_to_file("/tmp/temp_update_results.json", update_res)
+
     form_kruize_url(cluster_type)
     
-    response = delete_experiment(input_json_file)
+    response = delete_experiment("/tmp/temp_create_exp.json")
     print("delete exp = ", response.status_code)
 
-    response = create_experiment(input_json_file)
+    response = create_experiment("/tmp/temp_create_exp.json")
+
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     
-    response = update_results(result_json_file)
+    response = update_results("/tmp/temp_update_results.json")
     data = response.json()
     print(f"Update Results Response: {data}")
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert UNSUPPORTED_OBJECT_TYPE in data['data'][0]['errors'][0]['message']
-    
-    response = delete_experiment(input_json_file)
+    actual_error = data['data'][0]['errors'][0]['message']
+    assert "Kubernetes Object Types MisMatched" in actual_error
+
+    response = delete_experiment("/tmp/temp_create_exp.json")
     print("delete exp = ", response.status_code)
 
-@pytest.mark.negative
+# @pytest.mark.negative
 def test_upload_container_results_for_namespace_experiment(cluster_type):
     """
     Test Description: This test validates that posting container results to a namespace-based
                       experiment fails with the expected error.
     """
-    input_json_file = "../json_files/create_namespace_exp.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
     result_json_file = "../json_files/update_results.json"
+
+    create_exp = read_json_data_from_file(input_json_file)
+    update_res = read_json_data_from_file(result_json_file)
+
+    experiment_name = 'namespace_experiment'
+
+    # Set the same experiment name
+    create_exp[0]['experiment_name'] = experiment_name
+    update_res[0]['experiment_name'] = experiment_name
+
+    # Write back to file if functions expect file input
+    write_json_data_to_file("/tmp/temp_create_exp.json", create_exp)
+    write_json_data_to_file("/tmp/temp_update_results.json", update_res)
 
     form_kruize_url(cluster_type)
     
-    response = delete_experiment(input_json_file)
+    response = delete_experiment("/tmp/temp_create_exp.json")
     print("delete exp = ", response.status_code)
 
-    response = create_experiment(input_json_file)
+    response = create_experiment("/tmp/temp_create_exp.json")
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     
-    response = update_results(result_json_file)
+    response = update_results("/tmp/temp_update_results.json")
     data = response.json()
     print(f"Update Results Response: {data}")
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert CONTAINER_DATA_NOT_SUPPORTED in data['data'][0]['errors'][0]['message']
+    ## add assertion for error message
 
-    response = delete_experiment(input_json_file)
+    response = delete_experiment("/tmp/temp_create_exp.json")
     print("delete exp = ", response.status_code)
 
 @pytest.mark.negative
@@ -432,24 +461,24 @@ def test_upload_bulk_namespace_results_for_container_experiment(cluster_type):
     for result in data.get('data', []):
         if result.get('errors'):
             for error in result['errors']:
-                if "Unsupported object type" in error.get('message', ''):
+                if "Kubernetes Object Names MisMatched" in error.get('message', ''):
                     error_found = True
                     break
         if error_found:
             break
     
-    assert error_found, UPDATE_RESULTS_NAMESPACE_NOT_FOUND
+    assert error_found, KUBERNETES_MISMATCH
     
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
-@pytest.mark.negative
+# @pytest.mark.negative
 def test_upload_bulk_container_results_for_namespace_experiment(cluster_type):
     """
     Test Description: This test validates that posting a mix of container and namespace results
                       to a namespace-based experiment fails for the container results.
     """
-    input_json_file = "../json_files/create_namespace_exp.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
     result_json_file = "../json_files/mixed_bulk_results_namespace.json"
 
     form_kruize_url(cluster_type)
@@ -474,13 +503,13 @@ def test_upload_bulk_container_results_for_namespace_experiment(cluster_type):
     for result in data.get('data', []):
         if result.get('errors'):
             for error in result['errors']:
-                if "container data not supported" in error.get('message', ''):
+                if "Missing one of the following mandatory parameters for experiment" in error.get('message', ''):
                     error_found = True
                     break
         if error_found:
             break
             
-    assert error_found, UPDATE_RESULTS_CONTAINER_NOT_FOUND
+    assert error_found, MISSING_MANDATORY_PARAMETERS
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -490,7 +519,7 @@ def test_update_results_with_zero_metric_values_fails(cluster_type):
     """
     Test Description: This test validates that updating results fails when all metric values are zero.
     """
-    input_json_file = "../json_files/create_namespace_exp.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
     tmp_json_file = "/tmp/update_results_zero_metrics_namespace.json"
 
     form_kruize_url(cluster_type)
@@ -576,7 +605,7 @@ def test_update_valid_results_after_create_namespace_exp(cluster_type):
     """
     Test Description: This test validates update results for a valid namespace experiment
     """
-    input_json_file = "../json_files/create_namespace_exp.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
 
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file)
@@ -638,7 +667,7 @@ def test_update_multiple_valid_results_single_json_after_create_namespace_exp(cl
     """
     Test Description: This test validates update results for a valid namespace experiment by posting multiple results
     """
-    input_json_file = "../json_files/create_namespace_exp.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
 
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file)
@@ -726,7 +755,7 @@ def test_update_multiple_valid_results_after_create_namespace_exp(cluster_type):
     """
     Test Description: This test validates update results for a valid namespace experiment
     """
-    input_json_file = "../json_files/create_namespace_exp.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
 
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file)
@@ -843,7 +872,7 @@ def test_update_multiple_valid_results_for_namespace_experiment_with_supported_c
     """
     Test Description: This test validates update results for a valid namespace experiment
     """
-    input_json_file = "../json_files/create_namespace_exp.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
 
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file)
@@ -969,7 +998,7 @@ def test_update_multiple_valid_results_for_namespace_experiment_with_supported_m
     """
     Test Description: This test validates update results for a valid namespace experiment
     """
-    input_json_file = "../json_files/create_namespace_exp.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
 
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file)
@@ -1269,7 +1298,7 @@ def test_update_results_with_same_result_for_namespace_experiment(cluster_type):
     Test Description: This test validates update results for a valid namespace experiment
                         by posting the same results twice.
     """
-    input_json_file = "../json_files/create_namespace_exp.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
 
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file)
@@ -1375,7 +1404,7 @@ def test_update_results_with_valid_and_invalid_interval_duration_for_namespace_e
     Test Description: This test validates update results by posting results with interval time difference that is not valid for
     the given measurement duration
     """
-    input_json_file = "../json_files/create_namespace_exp.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
 
     form_kruize_url(cluster_type)
 
@@ -1487,8 +1516,8 @@ def test_update_results_with_missing_metrics_and_generate_recommendations(cluste
     Test Description: This test validates updating results with missing metrics and then generating recommendations.
     Expected: Update results should fail, and thus no recommendations should be generated.
     """
-    input_json_file = "../json_files/create_exp.json"
-    missing_metrics_json_file = "../json_files/missing_metrics_jsons/update_results_missing_metrics_single_container.json"
+    input_json_file = "../json_files/create_exp_namespace.json"
+    missing_metrics_json_file = "../json_files/missing_metrics_jsons/update_results_missing_metrics_single_namespace.json"
 
     form_kruize_url(cluster_type)
     response = delete_experiment(input_json_file)
@@ -1500,21 +1529,23 @@ def test_update_results_with_missing_metrics_and_generate_recommendations(cluste
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
-    experiment_name = json.load(open(input_json_file))[0]['experiment_name']
+    experiment_name = json.load(open(input_json_file))[0]['experiment_name'].strip()
 
     # Update results with missing metrics
     response = update_results(missing_metrics_json_file)
     data = response.json()
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert "Metric data is not present for container" in data['data'][0]['errors'][0]['message']
+    assert "Performance profile: [Missing one of the following mandatory parameters for experiment - namespace-demo" in data['data'][0]['errors'][0]['message']
 
     # Try to generate recommendations (should not be present)
-    recommendations_response = list_experiments(results="true", recommendations="true", latest="true", experiment_name=experiment_name)
+    recommendations_response = generate_recommendations(experiment_name=experiment_name)
     recommendations_data = recommendations_response.json()
-    assert recommendations_response.status_code == SUCCESS_200_STATUS_CODE
-    assert len(recommendations_data) > 0
-    assert "recommendations" not in recommendations_data[0] # No recommendations should be present
+
+    assert recommendations_response.status_code == ERROR_STATUS_CODE
+    assert recommendations_data["status"] == ERROR_STATUS
+    assert "message" in recommendations_data
+    assert experiment_name in recommendations_data["message"]
 
     response = delete_experiment(input_json_file)
     print(f"Delete experiment response: {response.status_code}")

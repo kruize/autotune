@@ -93,7 +93,7 @@ Here are the test scenarios:
 - List recommendations with minimum data threshold exceeding the max duration for each term
   - with non-contiguous data points exceeding the max duration fixed for each term
 - List recommendations with data available for some terms
-  <<<<<<< HEAD - for contiguous data: - no data available - all data available - only short_term data available - only medium_term data available - only long_term data available - short_term and medium_term data available - short_term and long_term data available - medium_term and long_term data available - for non-contiguous data: - similar tests as mentioned above for contiguous
+  - for contiguous data: - no data available - all data available - only short_term data available - only medium_term data available - only long_term data available - short_term and medium_term data available - short_term and long_term data available - medium_term and long_term data available - for non-contiguous data: - similar tests as mentioned above for contiguous
 
 ### **Update Recommendation API tests**
 

@@ -19,35 +19,6 @@
               }
             },
             {
-              "name": "namespaceCpuThrottle",
-              "results": {
-                "aggregation_info": {
-                  "min": 0.01,
-                  "max": 0.09,
-                  "avg": 0.037,
-                  "format": "cores"
-                }
-              }
-            },
-            {
-              "name": "namespaceMemoryRequest",
-              "results": {
-                "aggregation_info": {
-                  "sum": 400,
-                  "format": "MiB"
-                }
-              }
-            },
-            {
-              "name": "namespaceMemoryLimit",
-              "results": {
-                "aggregation_info": {
-                  "sum": 600,
-                  "format": "MiB"
-                }
-              }
-            },
-            {
               "name": "namespaceMemoryUsage",
               "results": {
                 "aggregation_info": {
