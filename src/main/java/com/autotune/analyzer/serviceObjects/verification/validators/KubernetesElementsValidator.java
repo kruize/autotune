@@ -25,6 +25,7 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.k8sObjects.K8sObject;
+import com.autotune.utils.KruizeConstants;
 import jakarta.validation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,8 +55,23 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             String errorMsg = "";
             boolean kubeObjsMisMatch = false;
 
-            
+            // Check if Kubernetes Object Namespaces is matched
+            if (kruizeObject.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)) {
+                // it's a namespace experiment type then type, name, namespace should not be present
 
+                String kubeObjTypeInResultData = resultData.getKubernetes_objects().get(0).getType();
+                String kubeObjNameInResultsData = resultData.getKubernetes_objects().get(0).getName();
+                String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
+
+                if (kubeObjTypeInResultData != null && kubeObjNameInResultsData != null && kubeObjNameSpaceInResultsData != null) {
+                    kubeObjsMisMatch = true;
+                    errorMsg = errorMsg.concat(
+                            String.format(
+                                    "Kubernetes Object Type, Name, Namespace Present. Expected Namespace-level Update Results fields, Found Container-level Update Results fields for experiment: %s \n",
+                                    expName
+                            ));
+                }
+            }
 
             // Check if Kubernetes Object Type is matched
             String kubeObjTypeInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getType();
@@ -118,16 +134,6 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             if (!validationErrors.isEmpty()) {
                 kubeObjsMisMatch = true;
                 errorMsg = errorMsg.concat(validationErrors.toString());
-            }
-
-
-            if (kubeObjsMisMatch) {
-                context.disableDefaultConstraintViolation();
-                context.buildConstraintViolationWithTemplate(errorMsg)
-                        .addPropertyNode("kubernetes_objects ")
-                        .addConstraintViolation();
-            } else {
-                success = true;
             }
 
             // Validate for blank or null Namespace Name
