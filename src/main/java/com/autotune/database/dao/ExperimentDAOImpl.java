@@ -797,9 +797,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
-     * @param experimentNames 
-     * @param currentTimestamp
-     * @return
+     * Updates the {@code update_date} column in the {@code kruize_experiments} table for the specified experiments.
+     *
+     * <p>This method executes a native SQL update query to set the {@code update_date} field for all experiments
+     * whose names are provided in the {@code experimentNames} set. The update is performed using a Hibernate session
+     * within a transaction.</p>
+     *
+     * @param experimentNames A set of experiment names to be updated.
+     * @param currentTimestamp The timestamp to be set in the {@code update_date} field.
+     * @return {@code true} if the update operation was executed (even if no rows were affected),
+     *         {@code false} if {@code experimentNames} is {@code null} or empty.
+     * @throws Exception If any exception occurs during the database update.
      */
     @Override
     public boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception {
