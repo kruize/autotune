@@ -321,6 +321,44 @@ update_results_namespace_test_data = {
     "namespaceRunningPods_max": 3
 }
 
+gpu_data_keys = [
+    "acceleratorCoreUsage_min",
+    "acceleratorCoreUsage_max",
+    "acceleratorCoreUsage_avg",
+
+    "acceleratorMemoryUsage_min",
+    "acceleratorMemoryUsage_max",
+    "acceleratorMemoryUsage_avg",
+
+    "acceleratorFrameBufferUsage_min",
+    "acceleratorFrameBufferUsage_max",
+    "acceleratorFrameBufferUsage_avg",
+]
+
+
+gpu_data = {
+    "acceleratorCoreUsage_name": "acceleratorCoreUsage",
+    "acceleratorCoreUsage_min": 25,
+    "acceleratorCoreUsage_max": 67,
+    "acceleratorCoreUsage_avg": 34,
+    "acceleratorCoreUsage_format": "percentage",
+
+    "acceleratorMemoryUsage_name": "acceleratorMemoryUsage",
+    "acceleratorMemoryUsage_min": 25,
+    "acceleratorMemoryUsage_max": 67,
+    "acceleratorMemoryUsage_avg": 34,
+    "acceleratorMemoryUsage_format": "percentage",
+
+    "acceleratorFrameBufferUsage_name": "acceleratorFrameBufferUsage",
+    "acceleratorFrameBufferUsage_min": 5321,
+    "acceleratorFrameBufferUsage_max": 18991,
+    "acceleratorFrameBufferUsage_avg": 11456,
+    "acceleratorFrameBufferUsage_format": "MiB"
+}
+
+update_results_gpu_test_data = {**update_results_test_data, **gpu_data}
+
+
 # version, datasource_name
 import_metadata_test_data = {
     "version": "v1.0",
@@ -331,11 +369,31 @@ import_metadata_test_data = {
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
-aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "cpuLimit_avg", "cpuUsage_sum", "cpuUsage_max",
-                          "cpuUsage_avg", "cpuUsage_min", "cpuThrottle_sum", "cpuThrottle_max", "cpuThrottle_avg",
-                          "memoryRequest_sum", "memoryRequest_avg", "memoryLimit_sum", "memoryRequest_avg",
-                          "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
-                          "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
+aggr_info_keys_to_skip = [
+    "cpuRequest_sum",
+    "cpuRequest_avg",
+    "cpuLimit_sum",
+    "cpuLimit_avg",
+    "cpuUsage_sum",
+    "cpuUsage_max",
+    "cpuUsage_avg",
+    "cpuUsage_min",
+    "cpuThrottle_sum",
+    "cpuThrottle_max",
+    "cpuThrottle_avg",
+    "memoryRequest_sum",
+    "memoryRequest_avg",
+    "memoryLimit_sum",
+    "memoryLimit_avg",
+    "memoryUsage_sum",
+    "memoryUsage_max",
+    "memoryUsage_avg",
+    "memoryUsage_min",
+    "memoryRSS_sum",
+    "memoryRSS_max",
+    "memoryRSS_avg",
+    "memoryRSS_min"
+    ] + gpu_data_keys
 
 aggr_info_keys_to_skip_namespace = ["namespaceCpuRequest_sum", "namespaceCpuRequest_format",
                           "namespaceCpuLimit_sum", "namespaceCpuLimit_format", "namespaceCpuUsage_min", "namespaceCpuUsage_max", "namespaceCpuUsage_avg", "namespaceCpuUsage_format",
