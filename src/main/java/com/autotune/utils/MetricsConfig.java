@@ -51,7 +51,6 @@ public class MetricsConfig {
         timerBListRec = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "listRecommendations").tag("method", "GET");
         timerBListExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "listExperiments").tag("method", "GET");
         timerBCreateExp = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "createExperiment").tag("method", "POST");
-        timerBUpdateExpDate = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateResults").tag("method", "POST");
         timerBUpdateResults = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateResults").tag("method", "POST");
         timerBUpdateRecommendations = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateRecommendations").tag("method", "POST");
 
@@ -69,6 +68,7 @@ public class MetricsConfig {
         timerBSaveBulkJobDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "saveBulkJobDB");
         timerBLoadBulkJobId = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "getBulkJobDB");
         timerBUpdateBulkJobId = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updateBulkJobDB");
+        timerBUpdateExpDate = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updateExperimentDates");
 
         timerBAddPerfProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addPerformanceProfileToDB");
         timerBLoadPerfProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadPerformanceProfileByName");
