@@ -7,7 +7,8 @@
     "kubernetes_objects": [
       {
         "namespaces": {
-          "namespace": "default"
+          "namespace": "default",
+          "namespace": "test-multiple-import"
         }
       }
     ]

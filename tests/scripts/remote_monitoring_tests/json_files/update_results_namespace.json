@@ -6,7 +6,8 @@
     "interval_end_time": "2022-01-23T18:40:43.570Z",
     "kubernetes_objects": [
       {
-        "namespaces": {
+        "namespaces":
+        {
           "namespace": "default",
           "metrics": [
             {
@@ -14,6 +15,26 @@
               "results": {
                 "aggregation_info": {
                   "sum": 6,
+                  "format": "cores"
+                }
+              }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": {
+                "aggregation_info": {
+                  "sum": 4.5,
+                  "format": "cores"
+                }
+              }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": {
+                "aggregation_info": {
+                  "min": 0.14,
+                  "max": 0.84,
+                  "avg": 0.42,
                   "format": "cores"
                 }
               }

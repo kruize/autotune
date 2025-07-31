@@ -41,8 +41,10 @@ UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG = "The Start time should precede the End t
 UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG = "Performance profile: [avg cannot be negative or blank for the metric variable: "
 UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile: [ Format value should be among these values: [GiB, Gi, Ei, KiB, E, MiB, G, PiB, K, TiB, M, P, Bytes, cores, T, Ti, MB, KB, Pi, GB, EB, k, m, TB, PB, bytes, kB, Mi, Ki, EiB]"
 UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_RECORDS_COUNT} failed to save"
-KUBERNETES_MISMATCH = "Kubernetes Object Names MisMatched"
+KUBERNETES_OBJECT_NAME_MISMATCH = "Kubernetes Object Names MisMatched"
+KUBERNETES_OBJECT_TYPE_MISMATCH = "Kubernetes Object Types MisMatched"
 MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment"
+UPDATE_RESULTS_UPDATE_MISMATCH_FOR_NAMESPACE_EXPERIMENT = "Kubernetes Object Namespaces MisMatched. Expected Namespace-level update Results, Found Container-level update Results for experiment: namespace_experiment"
 CONTAINER_DATA_NOT_SUPPORTED = "container data not supported"
 UNSUPPORTED_OBJECT_TYPE = "Unsupported object type"
 FAILED_RECORDS_MSG = "Out of a total of 1 records, 1 failed to save"
@@ -319,6 +321,16 @@ aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "c
                           "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
                           "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
 
+aggr_info_keys_to_skip_namespace = ["namespaceCpuRequest_sum", "namespaceCpuRequest_format",
+                          "namespaceCpuLimit_sum", "namespaceCpuLimit_format", "namespaceCpuUsage_min", "namespaceCpuUsage_max", "namespaceCpuUsage_avg", "namespaceCpuUsage_format",
+                          "namespaceCpuThrottle_min", "namespaceCpuThrottle_max", "namespaceCpuThrottle_avg", "namespaceCpuThrottle_format",
+                          "namespaceMemoryRequest_sum", "namespaceMemoryRequest_format", "namespaceMemoryLimit_sum", "namespaceMemoryLimit_format",
+                           "namespaceMemoryUsage_min", "namespaceMemoryUsage_max", "namespaceMemoryUsage_avg", "namespaceMemoryUsage_format",
+                          "namespaceMemoryRSS_min", "namespaceMemoryRSS_max", "namespaceMemoryRSS_avg", "namespaceMemoryRSS_format",
+                          "namespaceTotalPods_sum", "namespaceRunningPods_sum"
+]
+
+
 MIG_PATTERN = r"nvidia\.com/mig-[1-4|7]g\.(5|10|20|40|80)gb"
 
 
@@ -334,8 +346,13 @@ def generate_test_data(csvfile, test_data, api_name):
                 # skip checking the invalid container name and container image name
                 if key == "container_image_name" or (key == "container_name" and t == "invalid"):
                     continue
-                #  skip checking the aggregation info values
+                # skip checking the invalid or null namespace name
+                if key == "namespace" and t == "invalid" or t == "null":
+                    continue
+                #  skip checking the aggregation info values for container and namespace
                 if key in aggr_info_keys_to_skip and t == "null":
+                    continue
+                if key in aggr_info_keys_to_skip_namespace and t == "null":
                     continue
 
                 test_name = t + "_" + key

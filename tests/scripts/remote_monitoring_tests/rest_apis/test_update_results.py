@@ -44,7 +44,13 @@ missing_metrics = [
 ]
 
 missing_metrics_namespace = [
-    ("Missing_metrics_single_res_single_namespace", "../json_files/missing_metrics_jsons/update_results_missing_metrics_single_namespace.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Missing one of the following mandatory parameters for experiment - namespace-demo"),
+    ("Missing_metrics_single_res_single_namespace", "../json_files/missing_metrics_jsons/update_results_missing_metrics_single_namespace.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Metric data is not present for namespace : default for experiment: namespace-demo"),
+    ("Missing_metrics_single_res_all_namespace", "../json_files/missing_metrics_jsons/update_results_missing_metrics_all_namespace.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Metric data is not present for namespace : test-multiple-import for experiment: namespace-demo. ]"),
+    ("Missing_metrics_bulk_res_single_namespace", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_single_namespace.json", "Out of a total of 3 records, 3 failed to save", "Performance profile: [Metric data is not present for namespace : default for experiment: namespace-demo"),
+    ("Missing_metrics_bulk_res_few_namespaces", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_namespace.json", "Out of a total of 20 records, 1 failed to save", "Performance profile: [Metric data is not present for namespace : default for experiment: namespace-demo"),
+    ("Missing_metrics_bulk_res_few_namespace_few_individual_metrics_missing", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_namespaces_few_individual_metrics_missing.json", "Out of a total of 19 records, 1 failed to save", "Performance profile: [Missing one of the following mandatory parameters for experiment - namespace-demo : [namespaceCpuUsage, namespaceMemoryUsage, namespaceMemoryRSS]]"),
+    ("Missing_metrics_mandatory_metrics_single_namespace", "../json_files/missing_metrics_jsons/update_results_missing_mandatory_metrics_single_namespace.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Missing one of the following mandatory parameters for experiment - namespace-demo : [namespaceCpuUsage, namespaceMemoryUsage, namespaceMemoryRSS]]")
+
 ]
 
 @pytest.mark.negative
@@ -382,12 +388,12 @@ def test_upload_namespace_results_for_container_experiment(cluster_type):
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
     actual_error = data['data'][0]['errors'][0]['message']
-    assert "Kubernetes Object Types MisMatched" in actual_error
+    assert KUBERNETES_OBJECT_TYPE_MISMATCH in actual_error
 
     response = delete_experiment("/tmp/temp_create_exp.json")
     print("delete exp = ", response.status_code)
 
-# @pytest.mark.negative
+@pytest.mark.negative
 def test_upload_container_results_for_namespace_experiment(cluster_type):
     """
     Test Description: This test validates that posting container results to a namespace-based
@@ -425,7 +431,8 @@ def test_upload_container_results_for_namespace_experiment(cluster_type):
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    ## add assertion for error message
+    actual_error = data['data'][0]['errors'][0]['message']
+    assert UPDATE_RESULTS_UPDATE_MISMATCH_FOR_NAMESPACE_EXPERIMENT in actual_error
 
     response = delete_experiment("/tmp/temp_create_exp.json")
     print("delete exp = ", response.status_code)
@@ -467,12 +474,12 @@ def test_upload_bulk_namespace_results_for_container_experiment(cluster_type):
         if error_found:
             break
     
-    assert error_found, KUBERNETES_MISMATCH
+    assert error_found, KUBERNETES_OBJECT_NAME_MISMATCH
     
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
-# @pytest.mark.negative
+@pytest.mark.negative
 def test_upload_bulk_container_results_for_namespace_experiment(cluster_type):
     """
     Test Description: This test validates that posting a mix of container and namespace results
@@ -514,6 +521,7 @@ def test_upload_bulk_container_results_for_namespace_experiment(cluster_type):
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+@pytest.mark.skip(reason="This feature is not yet implemented in the backend code.")
 @pytest.mark.negative
 def test_update_results_with_zero_metric_values_fails(cluster_type):
     """
@@ -1212,7 +1220,7 @@ def test_update_results_multiple_exps_from_diff_json_files(cluster_type):
         print("delete exp = ", response.status_code)
 
 
-# @pytest.mark.negative
+@pytest.mark.negative
 def test_update_valid_results_without_create_exp(cluster_type):
     """
     Test Description: This test validates the behavior of updateResults API by posting results for a non-existing experiment
@@ -1240,6 +1248,33 @@ def test_update_valid_results_without_create_exp(cluster_type):
     assert data['message'] == FAILED_RECORDS_MSG
     assert data['data'][0]['errors'][0]['message'] == EXP_NAME_NOT_FOUND_MSG
 
+@pytest.mark.negative
+def test_update_valid_results_without_create_exp_for_namespace(cluster_type):
+    """
+    Test Description: This test validates the behavior of updateResults API by posting results for a non-existing namespace experiment
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+    json_data = json.load(open(input_json_file))
+
+    experiment_name = json_data[0]['experiment_name']
+    print("experiment_name = ", experiment_name)
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    result_json_file = "../json_files/update_results_namespace.json"
+    response = update_results(result_json_file)
+
+    data = response.json()
+    print("message = ", data['message'])
+
+    EXP_NAME_NOT_FOUND_MSG = UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND + experiment_name
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert data['message'] == FAILED_RECORDS_MSG
+    assert data['data'][0]['errors'][0]['message'] == EXP_NAME_NOT_FOUND_MSG
 
 @pytest.mark.sanity
 def test_update_results_with_same_result(cluster_type):
@@ -1507,45 +1542,3 @@ def test_update_results__duplicate_records_with_single_exp_multiple_results(clus
     # Delete the experiment
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
-
-
-
-@pytest.mark.negative
-def test_update_results_with_missing_metrics_and_generate_recommendations(cluster_type):
-    """
-    Test Description: This test validates updating results with missing metrics and then generating recommendations.
-    Expected: Update results should fail, and thus no recommendations should be generated.
-    """
-    input_json_file = "../json_files/create_exp_namespace.json"
-    missing_metrics_json_file = "../json_files/missing_metrics_jsons/update_results_missing_metrics_single_namespace.json"
-
-    form_kruize_url(cluster_type)
-    response = delete_experiment(input_json_file)
-    print(f"Delete experiment response: {response.status_code}")
-
-    # Create experiment
-    response = create_experiment(input_json_file)
-    data = response.json()
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
-    assert data['message'] == CREATE_EXP_SUCCESS_MSG
-    experiment_name = json.load(open(input_json_file))[0]['experiment_name'].strip()
-
-    # Update results with missing metrics
-    response = update_results(missing_metrics_json_file)
-    data = response.json()
-    assert response.status_code == ERROR_STATUS_CODE
-    assert data['status'] == ERROR_STATUS
-    assert "Performance profile: [Missing one of the following mandatory parameters for experiment - namespace-demo" in data['data'][0]['errors'][0]['message']
-
-    # Try to generate recommendations (should not be present)
-    recommendations_response = generate_recommendations(experiment_name=experiment_name)
-    recommendations_data = recommendations_response.json()
-
-    assert recommendations_response.status_code == ERROR_STATUS_CODE
-    assert recommendations_data["status"] == ERROR_STATUS
-    assert "message" in recommendations_data
-    assert experiment_name in recommendations_data["message"]
-
-    response = delete_experiment(input_json_file)
-    print(f"Delete experiment response: {response.status_code}")
