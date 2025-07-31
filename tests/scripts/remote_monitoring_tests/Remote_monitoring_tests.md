@@ -29,7 +29,7 @@ Here are the test scenarios:
 - Create namespace experiment specifying containers
 - Create container experiment specifying namespaces
 - Create multiple namespace experiments with valid namespace
-- Validate the presence of 3 new columns experiment_type, creation_date and update_date along with its default values
+- Validate the experiment for the presence of experiment_type, creation_date and update_date along with its default values using listExperiments
 
 ### **Update Results API tests**
 
