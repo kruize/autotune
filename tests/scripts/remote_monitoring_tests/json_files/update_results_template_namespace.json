@@ -94,7 +94,8 @@
               "name": "{{namespaceTotalPods_name}}",
               "results": {
                 "aggregation_info": {
-                  "sum": {{namespaceTotalPods_sum}}
+                  "max": {{namespaceTotalPods_max}},
+                  "avg": {{namespaceTotalPods_avg}}
                 }
               }
             },
@@ -102,7 +103,8 @@
               "name": "{{namespaceRunningPods_name}}",
               "results": {
                 "aggregation_info": {
-                  "sum": {{namespaceRunningPods_sum}}
+                  "max": {{namespaceRunningPods_max}},
+                  "avg": {{namespaceRunningPods_avg}}
                 }
               }
             }

@@ -43,6 +43,7 @@ UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile: [ Format 
 UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_RECORDS_COUNT} failed to save"
 KUBERNETES_OBJECT_NAME_MISMATCH = "Kubernetes Object Names MisMatched"
 KUBERNETES_OBJECT_TYPE_MISMATCH = "Kubernetes Object Types MisMatched"
+CANNOT_PROCESS_ALL_ZERO_METRIC_VALUES = "Cannot process results with all zero metric values"
 MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment"
 UPDATE_RESULTS_UPDATE_MISMATCH_FOR_NAMESPACE_EXPERIMENT = "Kubernetes Object Namespaces MisMatched. Expected Namespace-level update Results, Found Container-level update Results for experiment: namespace_experiment"
 CONTAINER_DATA_NOT_SUPPORTED = "container data not supported"
@@ -300,9 +301,11 @@ update_results_namespace_test_data = {
     "namespaceMemoryRSS_avg": 46.5, 
     "namespaceMemoryRSS_format": "MiB",
     "namespaceTotalPods_name": "namespaceTotalPods", 
-    "namespaceTotalPods_sum": 10,
+    "namespaceTotalPods_avg": 10,
+    "namespaceTotalPods_max": ,
     "namespaceRunningPods_name": "namespaceRunningPods", 
-    "namespaceRunningPods_sum": 8
+    "namespaceRunningPods_avg": 8,
+    "namespaceRunningPods_max": 8
 }
 
 # version, datasource_name
@@ -327,7 +330,7 @@ aggr_info_keys_to_skip_namespace = ["namespaceCpuRequest_sum", "namespaceCpuRequ
                           "namespaceMemoryRequest_sum", "namespaceMemoryRequest_format", "namespaceMemoryLimit_sum", "namespaceMemoryLimit_format",
                            "namespaceMemoryUsage_min", "namespaceMemoryUsage_max", "namespaceMemoryUsage_avg", "namespaceMemoryUsage_format",
                           "namespaceMemoryRSS_min", "namespaceMemoryRSS_max", "namespaceMemoryRSS_avg", "namespaceMemoryRSS_format",
-                          "namespaceTotalPods_sum", "namespaceRunningPods_sum"
+                          "namespaceTotalPods_avg", "namespaceTotalPods_max", "namespaceRunningPods_avg", "namespaceRunningPods_max"
 ]
 
 

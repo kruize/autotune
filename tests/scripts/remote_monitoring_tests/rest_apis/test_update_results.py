@@ -83,7 +83,6 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
     response = create_experiment(input_json_file)
 
     data = response.json()
-    print(data['message'])
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
@@ -197,7 +196,6 @@ def test_update_results_invalid_namespace_tests(
 
     response = create_experiment(create_exp_json_file)
     data = response.json()
-    print(f"Create Experiment Response: {data.get('message')}")
     assert response.status_code == SUCCESS_STATUS_CODE, "Experiment creation failed"
     assert data.get('status') == SUCCESS_STATUS, "Experiment status is not success"
 
@@ -253,7 +251,6 @@ def test_update_results_invalid_namespace_tests(
 
     response = update_results(tmp_json_file)
     data = response.json()
-    # print(data['message'])
 
     assert response.status_code == int(expected_status_code)
     actual_message = data.get('message')    
@@ -383,7 +380,6 @@ def test_upload_namespace_results_for_container_experiment(cluster_type):
     
     response = update_results("/tmp/temp_update_results.json")
     data = response.json()
-    print(f"Update Results Response: {data}")
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
@@ -427,7 +423,6 @@ def test_upload_container_results_for_namespace_experiment(cluster_type):
     
     response = update_results("/tmp/temp_update_results.json")
     data = response.json()
-    print(f"Update Results Response: {data}")
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
@@ -458,7 +453,6 @@ def test_upload_bulk_namespace_results_for_container_experiment(cluster_type):
     
     response = update_results(result_json_file)
     data = response.json()
-    print(f"Update Results Response: {data}")
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
@@ -500,7 +494,6 @@ def test_upload_bulk_container_results_for_namespace_experiment(cluster_type):
     
     response = update_results(result_json_file)
     data = response.json()
-    print(f"Update Results Response: {data}")
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
@@ -510,7 +503,7 @@ def test_upload_bulk_container_results_for_namespace_experiment(cluster_type):
     for result in data.get('data', []):
         if result.get('errors'):
             for error in result['errors']:
-                if "Missing one of the following mandatory parameters for experiment" in error.get('message', ''):
+                if MISSING_MANDATORY_PARAMETERS in error.get('message', ''):
                     error_found = True
                     break
         if error_found:
@@ -572,7 +565,7 @@ def test_update_results_with_zero_metric_values_fails(cluster_type):
     
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert "Cannot process results with all zero metric values" in data['data'][0]['errors'][0]['message']
+    assert CANNOT_PROCESS_ALL_ZERO_METRIC_VALUES in data['data'][0]['errors'][0]['message']
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
