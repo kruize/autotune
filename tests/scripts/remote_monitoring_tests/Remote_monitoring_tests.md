@@ -1,10 +1,11 @@
 # **Kruize Remote monitoring tests**
 
-Kruize Remote monitoring tests validates the behaviour of [Kruize remote monitoring APIs](/design/MonitoringModeAPI.md)
-using various positive and negative scenarios. These tests are developed using pytest framework.
+Kruize Remote monitoring tests validates the behaviour of [Kruize remote monitoring APIs](/design/MonitoringModeAPI.md) 
+using various positive and negative scenarios. These tests are developed using pytest framework. 
 
 ## Tests description
 ### **Create Experiment API tests**
+
 Here are the test scenarios:
 - Create a single valid experiment json to the API
 - Create multiple valid experiments using a single json
@@ -65,6 +66,7 @@ Negative Tests
 
 ### **List Recommendation API tests**
 
+
 Here are the test scenarios:
 
 - List recommendations specifying a valid experiment name
@@ -72,35 +74,35 @@ Here are the test scenarios:
 - List recommendations for a single experiment with multiple results posted in a single json
 - List recommendations for multiple experiments created using multiple jsons and results from multiple jsons
 - List recommendations for multiple experiments after updating results with
-    - some of the non-mandatory metrics (for example, memoryLimit/memoryRequest etc) missing
-    - with invalid kubernetes object type
+  - some of the non-mandatory metrics (for example, memoryLimit/memoryRequest etc) missing
+  - with invalid kubernetes object type
 - List recommendations with parameters by specifying the following parameters:
-      /listRecommendations?experiment_name=<experiment_name>&latest=false
-      /listRecommendations?experiment_name=<experiment_name>&latest=true
-      /listRecommendations?experiment_name=<experiment_name>&monitoring_end_time=<valid_timestamp>
+  /listRecommendations?experiment_name=<experiment_name>&latest=false
+  /listRecommendations?experiment_name=<experiment_name>&latest=true
+  /listRecommendations?experiment_name=<experiment_name>&monitoring_end_time=<valid_timestamp>
 - List recommendations after creating an experiment but without updating results
 - List recommendations with invalid parameter values for experiment_name & monitoring_end_time
-    - Non-existing experiment_name
-    - Non-existing time stamp, incorrect timestamp format
+  - Non-existing experiment_name
+  - Non-existing time stamp, incorrect timestamp format
 - List recommendations after sending 15 days of constant results matching requests and limits
 - List recommendations with valid and invalid notification codes
 - List recommendations with valid and invalid minimum data threshold
-    - Valid contiguous and non-contiguous minimum data points for each term
-    - Invalid minimum data points for each term
+  - Valid contiguous and non-contiguous minimum data points for each term
+  - Invalid minimum data points for each term
 - List recommendations with minimum data threshold exceeding the max duration for each term
-    - with non-contiguous data points exceeding the max duration fixed for each term
+  - with non-contiguous data points exceeding the max duration fixed for each term
 - List recommendations with data available for some terms
-    - for contiguous data: 
-      - no data available 
-      - all data available 
-      - only short_term data available 
-      - only medium_term data available 
-      - only long_term data available 
-      - short_term and medium_term data available 
-      - hort_term and long_term data available 
-      - medium_term and long_term data available 
-    - for non-contiguous data: 
-      - similar tests as mentioned above for contiguous
+  - for contiguous data:
+    - no data available
+    - all data available
+    - only short_term data available
+    - only medium_term data available
+    - only long_term data available
+    - short_term and medium_term data available
+    - short_term and long_term data available
+    - medium_term and long_term data available
+  - for non-contiguous data:
+    - similar tests as mentioned above for contiguous
 
 Namespace Related Test Scenarios:
 Sanity Tests
@@ -110,7 +112,9 @@ Sanity Tests
 Negative Tests
 - _To be updated_
 
+
 ### **Update Recommendation API tests**
+
 
 Here are the test scenarios:
 
