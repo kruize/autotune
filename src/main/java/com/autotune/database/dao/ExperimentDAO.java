@@ -152,7 +152,8 @@ public interface ExperimentDAO {
 
     KruizeBulkJobEntry findBulkJobById(String jobId) throws Exception;
 
-    ValidationOutputData updateBulkJobByExperiment(String jobId, String experimentName, String notification, String recommendationJson) throws Exception;
+    ValidationOutputData updateBulkJobByExperiment(String jobId, int totalCount, int processCount, String experimentDetails) throws Exception;
+
 
     void deleteBulkJobByID(String jobId);
 
