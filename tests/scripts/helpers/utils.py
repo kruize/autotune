@@ -301,11 +301,11 @@ update_results_namespace_test_data = {
     "namespaceMemoryRSS_avg": 46.5, 
     "namespaceMemoryRSS_format": "MiB",
     "namespaceTotalPods_name": "namespaceTotalPods", 
-    "namespaceTotalPods_avg": 10,
-    "namespaceTotalPods_max": ,
+    "namespaceTotalPods_avg": 2,
+    "namespaceTotalPods_max": 3,
     "namespaceRunningPods_name": "namespaceRunningPods", 
-    "namespaceRunningPods_avg": 8,
-    "namespaceRunningPods_max": 8
+    "namespaceRunningPods_avg": 2,
+    "namespaceRunningPods_max": 3
 }
 
 # version, datasource_name
