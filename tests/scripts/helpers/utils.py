@@ -16,11 +16,14 @@ limitations under the License.
 import csv
 import json
 import os
+import random
 import re
+import string
 import subprocess
 import time
 import math
 import docker
+import tempfile
 from helpers.kruize import *
 from datetime import datetime, timedelta
 from kubernetes import client, config
@@ -96,6 +99,7 @@ INVALID_QUERY_PARAMETER_UPDATE_METADATA_PROFILE = "The query param(s) - [%s] is/
 MISSING_METADATA_PROFILE_NAME_PARAMETER = "Missing metadata profile 'name' parameter"
 DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully. View Metadata Profiles at /listMetadataProfiles"
 IMPORT_METADATA_INVALID_METADATA_PROFILE_NAME = "MetadataProfile - %s either does not exist or is not valid"
+INVALID_REQUEST_ID = "Invalid request_id format. Should be a 32-character alphanumeric"
 
 
 # Kruize Recommendations Notification codes
@@ -1905,3 +1909,20 @@ def validate_metadata_workloads(metadata_json, namespace, workload, container):
         f"Validation failed: No entry found for namespace='{namespace}', "
         f"workload='{workload}', and container='{container}'."
     )
+
+
+# Generate request_id
+def generate_request_id(length=32):
+    return ''.join(random.choices(string.ascii_letters + string.digits, k=length))
+
+# modify the input json to include request_id and create a temp file with it
+def inject_request_id_and_save(input_file, request_id):
+    with open(input_file, "r") as f:
+        input_json = json.load(f)
+    for experiment in input_json:
+        experiment["request_id"] = request_id
+
+    temp_file = tempfile.NamedTemporaryFile(delete=False, mode='w', suffix='.json')
+    json.dump(input_json, temp_file, indent=2)
+    temp_file.flush()
+    return temp_file.name

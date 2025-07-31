@@ -126,7 +126,7 @@ def update_results(result_json_file, logging=True):
 
 
 # Description: This function generates recommendation for the given experiment_name , start time and end time .
-def update_recommendations(experiment_name, startTime, endTime):
+def update_recommendations(experiment_name, startTime, endTime, request_id=None):
     print("\n************************************************************")
     print("\nUpdating the recommendation \n for %s for dates Start-time: %s and End-time: %s..." % (
         experiment_name, startTime, endTime))
@@ -137,6 +137,8 @@ def update_recommendations(experiment_name, startTime, endTime):
         queryString = queryString + "&interval_end_time=%s" % (endTime)
     if startTime:
         queryString = queryString + "&interval_start_time=%s" % (startTime)
+    if request_id is not None:
+        queryString = queryString + "&request_id=%s" % (request_id)
 
     url = URL + "/updateRecommendations?%s" % (queryString)
     print("URL = ", url)

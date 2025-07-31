@@ -751,3 +751,61 @@ def test_create_exp_exptype_dates_columns(cluster_type):
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+def test_create_exp_with_valid_request_id(cluster_type):
+    """
+    Test Description: This test validates the experiment creation with the request_id by passing a
+    valid input json
+    """
+    input_json_file = "../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+    # Generate a random valid request_id
+    request_id = generate_request_id(32)
+    temp_file_path = inject_request_id_and_save(input_json_file, request_id)
+
+    response = create_experiment(temp_file_path)
+    data = response.json()
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    response = delete_experiment(temp_file_path)
+    print("delete exp = ", response.status_code)
+    # delete the temp file
+    os.remove(temp_file_path)
+
+
+@pytest.mark.negative
+@pytest.mark.requestId
+@pytest.mark.parametrize("invalid_request_id", [
+    "", "abc123", generate_request_id(33), "1234567890abcdef!@#$%^&*()", " " * 32
+])
+def test_create_exp_with_invalid_request_id(cluster_type, invalid_request_id):
+    """
+    Test Description: This test validates the experiment creation by passing the invalid request_ids in the input json
+    """
+    input_json_file = "../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    # pass the invalid request_id
+    temp_file_path = inject_request_id_and_save(input_json_file, invalid_request_id)
+    response = delete_experiment(temp_file_path)
+    print("delete exp = ", response.status_code)
+
+    response = create_experiment(temp_file_path)
+    data = response.json()
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert data['message'] == INVALID_REQUEST_ID
+
+    response = delete_experiment(temp_file_path)
+    print("delete exp = ", response.status_code)
+    # delete the temp file
+    os.remove(temp_file_path)

@@ -1145,3 +1145,81 @@ def test_update_results__duplicate_records_with_single_exp_multiple_results(clus
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+
+@pytest.mark.sanity
+@pytest.mark.requestId
+def test_update_results_with_valid_request_id(cluster_type):
+    """
+       Test Description: This test validates update results for a valid experiment with the request_id
+   """
+    creat_exp_json = "../json_files/create_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(creat_exp_json)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(creat_exp_json)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/update_results.json"
+    # Generate a random valid request_id
+    request_id = generate_request_id(32)
+    temp_file_path = inject_request_id_and_save(result_json_file, request_id)
+
+    response = update_results(temp_file_path)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    response = delete_experiment(temp_file_path)
+    print("delete exp = ", response.status_code)
+    # delete the temp file
+    os.remove(temp_file_path)
+
+
+@pytest.mark.negative
+@pytest.mark.requestId
+@pytest.mark.parametrize("invalid_request_id", [
+    "", "abc123", generate_request_id(33), "1234567890abcdef!@#$%^&*()", " " * 32
+])
+def test_update_results_with_invalid_request_id(cluster_type, invalid_request_id):
+    """
+    Test Description: This test validates the results updation by passing the invalid request_ids in the input json
+    """
+    creat_exp_json = "../json_files/create_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(creat_exp_json)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(creat_exp_json)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/update_results.json"
+    temp_file_path = inject_request_id_and_save(result_json_file, invalid_request_id)
+
+    response = update_results(temp_file_path)
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    message = data['data'][0]['errors'][0]['message']
+    assert message == INVALID_REQUEST_ID
+
+    response = delete_experiment(temp_file_path)
+    print("delete exp = ", response.status_code)
+    # delete the temp file
+    os.remove(temp_file_path)
