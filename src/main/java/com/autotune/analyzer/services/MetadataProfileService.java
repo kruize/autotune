@@ -33,9 +33,11 @@ import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.autotune.utils.MetricsConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.*;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -206,6 +208,8 @@ public class MetadataProfileService extends HttpServlet{
      */
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String statusValue = "failure";
+        Timer.Sample timerUpdateMetadataProfile = Timer.start(MetricsConfig.meterRegistry());
 
         Map<String, MetadataProfile> metadataProfilesMap = new ConcurrentHashMap<>();
         String metadataProfileName = request.getParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME);
@@ -276,6 +280,7 @@ public class MetadataProfileService extends HttpServlet{
                                 LOGGER.debug(KruizeConstants.MetadataProfileAPIMessages.UPDATE_METADATA_PROFILE_TO_DB_WITH_VERSION,
                                         metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText(), metadataProfile.getProfile_version());
 
+                                statusValue = "success";
                                 sendSuccessResponse(response, String.format(KruizeConstants.MetadataProfileAPIMessages.UPDATE_METADATA_PROFILE_SUCCESS_MSG, metadataProfile.getMetadata().get("name").asText()));
                             } else {
                                 sendErrorResponseMessage(response, null, HttpServletResponse.SC_BAD_REQUEST, updateMetadataProfileToDB.getMessage());
@@ -300,6 +305,11 @@ public class MetadataProfileService extends HttpServlet{
         } catch (Exception e) {
             LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ERROR, e.getMessage());
             sendErrorResponseMessage(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } finally {
+            if (null != timerUpdateMetadataProfile) {
+                MetricsConfig.timerUpdateMetadataProfile = MetricsConfig.timerBUpdateMetadataProfile.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateMetadataProfile.stop(MetricsConfig.timerUpdateMetadataProfile);
+            }
         }
     }
 

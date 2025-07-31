@@ -37,6 +37,9 @@ public class MetricsConfig {
     public static Timer.Builder timerBImportMetadata, timerBGetMetadata;
     public static Timer.Builder timerBJobStatus, timerBCreateBulkJob, timerBGetExpMap, timerBCreateBulkExp, timerBGenerateBulkRec, timerBRunJob;
     public static Timer.Builder timerBAddMetadataProfileDB, timerBLoadMetadataProfileName, timerBLoadAllMetadataProfiles, timerBUpdateMetadataProfileDB;
+    public static Timer timerUpdateMetadataProfile;
+    public static Timer.Builder timerBUpdateMetadataProfile;
+
     private static MetricsConfig INSTANCE;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
     public String DB_METRIC_DESC = "Time taken for KruizeDB methods";
@@ -94,6 +97,8 @@ public class MetricsConfig {
         timerBLoadMetadataProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadMetadataProfileByName");
         timerBLoadAllMetadataProfiles = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllMetadataProfiles");
         timerBUpdateMetadataProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updateMetadataProfileToDB");
+
+        timerBUpdateMetadataProfile = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateMetadataProfile").tag("method", "PUT");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);
