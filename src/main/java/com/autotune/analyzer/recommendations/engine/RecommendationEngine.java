@@ -19,6 +19,7 @@ import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.*;
 import com.autotune.common.data.result.ContainerData;
@@ -2044,8 +2045,11 @@ public class RecommendationEngine {
 
                 }
 
-                List<Metric> namespaceMetricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
-                        AnalyzerConstants.MetricName.namespaceMaxDate.name(), kruizeObject.getExperimentType());
+                List<Metric> namespaceMetricList = filterMetricsBasedOnExpTypeAndK8sObject(
+                        metricProfile,
+                        AnalyzerConstants.MetricName.namespaceMaxDate.name(),
+                        ExperimentTypeUtil.getExperimentTypeFromBitMask(kruizeObject.getExperimentType())
+                );
 
                 // Iterate over metrics and aggregation functions
                 for (Metric metricEntry : namespaceMetricList) {
@@ -2276,8 +2280,11 @@ public class RecommendationEngine {
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
 
-                    List<Metric> metricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
-                            AnalyzerConstants.MetricName.maxDate.name(), kruizeObject.getExperimentType());
+                    List<Metric> metricList = filterMetricsBasedOnExpTypeAndK8sObject(
+                            metricProfile,
+                            AnalyzerConstants.MetricName.maxDate.name(),
+                            ExperimentTypeUtil.getExperimentTypeFromBitMask(kruizeObject.getExperimentType())
+                    );
 
                     List<String> acceleratorFunctions = Arrays.asList(
                             AnalyzerConstants.MetricName.acceleratorCoreUsage.toString(),

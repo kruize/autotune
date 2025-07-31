@@ -616,7 +616,9 @@ public class DBHelpers {
                     kruizeRecommendationEntry.setVersion(KruizeConstants.KRUIZE_RECOMMENDATION_API_VERSION.LATEST.getVersionNumber());
                     kruizeRecommendationEntry.setExperiment_name(listRecommendationsAPIObject.getExperimentName());
                     kruizeRecommendationEntry.setCluster_name(listRecommendationsAPIObject.getClusterName());
-                    kruizeRecommendationEntry.setExperimentType(kruizeObject.getExperimentType().name());
+                    kruizeRecommendationEntry.setExperimentType(
+                            ExperimentTypeUtil.getExperimentTypeFromBitMask(kruizeObject.getExperimentType()).name()
+                    );
 
                     Timestamp endInterval = null;
                     // todo : what happens if two k8 objects or Containers with different timestamp
@@ -756,7 +758,9 @@ public class DBHelpers {
                     listRecommendationsAPIObject.setClusterName(kruizeObject.getClusterName());
                     listRecommendationsAPIObject.setExperimentName(kruizeObject.getExperimentName());
                     listRecommendationsAPIObject.setKubernetesObjects(kubernetesAPIObjectList);
-                    listRecommendationsAPIObject.setExperimentType(kruizeObject.getExperimentType());
+                    listRecommendationsAPIObject.setExperimentType(
+                            ExperimentTypeUtil.getExperimentTypeFromBitMask(kruizeObject.getExperimentType())
+                    );
                 }
                 return listRecommendationsAPIObject;
             }

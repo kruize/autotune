@@ -21,6 +21,7 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
@@ -373,7 +374,7 @@ public class ExperimentValidation {
                 String depType = "";
                 if (expObj.getExperiment_usecase_type().isRemote_monitoring()) {
                     // In case of RM, kubernetes_obj is mandatory
-                    if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.CONTAINER)) {
+                    if (AnalyzerConstants.ExperimentBitMask.CONTAINER_BIT.isSet(expObj.getExperimentType())) {
                         mandatoryDeploymentSelector = Collections.singletonList(AnalyzerConstants.KUBERNETES_OBJECTS);
                         // check for valid k8stype
                         for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
@@ -395,15 +396,27 @@ public class ExperimentValidation {
                     }
                 }
                 // Namespace experiment validation for both remote and local monitoring
-                if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)){
+                if (AnalyzerConstants.ExperimentBitMask.NAMESPACE_BIT.isSet(expObj.getExperimentType())){
                     for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
                         if (null == k8sObject.getNamespaceDataMap() || k8sObject.getNamespaceDataMap().isEmpty()) {
-                            errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE_DATA, expObj.getExperimentType().toString()));
+                            errorMsg = errorMsg.concat(
+                                    String.format(
+                                            AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE_DATA,
+                                            ExperimentTypeUtil.getExperimentTypeFromBitMask(
+                                                    expObj.getExperimentType()
+                                            ).toString()
+                                    ));
                             missingNamespaceData = true;
                         } else {
                             for (NamespaceData namespaceData : k8sObject.getNamespaceDataMap().values()) {
                                 if (null == namespaceData.getNamespace_name()) {
-                                    errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE, expObj.getExperimentType().toString()));
+                                    errorMsg = errorMsg.concat(
+                                            String.format(
+                                                    AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE,
+                                                    ExperimentTypeUtil.getExperimentTypeFromBitMask(
+                                                            expObj.getExperimentType()
+                                                    ).toString()
+                                            ));
                                     missingNamespaceData = true;
                                     break;
                                 }
