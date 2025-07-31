@@ -94,7 +94,8 @@
                 "name": "namespaceTotalPods",
                 "results": {
                   "aggregation_info": {
-                    "sum": 25
+                    "max": 5,
+                    "avg": 3.5
                   }
                 }
               },
@@ -102,7 +103,8 @@
                 "name": "namespaceRunningPods",
                 "results": {
                   "aggregation_info": {
-                    "sum": 22
+                    "max": 4,
+                    "avg": 2.0
                   }
                 }
               }
