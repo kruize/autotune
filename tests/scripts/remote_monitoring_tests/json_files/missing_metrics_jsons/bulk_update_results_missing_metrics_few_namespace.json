@@ -1,0 +1,1060 @@
+[
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:40:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.14, "max": 0.84, "avg": 0.42, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.01, "max": 0.09, "avg": 0.037, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 400, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 600, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 60, "max": 180, "avg": 125, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 55, "max": 160, "avg": 120, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 25 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 22 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T18:40:43.570Z",
+    "interval_end_time": "2022-01-23T18:55:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.2, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.2, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.18, "max": 0.91, "avg": 0.45, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.02, "max": 0.11, "avg": 0.041, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 410, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 620, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 65, "max": 195, "avg": 130, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 60, "max": 185, "avg": 125, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 26 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 24 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T18:55:43.570Z",
+    "interval_end_time": "2022-01-23T19:10:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 5.9, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 7.8, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.21, "max": 0.88, "avg": 0.49, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.0, "max": 0.05, "avg": 0.02, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 390, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 590, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 80, "max": 210, "avg": 145, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 75, "max": 200, "avg": 135, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 24 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 24 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T19:10:43.570Z",
+    "interval_end_time": "2022-01-23T19:25:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.5, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.5, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.3, "max": 1.1, "avg": 0.65, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.05, "max": 0.15, "avg": 0.08, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 450, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 650, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 110, "max": 250, "avg": 180, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 100, "max": 240, "avg": 170, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 28 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 27 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T19:25:43.570Z",
+    "interval_end_time": "2022-01-23T19:40:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.8, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 9, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.4, "max": 1.5, "avg": 0.8, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.1, "max": 0.2, "avg": 0.14, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 480, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 700, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 150, "max": 300, "avg": 220, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 140, "max": 290, "avg": 210, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 30 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 28 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T19:40:43.570Z",
+    "interval_end_time": "2022-01-23T19:55:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.6, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.8, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.35, "max": 1.2, "avg": 0.72, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.08, "max": 0.18, "avg": 0.12, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 460, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 680, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 130, "max": 280, "avg": 200, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 125, "max": 270, "avg": 195, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 29 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 29 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T19:55:43.570Z",
+    "interval_end_time": "2022-01-23T20:10:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.1, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.1, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.25, "max": 0.95, "avg": 0.55, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.03, "max": 0.12, "avg": 0.06, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 420, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 630, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 90, "max": 220, "avg": 150, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 85, "max": 210, "avg": 145, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 27 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 25 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T20:10:43.570Z",
+    "interval_end_time": "2022-01-23T20:25:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 5.8, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 7.5, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.15, "max": 0.8, "avg": 0.4, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.01, "max": 0.08, "avg": 0.03, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 380, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 570, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 70, "max": 190, "avg": 120, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 65, "max": 180, "avg": 115, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 23 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 21 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T20:25:43.570Z",
+    "interval_end_time": "2022-01-23T20:40:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.0, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.0, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.22, "max": 0.9, "avg": 0.48, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.02, "max": 0.1, "avg": 0.045, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 400, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 600, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 85, "max": 215, "avg": 140, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 80, "max": 205, "avg": 135, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 25 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 23 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T20:40:43.570Z",
+    "interval_end_time": "2022-01-23T20:55:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.3, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.4, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.28, "max": 1.0, "avg": 0.6, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.04, "max": 0.13, "avg": 0.07, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 430, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 640, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 100, "max": 240, "avg": 170, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 95, "max": 230, "avg": 165, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 27 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 26 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T20:55:43.570Z",
+    "interval_end_time": "2022-01-23T21:10:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.9, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 9.2, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.5, "max": 1.8, "avg": 0.9, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.12, "max": 0.22, "avg": 0.16, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 500, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 720, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 180, "max": 350, "avg": 250, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 170, "max": 340, "avg": 240, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 31 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 30 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T21:10:43.570Z",
+    "interval_end_time": "2022-01-23T21:25:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.7, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.9, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.45, "max": 1.6, "avg": 0.85, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.1, "max": 0.2, "avg": 0.15, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 470, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 690, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 160, "max": 320, "avg": 230, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 150, "max": 310, "avg": 220, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 30 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 28 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T21:25:43.570Z",
+    "interval_end_time": "2022-01-23T21:40:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.4, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.5, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.32, "max": 1.1, "avg": 0.68, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.06, "max": 0.16, "avg": 0.09, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 440, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 660, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 120, "max": 270, "avg": 190, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 115, "max": 260, "avg": 185, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 28 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 27 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T21:40:43.570Z",
+    "interval_end_time": "2022-01-23T21:55:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.2, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.3, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.25, "max": 0.95, "avg": 0.58, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.03, "max": 0.11, "avg": 0.05, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 415, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 625, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 95, "max": 230, "avg": 155, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 90, "max": 220, "avg": 150, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 26 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 25 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T21:55:43.570Z",
+    "interval_end_time": "2022-01-23T22:10:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.0, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.0, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.2, "max": 0.85, "avg": 0.45, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.01, "max": 0.09, "avg": 0.04, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 400, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 600, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 75, "max": 200, "avg": 130, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 70, "max": 190, "avg": 125, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 25 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 22 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T22:10:43.570Z",
+    "interval_end_time": "2022-01-23T22:25:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 5.7, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 7.6, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.18, "max": 0.75, "avg": 0.38, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.0, "max": 0.07, "avg": 0.02, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 370, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 560, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 60, "max": 180, "avg": 110, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 55, "max": 170, "avg": 105, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 22 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 20 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T22:25:43.570Z",
+    "interval_end_time": "2022-01-23T22:40:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default"
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T22:40:43.570Z",
+    "interval_end_time": "2022-01-23T22:55:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.1, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.1, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.22, "max": 0.88, "avg": 0.5, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.02, "max": 0.1, "avg": 0.048, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 410, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 610, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 80, "max": 210, "avg": 140, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 75, "max": 200, "avg": 135, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 26 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 25 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T22:55:43.570Z",
+    "interval_end_time": "2022-01-23T23:10:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.4, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.5, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.3, "max": 1.0, "avg": 0.65, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.05, "max": 0.15, "avg": 0.08, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 440, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 650, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 110, "max": 260, "avg": 180, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 105, "max": 250, "avg": 175, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 28 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 28 } }
+            }
+          ]
+        }
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T23:10:43.570Z",
+    "interval_end_time": "2022-01-23T23:25:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuRequest",
+              "results": { "aggregation_info": { "sum": 6.4, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuLimit",
+              "results": { "aggregation_info": { "sum": 8.5, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuUsage",
+              "results": { "aggregation_info": { "min": 0.3, "max": 1.0, "avg": 0.65, "format": "cores" } }
+            },
+            {
+              "name": "namespaceCpuThrottle",
+              "results": { "aggregation_info": { "min": 0.05, "max": 0.15, "avg": 0.08, "format": "cores" } }
+            },
+            {
+              "name": "namespaceMemoryRequest",
+              "results": { "aggregation_info": { "sum": 440, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryLimit",
+              "results": { "aggregation_info": { "sum": 650, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": { "aggregation_info": { "min": 110, "max": 260, "avg": 180, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceMemoryRSS",
+              "results": { "aggregation_info": { "min": 105, "max": 250, "avg": 175, "format": "MiB" } }
+            },
+            {
+              "name": "namespaceTotalPods",
+              "results": { "aggregation_info": { "sum": 28 } }
+            },
+            {
+              "name": "namespaceRunningPods",
+              "results": { "aggregation_info": { "sum": 28 } }
+            }
+          ]
+        }
+      }
+    ]
+  }
+]
