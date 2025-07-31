@@ -58,7 +58,8 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     private AnalyzerConstants.ExperimentStatus status;
     private String experiment_id;   // this id is UUID and getting set at createExperiment API
     private ValidationOutputData validationData;  // This object indicates if this API object is valid or invalid
-    private String request_id; // this gets logged to uniquely identify each request
+    @SerializedName(KruizeConstants.JSONKeys.REQUEST_ID)
+    private String requestId; // this gets logged to uniquely identify each request
 
     public CreateExperimentAPIObject() {
     }
@@ -171,8 +172,8 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
         this.experimentType = experimentType;
     }
 
-    public String getRequest_id() {
-        return request_id;
+    public String getRequestId() {
+        return requestId;
     }
 
     @Override

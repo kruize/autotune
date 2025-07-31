@@ -193,7 +193,10 @@ public class ExperimentValidation {
                     // validate request_id, if present
                     if (kruizeObject.getRequestId() != null) {
                         errorMsg = ExperimentInitiator.validateRequestId(kruizeObject.getRequestId());
-                        validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                        if (!errorMsg.isEmpty()) {
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            proceed = false;
+                        }
                     }
 
                 } else {

@@ -647,7 +647,7 @@ public class KruizeConstants {
         public static class APIErrorMsgs {
             private APIErrorMsgs() {
             }
-            public static final String INVALID_REQUEST_ID = "Invalid requestId format. Should be a "+KRUIZE_CONFIG_DEFAULT_VALUE.REQUEST_ID_LENGTH+"-character alphanumeric";
+            public static final String INVALID_REQUEST_ID = "Invalid request_id format. Should be a "+KRUIZE_CONFIG_DEFAULT_VALUE.REQUEST_ID_LENGTH+"-character alphanumeric";
 
             public static class ListDeploymentsInNamespace {
                 public static final String INVALID_NAMESPACE = "Given Namespace is invalid";
