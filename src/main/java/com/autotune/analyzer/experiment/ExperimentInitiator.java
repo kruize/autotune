@@ -158,6 +158,18 @@ public class ExperimentInitiator {
                     failedUpdateResultsAPIObjects.add(object);
                     continue;
                 }
+                // log and validate requestId
+                if (null != object.getRequestId()) {
+                    String requestId = object.getRequestId();
+                    LOGGER.info("request_id : {}", requestId);
+                    errorMsg = validateRequestId(requestId);
+                    if (!errorMsg.isEmpty()) {
+                        errorReasons.add(errorMsg);
+                        object.setErrors(getErrorMap(errorReasons));
+                        failedUpdateResultsAPIObjects.add(object);
+                        continue;
+                    }
+                }
                 object.setKruizeObject(mainKruizeExperimentMAP.get(object.getExperimentName()));
                 Set<ConstraintViolation<UpdateResultsAPIObject>> violations = new HashSet<>();
                 try {
