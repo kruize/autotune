@@ -429,7 +429,7 @@ def test_upload_container_results_for_namespace_experiment(cluster_type):
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
     actual_error = data['data'][0]['errors'][0]['message']
-    assert UPDATE_RESULTS_UPDATE_MISMATCH_FOR_NAMESPACE_EXPERIMENT in actual_error
+    assert MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS in actual_error
 
     response = delete_experiment("/tmp/temp_create_exp.json")
     print("delete exp = ", response.status_code)
