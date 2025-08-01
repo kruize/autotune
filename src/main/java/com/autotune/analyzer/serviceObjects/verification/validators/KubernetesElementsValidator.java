@@ -59,23 +59,23 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             // Check if Kubernetes Object Namespaces is matched
             if (kruizeObject.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)) {
                 // Validate the absence of type, name and namespace objects
-                for (K8sObject obj : resultData.getKubernetes_objects()) {
-                    String kubeObjTypeInResultData = obj.getType();
-                    String kubeObjNameInResultsData = obj.getName();
-                    String kubeObjNameSpaceInResultsData = obj.getNamespace();
+                // Assuming that there is only one Kubernetes object
+                String kubeObjTypeInResultData = resultData.getKubernetes_objects().get(0).getType();
+                String kubeObjNameInResultsData = resultData.getKubernetes_objects().get(0).getName();
+                String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
 
-                    if (kubeObjTypeInResultData != null && kubeObjNameInResultsData != null && kubeObjNameSpaceInResultsData != null) {
-                        kubeObjsMisMatch = true;
-                        errorMsg = errorMsg.concat(
-                                String.format(
-                                        AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS,
-                                        expName
-                                ));
-                    }
+                if (kubeObjTypeInResultData != null && kubeObjNameInResultsData != null && kubeObjNameSpaceInResultsData != null) {
+                    kubeObjsMisMatch = true;
+                    errorMsg = errorMsg.concat(
+                            String.format(
+                                    AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS,
+                                    expName
+                            ));
                 }
             }
 
             // Check if Kubernetes Object Type is matched
+            // Assuming that there is only one Kubernetes object
             String kubeObjTypeInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getType();
             String kubeObjTypeInResultData = resultData.getKubernetes_objects().get(0).getType();
 
@@ -91,6 +91,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             }
 
             // Check if Kubernetes Object Name is matched
+            // Assuming that there is only one Kubernetes object
             String kubeObjNameInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getName();
             String kubeObjNameInResultsData = resultData.getKubernetes_objects().get(0).getName();
 
@@ -107,6 +108,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
 
 
             // Check if Kubernetes Object NameSpace is matched
+            // Assuming that there is only one Kubernetes object
             String kubeObjNameSpaceInKruizeObject = kruizeObject.getKubernetes_objects().get(0).getNamespace();
             String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
 
@@ -123,6 +125,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
                 }
             }
             // Validate blank or null container names and image names
+            // Assuming that there is only one Kubernetes object
             List<ContainerData> resultContainers = new ArrayList<>();
             if (resultData.getKubernetes_objects() != null && !resultData.getKubernetes_objects().isEmpty() &&
                     resultData.getKubernetes_objects().get(0) != null && resultData.getKubernetes_objects().get(0).getContainerDataMap() != null) {
@@ -139,7 +142,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
             }
 
             // Validate for blank or null Namespace Name
-
+            // Assuming that there is only one Kubernetes object
             List<NamespaceData> resultNamespaces = new ArrayList<>();
             if (resultData.getKubernetes_objects() != null && !resultData.getKubernetes_objects().isEmpty() &&
                     resultData.getKubernetes_objects().get(0) != null && resultData.getKubernetes_objects().get(0).getNamespaceDataMap() != null) {
