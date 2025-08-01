@@ -17,6 +17,7 @@ package com.autotune.analyzer.serviceObjects.verification.validators;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.KubernetesElementsCheck;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -57,19 +58,20 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
 
             // Check if Kubernetes Object Namespaces is matched
             if (kruizeObject.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)) {
-                // it's a namespace experiment type then type, name, namespace should not be present
+                // Validate the absence of type, name and namespace objects
+                for (K8sObject obj : resultData.getKubernetes_objects()) {
+                    String kubeObjTypeInResultData = obj.getType();
+                    String kubeObjNameInResultsData = obj.getName();
+                    String kubeObjNameSpaceInResultsData = obj.getNamespace();
 
-                String kubeObjTypeInResultData = resultData.getKubernetes_objects().get(0).getType();
-                String kubeObjNameInResultsData = resultData.getKubernetes_objects().get(0).getName();
-                String kubeObjNameSpaceInResultsData = resultData.getKubernetes_objects().get(0).getNamespace();
-
-                if (kubeObjTypeInResultData != null && kubeObjNameInResultsData != null && kubeObjNameSpaceInResultsData != null) {
-                    kubeObjsMisMatch = true;
-                    errorMsg = errorMsg.concat(
-                            String.format(
-                                    AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS,
-                                    expName
-                            ));
+                    if (kubeObjTypeInResultData != null && kubeObjNameInResultsData != null && kubeObjNameSpaceInResultsData != null) {
+                        kubeObjsMisMatch = true;
+                        errorMsg = errorMsg.concat(
+                                String.format(
+                                        AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS,
+                                        expName
+                                ));
+                    }
                 }
             }
 

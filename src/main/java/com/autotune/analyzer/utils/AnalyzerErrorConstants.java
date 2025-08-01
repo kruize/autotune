@@ -117,7 +117,7 @@ public class AnalyzerErrorConstants {
         public static final String INVALID_METADATA_PROFILE_NAME = "MetadataProfile 'name' field is either null or empty!";
         public static final String INVALID_METRICS_FOUND = "Invalid metrics found for experiment - %s: %s";
         public static final String MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment - %s : %s";
-        public static final String MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS = "Kubernetes Object Type, Name, Namespace Present. Expected Namespace-level Update Results fields, Found Container-level Update Results fields for experiment: %s ";
+        public static final String MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS = "Expected namespace-level results, but found type, name, and namespace for experiment: %s.";
 
 
         private AutotuneObjectErrors() {
