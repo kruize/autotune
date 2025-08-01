@@ -560,6 +560,58 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+
+    /**
+     * Update MetadataProfile in database
+     *
+     * @param kruizeMetadataProfileEntry Metadata Profile Database object to be updated
+     * @return validationOutputData contains the status of the DB update operation
+     */
+    public ValidationOutputData updateMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerUpdateMetadataProfileDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(UPDATE_METADATA_PROFILE_TO_DB, null);
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME_PARAMETER, kruizeMetadataProfileEntry.getMetadata().get("name").asText());
+                query.setParameter(AnalyzerConstants.API_VERSION, kruizeMetadataProfileEntry.getApi_version());
+                query.setParameter(AnalyzerConstants.KIND, kruizeMetadataProfileEntry.getKind());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.METADATA, kruizeMetadataProfileEntry.getMetadata());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME, kruizeMetadataProfileEntry.getMetadata().get("name").asText());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.PROFILE_VERSION, kruizeMetadataProfileEntry.getProfile_version());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.K8STYPE, kruizeMetadataProfileEntry.getK8s_type());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.DATASOURCE, kruizeMetadataProfileEntry.getDatasource());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.QUERY_VARIABLES, kruizeMetadataProfileEntry.getQuery_variables());
+
+                int updatedCount = query.executeUpdate();
+                if (updatedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME + kruizeMetadataProfileEntry.getMetadata().get("name").asText());
+                }
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ERROR, e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ERROR, e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerUpdateMetadataProfileDB) {
+                MetricsConfig.timerUpdateMetadataProfileDB = MetricsConfig.timerBUpdateMetadataProfileDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateMetadataProfileDB.stop(MetricsConfig.timerUpdateMetadataProfileDB);
+            }
+        }
+        return validationOutputData;
+    }
+
     /**
      * @param kruizeDataSourceEntry
      * @param validationOutputData

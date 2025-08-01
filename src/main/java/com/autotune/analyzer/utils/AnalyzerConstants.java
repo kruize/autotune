@@ -18,6 +18,7 @@ package com.autotune.analyzer.utils;
 import com.autotune.utils.KruizeConstants;
 
 import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -105,7 +106,12 @@ public class AnalyzerConstants {
     public static final String WORKLOAD = "workload";
     public static final String CONTAINER = "container";
     public static final int DEFAULT_MEASUREMENT_DURATION_INT = 15;
-
+    public static final String KRUIZE_PROFILE_FILTER = "kruize";
+    public static final String NAMESPACE_PROFILE_FILTER = "openshift-tuning|monitoring";
+    public static final String NAMESPACE_FILTER_IDENTIFIER = ", %s=~\"%s\"";
+    public static final String WORKLOAD_FILTER_IDENTIFIER = ", %s=\"%s\"";
+    public static final String METADATA_PROFILE_QUERY_MATCHER = "sum by \\((.*?)\\)";
+    public static final String COMMA_SPACE_REGEX = "\\s*,\\s*";
 
     private AnalyzerConstants() {
     }
@@ -313,6 +319,43 @@ public class AnalyzerConstants {
         }
     }
 
+    public enum MetadataProfileQueryIdentifier {
+        NAMESPACE_QUERY_IDENTIFIER(new LinkedHashSet<>(List.of("namespace"))),
+
+        WORKLOAD_QUERY_IDENTIFIER(new LinkedHashSet<>(List.of("namespace", "workload", "workload_type"))),
+
+        CONTAINER_QUERY_IDENTIFIER(new LinkedHashSet<>(List.of("container", "image", "workload", "workload_type", "namespace")));
+
+        private final Set<String> expectedIdentifiers;
+
+        MetadataProfileQueryIdentifier(Set<String> expectedIdentifiers) {
+            this.expectedIdentifiers = expectedIdentifiers;
+        }
+
+        public Set<String> getExpectedIdentifiers() {
+            return expectedIdentifiers;
+        }
+    }
+
+    /**
+     * Validates if the metricName to be updated has supported prefix like namespace, workload, container.
+     * @param metricName Name of the metric to be updated
+     * @return boolean output if the metric name has one of the supported prefixes
+     */
+    public static boolean validateMetricQueryName(String metricName) {
+        List<String> supportedQueryPrefixes = Arrays.asList(AnalyzerConstants.NAMESPACE,
+                AnalyzerConstants.WORKLOAD, AnalyzerConstants.CONTAINER);
+
+        String metricNameLowerCase = metricName.toLowerCase();
+        for (String queryPrefix : supportedQueryPrefixes) {
+            if (metricNameLowerCase.contains(queryPrefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+
     public static final class AcceleratorConstants {
         private AcceleratorConstants() {
 
@@ -422,7 +465,7 @@ public class AnalyzerConstants {
         public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
         public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
         public static final String FUNCTION_VARIABLE = "function_variable: ";
-        public static final String QUERY_VARIABLE = "query_variable: ";
+        public static final String QUERY_VARIABLE = "For query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String QUERY_VARIABLES = "query_variables";
 
@@ -706,6 +749,10 @@ public class AnalyzerConstants {
         public static final String DEFAULT_DATASOURCE = "prometheus";
         public static final String CLUSTER_METADATA_LOCAL_MON_PROFILE = "cluster-metadata-local-monitoring";
         public static final String DEFAULT_MEASUREMENT_DURATION = "15min";
+        public static final String PROFILE_VERSION = "profileVersion";
+        public static final String METADATA = "metadata";
+        public static final String K8STYPE = "k8sType";
+        public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
     }
 
     public static final class CommonProfileMsgs {

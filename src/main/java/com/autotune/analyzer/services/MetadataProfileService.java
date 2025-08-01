@@ -33,15 +33,16 @@ import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.autotune.utils.MetricsConfig;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.*;
+import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
-import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -195,17 +196,121 @@ public class MetadataProfileService extends HttpServlet{
     }
 
     /**
-     * TODO: Need to implement
      * Update Metadata Profile
+     * Handles the PUT request for updating metadata profile - PUT /updateMetadataProfile
+     * <p>
+     * Supported Query Parameters -
+     * name	- metadata profile name to be updated(required)
      *
-     * @param req
-     * @param resp
-     * @throws ServletException
+     * @param request
+     * @param response
      * @throws IOException
      */
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPut(req, resp);
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        String statusValue = "failure";
+        Timer.Sample timerUpdateMetadataProfile = Timer.start(MetricsConfig.meterRegistry());
+
+        Map<String, MetadataProfile> metadataProfilesMap = new ConcurrentHashMap<>();
+        String metadataProfileName = request.getParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME);
+
+        String inputData = request.getReader().lines().collect(Collectors.joining());
+
+        if (null == metadataProfileName || metadataProfileName.isEmpty()) {
+            sendErrorResponseMessage(
+                    response,
+                    new Exception(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.MISSING_METADATA_PROFILE_NAME_EXCPTN),
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.MISSING_METADATA_PROFILE_NAME_MSG)
+            );
+            return;
+        }
+
+        if (inputData.isEmpty()) {
+            sendErrorResponseMessage(
+                    response,
+                    new Exception(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.MISSING_INPUT_PAYLOAD),
+                    HttpServletResponse.SC_BAD_REQUEST,
+                    AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.MISSING_INPUT_PAYLOAD
+            );
+            return;
+        }
+
+        Set<String> invalidParams = new HashSet<>();
+        for (String param : request.getParameterMap().keySet()) {
+            if (!KruizeSupportedTypes.UPDATE_METADATA_PROFILES_QUERY_PARAMS_SUPPORTED.contains(param)) {
+                invalidParams.add(param);
+            }
+        }
+
+        try {
+            if (invalidParams.isEmpty()) {
+                try {
+                    // Fetch metadata profiles based on the query parameter using the in-memory storage collection
+                    loadMetadataProfilesFromCollection(metadataProfilesMap, metadataProfileName);
+
+                    // Check if metadata profile exists
+                    if (!metadataProfilesMap.containsKey(metadataProfileName)) {
+                        sendErrorResponseMessage(
+                                response,
+                                new Exception(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_METADATA_PROFILE_NAME_EXCPTN),
+                                HttpServletResponse.SC_BAD_REQUEST,
+                                String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_METADATA_PROFILE_NAME_MSG, metadataProfileName)
+                        );
+                    } else {
+                        MetadataProfile metadataProfile = Converters.KruizeObjectConverters.convertInputJSONToCreateMetadataProfile(inputData);
+                        String inputMetadataProfileName =  metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText();
+
+                        if (!inputMetadataProfileName.equals(metadataProfileName)) {
+                            sendErrorResponseMessage(response, null, HttpServletResponse.SC_BAD_REQUEST,
+                                    String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.METADATA_PROFILE_NAMES_MISMATCH,
+                                            metadataProfileName, inputMetadataProfileName));
+                            return;
+                        }
+
+                        ValidationOutputData validationOutputData = MetadataProfileUtil.validateMetadataProfile(metadataProfilesMap, metadataProfile);
+                        if (validationOutputData.isSuccess()) {
+                            ValidationOutputData updateMetadataProfileToDB = new ExperimentDBService().updateMetadataProfileToDB(metadataProfile);
+                            if (updateMetadataProfileToDB.isSuccess()) {
+                                // Update metadata profile in-memory collection
+                                MetadataProfileCollection.getInstance().updateMetadataProfileToCollection(metadataProfileName, metadataProfile);
+
+                                metadataProfilesMap.put(inputMetadataProfileName, metadataProfile);
+                                getServletContext().setAttribute(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_MAP, metadataProfilesMap);
+                                LOGGER.debug(KruizeConstants.MetadataProfileAPIMessages.UPDATE_METADATA_PROFILE_TO_DB_WITH_VERSION,
+                                        metadataProfile.getMetadata().get(KruizeConstants.JSONKeys.NAME).asText(), metadataProfile.getProfile_version());
+
+                                statusValue = "success";
+                                sendSuccessResponse(response, String.format(KruizeConstants.MetadataProfileAPIMessages.UPDATE_METADATA_PROFILE_SUCCESS_MSG, metadataProfile.getMetadata().get("name").asText()));
+                            } else {
+                                sendErrorResponseMessage(response, null, HttpServletResponse.SC_BAD_REQUEST, updateMetadataProfileToDB.getMessage());
+                            }
+                        } else {
+                            sendErrorResponseMessage(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
+                        }
+                    }
+                } catch (Exception e) {
+                    LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ERROR, e.getMessage());
+                    e.printStackTrace();
+                    sendErrorResponseMessage(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+                }
+            } else {
+                sendErrorResponseMessage(
+                        response,
+                        new Exception(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_QUERY_PARAM),
+                        HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.INVALID_QUERY_PARAM, invalidParams)
+                );
+            }
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ERROR, e.getMessage());
+            sendErrorResponseMessage(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } finally {
+            if (null != timerUpdateMetadataProfile) {
+                MetricsConfig.timerUpdateMetadataProfile = MetricsConfig.timerBUpdateMetadataProfile.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateMetadataProfile.stop(MetricsConfig.timerUpdateMetadataProfile);
+            }
+        }
     }
 
     /**
@@ -230,7 +335,7 @@ public class MetadataProfileService extends HttpServlet{
         String metadataProfileName = request.getParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME);
 
         if (null == metadataProfileName || metadataProfileName.isEmpty()) {
-            sendDeleteErrorResponse(
+            sendErrorResponseMessage(
                     response,
                     new Exception(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.MISSING_METADATA_PROFILE_NAME_EXCPTN),
                     HttpServletResponse.SC_BAD_REQUEST,
@@ -250,7 +355,7 @@ public class MetadataProfileService extends HttpServlet{
                     deleteMetadataProfile(metadataProfileName);
                     metadataProfilesMap.remove(metadataProfileName);
                 } catch (Exception e) {
-                    sendDeleteErrorResponse(
+                    sendErrorResponseMessage(
                             response,
                             e,
                             HttpServletResponse.SC_BAD_REQUEST,
@@ -258,7 +363,7 @@ public class MetadataProfileService extends HttpServlet{
                     return;
                 }
             } else {
-                sendDeleteErrorResponse(
+                sendErrorResponseMessage(
                         response,
                         new Exception(AnalyzerErrorConstants.APIErrors.DeleteMetadataProfileAPI.INVALID_METADATA_PROFILE_NAME_EXCPTN),
                         HttpServletResponse.SC_BAD_REQUEST,
@@ -271,7 +376,7 @@ public class MetadataProfileService extends HttpServlet{
 
         } catch (Exception e) {
             LOGGER.error(e.getMessage());
-            sendDeleteErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+            sendErrorResponseMessage(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
@@ -363,7 +468,7 @@ public class MetadataProfileService extends HttpServlet{
      * @param errorMsg
      * @throws IOException
      */
-    public void sendDeleteErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws IOException {
+    public void sendErrorResponseMessage(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws IOException {
         if (e != null) {
             LOGGER.error(e.toString());
             if (errorMsg == null) {
