@@ -67,7 +67,7 @@ public class KubernetesElementsValidator implements ConstraintValidator<Kubernet
                     kubeObjsMisMatch = true;
                     errorMsg = errorMsg.concat(
                             String.format(
-                                    "Kubernetes Object Type, Name, Namespace Present. Expected Namespace-level Update Results fields, Found Container-level Update Results fields for experiment: %s \n",
+                                    AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS,
                                     expName
                             ));
                 }
