@@ -666,7 +666,6 @@ def test_update_valid_namespace_recommendations(cluster_type):
 
 
 @pytest.mark.sanity
-@pytest.mark.requestId
 def test_update_recommendations_with_valid_request_id(cluster_type):
     '''
       Creates Experiment +
@@ -746,6 +745,11 @@ def test_update_recommendations_with_valid_request_id(cluster_type):
         assert data[0]['experiment_name'] == experiment_name
         assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
                    'message'] == 'Recommendations Are Available'
+
+        # validate the request_id in logs
+        logs = get_kruize_pod_logs()
+        assert f"request_id : {request_id}" in logs, f"request_id {request_id} not found in pod logs"
+
         response = list_recommendations(experiment_name, rm=True)
         if response.status_code == SUCCESS_200_STATUS_CODE:
             recommendation_json = response.json()
@@ -782,7 +786,6 @@ def test_update_recommendations_with_valid_request_id(cluster_type):
 
 
 @pytest.mark.negative
-@pytest.mark.requestId
 @pytest.mark.parametrize("invalid_request_id", [
     "", "abc123", generate_request_id(33), "1234567890abcdef!@#$%^&*()", " " * 32
 ])

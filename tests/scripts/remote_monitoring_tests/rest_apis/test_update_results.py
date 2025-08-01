@@ -1147,7 +1147,6 @@ def test_update_results__duplicate_records_with_single_exp_multiple_results(clus
 
 
 @pytest.mark.sanity
-@pytest.mark.requestId
 def test_update_results_with_valid_request_id(cluster_type):
     """
        Test Description: This test validates update results for a valid experiment with the request_id
@@ -1179,6 +1178,11 @@ def test_update_results_with_valid_request_id(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
 
+    # Allow logs to flush to validate the request_id in logs
+    time.sleep(2)
+    logs = get_kruize_pod_logs()
+    assert f"request_id : {request_id}" in logs, f"request_id {request_id} not found in pod logs"
+
     response = delete_experiment(temp_file_path)
     print("delete exp = ", response.status_code)
     # delete the temp file
@@ -1186,7 +1190,6 @@ def test_update_results_with_valid_request_id(cluster_type):
 
 
 @pytest.mark.negative
-@pytest.mark.requestId
 @pytest.mark.parametrize("invalid_request_id", [
     "", "abc123", generate_request_id(33), "1234567890abcdef!@#$%^&*()", " " * 32
 ])

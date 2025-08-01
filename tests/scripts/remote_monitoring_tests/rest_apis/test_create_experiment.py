@@ -775,6 +775,10 @@ def test_create_exp_with_valid_request_id(cluster_type):
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
+    # validate the request_id in logs
+    logs = get_kruize_pod_logs()
+    assert f"request_id : {request_id}" in logs, f"request_id {request_id} not found in pod logs"
+
     response = delete_experiment(temp_file_path)
     print("delete exp = ", response.status_code)
     # delete the temp file
@@ -782,7 +786,6 @@ def test_create_exp_with_valid_request_id(cluster_type):
 
 
 @pytest.mark.negative
-@pytest.mark.requestId
 @pytest.mark.parametrize("invalid_request_id", [
     "", "abc123", generate_request_id(33), "1234567890abcdef!@#$%^&*()", " " * 32
 ])

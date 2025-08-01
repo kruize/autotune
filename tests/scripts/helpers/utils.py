@@ -1926,3 +1926,16 @@ def inject_request_id_and_save(input_file, request_id):
     json.dump(input_json, temp_file, indent=2)
     temp_file.flush()
     return temp_file.name
+
+
+def get_kruize_pod_logs(namespace="openshift-tuning"):
+    try:
+        pod_name = subprocess.check_output(
+            ["oc", "get", "pod", "-n", namespace, "-l", "app=kruize", "-o", "jsonpath={.items[0].metadata.name}"]
+        ).decode().strip()
+        logs = subprocess.check_output(["oc", "logs", pod_name, "-n", namespace]).decode()
+        return logs
+    except subprocess.CalledProcessError as e:
+        print(f"Error fetching logs: {e}")
+        return ""
+
