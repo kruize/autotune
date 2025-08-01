@@ -552,8 +552,8 @@ def test_update_results_with_zero_metric_values_fails(cluster_type):
         "namespaceMemoryLimit_name": "namespaceMemoryLimit", "namespaceMemoryLimit_sum": 0.0, "namespaceMemoryLimit_format": "MiB",
         "namespaceMemoryUsage_name": "namespaceMemoryUsage", "namespaceMemoryUsage_min": 0.0, "namespaceMemoryUsage_max": 0.0, "namespaceMemoryUsage_avg": 0.0, "namespaceMemoryUsage_format": "MiB",
         "namespaceMemoryRSS_name": "namespaceMemoryRSS", "namespaceMemoryRSS_min": 0.0, "namespaceMemoryRSS_max": 0.0, "namespaceMemoryRSS_avg": 0.0, "namespaceMemoryRSS_format": "MiB",
-        "namespaceTotalPods_name": "namespaceTotalPods", "namespaceTotalPods_sum": 0,
-        "namespaceRunningPods_name": "namespaceRunningPods", "namespaceRunningPods_sum": 0
+        "namespaceTotalPods_name": "namespaceTotalPods", "namespaceTotalPods_max": 0, "namespaceTotalPods_avg": 0,
+        "namespaceRunningPods_name": "namespaceRunningPods", "namespaceRunningPods_max": 0, "namespaceRunningPods_avg": 0
     }
     
     content = template.render(**template_vars)
