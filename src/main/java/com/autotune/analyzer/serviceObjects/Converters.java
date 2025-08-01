@@ -108,6 +108,8 @@ public class Converters {
                     // Validation already done, and it is getting loaded back from db
                     kruizeObject.setValidation_data(createExperimentAPIObject.getValidationData());
                 }
+                kruizeObject.setCreation_date(createExperimentAPIObject.getCreationDate());
+                kruizeObject.setUpdate_date(createExperimentAPIObject.getUpdateDate());
                 // add request_id
                 kruizeObject.setRequestId(createExperimentAPIObject.getRequestId());
             } catch (Exception e) {

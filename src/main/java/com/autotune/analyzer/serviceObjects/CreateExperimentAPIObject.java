@@ -26,6 +26,7 @@ import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 
+import java.sql.Timestamp;
 import java.util.List;
 
 /**
@@ -58,6 +59,10 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     private AnalyzerConstants.ExperimentStatus status;
     private String experiment_id;   // this id is UUID and getting set at createExperiment API
     private ValidationOutputData validationData;  // This object indicates if this API object is valid or invalid
+    @SerializedName(KruizeConstants.JSONKeys.CREATION_DATE)
+    public Timestamp creationDate;
+    @SerializedName(KruizeConstants.JSONKeys.UPDATE_DATE)
+    public Timestamp updateDate;
     @SerializedName(KruizeConstants.JSONKeys.REQUEST_ID)
     private String requestId; // this gets logged to uniquely identify each request
 
@@ -170,6 +175,22 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
 
     public void setExperimentType(AnalyzerConstants.ExperimentType experimentType) {
         this.experimentType = experimentType;
+    }
+
+    public Timestamp getCreationDate() {
+        return creationDate;
+    }
+
+    public void setCreationDate(Timestamp creationDate) {
+        this.creationDate = creationDate;
+    }
+
+    public Timestamp getUpdateDate() {
+        return updateDate;
+    }
+
+    public void setUpdateDate(Timestamp updateDate) {
+        this.updateDate = updateDate;
     }
 
     public String getRequestId() {

@@ -12,6 +12,7 @@ import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Set;
 
 public interface ExperimentDAO {
 
@@ -156,4 +157,5 @@ public interface ExperimentDAO {
 
     void deleteBulkJobByID(String jobId);
 
+    boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception;
 }

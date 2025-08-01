@@ -46,10 +46,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
@@ -797,6 +794,50 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public void deleteBulkJobByID(String jobId) {
         //todo
+    }
+
+    /**
+     * Updates the {@code update_date} column in the {@code kruize_experiments} table for the specified experiments.
+     *
+     * <p>This method executes a native SQL update query to set the {@code update_date} field for all experiments
+     * whose names are provided in the {@code experimentNames} set. The update is performed using a Hibernate session
+     * within a transaction.</p>
+     *
+     * @param experimentNames A set of experiment names to be updated.
+     * @param currentTimestamp The timestamp to be set in the {@code update_date} field.
+     * @return {@code true} if the update operation was executed (even if no rows were affected),
+     *         {@code false} if {@code experimentNames} is {@code null} or empty.
+     * @throws Exception If any exception occurs during the database update.
+     */
+    @Override
+    public boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception {
+        if (experimentNames == null || experimentNames.isEmpty()) {
+            return false;
+        }
+
+        String statusValue = "failure";
+        Timer.Sample timerUpdateExperiment = Timer.start(MetricsConfig.meterRegistry());
+
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+
+            session.beginTransaction();
+            session.createNativeQuery(UPDATE_EXPERIMENTS_DATE)
+                    .setParameter("updateDate", currentTimestamp)
+                    .setParameterList("experimentNames", experimentNames)
+                    .executeUpdate();
+
+            session.getTransaction().commit();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Failed to update update_date for experiments: {}", e.getMessage());
+            throw new Exception(e.getMessage());
+        } finally {
+            if (null != timerUpdateExperiment) {
+                MetricsConfig.timerUpdateExpDate = MetricsConfig.timerBUpdateExpDate.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateExperiment.stop(MetricsConfig.timerUpdateExpDate);
+            }
+        }
+        return true;
     }
 
 
