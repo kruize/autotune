@@ -304,6 +304,9 @@ public class KruizeConstants {
         public static final String MODEL_NAME = "modelName";
         public static final String GPU_PROFILE = "GPU_I_PROFILE";
 
+        public static final String CREATION_DATE = "creation_date";
+        public static final String UPDATE_DATE = "update_date";
+
         // Config changes JSON Keys
         public static final String MODEL_SETTINGS = "model_settings";
         public static final String TERM_SETTINGS = "term_settings";
@@ -516,6 +519,7 @@ public class KruizeConstants {
             public static final String DATASOURCE_AUTH_DB_INSERTION_FAILED = "Failed to add auth details to DB: {}";
             public static final String DATASOURCE_AUTH_DB_UPDATE_FAILED = "Failed to update auth details in the DB: {}";
             public static final String DATASOURCE_AUTH_UPDATE_INVALID = "The updated authentication configuration is invalid. Reverting to the previous configuration.";
+            public static final String DATASOURCE_ACCESS_ERROR_MESSAGE = "An unexpected error occurred while accessing datasource {} details: {}";
 
             private DataSourceErrorMsgs() {
             }
@@ -1020,6 +1024,10 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: {}";
         public static final String CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE = "Failed to convert input JSON to MetadataProfile object due to: {}";
         public static final String METADATA_PROFILE_FILE_PATH = "MetadataProfile file path: {}";
+        public static final String UPDATING_METADATA_PROFILE = "Trying to update the metadata profile to collection: ";
+        public static final String METADATA_PROFILE_DOES_NOT_EXIST = "MetadataProfile does not exist: {}";
+        public static final String METADATA_PROFILE_UPDATED = "MetadataProfile updated in the collection successfully: {}";
+        public static final String METADATA_PROFILE_VALIDATION_ERROR= "Validation of metadata profile failed: {}";
 
         public static class MetadataProfileErrorMsgs {
 
@@ -1034,6 +1042,7 @@ public class KruizeConstants {
             public static final String SET_UP_DEFAULT_METADATA_PROFILE_ERROR = "Failed to set up default MetadataProfile due to: {}";
             public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
             public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
+            public static final String UPDATE_METADATA_PROFILE_FROM_DB_ERROR = "Failed to update Metadata Profile due to {}";
 
             private MetadataProfileErrorMsgs() {
             }
@@ -1047,6 +1056,8 @@ public class KruizeConstants {
         public static final String ADD_METADATA_PROFILE_TO_DB_WITH_VERSION = "Added Metadata Profile : {} into the DB with version: {}";
         public static final String DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully.";
         public static final String DELETE_METADATA_PROFILE_FROM_DB_SUCCESS_MSG = "Metadata profile deleted successfully from the DB.";
+        public static final String UPDATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s updated successfully.";
+        public static final String UPDATE_METADATA_PROFILE_TO_DB_WITH_VERSION = "Updated Metadata Profile : {} into the DB with version: {}";
 
         private MetadataProfileAPIMessages() {
         }

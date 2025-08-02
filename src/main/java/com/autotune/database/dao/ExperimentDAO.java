@@ -12,6 +12,7 @@ import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 
 import java.sql.Timestamp;
 import java.util.List;
+import java.util.Set;
 
 public interface ExperimentDAO {
 
@@ -40,6 +41,9 @@ public interface ExperimentDAO {
 
     // Add Metadata Profile  to DB
     public ValidationOutputData addMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry);
+
+    // Update Metadata Profile to DB
+    public ValidationOutputData updateMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry);
 
     // Add DataSource to DB
     ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry, ValidationOutputData validationOutputData);
@@ -156,4 +160,5 @@ public interface ExperimentDAO {
 
     void deleteBulkJobByID(String jobId);
 
+    boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception;
 }

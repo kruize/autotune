@@ -19,10 +19,15 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.ExperimentTypeUtil;
 import com.autotune.database.helper.GenerateExperimentID;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.utils.KruizeConstants;
 import com.fasterxml.jackson.databind.JsonNode;
 import jakarta.persistence.*;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 
 /**
  * This is a Java class named KruizeExperimentEntry annotated with JPA annotations.
@@ -41,6 +46,8 @@ import org.hibernate.type.SqlTypes;
  * extended_data: A JSON object representing extended data for the experiment.
  * meta_data: A string representing metadata for the experiment.
  * experimentType: A string representing the type of the experiment
+ * creation_date: A timestamp object representing the time when the experiment got created
+ * update_date: A timestamp object representing the time when results are updated for a particular experiment
  * The ExperimentDetail class also has getters and setters for all its fields.
  */
 @Entity
@@ -66,6 +73,12 @@ public class KruizeExperimentEntry {
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode meta_data;
     private long experiment_type;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = KruizeConstants.JSONKeys.CREATION_DATE, updatable = false)
+    private Timestamp creation_date;
+    @Temporal(TemporalType.TIMESTAMP)
+    @Column(name = KruizeConstants.JSONKeys.UPDATE_DATE)
+    private Timestamp update_date;
 
 //    TODO: update KruizeDSMetadataEntry
 
@@ -83,6 +96,9 @@ public class KruizeExperimentEntry {
         this.extended_data = kruizeLMExperimentEntry.getExtended_data();
         this.meta_data = kruizeLMExperimentEntry.getMeta_data();
         this.experiment_type = ExperimentTypeUtil.getBitMaskForExperimentType(kruizeLMExperimentEntry.getExperiment_type());
+        Instant now = Instant.now().truncatedTo(ChronoUnit.MILLIS);
+        this.creation_date = Timestamp.from(now);
+        this.update_date = Timestamp.from(now);
     }
 
     public KruizeExperimentEntry() {
@@ -183,6 +199,14 @@ public class KruizeExperimentEntry {
 
     public void setExperiment_type(long experiment_type) {
         this.experiment_type = experiment_type;
+    }
+
+    public Timestamp getCreation_date() {
+        return creation_date;
+    }
+
+    public Timestamp getUpdate_date() {
+        return update_date;
     }
 
 }

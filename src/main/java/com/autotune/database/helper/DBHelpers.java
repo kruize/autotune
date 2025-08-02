@@ -801,6 +801,8 @@ public class DBHelpers {
                         apiObj.setExperiment_id(entry.getExperiment_id());
                         apiObj.setStatus(entry.getStatus());
                         apiObj.setExperimentType(ExperimentTypeUtil.getExperimentTypeFromBitMask(entry.getExperiment_type()));
+                        apiObj.setCreationDate(entry.getCreation_date());
+                        apiObj.setUpdateDate(entry.getUpdate_date());
                         createExperimentAPIObjects.add(apiObj);
                     } catch (Exception e) {
                         LOGGER.error("Error in converting to apiObj from db object due to : {}", e.getMessage());

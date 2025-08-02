@@ -48,6 +48,13 @@ UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG = "The Start time should precede the End t
 UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG = "Performance profile: [avg cannot be negative or blank for the metric variable: "
 UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile: [ Format value should be among these values: [GiB, Gi, Ei, KiB, E, MiB, G, PiB, K, TiB, M, P, Bytes, cores, T, Ti, MB, KB, Pi, GB, EB, k, m, TB, PB, bytes, kB, Mi, Ki, EiB]"
 UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_RECORDS_COUNT} failed to save"
+KUBERNETES_OBJECT_NAME_MISMATCH = "Kubernetes Object Names MisMatched"
+KUBERNETES_OBJECT_TYPE_MISMATCH = "Kubernetes Object Types MisMatched"
+CANNOT_PROCESS_ALL_ZERO_METRIC_VALUES = "Cannot process results with all zero metric values"
+MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment"
+MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS = "Expected namespace-level results, but found type, name, and namespace for experiment: namespace_experiment."
+CONTAINER_DATA_NOT_SUPPORTED = "container data not supported"
+UNSUPPORTED_OBJECT_TYPE = "Unsupported object type"
 FAILED_RECORDS_MSG = "Out of a total of 1 records, 1 failed to save"
 THREE_FAILED_RECORDS_MSG = "Out of a total of 3 records, 3 failed to save"
 DUPLICATE_RECORDS_MSG = "An entry for this record already exists!"
@@ -272,6 +279,52 @@ update_results_test_data = {
     "memoryRSS_format": "MiB"
 }
 
+update_results_namespace_test_data = {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:40:43.511Z",
+    "namespace": "default",
+    "namespaceCpuRequest_name": "namespaceCpuRequest", 
+    "namespaceCpuRequest_sum": 4.4, 
+    "namespaceCpuRequest_format": "cores",
+    "namespaceCpuLimit_name": "namespaceCpuLimit", 
+    "namespaceCpuLimit_sum": 5.4, 
+    "namespaceCpuLimit_format": "cores",
+    "namespaceCpuUsage_name": "namespaceCpuUsage", 
+    "namespaceCpuUsage_min": 0.5, 
+    "namespaceCpuUsage_max": 2.4, 
+    "namespaceCpuUsage_avg": 1.5, 
+    "namespaceCpuUsage_format": "cores",
+    "namespaceCpuThrottle_name": "namespaceCpuThrottle", 
+    "namespaceCpuThrottle_min": 0.045, 
+    "namespaceCpuThrottle_max": 1.09, 
+    "namespaceCpuThrottle_avg": 0.09, 
+    "namespaceCpuThrottle_format": "cores",
+    "namespaceMemoryRequest_name": "namespaceMemoryRequest", 
+    "namespaceMemoryRequest_sum": 250.85, 
+    "namespaceMemoryRequest_format": "MiB",
+    "namespaceMemoryLimit_name": "namespaceMemoryLimit", 
+    "namespaceMemoryLimit_sum": 500, 
+    "namespaceMemoryLimit_format": "MiB",
+    "namespaceMemoryUsage_name": "namespaceMemoryUsage", 
+    "namespaceMemoryUsage_min": 21.5, 
+    "namespaceMemoryUsage_max": 198.4, 
+    "namespaceMemoryUsage_avg": 41.5, 
+    "namespaceMemoryUsage_format": "MiB",
+    "namespaceMemoryRSS_name": "namespaceMemoryRSS", 
+    "namespaceMemoryRSS_min": 26.5, 
+    "namespaceMemoryRSS_max": 125.54, 
+    "namespaceMemoryRSS_avg": 46.5, 
+    "namespaceMemoryRSS_format": "MiB",
+    "namespaceTotalPods_name": "namespaceTotalPods", 
+    "namespaceTotalPods_avg": 2,
+    "namespaceTotalPods_max": 3,
+    "namespaceRunningPods_name": "namespaceRunningPods", 
+    "namespaceRunningPods_avg": 2,
+    "namespaceRunningPods_max": 3
+}
+
 # version, datasource_name
 import_metadata_test_data = {
     "version": "v1.0",
@@ -288,6 +341,16 @@ aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "c
                           "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
                           "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
 
+aggr_info_keys_to_skip_namespace = ["namespaceCpuRequest_sum", "namespaceCpuRequest_format",
+                          "namespaceCpuLimit_sum", "namespaceCpuLimit_format", "namespaceCpuUsage_min", "namespaceCpuUsage_max", "namespaceCpuUsage_avg", "namespaceCpuUsage_format",
+                          "namespaceCpuThrottle_min", "namespaceCpuThrottle_max", "namespaceCpuThrottle_avg", "namespaceCpuThrottle_format",
+                          "namespaceMemoryRequest_sum", "namespaceMemoryRequest_format", "namespaceMemoryLimit_sum", "namespaceMemoryLimit_format",
+                           "namespaceMemoryUsage_min", "namespaceMemoryUsage_max", "namespaceMemoryUsage_avg", "namespaceMemoryUsage_format",
+                          "namespaceMemoryRSS_min", "namespaceMemoryRSS_max", "namespaceMemoryRSS_avg", "namespaceMemoryRSS_format",
+                          "namespaceTotalPods_avg", "namespaceTotalPods_max", "namespaceRunningPods_avg", "namespaceRunningPods_max"
+]
+
+
 MIG_PATTERN = r"nvidia\.com/mig-[1-4|7]g\.(5|10|20|40|80)gb"
 
 
@@ -303,8 +366,13 @@ def generate_test_data(csvfile, test_data, api_name):
                 # skip checking the invalid container name and container image name
                 if key == "container_image_name" or (key == "container_name" and t == "invalid"):
                     continue
-                #  skip checking the aggregation info values
+                # skip checking the invalid or null namespace name
+                if key == "namespace" and t == "invalid" or t == "null":
+                    continue
+                #  skip checking the aggregation info values for container and namespace
                 if key in aggr_info_keys_to_skip and t == "null":
+                    continue
+                if key in aggr_info_keys_to_skip_namespace and t == "null":
                     continue
 
                 test_name = t + "_" + key

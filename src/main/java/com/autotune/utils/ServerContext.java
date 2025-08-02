@@ -49,6 +49,7 @@ public class ServerContext {
     public static final String CREATE_METADATA_PROFILE = ROOT_CONTEXT + "createMetadataProfile";
     public static final String LIST_METADATA_PROFILES = ROOT_CONTEXT + "listMetadataProfiles";
     public static final String DELETE_METADATA_PROFILE = ROOT_CONTEXT + "deleteMetadataProfile";
+    public static final String UPDATE_METADATA_PROFILE = ROOT_CONTEXT + "updateMetadataProfile";
 
 
     public static final String KRUIZE_SERVER_URL = "http://localhost:" + KRUIZE_SERVER_PORT;

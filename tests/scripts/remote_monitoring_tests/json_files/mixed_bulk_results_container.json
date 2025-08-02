@@ -1,0 +1,83 @@
+[
+  {
+    "version": "v2.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:40:43.570Z",
+    "kubernetes_objects": [
+      {
+        "type": "deployment",
+        "name": "tfb-server",
+        "namespace": "default",
+        "containers": [
+          {
+            "container_image_name": "kruize/tfb-server:latest",
+            "container_name": "tfb-server-0",
+            "metrics": [
+              {
+                "name": "cpuUsage",
+                "results": {
+                  "aggregation_info": {
+                    "avg": 0.5,
+                    "format": "cores"
+                  }
+                }
+              },
+              {
+                "name": "memoryUsage",
+                "results": {
+                  "aggregation_info": {
+                    "avg": 200,
+                    "format": "MiB"
+                  }
+                }
+              },
+              {
+                "name": "memoryRSS",
+                "results": {
+                  "aggregation_info": {
+                    "avg": 150,
+                    "format": "MiB"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "version": "v2.0",
+    "experiment_name": "quarkus-resteasy-kruize-min-http-response-time-db",
+    "interval_start_time": "2022-01-23T18:40:43.571Z",
+    "interval_end_time": "2022-01-23T18:55:43.571Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default",
+          "metrics": [
+            {
+              "name": "namespaceCpuUsage",
+              "results": {
+                "aggregation_info": {
+                  "avg": 1.5,
+                  "format": "cores"
+                }
+              }
+            },
+            {
+              "name": "namespaceMemoryUsage",
+              "results": {
+                "aggregation_info": {
+                  "avg": 500,
+                  "format": "MiB"
+                }
+              }
+            }
+          ]
+        }
+      }
+    ]
+  }
+]

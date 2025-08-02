@@ -38,8 +38,11 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.http.HttpServletResponse;
 import java.lang.reflect.Field;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 
@@ -122,7 +125,7 @@ public class ExperimentInitiator {
         }
     }
 
-    public void validateAndAddExperimentResults(List<UpdateResultsAPIObject> updateResultsAPIObjects) {
+    public void validateAndAddExperimentResults(List<UpdateResultsAPIObject> updateResultsAPIObjects) throws Exception {
         List<UpdateResultsAPIObject> failedDBObjects;
         Validator validator = Validation.byProvider(HibernateValidator.class)
                 .configure()
@@ -198,6 +201,23 @@ public class ExperimentInitiator {
         if (successUpdateResultsAPIObjects.size() > 0) {
             failedDBObjects = new ExperimentDBService().addResultsToDB(resultDataList);
             failedUpdateResultsAPIObjects.addAll(failedDBObjects);
+        }
+        //Derive successful experiments by filtering out failed ones
+        Set<String> failedExperimentNames = failedUpdateResultsAPIObjects.stream()
+                .map(UpdateResultsAPIObject::getExperimentName)
+                .collect(Collectors.toSet());
+
+        Set<String> successfulExperimentNames = updateResultsAPIObjects.stream()
+                .map(UpdateResultsAPIObject::getExperimentName)
+                .filter(name -> !failedExperimentNames.contains(name))
+                .collect(Collectors.toSet());
+
+        if (!successfulExperimentNames.isEmpty()) {
+            Timestamp currentTimestamp = Timestamp.from(Instant.now().truncatedTo(ChronoUnit.MILLIS));
+            boolean isUpdated = new ExperimentDBService().updateExperimentDates(successfulExperimentNames, currentTimestamp);
+            if (!isUpdated) {
+                LOGGER.error("Failed to update the date in the experiments table");
+            }
         }
     }
 

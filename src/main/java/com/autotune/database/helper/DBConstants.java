@@ -16,6 +16,8 @@ public class DBConstants {
                 "    :recommendationPath, :newRecommendation::jsonb, true" +
                 ") " +
                 "WHERE job_id = :jobId";
+        public static final String UPDATE_EXPERIMENTS_DATE = "UPDATE kruize_experiments " +
+                "SET update_date = :updateDate WHERE experiment_name IN (:experimentNames) ";
         public static final String SELECT_FROM_RESULTS = "from KruizeResultsEntry";
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME = "from KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_DATASOURCE = "from KruizeDataSourceEntry";
@@ -111,6 +113,10 @@ public class DBConstants {
                 " WHERE container->>'container_name' = :container_name" +
                 " AND container->>'container_image_name' = :container_image_name" +
                 " ))";
+        public static final String UPDATE_METADATA_PROFILE_TO_DB = "UPDATE KruizeLMMetadataProfileEntry km "+
+                "SET km.api_version = :apiVersion, km.kind = :kind, km.metadata = :metadata, km.name = :name, km.profile_version = :profileVersion, " +
+                "km.k8s_type = :k8sType, km.datasource = :datasource, km.query_variables = :queryVariables " +
+                "WHERE km.name = :metadataProfileName";
     }
 
     public static final class TABLE_NAMES {
