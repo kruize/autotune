@@ -188,7 +188,7 @@ def test_update_results_invalid_namespace_tests(
     print(f"\n*******************************************************")
     print(f"Test - {test_name}")
     print("*******************************************************\n")
-    
+
     create_exp_json_file = "../json_files/create_exp_namespace.json"
     form_kruize_url(cluster_type)
 
@@ -201,7 +201,7 @@ def test_update_results_invalid_namespace_tests(
 
     environment = Environment(loader=FileSystemLoader("../json_files/"))
     template = environment.get_template("update_results_template_namespace.json")
-    
+
     content = template.render(
         version=version,
         experiment_name=experiment_name,
@@ -255,7 +255,7 @@ def test_update_results_invalid_namespace_tests(
     data = response.json()
 
     assert response.status_code == int(expected_status_code)
-    actual_message = data.get('message')    
+    actual_message = data.get('message')
     response = delete_experiment(create_exp_json_file)
     print("delete exp = ", response.status_code)
 
@@ -342,10 +342,10 @@ def test_update_results_with_missing_metrics_section_namespace(test_name, result
         for err in error_data:
             actual_error_message = err["message"]
             assert error_message in actual_error_message
-    
+
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
-    
+
 
 @pytest.mark.negative
 def test_upload_namespace_results_for_container_experiment(cluster_type):
@@ -370,7 +370,7 @@ def test_upload_namespace_results_for_container_experiment(cluster_type):
     write_json_data_to_file("/tmp/temp_update_results.json", update_res)
 
     form_kruize_url(cluster_type)
-    
+
     response = delete_experiment("/tmp/temp_create_exp.json")
     print("delete exp = ", response.status_code)
 
@@ -379,7 +379,7 @@ def test_upload_namespace_results_for_container_experiment(cluster_type):
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
-    
+
     response = update_results("/tmp/temp_update_results.json")
     data = response.json()
 
@@ -414,7 +414,7 @@ def test_upload_container_results_for_namespace_experiment(cluster_type):
     write_json_data_to_file("/tmp/temp_update_results.json", update_res)
 
     form_kruize_url(cluster_type)
-    
+
     response = delete_experiment("/tmp/temp_create_exp.json")
     print("delete exp = ", response.status_code)
 
@@ -422,7 +422,7 @@ def test_upload_container_results_for_namespace_experiment(cluster_type):
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
-    
+
     response = update_results("/tmp/temp_update_results.json")
     data = response.json()
 
@@ -441,10 +441,10 @@ def test_upload_bulk_namespace_results_for_container_experiment(cluster_type):
                       to a container-based experiment fails for the namespace results.
     """
     input_json_file = "../json_files/create_exp.json"
-    result_json_file = "../json_files/mixed_bulk_results_container.json" 
+    result_json_file = "../json_files/mixed_bulk_results_container.json"
 
     form_kruize_url(cluster_type)
-    
+
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
@@ -452,14 +452,14 @@ def test_upload_bulk_namespace_results_for_container_experiment(cluster_type):
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
-    
+
     response = update_results(result_json_file)
     data = response.json()
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
     assert "failed to save" in data['message']
-    
+
     error_found = False
     for result in data.get('data', []):
         if result.get('errors'):
@@ -469,9 +469,9 @@ def test_upload_bulk_namespace_results_for_container_experiment(cluster_type):
                     break
         if error_found:
             break
-    
+
     assert error_found, KUBERNETES_OBJECT_NAME_MISMATCH
-    
+
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
@@ -485,7 +485,7 @@ def test_upload_bulk_container_results_for_namespace_experiment(cluster_type):
     result_json_file = "../json_files/mixed_bulk_results_namespace.json"
 
     form_kruize_url(cluster_type)
-    
+
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
@@ -493,14 +493,14 @@ def test_upload_bulk_container_results_for_namespace_experiment(cluster_type):
     data = response.json()
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
-    
+
     response = update_results(result_json_file)
     data = response.json()
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
     assert "failed to save" in data['message']
-    
+
     error_found = False
     for result in data.get('data', []):
         if result.get('errors'):
@@ -510,7 +510,7 @@ def test_upload_bulk_container_results_for_namespace_experiment(cluster_type):
                     break
         if error_found:
             break
-            
+
     assert error_found, MISSING_MANDATORY_PARAMETERS
 
     response = delete_experiment(input_json_file)
@@ -555,16 +555,16 @@ def test_update_results_with_zero_metric_values_fails(cluster_type):
         "namespaceTotalPods_name": "namespaceTotalPods", "namespaceTotalPods_max": 0, "namespaceTotalPods_avg": 0,
         "namespaceRunningPods_name": "namespaceRunningPods", "namespaceRunningPods_max": 0, "namespaceRunningPods_avg": 0
     }
-    
+
     content = template.render(**template_vars)
-    
+
     with open(tmp_json_file, mode="w", encoding="utf-8") as message:
         message.write(content)
 
     response = update_results(tmp_json_file)
     data = response.json()
     print(f"Update Results Response: {data.get('message')}")
-    
+
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
     assert CANNOT_PROCESS_ALL_ZERO_METRIC_VALUES in data['data'][0]['errors'][0]['message']
@@ -1537,3 +1537,85 @@ def test_update_results__duplicate_records_with_single_exp_multiple_results(clus
     # Delete the experiment
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+def test_update_results_with_valid_request_id(cluster_type):
+    """
+       Test Description: This test validates update results for a valid experiment with the request_id
+   """
+    creat_exp_json = "../json_files/create_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(creat_exp_json)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(creat_exp_json)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/update_results.json"
+    # Generate a random valid request_id
+    request_id = generate_request_id(32)
+    temp_file_path = inject_request_id_and_save(result_json_file, request_id)
+
+    response = update_results(temp_file_path)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    # Allow logs to flush to validate the request_id in logs
+    time.sleep(2)
+    logs = get_kruize_pod_logs()
+    assert f"request_id : {request_id}" in logs, f"request_id {request_id} not found in pod logs"
+
+    response = delete_experiment(temp_file_path)
+    print("delete exp = ", response.status_code)
+    # delete the temp file
+    os.remove(temp_file_path)
+
+
+@pytest.mark.negative
+@pytest.mark.parametrize("invalid_request_id", [
+    "", "abc123", generate_request_id(33), "1234567890abcdef!@#$%^&*()", " " * 32
+])
+def test_update_results_with_invalid_request_id(cluster_type, invalid_request_id):
+    """
+    Test Description: This test validates the results updation by passing the invalid request_ids in the input json
+    """
+    creat_exp_json = "../json_files/create_exp.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(creat_exp_json)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(creat_exp_json)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/update_results.json"
+    temp_file_path = inject_request_id_and_save(result_json_file, invalid_request_id)
+
+    response = update_results(temp_file_path)
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    message = data['data'][0]['errors'][0]['message']
+    assert message == INVALID_REQUEST_ID
+
+    response = delete_experiment(temp_file_path)
+    print("delete exp = ", response.status_code)
+    # delete the temp file
+    os.remove(temp_file_path)
