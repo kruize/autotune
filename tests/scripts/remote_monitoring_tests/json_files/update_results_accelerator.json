@@ -104,10 +104,13 @@
               {
                 "name": "acceleratorCoreUsage",
                 "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
                   "aggregation_info": {
-                    "min": 15.2,
-                    "max": 74.5,
-                    "avg": 45.8,
+                    "min": 18.7,
+                    "max": 45.7,
+                    "avg": 36.4,
                     "format": "percentage"
                   }
                 }
@@ -115,10 +118,13 @@
               {
                 "name": "acceleratorMemoryUsage",
                 "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
                   "aggregation_info": {
-                    "min": 20.1,
-                    "max": 83.7,
-                    "avg": 50.3,
+                    "min": 22.9,
+                    "max": 49.0,
+                    "avg": 30.5,
                     "format": "percentage"
                   }
                 }
@@ -126,10 +132,13 @@
               {
                 "name": "acceleratorFrameBufferUsage",
                 "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
                   "aggregation_info": {
-                    "min": 6421,
-                    "max": 28450,
-                    "avg": 15432,
+                    "min": 8120,
+                    "max": 18977,
+                    "avg": 12703,
                     "format": "MiB"
                   }
                 }
@@ -230,10 +239,13 @@
               {
                 "name": "acceleratorCoreUsage",
                 "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
                   "aggregation_info": {
                     "min": 18.7,
-                    "max": 89.3,
-                    "avg": 56.4,
+                    "max": 45.7,
+                    "avg": 36.4,
                     "format": "percentage"
                   }
                 }
@@ -241,10 +253,13 @@
               {
                 "name": "acceleratorMemoryUsage",
                 "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
                   "aggregation_info": {
                     "min": 22.9,
-                    "max": 91.0,
-                    "avg": 60.5,
+                    "max": 49.0,
+                    "avg": 30.5,
                     "format": "percentage"
                   }
                 }
@@ -252,10 +267,13 @@
               {
                 "name": "acceleratorFrameBufferUsage",
                 "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
                   "aggregation_info": {
                     "min": 8120,
-                    "max": 37980,
-                    "avg": 21150,
+                    "max": 18977,
+                    "avg": 12703,
                     "format": "MiB"
                   }
                 }

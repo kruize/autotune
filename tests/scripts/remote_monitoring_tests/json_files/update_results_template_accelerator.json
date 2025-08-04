@@ -104,6 +104,9 @@
               {
                 "name": "{{acceleratorCoreUsage_name}}",
                 "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
                   "aggregation_info": {
                     "min": {{acceleratorCoreUsage_min}},
                     "max": {{acceleratorCoreUsage_max}},
@@ -115,6 +118,9 @@
               {
                 "name": "{{acceleratorMemoryUsage_name}}",
                 "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
                   "aggregation_info": {
                     "min": {{acceleratorMemoryUsage_min}},
                     "max": {{acceleratorMemoryUsage_max}},
@@ -126,6 +132,9 @@
               {
                 "name": "{{acceleratorFrameBufferUsage_name}}",
                 "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
                   "aggregation_info": {
                     "min": {{acceleratorFrameBufferUsage_min}},
                     "max": {{acceleratorFrameBufferUsage_max}},
