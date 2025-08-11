@@ -209,7 +209,7 @@ public class PerformanceProfileUtil {
                 // if the metrics data is not present, set corresponding validation message and skip adding the current namespace data
                 if (namespaceAPIObject.getMetrics() == null) {
                     errorReasons.add(String.format(
-                            AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS,
+                            AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRICS_NAMESPACE,
                             namespaceAPIObject.getNamespace(),
                             updateResultsAPIObject.getExperimentName()
                     ));
