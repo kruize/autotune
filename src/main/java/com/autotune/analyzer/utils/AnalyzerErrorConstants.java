@@ -96,6 +96,7 @@ public class AnalyzerErrorConstants {
         public static final String WRONG_TIMESTAMP = "The Start time should precede the End time!";
         public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than " + KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS + " seconds";
         public static final String MISSING_METRICS = "Metric data is not present for container : %s for experiment: %s. ";
+        public static final String MISSING_METRICS_NAMESPACE = "Metric data is not present for namespace : %s for experiment: %s. ";
         public static final String BLANK_AGGREGATION_INFO_VALUE = " cannot be negative or blank for the metric variable: ";
         public static final String UNSUPPORTED_FORMAT = " Format value should be among these values: ".concat(KruizeSupportedTypes.SUPPORTED_FORMATS.toString());
         public static final String UNSUPPORTED_METRIC = "Metric variable name should be among these values: ".concat(Arrays.toString(AnalyzerConstants.MetricName.values()));
@@ -106,6 +107,7 @@ public class AnalyzerErrorConstants {
         public static final String VERSION_MISMATCH = "Version number mismatch found. Expected: %s , Found: %s";
         public static final String NULL_OR_BLANK_CONTAINER_IMAGE_NAME = "container_image_name cannot be null or blank";
         public static final String NULL_OR_BLANK_CONTAINER_NAME = "container_name cannot be null or blank";
+        public static final String NULL_OR_BLANK_NAMESPACE_NAME = "namespace_name cannot be null or blank";
         public static final String EXPERIMENT_AND_INTERVAL_END_TIME = " for experiment : %s interval_end_time: %s";
         public static final String LOCAL_MONITORING_DATASOURCE_MANDATORY = "Experiment %s: datasource mandatory for Local Monitoring type";
         public static final String LOAD_METADATA_PROFILE_FAILURE = "Loading saved Metadata Profile %s failed: %s";
@@ -115,6 +117,7 @@ public class AnalyzerErrorConstants {
         public static final String INVALID_METADATA_PROFILE_NAME = "MetadataProfile 'name' field is either null or empty!";
         public static final String INVALID_METRICS_FOUND = "Invalid metrics found for experiment - %s: %s";
         public static final String MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment - %s : %s";
+        public static final String MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS = "Expected namespace-level results, but found type, name, and namespace for experiment: %s.";
 
 
         private AutotuneObjectErrors() {
