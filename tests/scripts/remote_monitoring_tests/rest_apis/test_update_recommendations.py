@@ -25,13 +25,13 @@ from helpers.list_reco_json_local_monitoring_schema import list_reco_namespace_j
 from helpers.long_term_list_reco_json_schema import long_term_namespace_reco_json_schema
 from helpers.medium_term_list_reco_json_schema import medium_term_namespace_reco_json_schema
 
-reco_term_input = [
-    ("short_term_test_latest_true", 1, list_reco_namespace_json_local_monitoring_schema, SHORT_TERM_DURATION_IN_HRS_MAX, True),
-    ("short_term_test_latest_false", 1, list_reco_namespace_json_local_monitoring_schema, SHORT_TERM_DURATION_IN_HRS_MAX, True),
-    ("medium_term_test_true", 7, medium_term_namespace_reco_json_schema, MEDIUM_TERM_DURATION_IN_HRS_MAX, False),
-    ("medium_term_test_false", 7, medium_term_namespace_reco_json_schema, MEDIUM_TERM_DURATION_IN_HRS_MAX, False),
-    ("long_term_test_true", 15, long_term_namespace_reco_json_schema, LONG_TERM_DURATION_IN_HRS_MAX, False),
-    ("long_term_test_false", 15, long_term_namespace_reco_json_schema, LONG_TERM_DURATION_IN_HRS_MAX, False),
+namespace_reco_term_input = [
+    ("short_term_test_latest_true", 1, list_reco_namespace_json_local_monitoring_schema, SHORT_TERM_DURATION_IN_HRS_MAX, True, True),
+    ("short_term_test_latest_false", 1, list_reco_namespace_json_local_monitoring_schema, SHORT_TERM_DURATION_IN_HRS_MAX, False, True),
+    ("medium_term_test_true", 7, medium_term_namespace_reco_json_schema, MEDIUM_TERM_DURATION_IN_HRS_MAX, True, False),
+    ("medium_term_test_false", 7, medium_term_namespace_reco_json_schema, MEDIUM_TERM_DURATION_IN_HRS_MAX, True, False),
+    ("long_term_test_true", 15, long_term_namespace_reco_json_schema, LONG_TERM_DURATION_IN_HRS_MAX, True, False),
+    ("long_term_test_false", 15, long_term_namespace_reco_json_schema, LONG_TERM_DURATION_IN_HRS_MAX, False, False),
 ]
 
 
@@ -676,13 +676,14 @@ def test_update_valid_namespace_recommendations(cluster_type):
 
 
 @pytest.mark.extended
-@pytest.mark.parametrize("test_name, num_days, reco_json_schema, expected_duration_in_hours, logging",
-                         reco_term_input)
+@pytest.mark.parametrize("test_name, num_days, reco_json_schema, expected_duration_in_hours, latest, logging",
+                         namespace_reco_term_input)
 def test_update_namespace_recommendations_for_diff_reco_terms_with_only_latest(test_name, num_days, reco_json_schema,
-                                                                   expected_duration_in_hours, logging,
+                                                                   expected_duration_in_hours, latest, logging,
                                                                    cluster_type):
     '''
         Test Description: This test validates update_recommendations for namespace experiments for all the terms for multiple experiments posted using different json files
+         with both latest=true and latest=false
     '''
     input_json_file = "../json_files/create_exp_namespace.json"
     result_json_file = "../json_files/update_results_namespace.json"
@@ -760,7 +761,7 @@ def test_update_namespace_recommendations_for_diff_reco_terms_with_only_latest(t
                    NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE][
                    'message'] == RECOMMENDATIONS_AVAILABLE
     experiment_name = None
-    response = list_recommendations(experiment_name, rm=True)
+    response = list_recommendations(experiment_name, latest, rm=True)
 
     list_reco_json = response.json()
     assert response.status_code == SUCCESS_200_STATUS_CODE
@@ -784,8 +785,14 @@ def test_update_namespace_recommendations_for_diff_reco_terms_with_only_latest(t
         else:
             expected_duration_in_hours = SHORT_TERM_DURATION_IN_HRS_MAX
 
-        # TODO: Need to check if this required
-        update_results_json.append(list_of_result_json_arr[i][len(list_of_result_json_arr[i]) - 1])
+        if latest == "true":
+            update_results_json.append(list_of_result_json_arr[i][len(list_of_result_json_arr[i]) - 1])
+        elif latest == "false":
+            total_num_results = len(list_of_result_json_arr[i])
+            # Recommendations will be generated when 24h/672h/1440h results are available
+            num_results_without_recos = int(expected_duration_in_hours * 4 - 1)
+            for j in range(num_results_without_recos, total_num_results):
+                update_results_json.append(list_of_result_json_arr[i][j])
 
         exp_found = False
         for list_reco in list_reco_json:
