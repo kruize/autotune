@@ -1032,6 +1032,7 @@ def test_update_invalid_accelerator_name_recommendations(cluster_type):
                 assert data[0]['experiment_name'] == experiment_name
                 assert data[0]['kubernetes_objects'][0]['containers'][0]['recommendations']['notifications']['111000'][
                            'message'] == RECOMMENDATIONS_AVAILABLE
+
                 response = list_recommendations(experiment_name, rm=True)
                 if response.status_code == SUCCESS_200_STATUS_CODE:
                     recommendation_json = response.json()
