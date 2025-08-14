@@ -83,6 +83,16 @@ function get_kruize_service_log() {
         kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
+#
+# Switch to default values for isROSEnabled & local flags in the code (isROSEnabled is true for RM)
+#
+function kruize_scale_test_remote_patch() {
+	CRC_DIR="./manifests/crc/default-db-included-installation"
+	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+
+	sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+}
+
 while getopts r:i:u:d:t:n:m:s:l:f:b:e:q:c:h gopts
 do
 	case ${gopts} in
@@ -156,7 +166,7 @@ if [ ${kruize_setup} == true ]; then
 	echo "Removing isROSEnabled=false and local=true"
 	cluster_type=${CLUSTER_TYPE}
 	pushd ${KRUIZE_REPO} > /dev/null
-		kruize_remote_patch
+		kruize_scale_test_remote_patch
         	echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
 		./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG} 2>&1
 
