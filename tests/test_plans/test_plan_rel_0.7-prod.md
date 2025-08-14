@@ -1,4 +1,4 @@
-# KRUIZE TEST PLAN RELEASE 0.7-dev
+# KRUIZE TEST PLAN RELEASE 0.7
 
 - [INTRODUCTION](#introduction)
 - [FEATURES TO BE TESTED](#features-to-be-tested)
@@ -17,7 +17,7 @@
 
 ## INTRODUCTION
 
-This document describes the test plan for Kruize release 0.7-prod / 0.7-rc1
+This document describes the test plan for Kruize release 0.7
 
 ----
 
@@ -30,6 +30,7 @@ This document describes the test plan for Kruize release 0.7-prod / 0.7-rc1
 * Stress test updates for namespace recommendations
 * Include GPU validation in remote monitoring demo
 * Negative tests for Update Results
+* Add remaining tests for Namespace recommendations
 ------
 
 ## BUG FIXES TO BE TESTED
@@ -52,18 +53,25 @@ This document describes the test plan for Kruize release 0.7-prod / 0.7-rc1
 
 ### New Test Cases Developed
 
-None
+| # | ISSUE (NEW FEATURE)                                                        | TEST DESCRIPTION                                            | TEST DELIVERABLES                                    | RESULTS | COMMENTS |
+|---|----------------------------------------------------------------------------|-------------------------------------------------------------|------------------------------------------------------|---------|----------|
+| 1 | Add tests for new DB columns (experiment_type, creation_date, update_date) | Added new testcase, tested using functional tests           | [1619](https://github.com/kruize/autotune/pull/1619) | PASSED  |          |
+| 2 | Fix negative test failure count                                            | Updated existing tests                                      | [1636](https://github.com/kruize/autotune/pull/1636) | PASSED  |          |
+| 3 | Negative Tests for Update Results                                          | Added new negative testcases, tested using functional tests | [1618](https://github.com/kruize/autotune/pull/1618) | PASSED  |          |
+| 4 | Update and Delete MetadataProfile API tests                                | Added new tests, tested using functional tests              | [1592](https://github.com/kruize/autotune/pull/1592) | PASSED  |          |
+| 5 | Add remaining tests for Namespace recommendations                          | Added new extended testcase, tested using functional tests  | [1614](https://github.com/kruize/autotune/pull/1614) | PASSED  |          |
 
 ### Regression Testing
 
-| # | ISSUE (NEW FEATURE)                                                             | TEST DESCRIPTION                                                                      | TEST DELIVERABLES | RESULTS | COMMENTS |
-|---|---------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|-------------------|---------|----------|
-| 1 | Add validation checks for namespace experiments                                 | Tested using functional testsuite and newly added negative tests for update results   |                   | PASSED  |          |
-| 2 | Update maven distribution URL in the Dockerfile                                 | Tested manually                                                                       |                   | PASSED  |          |
-| 3 | Fix vulnerabilities reported by upgrading to latest ubi & kafka client packages | Tested manually                                                                       |                   | PASSED  |          |
-| 4 | Add new DB columns to support experiment type and corresponding tests           | Tests were added for new DB columns (experiment_type, creation_date, update_date      |                   | PASSED  |          |
-| 5 | Add UpdateMetadataProfile API in local monitoring mode                          | Tested using functional testsuite and newly added tests for updateMetadataProfile API |                   | PASSED  |          |
-| 6 | Fix negative test failure count                                                 | Tested using remote monitoring functional testsuite                                   |                   | PASSED  |          |
+| # | ISSUE (NEW FEATURE)                                                             | TEST DESCRIPTION                                                                      | TEST DELIVERABLES                                    | RESULTS | COMMENTS |
+|---|---------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|------------------------------------------------------|---------|----------|
+| 1 | Add validation checks for namespace experiments                                 | Tested using functional testsuite and newly added negative tests for update results   | [1618](https://github.com/kruize/autotune/pull/1618) | PASSED  |          |
+| 2 | Update maven distribution URL in the Dockerfile                                 | Tested manually                                                                       |                                                      | PASSED  |          |
+| 3 | Fix vulnerabilities reported by upgrading to latest ubi & kafka client packages | Tested manually                                                                       |                                                      | PASSED  |          |
+| 4 | Add new DB columns to support experiment type and corresponding tests           | Tests were added for new DB columns (experiment_type, creation_date, update_date      | [1619](https://github.com/kruize/autotune/pull/1619) | PASSED  |          |
+| 5 | Add UpdateMetadataProfile API in local monitoring mode                          | Tested using functional testsuite and newly added tests for updateMetadataProfile API | [1592](https://github.com/kruize/autotune/pull/1592) | PASSED  |          |
+| 6 | Fix negative test failure count                                                 | Tested using remote monitoring functional testsuite                                   | [1618](https://github.com/kruize/autotune/pull/1618) | PASSED  |          |
+| 7 | Add remaining tests for Namespace recommendations                               | Tested using remote monitoring functional testsuite                                   | [1614](https://github.com/kruize/autotune/pull/1614) | PASSED  |          |
 
 ---
 
@@ -80,15 +88,17 @@ Short Scalability run
 - Kruize DB resources - requests - 10Gi / 2 cores, limits - 30Gi / 2 cores
 - Kruize resources - requests - 4Gi / 2 cores, limits - 8Gi / 2 cores
 
-| Kruize Release                            | Exps / Results / Recos                             | Execution time | Latency (Max/ Avg) in seconds |                |                      | Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB) |
-|-------------------------------------------|----------------------------------------------------|----------------|-------------------------------|----------------|----------------------|----------------------|----------------|------------------------|
-|                                           |                                                    |                | UpdateRecommendations         | UpdateResults  | LoadResultsByExpName |                      |                |                        |
-| 0.6 (on aws cluster 9th May 2025)         | 5K container exps / 72L / 3L                       | 4h 25 mins     | 0.87 / 0.49                   | 0.12 / 0.1     | 0.38 / 0.26          | 21756                | 7.39           | 35.11                  |
-| 0.7-dev (on aws cluster 18th June 2025)   | 5K container exps / 72L / 3L                       | 5h             | 1.03 / 0.56                   | 0.12 / 0.1     | 0.33 / 0.22          | 21757                | 9.47           | 42.45                  |
-| 0.7-dev (on aws cluster 18th June 2025)   | 5K namespace exps / 72L / 3L                       | 3h 17 mins     | 0.62 / 0.35                   | 0.11 / 0.08    | 0.26 / 0.16          | 10524                | 5.37           | 28.48                  |
-| 0.7-dev (on aws cluster 18th June 2025)   | 4.5k container exps, 500 namespace exps / 72L / 3L | 4h 59 mins     | 0.98 / 0.54                   | 0.12 / 0.1     | 0.31 / 0.22          | 20631                | 9.13           | 34.45                  |
-| 0.7-rc1 (on aws cluster 12th August 2025) | 5K container exps / 72L / 3L                       | 4h 29 mins     | 0.88 / 0.49                   | 0.13 / 0.1     | 0.4 / 0.27           | 21759                | 8.31           | 39.37                  |
- 
+| Kruize Release                            | Exps / Results / Recos                             | Execution time | Latency (Max/ Avg) in seconds |               |                      | Postgres DB size(MB) | Kruize Max CPU | Kruize Max Memory (GB) |
+|-------------------------------------------|----------------------------------------------------|----------------|-------------------------------|---------------|----------------------|----------------------|----------------|------------------------|
+|                                           |                                                    |                | UpdateRecommendations         | UpdateResults | LoadResultsByExpName |                      |                |                        |
+| 0.6 (on aws cluster 9th May 2025)         | 5K container exps / 72L / 3L                       | 4h 25 mins     | 0.87 / 0.49                   | 0.12 / 0.1    | 0.38 / 0.26          | 21756                | 7.39           | 35.11                  |
+| 0.7-dev (on aws cluster 18th June 2025)   | 5K container exps / 72L / 3L                       | 5h             | 1.03 / 0.56                   | 0.12 / 0.1    | 0.33 / 0.22          | 21757                | 9.47           | 42.45                  |
+| 0.7-dev (on aws cluster 18th June 2025)   | 5K namespace exps / 72L / 3L                       | 3h 17 mins     | 0.62 / 0.35                   | 0.11 / 0.08   | 0.26 / 0.16          | 10524                | 5.37           | 28.48                  |
+| 0.7-dev (on aws cluster 18th June 2025)   | 4.5k container exps, 500 namespace exps / 72L / 3L | 4h 59 mins     | 0.98 / 0.54                   | 0.12 / 0.1    | 0.31 / 0.22          | 20631                | 9.13           | 34.45                  |
+| 0.7-rc1 (on aws cluster 12th August 2025) | 5K container exps / 72L / 3L                       | 4h 29 mins     | 0.88 / 0.49                   | 0.13 / 0.1    | 0.4 / 0.27           | 21759                | 8.31           | 39.37                  |
+| 0.7-rc1 (on aws cluster 14th August 2025) | 5K namespace exps / 72L / 3L                       | 3h 02 mins     | 0.55 / 0.3                    | 0.1 / 0.08    | 0.3 / 0.19           | 10525                | 4.01           | 24.08 GB               |
+| 0.7-rc1 (on aws cluster 14th August 2025) | 4.5k container exps, 500 namespace exps / 72L / 3L |                |                               |               |                      |                      |                |                        |
+
 ----
 ## RELEASE TESTING
 
