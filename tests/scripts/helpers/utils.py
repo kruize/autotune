@@ -105,6 +105,9 @@ INVALID_QUERY_PARAMETER_UPDATE_METADATA_PROFILE = "The query param(s) - [%s] is/
 MISSING_METADATA_PROFILE_NAME_PARAMETER = "Missing metadata profile 'name' parameter"
 DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully. View Metadata Profiles at /listMetadataProfiles"
 IMPORT_METADATA_INVALID_METADATA_PROFILE_NAME = "MetadataProfile - %s either does not exist or is not valid"
+COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain any MIG-based recommendations"
+COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
+COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
 
 
 # Kruize Recommendations Notification codes

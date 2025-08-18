@@ -305,16 +305,16 @@ def test_update_results_gpu_invalid_tests(test_name, expected_status_code, versi
     tmp_json_file = "/tmp/update_results_" + test_name + ".json"
 
     environment = Environment(loader=FileSystemLoader("../json_files/"))
-    template = environment.get_template("update_results_template.json")
+    template = environment.get_template("update_results_template_accelerator.json")
 
     if "null" in test_name:
         field = test_name.replace("null_", "")
-        json_file = "../json_files/update_results_template.json"
-        filename = "/tmp/update_results_template.json"
+        json_file = "../json_files/update_results_template_accelerator.json"
+        filename = "/tmp/update_results_template_accelerator.json"
 
         strip_double_quotes_for_field(json_file, field, filename)
         environment = Environment(loader=FileSystemLoader("/tmp/"))
-        template = environment.get_template("update_results_template.json")
+        template = environment.get_template("update_results_template_accelerator.json")
 
     filename = f"/tmp/update_results_{test_name}.json"
     content = template.render(
