@@ -851,8 +851,7 @@ def test_update_valid_accelerator_recommendations(cluster_type):
 
         data = response.json()
         print("message = ", data['message'])
-        # Check if the status code falls under the http success code range 200 - 300
-        assert SUCCESS_STATUS_CODE_START <= response.status_code < SUCCESS_STATUS_CODE_END
+        assert response.status_code == SUCCESS_STATUS_CODE
         assert data['status'] == SUCCESS_STATUS
         assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
