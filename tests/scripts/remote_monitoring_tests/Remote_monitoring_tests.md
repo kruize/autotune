@@ -136,6 +136,9 @@ Sanity Tests
 Negative Tests
 - _To be updated_
 
+Extended Tests
+- Update recommendations with valid recommendations for namespace experiments for all the terms for multiple experiments posted using different json files.
+
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
 - Deploys kruize in non-CRD mode using the [deploy script](https://github.com/kruize/autotune/blob/master/deploy.sh) from the autotune repo
 - Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md)
