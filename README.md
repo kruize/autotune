@@ -19,8 +19,9 @@ In the right-sizing mode, Kruize is connected to a local or a remote data source
     - NVIDIA GPUs: MIG (Multi-Instance GPU) slice configurations for supported accelerators (e.g., A100, H100).
     - Namespaces: Hard CPU and Memory limits for namespace resource quotas.
 
-a. In Local Monitoring Mode you monitor your applications within your own environment and generate the recommendations by deploying it locally.
-b. In Remote Monitoring Mode you everage data gathered from remote clusters to generate resource recommendations. This mode is ideal if you want to centralize monitoring for multiple clusters.
+a. In **Local Monitoring Mode** you monitor your applications within your own environment and generate the recommendations by deploying it locally.
+
+b. In **Remote Monitoring Mode** you everage data gathered from remote clusters to generate resource recommendations. This mode is ideal if you want to centralize monitoring for multiple clusters.
 
 The local and remote monitoring mode can be accessed from [Kruize Demos](https://github.com/kruize/kruize-demos) repo. 
 
