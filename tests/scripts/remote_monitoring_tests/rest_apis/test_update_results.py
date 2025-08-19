@@ -260,6 +260,154 @@ def test_update_results_invalid_namespace_tests(
     print("delete exp = ", response.status_code)
 
 @pytest.mark.negative
+@pytest.mark.parametrize(
+    "test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format, cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum, memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum, memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format, memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_format, acceleratorCoreUsage_name, acceleratorCoreUsage_min, acceleratorCoreUsage_max, acceleratorCoreUsage_avg, acceleratorCoreUsage_format, acceleratorMemoryUsage_name, acceleratorMemoryUsage_min, acceleratorMemoryUsage_max, acceleratorMemoryUsage_avg, acceleratorMemoryUsage_format, acceleratorFrameBufferUsage_name, acceleratorFrameBufferUsage_min, acceleratorFrameBufferUsage_max, acceleratorFrameBufferUsage_avg, acceleratorFrameBufferUsage_format",
+    generate_test_data(csvfile, update_results_gpu_test_data, "update_results"))
+def test_update_results_gpu_invalid_tests(test_name, expected_status_code, version, experiment_name, interval_start_time,
+                                      interval_end_time, kubernetes_obj_type, name, namespace, container_image_name,
+                                      container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg,
+                                      cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format,
+                                      cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min,
+                                      cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max,
+                                      cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum,
+                                      memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum,
+                                      memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum,
+                                      memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format,
+                                      memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min,
+                                      memoryRSS_format, acceleratorCoreUsage_name, acceleratorCoreUsage_min,
+                                      acceleratorCoreUsage_max, acceleratorCoreUsage_avg, acceleratorCoreUsage_format,
+                                      acceleratorMemoryUsage_name, acceleratorMemoryUsage_min,
+                                      acceleratorMemoryUsage_max, acceleratorMemoryUsage_avg,
+                                      acceleratorMemoryUsage_format, acceleratorFrameBufferUsage_name,
+                                      acceleratorFrameBufferUsage_min, acceleratorFrameBufferUsage_max,
+                                      acceleratorFrameBufferUsage_avg, acceleratorFrameBufferUsage_format,cluster_type):
+    print("\n*******************************************************")
+    print("Test - ", test_name)
+    print("*******************************************************\n")
+    input_json_file = "../json_files/create_exp.json"
+
+    form_kruize_url(cluster_type)
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    print(data['message'])
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Create experiment using the specified json
+    result_json_file = "../json_files/update_results_template_accelerator.json"
+    tmp_json_file = "/tmp/update_results_" + test_name + ".json"
+
+    environment = Environment(loader=FileSystemLoader("../json_files/"))
+    template = environment.get_template("update_results_template_accelerator.json")
+
+    if "null" in test_name:
+        field = test_name.replace("null_", "")
+        json_file = "../json_files/update_results_template_accelerator.json"
+        filename = "/tmp/update_results_template_accelerator.json"
+
+        strip_double_quotes_for_field(json_file, field, filename)
+        environment = Environment(loader=FileSystemLoader("/tmp/"))
+        template = environment.get_template("update_results_template_accelerator.json")
+
+    filename = f"/tmp/update_results_{test_name}.json"
+    content = template.render(
+        version=version,
+        experiment_name=experiment_name,
+        interval_start_time=interval_start_time,
+        interval_end_time=interval_end_time,
+        kubernetes_obj_type=kubernetes_obj_type,
+        name=name,
+        namespace=namespace,
+        container_image_name=container_image_name,
+        container_name=container_name,
+
+        cpuRequest_name=cpuRequest_name,
+        cpuRequest_sum=cpuRequest_sum,
+        cpuRequest_avg=cpuRequest_avg,
+        cpuRequest_format=cpuRequest_format,
+
+        cpuLimit_name=cpuLimit_name,
+        cpuLimit_sum=cpuLimit_sum,
+        cpuLimit_avg=cpuLimit_avg,
+        cpuLimit_format=cpuLimit_format,
+
+        cpuUsage_name=cpuUsage_name,
+        cpuUsage_sum=cpuUsage_sum,
+        cpuUsage_max=cpuUsage_max,
+        cpuUsage_avg=cpuUsage_avg,
+        cpuUsage_min=cpuUsage_min,
+        cpuUsage_format=cpuUsage_format,
+
+        cpuThrottle_name=cpuThrottle_name,
+        cpuThrottle_sum=cpuThrottle_sum,
+        cpuThrottle_max=cpuThrottle_max,
+        cpuThrottle_avg=cpuThrottle_avg,
+        cpuThrottle_format=cpuThrottle_format,
+
+        memoryRequest_name=memoryRequest_name,
+        memoryRequest_sum=memoryRequest_sum,
+        memoryRequest_avg=memoryRequest_avg,
+        memoryRequest_format=memoryRequest_format,
+
+        memoryLimit_name=memoryLimit_name,
+        memoryLimit_sum=memoryLimit_sum,
+        memoryLimit_avg=memoryLimit_avg,
+        memoryLimit_format=memoryLimit_format,
+
+        memoryUsage_name=memoryUsage_name,
+        memoryUsage_sum=memoryUsage_sum,
+        memoryUsage_max=memoryUsage_max,
+        memoryUsage_avg=memoryUsage_avg,
+        memoryUsage_min=memoryUsage_min,
+        memoryUsage_format=memoryUsage_format,
+
+        memoryRSS_name=memoryRSS_name,
+        memoryRSS_sum=memoryRSS_sum,
+        memoryRSS_max=memoryRSS_max,
+        memoryRSS_avg=memoryRSS_avg,
+        memoryRSS_min=memoryRSS_min,
+        memoryRSS_format=memoryRSS_format,
+
+        acceleratorCoreUsage_name=acceleratorCoreUsage_name,
+        acceleratorCoreUsage_min=acceleratorCoreUsage_min,
+        acceleratorCoreUsage_max=acceleratorCoreUsage_max,
+        acceleratorCoreUsage_avg=acceleratorCoreUsage_avg,
+        acceleratorCoreUsage_format=acceleratorCoreUsage_format,
+
+        acceleratorMemoryUsage_name=acceleratorMemoryUsage_name,
+        acceleratorMemoryUsage_min=acceleratorMemoryUsage_min,
+        acceleratorMemoryUsage_max=acceleratorMemoryUsage_max,
+        acceleratorMemoryUsage_avg=acceleratorMemoryUsage_avg,
+        acceleratorMemoryUsage_format=acceleratorMemoryUsage_format,
+
+        acceleratorFrameBufferUsage_name=acceleratorFrameBufferUsage_name,
+        acceleratorFrameBufferUsage_min=acceleratorFrameBufferUsage_min,
+        acceleratorFrameBufferUsage_max=acceleratorFrameBufferUsage_max,
+        acceleratorFrameBufferUsage_avg=acceleratorFrameBufferUsage_avg,
+        acceleratorFrameBufferUsage_format=acceleratorFrameBufferUsage_format
+    )
+
+    with open(filename, mode="w", encoding="utf-8") as message:
+        message.write(content)
+
+    response = update_results(tmp_json_file)
+
+    data = response.json()
+    print(data['message'])
+    assert response.status_code == int(expected_status_code)
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.negative
 @pytest.mark.parametrize("test_name, result_json_file, expected_message, error_message", missing_metrics)
 def test_update_results_with_missing_metrics_section(test_name, result_json_file, expected_message, error_message, cluster_type):
     """

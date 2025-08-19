@@ -37,6 +37,8 @@ ERROR_STATUS_CODE = 400
 ERROR_409_STATUS_CODE = 409
 DUPLICATE_RECORDS_COUNT = 5
 ERROR_500_STATUS_CODE = 500
+SUCCESS_STATUS_CODE_START = 200
+SUCCESS_STATUS_CODE_END = 300
 
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
@@ -103,6 +105,9 @@ INVALID_QUERY_PARAMETER_UPDATE_METADATA_PROFILE = "The query param(s) - [%s] is/
 MISSING_METADATA_PROFILE_NAME_PARAMETER = "Missing metadata profile 'name' parameter"
 DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully. View Metadata Profiles at /listMetadataProfiles"
 IMPORT_METADATA_INVALID_METADATA_PROFILE_NAME = "MetadataProfile - %s either does not exist or is not valid"
+COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain any MIG-based recommendations"
+COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
+COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
 
 
 # Kruize Recommendations Notification codes
@@ -321,6 +326,44 @@ update_results_namespace_test_data = {
     "namespaceRunningPods_max": 3
 }
 
+gpu_data_keys = [
+    "acceleratorCoreUsage_min",
+    "acceleratorCoreUsage_max",
+    "acceleratorCoreUsage_avg",
+
+    "acceleratorMemoryUsage_min",
+    "acceleratorMemoryUsage_max",
+    "acceleratorMemoryUsage_avg",
+
+    "acceleratorFrameBufferUsage_min",
+    "acceleratorFrameBufferUsage_max",
+    "acceleratorFrameBufferUsage_avg",
+]
+
+
+gpu_data = {
+    "acceleratorCoreUsage_name": "acceleratorCoreUsage",
+    "acceleratorCoreUsage_min": 25,
+    "acceleratorCoreUsage_max": 67,
+    "acceleratorCoreUsage_avg": 34,
+    "acceleratorCoreUsage_format": "percentage",
+
+    "acceleratorMemoryUsage_name": "acceleratorMemoryUsage",
+    "acceleratorMemoryUsage_min": 25,
+    "acceleratorMemoryUsage_max": 67,
+    "acceleratorMemoryUsage_avg": 34,
+    "acceleratorMemoryUsage_format": "percentage",
+
+    "acceleratorFrameBufferUsage_name": "acceleratorFrameBufferUsage",
+    "acceleratorFrameBufferUsage_min": 5321,
+    "acceleratorFrameBufferUsage_max": 18991,
+    "acceleratorFrameBufferUsage_avg": 11456,
+    "acceleratorFrameBufferUsage_format": "MiB"
+}
+
+update_results_gpu_test_data = {**update_results_test_data, **gpu_data}
+
+
 # version, datasource_name
 import_metadata_test_data = {
     "version": "v1.0",
@@ -331,11 +374,31 @@ import_metadata_test_data = {
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
-aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "cpuLimit_avg", "cpuUsage_sum", "cpuUsage_max",
-                          "cpuUsage_avg", "cpuUsage_min", "cpuThrottle_sum", "cpuThrottle_max", "cpuThrottle_avg",
-                          "memoryRequest_sum", "memoryRequest_avg", "memoryLimit_sum", "memoryRequest_avg",
-                          "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
-                          "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
+aggr_info_keys_to_skip = [
+    "cpuRequest_sum",
+    "cpuRequest_avg",
+    "cpuLimit_sum",
+    "cpuLimit_avg",
+    "cpuUsage_sum",
+    "cpuUsage_max",
+    "cpuUsage_avg",
+    "cpuUsage_min",
+    "cpuThrottle_sum",
+    "cpuThrottle_max",
+    "cpuThrottle_avg",
+    "memoryRequest_sum",
+    "memoryRequest_avg",
+    "memoryLimit_sum",
+    "memoryLimit_avg",
+    "memoryUsage_sum",
+    "memoryUsage_max",
+    "memoryUsage_avg",
+    "memoryUsage_min",
+    "memoryRSS_sum",
+    "memoryRSS_max",
+    "memoryRSS_avg",
+    "memoryRSS_min"
+    ] + gpu_data_keys
 
 aggr_info_keys_to_skip_namespace = ["namespaceCpuRequest_sum", "namespaceCpuRequest_format",
                           "namespaceCpuLimit_sum", "namespaceCpuLimit_format", "namespaceCpuUsage_min", "namespaceCpuUsage_max", "namespaceCpuUsage_avg", "namespaceCpuUsage_format",

@@ -44,6 +44,7 @@ Here are the test scenarios:
 - Update results for an invalid experiment or a non-existing experiment
 - Test with invalid values such as blank, null or an invalid value for various keys in the updateResults json
 - Update the same results twice for the same experiment
+- [NEGATIVE] Test with invalid values such as blank, null or an invalid value for Accelerator specific metrics
 
 Namespace Related Test Scenarios:
 Sanity Tests
@@ -128,6 +129,8 @@ Here are the test scenarios:
 - Update recommendations with unknown experiment_name
 - Update recommendations with unknown end_time
 - Update recommendations with end_time preceding start_time
+- [SANITY] Update recommendations with valid results for MIG accelerator
+- [SANITY] Update recommendations with valid results for Non-MIG Accelerator
 
 Namespace Related Test Scenarios:
 Sanity Tests

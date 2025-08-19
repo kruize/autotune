@@ -1,0 +1,152 @@
+[
+  {
+    "version": "{{version}}",
+    "experiment_name": "{{experiment_name}}",
+    "interval_start_time": "{{interval_start_time}}",
+    "interval_end_time": "{{interval_end_time}}",
+    "kubernetes_objects": [
+      {
+        "type": "{{kubernetes_obj_type}}",
+        "name": "{{name}}",
+        "namespace": "{{namespace}}",
+        "containers": [
+          {
+            "container_image_name": "{{container_image_name}}",
+            "container_name": "{{container_name}}",
+            "metrics": [
+              {
+                "name": "{{cpuRequest_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "sum": {{cpuRequest_sum}},
+                    "avg": {{cpuRequest_avg}},
+                    "format": "{{cpuRequest_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{cpuLimit_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "sum": {{cpuLimit_sum}},
+                    "avg": {{cpuLimit_avg}},
+                    "format": "{{cpuLimit_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{cpuUsage_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "min": {{cpuUsage_min}},
+                    "max": {{cpuUsage_max}},
+                    "sum": {{cpuUsage_sum}},
+                    "avg": {{cpuUsage_avg}},
+                    "format": "{{cpuUsage_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{cpuThrottle_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "sum": {{cpuThrottle_sum}},
+                    "max": {{cpuThrottle_max}},
+                    "avg": {{cpuThrottle_avg}},
+                    "format": "{{cpuThrottle_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{memoryRequest_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "sum": {{memoryRequest_sum}},
+                    "avg": {{memoryRequest_avg}},
+                    "format": "{{memoryRequest_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{memoryLimit_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "sum": {{memoryLimit_sum}},
+                    "avg": {{memoryLimit_avg}},
+                    "format": "{{memoryLimit_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{memoryUsage_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "min": {{memoryUsage_min}},
+                    "max": {{memoryUsage_max}},
+                    "sum": {{memoryUsage_sum}},
+                    "avg": {{memoryUsage_avg}},
+                    "format": "{{memoryUsage_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{memoryRSS_name}}",
+                "results": {
+                  "aggregation_info": {
+                    "min": {{memoryRSS_min}},
+                    "max": {{memoryRSS_max}},
+                    "sum": {{memoryRSS_sum}},
+                    "avg": {{memoryRSS_avg}},
+                    "format": "{{memoryRSS_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{acceleratorCoreUsage_name}}",
+                "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
+                  "aggregation_info": {
+                    "min": {{acceleratorCoreUsage_min}},
+                    "max": {{acceleratorCoreUsage_max}},
+                    "avg": {{acceleratorCoreUsage_avg}},
+                    "format": "{{acceleratorCoreUsage_format}}"
+                  }
+                }
+              },
+              {
+                "name": "{{acceleratorMemoryUsage_name}}",
+                "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
+                  "aggregation_info": {
+                    "min": {{acceleratorMemoryUsage_min}},
+                    "max": {{acceleratorMemoryUsage_max}},
+                    "avg": {{acceleratorMemoryUsage_avg}},
+                    "format": "{{acceleratorMemoryUsage_format}}"
+                    }
+                  }
+                },
+              {
+                "name": "{{acceleratorFrameBufferUsage_name}}",
+                "results": {
+                  "metadata": {
+                    "accelerator_model_name": "NVIDIA-A100-SXM4-40GB"
+                  },
+                  "aggregation_info": {
+                    "min": {{acceleratorFrameBufferUsage_min}},
+                    "max": {{acceleratorFrameBufferUsage_max}},
+                    "avg": {{acceleratorFrameBufferUsage_avg}},
+                    "format": "{{acceleratorFrameBufferUsage_format}}"
+                  }
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+]
