@@ -26,6 +26,10 @@ from datetime import datetime, timedelta
 from kubernetes import client, config
 from pathlib import Path
 from helpers.kruize import get_bulk_job_status
+from helpers.import_metadata_json_validate import *
+from helpers.list_metadata_json_validate import *
+from helpers.list_metadata_json_schema import *
+from helpers.list_metadata_json_verbose_true_schema import *
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
@@ -33,6 +37,8 @@ ERROR_STATUS_CODE = 400
 ERROR_409_STATUS_CODE = 409
 DUPLICATE_RECORDS_COUNT = 5
 ERROR_500_STATUS_CODE = 500
+SUCCESS_STATUS_CODE_START = 200
+SUCCESS_STATUS_CODE_END = 300
 
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
@@ -41,6 +47,13 @@ UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG = "The Start time should precede the End t
 UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG = "Performance profile: [avg cannot be negative or blank for the metric variable: "
 UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile: [ Format value should be among these values: [GiB, Gi, Ei, KiB, E, MiB, G, PiB, K, TiB, M, P, Bytes, cores, T, Ti, MB, KB, Pi, GB, EB, k, m, TB, PB, bytes, kB, Mi, Ki, EiB]"
 UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_RECORDS_COUNT} failed to save"
+KUBERNETES_OBJECT_NAME_MISMATCH = "Kubernetes Object Names MisMatched"
+KUBERNETES_OBJECT_TYPE_MISMATCH = "Kubernetes Object Types MisMatched"
+CANNOT_PROCESS_ALL_ZERO_METRIC_VALUES = "Cannot process results with all zero metric values"
+MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment"
+MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS = "Expected namespace-level results, but found type, name, and namespace for experiment: namespace_experiment."
+CONTAINER_DATA_NOT_SUPPORTED = "container data not supported"
+UNSUPPORTED_OBJECT_TYPE = "Unsupported object type"
 FAILED_RECORDS_MSG = "Out of a total of 1 records, 1 failed to save"
 THREE_FAILED_RECORDS_MSG = "Out of a total of 3 records, 3 failed to save"
 DUPLICATE_RECORDS_MSG = "An entry for this record already exists!"
@@ -83,6 +96,18 @@ INVALID_LIST_METADATA_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are in
 LIST_METADATA_PROFILES_INVALID_NAME = "Given metadata profile name - %s either does not exist or is not valid"
 CREATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
 CREATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
+UPDATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s updated successfully. View Metadata Profiles at /listMetadataProfiles"
+UPDATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "JSONObject[\"%s\"] not found."
+UPDATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Missing mandatory parameters: [%s] "
+INVALID_NAME_PARAMETER_METADATA_PROFILE = "Given metadata profile name - %s either does not exist or is not valid"
+MISMATCH_IN_METADATA_PROFILE_NAMES = "MetadataProfile name in URL: %s, does not match name in request body: %s"
+INVALID_QUERY_PARAMETER_UPDATE_METADATA_PROFILE = "The query param(s) - [%s] is/are invalid"
+MISSING_METADATA_PROFILE_NAME_PARAMETER = "Missing metadata profile 'name' parameter"
+DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully. View Metadata Profiles at /listMetadataProfiles"
+IMPORT_METADATA_INVALID_METADATA_PROFILE_NAME = "MetadataProfile - %s either does not exist or is not valid"
+COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain any MIG-based recommendations"
+COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
+COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
 
 
 # Kruize Recommendations Notification codes
@@ -255,6 +280,90 @@ update_results_test_data = {
     "memoryRSS_format": "MiB"
 }
 
+update_results_namespace_test_data = {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:40:43.511Z",
+    "namespace": "default",
+    "namespaceCpuRequest_name": "namespaceCpuRequest", 
+    "namespaceCpuRequest_sum": 4.4, 
+    "namespaceCpuRequest_format": "cores",
+    "namespaceCpuLimit_name": "namespaceCpuLimit", 
+    "namespaceCpuLimit_sum": 5.4, 
+    "namespaceCpuLimit_format": "cores",
+    "namespaceCpuUsage_name": "namespaceCpuUsage", 
+    "namespaceCpuUsage_min": 0.5, 
+    "namespaceCpuUsage_max": 2.4, 
+    "namespaceCpuUsage_avg": 1.5, 
+    "namespaceCpuUsage_format": "cores",
+    "namespaceCpuThrottle_name": "namespaceCpuThrottle", 
+    "namespaceCpuThrottle_min": 0.045, 
+    "namespaceCpuThrottle_max": 1.09, 
+    "namespaceCpuThrottle_avg": 0.09, 
+    "namespaceCpuThrottle_format": "cores",
+    "namespaceMemoryRequest_name": "namespaceMemoryRequest", 
+    "namespaceMemoryRequest_sum": 250.85, 
+    "namespaceMemoryRequest_format": "MiB",
+    "namespaceMemoryLimit_name": "namespaceMemoryLimit", 
+    "namespaceMemoryLimit_sum": 500, 
+    "namespaceMemoryLimit_format": "MiB",
+    "namespaceMemoryUsage_name": "namespaceMemoryUsage", 
+    "namespaceMemoryUsage_min": 21.5, 
+    "namespaceMemoryUsage_max": 198.4, 
+    "namespaceMemoryUsage_avg": 41.5, 
+    "namespaceMemoryUsage_format": "MiB",
+    "namespaceMemoryRSS_name": "namespaceMemoryRSS", 
+    "namespaceMemoryRSS_min": 26.5, 
+    "namespaceMemoryRSS_max": 125.54, 
+    "namespaceMemoryRSS_avg": 46.5, 
+    "namespaceMemoryRSS_format": "MiB",
+    "namespaceTotalPods_name": "namespaceTotalPods", 
+    "namespaceTotalPods_avg": 2,
+    "namespaceTotalPods_max": 3,
+    "namespaceRunningPods_name": "namespaceRunningPods", 
+    "namespaceRunningPods_avg": 2,
+    "namespaceRunningPods_max": 3
+}
+
+gpu_data_keys = [
+    "acceleratorCoreUsage_min",
+    "acceleratorCoreUsage_max",
+    "acceleratorCoreUsage_avg",
+
+    "acceleratorMemoryUsage_min",
+    "acceleratorMemoryUsage_max",
+    "acceleratorMemoryUsage_avg",
+
+    "acceleratorFrameBufferUsage_min",
+    "acceleratorFrameBufferUsage_max",
+    "acceleratorFrameBufferUsage_avg",
+]
+
+
+gpu_data = {
+    "acceleratorCoreUsage_name": "acceleratorCoreUsage",
+    "acceleratorCoreUsage_min": 25,
+    "acceleratorCoreUsage_max": 67,
+    "acceleratorCoreUsage_avg": 34,
+    "acceleratorCoreUsage_format": "percentage",
+
+    "acceleratorMemoryUsage_name": "acceleratorMemoryUsage",
+    "acceleratorMemoryUsage_min": 25,
+    "acceleratorMemoryUsage_max": 67,
+    "acceleratorMemoryUsage_avg": 34,
+    "acceleratorMemoryUsage_format": "percentage",
+
+    "acceleratorFrameBufferUsage_name": "acceleratorFrameBufferUsage",
+    "acceleratorFrameBufferUsage_min": 5321,
+    "acceleratorFrameBufferUsage_max": 18991,
+    "acceleratorFrameBufferUsage_avg": 11456,
+    "acceleratorFrameBufferUsage_format": "MiB"
+}
+
+update_results_gpu_test_data = {**update_results_test_data, **gpu_data}
+
+
 # version, datasource_name
 import_metadata_test_data = {
     "version": "v1.0",
@@ -265,11 +374,41 @@ import_metadata_test_data = {
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
-aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "cpuLimit_avg", "cpuUsage_sum", "cpuUsage_max",
-                          "cpuUsage_avg", "cpuUsage_min", "cpuThrottle_sum", "cpuThrottle_max", "cpuThrottle_avg",
-                          "memoryRequest_sum", "memoryRequest_avg", "memoryLimit_sum", "memoryRequest_avg",
-                          "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
-                          "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
+aggr_info_keys_to_skip = [
+    "cpuRequest_sum",
+    "cpuRequest_avg",
+    "cpuLimit_sum",
+    "cpuLimit_avg",
+    "cpuUsage_sum",
+    "cpuUsage_max",
+    "cpuUsage_avg",
+    "cpuUsage_min",
+    "cpuThrottle_sum",
+    "cpuThrottle_max",
+    "cpuThrottle_avg",
+    "memoryRequest_sum",
+    "memoryRequest_avg",
+    "memoryLimit_sum",
+    "memoryLimit_avg",
+    "memoryUsage_sum",
+    "memoryUsage_max",
+    "memoryUsage_avg",
+    "memoryUsage_min",
+    "memoryRSS_sum",
+    "memoryRSS_max",
+    "memoryRSS_avg",
+    "memoryRSS_min"
+    ] + gpu_data_keys
+
+aggr_info_keys_to_skip_namespace = ["namespaceCpuRequest_sum", "namespaceCpuRequest_format",
+                          "namespaceCpuLimit_sum", "namespaceCpuLimit_format", "namespaceCpuUsage_min", "namespaceCpuUsage_max", "namespaceCpuUsage_avg", "namespaceCpuUsage_format",
+                          "namespaceCpuThrottle_min", "namespaceCpuThrottle_max", "namespaceCpuThrottle_avg", "namespaceCpuThrottle_format",
+                          "namespaceMemoryRequest_sum", "namespaceMemoryRequest_format", "namespaceMemoryLimit_sum", "namespaceMemoryLimit_format",
+                           "namespaceMemoryUsage_min", "namespaceMemoryUsage_max", "namespaceMemoryUsage_avg", "namespaceMemoryUsage_format",
+                          "namespaceMemoryRSS_min", "namespaceMemoryRSS_max", "namespaceMemoryRSS_avg", "namespaceMemoryRSS_format",
+                          "namespaceTotalPods_avg", "namespaceTotalPods_max", "namespaceRunningPods_avg", "namespaceRunningPods_max"
+]
+
 
 MIG_PATTERN = r"nvidia\.com/mig-[1-4|7]g\.(5|10|20|40|80)gb"
 
@@ -286,8 +425,13 @@ def generate_test_data(csvfile, test_data, api_name):
                 # skip checking the invalid container name and container image name
                 if key == "container_image_name" or (key == "container_name" and t == "invalid"):
                     continue
-                #  skip checking the aggregation info values
+                # skip checking the invalid or null namespace name
+                if key == "namespace" and (t == "invalid" or t == "null"):
+                    continue
+                #  skip checking the aggregation info values for container and namespace
                 if key in aggr_info_keys_to_skip and t == "null":
+                    continue
+                if key in aggr_info_keys_to_skip_namespace and t == "null":
                     continue
 
                 test_name = t + "_" + key
@@ -1785,7 +1929,6 @@ def delete_and_create_metadata_profile():
     response = create_metadata_profile(metadata_profile_json_file)
 
     data = response.json()
-    print(data['message'])
 
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
@@ -1811,3 +1954,85 @@ def delete_and_create_metric_profile():
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
+
+
+def import_metadata_list_and_validate(input_json_file, verbose=None, validate_workload=None, namespace=None, workload=None, container=None):
+
+    response = delete_metadata(input_json_file)
+    print("delete metadata = ", response.status_code)
+
+    # Import metadata using the specified json
+    response = import_metadata(input_json_file)
+    metadata_json = response.json()
+
+    # Validate the json against the json schema
+    errorMsg = validate_import_metadata_json(metadata_json, import_metadata_json_schema)
+    assert errorMsg == ""
+
+    json_data = json.load(open(input_json_file))
+    datasource = json_data['datasource_name']
+
+    if verbose is None:
+        verbose = "false"
+
+    response = list_metadata(datasource, verbose=verbose)
+
+    list_metadata_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    if verbose == "false":
+        errorMsg = validate_list_metadata_json(list_metadata_json, list_metadata_json_schema)
+    else :
+        errorMsg = validate_list_metadata_json(list_metadata_json, list_metadata_json_verbose_true_schema)
+    assert errorMsg == ""
+
+    # Validates if the specified namespace, workload and container are present in the metadata json
+    if validate_workload is not None:
+        assert namespace is not None, "namespace must be provided when validate_workload is True."
+        assert workload is not None, "workload must be provided when validate_workload is True."
+        assert container is not None, "container must be provided when validate_workload is True."
+        validate_metadata_workloads(list_metadata_json, namespace, workload, container)
+
+
+# Validates the metadata json if a container exists within the specified namespace and workload.
+def validate_metadata_workloads(metadata_json, namespace, workload, container):
+    print(f"\nValidating workload '{workload}' in metadata json")
+
+    datasources = metadata_json.get('datasources', {})
+    for ds_value in datasources.values():
+        clusters = ds_value.get('clusters', {})
+        for cl_value in clusters.values():
+            namespaces_dict = cl_value.get('namespaces', {})
+
+            assert len(namespaces_dict) == 1, \
+                f"Validation failed: Expected 1 namespace, but found {len(namespaces_dict)}."
+
+            # Check for the specific namespace key
+            namespace_obj = namespaces_dict.get(namespace)
+            if not namespace_obj:
+                continue
+
+            workloads_dict = namespace_obj.get('workloads', {})
+            assert len(workloads_dict) == 1, \
+                f"Validation failed: Expected 1 workload in '{namespace}', but found {len(workloads_dict)}."
+
+            # Check for the specific workload key
+            workload_obj = workloads_dict.get(workload)
+            if not workload_obj:
+                continue
+            
+            # Check for the specific container key
+            containers_dict = workload_obj.get('containers', {})
+            assert len(containers_dict) == 1, \
+                f"Validation failed: Expected 1 container in '{workload}', but found {len(containers_dict)}."
+
+            if containers_dict.get(container):
+                print(f"Validating workload '{workload}' in metadata json..done")
+                return
+
+    # Raise an error if no match was found.
+    raise AssertionError(
+        f"Validation failed: No entry found for namespace='{namespace}', "
+        f"workload='{workload}', and container='{container}'."
+    )

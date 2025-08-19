@@ -96,6 +96,7 @@ public class AnalyzerErrorConstants {
         public static final String WRONG_TIMESTAMP = "The Start time should precede the End time!";
         public static final String MEASUREMENT_DURATION_ERROR = "Interval duration cannot be less than or greater than measurement_duration by more than " + KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_SECONDS + " seconds";
         public static final String MISSING_METRICS = "Metric data is not present for container : %s for experiment: %s. ";
+        public static final String MISSING_METRICS_NAMESPACE = "Metric data is not present for namespace : %s for experiment: %s. ";
         public static final String BLANK_AGGREGATION_INFO_VALUE = " cannot be negative or blank for the metric variable: ";
         public static final String UNSUPPORTED_FORMAT = " Format value should be among these values: ".concat(KruizeSupportedTypes.SUPPORTED_FORMATS.toString());
         public static final String UNSUPPORTED_METRIC = "Metric variable name should be among these values: ".concat(Arrays.toString(AnalyzerConstants.MetricName.values()));
@@ -106,6 +107,7 @@ public class AnalyzerErrorConstants {
         public static final String VERSION_MISMATCH = "Version number mismatch found. Expected: %s , Found: %s";
         public static final String NULL_OR_BLANK_CONTAINER_IMAGE_NAME = "container_image_name cannot be null or blank";
         public static final String NULL_OR_BLANK_CONTAINER_NAME = "container_name cannot be null or blank";
+        public static final String NULL_OR_BLANK_NAMESPACE_NAME = "namespace_name cannot be null or blank";
         public static final String EXPERIMENT_AND_INTERVAL_END_TIME = " for experiment : %s interval_end_time: %s";
         public static final String LOCAL_MONITORING_DATASOURCE_MANDATORY = "Experiment %s: datasource mandatory for Local Monitoring type";
         public static final String LOAD_METADATA_PROFILE_FAILURE = "Loading saved Metadata Profile %s failed: %s";
@@ -115,6 +117,7 @@ public class AnalyzerErrorConstants {
         public static final String INVALID_METADATA_PROFILE_NAME = "MetadataProfile 'name' field is either null or empty!";
         public static final String INVALID_METRICS_FOUND = "Invalid metrics found for experiment - %s: %s";
         public static final String MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment - %s : %s";
+        public static final String MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS = "Expected namespace-level results, but found type, name, and namespace for experiment: %s.";
 
 
         private AutotuneObjectErrors() {
@@ -325,6 +328,28 @@ public class AnalyzerErrorConstants {
             public static final String DELETE_METADATA_PROFILE_FAILURE_MSG = "Failed to delete the specified metadata profile data: %s";
             public static final String DELETE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeLMMetadataProfileEntry not found with metadata profile name: ";
             public static final String DELETE_METADATA_PROFILE_ENTRY_ERROR_MSG = "Failed to delete metadata profile for metric profile {} due to {}";
+        }
+
+        public static final class UpdateMetadataProfileAPI {
+            public UpdateMetadataProfileAPI() {
+            }
+            public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+            public static final String INVALID_METADATA_PROFILE_NAME_EXCPTN = "Invalid Metadata Profile Name";
+            public static final String INVALID_METADATA_PROFILE_NAME_MSG = "Given metadata profile name - %s either does not exist or is not valid";
+            public static final String NO_METADATA_PROFILES_EXCPTN = "No metadata profile";
+            public static final String NO_METADATA_PROFILES = "No metadata profiles found!";
+            public static final String UPDATE_METADATA_PROFILE_ERROR = "Failed to update metadata profile data due to: {} ";
+            public static final String METADATA_PROFILE_NAMES_MISMATCH = "MetadataProfile name in URL: %s, does not match name in request body: %s";
+            public static final String MISSING_INPUT_PAYLOAD = "MetadataProfile JSON payload cannot be empty";
+            public static final String UPDATE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME = "KruizeLMMetadataProfileEntry not found with metadata profile name: ";
+            public static final String INVALID_METRIC_NAME = "Invalid metric name: ";
+            public static final String SUPPORTED_QUERY_NAME_PREFIXES = "Supported prefixes: namespace, workload, container.";
+            public static final String INVALID_SUM_BY_CLAUSE = "Invalid 'sum by ()' clause for metric: ";
+            public static final String EXPECTED_IDENTIFIERS = "Expected one of the following identifier sets";
+            public static final String INVALID_QUERY_NO_RESULT = "Invalid query, no result returned by the metric query: %s.";
+            public static final String QUERY_SYNTAX_ERROR_MESSAGE = ". Please review the metric query: %s for syntax errors.";
+            public static final String MISSING_METADATA_PROFILE_NAME_EXCPTN = "Missing Metadata Profile Name";
+            public static final String MISSING_METADATA_PROFILE_NAME_MSG = "Missing metadata profile 'name' parameter";
         }
     }
 

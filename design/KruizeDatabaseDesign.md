@@ -62,6 +62,14 @@ Kubernetes. The experiment contains the following attributes:
    <td>Primary key.
    </td>
   </tr>
+ <tr>
+   <td>experiment_type
+   </td>
+   <td>bigint
+   </td>
+   <td>The type of the experiment. This can be "container" or "namespace" for now.
+   </td>
+  </tr>
   <tr>
    <td>status
    </td>
@@ -124,6 +132,22 @@ Kubernetes. The experiment contains the following attributes:
    <td>json
    </td>
    <td>Additional metadata for the experiment in JSON format.
+   </td>
+  </tr>
+  <tr>
+   <td>creation_date
+   </td>
+   <td>timestamp
+   </td>
+   <td>The time when the experiment got created.
+   </td>
+  </tr>
+  <tr>
+   <td>update_date
+   </td>
+   <td>timestamp
+   </td>
+   <td>The time when the results are added/updated for a particular experiment.
    </td>
   </tr>
 </table>

@@ -555,7 +555,8 @@ For namespace experiment:
                 "name": "namespaceTotalPods",
                 "results": {
                   "aggregation_info": {
-                    "sum": 25
+                    "max": 3,
+                    "avg": 2
                   }
                 }
               },
@@ -563,7 +564,8 @@ For namespace experiment:
                 "name": "namespaceRunningPods",
                 "results": {
                   "aggregation_info": {
-                    "sum": 22
+                    "max": 3,
+                    "avg": 2
                   }
                 }
               }

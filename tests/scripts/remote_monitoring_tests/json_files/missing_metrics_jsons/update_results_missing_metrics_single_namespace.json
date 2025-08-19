@@ -1,0 +1,15 @@
+[
+  {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:40:43.570Z",
+    "kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default"
+        }
+      }
+    ]
+  }
+]

@@ -108,6 +108,8 @@ public class Converters {
                     // Validation already done, and it is getting loaded back from db
                     kruizeObject.setValidation_data(createExperimentAPIObject.getValidationData());
                 }
+                kruizeObject.setCreation_date(createExperimentAPIObject.getCreationDate());
+                kruizeObject.setUpdate_date(createExperimentAPIObject.getUpdateDate());
             } catch (Exception e) {
                 LOGGER.error("failed to convert CreateExperimentAPIObj To KruizeObject due to {} ", e.getMessage());
                 LOGGER.debug(createExperimentAPIObject.toString());

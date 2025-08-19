@@ -17,15 +17,15 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class MetricsConfig {
     
     public static Timer timerListRec, timerListExp, timerCreateExp, timerUpdateResults, timerUpdateRecomendations;
-    public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName, timerLoadRecExpNameDate, timerLoadBulkJobId, timerUpdateBulkJobId,  timerBoxPlots;
+    public static Timer timerLoadRecExpName, timerLoadResultsExpName, timerLoadExpName, timerLoadRecExpNameDate, timerLoadBulkJobId, timerUpdateBulkJobId,  timerBoxPlots, timerUpdateExpDate;
     public static Timer timerLoadAllRec, timerLoadAllExp, timerLoadAllResults;
     public static Timer timerAddRecDB, timerAddResultsDB, timerAddExpDB, timerAddBulkResultsDB, timerSaveBulkJobDB, timerAddBulkJob;
     public static Timer timerAddPerfProfileDB, timerLoadPerfProfileName, timerLoadAllPerfProfiles;
-    public static Timer timerAddMetadataProfileDB, timerLoadMetadataProfileName, timerLoadAllMetadataProfiles;
+    public static Timer timerAddMetadataProfileDB, timerLoadMetadataProfileName, timerLoadAllMetadataProfiles, timerUpdateMetadataProfileDB;
     public static Timer timerImportMetadata, timerGetMetadata;
     public static Timer timerJobStatus, timerCreateBulkJob, timerGetExpMap, timerCreateBulkExp, timerGenerateBulkRec, timerRunJob;
     public static Counter timerKruizeNotifications , timerBulkJobs;
-    public static Timer.Builder timerBListRec, timerBListExp, timerBCreateExp, timerBUpdateResults, timerBUpdateRecommendations;
+    public static Timer.Builder timerBListRec, timerBListExp, timerBCreateExp, timerBUpdateResults, timerBUpdateRecommendations, timerBUpdateExpDate;
     public static Timer.Builder timerBLoadRecExpName, timerBLoadResultsExpName, timerBLoadExpName, timerBLoadRecExpNameDate, timerBBoxPlots;
     public static Timer.Builder timerBLoadAllRec, timerBLoadAllExp, timerBLoadAllResults;
     public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB, timerBLoadBulkJobId, timerBUpdateBulkJobId, timerBSaveBulkJobDB, timerBaddBulkJob;
@@ -36,7 +36,10 @@ public class MetricsConfig {
     public static Timer.Builder timerBListDS, timerBImportDSMetadata, timerBListDSMetadata;
     public static Timer.Builder timerBImportMetadata, timerBGetMetadata;
     public static Timer.Builder timerBJobStatus, timerBCreateBulkJob, timerBGetExpMap, timerBCreateBulkExp, timerBGenerateBulkRec, timerBRunJob;
-    public static Timer.Builder timerBAddMetadataProfileDB, timerBLoadMetadataProfileName, timerBLoadAllMetadataProfiles;
+    public static Timer.Builder timerBAddMetadataProfileDB, timerBLoadMetadataProfileName, timerBLoadAllMetadataProfiles, timerBUpdateMetadataProfileDB;
+    public static Timer timerUpdateMetadataProfile;
+    public static Timer.Builder timerBUpdateMetadataProfile;
+
     private static MetricsConfig INSTANCE;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
     public String DB_METRIC_DESC = "Time taken for KruizeDB methods";
@@ -68,6 +71,7 @@ public class MetricsConfig {
         timerBSaveBulkJobDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "saveBulkJobDB");
         timerBLoadBulkJobId = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "getBulkJobDB");
         timerBUpdateBulkJobId = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updateBulkJobDB");
+        timerBUpdateExpDate = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updateExperimentDates");
 
         timerBAddPerfProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addPerformanceProfileToDB");
         timerBLoadPerfProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadPerformanceProfileByName");
@@ -93,6 +97,9 @@ public class MetricsConfig {
         timerBAddMetadataProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addMetadataProfileToDB");
         timerBLoadMetadataProfileName = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadMetadataProfileByName");
         timerBLoadAllMetadataProfiles = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "loadAllMetadataProfiles");
+        timerBUpdateMetadataProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updateMetadataProfileToDB");
+
+        timerBUpdateMetadataProfile = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateMetadataProfile").tag("method", "PUT");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);

@@ -91,6 +91,30 @@ Here are the test scenarios:
 - Test with invalid values such as blank, null or an invalid value for name query parameter in listMetadataProfiles API
 - List metadata profiles without creating metadata profile
 
+### **Update Metadata Profile API tests**
+
+Here are the test scenarios:
+
+- Update a metadata profile with a valid json using the API, list and validate the metadata profiles before and after 
+calling /updateMetadataProfile API and validate the updated queries using /dsmetadata API.
+- Update metadata profile twice using the API, list and validate the updated profiles and validate the updated queries using /dsmetadata API. Checks if different workloads can be imported by updating the MetadataProfile with corresponding workload details.
+- Update metadata profile with a valid json using the API, omitting required `name` in the query parameter. Verifies that the API returns an error when a profile update is attempted with a valid JSON body but omits the required `name` query parameter.
+- Update metadata profile by passing invalid `name` query parameter: Empty, NULL, invalid profile names. Verifies that the `name` parameter cannot be invalid when a profile update is attempted with a valid JSON body.
+- Update metadata profile with an invalid json missing the mandatory fields, validate for appropriate error message. Ensures the API returns a specific validation error when the request's JSON payload is missing mandatory fields.
+- Update metadata profile with a valid json using the API but pass invalid query parameter other than `name`. Checks that the API correctly rejects requests that use an invalid query parameter other than the accepted `name` parameter.
+- Update metadata profile with mismatch in profile names of input JSON payload, query parameter and validate for appropriate error message. Ensuring that the `name` field and input parameter match for successfully updating the MetadataProfile.
+
+
+### **Delete Metadata Profile API tests**
+
+Here are the test scenarios:
+
+- Delete metadata profile passing a valid `name` parameter.
+- Delete metadata profile by missing `name` query parameter. Verifies that the API returns an error when a profile is attempted to delete without the `name` query parameter.
+- Delete metadata profile by passing invalid `name` query parameter: Empty, NULL, invalid profile names. Verifies that the `name` parameter cannot be invalid to successfully delete the profile.
+- Multiple delete attempts: Delete same metadata profile multiple times and validate the expected error message, ensuring redundant delete requests are handled gracefully.
+- Delete metadata profile, try to import cluster metadata and validate the expected error message. This testcase ensures that the cluster metadata cannot be imported once the MetadataProfile is deleted.
+
 ### **Create Experiment API tests**
 
 Here are the test scenarios:

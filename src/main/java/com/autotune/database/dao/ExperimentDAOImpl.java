@@ -46,10 +46,7 @@ import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
 import java.time.YearMonth;
 import java.time.temporal.ChronoUnit;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.IntStream;
 
 import static com.autotune.database.helper.DBConstants.DB_MESSAGES.DUPLICATE_KEY;
@@ -563,6 +560,58 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+
+    /**
+     * Update MetadataProfile in database
+     *
+     * @param kruizeMetadataProfileEntry Metadata Profile Database object to be updated
+     * @return validationOutputData contains the status of the DB update operation
+     */
+    public ValidationOutputData updateMetadataProfileToDB(KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerUpdateMetadataProfileDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(UPDATE_METADATA_PROFILE_TO_DB, null);
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME_PARAMETER, kruizeMetadataProfileEntry.getMetadata().get("name").asText());
+                query.setParameter(AnalyzerConstants.API_VERSION, kruizeMetadataProfileEntry.getApi_version());
+                query.setParameter(AnalyzerConstants.KIND, kruizeMetadataProfileEntry.getKind());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.METADATA, kruizeMetadataProfileEntry.getMetadata());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.METADATA_PROFILE_NAME, kruizeMetadataProfileEntry.getMetadata().get("name").asText());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.PROFILE_VERSION, kruizeMetadataProfileEntry.getProfile_version());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.K8STYPE, kruizeMetadataProfileEntry.getK8s_type());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.DATASOURCE, kruizeMetadataProfileEntry.getDatasource());
+                query.setParameter(AnalyzerConstants.MetadataProfileConstants.QUERY_VARIABLES, kruizeMetadataProfileEntry.getQuery_variables());
+
+                int updatedCount = query.executeUpdate();
+                if (updatedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ENTRY_NOT_FOUND_WITH_NAME + kruizeMetadataProfileEntry.getMetadata().get("name").asText());
+                }
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ERROR, e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateMetadataProfileAPI.UPDATE_METADATA_PROFILE_ERROR, e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerUpdateMetadataProfileDB) {
+                MetricsConfig.timerUpdateMetadataProfileDB = MetricsConfig.timerBUpdateMetadataProfileDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateMetadataProfileDB.stop(MetricsConfig.timerUpdateMetadataProfileDB);
+            }
+        }
+        return validationOutputData;
+    }
+
     /**
      * @param kruizeDataSourceEntry
      * @param validationOutputData
@@ -797,6 +846,50 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     @Override
     public void deleteBulkJobByID(String jobId) {
         //todo
+    }
+
+    /**
+     * Updates the {@code update_date} column in the {@code kruize_experiments} table for the specified experiments.
+     *
+     * <p>This method executes a native SQL update query to set the {@code update_date} field for all experiments
+     * whose names are provided in the {@code experimentNames} set. The update is performed using a Hibernate session
+     * within a transaction.</p>
+     *
+     * @param experimentNames A set of experiment names to be updated.
+     * @param currentTimestamp The timestamp to be set in the {@code update_date} field.
+     * @return {@code true} if the update operation was executed (even if no rows were affected),
+     *         {@code false} if {@code experimentNames} is {@code null} or empty.
+     * @throws Exception If any exception occurs during the database update.
+     */
+    @Override
+    public boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception {
+        if (experimentNames == null || experimentNames.isEmpty()) {
+            return false;
+        }
+
+        String statusValue = "failure";
+        Timer.Sample timerUpdateExperiment = Timer.start(MetricsConfig.meterRegistry());
+
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+
+            session.beginTransaction();
+            session.createNativeQuery(UPDATE_EXPERIMENTS_DATE)
+                    .setParameter("updateDate", currentTimestamp)
+                    .setParameterList("experimentNames", experimentNames)
+                    .executeUpdate();
+
+            session.getTransaction().commit();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Failed to update update_date for experiments: {}", e.getMessage());
+            throw new Exception(e.getMessage());
+        } finally {
+            if (null != timerUpdateExperiment) {
+                MetricsConfig.timerUpdateExpDate = MetricsConfig.timerBUpdateExpDate.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdateExperiment.stop(MetricsConfig.timerUpdateExpDate);
+            }
+        }
+        return true;
     }
 
 
