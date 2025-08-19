@@ -74,6 +74,7 @@ This document describes the test plan for Kruize release 0.7
 | 5 | Add UpdateMetadataProfile API in local monitoring mode                          | Tested using functional testsuite and newly added tests for updateMetadataProfile API | [1592](https://github.com/kruize/autotune/pull/1592) | PASSED  |          |
 | 6 | Fix negative test failure count                                                 | Tested using remote monitoring functional testsuite                                   | [1618](https://github.com/kruize/autotune/pull/1618) | PASSED  |          |
 | 7 | Add remaining tests for Namespace recommendations                               | Tested using remote monitoring functional testsuite                                   | [1614](https://github.com/kruize/autotune/pull/1614) | PASSED  |          |
+| 8 | Add invalid tests for accelerator                                               | Tested using remote monitoring functional testsuite                                   | [1627](https://github.com/kruize/autotune/pull/1614) | PASSED  |          |
 
 ---
 
