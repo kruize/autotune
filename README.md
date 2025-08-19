@@ -1,29 +1,63 @@
 
-# Kruize Autotune - Autonomous Performance Tuning for Kubernetes !
+# Kruize 🚀 – Intelligent Kubernetes Resource Optimization
 
-## What is Kruize Autotune ?
+Kruize is an open-source optimization tool for Kubernetes that helps you achieve significant cost savings and optimal performance with minimal effort. It continuously monitors your applications and provides right-sizing recommendations for container and namespace resources like CPU and memory, as well as NVIDIA GPU MIG slices.
+Kruize serves as the powerful backend engine for the Resource Optimization Service within Red Hat Insights, a service now available to all OpenShift Container Platform (OCP) customers.
 
-Kruize Autotune is an Autonomous Performance Tuning Tool for Kubernetes. Autotune accepts a user provided "slo" goal to optimize application performance. It uses Prometheus to identify "layers" of an application that it is monitoring and matches tunables from those layers to the user provided slo. It then runs experiments with the help of a hyperparameter optimization framework to arrive at the most optimal values for the identified set of tunables to get a better result for the user provided slo.
+# How Kruize Works
 
-Autotune can take an arbitrarily large set of tunables and run experiments to continually optimize the user provided slo in incremental steps. For this reason, it does not necessarily have a "best" value for a set of tunables, only a "better" one than what is currently deployed.
+Kruize analyzes historical resource usage data from a monitoring source like Prometheus to generate its recommendations. It offers suggestions based on predefined terms (short-term, medium-term, long-term) or custom/user defined terms. Kruize also allows you to choose between cost-optimized or performance-optimized profiles for each container.
+To help you visualize optimization opportunities, Kruize also provides capacity and utilization data (e.g., as box plots) that clearly show the difference between requested vs. actual resource usage.
 
-## Motivation
+# Modes of Operation
+Kruize can be run in three distinct modes to fit your operational needs.
 
-Docker and Kubernetes have become more than buzzwords and are now the defacto building block for any cloud. We are now seeing a major transformation in the industry as every product/solution/offering is being containerized as well as being made kubernetes ready (Hello YAML!). This is throwing up a new set of challenges that are unique to this changing environment.
+## 1. Right-Sizing or Monitoring Mode
 
-![Kubernetes Performance Requirement](/docs/autotune-it-admin.png)
+In the right-sizing mode, Kruize is connected to a local or a remote data source such as prometheus / thanos and can provide right-sizing recommendations for containers and namespaces by monitoring workloads. Based on historical data, Kruize generates recommendations for:
+    - Containers: CPU and Memory requests/limits.
+    - NVIDIA GPUs: MIG (Multi-Instance GPU) slice configurations for supported accelerators (e.g., A100, H100).
+    - Namespaces: Hard CPU and Memory limits for namespace resource quotas.
 
-Consider an Flight Booking Application as shown in the figure. It consists of a number of microservices which are polyglot in nature and are running in a Kubernetes cluster. Consider a scenario where the user doing a booking is getting a very slow response time. The IT Admin is now tasked to reduce the overall response time for the booking URI.
+    a. In Local Monitoring Mode you monitor your applications within your own environment and generate the recommendations by deploying it locally.
+    b. In Remote Monitoring Mode you everage data gathered from remote clusters to generate resource recommendations. This mode is ideal if you want to centralize monitoring for multiple clusters.
 
-Tracking down performance issues in a dynamic microservices environment can be challenging and more often than not, stack or runtime specific optimizations are written off as too complex. This is because runtime optimization is a very involved effort and requires deep expertise. Common fixes are mostly limited to increasing pod resources, fixing application logic to make it more optimal or increasing horizontal pod auto-scaling. 
+The local and remote monitoring mode can be accessed from [Kruize Demos](https://github.com/kruize/kruize-demos) repo. 
 
-## How do I start ?
+Monitoring mode has been productized and is the backend engine for Resource Optimization Service as part of RH Insights. This service is now available to all OCP customers. Slightly over one third of all OCP customers (~1000) are now using this service. (Tracked through the usage of the Cost Operator)
 
-Autotune helps to capture your performance tuning needs in a comprehensive way and runs experiments to provide recommendations that help achieve your slo goals. So how does it do it ? We recommend you check out the [kruize-demos](https://github.com/kruize/kruize-demos) repo for a quick start !
+## 2. Autoscaling Mode 
+
+In this mode, Kruize not only generates recommendations but also applies them automatically.
+
+- VPA Integration: Kruize seamlessly integrates with the Kubernetes Vertical Pod Autoscaler (VPA) to automatically apply its CPU and memory right-sizing recommendations. Kruize creates a custom VPA recommender object and pushes recommendations to this VPA object. This then gets picked up by VPA, which actually applies the recommendations. Kruize supports two modes “auto” and “recreate” that correspond to the modes of VPA with the same names. 
+
+- Instaslice Integration: Kruize uses Instaslice under the covers to apply MIG slicing recommendations for Nvidia accelerators. In “auto” and “recreate” modes, if Kruize detects the presence of GPU metrics for accelerators that support MIG slicing, Kruize generates appropriate MIG slicing recommendations. This gets picked up by Instaslice which will then create the appropriate MIG partitioning scheme on the accelerator and assigns it to the container.
+
+## 3. Autotune
+
+Kruize supports an autotune mode for complex, user-defined performance objectives. In this mode, Kruize runs multiple trials with different tunable configurations for application containers, narrowing them down using Hyperparameter Optimization (HPO) algorithms until it finds the optimal set that meets the user’s Service Level Objective (SLO). It supports a wide range of tunables at the container, runtime (e.g., JVM), and framework levels (e.g., EAP, Quarkus).
+Kruize Autotune has been successfully used by performance and scale teams for OS tuning (via Node Tuning Operator profiles), Apache Kafka tuning, Quarkus optimizations, and is now being explored with EAP as part of a sustainability initiative.
+
+## Quick Start
+
+Kruize has a demos repo that enables users to get a quick start without worrying about the setup and its a great first step for first time users. 
+You can start by running the [Local Monitoring demo](https://github.com/kruize/kruize-demos/tree/main/monitoring/local_monitoring) or the [Remote Monitoring Demo](https://github.com/kruize/kruize-demos/tree/main/monitoring/remote_monitoring_demo)
+
+We recommend you check out the [kruize-demos](https://github.com/kruize/kruize-demos) repo in case you want to know more about VPA demo, GPU demo, HPO demo and a lot more!
 
 ## Installation
 
+Installing kruize on an openshift cluster can be the easiest way to get things working, you simply need to log into the cluster and run the deploy command .
+
+```
+./deploy.sh -c openshift -m crc -i <image_name>
+```
+
 See the [Autotune Installation](/docs/autotune_install.md) for more details on the installation.
+
+An Operator-based installation is under active development to simplify deployment and management on Kubernetes and OCP.
+
 
 ## REST API
 
@@ -38,6 +72,9 @@ See the [Autotune Architecture](/design/README.md) for more details on the archi
 We welcome your contributions! See [CONTRIBUTING.md](/CONTRIBUTING.md) for more details. 
 
 Join the [Kruize Slack](http://kruizeworkspace.slack.com/) to connect with the community, ask questions, and collaborate!
+
+or Scan the QR Code 
+![Slack QR code](./kruize_slack_QR.jpeg)
 
 ## License
 
