@@ -22,9 +22,6 @@ non_interactive=0
 # Call setup by default (and not terminate)
 setup=1
 
-# Prometheus release default
-tag="v0.8.0"
-
 function install_prometheus() {
 	echo
 	echo "Info: Checking pre requisites for prometheus..."
@@ -62,16 +59,13 @@ function install_prometheus() {
 		popd >/dev/null
 		echo
 		echo "Info: Downloading prometheus git release - ${tag}"
-		# Commenting the below lines as the latest prometheus requires more than 2 CPUs and the PR checks fail on github hosted runners
-		# as they have only 2 CPUs on the host. Hence switching back to prometheus release 0.8.0 (Apr 2021)
-		# git clone https://github.com/coreos/kube-prometheus.git 2>/dev/null
-		git clone -b ${tag} https://github.com/coreos/kube-prometheus.git 2>/dev/null
+		git clone https://github.com/coreos/kube-prometheus.git 2>/dev/null
 		pushd kube-prometheus/manifests >/dev/null
 		echo
 		echo "Info: Installing prometheus"
-		kubectl apply -f setup
+		kubectl create -f setup
 		check_err "Error: Unable to setup prometheus"
-		kubectl apply -f .
+		kubectl create -f .
 		check_err "Error: Unable to install prometheus"
 		popd >/dev/null
 	popd >/dev/null
