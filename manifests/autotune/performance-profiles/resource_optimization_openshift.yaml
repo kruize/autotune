@@ -2,7 +2,7 @@ apiVersion: "recommender.com/v1"
 kind: "KruizePerformanceProfile"
 metadata:
   name: "resource-optimization-openshift"
-profile_version: 1.0
+profile_version: 2.0
 k8s_type: openshift
 
 slo:
