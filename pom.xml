@@ -240,6 +240,10 @@
                             <mainClass>com.autotune.jobs.RetentionPartition</mainClass>
                             <name>RetentionPartition</name>
                         </program>
+                        <program>
+                            <mainClass>com.autotune.jobs.DeletePerformanceProfile</mainClass>
+                            <name>DeletePerformanceProfile</name>
+                        </program>
                     </programs>
                 </configuration>
                 <executions>

@@ -1231,6 +1231,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     @Override
     public List<KruizePerformanceProfileEntry> loadAllPerformanceProfiles() throws Exception {
+        LOGGER.info("Getting performance profiles from the DB...");
         String statusValue = "failure";
         Timer.Sample timerLoadAllPerfProfiles = Timer.start(MetricsConfig.meterRegistry());
         List<KruizePerformanceProfileEntry> entries = null;
@@ -1852,5 +1853,34 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             return true;
         }
         return false;
+    }
+
+    public void deleteOldPerformanceProfile(Double profileVersion) {
+        LOGGER.info("Performance Profile Current Version is set to {}", profileVersion);
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            List<KruizePerformanceProfileEntry> performanceProfileEntries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_PERFORMANCE_PROFILE, KruizePerformanceProfileEntry.class).list();
+            if (!performanceProfileEntries.isEmpty()) {
+                for (KruizePerformanceProfileEntry ignored : performanceProfileEntries) {
+                    try {
+                        Transaction tx = session.beginTransaction();
+                        Query query = session.createQuery(DELETE_FROM_PERFORMANCE_PROFILE_BY_VERSION_NUMBER, null);
+                        query.setParameter("profileVersion", profileVersion);
+                        int deletedCount = query.executeUpdate();
+                        if (deletedCount == 0) {
+                           LOGGER.info("No records with version number < {} found. ",  profileVersion);
+                        } else {
+                            LOGGER.info("Successfully removed performance profiles less than {}", profileVersion);
+                        }
+                        tx.commit();
+                    } catch (Exception e) {
+                        LOGGER.error("Exception occurred while deleting the performance profile: {}", e.getMessage());
+                    }
+                }
+            } else {
+                LOGGER.info("Performance Profile table is empty");
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while deleting the partition: {}", e.getMessage());
+        }
     }
 }

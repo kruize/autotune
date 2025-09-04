@@ -48,6 +48,7 @@ import java.io.PrintWriter;
 import java.io.Serial;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -120,6 +121,7 @@ public class PerformanceProfileService extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
         String gsonStr = "[]";
+        Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
         // Fetch all profiles from the DB
         try {
             new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);

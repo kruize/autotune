@@ -844,6 +844,7 @@ public class KruizeConstants {
 
     public static final class KRUIZE_CONFIG_DEFAULT_VALUE {
         public static final int DELETE_PARTITION_THRESHOLD_IN_DAYS = 16;
+        public static final double CURRENT_PERFORMANCE_PROFILE_VERSION = 2;
     }
 
     public static final class KRUIZE_RECOMMENDATION_METRICS {

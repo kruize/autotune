@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.*;
 import static com.autotune.utils.KruizeConstants.KRUIZE_CONFIG_DEFAULT_VALUE.DELETE_PARTITION_THRESHOLD_IN_DAYS;
+import static com.autotune.utils.KruizeConstants.KRUIZE_CONFIG_DEFAULT_VALUE.CURRENT_PERFORMANCE_PROFILE_VERSION;
 
 /**
  * Contains information about the current deployment by parsing the autotune config map
@@ -105,6 +106,7 @@ public class KruizeDeploymentInfo {
     public static String kafka_response_filter_include = System.getenv("KAFKA_RESPONSE_FILTER_INCLUDE");
     public static String kafka_response_filter_exclude = System.getenv("KAFKA_RESPONSE_FILTER_EXCLUDE");
     public static Integer kafka_thread_pool_size = 3;
+    public static Double current_performance_profile_version = CURRENT_PERFORMANCE_PROFILE_VERSION;
 
 
     private KruizeDeploymentInfo() {
