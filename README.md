@@ -1,3 +1,4 @@
+[![Test on Push](https://github.com/kruize/autotune/actions/workflows/test-on-push.yaml/badge.svg?branch=master)](https://github.com/kruize/autotune/actions/workflows/test-on-push.yaml)
 
 # Kruize 🚀 – Intelligent Kubernetes Resource Optimization
 
