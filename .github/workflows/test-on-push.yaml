@@ -44,8 +44,8 @@ jobs:
           password: ${{ secrets.DOCKER_PASSWORD }}
       - name: Docker Push
         run: |
-          docker tag autotune_operator:pr_${{ env.PR_NUMBER }} quay.io/kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
-          docker push quay.io/kruize/autotune_operator:pr_${{ env.PR_NUMBER }}
+          docker tag autotune_operator:pr_${{ env.PR_NUMBER }} quay.io/kruize/autotune:pr_${{ env.PR_NUMBER }}
+          docker push quay.io/kruize/autotune:pr_${{ env.PR_NUMBER }}
 
   deploy_crc:
     # The type of runner that the job will run on
@@ -81,7 +81,7 @@ jobs:
           cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           cd tests
           echo "PR_NUMBER = ${{ env.PR_NUMBER }}"
-          ./test_autotune.sh -c minikube -i quay.io/kruize/autotune_operator:pr_${{ env.PR_NUMBER }} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
+          ./test_autotune.sh -c minikube -i quay.io/kruize/autotune:pr_${{ env.PR_NUMBER }} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
       - name: Capture ffdc logs
         if: always()
         run: |
