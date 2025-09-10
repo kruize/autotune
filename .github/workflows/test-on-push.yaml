@@ -4,7 +4,7 @@ name: Test on Push
 on:
   # Triggers the workflow on push event but only for the mvp_demo branch
   push:
-    branches: [ mvp_demo ]
+    branches: [ mvp_demo, master]
     paths-ignore:
       - 'docs/**'
       - 'design/**'
