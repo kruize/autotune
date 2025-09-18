@@ -350,7 +350,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/khansaad/autotune_operator:pp-fix
+          image: quay.io/khansaad/autotune_operator:pp-fix-3
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -504,7 +504,7 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: kruize-delete-performance-profile-job-v0-7
+  name: kruize-prep-db-job
   namespace: openshift-tuning
 spec:
   backoffLimit: 1                # retry once if it fails
@@ -514,7 +514,7 @@ spec:
       restartPolicy: OnFailure
       initContainers:
         - name: wait-for-kruize
-          image: busybox:1.36
+          image: busybox
           command:
             - sh
             - -c
@@ -532,8 +532,8 @@ spec:
               done
               echo "Kruize service is reachable!"
       containers:
-        - name: kruize-delete-profile
-          image: quay.io/khansaad/autotune_operator:pp-fix
+        - name: kruize-prep-db
+          image: quay.io/khansaad/autotune_operator:pp-fix-3
           imagePullPolicy: IfNotPresent
           volumeMounts:
             - name: config-volume
@@ -542,7 +542,7 @@ spec:
             - sh
             - -c
             - |
-              /home/autotune/app/target/bin/DeletePerformanceProfile
+              /home/autotune/app/target/bin/PrepareDB
           env:
             - name: START_AUTOTUNE
               value: "false"
@@ -554,8 +554,8 @@ spec:
               value: "/etc/config/dbconfigjson"
             - name: KRUIZE_CONFIG_FILE
               value: "/etc/config/kruizeconfigjson"
-            - name: current_performance_profile_version
-              value: "2"
+            - name: prep_db # rename it later
+              value: "prep-db"
       volumes:
         - name: config-volume
           configMap:

@@ -1,0 +1,1 @@
+create table IF NOT EXISTS kruize_experiments (experiment_id varchar(255) not null, cluster_name varchar(255), datasource jsonb, experiment_name varchar(255), extended_data jsonb, meta_data jsonb, mode varchar(255), performance_profile varchar(255), status varchar(255), target_cluster varchar(255), version varchar(255), primary key (experiment_id));

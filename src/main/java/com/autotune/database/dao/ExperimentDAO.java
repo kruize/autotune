@@ -162,6 +162,4 @@ public interface ExperimentDAO {
 
     boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception;
 
-    void deleteOldPerformanceProfile(Double currentPerformanceProfileVersion) throws Exception;
-
 }

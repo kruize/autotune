@@ -241,8 +241,8 @@
                             <name>RetentionPartition</name>
                         </program>
                         <program>
-                            <mainClass>com.autotune.jobs.DeletePerformanceProfile</mainClass>
-                            <name>DeletePerformanceProfile</name>
+                            <mainClass>com.autotune.jobs.PrepareDB</mainClass>
+                            <name>PrepareDB</name>
                         </program>
                     </programs>
                 </configuration>

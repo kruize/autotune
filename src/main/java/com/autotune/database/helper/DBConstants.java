@@ -117,7 +117,6 @@ public class DBConstants {
                 "SET km.api_version = :apiVersion, km.kind = :kind, km.metadata = :metadata, km.name = :name, km.profile_version = :profileVersion, " +
                 "km.k8s_type = :k8sType, km.datasource = :datasource, km.query_variables = :queryVariables " +
                 "WHERE km.name = :metadataProfileName";
-        public static final String DELETE_FROM_PERFORMANCE_PROFILE_BY_VERSION_NUMBER = "DELETE FROM KruizePerformanceProfileEntry k WHERE k.profile_version < :profileVersion";
     }
 
     public static final class TABLE_NAMES {

@@ -1,0 +1,1 @@
+alter table if exists kruize_experiments add column experiment_type bigint not null default 1, add column creation_date timestamptz(3) not null default current_timestamp, add column update_date timestamptz(3) not null default current_timestamp;

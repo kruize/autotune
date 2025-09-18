@@ -21,7 +21,6 @@ import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
 import com.autotune.analyzer.recommendations.model.RecommendationTunables;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import org.apache.kafka.common.protocol.types.Field;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -781,6 +780,7 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_FILE_PATH = "metadataProfileFilePath";
         public static final String METRIC_PROFILE_FILE_PATH = "metricProfileFilePath";
         public static final String IS_KAFKA_ENABLED = "isKafkaEnabled";
+        public static final String PREP_DB = "prep_db";
     }
 
     public static final class RecommendationEngineConstants {
@@ -844,7 +844,7 @@ public class KruizeConstants {
 
     public static final class KRUIZE_CONFIG_DEFAULT_VALUE {
         public static final int DELETE_PARTITION_THRESHOLD_IN_DAYS = 16;
-        public static final double CURRENT_PERFORMANCE_PROFILE_VERSION = 2;
+        public static final String PREP_DB = null;
     }
 
     public static final class KRUIZE_RECOMMENDATION_METRICS {

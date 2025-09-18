@@ -1,0 +1,1 @@
+create table IF NOT EXISTS kruize_bulkjobs (job_id VARCHAR(36) not null, experiments jsonb, end_time timestamp(6), start_time timestamp(6), metadata jsonb, notifications jsonb, payload jsonb, processed_count integer, status varchar(255), total_count integer, webhook jsonb, primary key (job_id))
