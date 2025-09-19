@@ -350,7 +350,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/khansaad/autotune_operator:pp-fix-3
+          image: quay.io/kruize/autotune_operator:0.7
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -500,67 +500,6 @@ spec:
               configMap:
                 name: kruizeconfig
           restartPolicy: OnFailure
----
-apiVersion: batch/v1
-kind: Job
-metadata:
-  name: kruize-prep-db-job
-  namespace: openshift-tuning
-spec:
-  backoffLimit: 1                # retry once if it fails
-  ttlSecondsAfterFinished: 86400 # auto-delete job 24 hours after completion
-  template:
-    spec:
-      restartPolicy: OnFailure
-      initContainers:
-        - name: wait-for-kruize
-          image: busybox
-          command:
-            - sh
-            - -c
-            - |
-              echo "Waiting for Kruize service on port 8080 (max 2 minutes)..."
-              SECONDS=0
-              TIMEOUT=120
-              until nc -z kruize.openshift-tuning.svc.cluster.local 8080; do
-                if [ $SECONDS -ge $TIMEOUT ]; then
-                  echo "Timeout reached: Kruize service not available after 2 minutes."
-                  exit 1
-                fi
-                echo "Kruize not ready yet... waited ${SECONDS}s"
-                sleep 5
-              done
-              echo "Kruize service is reachable!"
-      containers:
-        - name: kruize-prep-db
-          image: quay.io/khansaad/autotune_operator:pp-fix-3
-          imagePullPolicy: IfNotPresent
-          volumeMounts:
-            - name: config-volume
-              mountPath: /etc/config
-          command:
-            - sh
-            - -c
-            - |
-              /home/autotune/app/target/bin/PrepareDB
-          env:
-            - name: START_AUTOTUNE
-              value: "false"
-            - name: LOGGING_LEVEL
-              value: "info"
-            - name: ROOT_LOGGING_LEVEL
-              value: "error"
-            - name: DB_CONFIG_FILE
-              value: "/etc/config/dbconfigjson"
-            - name: KRUIZE_CONFIG_FILE
-              value: "/etc/config/kruizeconfigjson"
-            - name: prep_db # rename it later
-              value: "prep-db"
-      volumes:
-        - name: config-volume
-          configMap:
-            name: kruizeconfig
-
 ---
 apiVersion: monitoring.coreos.com/v1
 kind: ServiceMonitor

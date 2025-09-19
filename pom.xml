@@ -240,10 +240,6 @@
                             <mainClass>com.autotune.jobs.RetentionPartition</mainClass>
                             <name>RetentionPartition</name>
                         </program>
-                        <program>
-                            <mainClass>com.autotune.jobs.PrepareDB</mainClass>
-                            <name>PrepareDB</name>
-                        </program>
                     </programs>
                 </configuration>
                 <executions>
