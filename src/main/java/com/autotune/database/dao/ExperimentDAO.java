@@ -161,5 +161,4 @@ public interface ExperimentDAO {
     void deleteBulkJobByID(String jobId);
 
     boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception;
-
 }

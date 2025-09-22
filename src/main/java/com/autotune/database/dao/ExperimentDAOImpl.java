@@ -1231,7 +1231,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
 
     @Override
     public List<KruizePerformanceProfileEntry> loadAllPerformanceProfiles() throws Exception {
-        LOGGER.info("Getting performance profiles from the DB...");
         String statusValue = "failure";
         Timer.Sample timerLoadAllPerfProfiles = Timer.start(MetricsConfig.meterRegistry());
         List<KruizePerformanceProfileEntry> entries = null;
@@ -1854,5 +1853,4 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return false;
     }
-
 }
