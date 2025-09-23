@@ -127,7 +127,7 @@ public class Autotune {
             if (KruizeDeploymentInfo.is_ros_enabled) {
                 executeDDLs(AnalyzerConstants.RM);
                 // Short sleep to let the DB operation reflect
-                Thread.sleep(15000);
+                Thread.sleep(KruizeDeploymentInfo.service_startup_delay);
             }
 
             // Read and execute the DDLs here
