@@ -415,19 +415,30 @@ public class Autotune {
             LOGGER.error("Exception occurred while trying to read the DDL(s): {}", e.getMessage());
             throw new Exception(e);
         } finally {
-            if (session != null) session.close();
+            if (null != session) session.close(); // Close the Hibernate session
         }
 
         LOGGER.info(DBConstants.DB_MESSAGES.DB_LIVELINESS_PROBE_SUCCESS);
     }
 
     /**
-     * Extract numeric version from filename patterns like V001__desc.sql or V1__desc.sql
-     * Returns Integer value or null if not present.
+     * Extracts the numeric version from a filename.
+     * <p>
+     * The expected filename format is: v{number}__description.sql (case-insensitive).
+     * <p>
+     * Examples:
+     *   "v001__create_kruize_experiments_table.sql"  -> returns 1
+     *   "v100__add_new_table.sql"                   -> returns 100
+     *   "v0003__fix.sql"                            -> returns 3
+     *   "20250923_1200__timestamped.sql"            -> returns null (does not match pattern)
+     *   "create_tables.sql"                         -> returns null (no leading v###__)
+     *
+     * @param filename the migration filename to parse
+     * @return the numeric version as Integer, or null if the filename doesn't match the expected pattern
      */
     private static Integer extractVersion(String filename) {
         if (filename == null) return null;
-        Pattern p = Pattern.compile("^V0*([0-9]+)__.*", Pattern.CASE_INSENSITIVE);
+        Pattern p = Pattern.compile("^v0*([0-9]+)__.*", Pattern.CASE_INSENSITIVE);
         Matcher m = p.matcher(filename);
         if (m.matches()) {
             try {
