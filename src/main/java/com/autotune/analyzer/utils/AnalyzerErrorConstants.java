@@ -80,6 +80,7 @@ public class AnalyzerErrorConstants {
         public static final String SLO_REDUNDANCY_ERROR = "SLO Data and Performance Profile cannot exist simultaneously!";
         public static final String DUPLICATE_PERF_PROFILE = "Performance Profile already exists: ";
         public static final String MISSING_PERF_PROFILE = "Not Found: performance_profile does not exist: ";
+        public static final String DEPRECATED_VERSION_ERROR = "Performance Profile version %s is deprecated, and no longer supported.";
         public static final String MISSING_METRIC_PROFILE_METADATA= "metadata missing\n";
         public static final String DUPLICATE_METRIC_PROFILE = "Metric Profile already exists: ";
         public static final String MISSING_METADATA_PROFILE = "Not Found: metadata_profile does not exist: ";

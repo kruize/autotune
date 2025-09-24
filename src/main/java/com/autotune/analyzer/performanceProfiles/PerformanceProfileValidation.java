@@ -24,6 +24,7 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -121,6 +122,11 @@ public class PerformanceProfileValidation {
             if (performanceProfilesMap.get(performanceProfile.getName()) != null) {
                 errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE).append(performanceProfile.getName());
                 return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
+            }
+            // check if the performance profile version is deprecated
+            if (performanceProfile.getProfile_version() < KruizeDeploymentInfo.perf_profile_version) {
+                errorString.append(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DEPRECATED_VERSION_ERROR, performanceProfile.getProfile_version()));
+                return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_BAD_REQUEST);
             }
 
             // Validates fields like k8s_type and slo object

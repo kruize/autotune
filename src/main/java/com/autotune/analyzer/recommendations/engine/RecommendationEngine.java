@@ -56,6 +56,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
+import static com.autotune.analyzer.services.UpdateResults.performanceProfilesMap;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 import static com.autotune.utils.KruizeConstants.CostBasedRecommendationConstants.COST_RECOMMENDATION_TUNABLES;
@@ -374,6 +375,14 @@ public class RecommendationEngine {
                 }
             }
 
+            // check if the performance profile version is deprecated
+            PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            LOGGER.info("Performance Profile version: {}", performanceProfile.getProfile_version());
+            if (performanceProfile.getProfile_version() < KruizeDeploymentInfo.perf_profile_version) {
+                String errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DEPRECATED_VERSION_ERROR, performanceProfile.getProfile_version());
+                kruizeObject.setValidation_data(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
+                return kruizeObject;
+            }
             // set the performance profile
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
 
