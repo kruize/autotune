@@ -56,7 +56,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationValueConstants.*;
-import static com.autotune.analyzer.services.UpdateResults.performanceProfilesMap;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 import static com.autotune.utils.KruizeConstants.CostBasedRecommendationConstants.COST_RECOMMENDATION_TUNABLES;
@@ -74,6 +73,7 @@ public class RecommendationEngine {
     private Timestamp interval_end_time;
     private List<String> modelNames;
     private Map<String, RecommendationTunables> modelTunable;
+    private Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
@@ -376,6 +376,11 @@ public class RecommendationEngine {
             }
 
             // check if the performance profile version is deprecated
+            try {
+                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
+            } catch (Exception e) {
+                throw new Exception("Failed to load performance profile: " + e.getMessage());
+            }
             PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
             LOGGER.info("Performance Profile version: {}", performanceProfile.getProfile_version());
             if (performanceProfile.getProfile_version() < KruizeDeploymentInfo.perf_profile_version) {

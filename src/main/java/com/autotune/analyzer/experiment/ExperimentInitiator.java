@@ -46,7 +46,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static com.autotune.analyzer.services.UpdateResults.performanceProfilesMap;
 import static com.autotune.analyzer.utils.AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_EXPERIMENT_NAME;
 
 /**
@@ -59,6 +58,7 @@ public class ExperimentInitiator {
     List<UpdateResultsAPIObject> successUpdateResultsAPIObjects = new ArrayList<>();
     List<UpdateResultsAPIObject> failedUpdateResultsAPIObjects = new ArrayList<>();
     private ValidationOutputData validationOutputData;
+    private Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
 
     public static List<KruizeResponse> getErrorMap(List<String> errorMessages) {
         List<KruizeResponse> responses;
@@ -165,6 +165,12 @@ public class ExperimentInitiator {
                 }
                 // check if the performance profile version is deprecated
                 KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experimentName);
+                try {
+                    new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
+                } catch (Exception e) {
+                    LOGGER.error("Failed to load performance profile: " + e.getMessage());
+                    continue;
+                }
                 PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
                 LOGGER.info("Performance Profile version: {}", performanceProfile.getProfile_version());
                 if (performanceProfile.getProfile_version() < KruizeDeploymentInfo.perf_profile_version) {
