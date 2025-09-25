@@ -68,6 +68,9 @@ do
 			skipsetup)
 				skip_setup=1
 				;;
+		  skip_perf_profile)
+				skip_perf_profile_creation=1
+				;;
 		esac
 		;;
 	i)

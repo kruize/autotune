@@ -108,6 +108,9 @@ IMPORT_METADATA_INVALID_METADATA_PROFILE_NAME = "MetadataProfile - %s either doe
 COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain any MIG-based recommendations"
 COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
 COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
+DEPRECATED_PERF_PROFILE_VERSION = "Performance Profile version 1 is deprecated, and no longer supported."
+CREATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : resource-optimization-openshift created successfully."
+CREATE_PERF_PROFILE_ERROR_MSG = "Validation failed: Performance Profile already exists: "
 
 
 # Kruize Recommendations Notification codes

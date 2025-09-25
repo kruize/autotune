@@ -43,7 +43,7 @@ function remote_monitoring_tests() {
 	target="crc"
 	perf_profile_json="${PERF_PROFILE_DIR}/resource_optimization_openshift.json"
 
-	remote_monitoring_tests=("test_e2e" "sanity" "negative" "extended")
+	remote_monitoring_tests=("test_e2e" "sanity" "negative" "extended", "perf_profile")
 	
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -69,8 +69,10 @@ function remote_monitoring_tests() {
 	
 		sleep 60
 
-		# create performance profile
-		create_performance_profile ${perf_profile_json}
+		if [ ${skip_perf_profile_creation} -eq 0 ]; then
+      # create performance profile
+      create_performance_profile ${perf_profile_json}
+    fi
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi

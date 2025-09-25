@@ -61,6 +61,7 @@ matched=0
 sanity=0
 setup=1
 skip_setup=0
+skip_perf_profile_creation=0
 
 cleanup_prometheus=0
 
