@@ -105,7 +105,7 @@ public class KruizeDeploymentInfo {
     public static String kafka_response_filter_include = System.getenv("KAFKA_RESPONSE_FILTER_INCLUDE");
     public static String kafka_response_filter_exclude = System.getenv("KAFKA_RESPONSE_FILTER_EXCLUDE");
     public static Integer kafka_thread_pool_size = 3;
-    public static Double perf_profile_version = 2.0;
+    public static Double perf_profile_supported_version = 2.0;
 
 
     private KruizeDeploymentInfo() {

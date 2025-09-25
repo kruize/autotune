@@ -119,7 +119,7 @@ public class PerformanceProfileValidation {
             }
             StringBuilder errorString = new StringBuilder();
             // check if the performance profile version is deprecated
-            if (performanceProfile.getProfile_version() < KruizeDeploymentInfo.perf_profile_version) {
+            if (performanceProfile.getProfile_version() < KruizeDeploymentInfo.perf_profile_supported_version) {
                 errorString.append(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DEPRECATED_VERSION_ERROR, performanceProfile.getProfile_version()));
                 return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_BAD_REQUEST);
             }
