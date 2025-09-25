@@ -76,6 +76,15 @@ tuned.
       "status": "ERROR"
   }
   ```
+  * Deprecated version error.
+  ```
+  {
+      "message": "Performance Profile version %s is deprecated, and no longer supported.",
+      "httpcode": 400,
+      "documentationLink": "",
+      "status": "ERROR"
+  }
+  ```
   * Any unknown exception on server side
   ```
   {

@@ -206,13 +206,8 @@ public class ExperimentValidation {
                 markFailed(validationOutputData.getMessage());
                 break;
             }
-            // check if the performance profile version is deprecated
-            PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
-            if (performanceProfile.getProfile_version() < KruizeDeploymentInfo.perf_profile_version) {
-                String errorString = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DEPRECATED_VERSION_ERROR, performanceProfile.getProfile_version());
-                kruizeObject.setValidation_data(new ValidationOutputData(false, errorString, HttpServletResponse.SC_BAD_REQUEST));
-            }
             // set Performance Profile metrics in the Kruize Object
+            PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
             try {
                 HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
                 for (Metric metric : performanceProfile.getSloInfo().getFunctionVariables()) {

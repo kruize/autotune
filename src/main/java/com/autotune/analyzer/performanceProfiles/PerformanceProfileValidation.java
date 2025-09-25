@@ -118,15 +118,15 @@ public class PerformanceProfileValidation {
                 LOGGER.error("Loading saved performance profiles failed: {} ", e.getMessage());
             }
             StringBuilder errorString = new StringBuilder();
-            // check if the performance profile already exists
-            if (performanceProfilesMap.get(performanceProfile.getName()) != null) {
-                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE).append(performanceProfile.getName());
-                return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
-            }
             // check if the performance profile version is deprecated
             if (performanceProfile.getProfile_version() < KruizeDeploymentInfo.perf_profile_version) {
                 errorString.append(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DEPRECATED_VERSION_ERROR, performanceProfile.getProfile_version()));
                 return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_BAD_REQUEST);
+            }
+            // check if the performance profile already exists
+            if (performanceProfilesMap.get(performanceProfile.getName()) != null) {
+                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE).append(performanceProfile.getName());
+                return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
             }
 
             // Validates fields like k8s_type and slo object

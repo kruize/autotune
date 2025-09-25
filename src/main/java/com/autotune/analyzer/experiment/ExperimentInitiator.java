@@ -19,7 +19,6 @@ import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -27,7 +26,6 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.google.gson.annotations.SerializedName;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -58,7 +56,6 @@ public class ExperimentInitiator {
     List<UpdateResultsAPIObject> successUpdateResultsAPIObjects = new ArrayList<>();
     List<UpdateResultsAPIObject> failedUpdateResultsAPIObjects = new ArrayList<>();
     private ValidationOutputData validationOutputData;
-    private Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
 
     public static List<KruizeResponse> getErrorMap(List<String> errorMessages) {
         List<KruizeResponse> responses;
@@ -158,23 +155,6 @@ public class ExperimentInitiator {
                 // check version
                 String errorMsg = checkVersion(object, mainKruizeExperimentMAP);
                 if (errorMsg != null) {
-                    errorReasons.add(errorMsg);
-                    object.setErrors(getErrorMap(errorReasons));
-                    failedUpdateResultsAPIObjects.add(object);
-                    continue;
-                }
-                // check if the performance profile version is deprecated
-                KruizeObject kruizeObject = mainKruizeExperimentMAP.get(experimentName);
-                try {
-                    new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
-                } catch (Exception e) {
-                    LOGGER.error("Failed to load performance profile: " + e.getMessage());
-                    continue;
-                }
-                PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
-                LOGGER.info("Performance Profile version: {}", performanceProfile.getProfile_version());
-                if (performanceProfile.getProfile_version() < KruizeDeploymentInfo.perf_profile_version) {
-                    errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DEPRECATED_VERSION_ERROR, performanceProfile.getProfile_version());
                     errorReasons.add(errorMsg);
                     object.setErrors(getErrorMap(errorReasons));
                     failedUpdateResultsAPIObjects.add(object);

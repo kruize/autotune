@@ -73,7 +73,6 @@ public class RecommendationEngine {
     private Timestamp interval_end_time;
     private List<String> modelNames;
     private Map<String, RecommendationTunables> modelTunable;
-    private Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
@@ -375,19 +374,6 @@ public class RecommendationEngine {
                 }
             }
 
-            // check if the performance profile version is deprecated
-            try {
-                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
-            } catch (Exception e) {
-                throw new Exception("Failed to load performance profile: " + e.getMessage());
-            }
-            PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
-            LOGGER.info("Performance Profile version: {}", performanceProfile.getProfile_version());
-            if (performanceProfile.getProfile_version() < KruizeDeploymentInfo.perf_profile_version) {
-                String errorMsg = String.format(AnalyzerErrorConstants.AutotuneObjectErrors.DEPRECATED_VERSION_ERROR, performanceProfile.getProfile_version());
-                kruizeObject.setValidation_data(new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST));
-                return kruizeObject;
-            }
             // set the performance profile
             setPerformanceProfile(kruizeObject.getPerformanceProfile());
 
