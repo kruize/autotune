@@ -892,6 +892,44 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return true;
     }
 
+    /**
+     * Delete performance profile with the name performanceProfileName
+     * This deletes the performance profile from kruize_performance_profiles table
+     *
+     * @param perfProfileName contains the name of the performance profile to be deleted
+     * @return validation object containing the status
+     */
+    @Override
+    public ValidationOutputData deletePerformanceProfileByName(String perfProfileName) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(DELETE_FROM_PERFORMANCE_PROFILE_BY_NAME, null);
+                query.setParameter("perfProfileName", perfProfileName);
+                int deletedCount = query.executeUpdate();
+                if (deletedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage("No performance profile found with the name: " + perfProfileName);
+                } else {
+                    validationOutputData.setSuccess(true);
+                }
+                tx.commit();
+            } catch (HibernateException e) {
+                LOGGER.error("Failed to delete performance profile {} due to {}", perfProfileName, e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while deleting performance profile {} due to {}", perfProfileName, e.getMessage());
+        }
+        return validationOutputData;
+    }
+
 
     @Override
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {

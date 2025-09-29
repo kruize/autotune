@@ -161,4 +161,7 @@ public interface ExperimentDAO {
     void deleteBulkJobByID(String jobId);
 
     boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception;
+
+    // Delete performance profile
+    ValidationOutputData deletePerformanceProfileByName(String perfProfileName) throws Exception;
 }

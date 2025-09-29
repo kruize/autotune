@@ -51,6 +51,8 @@ import java.util.Date;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.HashMap;
+import com.autotune.database.dao.ExperimentDAOImpl;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -173,7 +175,6 @@ public class PerformanceProfileService extends HttpServlet {
     }
 
     /**
-     * TODO: Need to implement
      * Delete Performance profile
      *
      * @param req
@@ -183,7 +184,31 @@ public class PerformanceProfileService extends HttpServlet {
      */
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doDelete(req, resp);
+        Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
+        String perfProfileName = req.getParameter(AnalyzerConstants.ServiceConstants.PERF_PROFILE_NAME);
+        try {
+            try {
+                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, perfProfileName);
+            } catch (Exception e) {
+                throw new Exception(String.format("Loading saved Performance Profile %s failed: %s ", perfProfileName, e.getMessage()));
+            }
+            if (null != performanceProfilesMap.get(perfProfileName)) {
+                ValidationOutputData validationOutputData;
+                validationOutputData = new ExperimentDAOImpl().deletePerformanceProfileByName(perfProfileName);
+
+                if (validationOutputData.isSuccess()) {
+                    performanceProfilesMap.remove(perfProfileName);
+                } else {
+                    throw new Exception("Performance Profile not deleted due to : " + validationOutputData.getMessage());
+                }
+            } else {
+                throw new Exception(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + perfProfileName);
+            }
+            sendSuccessResponse(resp, "Performance profile "+perfProfileName+" deleted successfully.");
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while deleting the Performance Profile: {}", e.getMessage());
+            sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        }
     }
 
     /**
