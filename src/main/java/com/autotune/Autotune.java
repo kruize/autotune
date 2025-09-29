@@ -126,8 +126,6 @@ public class Autotune {
             LOGGER.info("Kruize getting started with is_ros_enabled:{} , local:{}", KruizeDeploymentInfo.is_ros_enabled, KruizeDeploymentInfo.local);
             if (KruizeDeploymentInfo.is_ros_enabled) {
                 executeDDLs(AnalyzerConstants.RM);
-                // Short sleep to let the DB operation reflect
-                Thread.sleep(KruizeDeploymentInfo.service_startup_delay);
             }
 
             // Read and execute the DDLs here

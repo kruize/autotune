@@ -21,7 +21,6 @@ import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
 import com.autotune.analyzer.recommendations.model.RecommendationTunables;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import org.apache.kafka.common.protocol.types.Field;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
@@ -781,7 +780,6 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_FILE_PATH = "metadataProfileFilePath";
         public static final String METRIC_PROFILE_FILE_PATH = "metricProfileFilePath";
         public static final String IS_KAFKA_ENABLED = "isKafkaEnabled";
-        public static final String SERVICE_STARTUP_DELAY = "serviceStartupDelay";
     }
 
     public static final class RecommendationEngineConstants {

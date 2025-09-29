@@ -179,12 +179,14 @@ public class ExperimentDBService {
     }
 
     public void loadAllPerformanceProfiles(Map<String, PerformanceProfile> performanceProfileMap) throws Exception {
-        List<KruizePerformanceProfileEntry> entries = experimentDAO.loadAllPerformanceProfiles();
-        if (null != entries && !entries.isEmpty()) {
-            List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertPerformanceProfileEntryToPerformanceProfileObject(entries);
-            if (!performanceProfiles.isEmpty()) {
-                performanceProfiles.forEach(performanceProfile ->
-                        PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile));
+        if (performanceProfileMap.isEmpty()) {
+            List<KruizePerformanceProfileEntry> entries = experimentDAO.loadAllPerformanceProfiles();
+            if (null != entries && !entries.isEmpty()) {
+                List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertPerformanceProfileEntryToPerformanceProfileObject(entries);
+                if (!performanceProfiles.isEmpty()) {
+                    performanceProfiles.forEach(performanceProfile ->
+                            PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile));
+                }
             }
         }
     }
