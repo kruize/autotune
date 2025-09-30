@@ -1,0 +1,1 @@
+create table IF NOT EXISTS kruize_datasources (version varchar(255), name varchar(255), provider varchar(255), serviceName varchar(255), namespace varchar(255), url varchar(255), authentication_id serial, FOREIGN KEY (authentication_id) REFERENCES kruize_authentication(id), primary key (name));
