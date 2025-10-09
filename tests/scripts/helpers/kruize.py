@@ -229,6 +229,22 @@ def create_performance_profile(perf_profile_json_file):
     return response
 
 
+# Description: This function updates a performance profile using the Kruize updatePerformanceProfile API
+# Input Parameters: performance profile json
+def update_performance_profile(perf_profile_json_file):
+    json_file = open(perf_profile_json_file, "r")
+    perf_profile_json = json.loads(json_file.read())
+
+    print("\nUpdating performance profile...")
+    url = URL + "/updatePerformanceProfile"
+    print("URL = ", url)
+
+    response = requests.put(url, json=perf_profile_json)
+    print("Response status code = ", response.status_code)
+    print(response.text)
+    return response
+
+
 # Description: This function obtains the experiments from Kruize Autotune using listExperiments API
 # Input Parameters: None
 def list_experiments(results=None, recommendations=None, latest=None, experiment_name=None, rm=False):

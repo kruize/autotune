@@ -35,6 +35,7 @@ SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
 ERROR_STATUS_CODE = 400
 ERROR_409_STATUS_CODE = 409
+ERROR_404_STATUS_CODE = 404
 DUPLICATE_RECORDS_COUNT = 5
 ERROR_500_STATUS_CODE = 500
 SUCCESS_STATUS_CODE_START = 200
@@ -108,6 +109,9 @@ IMPORT_METADATA_INVALID_METADATA_PROFILE_NAME = "MetadataProfile - %s either doe
 COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain any MIG-based recommendations"
 COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
 COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
+UPDATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : %s updated successfully to version %s."
+UPDATE_PERF_PROFILE_MISSING_PROFILE_ERROR_MSG = "Performance Profile '%s' not found. Use POST to create a new profile."
+UPDATE_PERF_PROFILE_UNSUPPORTED_VERSION_ERROR_MSG = "Update rejected: the provided version (%s) is older than the current version (%s) for profile '%s'."
 
 
 # Kruize Recommendations Notification codes
