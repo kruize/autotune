@@ -175,41 +175,42 @@ public class PerformanceProfileService extends HttpServlet {
             PerformanceProfile incomingPerfProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
             String profileName = incomingPerfProfile.getName();
 
+            // Fetch existing profile
+            try {
+                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, profileName);
+            }  catch (Exception e) {
+                throw new Exception("Failed to load performance profile from the DB: {} "+ e.getMessage());
+            }
+            // Return 404 if the profile is not present
+            if (null ==  performanceProfilesMap.get(profileName)) {
+                LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.NO_PERF_PROFILE);
+                sendErrorResponse(
+                        response,
+                        null,
+                        HttpServletResponse.SC_NOT_FOUND,
+                        String.format("Performance Profile '%s' not found. Use POST to create a new profile.", profileName)
+                );
+                return;
+            }
+            // Compare version — only allow update if the version is matching with the current supported one
+            if (incomingPerfProfile.getProfile_version() != KruizeDeploymentInfo.perf_profile_supported_version) {
+                LOGGER.debug("Version not supported");
+                sendErrorResponse(
+                        response,
+                        null,
+                        HttpServletResponse.SC_CONFLICT,
+                        String.format(
+                                "Update rejected: the provided version (%.1f) is older than the current version (%.1f) for profile '%s'.",
+                                incomingPerfProfile.getProfile_version(),
+                                KruizeDeploymentInfo.perf_profile_supported_version,
+                                profileName
+                        )
+                );
+                return;
+            }
+            // validate the entries present in the incoming profile
             ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, incomingPerfProfile);
             if (validationOutputData.isSuccess()) {
-                // Fetch existing profile
-                try {
-                    new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, profileName);
-                }  catch (Exception e) {
-                    throw new Exception("Failed to load performance profile from the DB: {} "+ e.getMessage());
-                }
-                // Return 404 if the profile is not present
-                if (null ==  performanceProfilesMap.get(profileName)) {
-                    sendErrorResponse(
-                            response,
-                            null,
-                            HttpServletResponse.SC_NOT_FOUND,
-                            String.format("Performance Profile '%s' not found. Use POST to create a new profile.", profileName)
-                    );
-                    return;
-                }
-
-                // Compare version — only allow update if the version is matching with the current supported one
-                if (incomingPerfProfile.getProfile_version() != KruizeDeploymentInfo.perf_profile_supported_version) {
-                    sendErrorResponse(
-                            response,
-                            null,
-                            HttpServletResponse.SC_CONFLICT,
-                            String.format(
-                                    "Update rejected: the provided version (%.1f) is older than the current version (%.1f) for profile '%s'.",
-                                    incomingPerfProfile.getProfile_version(),
-                                    KruizeDeploymentInfo.perf_profile_supported_version,
-                                    profileName
-                            )
-                    );
-                    return;
-                }
-
                 // Perform update
                 ValidationOutputData updatedInDB = new ExperimentDBService().updatePerformanceProfileInDB(incomingPerfProfile);
 
@@ -228,11 +229,10 @@ public class PerformanceProfileService extends HttpServlet {
                 } else {
                     sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, updatedInDB.getMessage());
                 }
-
             } else {
+                LOGGER.debug(validationOutputData.getMessage());
                 sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
             }
-
         } catch (Exception e) {
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         } catch (InvalidValueException e) {
