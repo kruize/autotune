@@ -245,6 +245,20 @@ def update_performance_profile(perf_profile_json_file):
     return response
 
 
+# Description: This function lists performance profiles using the Kruize listPerformanceProfiles API
+def list_performance_profiles():
+    print("\nListing the Performance Profiles...")
+    url = URL + "/listPerformanceProfiles"
+    print("URL = ", url)
+    response = requests.get(url)
+
+    print("Response status code = ", response.status_code)
+    print("\n************************************************************")
+    print(response.text)
+    print("\n************************************************************")
+    return response
+
+
 # Description: This function obtains the experiments from Kruize Autotune using listExperiments API
 # Input Parameters: None
 def list_experiments(results=None, recommendations=None, latest=None, experiment_name=None, rm=False):

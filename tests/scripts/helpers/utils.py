@@ -112,6 +112,7 @@ COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
 UPDATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : %s updated successfully to version %s."
 UPDATE_PERF_PROFILE_MISSING_PROFILE_ERROR_MSG = "Performance Profile '%s' not found. Use POST to create a new profile."
 UPDATE_PERF_PROFILE_UNSUPPORTED_VERSION_ERROR_MSG = "Update rejected: the provided version (%s) is older than the current version (%s) for profile '%s'."
+UPDATE_PERF_PROFILE_MISSING_VERSION_ERROR_MSG = "Missing mandatory parameters"
 
 
 # Kruize Recommendations Notification codes
