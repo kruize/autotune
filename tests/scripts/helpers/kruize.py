@@ -244,6 +244,33 @@ def update_performance_profile(perf_profile_json_file):
     print(response.text)
     return response
 
+# Description: This function deletes the performance profile
+# Input Parameters: performance profile input json
+def delete_performance_profile(input_json_file, invalid_header=False):
+    json_file = open(input_json_file, "r")
+    input_json = json.loads(json_file.read())
+
+    print("\nDeleting the performance profile...")
+    url = URL + "/deletePerformanceProfile"
+
+    performance_profile_name = input_json['name']
+    query_string = f"name={performance_profile_name}"
+
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
+
+    headers = {'content-type': 'application/xml'}
+    if invalid_header:
+        print("Invalid header")
+        response = requests.delete(url, headers=headers)
+    else:
+        response = requests.delete(url)
+
+    print(response)
+    print("Response status code = ", response.status_code)
+    return response
+
 
 # Description: This function lists performance profiles using the Kruize listPerformanceProfiles API
 def list_performance_profiles():

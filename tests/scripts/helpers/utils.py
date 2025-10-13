@@ -41,6 +41,8 @@ ERROR_500_STATUS_CODE = 500
 SUCCESS_STATUS_CODE_START = 200
 SUCCESS_STATUS_CODE_END = 300
 
+PERFORMANCE_PROFILE_SUPPORTED_VERSION = 2.0
+
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
 UPDATE_RESULTS_SUCCESS_MSG = "Results added successfully! View saved results at /listExperiments."
@@ -109,10 +111,12 @@ IMPORT_METADATA_INVALID_METADATA_PROFILE_NAME = "MetadataProfile - %s either doe
 COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain any MIG-based recommendations"
 COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
 COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
-UPDATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : %s updated successfully to version %s."
+CREATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : %s created successfully."
+UPDATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile '%s' updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles"
 UPDATE_PERF_PROFILE_MISSING_PROFILE_ERROR_MSG = "Performance Profile '%s' not found. Use POST to create a new profile."
-UPDATE_PERF_PROFILE_UNSUPPORTED_VERSION_ERROR_MSG = "Update rejected: the provided version (%s) is older than the current version (%s) for profile '%s'."
+UPDATE_PERF_PROFILE_UNSUPPORTED_VERSION_ERROR_MSG = "Update rejected: Profile version (%.1f) does not match with the supported version (%.1f) for profile '%s'."
 UPDATE_PERF_PROFILE_MISSING_VERSION_ERROR_MSG = "Missing mandatory parameters"
+UPDATE_PERF_PROFILE_MISSING_MANDATORY_FIELD_MSG = "JSONObject[\"%s\"] not found."
 
 
 # Kruize Recommendations Notification codes
