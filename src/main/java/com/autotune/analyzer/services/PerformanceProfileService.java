@@ -31,6 +31,7 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -65,6 +66,10 @@ public class PerformanceProfileService extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileService.class);
     private ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap;
+    private static final Gson gson = new GsonBuilder()
+            .disableHtmlEscaping()  // Prevents escaping of quotes
+            .setPrettyPrinting()
+            .create();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -179,28 +184,28 @@ public class PerformanceProfileService extends HttpServlet {
             try {
                 new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, profileName);
             }  catch (Exception e) {
-                throw new Exception("Failed to load performance profile from the DB: {} "+ e.getMessage());
+                throw new Exception(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_LOADING_FAILED, e.getMessage()));
             }
             // Return 404 if the profile is not present
             if (null ==  performanceProfilesMap.get(profileName)) {
-                LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.NO_PERF_PROFILE);
+                LOGGER.debug("{}", AnalyzerErrorConstants.AutotuneObjectErrors.NO_PERF_PROFILE);
                 sendErrorResponse(
                         response,
                         null,
                         HttpServletResponse.SC_NOT_FOUND,
-                        String.format("Performance Profile '%s' not found. Use POST to create a new profile.", profileName)
+                        String.format(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERFORMANCE_PROFILE, profileName)
                 );
                 return;
             }
             // Compare version — only allow update if the version is matching with the current supported one
             if (incomingPerfProfile.getProfile_version() != KruizeDeploymentInfo.perf_profile_supported_version) {
-                LOGGER.debug("Version not supported");
+                LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_VERSION);
                 sendErrorResponse(
                         response,
                         null,
                         HttpServletResponse.SC_CONFLICT,
                         String.format(
-                                "Update rejected: the provided version (%.1f) is older than the current version (%.1f) for profile '%s'.",
+                               AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_PERFORMANCE_PROFILE_VERSION,
                                 incomingPerfProfile.getProfile_version(),
                                 KruizeDeploymentInfo.perf_profile_supported_version,
                                 profileName
@@ -215,15 +220,13 @@ public class PerformanceProfileService extends HttpServlet {
                 ValidationOutputData updatedInDB = new ExperimentDBService().updatePerformanceProfileInDB(incomingPerfProfile);
 
                 if (updatedInDB.isSuccess()) {
-                    LOGGER.info("Updated Performance Profile '{}' to version {}", profileName, incomingPerfProfile.getProfile_version());
-
+                    LOGGER.info("{}", String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
+                            profileName, incomingPerfProfile.getProfile_version()));
                     performanceProfilesMap.put(incomingPerfProfile.getName(), incomingPerfProfile);
                     getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
-                    LOGGER.debug("Updated Performance Profile : {} into the DB with version: {}",
-                            incomingPerfProfile.getName(), incomingPerfProfile.getProfile_version());
                     sendSuccessResponse(
                             response,
-                            String.format("Performance Profile '%s' updated successfully to version %.1f.",
+                            String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
                                     profileName, incomingPerfProfile.getProfile_version())
                     );
                 } else {
@@ -255,36 +258,39 @@ public class PerformanceProfileService extends HttpServlet {
     }
 
     /**
-     * Send success response in case of no errors or exceptions.
+     * Sends a JSON response (for both success and error cases).
      *
-     * @param response
-     * @param message
+     * @param response The servlet response
+     * @param message  Message to include in response
+     * @param statusCode HTTP status code (e.g., 200, 404, 500)
+     * @param status   "SUCCESS" or "FAILURE"
      * @throws IOException
      */
-    private void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
+    public static void sendJsonResponse(HttpServletResponse response,
+                                        String message,
+                                        int statusCode,
+                                        String status) throws IOException {
+
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
-        response.setStatus(HttpServletResponse.SC_CREATED);
+        response.setStatus(statusCode);
+
         PrintWriter out = response.getWriter();
         out.append(
-                new Gson().toJson(
-                        new PerformanceProfileResponse(message +
-                                " View Performance Profiles at /listPerformanceProfiles",
-                                HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                gson.toJson(
+                        new PerformanceProfileResponse(message, statusCode, "", status)
                 )
         );
         out.flush();
     }
 
-    /**
-     * Send response containing corresponding error message in case of failures and exceptions
-     *
-     * @param response
-     * @param e
-     * @param httpStatusCode
-     * @param errorMsg
-     * @throws IOException
-     */
+    // success response
+    public static void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
+        message += " View Performance Profiles at /listPerformanceProfiles";
+        sendJsonResponse(response, message, HttpServletResponse.SC_CREATED, "SUCCESS");
+    }
+
+    // Error response
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
@@ -292,6 +298,6 @@ public class PerformanceProfileService extends HttpServlet {
             if (null == errorMsg)
                 errorMsg = e.getMessage();
         }
-        response.sendError(httpStatusCode, errorMsg);
+        sendJsonResponse(response, errorMsg, httpStatusCode, "ERROR");
     }
 }

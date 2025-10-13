@@ -118,6 +118,11 @@ public class AnalyzerErrorConstants {
         public static final String INVALID_METRICS_FOUND = "Invalid metrics found for experiment - %s: %s";
         public static final String MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment - %s : %s";
         public static final String MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS = "Expected namespace-level results, but found type, name, and namespace for experiment: %s.";
+        public static final String MISSING_PERFORMANCE_PROFILE = "Performance Profile '%s' not found. Use POST to create a new profile.";
+        public static final String UNSUPPORTED_PERFORMANCE_PROFILE_VERSION = "Update rejected: Profile version (%.1f) does not match with the supported version (%.1f) for profile '%s'.";
+        public static final String UNSUPPORTED_VERSION = "Version not supported";
+        public static final String PERF_PROFILE_LOADING_FAILED = "Failed to load performance profile from the DB: %s";
+
 
 
         private AutotuneObjectErrors() {

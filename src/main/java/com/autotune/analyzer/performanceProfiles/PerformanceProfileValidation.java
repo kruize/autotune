@@ -50,6 +50,7 @@ public class PerformanceProfileValidation {
     //Mandatory fields for PerformanceProfile
     private final List<String> mandatoryFields = new ArrayList<>(Arrays.asList(
             AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_NAME,
+            AnalyzerConstants.PROFILE_VERSION,
             AnalyzerConstants.SLO
     ));
 
@@ -118,9 +119,13 @@ public class PerformanceProfileValidation {
             }
             StringBuilder errorString = new StringBuilder();
             // check if the performance profile already exists
-            if (performanceProfilesMap.get(performanceProfile.getName()) != null) {
-                errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE).append(performanceProfile.getName());
-                return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
+            PerformanceProfile existingPerformanceProfile = performanceProfilesMap.get(performanceProfile.getName());
+            if (existingPerformanceProfile != null) {
+                // check if the version is matching
+                if (existingPerformanceProfile.getProfile_version() == performanceProfile.getProfile_version()) {
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE).append(performanceProfile.getName());
+                    return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
+                }
             }
 
             // Validates fields like k8s_type and slo object
