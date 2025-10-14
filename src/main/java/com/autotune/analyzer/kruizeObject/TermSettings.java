@@ -18,15 +18,15 @@ package com.autotune.analyzer.kruizeObject;
 import java.util.List;
 
 public class TermSettings {
-    private List<String> terms;
+    private List<TermDefinition> terms;
 
     public TermSettings() {}
 
-    public List<String> getTerms() {
+    public List<TermDefinition> getTerms() {
         return terms;
     }
 
-    public void setTerms(List<String> terms) {
+    public void setTerms(List<TermDefinition> terms) {
         this.terms = terms;
     }
 

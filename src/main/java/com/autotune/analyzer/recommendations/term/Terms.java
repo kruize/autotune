@@ -29,7 +29,7 @@ public class Terms {
         this.name = name;
         this.days = days;
         this.threshold_in_days = threshold_in_days;
-	this.plots_datapoints = plots_datapoints;
+	    this.plots_datapoints = plots_datapoints;
         this.plots_datapoints_delta_in_days = plots_datapoints_delta_in_days;
     }
 

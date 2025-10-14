@@ -16,6 +16,7 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.kruizeObject.TermDefinition;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
@@ -327,9 +328,11 @@ public class ExperimentValidation {
                 if (expObj.getRecommendation_settings().getTermSettings() != null &&
                         expObj.getRecommendation_settings().getTermSettings().getTerms() != null ) {
                     Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG);
+                    Set<String> encounteredTerms = new HashSet<>();
 
-                    for(String term: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
-                        // Check for whitespace in terms
+                    for(TermDefinition termObj: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
+                        // 1. Check for whitespace in terms
+                        String term = termObj.getName();
                         if (term == null || term.trim().isEmpty()) {
                             errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.EMPTY_NOT_ALLOWED;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
@@ -337,14 +340,48 @@ public class ExperimentValidation {
                             validationOutputData.setMessage(errorMsg);
                             return validationOutputData;
                         }
-                        // Check for correct term in terms
-                        if (!validTerms.contains(term)) {
-                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME;
+                        // 2. Check for valid characters in the name
+                        if (!term.matches("^[a-zA-Z0-9_-]+$")) {
+                            errorMsg = "Term name '" + term+ "' is invalid. Only letters, numbers, underscores (_), and hyphens (-) are allowed.";
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
                             validationOutputData.setMessage(errorMsg);
                             return validationOutputData;
                         }
+
+                        // 3. Check for duplicate term names
+                        if (!encounteredTerms.add(term)) {
+                            errorMsg = "Duplicate term name '" + term + "' is not allowed.";
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
+                        }
+
+                        // 4. Validate numerical values are positive
+                        if (termObj.getDurationInDays() != null && termObj.getDurationInDays() <= 0) {
+                            errorMsg = "duration_in_days for term '" + term + "' must be a positive number.";
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
+                        }
+                        if (termObj.getPlotsDatapoint() != null && termObj.getPlotsDatapoint() <= 0) {
+                            errorMsg = "plots_datapoint for term '" + term + "' must be a positive number.";
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
+                        }
+
+                        // Check for correct term in terms -- no longer need this validation as custom terms can have custom names
+//                        if (!validTerms.contains(term)) {
+//                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME;
+//                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+//                            validationOutputData.setSuccess(false);
+//                            validationOutputData.setMessage(errorMsg);
+//                            return validationOutputData;
+//                        }
                     }
                 }
 

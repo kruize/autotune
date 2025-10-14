@@ -33,6 +33,7 @@ import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -180,8 +181,13 @@ public final class KruizeObject implements ExperimentTypeAware {
 
         if (kruizeObject.getRecommendation_settings() != null && kruizeObject.getRecommendation_settings().getTermSettings() != null) {
 
-            List<String> termList = kruizeObject.getRecommendation_settings().getTermSettings().getTerms();
-
+            List<TermDefinition> termDefinitionList = kruizeObject.getRecommendation_settings().getTermSettings().getTerms();
+            List<String> termList = new ArrayList<>();
+            if (termDefinitionList != null) {
+                for (TermDefinition def : termDefinitionList) {
+                    termList.add(def.getName());
+                }
+            }
             for (String userInputTerm : termList) {
                 if (KruizeConstants.JSONKeys.SHORT.equalsIgnoreCase(userInputTerm)) {
                     terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM,
@@ -198,8 +204,20 @@ public final class KruizeObject implements ExperimentTypeAware {
                             KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
                             getTermThresholdInDays(KruizeConstants.JSONKeys.LONG_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
                             15, 1));
+                } else if (KruizeConstants.JSONKeys.DAILY.equalsIgnoreCase(userInputTerm)) {
+
+                }  else if (KruizeConstants.JSONKeys.WEEKLY.equalsIgnoreCase(userInputTerm)) {
+
+                }  else if (KruizeConstants.JSONKeys.FORTNIGHTLY.equalsIgnoreCase(userInputTerm)) {
+
+                }  else if (KruizeConstants.JSONKeys.MONTHLY.equalsIgnoreCase(userInputTerm)) {
+
+                }  else if (KruizeConstants.JSONKeys.QUARTERLY.equalsIgnoreCase(userInputTerm)) {
+
                 } else {
-                    throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
+                    // custom term
+
+//                    throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
                 }
             }
             kruizeObject.setTerms(terms);
