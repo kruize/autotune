@@ -456,7 +456,7 @@ public class KruizeOperator {
             performanceProfile = new PerformanceProfile(name, profile_version, k8s_type, sloInfo);
 
             if (null != performanceProfile) {
-                ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(PerformanceProfilesDeployment.performanceProfilesMap, performanceProfile);
+                ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(PerformanceProfilesDeployment.performanceProfilesMap, performanceProfile, AnalyzerConstants.OperationType.CREATE);
                 if (validationOutputData.isSuccess()) {
                     LOGGER.info("Added Performance Profile : {} into the map with version: {}",
                             performanceProfile.getName(), performanceProfile.getProfile_version());

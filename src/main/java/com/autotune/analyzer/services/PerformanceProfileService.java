@@ -91,7 +91,8 @@ public class PerformanceProfileService extends HttpServlet {
             Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
             String inputData = request.getReader().lines().collect(Collectors.joining());
             PerformanceProfile performanceProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
-            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, performanceProfile);
+            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap,
+                    performanceProfile, AnalyzerConstants.OperationType.CREATE);
             if (validationOutputData.isSuccess()) {
                 ValidationOutputData addedToDB = new ExperimentDBService().addPerformanceProfileToDB(performanceProfile);
                 if (addedToDB.isSuccess()) {
@@ -175,50 +176,17 @@ public class PerformanceProfileService extends HttpServlet {
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
         try {
+            Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
             // Parse incoming JSON
             String inputData = request.getReader().lines().collect(Collectors.joining());
             PerformanceProfile incomingPerfProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
             String profileName = incomingPerfProfile.getName();
-
-            // Fetch existing profile
-            try {
-                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, profileName);
-            }  catch (Exception e) {
-                throw new Exception(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_LOADING_FAILED, e.getMessage()));
-            }
-            // Return 404 if the profile is not present
-            if (null ==  performanceProfilesMap.get(profileName)) {
-                LOGGER.debug("{}", AnalyzerErrorConstants.AutotuneObjectErrors.NO_PERF_PROFILE);
-                sendErrorResponse(
-                        response,
-                        null,
-                        HttpServletResponse.SC_NOT_FOUND,
-                        String.format(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERFORMANCE_PROFILE, profileName)
-                );
-                return;
-            }
-            // Compare version — only allow update if the version is matching with the current supported one
-            if (incomingPerfProfile.getProfile_version() != KruizeDeploymentInfo.perf_profile_supported_version) {
-                LOGGER.debug(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_VERSION);
-                sendErrorResponse(
-                        response,
-                        null,
-                        HttpServletResponse.SC_CONFLICT,
-                        String.format(
-                               AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_PERFORMANCE_PROFILE_VERSION,
-                                incomingPerfProfile.getProfile_version(),
-                                KruizeDeploymentInfo.perf_profile_supported_version,
-                                profileName
-                        )
-                );
-                return;
-            }
             // validate the entries present in the incoming profile
-            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, incomingPerfProfile);
+            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap,
+                    incomingPerfProfile, AnalyzerConstants.OperationType.UPDATE);
             if (validationOutputData.isSuccess()) {
                 // Perform update
                 ValidationOutputData updatedInDB = new ExperimentDBService().updatePerformanceProfileInDB(incomingPerfProfile);
-
                 if (updatedInDB.isSuccess()) {
                     LOGGER.info("{}", String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
                             profileName, incomingPerfProfile.getProfile_version()));

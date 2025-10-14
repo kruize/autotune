@@ -393,40 +393,54 @@ public class Converters {
             return experimentResultData;
         }
 
-        public static PerformanceProfile convertInputJSONToCreatePerfProfile(String inputData) throws InvalidValueException {
+        public static PerformanceProfile convertInputJSONToCreatePerfProfile(String inputData) throws InvalidValueException, Exception {
             PerformanceProfile performanceProfile = null;
             if (inputData != null) {
                 JSONObject jsonObject = new JSONObject(inputData);
                 String perfProfileName = jsonObject.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
-                Double profileVersion = jsonObject.has(AnalyzerConstants.PROFILE_VERSION) ? jsonObject.getDouble(AnalyzerConstants.PROFILE_VERSION) : null;
+                double profileVersion = jsonObject.has(AnalyzerConstants.PROFILE_VERSION) ? jsonObject.getDouble(AnalyzerConstants.PROFILE_VERSION) : 0.0;
                 String k8sType = jsonObject.has(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE) ? jsonObject.getString(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE) : null;
                 JSONObject sloJsonObject = jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO);
                 JSONArray functionVariableArray = sloJsonObject.getJSONArray(AnalyzerConstants.AutotuneObjectConstants.FUNCTION_VARIABLES);
                 ArrayList<Metric> functionVariablesList = new ArrayList<>();
-                for (Object object : functionVariableArray) {
-                    JSONObject functionVarObj = (JSONObject) object;
-                    String name = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
-                    String datasource = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE);
-                    String query = functionVarObj.has(AnalyzerConstants.AutotuneObjectConstants.QUERY) ? functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.QUERY) : null;
-                    String valueType = functionVarObj.getString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE);
-                    String kubeObject = functionVarObj.has(AnalyzerConstants.KUBERNETES_OBJECT) ? functionVarObj.getString(AnalyzerConstants.KUBERNETES_OBJECT) : null;
-                    Metric metric = new Metric(name, query, datasource, valueType, kubeObject);
-                    JSONArray aggrFunctionArray = functionVarObj.has(AnalyzerConstants.AGGREGATION_FUNCTIONS) ? functionVarObj.getJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS) : null;
-                    for (Object innerObject : aggrFunctionArray) {
-                        JSONObject aggrFuncJsonObject = (JSONObject) innerObject;
-                        HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
-                        String function = aggrFuncJsonObject.getString(AnalyzerConstants.FUNCTION);
-                        String aggrFuncQuery = aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.QUERY);
-                        String version = aggrFuncJsonObject.has(KruizeConstants.JSONKeys.VERSION) ? aggrFuncJsonObject.getString(KruizeConstants.JSONKeys.VERSION) : null;
-                        AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version);
-                        aggregationFunctionsMap.put(function, aggregationFunctions);
-                        metric.setAggregationFunctionsMap(aggregationFunctionsMap);
+                if (functionVariableArray != null) {
+                    for (Object object : functionVariableArray) {
+                        JSONObject functionVarObj = (JSONObject) object;
+                        String name = functionVarObj.optString(AnalyzerConstants.AutotuneObjectConstants.NAME, null);
+                        String datasource = functionVarObj.optString(AnalyzerConstants.AutotuneObjectConstants.DATASOURCE, null);
+                        String query = functionVarObj.optString(AnalyzerConstants.AutotuneObjectConstants.QUERY, null);
+                        String valueType = functionVarObj.optString(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, null);
+                        String kubeObject = functionVarObj.optString(AnalyzerConstants.KUBERNETES_OBJECT, null);
+                        Metric metric = new Metric(name, query, datasource, valueType, kubeObject);
+                        JSONArray aggrFunctionArray = functionVarObj.optJSONArray(AnalyzerConstants.AGGREGATION_FUNCTIONS);
+                        if (aggrFunctionArray != null) {
+                            HashMap<String, AggregationFunctions> aggregationFunctionsMap = new HashMap<>();
+                            for (Object innerObject : aggrFunctionArray) {
+                                try {
+                                    JSONObject aggrFuncJsonObject = (JSONObject) innerObject;
+                                    String function = aggrFuncJsonObject.optString(AnalyzerConstants.FUNCTION, null);
+                                    String aggrFuncQuery = aggrFuncJsonObject.optString(KruizeConstants.JSONKeys.QUERY, null);
+                                    String version = aggrFuncJsonObject.optString(KruizeConstants.JSONKeys.VERSION, null);
+                                    if (function != null) {
+                                        AggregationFunctions aggregationFunctions = new AggregationFunctions(function, aggrFuncQuery, version);
+                                        aggregationFunctionsMap.put(function, aggregationFunctions);
+                                    }
+                                } catch (Exception e) {
+                                    LOGGER.info(e.getMessage());
+                                    throw new Exception(e.getMessage());
+                                }
+                            }
+                            metric.setAggregationFunctionsMap(aggregationFunctionsMap);
+                        } else {
+                            throw new Exception("JSONObject[\"" + AnalyzerConstants.AGGREGATION_FUNCTIONS + "\"] not found.");
+                        }
+                        functionVariablesList.add(metric);
                     }
-                    functionVariablesList.add(metric);
                 }
                 String sloClass = sloJsonObject.has(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS) ? sloJsonObject.get(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS).toString() : null;
                 String direction = sloJsonObject.has(AnalyzerConstants.AutotuneObjectConstants.DIRECTION) ? sloJsonObject.get(AnalyzerConstants.AutotuneObjectConstants.DIRECTION).toString() : null;
-                ObjectiveFunction objectiveFunction = new Gson().fromJson(sloJsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION).toString(), ObjectiveFunction.class);
+                JSONObject objectiveFunctionJson = sloJsonObject.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION);
+                ObjectiveFunction objectiveFunction = objectiveFunctionJson != null ? new Gson().fromJson(objectiveFunctionJson.toString(), ObjectiveFunction.class) : null;
                 SloInfo sloInfo = new SloInfo(sloClass, objectiveFunction, direction, functionVariablesList);
                 performanceProfile = new PerformanceProfile(perfProfileName, profileVersion, k8sType, sloInfo);
             }

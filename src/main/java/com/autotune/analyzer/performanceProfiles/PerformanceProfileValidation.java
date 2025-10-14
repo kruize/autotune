@@ -24,6 +24,7 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -83,11 +84,12 @@ public class PerformanceProfileValidation {
      * Validates function variables
      *
      * @param performanceProfile Performance Profile Object to be validated
+     * @param operationType Type of API call (Create, Update, etc)
      * @return Returns the ValidationOutputData containing the response based on the validation
      */
-    public ValidationOutputData validate(PerformanceProfile performanceProfile) {
+    public ValidationOutputData validate(PerformanceProfile performanceProfile, AnalyzerConstants.OperationType operationType) {
 
-        return validatePerformanceProfileData(performanceProfile);
+        return validatePerformanceProfileData(performanceProfile, operationType);
     }
 
     /**
@@ -104,9 +106,10 @@ public class PerformanceProfileValidation {
     /**
      * Validates the data present in the performance profile object before adding it to the map
      * @param performanceProfile
+     * @param operationType Type of API call (Create, Update, etc)
      * @return
      */
-    private ValidationOutputData validatePerformanceProfileData(PerformanceProfile performanceProfile) {
+    private ValidationOutputData validatePerformanceProfileData(PerformanceProfile performanceProfile, AnalyzerConstants.OperationType operationType) {
         // validate the mandatory values first
         ValidationOutputData validationOutputData = validateMandatoryFieldsAndData(performanceProfile);
 
@@ -120,12 +123,36 @@ public class PerformanceProfileValidation {
             StringBuilder errorString = new StringBuilder();
             // check if the performance profile already exists
             PerformanceProfile existingPerformanceProfile = performanceProfilesMap.get(performanceProfile.getName());
-            if (existingPerformanceProfile != null) {
-                // check if the version is matching
-                if (existingPerformanceProfile.getProfile_version() == performanceProfile.getProfile_version()) {
-                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE).append(performanceProfile.getName());
-                    return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
-                }
+            switch (operationType) {
+                case CREATE:
+                    if (existingPerformanceProfile != null) {
+                        if (existingPerformanceProfile.getProfile_version() != performanceProfile.getProfile_version()) {
+                            errorString.append(String.format(
+                                    AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_VERSION_MISMATCH,
+                                    existingPerformanceProfile.getName()));
+                        } else {
+                            errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_PERF_PROFILE)
+                                    .append(performanceProfile.getName());
+                        }
+                        return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
+                    }
+                    break;
+
+                case UPDATE:
+                    if (existingPerformanceProfile == null) {
+                        errorString.append(String.format(
+                                AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERFORMANCE_PROFILE,
+                                performanceProfile.getName()));
+                        return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_NOT_FOUND);
+                    } else if (performanceProfile.getProfile_version() != KruizeDeploymentInfo.perf_profile_supported_version) {
+                        errorString.append(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_PERFORMANCE_PROFILE_VERSION,
+                                performanceProfile.getProfile_version(), KruizeDeploymentInfo.perf_profile_supported_version,
+                                performanceProfile.getName()
+                        ));
+                        return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
+                    }
+
+                    break;
             }
 
             // Validates fields like k8s_type and slo object
@@ -149,82 +176,96 @@ public class PerformanceProfileValidation {
      * @return ValidationOutputData object containing status of the validations
      */
     public ValidationOutputData validateMandatoryFieldsAndData(PerformanceProfile perfObj) {
-        List<String> missingMandatoryFields = new ArrayList<>();
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
-        String errorMsg;
-        errorMsg = "";
-        mandatoryFields.forEach(
-                mField -> {
-                    String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
-                    try {
-                        LOGGER.debug("MethodName = {}",methodName);
-                        Method getNameMethod = perfObj.getClass().getMethod(methodName);
-                        if (getNameMethod.invoke(perfObj) == null)
-                            missingMandatoryFields.add(mField);
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        LOGGER.error("Method name {} doesn't exist!", mField);
-                    }
-                }
-        );
-        if (missingMandatoryFields.size() == 0) {
-            try {
-                mandatorySLOPerf.forEach(
-                        mField -> {
-                            String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
-                            try {
-                                LOGGER.debug("MethodName = {}",methodName);
-                                Method getNameMethod = perfObj.getSloInfo().getClass().getMethod(methodName);
-                                if (getNameMethod.invoke(perfObj.getSloInfo()) == null)
-                                    missingMandatoryFields.add(mField);
-                            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                                LOGGER.error("Method name {} doesn't exist!", mField);
-                            }
+        List<String> missingMandatoryFields = new ArrayList<>();
 
-                        });
-                if (missingMandatoryFields.size() == 0) {
-                    mandatoryFuncVariables.forEach(
-                            mField -> {
-                                String methodName = "get" + mField.substring(0, 1).toUpperCase() + mField.substring(1);
-                                try {
-                                    LOGGER.debug("MethodName = {}",methodName);
-                                    Method getNameMethod = perfObj.getSloInfo().getFunctionVariables().get(0)
-                                            .getClass().getMethod(methodName);
-                                    if (getNameMethod.invoke(perfObj.getSloInfo().getFunctionVariables().get(0)) == null)
-                                        missingMandatoryFields.add(mField);
-                                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                                    LOGGER.error("Method name {} doesn't exist!", mField);
-                                }
+        try {
+            // Validate top-level mandatory fields
+            checkMandatoryFields(perfObj, mandatoryFields, missingMandatoryFields);
 
-                            });
-                    String mandatoryObjFuncData = AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE;
-                    String methodName = "get" + mandatoryObjFuncData.substring(0, 1).toUpperCase() +
-                    mandatoryObjFuncData.substring(1);
-                    try {
-                        LOGGER.debug("MethodName = {}",methodName);
-                        Method getNameMethod = perfObj.getSloInfo().getObjectiveFunction()
-                                .getClass().getMethod(methodName);
-                        if (getNameMethod.invoke(perfObj.getSloInfo().getObjectiveFunction()) == null)
-                            missingMandatoryFields.add(mandatoryObjFuncData);
-                    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-                        LOGGER.error("Method name {} doesn't exist!", mandatoryObjFuncData);
-                    }
-                }
-                validationOutputData.setSuccess(true);
-            } catch (Exception e) {
-                validationOutputData.setSuccess(false);
-                errorMsg = errorMsg.concat(e.getMessage());
-                validationOutputData.setMessage(errorMsg);
-                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            // Validate SLO info fields
+            if (missingMandatoryFields.isEmpty() && perfObj.getSloInfo() != null) {
+                checkMandatoryFields(perfObj.getSloInfo(), mandatorySLOPerf, missingMandatoryFields);
             }
-        } else {
-            errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s ", missingMandatoryFields));
-            validationOutputData.setSuccess(false);
-            validationOutputData.setMessage(errorMsg);
-            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-            LOGGER.error("Validation error message :{}", errorMsg);
+
+            // Validate function variables
+            if (missingMandatoryFields.isEmpty() && perfObj.getSloInfo() != null
+                    && perfObj.getSloInfo().getFunctionVariables() != null
+                    && !perfObj.getSloInfo().getFunctionVariables().isEmpty()) {
+
+                checkMandatoryFields(
+                        perfObj.getSloInfo().getFunctionVariables().get(0),
+                        mandatoryFuncVariables,
+                        missingMandatoryFields
+                );
+            }
+
+            // Validate objective function type
+            if (missingMandatoryFields.isEmpty() && perfObj.getSloInfo() != null
+                    && perfObj.getSloInfo().getObjectiveFunction() != null) {
+
+                String mandatoryObjFuncData = AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE;
+                checkMandatoryFields(
+                        perfObj.getSloInfo().getObjectiveFunction(),
+                        List.of(mandatoryObjFuncData),
+                        missingMandatoryFields
+                );
+            }
+
+            // Build validation result
+            if (missingMandatoryFields.isEmpty()) {
+                validationOutputData.setSuccess(true);
+            } else {
+                String errorMsg = String.format("Missing mandatory parameters: %s ", missingMandatoryFields);
+                setValidationError(validationOutputData, errorMsg, HttpServletResponse.SC_BAD_REQUEST);
+            }
+
+        } catch (Exception e) {
+            setValidationError(validationOutputData, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
 
         return validationOutputData;
+    }
+
+    /**
+     * Checks if the specified list of fields are present (non-null) in the given object.
+     *
+     * @param obj            the object instance to inspect; must not be {@code null}
+     * @param fields         list of field names (without "get" prefix) to validate for non-null values
+     * @param missingFields  the list where missing field names will be appended; must not be {@code null}
+     */
+    private void checkMandatoryFields(Object obj, List<String> fields, List<String> missingFields) {
+        for (String field : fields) {
+            String methodName = "get" + Character.toUpperCase(field.charAt(0)) + field.substring(1);
+            try {
+                LOGGER.debug("MethodName = {}", methodName);
+                Method method = obj.getClass().getMethod(methodName);
+                Object value = method.invoke(obj);
+                if (value == null) {
+                    missingFields.add(field);
+                }
+            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+                LOGGER.error("Method {} doesn't exist on class {}", methodName, obj.getClass().getSimpleName());
+            }
+        }
+    }
+
+    /**
+     * Populates the given ValidationOutputData object with error information and logs the message.
+     * <p>
+     * This helper method centralizes the logic for setting validation failure details, including
+     * the error message, HTTP error code, and success flag.
+     * </p>
+     *
+     * @param output     the ValidationOutputData object to populate with error details
+     * @param message    the error message to set; may be null or empty
+     * @param errorCode  the HTTP error code corresponding to the failure (e.g.SC_BAD_REQUEST)
+     */
+    private void setValidationError(ValidationOutputData output, String message, int errorCode) {
+        output.setSuccess(false);
+        output.setMessage(message);
+        output.setErrorCode(errorCode);
+        LOGGER.error("Validation error message: {}", message);
     }
 
     /**

@@ -339,6 +339,10 @@ public class AnalyzerConstants {
         }
     }
 
+    public enum OperationType {
+        CREATE, UPDATE
+    }
+
     /**
      * Validates if the metricName to be updated has supported prefix like namespace, workload, container.
      * @param metricName Name of the metric to be updated
