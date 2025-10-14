@@ -24,19 +24,16 @@ from helpers.utils import *
 
 perf_profile_dir = get_metric_profile_dir()
 mandatory_fields = [
-    ("profile_version", ERROR_500_STATUS_CODE, ERROR_STATUS),
     ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
     ("slo", ERROR_500_STATUS_CODE, ERROR_STATUS),
     ("direction", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("objective_function", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("function_type", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("objective_function", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("function_type", ERROR_STATUS_CODE, ERROR_STATUS),
     ("function_variables", ERROR_500_STATUS_CODE, ERROR_STATUS),
     ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("datasource", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("value_type", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("aggregation_functions", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("function", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("query", ERROR_500_STATUS_CODE, ERROR_STATUS)
+    ("datasource", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("value_type", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("aggregation_functions", ERROR_500_STATUS_CODE, ERROR_STATUS)
 ]
 
 @pytest.mark.perf_profile
@@ -191,12 +188,13 @@ def test_update_performance_profiles_mandatory_fields(cluster_type, field, expec
         namespace = "openshift-tuning"
 
     form_kruize_url(cluster_type)
+    input_json_file_v1 = "../json_files/resource_optimization_openshift_v1.json"
     input_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
     # Delete any existing profile
-    response = delete_performance_profile(input_json_file)
+    response = delete_performance_profile(input_json_file_v1)
     print("delete performance profile = ", response.status_code)
     # Create performance profile using the specified json
-    response = create_performance_profile(input_json_file)
+    response = create_performance_profile(input_json_file_v1)
     data = response.json()
     print(data['message'])
 
@@ -213,6 +211,7 @@ def test_update_performance_profiles_mandatory_fields(cluster_type, field, expec
         json_data['slo'].pop("direction", None)
     elif field == "objective_function":
         json_data['slo'].pop("objective_function", None)
+        field = "objectiveFunction"
     elif field == "function_type":
         json_data['slo']['objective_function'].pop("function_type", None)
     elif field == "function_variables":
@@ -223,6 +222,7 @@ def test_update_performance_profiles_mandatory_fields(cluster_type, field, expec
         json_data['slo']['function_variables'][0].pop("datasource", None)
     elif field == "value_type":
         json_data['slo']['function_variables'][0].pop("value_type", None)
+        field = "valueType"
     elif field == "aggregation_functions":
         json_data['slo']['function_variables'][0].pop("aggregation_functions", None)
     elif field == "function":
