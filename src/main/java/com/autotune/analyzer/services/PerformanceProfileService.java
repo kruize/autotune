@@ -91,8 +91,7 @@ public class PerformanceProfileService extends HttpServlet {
             Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
             String inputData = request.getReader().lines().collect(Collectors.joining());
             PerformanceProfile performanceProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
-            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap,
-                    performanceProfile, AnalyzerConstants.OperationType.CREATE);
+            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, performanceProfile, AnalyzerConstants.OperationType.CREATE);
             if (validationOutputData.isSuccess()) {
                 ValidationOutputData addedToDB = new ExperimentDBService().addPerformanceProfileToDB(performanceProfile);
                 if (addedToDB.isSuccess()) {
@@ -252,13 +251,25 @@ public class PerformanceProfileService extends HttpServlet {
         out.flush();
     }
 
-    // success response
+    /***
+     * success response
+     * @param response
+     * @param message
+     * @throws IOException
+     */
     public static void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
         message += " View Performance Profiles at /listPerformanceProfiles";
         sendJsonResponse(response, message, HttpServletResponse.SC_CREATED, "SUCCESS");
     }
 
-    // Error response
+    /***
+     * Error response
+     * @param response
+     * @param e
+     * @param httpStatusCode
+     * @param errorMsg
+     * @throws IOException
+     */
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
