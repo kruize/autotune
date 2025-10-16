@@ -930,6 +930,32 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+    /**
+     * @param perfProfileName name of the profile
+     * @return list of experiment names associated with the provided profile
+     */
+    @Override
+    public List<String> loadExperimentNamesByProfileName(String perfProfileName) throws Exception {
+        List<String> entries;
+        String statusValue = "failure";
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(SELECT_FROM_EXPERIMENTS_BY_PROFILE_NAME, String.class)
+                    .setParameter("performanceProfile", perfProfileName)
+                    .list();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiments by profile name {} due to {}", perfProfileName, e.getMessage());
+            throw new Exception("Error while loading existing experiments from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadExpName) {
+                MetricsConfig.timerLoadExpName = MetricsConfig.timerBLoadExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
+            }
+        }
+        return entries;
+    }
+
 
     @Override
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {

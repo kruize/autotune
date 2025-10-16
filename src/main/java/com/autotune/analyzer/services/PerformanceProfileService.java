@@ -30,6 +30,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -46,12 +47,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serial;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
-import java.util.HashMap;
+
 import com.autotune.database.dao.ExperimentDAOImpl;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
@@ -66,6 +65,10 @@ public class PerformanceProfileService extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileService.class);
     private ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap;
+    private static final Gson gson = new GsonBuilder()
+            .disableHtmlEscaping()  // Prevents escaping of quotes
+            .setPrettyPrinting()
+            .create();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -184,64 +187,76 @@ public class PerformanceProfileService extends HttpServlet {
      */
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
         String perfProfileName = req.getParameter(AnalyzerConstants.ServiceConstants.PERF_PROFILE_NAME);
+        if (perfProfileName == null || perfProfileName.isBlank()) {
+            sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE_NAME);
+            return;
+        }
         try {
-            try {
-                new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, perfProfileName);
-            } catch (Exception e) {
-                throw new Exception(String.format("Loading saved Performance Profile %s failed: %s ", perfProfileName, e.getMessage()));
+            // Load profile
+            new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, perfProfileName);
+            if (null == performanceProfilesMap.get(perfProfileName)) {
+                sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST,
+                        AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + perfProfileName);
+                return;
             }
-            if (null != performanceProfilesMap.get(perfProfileName)) {
-                ValidationOutputData validationOutputData;
-                validationOutputData = new ExperimentDAOImpl().deletePerformanceProfileByName(perfProfileName);
-
-                if (validationOutputData.isSuccess()) {
-                    performanceProfilesMap.remove(perfProfileName);
-                } else {
-                    throw new Exception("Performance Profile not deleted due to : " + validationOutputData.getMessage());
-                }
-            } else {
-                throw new Exception(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + perfProfileName);
+            // Check if the profile is associated with any of the existing experiments
+            // fetch experiments if any, associated with the mentioned profile name
+            List<String> experimentsList = new ExperimentDBService().loadExperimentNamesFromDBByProfileName(perfProfileName);
+            if (null != experimentsList && !experimentsList.isEmpty()) {
+                sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_EXPERIMENTS_ERROR, experimentsList));
+                return;
             }
-            sendSuccessResponse(resp, "Performance profile "+perfProfileName+" deleted successfully.");
+            // Delete profile
+            ValidationOutputData result = new ExperimentDAOImpl().deletePerformanceProfileByName(perfProfileName);
+            if (!result.isSuccess()) {
+                sendErrorResponse(resp, null, result.getErrorCode(), result.getMessage());
+                return;
+            }
+            // remove the profile from the local storage as well
+            performanceProfilesMap.remove(perfProfileName);
+            sendSuccessResponse(resp, String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName));
         } catch (Exception e) {
-            LOGGER.error("Exception occurred while deleting the Performance Profile: {}", e.getMessage());
-            sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+            LOGGER.error("{}",String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION, perfProfileName, e.getMessage()));
+            sendErrorResponse(resp, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
         }
     }
 
     /**
-     * Send success response in case of no errors or exceptions.
+     * Sends a JSON response (for both success and error cases).
      *
-     * @param response
-     * @param message
+     * @param response The servlet response
+     * @param message  Message to include in response
+     * @param statusCode HTTP status code (e.g., 200, 404, 500)
+     * @param status   "SUCCESS" or "FAILURE"
      * @throws IOException
      */
-    private void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
+    public static void sendJsonResponse(HttpServletResponse response,
+                                        String message,
+                                        int statusCode,
+                                        String status) throws IOException {
+
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
-        response.setStatus(HttpServletResponse.SC_CREATED);
+        response.setStatus(statusCode);
+
         PrintWriter out = response.getWriter();
         out.append(
-                new Gson().toJson(
-                        new PerformanceProfileResponse(message +
-                                " View Performance Profiles at /listPerformanceProfiles",
-                                HttpServletResponse.SC_CREATED, "", "SUCCESS")
+                gson.toJson(
+                        new PerformanceProfileResponse(message, statusCode, "", status)
                 )
         );
         out.flush();
     }
 
-    /**
-     * Send response containing corresponding error message in case of failures and exceptions
-     *
-     * @param response
-     * @param e
-     * @param httpStatusCode
-     * @param errorMsg
-     * @throws IOException
-     */
+    // success response
+    public static void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
+        message += " View Performance Profiles at /listPerformanceProfiles";
+        sendJsonResponse(response, message, HttpServletResponse.SC_CREATED, "SUCCESS");
+    }
+
+    // Error response
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {
@@ -249,6 +264,6 @@ public class PerformanceProfileService extends HttpServlet {
             if (null == errorMsg)
                 errorMsg = e.getMessage();
         }
-        response.sendError(httpStatusCode, errorMsg);
+        sendJsonResponse(response, errorMsg, httpStatusCode, "ERROR");
     }
 }

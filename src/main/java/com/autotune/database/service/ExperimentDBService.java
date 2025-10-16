@@ -824,4 +824,8 @@ public class ExperimentDBService {
     public boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception {
         return experimentDAO.updateExperimentDates(experimentNames, currentTimestamp);
     }
+
+    public List<String> loadExperimentNamesFromDBByProfileName(String perfProfileName) throws Exception {
+        return experimentDAO.loadExperimentNamesByProfileName(perfProfileName);
+    }
 }
