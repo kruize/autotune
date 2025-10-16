@@ -18,6 +18,7 @@ package com.autotune.analyzer.performanceProfiles;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.EvalExParser;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.database.service.ExperimentDBService;
@@ -32,12 +33,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * create Experiment input validation
@@ -181,44 +180,38 @@ public class PerformanceProfileValidation {
 
         try {
             // Validate top-level mandatory fields
-            checkMandatoryFields(perfObj, mandatoryFields, missingMandatoryFields);
-
-            // Validate SLO info fields
-            if (missingMandatoryFields.isEmpty() && perfObj.getSloInfo() != null) {
-                checkMandatoryFields(perfObj.getSloInfo(), mandatorySLOPerf, missingMandatoryFields);
+            if (checkMandatoryFields(perfObj, mandatoryFields, missingMandatoryFields)) {
+                return buildValidationFailure(validationOutputData, missingMandatoryFields);
+            }
+            // Validate SLO fields
+            if (checkMandatoryFields(perfObj.getSloInfo(), mandatorySLOPerf, missingMandatoryFields)) {
+                return buildValidationFailure(validationOutputData, missingMandatoryFields);
             }
 
             // Validate function variables
-            if (missingMandatoryFields.isEmpty() && perfObj.getSloInfo() != null
-                    && perfObj.getSloInfo().getFunctionVariables() != null
-                    && !perfObj.getSloInfo().getFunctionVariables().isEmpty()) {
-
-                checkMandatoryFields(
-                        perfObj.getSloInfo().getFunctionVariables().get(0),
-                        mandatoryFuncVariables,
-                        missingMandatoryFields
-                );
+            for (Metric metric : perfObj.getSloInfo().getFunctionVariables()) {
+                if (checkMandatoryFields(metric, mandatoryFuncVariables, missingMandatoryFields)) {
+                    return buildValidationFailure(validationOutputData, missingMandatoryFields);
+                }
+            }
+            // Validate aggregationFunction/query objects
+            if (checkFunctionVariables(perfObj.getSloInfo().getFunctionVariables(), missingMandatoryFields)) {
+                return buildValidationFailure(validationOutputData, missingMandatoryFields);
             }
 
-            // Validate objective function type
-            if (missingMandatoryFields.isEmpty() && perfObj.getSloInfo() != null
-                    && perfObj.getSloInfo().getObjectiveFunction() != null) {
-
-                String mandatoryObjFuncData = AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE;
-                checkMandatoryFields(
-                        perfObj.getSloInfo().getObjectiveFunction(),
-                        List.of(mandatoryObjFuncData),
-                        missingMandatoryFields
-                );
+            // Validate objective function
+            if (perfObj.getSloInfo().getObjectiveFunction() == null) {
+                return buildValidationFailure(validationOutputData, List.of(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION));
             }
 
-            // Build validation result
-            if (missingMandatoryFields.isEmpty()) {
-                validationOutputData.setSuccess(true);
-            } else {
-                String errorMsg = String.format("Missing mandatory parameters: %s ", missingMandatoryFields);
-                setValidationError(validationOutputData, errorMsg, HttpServletResponse.SC_BAD_REQUEST);
+            String mandatoryObjFuncData = AnalyzerConstants.AutotuneObjectConstants.OBJ_FUNCTION_TYPE;
+            if (checkMandatoryFields(perfObj.getSloInfo().getObjectiveFunction(), List.of(mandatoryObjFuncData),
+                    missingMandatoryFields)) {
+                return buildValidationFailure(validationOutputData, missingMandatoryFields);
             }
+
+            // All validations passed
+            validationOutputData.setSuccess(true);
 
         } catch (Exception e) {
             setValidationError(validationOutputData, e.getMessage(), HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -228,27 +221,40 @@ public class PerformanceProfileValidation {
     }
 
     /**
-     * Checks if the specified list of fields are present (non-null) in the given object.
+     * Checks that all specified fields in the given object are non-null and non-empty.
+     * <p>
+     * Uses reflection to invoke JavaBean-style getters (e.g., field name → getName() ).
+     * Returns true if all fields are valid; otherwise, adds the first missing field to
+     * missingFields and returns false.
+     * </p>
      *
      * @param obj            the object instance to inspect; must not be {@code null}
-     * @param fields         list of field names (without "get" prefix) to validate for non-null values
-     * @param missingFields  the list where missing field names will be appended; must not be {@code null}
+     * @param fields         list of field names (without "get" prefix) to validate
+     * @param missingMandatoryFields  the list where the first missing field name will be added
+     * @return true if all fields are valid;  false otherwise
      */
-    private void checkMandatoryFields(Object obj, List<String> fields, List<String> missingFields) {
+    private boolean checkMandatoryFields(Object obj, List<String> fields, List<String> missingMandatoryFields) {
         for (String field : fields) {
             String methodName = "get" + Character.toUpperCase(field.charAt(0)) + field.substring(1);
             try {
                 LOGGER.debug("MethodName = {}", methodName);
                 Method method = obj.getClass().getMethod(methodName);
                 Object value = method.invoke(obj);
-                if (value == null) {
-                    missingFields.add(field);
+                if (isNullOrEmpty(value)) {
+                    missingMandatoryFields.add(field);
+                    LOGGER.warn("Field '{}' is missing or empty on {}", field, obj.getClass().getSimpleName());
+                    return true;
                 }
+
             } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
                 LOGGER.error("Method {} doesn't exist on class {}", methodName, obj.getClass().getSimpleName());
+                missingMandatoryFields.add(field);
+                return true;
             }
         }
+        return false;
     }
+
 
     /**
      * Populates the given ValidationOutputData object with error information and logs the message.
@@ -267,6 +273,77 @@ public class PerformanceProfileValidation {
         output.setErrorCode(errorCode);
         LOGGER.error("Validation error message: {}", message);
     }
+
+    /**
+     * Populates the givenValidationOutputData with failure details for missing mandatory fields.
+     * @param output ValidationOutputData object to populate
+     * @param missingFields list of missing field names
+     * @return the same ValidationOutputData object populated with error info
+     */
+    private ValidationOutputData buildValidationFailure(ValidationOutputData output, List<String> missingFields) {
+        String errorMsg = String.format("Missing mandatory parameters: %s", missingFields);
+        setValidationError(output, errorMsg, HttpServletResponse.SC_BAD_REQUEST);
+        return output;
+    }
+
+    /**
+     * Checks whether the given value is null or considered "empty".
+     * <p>
+     * The following are treated as empty:
+     * <ul>
+     *   <li>null</li>
+     *   <li>Empty or blank String</li>
+     *   <li>Empty Collection, Map or array</li>
+     * </ul>
+     *
+     * @param value the object to check
+     * @return true if the value is null or empty; false otherwise
+     */
+    private boolean isNullOrEmpty(Object value) {
+        if (value == null)
+            return true;
+        if (value instanceof String) {
+            return ((String) value).isEmpty();
+        } else if (value instanceof Collection<?>) {
+            return ((Collection<?>) value).isEmpty();
+        } else if (value.getClass().isArray()) {
+            return Array.getLength(value) == 0;
+        }
+        return false;
+    }
+
+    private boolean checkFunctionVariables(List<Metric> functionVariables, List<String> missingFields) {
+
+        for (Metric metric : functionVariables) {
+            boolean hasQuery = metric.getQuery() != null && !metric.getQuery().isEmpty();
+            boolean hasAggFunctions = metric.getAggregationFunctionsMap() != null && !metric.getAggregationFunctionsMap().isEmpty();
+            // At least one of them must be present
+            if (!hasQuery && !hasAggFunctions) {
+                missingFields.add(AnalyzerConstants.AutotuneObjectConstants.QUERY);
+                missingFields.add(AnalyzerConstants.AGGREGATION_FUNCTIONS);
+                return true;
+            }
+            // If aggregation_functions map present, validate inner fields
+            if (hasAggFunctions) {
+                for (Map.Entry<String, AggregationFunctions> entry : metric.getAggregationFunctionsMap().entrySet()) {
+                    AggregationFunctions af = entry.getValue();
+                    if (af.getFunction() == null || af.getFunction().isEmpty()) {
+                        missingFields.add(AnalyzerConstants.FUNCTION);
+                        LOGGER.error("Missing 'function' in aggregation_functions for '{}' key '{}'", metric.getName(), entry.getKey());
+                        return true;
+                    }
+                    if (af.getQuery() == null || af.getQuery().isEmpty()) {
+                        missingFields.add(AnalyzerConstants.AutotuneObjectConstants.QUERY);
+                        LOGGER.error("Missing 'query' in aggregation_functions for '{}' key '{}'", metric.getName(), entry.getKey());
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
+
+
 
     /**
      * Validates the data present in the metric profile object before adding it to the map
