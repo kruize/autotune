@@ -24,16 +24,18 @@ from helpers.utils import *
 
 perf_profile_dir = get_metric_profile_dir()
 mandatory_fields = [
-    ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("slo", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("name", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("sloInfo", ERROR_STATUS_CODE, ERROR_STATUS),
     ("direction", ERROR_STATUS_CODE, ERROR_STATUS),
     ("objective_function", ERROR_STATUS_CODE, ERROR_STATUS),
     ("function_type", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("function_variables", ERROR_500_STATUS_CODE, ERROR_STATUS),
-    ("name", ERROR_500_STATUS_CODE, ERROR_STATUS),
+    ("function_variables", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("metric_name", ERROR_STATUS_CODE, ERROR_STATUS),
     ("datasource", ERROR_STATUS_CODE, ERROR_STATUS),
     ("value_type", ERROR_STATUS_CODE, ERROR_STATUS),
-    ("aggregation_functions", ERROR_500_STATUS_CODE, ERROR_STATUS)
+    ("aggregation_functions", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("function", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("query", ERROR_STATUS_CODE, ERROR_STATUS)
 ]
 
 @pytest.mark.perf_profile
@@ -203,9 +205,7 @@ def test_update_performance_profiles_mandatory_fields(cluster_type, field, expec
 
     if field == "name":
         json_data.pop("name", None)
-    elif field == "profile_version":
-        json_data.pop("profile_version", None)
-    elif field == "slo":
+    elif field == "sloInfo":
         json_data.pop("slo", None)
     elif field == "direction":
         json_data['slo'].pop("direction", None)
@@ -216,8 +216,10 @@ def test_update_performance_profiles_mandatory_fields(cluster_type, field, expec
         json_data['slo']['objective_function'].pop("function_type", None)
     elif field == "function_variables":
         json_data['slo'].pop("function_variables", None)
-    elif field == "name":
-        json_data['slo']['function_variables'].pop("name", None)
+        field = "functionVariables"
+    elif field == "metric_name":
+        json_data['slo']['function_variables'][0].pop("name", None)
+        field = "name"
     elif field == "datasource":
         json_data['slo']['function_variables'][0].pop("datasource", None)
     elif field == "value_type":
@@ -246,7 +248,7 @@ def test_update_performance_profiles_mandatory_fields(cluster_type, field, expec
         f"Mandatory field check failed for {field} actual - {response.status_code} expected - {expected_status_code}"
     assert data['status'] == expected_status
 
-    if response.status_code == ERROR_500_STATUS_CODE:
-        assert data['message'] == UPDATE_PERF_PROFILE_MISSING_MANDATORY_FIELD_MSG % field
+    if field == "aggregation_functions":
+        assert data['message'] == AGGR_FUNC_MISSING_MANDATORY_PARAMETERS_MSG
     else:
         assert data['message'] == CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG % field
