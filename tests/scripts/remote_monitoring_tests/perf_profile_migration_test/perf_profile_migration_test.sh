@@ -48,7 +48,6 @@ query_db_interval=10
 target="crc"
 kruize_image_prev="quay.io/kruize/autotune_operator:0.6"
 kruize_image_current="quay.io/kruize/autotune_operator:0.7"
-hours=6
 
 function usage() {
 	echo
@@ -100,7 +99,6 @@ LOG_DIR="${RESULTS_DIR}/perf-profile-migration-test-$(date +%Y%m%d%H%M)"
 mkdir -p ${LOG_DIR}
 
 LOG="${LOG_DIR}/perf-profile-migration-test.log"
-results_count=$((${num_exps} * ${num_clients} * ${num_days_of_res} * 96))
 total_results_count=0
 
 # Run scalability test to load 10 exps / 15 days data and update Recommendations with previous release
