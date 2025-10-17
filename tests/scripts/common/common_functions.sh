@@ -742,7 +742,7 @@ function form_curl_cmd() {
 	esac
 
 	curl_cmd="curl -s -H 'Accept: application/json' ${AUTOTUNE_URL}"
-	if [ ${crud_operation} == "update" ]; then
+	if [ "${crud_operation}" == "update" ]; then
         	curl_cmd="curl -s -X PUT -H 'Accept: application/json' ${AUTOTUNE_URL}"
         fi
 
@@ -1868,7 +1868,7 @@ function create_performance_profile() {
 }
 
 function update_performance_profile() {
-        perf_profile_json=$1
+	perf_profile_json=$1
 	operation="update"
 
         echo "Forming the curl command to update the performance profile ..."
