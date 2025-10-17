@@ -148,7 +148,8 @@ public class PerformanceProfileValidation {
                                 performanceProfile.getProfile_version(), KruizeDeploymentInfo.perf_profile_supported_version,
                                 performanceProfile.getName()));
                         return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
-                    } else if (existingPerformanceProfile.getName().equals(performanceProfile.getName())) {
+                    } else if (existingPerformanceProfile.getName().equals(performanceProfile.getName()) &&
+                            existingPerformanceProfile.getProfile_version() == performanceProfile.getProfile_version()) {
                         errorString.append(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_ALREADY_UPDATED,
                                 performanceProfile.getName(), performanceProfile.getProfile_version()));
                         return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
