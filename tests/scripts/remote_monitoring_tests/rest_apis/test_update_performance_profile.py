@@ -41,15 +41,10 @@ mandatory_fields = [
 @pytest.mark.perf_profile
 def test_update_performance_profile(cluster_type):
     """
-    Test Description: This test validates the response status code of createPerformanceProfile API by passing a
+    Test Description: This test validates the response status code of updatePerformanceProfile API by passing a
     valid input for the json
     """
     # Form the kruize url
-    if cluster_type == "minikube":
-        namespace = "monitoring"
-    else:
-        namespace = "openshift-tuning"
-
     form_kruize_url(cluster_type)
     perf_profile_json_file = "../json_files/resource_optimization_openshift_v1.json"
     # Delete any existing profile
@@ -95,16 +90,71 @@ def test_update_performance_profile(cluster_type):
 
 
 @pytest.mark.perf_profile
-def test_update_performance_profile_with_missing_profile(cluster_type):
+def test_update_performance_profile_with_duplicate_data(cluster_type):
     """
-    Test Description: This test validates the response message of update performance profile API by passing the missing profile name
+    Test Description: This test validates the response message of updatePerformanceProfile API by passing the same data twice
     """
     # Form the kruize url
-    if cluster_type == "minikube":
-        namespace = "monitoring"
-    else:
-        namespace = "openshift-tuning"
+    form_kruize_url(cluster_type)
+    perf_profile_json_file = "../json_files/resource_optimization_openshift_v1.json"
+    # Delete any existing profile
+    response = delete_performance_profile(perf_profile_json_file)
+    print("delete performance profile = ", response.status_code)
 
+    # Create the performance profile
+    response = create_performance_profile(perf_profile_json_file)
+    data = response.json()
+    print(data['message'])
+
+    with open(perf_profile_json_file, "r") as f:
+        json_data = json.load(f)
+    perf_profile_name = json_data["name"]
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert CREATE_PERF_PROFILE_SUCCESS_MSG % perf_profile_name in data['message']
+
+    # Update the performance profile
+    perf_profile_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+    response = update_performance_profile(perf_profile_json_file)
+
+    with open(perf_profile_json_file, "r") as f:
+        json_data = json.load(f)
+    perf_profile_name = json_data["name"]
+    perf_profile_version_v2 = json_data["profile_version"]
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_PERF_PROFILE_SUCCESS_MSG % (perf_profile_name, perf_profile_version_v2)
+
+    # Validate using listPerformanceProfile API
+    response = list_performance_profiles()
+    perf_profile_version = response.json()[0]["profile_version"]
+    assert perf_profile_version == perf_profile_version_v2
+
+    # Update the performance profile again
+    perf_profile_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+    response = update_performance_profile(perf_profile_json_file)
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == ERROR_409_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert data['message'] == UPDATE_PERF_PROFILE_ALREADY_UPDATED_MSG % (perf_profile_name, perf_profile_version_v2)
+
+    response = delete_performance_profile(perf_profile_json_file)
+    print("delete performance profile = ", response.status_code)
+
+
+@pytest.mark.perf_profile
+def test_update_performance_profile_with_missing_profile(cluster_type):
+    """
+    Test Description: This test validates the response message of updatePerformanceProfile API by passing the missing profile name
+    """
+    # Form the kruize url
     form_kruize_url(cluster_type)
     perf_profile_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
     # Delete any existing profile
@@ -131,15 +181,10 @@ def test_update_performance_profile_with_missing_profile(cluster_type):
 @pytest.mark.perf_profile
 def test_update_performance_profile_with_unsupported_version(cluster_type):
     """
-    Test Description: This test validates the response message of update performance profile API by specifying the
+    Test Description: This test validates the response message of updatePerformanceProfile API by specifying the
     incorrect version
     """
     # Form the kruize url
-    if cluster_type == "minikube":
-        namespace = "monitoring"
-    else:
-        namespace = "openshift-tuning"
-
     form_kruize_url(cluster_type)
     perf_profile_json_file = "../json_files/resource_optimization_openshift_v1.json"
     # Delete any existing profile
@@ -179,16 +224,10 @@ def test_update_performance_profile_with_unsupported_version(cluster_type):
 @pytest.mark.parametrize("field, expected_status_code, expected_status", mandatory_fields)
 def test_update_performance_profiles_mandatory_fields(cluster_type, field, expected_status_code, expected_status):
     """
-    Test Description: This test validates the updation of performance profile by missing the mandatory fields and validating
-    the error message and status code
+    Test Description: This test Validates error response of updatePerformanceProfile API when mandatory fields are missing.
     """
 
     # Form the kruize url
-    if cluster_type == "minikube":
-        namespace = "monitoring"
-    else:
-        namespace = "openshift-tuning"
-
     form_kruize_url(cluster_type)
     input_json_file_v1 = "../json_files/resource_optimization_openshift_v1.json"
     input_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
