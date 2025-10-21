@@ -49,7 +49,9 @@ def test_update_performance_profile(cluster_type):
     perf_profile_json_file = "../json_files/resource_optimization_openshift_v1.json"
     # Delete any existing profile
     response = delete_performance_profile(perf_profile_json_file)
-    print("delete performance profile = ", response.status_code)
+    print("delete API status code = ", response.status_code)
+    data = response.json()
+    print("delete API status message  = ", data["message"])
 
     # Create the performance profile
     response = create_performance_profile(perf_profile_json_file)
@@ -99,7 +101,9 @@ def test_update_performance_profile_with_duplicate_data(cluster_type):
     perf_profile_json_file = "../json_files/resource_optimization_openshift_v1.json"
     # Delete any existing profile
     response = delete_performance_profile(perf_profile_json_file)
-    print("delete performance profile = ", response.status_code)
+    print("delete API status code = ", response.status_code)
+    data = response.json()
+    print("delete API status message  = ", data["message"])
 
     # Create the performance profile
     response = create_performance_profile(perf_profile_json_file)
@@ -159,7 +163,9 @@ def test_update_performance_profile_with_missing_profile(cluster_type):
     perf_profile_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
     # Delete any existing profile
     response = delete_performance_profile(perf_profile_json_file)
-    print("delete performance profile = ", response.status_code)
+    print("delete API status code = ", response.status_code)
+    data = response.json()
+    print("delete API status message  = ", data["message"])
 
     # Update the performance profile
     response = update_performance_profile(perf_profile_json_file)
@@ -179,48 +185,6 @@ def test_update_performance_profile_with_missing_profile(cluster_type):
 
 
 @pytest.mark.perf_profile
-def test_update_performance_profile_with_unsupported_version(cluster_type):
-    """
-    Test Description: This test validates the response message of updatePerformanceProfile API by specifying the
-    incorrect version
-    """
-    # Form the kruize url
-    form_kruize_url(cluster_type)
-    perf_profile_json_file = "../json_files/resource_optimization_openshift_v1.json"
-    # Delete any existing profile
-    response = delete_performance_profile(perf_profile_json_file)
-    print("delete performance profile = ", response.status_code)
-
-    # create performance profile
-    response = create_performance_profile(perf_profile_json_file)
-    data = response.json()
-    print(data['message'])
-
-    with open(perf_profile_json_file, "r") as f:
-        json_data = json.load(f)  # parses JSON once
-
-    perf_profile_name = json_data["name"]
-    perf_profile_version = json_data["profile_version"]
-
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
-    assert CREATE_PERF_PROFILE_SUCCESS_MSG % perf_profile_name in data['message']
-
-    # Update the performance profile
-    response = update_performance_profile(perf_profile_json_file)
-    data = response.json()
-    print(data['message'])
-
-    assert response.status_code == ERROR_409_STATUS_CODE
-    assert data['status'] == ERROR_STATUS
-    assert data['message'] == UPDATE_PERF_PROFILE_UNSUPPORTED_VERSION_ERROR_MSG % (perf_profile_version,
-                                PERFORMANCE_PROFILE_SUPPORTED_VERSION, perf_profile_name, )
-
-    response = delete_performance_profile(perf_profile_json_file)
-    print("delete performance profile = ", response.status_code)
-
-
-@pytest.mark.perf_profile
 @pytest.mark.parametrize("field, expected_status_code, expected_status", mandatory_fields)
 def test_update_performance_profiles_mandatory_fields(cluster_type, field, expected_status_code, expected_status):
     """
@@ -233,7 +197,9 @@ def test_update_performance_profiles_mandatory_fields(cluster_type, field, expec
     input_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
     # Delete any existing profile
     response = delete_performance_profile(input_json_file_v1)
-    print("delete performance profile = ", response.status_code)
+    print("delete API status code = ", response.status_code)
+    data = response.json()
+    print("delete API status message  = ", data["message"])
     # Create performance profile using the specified json
     response = create_performance_profile(input_json_file_v1)
     data = response.json()

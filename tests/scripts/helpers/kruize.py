@@ -280,9 +280,6 @@ def list_performance_profiles():
     response = requests.get(url)
 
     print("Response status code = ", response.status_code)
-    print("\n************************************************************")
-    print(response.text)
-    print("\n************************************************************")
     return response
 
 

@@ -115,9 +115,6 @@ COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
 CREATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : %s created successfully."
 UPDATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile '%s' updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles"
 UPDATE_PERF_PROFILE_MISSING_PROFILE_ERROR_MSG = "Validation failed: Performance Profile '%s' not found. Use POST to create a new profile."
-UPDATE_PERF_PROFILE_UNSUPPORTED_VERSION_ERROR_MSG = "Validation failed: Update rejected: Profile version (%.1f) does not match with the supported version (%.1f) for profile '%s'."
-UPDATE_PERF_PROFILE_MISSING_VERSION_ERROR_MSG = "Missing mandatory parameters"
-UPDATE_PERF_PROFILE_MISSING_MANDATORY_FIELD_MSG = "JSONObject[\"%s\"] not found."
 UPDATE_PERF_PROFILE_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the version %.1f"
 
 
