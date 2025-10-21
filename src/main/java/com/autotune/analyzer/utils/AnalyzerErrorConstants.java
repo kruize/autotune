@@ -119,7 +119,6 @@ public class AnalyzerErrorConstants {
         public static final String MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment - %s : %s";
         public static final String MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS = "Expected namespace-level results, but found type, name, and namespace for experiment: %s.";
         public static final String MISSING_PERFORMANCE_PROFILE = "Performance Profile '%s' not found. Use POST to create a new profile.";
-        public static final String UNSUPPORTED_PERFORMANCE_PROFILE_VERSION = "Update rejected: Profile version (%.1f) does not match with the supported version (%.1f) for profile '%s'.";
         public static final String PERF_PROFILE_VERSION_MISMATCH = "Performance profile '%s' already exists with a different version. Use the /updatePerformanceProfile API to modify the existing profile.";
         public static final String PERF_PROFILE_ALREADY_UPDATED = "Performance profile '%s' already updated with the version %.1f";
 
