@@ -31,8 +31,6 @@ import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
-import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.utils.KruizeConstants;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;

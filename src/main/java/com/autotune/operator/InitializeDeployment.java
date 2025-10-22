@@ -105,8 +105,6 @@ public class InitializeDeployment {
                         deploymentInfoField.set(null, Boolean.parseBoolean(deploymentInfoFieldValue));
                     else if (deploymentInfoField.getType() == Integer.class)
                         deploymentInfoField.set(null, Integer.parseInt(deploymentInfoFieldValue));
-                    else if (deploymentInfoField.getType() == Double.class)
-                        deploymentInfoField.set(null, Double.parseDouble(deploymentInfoFieldValue));
                     else
                         throw new IllegalAccessException("Failed to set " + deploymentInfoField + "due to its type " + deploymentInfoField.getType());
                 }
