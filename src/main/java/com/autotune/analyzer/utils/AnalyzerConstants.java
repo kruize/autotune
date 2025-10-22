@@ -722,6 +722,7 @@ public class AnalyzerConstants {
         public static final String SOURCE = "source";
         public static final String PERFORMANCE_PROFILE_PKG = "com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.";
         public static final String DEFAULT_PROFILE = "default";
+        public static final Double ZERO_VALUE = 0.0;
 
         //Metric profile constants
         public static final String DEFAULT_API_VERSION = "recommender.com/v1";

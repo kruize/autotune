@@ -399,7 +399,7 @@ public class Converters {
             if (inputData != null) {
                 JSONObject jsonObject = new JSONObject(inputData);
                 String perfProfileName = jsonObject.has(AnalyzerConstants.AutotuneObjectConstants.NAME) ? jsonObject.getString(AnalyzerConstants.AutotuneObjectConstants.NAME) : null;
-                double profileVersion = jsonObject.has(AnalyzerConstants.PROFILE_VERSION) ? jsonObject.getDouble(AnalyzerConstants.PROFILE_VERSION) : 0.0;
+                double profileVersion = jsonObject.has(AnalyzerConstants.PROFILE_VERSION) ? jsonObject.getDouble(AnalyzerConstants.PROFILE_VERSION) : AnalyzerConstants.PerformanceProfileConstants.ZERO_VALUE;
                 String k8sType = jsonObject.has(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE) ? jsonObject.getString(AnalyzerConstants.PerformanceProfileConstants.K8S_TYPE) : null;
                 JSONObject sloJsonObject = jsonObject.has(AnalyzerConstants.AutotuneObjectConstants.SLO) ? jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.SLO) : null;
                 if (sloJsonObject != null) {

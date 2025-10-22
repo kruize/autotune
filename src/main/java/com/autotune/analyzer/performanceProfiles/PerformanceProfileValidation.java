@@ -25,10 +25,10 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,7 +112,7 @@ public class PerformanceProfileValidation {
         // validate the mandatory values first
         ValidationOutputData validationOutputData = validateMandatoryFieldsAndData(performanceProfile);
 
-        // If the mandatory values are present,proceed for further validation else return the validation object directly
+        // If the mandatory values are present, proceed for further validation else return the validation object directly
         if (validationOutputData.isSuccess()) {
             try {
                 new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
@@ -148,6 +148,21 @@ public class PerformanceProfileValidation {
                         errorString.append(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_ALREADY_UPDATED,
                                 performanceProfile.getName(), performanceProfile.getProfile_version()));
                         return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
+                    } else {
+                        // check if the new SLO data is a superset of existing one
+                        ObjectMapper mapper = new ObjectMapper();
+                        JsonNode existingSLOData = mapper.valueToTree(existingPerformanceProfile.getSloInfo());
+                        JsonNode newSLOData = mapper.valueToTree(performanceProfile.getSloInfo());
+
+                        if (newSLOData.equals(existingSLOData)) {
+                            errorString.append(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_SLO_ALREADY_UPDATED,
+                                    performanceProfile.getName()));
+                            return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
+                        } else if (!isSuperset(newSLOData, existingSLOData)) {
+                            LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_SUPERSET_ERROR);
+                            errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_SUPERSET_ERROR);
+                            return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
+                        }
                     }
                     break;
             }
@@ -167,6 +182,51 @@ public class PerformanceProfileValidation {
     }
 
     /**
+     * Checks whether 'newSLOData' contains all keys and values from 'existingSLOData'
+     * @param newSLOData SLO data present in the incoming performance profile
+     * @param existingSLOData SLO data present in the existing performance profile
+     * @return true, if newSLOData contains all the values of existingSLOData otherwise false
+     */
+    public static boolean isSuperset(JsonNode newSLOData, JsonNode existingSLOData) {
+        if (existingSLOData == null)
+            return true;
+        if (newSLOData == null)
+            return false;
+
+        if (existingSLOData.isObject()) {
+            Iterator<Map.Entry<String, JsonNode>> fields = existingSLOData.fields();
+            while (fields.hasNext()) {
+                Map.Entry<String, JsonNode> entry = fields.next();
+                String fieldName = entry.getKey();
+                JsonNode existingValue = entry.getValue();
+                JsonNode newValue = newSLOData.get(fieldName);
+
+                if (newValue == null)
+                    return false;
+                if (!isSuperset(newValue, existingValue))
+                    return false;
+            }
+            return true;
+        } else if (existingSLOData.isArray()) {
+            for (JsonNode existingElem : existingSLOData) {
+                boolean found = false;
+                for (JsonNode newElem : newSLOData) {
+                    if (newElem.equals(existingElem)) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (!found)
+                    return false;
+            }
+            return true;
+        } else {
+            // primitive value/String
+            return newSLOData.equals(existingSLOData);
+        }
+    }
+
+    /**
      * Check if all mandatory values are present.
      *
      * @param perfObj Mandatory fields of this Performance Profile Object will be validated
@@ -180,6 +240,10 @@ public class PerformanceProfileValidation {
             // Validate top-level mandatory fields
             if (checkMandatoryFields(perfObj, mandatoryFields, missingMandatoryFields)) {
                 return buildValidationFailure(validationOutputData, missingMandatoryFields);
+            }
+            // Validate version
+            if (perfObj.getProfile_version() == AnalyzerConstants.PerformanceProfileConstants.ZERO_VALUE) {
+                return buildValidationFailure(validationOutputData, List.of(AnalyzerConstants.PROFILE_VERSION));
             }
             // Validate SLO fields
             if (checkMandatoryFields(perfObj.getSloInfo(), mandatorySLOPerf, missingMandatoryFields)) {

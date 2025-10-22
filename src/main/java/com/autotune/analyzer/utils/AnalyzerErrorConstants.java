@@ -121,6 +121,8 @@ public class AnalyzerErrorConstants {
         public static final String MISSING_PERFORMANCE_PROFILE = "Performance Profile '%s' not found. Use POST to create a new profile.";
         public static final String PERF_PROFILE_VERSION_MISMATCH = "Performance profile '%s' already exists with a different version. Use the /updatePerformanceProfile API to modify the existing profile.";
         public static final String PERF_PROFILE_ALREADY_UPDATED = "Performance profile '%s' already updated with the version %.1f";
+        public static final String PERF_PROFILE_SLO_ALREADY_UPDATED = "Performance profile '%s' already updated with the provided SLO data";
+        public static final String PERF_PROFILE_SUPERSET_ERROR = "Updated profile must be a superset of existing data";
 
 
 
