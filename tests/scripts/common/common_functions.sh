@@ -712,6 +712,7 @@ function run_test() {
 
 # Form the curl command based on the cluster type
 function form_curl_cmd() {
+	crud_operation=$1
 	# Form the curl command based on the cluster type
 	service="autotune"
 	if [ ${target} == "crc" ]; then
@@ -741,6 +742,10 @@ function form_curl_cmd() {
 	esac
 
 	curl_cmd="curl -s -H 'Accept: application/json' ${AUTOTUNE_URL}"
+	if [ "${crud_operation}" == "update" ]; then
+        	curl_cmd="curl -s -X PUT -H 'Accept: application/json' ${AUTOTUNE_URL}"
+        fi
+
 	echo "curl_cmd = ${curl_cmd}"
 }
 
@@ -1860,6 +1865,29 @@ function create_performance_profile() {
                 echo "Failed! Create performance profile failed. Status - ${perf_profile_status}"
                 exit 1
         fi
+}
+
+function update_performance_profile() {
+	perf_profile_json=$1
+	operation="update"
+	
+	echo "Forming the curl command to update the performance profile ..."
+	form_curl_cmd "${operation}"
+	
+	curl_cmd="${curl_cmd}/updatePerformanceProfile -d @${perf_profile_json}"
+	echo "curl_cmd = ${curl_cmd}"
+	
+	status_json=$($curl_cmd)
+	echo "update performance profile status = ${status_json}"
+	echo ""
+	echo "Command used to update the performance profile = ${curl_cmd}"
+	echo ""
+	perf_profile_status=$(echo ${status_json} | jq '.status')
+	echo "update performance profile status = ${perf_profile_status}"
+	if [ "${perf_profile_status}" != \"SUCCESS\" ]; then
+		echo "Failed! Update performance profile failed. Status - ${perf_profile_status}"
+		exit 1
+	fi
 }
 
 function create_metric_profile() {
