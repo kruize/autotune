@@ -8,7 +8,7 @@ public class DBConstants {
         public static final String SELECT_FROM_EXPERIMENTS = "from KruizeExperimentEntry";
         public static final String SELECT_FROM_LM_EXPERIMENTS = "from KruizeLMExperimentEntry";
         public static final String SELECT_FROM_EXPERIMENTS_BY_EXP_NAME = "from KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
-        public static final String SELECT_FROM_EXPERIMENTS_BY_PROFILE_NAME = "SELECT k.experiment_name FROM KruizeExperimentEntry k WHERE k.performance_profile = :performanceProfile";
+        public static final String SELECT_COUNT_FROM_EXPERIMENTS_BY_PROFILE_NAME = "SELECT count(k) FROM KruizeExperimentEntry k WHERE k.performance_profile = :performanceProfile";
         public static final String SELECT_FROM_LM_EXPERIMENTS_BY_EXP_NAME = "from KruizeLMExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_BULKJOBS_BY_JOB_ID = "from KruizeBulkJobEntry k WHERE k.jobId = :jobId";
         public static final String UPDATE_BULKJOB_BY_ID = "UPDATE kruize_bulkjobs " +

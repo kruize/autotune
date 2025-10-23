@@ -165,5 +165,5 @@ public interface ExperimentDAO {
     // Delete performance profile
     ValidationOutputData deletePerformanceProfileByName(String perfProfileName) throws Exception;
 
-    List<String> loadExperimentNamesByProfileName(String perfProfileName) throws Exception;
+    Long getExperimentsCountFromDBByProfileName(String perfProfileName) throws Exception;
 }

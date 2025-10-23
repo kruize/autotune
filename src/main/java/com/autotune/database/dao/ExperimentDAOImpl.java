@@ -935,14 +935,13 @@ public class ExperimentDAOImpl implements ExperimentDAO {
      * @return list of experiment names associated with the provided profile
      */
     @Override
-    public List<String> loadExperimentNamesByProfileName(String perfProfileName) throws Exception {
-        List<String> entries;
+    public Long getExperimentsCountFromDBByProfileName(String perfProfileName) throws Exception {
+        Long experimentsCount;
         String statusValue = "failure";
         Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            entries = session.createQuery(SELECT_FROM_EXPERIMENTS_BY_PROFILE_NAME, String.class)
-                    .setParameter("performanceProfile", perfProfileName)
-                    .list();
+            experimentsCount = session.createQuery(SELECT_COUNT_FROM_EXPERIMENTS_BY_PROFILE_NAME, Long.class)
+                    .setParameter("performanceProfile", perfProfileName).uniqueResult();
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to load experiments by profile name {} due to {}", perfProfileName, e.getMessage());
@@ -953,7 +952,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
             }
         }
-        return entries;
+        return experimentsCount;
     }
 
 

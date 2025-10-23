@@ -843,7 +843,7 @@ public class ExperimentDBService {
         return experimentDAO.updateExperimentDates(experimentNames, currentTimestamp);
     }
 
-    public List<String> loadExperimentNamesFromDBByProfileName(String perfProfileName) throws Exception {
-        return experimentDAO.loadExperimentNamesByProfileName(perfProfileName);
+    public Long getExperimentsCountFromDBByProfileName(String perfProfileName) throws Exception {
+        return experimentDAO.getExperimentsCountFromDBByProfileName(perfProfileName);
     }
 }

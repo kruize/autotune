@@ -44,6 +44,7 @@ public class ServerContext {
     public static final String CREATE_PERF_PROFILE = ROOT_CONTEXT + "createPerformanceProfile";
     public static final String LIST_PERF_PROFILES = ROOT_CONTEXT + "listPerformanceProfiles";
     public static final String UPDATE_PERF_PROFILE = ROOT_CONTEXT + "updatePerformanceProfile";
+    public static final String DELETE_PERF_PROFILE = ROOT_CONTEXT + "deletePerformanceProfile";
     public static final String CREATE_METRIC_PROFILE = ROOT_CONTEXT + "createMetricProfile";
     public static final String LIST_METRIC_PROFILES = ROOT_CONTEXT + "listMetricProfiles";
     public static final String DELETE_METRIC_PROFILE = ROOT_CONTEXT + "deleteMetricProfile";

@@ -234,10 +234,11 @@ public class PerformanceProfileService extends HttpServlet {
             }
             // Check if the profile is associated with any of the existing experiments
             // fetch experiments if any, associated with the mentioned profile name
-            List<String> experimentsList = new ExperimentDBService().loadExperimentNamesFromDBByProfileName(perfProfileName);
-            if (null != experimentsList && !experimentsList.isEmpty()) {
+            Long experimentsCount = new ExperimentDBService().getExperimentsCountFromDBByProfileName(perfProfileName);
+            if (experimentsCount != 0) {
                 sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST,
-                        String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_EXPERIMENTS_ERROR, experimentsList));
+                        String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_EXPERIMENTS_ERROR,
+                                perfProfileName, experimentsCount, experimentsCount > 1 ? "s" : ""));
                 return;
             }
             // Delete profile
