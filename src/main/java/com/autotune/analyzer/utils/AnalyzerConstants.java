@@ -112,6 +112,8 @@ public class AnalyzerConstants {
     public static final String WORKLOAD_FILTER_IDENTIFIER = ", %s=\"%s\"";
     public static final String METADATA_PROFILE_QUERY_MATCHER = "sum by \\((.*?)\\)";
     public static final String COMMA_SPACE_REGEX = "\\s*,\\s*";
+    public static final String RM = "rm";
+    public static final String LM = "lm";
 
     private AnalyzerConstants() {
     }
@@ -335,6 +337,10 @@ public class AnalyzerConstants {
         public Set<String> getExpectedIdentifiers() {
             return expectedIdentifiers;
         }
+    }
+
+    public enum OperationType {
+        CREATE, UPDATE
     }
 
     /**

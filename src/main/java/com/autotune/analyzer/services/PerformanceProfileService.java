@@ -90,7 +90,7 @@ public class PerformanceProfileService extends HttpServlet {
             Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
             String inputData = request.getReader().lines().collect(Collectors.joining());
             PerformanceProfile performanceProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
-            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, performanceProfile);
+            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap, performanceProfile, AnalyzerConstants.OperationType.CREATE);
             if (validationOutputData.isSuccess()) {
                 ValidationOutputData addedToDB = new ExperimentDBService().addPerformanceProfileToDB(performanceProfile);
                 if (addedToDB.isSuccess()) {
@@ -164,17 +164,49 @@ public class PerformanceProfileService extends HttpServlet {
     }
 
     /**
-     * TODO: Need to implement
      * Update Performance Profile
      *
-     * @param req
-     * @param resp
+     * @param request
+     * @param response
      * @throws ServletException
      * @throws IOException
      */
     @Override
-    protected void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doPut(req, resp);
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
+        try {
+            Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
+            // Parse incoming JSON
+            String inputData = request.getReader().lines().collect(Collectors.joining());
+            PerformanceProfile incomingPerfProfile = Converters.KruizeObjectConverters.convertInputJSONToCreatePerfProfile(inputData);
+            String profileName = incomingPerfProfile.getName();
+            // validate the entries present in the incoming profile
+            ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddProfile(performanceProfilesMap,
+                    incomingPerfProfile, AnalyzerConstants.OperationType.UPDATE);
+            if (validationOutputData.isSuccess()) {
+                // Perform update
+                ValidationOutputData updatedInDB = new ExperimentDBService().updatePerformanceProfileInDB(incomingPerfProfile);
+                if (updatedInDB.isSuccess()) {
+                    LOGGER.info("{}", String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
+                            profileName, incomingPerfProfile.getProfile_version()));
+                    performanceProfilesMap.put(incomingPerfProfile.getName(), incomingPerfProfile);
+                    getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
+                    sendSuccessResponse(
+                            response,
+                            String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
+                                    profileName, incomingPerfProfile.getProfile_version())
+                    );
+                } else {
+                    sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, updatedInDB.getMessage());
+                }
+            } else {
+                LOGGER.debug(validationOutputData.getMessage());
+                sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
+            }
+        } catch (Exception e) {
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        } catch (InvalidValueException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     /**
@@ -250,13 +282,25 @@ public class PerformanceProfileService extends HttpServlet {
         out.flush();
     }
 
-    // success response
+    /***
+     * success response
+     * @param response
+     * @param message
+     * @throws IOException
+     */
     public static void sendSuccessResponse(HttpServletResponse response, String message) throws IOException {
         message += " View Performance Profiles at /listPerformanceProfiles";
         sendJsonResponse(response, message, HttpServletResponse.SC_CREATED, "SUCCESS");
     }
 
-    // Error response
+    /***
+     * Error response
+     * @param response
+     * @param e
+     * @param httpStatusCode
+     * @param errorMsg
+     * @throws IOException
+     */
     public void sendErrorResponse(HttpServletResponse response, Exception e, int httpStatusCode, String errorMsg) throws
             IOException {
         if (null != e) {

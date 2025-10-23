@@ -60,14 +60,18 @@ import org.slf4j.LoggerFactory;
 import javax.servlet.DispatcherType;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Scanner;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_CONNECTION_FAILED;
 import static com.autotune.utils.KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.SET_UP_DEFAULT_METADATA_PROFILE_ERROR;
@@ -121,13 +125,13 @@ public class Autotune {
             CloudWatchAppender.configureLoggerForCloudWatchLog();
             LOGGER.info("Kruize getting started with is_ros_enabled:{} , local:{}", KruizeDeploymentInfo.is_ros_enabled, KruizeDeploymentInfo.local);
             if (KruizeDeploymentInfo.is_ros_enabled) {
-                executeDDLs(AnalyzerConstants.ROS_DDL_SQL);
+                executeDDLs(AnalyzerConstants.RM);
             }
 
             // Read and execute the DDLs here
             if (KruizeDeploymentInfo.local) {
                 LOGGER.debug("Now running kruize local DDL's ");
-                executeDDLs(AnalyzerConstants.KRUIZE_LOCAL_DDL_SQL);
+                executeDDLs(AnalyzerConstants.LM);
                 // load available datasources from db
                 loadDataSourcesFromDB();
 
@@ -316,47 +320,132 @@ public class Autotune {
         ExperimentManager.launch(contextHandler);
     }
 
-    private static void executeDDLs(String ddlFileName) throws Exception {
+    private static void executeDDLs(String ddlPathOrFile) throws Exception {
         SessionFactory factory = KruizeHibernateUtil.getSessionFactory();
         Session session = null;
-        try {
-            session = factory.openSession();
-            Path sqlFilePath = Paths.get(AnalyzerConstants.TARGET, AnalyzerConstants.MIGRATIONS, ddlFileName);
-            File sqlFile = sqlFilePath.toFile();
-            Scanner scanner = new Scanner(sqlFile);
-            Transaction transaction = session.beginTransaction();
 
-            while (scanner.hasNextLine()) {
-                String sqlStatement = scanner.nextLine();
-                if (sqlStatement.startsWith("#") || sqlStatement.startsWith("-")) {
-                    continue;
-                } else {
-                    try {
-                        session.createNativeQuery(sqlStatement).executeUpdate();
-                    } catch (Exception e) {
-                        if (e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_CONSTRAINT)) {
-                            LOGGER.warn("sql: {} failed due to : {}", sqlStatement, DBConstants.DB_MESSAGES.ADD_CONSTRAINT + DBConstants.DB_MESSAGES.DUPLICATE_DB_OPERATION);
-                        } else if (e.getMessage().contains(DBConstants.DB_MESSAGES.ADD_COLUMN)) {
-                            LOGGER.warn("sql: {} failed due to : {}", sqlStatement, DBConstants.DB_MESSAGES.ADD_COLUMN + DBConstants.DB_MESSAGES.DUPLICATE_DB_OPERATION);
-                        } else {
-                            LOGGER.error("sql: {} failed due to : {}", sqlStatement, e.getMessage());
-                        }
-                        transaction.commit();
-                        transaction = session.beginTransaction();
+        // TARGET/MIGRATIONS/<ddlPathOrFile>
+        Path basePath = Paths.get(AnalyzerConstants.TARGET, AnalyzerConstants.MIGRATIONS, ddlPathOrFile);
+
+        try {
+            // Collect single file or all .sql files under directory
+            List<Path> sqlFiles = new ArrayList<>();
+            if (Files.notExists(basePath)) {
+                throw new IllegalArgumentException("DDL path does not exist: " + basePath);
+            }
+
+            if (Files.isRegularFile(basePath)) {
+                sqlFiles.add(basePath);
+            } else if (Files.isDirectory(basePath)) {
+                try (Stream<Path> walk = Files.walk(basePath)) {
+                    sqlFiles = walk
+                            .filter(p -> Files.isRegularFile(p) && p.toString().toLowerCase().endsWith(".sql"))
+                            .collect(Collectors.toList());
+                }
+                // sort files by extracted numeric version if possible, otherwise by filename
+                sqlFiles.sort((p1, p2) -> {
+                    Integer v1 = extractVersion(p1.getFileName().toString());
+                    Integer v2 = extractVersion(p2.getFileName().toString());
+                    if (v1 != null && v2 != null) {
+                        return Integer.compare(v1, v2);
+                    } else if (v1 != null) {
+                        return -1;
+                    } else if (v2 != null) {
+                        return 1;
+                    } else {
+                        return p1.getFileName().toString().compareTo(p2.getFileName().toString());
                     }
+                });
+            } else {
+                throw new IllegalArgumentException("Provided path is not a file or directory: " + basePath);
+            }
+
+            if (sqlFiles.isEmpty()) {
+                LOGGER.info("No SQL files found at path: {}", basePath);
+                return;
+            }
+
+            session = factory.openSession();
+
+            for (Path sqlFilePath : sqlFiles) {
+                LOGGER.debug("Applying SQL file: {}", sqlFilePath.toString());
+                String sqlStatement = Files.readString(sqlFilePath, StandardCharsets.UTF_8);
+                Transaction transaction = session.beginTransaction();
+                String trimmed = sqlStatement.trim();
+                // skip blank and comment-only statements
+                if (trimmed.isEmpty()
+                        || trimmed.startsWith("--")
+                        || trimmed.startsWith("#")
+                        || trimmed.startsWith("/*")) {
+                    continue;
+                }
+
+                try {
+                    session.createNativeQuery(trimmed).executeUpdate();
+                } catch (Exception e) {
+                    String msg = Optional.ofNullable(e.getMessage()).orElse("");
+                    if (msg.contains(DBConstants.DB_MESSAGES.ADD_CONSTRAINT)) {
+                        LOGGER.warn("sql: {} failed due to : {}{}", trimmed, DBConstants.DB_MESSAGES.ADD_CONSTRAINT, DBConstants.DB_MESSAGES.DUPLICATE_DB_OPERATION);
+                    } else if (msg.contains(DBConstants.DB_MESSAGES.ADD_COLUMN)) {
+                        LOGGER.warn("sql: {} failed due to : {}{}", trimmed, DBConstants.DB_MESSAGES.ADD_COLUMN, DBConstants.DB_MESSAGES.DUPLICATE_DB_OPERATION);
+                    } else {
+                        LOGGER.error("sql: {} failed due to : {}", trimmed, msg);
+                    }
+
+                    // Commit current transaction and begin a new one
+                    try {
+                        transaction.commit();
+                    } catch (Exception ignore) {
+                    }
+                    transaction = session.beginTransaction();
+                }
+
+                // commit file-level transaction
+                try {
+                    transaction.commit();
+                } catch (Exception e) {
+                    LOGGER.error("Failed to commit transaction after processing file {}: {}", sqlFilePath, e.getMessage());
                 }
             }
-            transaction.commit();
-            scanner.close();
+
             LOGGER.info(DBConstants.DB_MESSAGES.DB_CREATION_SUCCESS);
         } catch (Exception e) {
-            LOGGER.error("Exception occurred while trying to read the DDL file: {}", e.getMessage());
+            LOGGER.error("Exception occurred while trying to read the DDL(s): {}", e.getMessage());
             throw new Exception(e);
         } finally {
             if (null != session) session.close(); // Close the Hibernate session
         }
 
         LOGGER.info(DBConstants.DB_MESSAGES.DB_LIVELINESS_PROBE_SUCCESS);
+    }
+
+    /**
+     * Extracts the numeric version from a filename.
+     * <p>
+     * The expected filename format is: v{number}__description.sql (case-insensitive).
+     * <p>
+     * Examples:
+     *   "v001__create_kruize_experiments_table.sql"  -> returns 1
+     *   "v100__add_new_table.sql"                   -> returns 100
+     *   "v0003__fix.sql"                            -> returns 3
+     *   "20250923_1200__timestamped.sql"            -> returns null (does not match pattern)
+     *   "create_tables.sql"                         -> returns null (no leading v###__)
+     *
+     * @param filename the migration filename to parse
+     * @return the numeric version as Integer, or null if the filename doesn't match the expected pattern
+     */
+    private static Integer extractVersion(String filename) {
+        if (filename == null) return null;
+        Pattern p = Pattern.compile("^v0*([0-9]+)__.*", Pattern.CASE_INSENSITIVE);
+        Matcher m = p.matcher(filename);
+        if (m.matches()) {
+            try {
+                return Integer.valueOf(m.group(1));
+            } catch (NumberFormatException e) {
+                return null;
+            }
+        }
+        return null;
     }
 
     // starts the recommendation updater service

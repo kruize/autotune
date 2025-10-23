@@ -393,6 +393,24 @@ public class ExperimentDBService {
     }
 
     /**
+     * Updates Performance Profile in KruizePerformanceProfileEntry
+     *
+     * @param performanceProfile PerformanceProfile object to be updated
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData updatePerformanceProfileInDB(PerformanceProfile performanceProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
+            // TODO: add dao methods persist the updated profile data in the DB
+            //validationOutputData = this.experimentDAO.updatePerformanceProfileInDB(kruizePerformanceProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error("Not able to update Performance Profile due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
      * Adds Metric Profile to kruizeMetricProfileEntry
      *
      * @param metricProfile Metric profile object to be added

@@ -297,6 +297,7 @@ if [ ${total_results_count} != ${actual_results_count} ]; then
 fi
 echo "###########################################################################"
 
+sleep 60
 echo ""
 echo ""
 echo "###########################################################################"
@@ -315,8 +316,8 @@ db_size_mb=$((db_size / (1024 * 1024) + 1))
 
 echo "Postgres DB size in MB = ${db_size_mb}"
 
-echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${expected_results_count}""
-python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${expected_results_count}"
+echo "python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_results_count}""
+python3 parse_metrics.py -d "${RESULTS_DIR}/results" -r "${total_results_count}"
 
 echo "###########################################################################"
 echo ""

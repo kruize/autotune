@@ -147,6 +147,15 @@ The above tests are developed using pytest framework and the tests are run using
 - Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md)
 - Runs the above tests using pytest
 
+### **Update Performance Profile API tests**
+
+Here are the test scenarios:
+- Update performance profile with a valid version
+- Update performance profile with a missing profile name
+- Update performance profile with unsupported version
+- Update performance profile with missing version
+
+
 ## Prerequisites for running the tests:
 - Minikube setup or access to Openshift cluster
 - Tools like kubectl, oc, curl, jq, python
