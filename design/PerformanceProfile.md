@@ -96,52 +96,71 @@ Same as in the createPerformanceProfile. You can refer [here](/design/Performanc
 
 # Response
 
-* Success
+* **Success**
+    
+    ```
+    {
+        "message": "Performance Profile <name> updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles",
+        "httpcode": 201,
+        "documentationLink": "",
+        "status": "SUCCESS"
+    }
+    ```
 
-```
-{
-    "message": "Performance Profile <name> updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles",
-    "httpcode": 201,
-    "documentationLink": "",
-    "status": "SUCCESS"
-}
-```
+* **Failure**
 
-* Failure
-    * Missing Performance Profile name.
-  ```
-  {
-      "message": "Validation failed: Performance Profile <name> not found. Use POST to create a new profile.",
-      "httpcode": 404,
-      "documentationLink": "",
-      "status": "ERROR"
-  }
-  ```
+    * Incorrect Performance Profile name.
+    ```
+    {
+        "message": "Validation failed: Performance Profile <name> not found. Use POST to create a new profile.",
+        "httpcode": 404,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
     * Mandatory parameters are missing.
-  ```
-  {
-      "message": "Validation failed: Missing mandatory parameters: <list of params missing>",
-      "httpcode": 400,
-      "documentationLink": "",
-      "status": "ERROR"
-  }
-  ```
-  * Duplicate API request.
-  ```
-  {
-      "message": "Validation failed: Performance profile <name> already updated with the version <version>",
-      "httpcode": 409,
-      "documentationLink": "",
-      "status": "ERROR"
-  }
-  ```
+    ```
+    {
+        "message": "Validation failed: Missing mandatory parameters: <list of params missing>",
+        "httpcode": 400,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
+    * Duplicate API request.
+    ```
+    {
+        "message": "Validation failed: Performance profile <name> already updated with the version <version>",
+        "httpcode": 409,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
+    * Duplicate SLO request.
+    ```
+    {
+        "message": "Validation failed: Performance profile 'resource-optimization-openshift' already updated with the provided SLO data",
+        "httpcode": 409,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
+    * New profile data is not a superset of existing one.
+    ```
+    {
+        "message": "Validation failed: Updated profile must be a superset of existing data",
+        "httpcode": 409,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
     * Any unknown exception on server side
-  ```
-  {
-      "message": "Internal Server Error",
-      "httpcode": 500,
-      "documentationLink": "",
-      "status": "ERROR"
-  }
-  ```
+    ```
+    {
+        "message": "Internal Server Error",
+        "httpcode": 500,
+        "documentationLink": "",
+        "status": "ERROR"
+    }
+    ```
 * #####  You can get the API details [here](/design/PerformanceProfileAPI.md)

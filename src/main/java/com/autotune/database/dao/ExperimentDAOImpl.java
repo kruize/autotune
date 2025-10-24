@@ -490,6 +490,44 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
     /**
+     * @param kruizePerformanceProfileEntry
+     * @return
+     */
+    @Override
+    public ValidationOutputData updatePerformanceProfileInDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerUpdatePerfProfileDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                // Overwrites all the values in the DB with this entry
+                session.merge(kruizePerformanceProfileEntry);
+
+                tx.commit();
+                validationOutputData.setSuccess(true);
+                statusValue = "success";
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to update performance profile due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to update performance profile due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerUpdatePerfProfileDB) {
+                MetricsConfig.timerUpdatePerfProfile = MetricsConfig.timerBUpdatePerfProfileDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerUpdatePerfProfileDB.stop(MetricsConfig.timerUpdatePerfProfile);
+            }
+        }
+        return validationOutputData;
+    }
+
+    /**
      * Adds MetricProfile to database
      *
      * @param kruizeMetricProfileEntry Metric Profile Database object to be added

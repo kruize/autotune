@@ -57,7 +57,7 @@ public class PerformanceProfileUtil {
                                                              AnalyzerConstants.OperationType operationType) {
         ValidationOutputData validationOutputData;
         try {
-            validationOutputData = new PerformanceProfileValidation(performanceProfilesMap).validate(performanceProfile); //TODO: pass the `operationType` here to do further validations
+            validationOutputData = new PerformanceProfileValidation(performanceProfilesMap).validate(performanceProfile, operationType);
             if (validationOutputData.isSuccess()) {
                 addPerformanceProfile(performanceProfilesMap, performanceProfile);
             } else {

@@ -166,4 +166,6 @@ public interface ExperimentDAO {
     ValidationOutputData deletePerformanceProfileByName(String perfProfileName) throws Exception;
 
     Long getExperimentsCountFromDBByProfileName(String perfProfileName) throws Exception;
+
+    ValidationOutputData updatePerformanceProfileInDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry);
 }

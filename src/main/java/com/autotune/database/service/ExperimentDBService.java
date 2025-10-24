@@ -402,8 +402,7 @@ public class ExperimentDBService {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         try {
             KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
-            // TODO: add dao methods persist the updated profile data in the DB
-            //validationOutputData = this.experimentDAO.updatePerformanceProfileInDB(kruizePerformanceProfileEntry);
+            validationOutputData = this.experimentDAO.updatePerformanceProfileInDB(kruizePerformanceProfileEntry);
         } catch (Exception e) {
             LOGGER.error("Not able to update Performance Profile due to {}", e.getMessage());
         }
