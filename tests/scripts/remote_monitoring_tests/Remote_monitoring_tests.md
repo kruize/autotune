@@ -152,8 +152,10 @@ The above tests are developed using pytest framework and the tests are run using
 Here are the test scenarios:
 - Update performance profile with a valid version
 - Update performance profile with a missing profile name
-- Update performance profile with unsupported version
-- Update performance profile with missing version
+- Update performance profile with duplicate data
+- Update performance profile with duplicate SLO data
+- Update performance profile with invalid superset data 
+- Update performance profile with missing mandatory fields
 
 
 ## Prerequisites for running the tests:
