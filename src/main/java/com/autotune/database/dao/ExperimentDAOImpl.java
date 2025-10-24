@@ -930,6 +930,69 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return true;
     }
 
+    /**
+     * Delete performance profile with the name performanceProfileName
+     * This deletes the performance profile from kruize_performance_profiles table
+     *
+     * @param perfProfileName contains the name of the performance profile to be deleted
+     * @return validation object containing the status
+     */
+    @Override
+    public ValidationOutputData deletePerformanceProfileByName(String perfProfileName) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery(DELETE_FROM_PERFORMANCE_PROFILE_BY_NAME, null);
+                query.setParameter("perfProfileName", perfProfileName);
+                int deletedCount = query.executeUpdate();
+                if (deletedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage("No performance profile found with the name: " + perfProfileName);
+                } else {
+                    validationOutputData.setSuccess(true);
+                }
+                tx.commit();
+            } catch (HibernateException e) {
+                LOGGER.error("Failed to delete performance profile {} due to {}", perfProfileName, e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Exception occurred while deleting performance profile {} due to {}", perfProfileName, e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * @param perfProfileName name of the profile
+     * @return list of experiment names associated with the provided profile
+     */
+    @Override
+    public Long getExperimentsCountFromDBByProfileName(String perfProfileName) throws Exception {
+        Long experimentsCount;
+        String statusValue = "failure";
+        Timer.Sample timerLoadExpName = Timer.start(MetricsConfig.meterRegistry());
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            experimentsCount = session.createQuery(SELECT_COUNT_FROM_EXPERIMENTS_BY_PROFILE_NAME, Long.class)
+                    .setParameter("performanceProfile", perfProfileName).uniqueResult();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load experiments by profile name {} due to {}", perfProfileName, e.getMessage());
+            throw new Exception("Error while loading existing experiments from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadExpName) {
+                MetricsConfig.timerLoadExpName = MetricsConfig.timerBLoadExpName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadExpName.stop(MetricsConfig.timerLoadExpName);
+            }
+        }
+        return experimentsCount;
+    }
+
 
     @Override
     public boolean updateExperimentStatus(KruizeObject kruizeObject, AnalyzerConstants.ExperimentStatus status) {

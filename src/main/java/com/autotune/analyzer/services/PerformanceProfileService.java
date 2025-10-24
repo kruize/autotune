@@ -47,11 +47,11 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serial;
-import java.util.Collection;
-import java.util.Date;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+
+import com.autotune.database.dao.ExperimentDAOImpl;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
@@ -210,7 +210,6 @@ public class PerformanceProfileService extends HttpServlet {
     }
 
     /**
-     * TODO: Need to implement
      * Delete Performance profile
      *
      * @param req
@@ -220,7 +219,41 @@ public class PerformanceProfileService extends HttpServlet {
      */
     @Override
     protected void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        super.doDelete(req, resp);
+        String perfProfileName = req.getParameter(AnalyzerConstants.ServiceConstants.PERF_PROFILE_NAME);
+        if (perfProfileName == null || perfProfileName.isBlank()) {
+            sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE_NAME);
+            return;
+        }
+        try {
+            // Load profile
+            new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, perfProfileName);
+            if (null == performanceProfilesMap.get(perfProfileName)) {
+                sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST,
+                        AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + perfProfileName);
+                return;
+            }
+            // Check if the profile is associated with any of the existing experiments
+            // fetch experiments if any, associated with the mentioned profile name
+            Long experimentsCount = new ExperimentDBService().getExperimentsCountFromDBByProfileName(perfProfileName);
+            if (experimentsCount != 0) {
+                sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST,
+                        String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_EXPERIMENTS_ERROR,
+                                perfProfileName, experimentsCount, experimentsCount > 1 ? "s" : ""));
+                return;
+            }
+            // Delete profile
+            ValidationOutputData result = new ExperimentDAOImpl().deletePerformanceProfileByName(perfProfileName);
+            if (!result.isSuccess()) {
+                sendErrorResponse(resp, null, result.getErrorCode(), result.getMessage());
+                return;
+            }
+            // remove the profile from the local storage as well
+            performanceProfilesMap.remove(perfProfileName);
+            sendSuccessResponse(resp, String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName));
+        } catch (Exception e) {
+            LOGGER.error("{}",String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION, perfProfileName, e.getMessage()));
+            sendErrorResponse(resp, null, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, e.getMessage());
+        }
     }
 
     /**
