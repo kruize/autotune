@@ -118,6 +118,9 @@ public class AnalyzerErrorConstants {
         public static final String INVALID_METRICS_FOUND = "Invalid metrics found for experiment - %s: %s";
         public static final String MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment - %s : %s";
         public static final String MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS = "Expected namespace-level results, but found type, name, and namespace for experiment: %s.";
+        public static final String MISSING_PERF_PROFILE_NAME = "Performance profile name is required.";
+        public static final String PERF_PROFILE_DELETION_EXCEPTION = "Exception occurred while deleting Performance Profile: %s, %s";
+        public static final String PERF_PROFILE_EXPERIMENTS_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment%s.";
 
 
         private AutotuneObjectErrors() {

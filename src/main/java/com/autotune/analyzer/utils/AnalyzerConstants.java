@@ -577,6 +577,7 @@ public class AnalyzerConstants {
         public static final String VERBOSE = "verbose";
         public static final String FALSE = "false";
         public static final String RM = "rm";
+        public static final String PERF_PROFILE_NAME = "name";
 
         private ServiceConstants() {
         }
