@@ -13,6 +13,8 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 """
+import tempfile
+
 import pytest
 import sys
 
@@ -25,6 +27,7 @@ from helpers.utils import *
 perf_profile_dir = get_metric_profile_dir()
 mandatory_fields = [
     ("name", ERROR_STATUS_CODE, ERROR_STATUS),
+    ("profile_version", ERROR_STATUS_CODE, ERROR_STATUS),
     ("sloInfo", ERROR_STATUS_CODE, ERROR_STATUS),
     ("direction", ERROR_STATUS_CODE, ERROR_STATUS),
     ("objective_function", ERROR_STATUS_CODE, ERROR_STATUS),
@@ -154,6 +157,68 @@ def test_update_performance_profile_with_duplicate_data(cluster_type):
 
 
 @pytest.mark.perf_profile
+def test_update_performance_profile_with_duplicate_slo_data(cluster_type):
+    """
+    Test Description: This test validates the response message of updatePerformanceProfile API by passing the same SLO data in the update request
+    """
+    # Form the kruize url
+    form_kruize_url(cluster_type)
+    perf_profile_json_file = "../json_files/resource_optimization_openshift_v1.json"
+    # Delete any existing profile
+    response = delete_performance_profile(perf_profile_json_file)
+    print("delete API status code = ", response.status_code)
+    data = response.json()
+    print("delete API status message  = ", data["message"])
+
+    # Create the performance profile
+    response = create_performance_profile(perf_profile_json_file)
+    data = response.json()
+    print(data['message'])
+
+    with open(perf_profile_json_file, "r") as f:
+        json_data = json.load(f)
+    perf_profile_name = json_data["name"]
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert CREATE_PERF_PROFILE_SUCCESS_MSG % perf_profile_name in data['message']
+
+    # Update the performance profile
+    perf_profile_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+    response = update_performance_profile(perf_profile_json_file)
+
+    with open(perf_profile_json_file, "r") as f:
+        json_data = json.load(f)
+    perf_profile_name = json_data["name"]
+    perf_profile_version_v2 = json_data["profile_version"]
+
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_PERF_PROFILE_SUCCESS_MSG % (perf_profile_name, perf_profile_version_v2)
+
+   # Update the performance profile again by changing only the version
+    json_data["profile_version"] = json_data["profile_version"] + 1
+
+    with tempfile.NamedTemporaryFile(mode="w+", suffix=".json", delete=False) as tmp:
+        tmp.write(json.dumps(json_data, indent=2))
+        temp_file_path = tmp.name
+
+    response = update_performance_profile(temp_file_path)
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == ERROR_409_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert data['message'] == UPDATE_PERF_PROFILE_SLO_ALREADY_UPDATED_MSG % perf_profile_name
+
+    response = delete_performance_profile(perf_profile_json_file)
+    print("delete performance profile = ", response.status_code)
+
+
+@pytest.mark.perf_profile
 def test_update_performance_profile_with_missing_profile(cluster_type):
     """
     Test Description: This test validates the response message of updatePerformanceProfile API by passing the missing profile name
@@ -185,6 +250,57 @@ def test_update_performance_profile_with_missing_profile(cluster_type):
 
 
 @pytest.mark.perf_profile
+def test_update_performance_profile_with_invalid_superset(cluster_type):
+    """
+    Test Description: This test validates the response message of updatePerformanceProfile API by skipping the `cpuRequest` data
+    from the function_variables, it should fail with 'not a superset' error.
+    """
+    # Form the kruize url
+    form_kruize_url(cluster_type)
+    perf_profile_json_file = "../json_files/resource_optimization_openshift_v1.json"
+    # Delete any existing profile
+    response = delete_performance_profile(perf_profile_json_file)
+    print("delete API status code = ", response.status_code)
+    data = response.json()
+    print("delete API status message  = ", data["message"])
+
+    # Create the performance profile
+    response = create_performance_profile(perf_profile_json_file)
+    data = response.json()
+    print(data['message'])
+
+    perf_profile_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+    with open(perf_profile_json_file, "r") as f:
+        original_profile = json.load(f)
+
+    # Simulate an update payload that removes part of the existing data
+    data = json.loads(json.dumps(original_profile))
+
+    data["slo"]["function_variables"] = [
+        fv for fv in data["slo"]["function_variables"]
+        if fv.get("name") != "cpuRequest"
+    ]
+    # Increment version to simulate update
+    data["profile_version"] = original_profile["profile_version"] + 1
+
+    with tempfile.NamedTemporaryFile(mode="w+", suffix=".json", delete=False) as tmp:
+        tmp.write(json.dumps(data, indent=2))
+        temp_file_path = tmp.name
+
+    # Update the performance profile
+    response = update_performance_profile(temp_file_path)
+    data = response.json()
+    print(data['message'])
+
+    assert response.status_code == ERROR_409_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert data['message'] == UPDATE_PERF_PROFILE_SUPERSET_ERROR
+
+    response = delete_performance_profile(perf_profile_json_file)
+    print("delete performance profile = ", response.status_code)
+
+
+@pytest.mark.perf_profile
 @pytest.mark.parametrize("field, expected_status_code, expected_status", mandatory_fields)
 def test_update_performance_profiles_mandatory_fields(cluster_type, field, expected_status_code, expected_status):
     """
@@ -210,6 +326,8 @@ def test_update_performance_profiles_mandatory_fields(cluster_type, field, expec
 
     if field == "name":
         json_data.pop("name", None)
+    elif field == "profile_version":
+        json_data.pop("profile_version", None)
     elif field == "sloInfo":
         json_data.pop("slo", None)
     elif field == "direction":
