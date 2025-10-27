@@ -37,6 +37,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * create Experiment input validation
@@ -150,9 +151,8 @@ public class PerformanceProfileValidation {
                         return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
                     } else {
                         // check if the new SLO data is a superset of existing one
-                        ObjectMapper mapper = new ObjectMapper();
-                        JsonNode existingSLOData = mapper.valueToTree(existingPerformanceProfile.getSloInfo());
-                        JsonNode newSLOData = mapper.valueToTree(performanceProfile.getSloInfo());
+                        SloInfo existingSLOData = existingPerformanceProfile.getSloInfo();
+                        SloInfo newSLOData = performanceProfile.getSloInfo();
 
                         if (newSLOData.equals(existingSLOData)) {
                             errorString.append(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_SLO_ALREADY_UPDATED,
@@ -182,48 +182,32 @@ public class PerformanceProfileValidation {
     }
 
     /**
-     * Checks whether 'newSLOData' contains all keys and values from 'existingSLOData'
+     * Checks whether 'newSLOData' contains all values from 'existingSLOData'
      * @param newSLOData SLO data present in the incoming performance profile
      * @param existingSLOData SLO data present in the existing performance profile
      * @return true, if newSLOData contains all the values of existingSLOData otherwise false
      */
-    public static boolean isSuperset(JsonNode newSLOData, JsonNode existingSLOData) {
-        if (existingSLOData == null)
-            return true;
-        if (newSLOData == null)
+    public static boolean isSuperset(SloInfo newSLOData, SloInfo existingSLOData) {
+
+        if (newSLOData == null || existingSLOData == null)
             return false;
 
-        if (existingSLOData.isObject()) {
-            Iterator<Map.Entry<String, JsonNode>> fields = existingSLOData.fields();
-            while (fields.hasNext()) {
-                Map.Entry<String, JsonNode> entry = fields.next();
-                String fieldName = entry.getKey();
-                JsonNode existingValue = entry.getValue();
-                JsonNode newValue = newSLOData.get(fieldName);
+        List<Metric> existingFunctionVariables = existingSLOData.getFunctionVariables();
+        List<Metric> updatedFunctionVariables = newSLOData.getFunctionVariables();
 
-                if (newValue == null)
-                    return false;
-                if (!isSuperset(newValue, existingValue))
-                    return false;
-            }
-            return true;
-        } else if (existingSLOData.isArray()) {
-            for (JsonNode existingElem : existingSLOData) {
-                boolean found = false;
-                for (JsonNode newElem : newSLOData) {
-                    if (newElem.equals(existingElem)) {
-                        found = true;
-                        break;
-                    }
-                }
-                if (!found)
-                    return false;
-            }
-            return true;
-        } else {
-            // primitive value/String
-            return newSLOData.equals(existingSLOData);
-        }
+        // Collect function variable names for comparison
+        Set<String> existingNames = existingFunctionVariables.stream()
+                .map(Metric::getName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        Set<String> updatedNames = updatedFunctionVariables.stream()
+                .map(Metric::getName)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+
+        // The updated profile must contain all existing variable names
+        return updatedNames.containsAll(existingNames);
     }
 
     /**
