@@ -179,14 +179,12 @@ public class ExperimentDBService {
     }
 
     public void loadAllPerformanceProfiles(Map<String, PerformanceProfile> performanceProfileMap) throws Exception {
-        if (performanceProfileMap.isEmpty()) {
-            List<KruizePerformanceProfileEntry> entries = experimentDAO.loadAllPerformanceProfiles();
-            if (null != entries && !entries.isEmpty()) {
-                List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertPerformanceProfileEntryToPerformanceProfileObject(entries);
-                if (!performanceProfiles.isEmpty()) {
-                    performanceProfiles.forEach(performanceProfile ->
-                            PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile));
-                }
+        List<KruizePerformanceProfileEntry> entries = experimentDAO.loadAllPerformanceProfiles();
+        if (null != entries && !entries.isEmpty()) {
+            List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertPerformanceProfileEntryToPerformanceProfileObject(entries);
+            if (!performanceProfiles.isEmpty()) {
+                performanceProfiles.forEach(performanceProfile ->
+                        PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile));
             }
         }
     }
@@ -390,6 +388,23 @@ public class ExperimentDBService {
             validationOutputData = this.experimentDAO.addPerformanceProfileToDB(kruizePerformanceProfileEntry);
         } catch (Exception e) {
             LOGGER.error("Not able to save Performance Profile due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Updates Performance Profile in KruizePerformanceProfileEntry
+     *
+     * @param performanceProfile PerformanceProfile object to be updated
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData updatePerformanceProfileInDB(PerformanceProfile performanceProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
+            validationOutputData = this.experimentDAO.updatePerformanceProfileInDB(kruizePerformanceProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error("Not able to update Performance Profile due to {}", e.getMessage());
         }
         return validationOutputData;
     }
@@ -825,5 +840,9 @@ public class ExperimentDBService {
 
     public boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception {
         return experimentDAO.updateExperimentDates(experimentNames, currentTimestamp);
+    }
+
+    public Long getExperimentsCountFromDBByProfileName(String perfProfileName) throws Exception {
+        return experimentDAO.getExperimentsCountFromDBByProfileName(perfProfileName);
     }
 }

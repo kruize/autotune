@@ -229,6 +229,60 @@ def create_performance_profile(perf_profile_json_file):
     return response
 
 
+# Description: This function updates a performance profile using the Kruize updatePerformanceProfile API
+# Input Parameters: performance profile json
+def update_performance_profile(perf_profile_json_file):
+    json_file = open(perf_profile_json_file, "r")
+    perf_profile_json = json.loads(json_file.read())
+
+    print("\nUpdating performance profile...")
+    url = URL + "/updatePerformanceProfile"
+    print("URL = ", url)
+
+    response = requests.put(url, json=perf_profile_json)
+    print("Response status code = ", response.status_code)
+    print(response.text)
+    return response
+
+# Description: This function deletes the performance profile
+# Input Parameters: performance profile input json
+def delete_performance_profile(input_json_file, invalid_header=False):
+    json_file = open(input_json_file, "r")
+    input_json = json.loads(json_file.read())
+
+    print("\nDeleting the performance profile...")
+    url = URL + "/deletePerformanceProfile"
+
+    performance_profile_name = input_json['name']
+    query_string = f"name={performance_profile_name}"
+
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
+
+    headers = {'content-type': 'application/xml'}
+    if invalid_header:
+        print("Invalid header")
+        response = requests.delete(url, headers=headers)
+    else:
+        response = requests.delete(url)
+
+    print(response)
+    print("Response status code = ", response.status_code)
+    return response
+
+
+# Description: This function lists performance profiles using the Kruize listPerformanceProfiles API
+def list_performance_profiles():
+    print("\nListing the Performance Profiles...")
+    url = URL + "/listPerformanceProfiles"
+    print("URL = ", url)
+    response = requests.get(url)
+
+    print("Response status code = ", response.status_code)
+    return response
+
+
 # Description: This function obtains the experiments from Kruize Autotune using listExperiments API
 # Input Parameters: None
 def list_experiments(results=None, recommendations=None, latest=None, experiment_name=None, rm=False):

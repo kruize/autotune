@@ -50,12 +50,14 @@ public class PerformanceProfileUtil {
     /**
      * validates the performance profile fields and the data and then adds it to the map
      * @param performanceProfile
+     * @param operationType Type of API call (Create, Update, etc)
      * @return
      */
-    public static ValidationOutputData validateAndAddProfile(Map<String, PerformanceProfile> performanceProfilesMap, PerformanceProfile performanceProfile) {
+    public static ValidationOutputData validateAndAddProfile(Map<String, PerformanceProfile> performanceProfilesMap, PerformanceProfile performanceProfile,
+                                                             AnalyzerConstants.OperationType operationType) {
         ValidationOutputData validationOutputData;
         try {
-            validationOutputData = new PerformanceProfileValidation(performanceProfilesMap).validate(performanceProfile);
+            validationOutputData = new PerformanceProfileValidation(performanceProfilesMap).validate(performanceProfile, operationType);
             if (validationOutputData.isSuccess()) {
                 addPerformanceProfile(performanceProfilesMap, performanceProfile);
             } else {

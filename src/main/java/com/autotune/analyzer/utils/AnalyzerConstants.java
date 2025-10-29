@@ -112,6 +112,8 @@ public class AnalyzerConstants {
     public static final String WORKLOAD_FILTER_IDENTIFIER = ", %s=\"%s\"";
     public static final String METADATA_PROFILE_QUERY_MATCHER = "sum by \\((.*?)\\)";
     public static final String COMMA_SPACE_REGEX = "\\s*,\\s*";
+    public static final String RM = "rm";
+    public static final String LM = "lm";
 
     private AnalyzerConstants() {
     }
@@ -335,6 +337,10 @@ public class AnalyzerConstants {
         public Set<String> getExpectedIdentifiers() {
             return expectedIdentifiers;
         }
+    }
+
+    public enum OperationType {
+        CREATE, UPDATE
     }
 
     /**
@@ -571,6 +577,7 @@ public class AnalyzerConstants {
         public static final String VERBOSE = "verbose";
         public static final String FALSE = "false";
         public static final String RM = "rm";
+        public static final String PERF_PROFILE_NAME = "name";
 
         private ServiceConstants() {
         }
@@ -716,6 +723,7 @@ public class AnalyzerConstants {
         public static final String SOURCE = "source";
         public static final String PERFORMANCE_PROFILE_PKG = "com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.";
         public static final String DEFAULT_PROFILE = "default";
+        public static final Double ZERO_VALUE = 0.0;
 
         //Metric profile constants
         public static final String DEFAULT_API_VERSION = "recommender.com/v1";

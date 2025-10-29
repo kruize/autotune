@@ -35,10 +35,12 @@ SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
 ERROR_STATUS_CODE = 400
 ERROR_409_STATUS_CODE = 409
+ERROR_404_STATUS_CODE = 404
 DUPLICATE_RECORDS_COUNT = 5
 ERROR_500_STATUS_CODE = 500
 SUCCESS_STATUS_CODE_START = 200
 SUCCESS_STATUS_CODE_END = 300
+
 
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
@@ -88,7 +90,8 @@ METRIC_PROFILE_NOT_FOUND_MSG = "No metric profiles found!"
 INVALID_LIST_METRIC_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are invalid"
 LIST_METRIC_PROFILES_INVALID_NAME = "Given metric profile name - %s either does not exist or is not valid"
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
-CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
+CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s]"
+AGGR_FUNC_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [query, aggregation_functions]"
 CREATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s created successfully. View Metadata Profiles at /listMetadataProfiles"
 METADATA_PROFILE_EXISTS_MSG = "Validation failed: Metadata Profile already exists: %s"
 METADATA_PROFILE_NOT_FOUND_MSG = "No metadata profiles found!"
@@ -108,6 +111,12 @@ IMPORT_METADATA_INVALID_METADATA_PROFILE_NAME = "MetadataProfile - %s either doe
 COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain any MIG-based recommendations"
 COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
 COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
+CREATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : %s created successfully."
+UPDATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile '%s' updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles"
+UPDATE_PERF_PROFILE_MISSING_PROFILE_ERROR_MSG = "Validation failed: Performance Profile '%s' not found. Use POST to create a new profile."
+UPDATE_PERF_PROFILE_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the version %.1f"
+UPDATE_PERF_PROFILE_SLO_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the provided SLO data"
+UPDATE_PERF_PROFILE_SUPERSET_ERROR = "Validation failed: Updated profile must be a superset of existing data"
 
 
 # Kruize Recommendations Notification codes

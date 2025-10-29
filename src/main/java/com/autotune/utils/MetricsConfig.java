@@ -29,7 +29,7 @@ public class MetricsConfig {
     public static Timer.Builder timerBLoadRecExpName, timerBLoadResultsExpName, timerBLoadExpName, timerBLoadRecExpNameDate, timerBBoxPlots;
     public static Timer.Builder timerBLoadAllRec, timerBLoadAllExp, timerBLoadAllResults;
     public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB, timerBLoadBulkJobId, timerBUpdateBulkJobId, timerBSaveBulkJobDB, timerBaddBulkJob;
-    public static Timer.Builder timerBAddPerfProfileDB, timerBLoadPerfProfileName, timerBLoadAllPerfProfiles;
+    public static Timer.Builder timerBAddPerfProfileDB, timerBLoadPerfProfileName, timerBLoadAllPerfProfiles, timerBUpdatePerfProfileDB;
     public static Counter.Builder timerBKruizeNotifications, timerBBulkJobs;
     public static PrometheusMeterRegistry meterRegistry;
     public static Timer timerListDS, timerImportDSMetadata, timerListDSMetadata;
@@ -39,6 +39,8 @@ public class MetricsConfig {
     public static Timer.Builder timerBAddMetadataProfileDB, timerBLoadMetadataProfileName, timerBLoadAllMetadataProfiles, timerBUpdateMetadataProfileDB;
     public static Timer timerUpdateMetadataProfile;
     public static Timer.Builder timerBUpdateMetadataProfile;
+    public static Timer timerUpdatePerfProfile;
+    public static Timer.Builder timerBUpdatePerfProfile;
 
     private static MetricsConfig INSTANCE;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
@@ -100,6 +102,8 @@ public class MetricsConfig {
         timerBUpdateMetadataProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updateMetadataProfileToDB");
 
         timerBUpdateMetadataProfile = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateMetadataProfile").tag("method", "PUT");
+        timerBUpdatePerfProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updatePerformanceProfileInDB");
+        timerBUpdatePerfProfile = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updatePerformanceProfile").tag("method", "PUT");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);
