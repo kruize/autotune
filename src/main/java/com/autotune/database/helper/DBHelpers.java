@@ -940,6 +940,20 @@ public class DBHelpers {
                         JsonNode extended_data = entry.getExtended_data();
                         String extended_data_rawJson = extended_data.toString();
                         CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
+
+                        if (apiObj.getRecommendationSettings() != null &&
+                                apiObj.getRecommendationSettings().getTermSettings() != null) {
+
+                            // Get the potentially incomplete terms from the deserialized object
+                            Map<String, TermDefinition> termsFromDB = apiObj.getRecommendationSettings().getTermSettings().getTerms();
+
+                            // Call the helper to populate all defaults
+                            Map<String, TermDefinition> fullyPopulatedTerms = populateTermSettingsDefaults(termsFromDB);
+
+                            // Set the fully populated map back onto the object
+                            apiObj.getRecommendationSettings().getTermSettings().setTerms(fullyPopulatedTerms);
+                        }
+
                         apiObj.setExperiment_id(entry.getExperiment_id());
                         apiObj.setStatus(entry.getStatus());
                         apiObj.setExperimentType(ExperimentTypeUtil.getExperimentTypeFromBitMask(entry.getExperiment_type()));
