@@ -345,7 +345,7 @@ public class ExperimentValidation {
                         }
                         // 2. Check for valid characters in the name
                         if (!termName.matches("^[a-zA-Z0-9_-]+$")) {
-                            errorMsg = "Term name '" + termName + "' is invalid. Only letters, numbers, underscores (_), and hyphens (-) are allowed.";
+                            errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME_FORMAT, entry.getKey());
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
                             validationOutputData.setMessage(errorMsg);
@@ -356,7 +356,7 @@ public class ExperimentValidation {
                             // A null definition is only allowed if the term is a known default (Standard or ROS)
                             if (!AnalyzerConstants.TermValidationConstants.KRUIZE_DEFAULT_TERMS.contains(termName) &&
                                     !AnalyzerConstants.TermValidationConstants.ROS_FIXED_TERMS.contains(termName)) {
-                                errorMsg = "Term definition for custom term '" + entry.getKey() + "' cannot be null.";
+                                errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NULL_CUSTOM_TERM_DEFINITION , entry.getKey());
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                                 validationOutputData.setSuccess(false);
                                 validationOutputData.setMessage(errorMsg);
@@ -371,7 +371,7 @@ public class ExperimentValidation {
                             // No fields can be specified by the user.
                             if (termObj.getDurationInDays() != null || termObj.getDurationThreshold() != null ||
                                     termObj.getPlotsDatapoint() != null || termObj.getPlotsDatapointDeltaInDays() != null) {
-                                errorMsg = entry.getKey() + "' is immutable. Configuration fields cannot be specified.";
+                                errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.IMMUTABLE_TERM_MODIFICATION, entry.getKey());
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                                 validationOutputData.setSuccess(false);
                                 validationOutputData.setMessage(errorMsg);
@@ -384,10 +384,8 @@ public class ExperimentValidation {
 
                             // RULE 1: 'duration_in_days' remains COMPLETELY IMMUTABLE.
                             if (termObj.getDurationInDays() != null && !termObj.getDurationInDays().equals(defaultTermDef.getDurationInDays())) {
-                                errorMsg = String.format(
-                                        "Invalid 'duration_in_days' value (%s) for the standard term '%s'. This field cannot be modified.",
-                                        termObj.getDurationInDays(), termName
-                                );
+                                errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.IMMUTABLE_DURATION_IN_DAYS,
+                                        termObj.getDurationInDays(), termName);
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                                 validationOutputData.setSuccess(false);
                                 validationOutputData.setMessage(errorMsg);
@@ -403,7 +401,7 @@ public class ExperimentValidation {
                                     }
                                 } catch (IllegalArgumentException e) {
                                     errorMsg = String.format(
-                                            "Invalid 'duration_threshold' for term '%s'. It must be a valid duration (e.g., '2 days') and be less than the term duration of %s days.",
+                                            AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_DURATION_THRESHOLD,
                                             termName, defaultTermDef.getDurationInDays()
                                     );
                                     validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
@@ -418,7 +416,7 @@ public class ExperimentValidation {
                                 int plotsDatapoint = termObj.getPlotsDatapoint();
                                 if (plotsDatapoint < 2 || plotsDatapoint > 1000) { // Suggested range: [2, 1000]
                                     errorMsg = String.format(
-                                            "Invalid 'plots_datapoint' for term '%s'. Value must be between 2 and 1000.",
+                                            AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_PLOTS_DATAPOINT_RANGE,
                                             termName
                                     );
                                     validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
@@ -432,7 +430,7 @@ public class ExperimentValidation {
                             if (termObj.getPlotsDatapointDeltaInDays() != null) {
                                 if (termObj.getPlotsDatapointDeltaInDays() <= 0.0) {
                                     errorMsg = String.format(
-                                            "Invalid 'plots_datapoint_delta_in_days' for term '%s'. Value must be greater than 0.",
+                                            AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_PLOTS_DATAPOINT_DELTA,
                                             termName
                                     );
                                     validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
@@ -445,7 +443,7 @@ public class ExperimentValidation {
                             // CATEGORY: Custom Term
                             // 'duration_in_days' is mandatory and all numerical values must be positive.
                             if (termObj.getDurationInDays() == null) {
-                                errorMsg = "The field 'duration_in_days' is mandatory for the custom term '" + entry.getKey() + "'.";
+                                errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MANDATORY_DURATION_IN_DAYS, entry.getKey());
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                                 validationOutputData.setSuccess(false);
                                 validationOutputData.setMessage(errorMsg);
@@ -453,14 +451,14 @@ public class ExperimentValidation {
                             }
 
                             if (termObj.getDurationInDays() <= 0.0) {
-                                errorMsg = "duration_in_days for term '" + termName + "' must be a positive number.";
+                                errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NON_POSITIVE_DURATION_IN_DAYS, termName);
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                                 validationOutputData.setSuccess(false);
                                 validationOutputData.setMessage(errorMsg);
                                 return validationOutputData;
                             }
                             if (termObj.getPlotsDatapoint() != null && termObj.getPlotsDatapoint() <= 0) {
-                                errorMsg = "plots_datapoint for term '" + termName + "' must be a positive number.";
+                                errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NON_POSITIVE_PLOTS_DATAPOINT, termName);
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                                 validationOutputData.setSuccess(false);
                                 validationOutputData.setMessage(errorMsg);

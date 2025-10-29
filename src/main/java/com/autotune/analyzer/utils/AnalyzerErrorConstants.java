@@ -202,10 +202,25 @@ public class AnalyzerErrorConstants {
             public static final String MULTIPLE_TERMS_UNSUPPORTED = "Multiple terms are currently not supported for auto or recreate mode.";
             public static final String INVALID_MODEL_NAME = "Model name is not supported. Use cost or performance.";
             public static final String MULTIPLE_MODELS_UNSUPPORTED = "Multiple models are currently not supported for auto or recreate mode.";
-            public static final String EMPTY_NOT_ALLOWED = "Empty term or model value.";
+            public static final String EMPTY_NOT_ALLOWED = "Empty term or model value is not allowed.";
             public static final String MISSING_NAMESPACE_DATA = "Missing NamespaceData for experimentType: %s";
             public static final String MISSING_NAMESPACE = "Missing namespace for experimentType: %s";
             public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
+            // General Term Errors
+            public static final String INVALID_TERM_NAME_FORMAT = "Term name '%s' is invalid. Only letters, numbers, underscores (_), and hyphens (-) are allowed.";
+
+            // Custom Term Errors
+            public static final String NULL_CUSTOM_TERM_DEFINITION = "Term definition for custom term '%s' cannot be null.";
+            public static final String MANDATORY_DURATION_IN_DAYS = "The field 'duration_in_days' is mandatory for the custom term '%s'.";
+            public static final String NON_POSITIVE_DURATION_IN_DAYS = "'duration_in_days' for term '%s' must be a positive number.";
+            public static final String NON_POSITIVE_PLOTS_DATAPOINT = "'plots_datapoint' for term '%s' must be a positive number.";
+
+            // Default & ROS Term Errors
+            public static final String IMMUTABLE_TERM_MODIFICATION = "The term '%s' is immutable. Configuration fields cannot be specified.";
+            public static final String IMMUTABLE_DURATION_IN_DAYS = "Invalid 'duration_in_days' value (%s) for the standard term '%s'. This field cannot be modified.";
+            public static final String INVALID_DURATION_THRESHOLD = "Invalid 'duration_threshold' for term '%s'. It must be a valid duration (e.g., '2 days') and be less than the term duration of %s days.";
+            public static final String INVALID_PLOTS_DATAPOINT_RANGE = "Invalid 'plots_datapoint' for term '%s'. Value must be between 2 and 1000.";
+            public static final String INVALID_PLOTS_DATAPOINT_DELTA = "Invalid 'plots_datapoint_delta_in_days' for term '%s'. Value must be greater than 0.";
 
             private CreateExperimentAPI() {
 
