@@ -901,4 +901,22 @@ public class AnalyzerConstants {
             }
         }
     }
+
+    public static final class TermValidationConstants {
+        private TermValidationConstants() { }
+
+        /**
+         * Category: Kruize Default Terms (User-Facing Standards)
+         */
+        public static final Set<String> KRUIZE_DEFAULT_TERMS = Collections.unmodifiableSet(
+                Set.of("daily", "weekly", "15 days", "monthly", "quarterly", "half_yearly", "yearly")
+        );
+
+        /**
+         * Category: ROS Custom Terms (Kruize Internal)
+         */
+        public static final Set<String> ROS_FIXED_TERMS = Collections.unmodifiableSet(
+                Set.of("short_term", "medium_term", "long_term")
+        );
+    }
 }
