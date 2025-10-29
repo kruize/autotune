@@ -16,6 +16,7 @@
 package com.autotune.analyzer.experiment;
 
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.kruizeObject.TermDefaults;
 import com.autotune.analyzer.kruizeObject.TermDefinition;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
@@ -31,6 +32,7 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.KruizeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -280,7 +282,7 @@ public class ExperimentValidation {
                     }
                 }
         );
-        if (missingMandatoryFields.size() == 0) {
+        if (missingMandatoryFields.isEmpty()) {
             try {
                 if (expObj.getExperiment_usecase_type().isRemote_monitoring() || expObj.getExperiment_usecase_type().isLocal_monitoring()) {
                     mandatoryFieldsForLocalRemoteMonitoring.forEach(
@@ -327,13 +329,14 @@ public class ExperimentValidation {
                 // common check for terms and models
                 if (expObj.getRecommendation_settings().getTermSettings() != null &&
                         expObj.getRecommendation_settings().getTermSettings().getTerms() != null ) {
-                    Set<String> validTerms = Set.of(KruizeConstants.JSONKeys.SHORT, KruizeConstants.JSONKeys.MEDIUM, KruizeConstants.JSONKeys.LONG);
-                    Set<String> encounteredTerms = new HashSet<>();
+                    Map<String, TermDefinition> termMap = expObj.getRecommendation_settings().getTermSettings().getTerms();
 
-                    for(TermDefinition termObj: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
+                    for(Map.Entry<String, TermDefinition> entry : termMap.entrySet()) {
+                        String termName = entry.getKey().toLowerCase();
+                        TermDefinition termObj = entry.getValue();
+
                         // 1. Check for whitespace in terms
-                        String term = termObj.getName();
-                        if (term == null || term.trim().isEmpty()) {
+                        if (termName.trim().isEmpty()) {
                             errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.EMPTY_NOT_ALLOWED;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
@@ -341,47 +344,130 @@ public class ExperimentValidation {
                             return validationOutputData;
                         }
                         // 2. Check for valid characters in the name
-                        if (!term.matches("^[a-zA-Z0-9_-]+$")) {
-                            errorMsg = "Term name '" + term+ "' is invalid. Only letters, numbers, underscores (_), and hyphens (-) are allowed.";
+                        if (!termName.matches("^[a-zA-Z0-9_-]+$")) {
+                            errorMsg = "Term name '" + termName + "' is invalid. Only letters, numbers, underscores (_), and hyphens (-) are allowed.";
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
                             validationOutputData.setMessage(errorMsg);
                             return validationOutputData;
+                        }
+                        // 3. Null term definition check
+                        if (termObj == null) {
+                            // A null definition is only allowed if the term is a known default (Standard or ROS)
+                            if (!AnalyzerConstants.TermValidationConstants.KRUIZE_DEFAULT_TERMS.contains(termName) &&
+                                    !AnalyzerConstants.TermValidationConstants.ROS_FIXED_TERMS.contains(termName)) {
+                                errorMsg = "Term definition for custom term '" + entry.getKey() + "' cannot be null.";
+                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                validationOutputData.setSuccess(false);
+                                validationOutputData.setMessage(errorMsg);
+                                return validationOutputData;
+                            }
+                            continue; // Skip further validation for this term, as it will use full defaults.
                         }
 
-                        // 3. Check for duplicate term names
-                        if (!encounteredTerms.add(term)) {
-                            errorMsg = "Duplicate term name '" + term + "' is not allowed.";
-                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                            validationOutputData.setSuccess(false);
-                            validationOutputData.setMessage(errorMsg);
-                            return validationOutputData;
+                        // 4. Apply Rules Based on Term Category
+                        if (AnalyzerConstants.TermValidationConstants.ROS_FIXED_TERMS.contains(termName)) {
+                            // CATEGORY: ROS Specific Term (short, medium, long) - ENTIRELY IMMUTABLE
+                            // No fields can be specified by the user.
+                            if (termObj.getDurationInDays() != null || termObj.getDurationThreshold() != null ||
+                                    termObj.getPlotsDatapoint() != null || termObj.getPlotsDatapointDeltaInDays() != null) {
+                                errorMsg = entry.getKey() + "' is immutable. Configuration fields cannot be specified.";
+                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                validationOutputData.setSuccess(false);
+                                validationOutputData.setMessage(errorMsg);
+                                return validationOutputData;
+                            }
+
+                        } else if (AnalyzerConstants.TermValidationConstants.KRUIZE_DEFAULT_TERMS.contains(termName)) {
+                            // CATEGORY: Kruize Default Term (daily, weekly, etc.) - PARTIALLY MODIFIABLE
+                            TermDefinition defaultTermDef = TermDefaults.DEFAULTS.get(termName);
+
+                            // RULE 1: 'duration_in_days' remains COMPLETELY IMMUTABLE.
+                            if (termObj.getDurationInDays() != null && !termObj.getDurationInDays().equals(defaultTermDef.getDurationInDays())) {
+                                errorMsg = String.format(
+                                        "Invalid 'duration_in_days' value (%s) for the standard term '%s'. This field cannot be modified.",
+                                        termObj.getDurationInDays(), termName
+                                );
+                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                validationOutputData.setSuccess(false);
+                                validationOutputData.setMessage(errorMsg);
+                                return validationOutputData;
+                            }
+
+                            // RULE 2: Validate 'duration_threshold' within permissible limits.
+                            if (termObj.getDurationThreshold() != null) {
+                                try {
+                                    double thresholdInDays = KruizeUtils.parseDurationToDays(termObj.getDurationThreshold());
+                                    if (thresholdInDays <= 0 || thresholdInDays >= defaultTermDef.getDurationInDays()) {
+                                        throw new IllegalArgumentException("Value out of bounds.");
+                                    }
+                                } catch (IllegalArgumentException e) {
+                                    errorMsg = String.format(
+                                            "Invalid 'duration_threshold' for term '%s'. It must be a valid duration (e.g., '2 days') and be less than the term duration of %s days.",
+                                            termName, defaultTermDef.getDurationInDays()
+                                    );
+                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                    validationOutputData.setSuccess(false);
+                                    validationOutputData.setMessage(errorMsg);
+                                    return validationOutputData;
+                                }
+                            }
+
+                            // RULE 3: Validate 'plots_datapoint' within permissible limits.
+                            if (termObj.getPlotsDatapoint() != null) {
+                                int plotsDatapoint = termObj.getPlotsDatapoint();
+                                if (plotsDatapoint < 2 || plotsDatapoint > 1000) { // Suggested range: [2, 1000]
+                                    errorMsg = String.format(
+                                            "Invalid 'plots_datapoint' for term '%s'. Value must be between 2 and 1000.",
+                                            termName
+                                    );
+                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                    validationOutputData.setSuccess(false);
+                                    validationOutputData.setMessage(errorMsg);
+                                    return validationOutputData;
+                                }
+                            }
+
+                            // RULE 4: Validate 'plots_datapoint_delta_in_days'.
+                            if (termObj.getPlotsDatapointDeltaInDays() != null) {
+                                if (termObj.getPlotsDatapointDeltaInDays() <= 0.0) {
+                                    errorMsg = String.format(
+                                            "Invalid 'plots_datapoint_delta_in_days' for term '%s'. Value must be greater than 0.",
+                                            termName
+                                    );
+                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                    validationOutputData.setSuccess(false);
+                                    validationOutputData.setMessage(errorMsg);
+                                    return validationOutputData;
+                                }
+                            }
+                        } else {
+                            // CATEGORY: Custom Term
+                            // 'duration_in_days' is mandatory and all numerical values must be positive.
+                            if (termObj.getDurationInDays() == null) {
+                                errorMsg = "The field 'duration_in_days' is mandatory for the custom term '" + entry.getKey() + "'.";
+                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                validationOutputData.setSuccess(false);
+                                validationOutputData.setMessage(errorMsg);
+                                return validationOutputData;
+                            }
+
+                            if (termObj.getDurationInDays() <= 0.0) {
+                                errorMsg = "duration_in_days for term '" + termName + "' must be a positive number.";
+                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                validationOutputData.setSuccess(false);
+                                validationOutputData.setMessage(errorMsg);
+                                return validationOutputData;
+                            }
+                            if (termObj.getPlotsDatapoint() != null && termObj.getPlotsDatapoint() <= 0) {
+                                errorMsg = "plots_datapoint for term '" + termName + "' must be a positive number.";
+                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                validationOutputData.setSuccess(false);
+                                validationOutputData.setMessage(errorMsg);
+                                return validationOutputData;
+                            }
                         }
 
-                        // 4. Validate numerical values are positive
-                        if (termObj.getDurationInDays() != null && termObj.getDurationInDays() <= 0) {
-                            errorMsg = "duration_in_days for term '" + term + "' must be a positive number.";
-                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                            validationOutputData.setSuccess(false);
-                            validationOutputData.setMessage(errorMsg);
-                            return validationOutputData;
-                        }
-                        if (termObj.getPlotsDatapoint() != null && termObj.getPlotsDatapoint() <= 0) {
-                            errorMsg = "plots_datapoint for term '" + term + "' must be a positive number.";
-                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                            validationOutputData.setSuccess(false);
-                            validationOutputData.setMessage(errorMsg);
-                            return validationOutputData;
-                        }
-
-                        // Check for correct term in terms -- no longer need this validation as custom terms can have custom names
-//                        if (!validTerms.contains(term)) {
-//                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME;
-//                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-//                            validationOutputData.setSuccess(false);
-//                            validationOutputData.setMessage(errorMsg);
-//                            return validationOutputData;
-//                        }
                     }
                 }
 
