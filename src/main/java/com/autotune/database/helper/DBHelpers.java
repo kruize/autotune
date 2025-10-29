@@ -22,6 +22,8 @@ import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
+import com.autotune.analyzer.kruizeObject.TermDefaults;
+import com.autotune.analyzer.kruizeObject.TermDefinition;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
@@ -771,6 +773,20 @@ public class DBHelpers {
                         JsonNode extended_data = entry.getExtended_data();
                         String extended_data_rawJson = extended_data.toString();
                         CreateExperimentAPIObject apiObj = new Gson().fromJson(extended_data_rawJson, CreateExperimentAPIObject.class);
+
+                        // Check if recommendation settings and terms exist
+                        if (apiObj.getRecommendationSettings() != null
+                                && apiObj.getRecommendationSettings().getTermSettings() != null) {
+
+                            // Get the user's saved terms (which might be incomplete)
+                            Map<String, TermDefinition> userInputTerms = apiObj.getRecommendationSettings().getTermSettings().getTerms();
+
+                            // Call a helper function to merge them with defaults
+                            Map<String, TermDefinition> fullyPopulatedTerms = populateTermSettingsDefaults(userInputTerms);
+
+                            // Set the complete map back onto the object before returning it
+                            apiObj.getRecommendationSettings().getTermSettings().setTerms(fullyPopulatedTerms);
+                        }
                         apiObj.setExperiment_id(entry.getExperiment_id());
                         apiObj.setStatus(entry.getStatus());
                         apiObj.setTargetCluster(entry.getTarget_cluster());
@@ -787,6 +803,132 @@ public class DBHelpers {
                     throw new Exception("None of the experiments are able to load from DB.");
 
                 return createExperimentAPIObjects;
+            }
+
+            private static Map<String, TermDefinition> populateTermSettingsDefaults(Map<String, TermDefinition> userInputTerms) {
+                Map<String, TermDefinition> finalTerms = new HashMap<>();
+
+                if (userInputTerms == null || userInputTerms.isEmpty()) {
+                    return finalTerms;
+                }
+
+                // Iterate over the user's terms
+                for (Map.Entry<String, TermDefinition> userEntry : userInputTerms.entrySet()) {
+
+                    String termName = userEntry.getKey();
+                    TermDefinition userDef = userEntry.getValue();
+                    TermDefinition baseDefault = TermDefaults.DEFAULTS.get(termName.toLowerCase());
+                    TermDefinition mergedDef;
+
+                    if (baseDefault != null) {
+                        // It's a KNOWN term (e.g., "weekly"). Start with a copy of its defaults.
+                        mergedDef = cloneTermDefinition(baseDefault);
+                    } else {
+                        // It's a CUSTOM term. Start with an empty object.
+                        mergedDef = new TermDefinition();
+                    }
+
+                    // Apply the user's specific overrides.
+                    if (userDef != null) {
+                        if (userDef.getDurationInDays() != null) mergedDef.setDurationInDays(userDef.getDurationInDays());
+                        if (userDef.getDurationThreshold() != null) mergedDef.setDurationThreshold(userDef.getDurationThreshold());
+                        if (userDef.getPlotsDatapoint() != null) mergedDef.setPlotsDatapoint(userDef.getPlotsDatapoint());
+                        if (userDef.getPlotsDatapointDeltaInDays() != null) mergedDef.setPlotsDatapointDeltaInDays(userDef.getPlotsDatapointDeltaInDays());
+                    }
+
+                    // If it was a custom term, apply defaults for any missing fields.
+                    if (baseDefault == null) {
+                        if (mergedDef.getDurationInDays() == null) {
+                            // Custom terms MUST have a duration. Validation should catch this
+                            continue;
+                        }
+                        double duration = mergedDef.getDurationInDays();
+
+                        if (mergedDef.getDurationThreshold() == null) {
+                            // User did not provide Duration Threshold calculate it using the formula
+                            String calculatedThreshold = calculatesThresholdForCustomTerms(duration);
+                            mergedDef.setDurationThreshold(calculatedThreshold);
+                        }
+                        // If plot points are missing, default them to match the duration.
+                        if (mergedDef.getPlotsDatapoint() == null) {
+                            mergedDef.setPlotsDatapoint((int) duration);
+                        }
+                        // If plot delta is missing, default it to 1 day.
+                        if (mergedDef.getPlotsDatapointDeltaInDays() == null) {
+                            mergedDef.setPlotsDatapointDeltaInDays(1.0);
+                        }
+                    }
+                    finalTerms.put(termName, mergedDef);
+                }
+                return finalTerms;
+            }
+
+            private static TermDefinition cloneTermDefinition(TermDefinition original) {
+                TermDefinition copy = new TermDefinition();
+                copy.setDurationInDays(original.getDurationInDays());
+                copy.setDurationThreshold(original.getDurationThreshold());
+                copy.setPlotsDatapoint(original.getPlotsDatapoint());
+                copy.setPlotsDatapointDeltaInDays(original.getPlotsDatapointDeltaInDays());
+                return copy;
+            }
+
+            /**
+             * Calculates value for Threshold in days parameter for a Custom Term if not specified.
+             * If the duration is 1 day Threshold is set to 30 mins
+             * If the duration is more than 15 days Threshold is set to 70% of duration in days
+             * If the duration is in between 1-15 days then max of 45 mins or 50% of duration in days is used.
+             *
+             * @param duration in days
+             * @return calculated threshold value
+             */
+            private static String calculatesThresholdForCustomTerms(double duration) {
+                String calculatedThreshold = null;
+
+                // RULE 1: Daily (duration = 1.0 day)
+                if (duration == 1.0) {
+                    calculatedThreshold = "30 min";
+
+                    // RULE 2: >= 15 days (70% rule)
+                } else if (duration >= 15.0) {
+                    int thresholdDays = (int) Math.round(duration * 0.70);
+                    calculatedThreshold = thresholdDays + (thresholdDays == 1 ? " day" : " days");
+
+                    // RULE 3: > 1 and < 15 days (e.g., 1.5, 7.0, 10.5, 14.9)
+                } else if (duration > 1.0) {
+                    // Logic: max(45 mins, 50% of duration)
+                    double fiftyPercentAsDays = duration * 0.5;
+                    double fortyFiveMinutesAsDays = 45.0 / (24.0 * 60.0); // ~0.03125 days
+
+                    double maxDays = Math.max(fortyFiveMinutesAsDays, fiftyPercentAsDays);
+                    // Convert back to a readable string.
+                    if (maxDays == fortyFiveMinutesAsDays) {
+                        calculatedThreshold = "45 min";
+                    } else {
+                        // It's 50% of the duration, format it nicely
+                        double totalHours = maxDays * 24.0;
+
+                        if (totalHours < 1.0) {
+                            // Less than 1 hour
+                            long totalMinutes = Math.round(totalHours * 60.0);
+                            calculatedThreshold = totalMinutes + (totalMinutes == 1 ? " min" : " mins");
+                        } else if (totalHours >= 24.0) {
+                            // 1 day or more
+                            if (maxDays % 1.0 == 0) { // Whole number of days
+                                calculatedThreshold = (long)maxDays + ((long)maxDays == 1 ? " day" : " days");
+                            } else { // Fractional days
+                                calculatedThreshold = String.format("%.1f days", maxDays);
+                            }
+                        } else {
+                            // Between 1 and 24 hours
+                            if (totalHours % 1.0 == 0) { // Whole number of hours (e.g., 3.0, 4.0)
+                                calculatedThreshold = (long)totalHours + ((long)totalHours == 1 ? " hour" : " hours");
+                            } else { // Fractional hours (e.g., 3.5)
+                                calculatedThreshold = String.format("%.1f hours", totalHours);
+                            }
+                        }
+                    }
+                }
+                return calculatedThreshold;
             }
 
             public static List<CreateExperimentAPIObject> convertExperimentEntryToCreateExperimentAPIObject(List<KruizeExperimentEntry> entries) throws Exception {
