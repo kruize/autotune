@@ -181,12 +181,10 @@ public final class KruizeObject implements ExperimentTypeAware {
 
         if (kruizeObject.getRecommendation_settings() != null && kruizeObject.getRecommendation_settings().getTermSettings() != null) {
 
-            List<TermDefinition> termDefinitionList = kruizeObject.getRecommendation_settings().getTermSettings().getTerms();
+            Map<String, TermDefinition> termMap = kruizeObject.getRecommendation_settings().getTermSettings().getTerms();
             List<String> termList = new ArrayList<>();
-            if (termDefinitionList != null) {
-                for (TermDefinition def : termDefinitionList) {
-                    termList.add(def.getName());
-                }
+            if (termMap!= null) {
+               termList.addAll(termMap.keySet());
             }
             for (String userInputTerm : termList) {
                 if (KruizeConstants.JSONKeys.SHORT.equalsIgnoreCase(userInputTerm)) {
@@ -204,20 +202,9 @@ public final class KruizeObject implements ExperimentTypeAware {
                             KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
                             getTermThresholdInDays(KruizeConstants.JSONKeys.LONG_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
                             15, 1));
-                } else if (KruizeConstants.JSONKeys.DAILY.equalsIgnoreCase(userInputTerm)) {
-
-                }  else if (KruizeConstants.JSONKeys.WEEKLY.equalsIgnoreCase(userInputTerm)) {
-
-                }  else if (KruizeConstants.JSONKeys.FORTNIGHTLY.equalsIgnoreCase(userInputTerm)) {
-
-                }  else if (KruizeConstants.JSONKeys.MONTHLY.equalsIgnoreCase(userInputTerm)) {
-
-                }  else if (KruizeConstants.JSONKeys.QUARTERLY.equalsIgnoreCase(userInputTerm)) {
-
                 } else {
                     // custom term
-
-//                    throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
+                    throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
                 }
             }
             kruizeObject.setTerms(terms);

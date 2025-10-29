@@ -16,17 +16,18 @@
 package com.autotune.analyzer.kruizeObject;
 
 import java.util.List;
+import java.util.Map;
 
 public class TermSettings {
-    private List<TermDefinition> terms;
+    private Map<String, TermDefinition> terms;
 
     public TermSettings() {}
 
-    public List<TermDefinition> getTerms() {
+    public Map<String, TermDefinition> getTerms() {
         return terms;
     }
 
-    public void setTerms(List<TermDefinition> terms) {
+    public void setTerms(Map<String, TermDefinition> terms) {
         this.terms = terms;
     }
 

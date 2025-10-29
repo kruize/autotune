@@ -18,10 +18,9 @@ package com.autotune.analyzer.kruizeObject;
 import com.google.gson.annotations.SerializedName;
 
 public class TermDefinition {
-    private String name;
 
     @SerializedName("duration_in_days")
-    private Integer durationInDays;
+    private Double durationInDays;
 
     @SerializedName("duration_threshold")
     private String durationThreshold;
@@ -34,19 +33,11 @@ public class TermDefinition {
 
     public TermDefinition() {}
 
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public Integer getDurationInDays() {
+    public Double getDurationInDays() {
         return durationInDays;
     }
 
-    public void setDurationInDays(Integer durationInDays) {
+    public void setDurationInDays(Double durationInDays) {
         this.durationInDays = durationInDays;
     }
 
@@ -77,7 +68,6 @@ public class TermDefinition {
     @Override
     public String toString() {
         return "TermDefinition{" +
-                "name='" + name +
                 ", durationInDays=" + durationInDays +
                 ", durationThreshold='" + durationThreshold +
                 ", plotsDatapoint=" + plotsDatapoint +

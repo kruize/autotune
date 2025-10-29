@@ -18,6 +18,7 @@ package com.autotune.utils;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.concurrent.TimeUnit;
 
 /**
  * This is a Utility class at the Autotune level for common constants, functions etc.
@@ -53,4 +54,47 @@ public final class KruizeUtils {
 		Matcher matcher = URL_PATTERN.matcher(url);
 		return matcher.matches();
 	}
+
+    /**
+     * Parses a duration string (e.g., "30 min", "2 hours") into a total number of days.
+     *
+     * @param durationString The string to parse, like "30 min".
+     * @return The equivalent duration in days as a double.
+     * @throws IllegalArgumentException if the string format or unit is invalid.
+     */
+    public static double parseDurationToDays(String durationString) {
+        if (durationString == null || durationString.isBlank()) {
+            throw new IllegalArgumentException("Duration string cannot be null or empty.");
+        }
+
+        // Split the string into number and unit parts
+        String[] parts = durationString.trim().split("\\s+");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid duration format. Expected: '<value> <unit>' (e.g., '30 min').");
+        }
+
+        double value;
+        try {
+            value = Double.parseDouble(parts[0]);
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid number in duration string: " + parts[0]);
+        }
+
+        String unit = parts[1].toLowerCase();
+        long minutes;
+
+        // Convert the value to a common base (minutes)
+        if (unit.startsWith("min")) {
+            minutes = (long) value;
+        } else if (unit.startsWith("hour")) {
+            minutes = TimeUnit.HOURS.toMinutes((long) value);
+        } else if (unit.startsWith("day")) {
+            minutes = TimeUnit.DAYS.toMinutes((long) value);
+        } else {
+            throw new IllegalArgumentException("Unsupported time unit: " + unit + ". Supported units are 'min', 'hour', 'day'.");
+        }
+
+        // Convert the total minutes into a fraction of a day
+        return (double) minutes / TimeUnit.DAYS.toMinutes(1); // 1 day = 1440 minutes
+    }
 }
