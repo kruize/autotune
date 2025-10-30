@@ -31,6 +31,9 @@ Currently we have the following pre-defined profiles
 | default                                | NA (User defined SLO)                       | [source](https://github.com/kruize/autotune/blob/master/src/main/java/com/autotune/analyzer/performanceProfiles/PerformanceProfileInterface/DefaultImpl.java)            | This is applicable to all to Autotune Usecases |
 
 
+You can now define custom terms directly in the recommendation_settings.term_settings section.
+See the [Terms Customization Guide](/design/TermsCustomization.md) for examples, default behaviors, and validation rules.
+
 # Response
 
 * Success
