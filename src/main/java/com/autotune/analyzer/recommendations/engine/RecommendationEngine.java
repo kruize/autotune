@@ -766,7 +766,7 @@ public class RecommendationEngine {
                     }
                 }
             }
-            Terms.setDurationBasedOnTerm(containerData, mappedRecommendationForTerm, recommendationTerm);
+            Terms.setDurationBasedOnTerm(containerData, mappedRecommendationForTerm, recommendationTerm, terms);
             timestampRecommendation.setRecommendationForTermHashMap(recommendationTerm, mappedRecommendationForTerm);
 
         }
@@ -1098,7 +1098,7 @@ public class RecommendationEngine {
                 mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
 
             }
-            Terms.setDurationBasedOnTermNamespace(namespaceData, mappedRecommendationForTerm, recommendationTerm);
+            Terms.setDurationBasedOnTermNamespace(namespaceData, mappedRecommendationForTerm, recommendationTerm, terms);
             timestampRecommendation.setRecommendationForTermHashMap(recommendationTerm, mappedRecommendationForTerm);
 
         }
@@ -1251,24 +1251,12 @@ public class RecommendationEngine {
             memoryThreshold = DEFAULT_MEMORY_THRESHOLD;
         }
         // Check for null
-        if (null == recommendationTerm) {
+        if (null == recommendationTerm || recommendationTerm.trim().isEmpty()) {
             LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.NULL_RECOMMENDATION_TERM);
             return false;
         }
         // Remove whitespaces
-        recommendationTerm = recommendationTerm.trim();
-
-        // Check if term is not empty and also must be one of short, medium or long term
-        if (recommendationTerm.isEmpty() ||
-                (
-                        !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.SHORT_TERM) &&
-                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.MEDIUM_TERM) &&
-                                !recommendationTerm.equalsIgnoreCase(KruizeConstants.JSONKeys.LONG_TERM)
-                )
-        ) {
-            LOGGER.error(String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.INVALID_RECOMMENDATION_TERM, recommendationTerm));
-            return false;
-        }
+//        recommendationTerm = recommendationTerm.trim();
 
         // Check if recommendation is null
         if (null == recommendationModel) {

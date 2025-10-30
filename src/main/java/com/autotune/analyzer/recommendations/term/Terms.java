@@ -174,12 +174,12 @@ public class Terms {
 
     public static void setDurationBasedOnTermNamespace(NamespaceData namespaceData,
                                                        TermRecommendations mappedRecommendationForTerm,
-                                                       String recommendationTerm) {
+                                                       String recommendationTerm, Terms term) {
 
         double durationSummation = getDurationSummationNamespace(namespaceData);
         durationSummation = Double.parseDouble(String.format("%.1f", durationSummation));
         // Get the maximum duration allowed for the term
-        double maxDurationInHours = getMaxDuration(recommendationTerm);
+        double maxDurationInHours = term.getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
         double maxDurationInMinutes = maxDurationInHours * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
         // Set durationSummation to the maximum duration if it exceeds the maximum duration
         if (durationSummation > maxDurationInMinutes) {
@@ -209,11 +209,11 @@ public class Terms {
     }
 
     public static void setDurationBasedOnTerm(ContainerData containerDataKruizeObject, TermRecommendations
-            mappedRecommendationForTerm, String recommendationTerm) {
+            mappedRecommendationForTerm, String recommendationTerm, Terms term) {
 
         double durationSummation = getDurationSummation(containerDataKruizeObject);
         // Get the maximum duration allowed for the term
-        double maxDurationInHours = getMaxDuration(recommendationTerm);
+        double maxDurationInHours = term.getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
         double maxDurationInMinutes = maxDurationInHours * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
         // Set durationSummation to the maximum duration if it exceeds the maximum duration
         if (durationSummation > maxDurationInMinutes) {

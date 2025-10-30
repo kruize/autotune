@@ -27,6 +27,7 @@ import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.k8sObjects.TrialSettings;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.autotune.utils.KruizeUtils;
 import com.autotune.utils.Utils;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
@@ -176,42 +177,40 @@ public final class KruizeObject implements ExperimentTypeAware {
     }
 
     public static void setCustomTerms(Map<String, Terms> terms, KruizeObject kruizeObject) throws InvalidTermException {
-        // TODO: define term names like daily, weekly, fortnightly etc
         // TODO: add CRD for terms
 
-        if (kruizeObject.getRecommendation_settings() != null && kruizeObject.getRecommendation_settings().getTermSettings() != null) {
-
-            Map<String, TermDefinition> termMap = kruizeObject.getRecommendation_settings().getTermSettings().getTerms();
-            List<String> termList = new ArrayList<>();
-            if (termMap!= null) {
-               termList.addAll(termMap.keySet());
-            }
-            for (String userInputTerm : termList) {
-                if (KruizeConstants.JSONKeys.SHORT.equalsIgnoreCase(userInputTerm)) {
-                    terms.put(KruizeConstants.JSONKeys.SHORT_TERM, new Terms(KruizeConstants.JSONKeys.SHORT_TERM,
-                            KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.SHORT_TERM_DURATION_DAYS,
-                            getTermThresholdInDays(KruizeConstants.JSONKeys.SHORT_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
-                            4, 0.25));
-                } else if (KruizeConstants.JSONKeys.MEDIUM.equalsIgnoreCase(userInputTerm)) {
-                    terms.put(KruizeConstants.JSONKeys.MEDIUM_TERM, new Terms(KruizeConstants.JSONKeys.MEDIUM_TERM,
-                            KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.MEDIUM_TERM_DURATION_DAYS,
-                            getTermThresholdInDays(KruizeConstants.JSONKeys.MEDIUM_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
-                            7, 1));
-                } else if (KruizeConstants.JSONKeys.LONG.equalsIgnoreCase(userInputTerm)) {
-                    terms.put(KruizeConstants.JSONKeys.LONG_TERM, new Terms(KruizeConstants.JSONKeys.LONG_TERM,
-                            KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.LONG_TERM_DURATION_DAYS,
-                            getTermThresholdInDays(KruizeConstants.JSONKeys.LONG_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
-                            15, 1));
-                } else {
-                    throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
-                }
-            }
-            kruizeObject.setTerms(terms);
-        } else {
-            // Handles the case where termSettings is null
-            throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.TERM_SETTINGS_UNDEFINED);
+        RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
+        if (recommendationSettings == null || recommendationSettings.getTermSettings() == null || recommendationSettings.getTermSettings().getTerms() == null) {
+            // If no terms are defined by user, use default terms
+            setDefaultTerms(terms, kruizeObject);
+            return;
         }
+
+        Map<String, TermDefinition> termMap = recommendationSettings.getTermSettings().getTerms();
+        for (Map.Entry<String, TermDefinition> entry : termMap.entrySet()) {
+            String termName = entry.getKey();
+            TermDefinition termDefinition = entry.getValue();
+
+            if (termDefinition == null || termDefinition.getDurationInDays() == null) {
+//                LOGGER.warn("Term definition or its duration is null for term: {}. Skipping.", termName);
+                continue;
+            }
+            try {
+                // Create 'Terms' object using data from 'TermDefination'.
+                int durationInDays = (int) Math.round(termDefinition.getDurationInDays());
+                double thresholdInDays = KruizeUtils.parseDurationToDays(termDefinition.getDurationThreshold());
+                int plotsDatapoint = (termDefinition.getPlotsDatapoint() != null) ? termDefinition.getPlotsDatapoint() : durationInDays; // Default to one plot per day
+                double plotsDatapointDelta = (termDefinition.getPlotsDatapointDeltaInDays() != null) ? termDefinition.getPlotsDatapointDeltaInDays() : 1.0;
+
+                terms.put(termName, new Terms(termName, durationInDays, thresholdInDays, plotsDatapoint, plotsDatapointDelta));
+
+            } catch (Exception e) {
+                throw new InvalidTermException("Failed to parse term definition for '" + termName + "': " + e.getMessage());
+            }
+        }
+        kruizeObject.setTerms(terms);
     }
+
 
     public String getBulkJobId() {
         return bulkJobId;
