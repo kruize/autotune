@@ -913,10 +913,12 @@ public class AnalyzerConstants {
         );
 
         /**
-         * Category: ROS Custom Terms (Kruize Internal)
+         * Category: Kruize Fixed Terms (Kruize Internal)
          */
-        public static final Set<String> ROS_FIXED_TERMS = Collections.unmodifiableSet(
+        public static final Set<String> KRUIZE_FIXED_TERMS = Collections.unmodifiableSet(
                 Set.of("short_term", "medium_term", "long_term")
         );
+
+        public static final String TERM_NAME_REGEX = "^[a-zA-Z0-9_-]+$";
     }
 }

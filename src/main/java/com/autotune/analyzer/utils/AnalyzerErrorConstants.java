@@ -215,7 +215,7 @@ public class AnalyzerErrorConstants {
             public static final String NON_POSITIVE_DURATION_IN_DAYS = "'duration_in_days' for term '%s' must be a positive number.";
             public static final String NON_POSITIVE_PLOTS_DATAPOINT = "'plots_datapoint' for term '%s' must be a positive number.";
 
-            // Default & ROS Term Errors
+            // Default Term Errors
             public static final String IMMUTABLE_TERM_MODIFICATION = "The term '%s' is immutable. Configuration fields cannot be specified.";
             public static final String IMMUTABLE_DURATION_IN_DAYS = "Invalid 'duration_in_days' value (%s) for the standard term '%s'. This field cannot be modified.";
             public static final String INVALID_DURATION_THRESHOLD = "Invalid 'duration_threshold' for term '%s'. It must be a valid duration (e.g., '2 days') and be less than the term duration of %s days.";

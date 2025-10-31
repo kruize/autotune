@@ -344,7 +344,7 @@ public class ExperimentValidation {
                             return validationOutputData;
                         }
                         // 2. Check for valid characters in the name
-                        if (!termName.matches("^[a-zA-Z0-9_-]+$")) {
+                        if (!termName.matches(AnalyzerConstants.TermValidationConstants.TERM_NAME_REGEX)) {
                             errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME_FORMAT, entry.getKey());
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
@@ -355,7 +355,7 @@ public class ExperimentValidation {
                         if (termObj == null) {
                             // A null definition is only allowed if the term is a known default (Standard or ROS)
                             if (!AnalyzerConstants.TermValidationConstants.KRUIZE_DEFAULT_TERMS.contains(termName) &&
-                                    !AnalyzerConstants.TermValidationConstants.ROS_FIXED_TERMS.contains(termName)) {
+                                    !AnalyzerConstants.TermValidationConstants.KRUIZE_FIXED_TERMS.contains(termName)) {
                                 errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NULL_CUSTOM_TERM_DEFINITION , entry.getKey());
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                                 validationOutputData.setSuccess(false);
@@ -366,8 +366,8 @@ public class ExperimentValidation {
                         }
 
                         // 4. Apply Rules Based on Term Category
-                        if (AnalyzerConstants.TermValidationConstants.ROS_FIXED_TERMS.contains(termName)) {
-                            // CATEGORY: ROS Specific Term (short, medium, long) - ENTIRELY IMMUTABLE
+                        if (AnalyzerConstants.TermValidationConstants.KRUIZE_FIXED_TERMS.contains(termName)) {
+                            // CATEGORY: Kruize Fixed Terms (short, medium, long) - ENTIRELY IMMUTABLE
                             // No fields can be specified by the user.
                             if (termObj.getDurationInDays() != null || termObj.getDurationThreshold() != null ||
                                     termObj.getPlotsDatapoint() != null || termObj.getPlotsDatapointDeltaInDays() != null) {

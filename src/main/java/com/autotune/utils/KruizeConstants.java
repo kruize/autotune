@@ -815,6 +815,47 @@ public class KruizeConstants {
                 public static final int LONG_TERM_MIN_DATAPOINTS = 768;
 
 
+                // Term Names (for consistency in keys and names)
+                public static final String TERM_DAILY = "daily";
+                public static final String TERM_WEEKLY = "weekly";
+                public static final String TERM_15_DAYS = "15 days";
+                public static final String TERM_MONTHLY = "monthly";
+                public static final String TERM_QUARTERLY = "quarterly";
+                public static final String TERM_HALF_YEARLY = "half_yearly";
+                public static final String TERM_YEARLY = "yearly";
+                public static final String TERM_SHORT = "short_term";
+                public static final String TERM_MEDIUM = "medium_term";
+                public static final String TERM_LONG = "long_term";
+
+                // Durations in Days
+                public static final double DURATION_DAILY = 1.0;
+                public static final double DURATION_WEEKLY = 7.0;
+                public static final double DURATION_15_DAYS = 15.0;
+                public static final double DURATION_MONTHLY = 30.0;
+                public static final double DURATION_QUARTERLY = 90.0;
+                public static final double DURATION_HALF_YEARLY = 180.0;
+                public static final double DURATION_YEARLY = 365.0;
+
+                // Duration Thresholds as Strings
+                public static final String THRESHOLD_DAILY = "30 min";
+                public static final String THRESHOLD_WEEKLY = "2 days";
+                public static final String THRESHOLD_15_DAYS = "7 days";
+                public static final String THRESHOLD_MONTHLY = "21 days";
+                public static final String THRESHOLD_QUARTERLY = "63 days";
+                public static final String THRESHOLD_HALF_YEARLY = "126 days";
+                public static final String THRESHOLD_YEARLY = "256 days";
+
+                // Plotting Parameters
+                public static final int PLOTS_DATAPOINT_DAILY = 4;
+                public static final double PLOTS_DELTA_DAILY = 0.25;
+                public static final int PLOTS_DATAPOINT_WEEKLY = 7;
+                public static final double PLOTS_DELTA_GENERIC = 1.0;
+                public static final int PLOTS_DATAPOINT_15_DAYS = 15;
+                public static final int PLOTS_DATAPOINT_MONTHLY = 30;
+                public static final int PLOTS_DATAPOINT_QUARTERLY = 90;
+                public static final int PLOTS_DATAPOINT_HALF_YEARLY = 180;
+                public static final int PLOTS_DATAPOINT_YEARLY = 365;
+
                 private DurationAmount() {
 
                 }

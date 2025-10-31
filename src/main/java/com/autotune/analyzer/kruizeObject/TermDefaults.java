@@ -16,6 +16,8 @@
 
 package com.autotune.analyzer.kruizeObject;
 
+import static com.autotune.utils.KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.DurationAmount.*;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,63 +39,63 @@ public final class TermDefaults {
 
         // Daily Term (~2% threshold)
         TermDefinition dailyTerm = new TermDefinition();
-        dailyTerm.setDurationInDays(1.0);
-        dailyTerm.setDurationThreshold("30 min");
-        dailyTerm.setPlotsDatapoint(4);
-        dailyTerm.setPlotsDatapointDeltaInDays(0.25);
-        defaultMap.put("daily", dailyTerm);
+        dailyTerm.setDurationInDays(DURATION_DAILY);
+        dailyTerm.setDurationThreshold(THRESHOLD_DAILY);
+        dailyTerm.setPlotsDatapoint(PLOTS_DATAPOINT_DAILY);
+        dailyTerm.setPlotsDatapointDeltaInDays(PLOTS_DELTA_DAILY);
+        defaultMap.put(TERM_DAILY, dailyTerm);
 
         // Weekly Term (~29% threshold)
         TermDefinition weeklyTerm = new TermDefinition();
-        weeklyTerm.setDurationInDays(7.0);
-        weeklyTerm.setDurationThreshold("2 days");
-        weeklyTerm.setPlotsDatapoint(7);
-        weeklyTerm.setPlotsDatapointDeltaInDays(1.0);
-        defaultMap.put("weekly", weeklyTerm);
+        weeklyTerm.setDurationInDays(DURATION_WEEKLY);
+        weeklyTerm.setDurationThreshold(THRESHOLD_WEEKLY);
+        weeklyTerm.setPlotsDatapoint(PLOTS_DATAPOINT_WEEKLY);
+        weeklyTerm.setPlotsDatapointDeltaInDays(PLOTS_DELTA_GENERIC);
+        defaultMap.put(TERM_WEEKLY, weeklyTerm);
 
         // 15 days Term (~50% threshold)
         TermDefinition fifteenDayTerm = new TermDefinition();
-        fifteenDayTerm.setDurationInDays(15.0);
-        fifteenDayTerm.setDurationThreshold("7 days");
-        fifteenDayTerm.setPlotsDatapoint(15);
-        fifteenDayTerm.setPlotsDatapointDeltaInDays(1.0);
-        defaultMap.put("15 days", fifteenDayTerm);
+        fifteenDayTerm.setDurationInDays(DURATION_15_DAYS);
+        fifteenDayTerm.setDurationThreshold(THRESHOLD_15_DAYS);
+        fifteenDayTerm.setPlotsDatapoint(PLOTS_DATAPOINT_15_DAYS);
+        fifteenDayTerm.setPlotsDatapointDeltaInDays(PLOTS_DELTA_GENERIC);
+        defaultMap.put(TERM_15_DAYS, fifteenDayTerm);
 
         // Monthly Term (~70% threshold, rationalized)
         TermDefinition monthlyTerm = new TermDefinition();
-        monthlyTerm.setDurationInDays(30.0);
-        monthlyTerm.setDurationThreshold("21 days"); // 30 days * 0.70 = 21 days
-        monthlyTerm.setPlotsDatapoint(30);
-        monthlyTerm.setPlotsDatapointDeltaInDays(1.0);
-        defaultMap.put("monthly", monthlyTerm);
+        monthlyTerm.setDurationInDays(DURATION_MONTHLY);
+        monthlyTerm.setDurationThreshold(THRESHOLD_MONTHLY); // 30 days * 0.70 = 21 days
+        monthlyTerm.setPlotsDatapoint(PLOTS_DATAPOINT_MONTHLY);
+        monthlyTerm.setPlotsDatapointDeltaInDays(PLOTS_DELTA_GENERIC);
+        defaultMap.put(TERM_MONTHLY, monthlyTerm);
 
         // Quarterly Term (~70% threshold, rationalized)
         TermDefinition quarterlyTerm = new TermDefinition();
-        quarterlyTerm.setDurationInDays(90.0);
-        quarterlyTerm.setDurationThreshold("63 days"); // 90 days * 0.70 = 63 days
-        quarterlyTerm.setPlotsDatapoint(90);
-        quarterlyTerm.setPlotsDatapointDeltaInDays(1.0);
-        defaultMap.put("quarterly", quarterlyTerm);
+        quarterlyTerm.setDurationInDays(DURATION_QUARTERLY);
+        quarterlyTerm.setDurationThreshold(THRESHOLD_QUARTERLY); // 90 days * 0.70 = 63 days
+        quarterlyTerm.setPlotsDatapoint(PLOTS_DATAPOINT_QUARTERLY);
+        quarterlyTerm.setPlotsDatapointDeltaInDays(PLOTS_DELTA_GENERIC);
+        defaultMap.put(TERM_QUARTERLY, quarterlyTerm);
 
         // Half-Yearly Term (~70% threshold, rationalized)
         TermDefinition halfYearlyTerm = new TermDefinition();
-        halfYearlyTerm.setDurationInDays(180.0);
-        halfYearlyTerm.setDurationThreshold("126 days"); // 180 days * 0.70 = 126 days
-        halfYearlyTerm.setPlotsDatapoint(180);
-        halfYearlyTerm.setPlotsDatapointDeltaInDays(1.0);
-        defaultMap.put("half_yearly", halfYearlyTerm);
+        halfYearlyTerm.setDurationInDays(DURATION_HALF_YEARLY);
+        halfYearlyTerm.setDurationThreshold(THRESHOLD_HALF_YEARLY); // 180 days * 0.70 = 126 days
+        halfYearlyTerm.setPlotsDatapoint(PLOTS_DATAPOINT_HALF_YEARLY);
+        halfYearlyTerm.setPlotsDatapointDeltaInDays(PLOTS_DELTA_GENERIC);
+        defaultMap.put(TERM_HALF_YEARLY, halfYearlyTerm);
 
         // Yearly Term (~70% threshold, rationalized)
         TermDefinition yearlyTerm = new TermDefinition();
-        yearlyTerm.setDurationInDays(365.0);
-        yearlyTerm.setDurationThreshold("256 days"); // 365 days * 0.70 = 255.5, rounded up
-        yearlyTerm.setPlotsDatapoint(365);
-        yearlyTerm.setPlotsDatapointDeltaInDays(1.0);
-        defaultMap.put("yearly", yearlyTerm);
+        yearlyTerm.setDurationInDays(DURATION_YEARLY);
+        yearlyTerm.setDurationThreshold(THRESHOLD_YEARLY); // 365 days * 0.70 = 255.5, rounded up
+        yearlyTerm.setPlotsDatapoint(PLOTS_DATAPOINT_YEARLY);
+        yearlyTerm.setPlotsDatapointDeltaInDays(PLOTS_DELTA_GENERIC);
+        defaultMap.put(TERM_YEARLY, yearlyTerm);
 
-        defaultMap.put("short_term", dailyTerm);
-        defaultMap.put("medium_term", weeklyTerm);
-        defaultMap.put("long_term", fifteenDayTerm);
+        defaultMap.put(TERM_SHORT, dailyTerm);
+        defaultMap.put(TERM_MEDIUM, weeklyTerm);
+        defaultMap.put(TERM_LONG, fifteenDayTerm);
 
         // Make the final map unmodifiable to prevent changes at runtime
         DEFAULTS = Collections.unmodifiableMap(defaultMap);
