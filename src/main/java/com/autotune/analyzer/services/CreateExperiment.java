@@ -92,17 +92,14 @@ public class CreateExperiment extends HttpServlet {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
             inputData = request.getReader().lines().collect(Collectors.joining());
-//            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
             List<CreateExperimentAPIObject> createExperimentAPIObjects;
             try {
-                // This is the line that can fail
                 createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
             } catch (JsonSyntaxException e) {
-                // Catch the specific error for bad JSON or data type mismatch
                 LOGGER.error("Error parsing createExperiment JSON: {}", e.getMessage());
                 String userFriendlyError = "Invalid JSON format or data type mismatch. Please ensure all numerical fields are valid numbers. Details: " + e.getMessage();
                 sendErrorResponse(inputData, response, e, HttpServletResponse.SC_BAD_REQUEST, userFriendlyError);
-                return; // Stop further execution
+                return;
             }
             // check for bulk entries and respond accordingly
             if (createExperimentAPIObjects.size() > 1) {

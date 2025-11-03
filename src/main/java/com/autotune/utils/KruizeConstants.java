@@ -284,13 +284,6 @@ public class KruizeConstants {
         public static final String SHORT = "short";
         public static final String MEDIUM = "medium";
         public static final String LONG = "long";
-        public static final String DAILY = "daily";
-        public static final String WEEKLY = "weekly";
-        public static final String FORTNIGHTLY = "fortnightly";
-        public static final String MONTHLY = "monthly";
-        public static final String QUARTERLY = "quarterly";
-        public static final String HALF_YEARLY = "half yearly";
-
         public static final String RECOMMENDATIONS = "recommendations";
         public static final String VARIATION = "variation";
         public static final String NOTIFICATIONS = "notifications";

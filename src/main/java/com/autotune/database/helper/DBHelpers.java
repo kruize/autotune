@@ -805,6 +805,13 @@ public class DBHelpers {
                 return createExperimentAPIObjects;
             }
 
+            /**
+             * Merges user-provided term settings with system defaults to create a final,
+             * fully-populated map of TermDefinition objects.
+             *
+             * @param userInputTerms The map of terms provided by the user (can be null or incomplete).
+             * @return A map where each term is fully populated and rationalized.
+             */
             private static Map<String, TermDefinition> populateTermSettingsDefaults(Map<String, TermDefinition> userInputTerms) {
                 Map<String, TermDefinition> finalTerms = new HashMap<>();
 
@@ -821,34 +828,36 @@ public class DBHelpers {
                     TermDefinition mergedDef;
 
                     if (baseDefault != null) {
-                        // It's a KNOWN term (e.g., "weekly"). Start with a copy of its defaults.
+                        // It's a KNOWN term (e.g., "weekly"). Always use the default settings and IGNORE any user-provided overrides
                         mergedDef = cloneTermDefinition(baseDefault);
                     } else {
-                        // It's a CUSTOM term. Start with an empty object.
+                        // It's a User Defined term. Start with an empty object.
                         mergedDef = new TermDefinition();
-                    }
 
-                    // Apply the user's specific overrides.
-                    if (userDef != null) {
-                        if (userDef.getDurationInDays() != null) mergedDef.setDurationInDays(userDef.getDurationInDays());
-                        if (userDef.getDurationThreshold() != null) mergedDef.setDurationThreshold(userDef.getDurationThreshold());
-                        if (userDef.getPlotsDatapoint() != null) mergedDef.setPlotsDatapoint(userDef.getPlotsDatapoint());
-                        if (userDef.getPlotsDatapointDeltaInDays() != null) mergedDef.setPlotsDatapointDeltaInDays(userDef.getPlotsDatapointDeltaInDays());
-                    }
+                        // Apply the user's specific overrides.
+                        if (userDef != null) {
+                            if (userDef.getDurationInDays() != null) mergedDef.setDurationInDays(userDef.getDurationInDays());
+                            if (userDef.getDurationThreshold() != null) mergedDef.setDurationThreshold(userDef.getDurationThreshold());
+                            if (userDef.getPlotsDatapoint() != null) mergedDef.setPlotsDatapoint(userDef.getPlotsDatapoint());
+                            if (userDef.getPlotsDatapointDeltaInDays() != null) mergedDef.setPlotsDatapointDeltaInDays(userDef.getPlotsDatapointDeltaInDays());
+                        }
 
-                    // If it was a custom term, apply defaults for any missing fields.
-                    if (baseDefault == null) {
+                        // If it was a user defined term, apply defaults for any missing fields.
                         if (mergedDef.getDurationInDays() == null) {
-                            // Custom terms MUST have a duration. Validation should catch this
+                            // User defined terms MUST have a duration. Validation should catch this.
+                            // We skip this term as it is invalid and cannot be processed.
                             continue;
                         }
-                        double duration = mergedDef.getDurationInDays();
 
+                        double duration = mergedDef.getDurationInDays();
+                        // If duration threshold is not mentioned by the user
                         if (mergedDef.getDurationThreshold() == null) {
-                            // User did not provide Duration Threshold calculate it using the formula
-                            String calculatedThreshold = calculatesThresholdForCustomTerms(duration);
+                            // Set threshold days to be 70% of duration.
+                            int thresholdDays = (int) Math.round(duration * 0.70);
+                            String calculatedThreshold = thresholdDays + (thresholdDays == 1 ? " day" : " days");
                             mergedDef.setDurationThreshold(calculatedThreshold);
                         }
+
                         // If plot points are missing, default them to match the duration.
                         if (mergedDef.getPlotsDatapoint() == null) {
                             mergedDef.setPlotsDatapoint((int) duration);
@@ -858,11 +867,19 @@ public class DBHelpers {
                             mergedDef.setPlotsDatapointDeltaInDays(1.0);
                         }
                     }
+                    // Add final populated term to the map
                     finalTerms.put(termName, mergedDef);
                 }
                 return finalTerms;
             }
 
+            /**
+             * Creates a deep copy of a TermDefinition object.
+             * This is crucial to prevent modifying the original default objects in the TermDefaults map.
+             *
+             * @param original The TermDefinition to clone.
+             * @return A new, independent copy of the TermDefinition.
+             */
             private static TermDefinition cloneTermDefinition(TermDefinition original) {
                 TermDefinition copy = new TermDefinition();
                 copy.setDurationInDays(original.getDurationInDays());
@@ -870,65 +887,6 @@ public class DBHelpers {
                 copy.setPlotsDatapoint(original.getPlotsDatapoint());
                 copy.setPlotsDatapointDeltaInDays(original.getPlotsDatapointDeltaInDays());
                 return copy;
-            }
-
-            /**
-             * Calculates value for Threshold in days parameter for a Custom Term if not specified.
-             * If the duration is 1 day Threshold is set to 30 mins
-             * If the duration is more than 15 days Threshold is set to 70% of duration in days
-             * If the duration is in between 1-15 days then max of 45 mins or 50% of duration in days is used.
-             *
-             * @param duration in days
-             * @return calculated threshold value
-             */
-            private static String calculatesThresholdForCustomTerms(double duration) {
-                String calculatedThreshold = null;
-
-                // RULE 1: Daily (duration = 1.0 day)
-                if (duration == 1.0) {
-                    calculatedThreshold = "30 min";
-
-                    // RULE 2: >= 15 days (70% rule)
-                } else if (duration >= 15.0) {
-                    int thresholdDays = (int) Math.round(duration * 0.70);
-                    calculatedThreshold = thresholdDays + (thresholdDays == 1 ? " day" : " days");
-
-                    // RULE 3: > 1 and < 15 days (e.g., 1.5, 7.0, 10.5, 14.9)
-                } else if (duration > 1.0) {
-                    // Logic: max(45 mins, 50% of duration)
-                    double fiftyPercentAsDays = duration * 0.5;
-                    double fortyFiveMinutesAsDays = 45.0 / (24.0 * 60.0); // ~0.03125 days
-
-                    double maxDays = Math.max(fortyFiveMinutesAsDays, fiftyPercentAsDays);
-                    // Convert back to a readable string.
-                    if (maxDays == fortyFiveMinutesAsDays) {
-                        calculatedThreshold = "45 min";
-                    } else {
-                        // It's 50% of the duration, format it nicely
-                        double totalHours = maxDays * 24.0;
-
-                        if (totalHours < 1.0) {
-                            // Less than 1 hour
-                            long totalMinutes = Math.round(totalHours * 60.0);
-                            calculatedThreshold = totalMinutes + (totalMinutes == 1 ? " min" : " mins");
-                        } else if (totalHours >= 24.0) {
-                            // 1 day or more
-                            if (maxDays % 1.0 == 0) { // Whole number of days
-                                calculatedThreshold = (long)maxDays + ((long)maxDays == 1 ? " day" : " days");
-                            } else { // Fractional days
-                                calculatedThreshold = String.format("%.1f days", maxDays);
-                            }
-                        } else {
-                            // Between 1 and 24 hours
-                            if (totalHours % 1.0 == 0) { // Whole number of hours (e.g., 3.0, 4.0)
-                                calculatedThreshold = (long)totalHours + ((long)totalHours == 1 ? " hour" : " hours");
-                            } else { // Fractional hours (e.g., 3.5)
-                                calculatedThreshold = String.format("%.1f hours", totalHours);
-                            }
-                        }
-                    }
-                }
-                return calculatedThreshold;
             }
 
             public static List<CreateExperimentAPIObject> convertExperimentEntryToCreateExperimentAPIObject(List<KruizeExperimentEntry> entries) throws Exception {

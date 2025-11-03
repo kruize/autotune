@@ -906,17 +906,10 @@ public class AnalyzerConstants {
         private TermValidationConstants() { }
 
         /**
-         * Category: Kruize Default Terms (User-Facing Standards)
+         * Category: Fixed Default Terms
          */
-        public static final Set<String> KRUIZE_DEFAULT_TERMS = Collections.unmodifiableSet(
-                Set.of("daily", "weekly", "15 days", "monthly", "quarterly", "half_yearly", "yearly")
-        );
-
-        /**
-         * Category: Kruize Fixed Terms (Kruize Internal)
-         */
-        public static final Set<String> KRUIZE_FIXED_TERMS = Collections.unmodifiableSet(
-                Set.of("short_term", "medium_term", "long_term")
+        public static final Set<String> FIXED_DEFAULT_TERMS = Collections.unmodifiableSet(
+                Set.of("daily", "weekly", "15 days", "monthly", "quarterly", "half_yearly", "yearly", "short_term", "medium_term", "long_term")
         );
 
         public static final String TERM_NAME_REGEX = "^[a-zA-Z0-9_-]+$";

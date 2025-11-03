@@ -353,9 +353,8 @@ public class ExperimentValidation {
                         }
                         // 3. Null term definition check
                         if (termObj == null) {
-                            // A null definition is only allowed if the term is a known default (Standard or ROS)
-                            if (!AnalyzerConstants.TermValidationConstants.KRUIZE_DEFAULT_TERMS.contains(termName) &&
-                                    !AnalyzerConstants.TermValidationConstants.KRUIZE_FIXED_TERMS.contains(termName)) {
+                            // A null definition is only allowed if the term is a known default
+                            if (!AnalyzerConstants.TermValidationConstants.FIXED_DEFAULT_TERMS.contains(termName)) {
                                 errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NULL_CUSTOM_TERM_DEFINITION , entry.getKey());
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                                 validationOutputData.setSuccess(false);
@@ -366,8 +365,8 @@ public class ExperimentValidation {
                         }
 
                         // 4. Apply Rules Based on Term Category
-                        if (AnalyzerConstants.TermValidationConstants.KRUIZE_FIXED_TERMS.contains(termName)) {
-                            // CATEGORY: Kruize Fixed Terms (short, medium, long) - ENTIRELY IMMUTABLE
+                        if (AnalyzerConstants.TermValidationConstants.FIXED_DEFAULT_TERMS.contains(termName)) {
+                            // CATEGORY: Fixed Default Terms - ENTIRELY IMMUTABLE
                             // No fields can be specified by the user.
                             if (termObj.getDurationInDays() != null || termObj.getDurationThreshold() != null ||
                                     termObj.getPlotsDatapoint() != null || termObj.getPlotsDatapointDeltaInDays() != null) {
@@ -378,69 +377,8 @@ public class ExperimentValidation {
                                 return validationOutputData;
                             }
 
-                        } else if (AnalyzerConstants.TermValidationConstants.KRUIZE_DEFAULT_TERMS.contains(termName)) {
-                            // CATEGORY: Kruize Default Term (daily, weekly, etc.) - PARTIALLY MODIFIABLE
-                            TermDefinition defaultTermDef = TermDefaults.DEFAULTS.get(termName);
-
-                            // RULE 1: 'duration_in_days' remains COMPLETELY IMMUTABLE.
-                            if (termObj.getDurationInDays() != null && !termObj.getDurationInDays().equals(defaultTermDef.getDurationInDays())) {
-                                errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.IMMUTABLE_DURATION_IN_DAYS,
-                                        termObj.getDurationInDays(), termName);
-                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                                validationOutputData.setSuccess(false);
-                                validationOutputData.setMessage(errorMsg);
-                                return validationOutputData;
-                            }
-
-                            // RULE 2: Validate 'duration_threshold' within permissible limits.
-                            if (termObj.getDurationThreshold() != null) {
-                                try {
-                                    double thresholdInDays = KruizeUtils.parseDurationToDays(termObj.getDurationThreshold());
-                                    if (thresholdInDays <= 0 || thresholdInDays >= defaultTermDef.getDurationInDays()) {
-                                        throw new IllegalArgumentException("Value out of bounds.");
-                                    }
-                                } catch (IllegalArgumentException e) {
-                                    errorMsg = String.format(
-                                            AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_DURATION_THRESHOLD,
-                                            termName, defaultTermDef.getDurationInDays()
-                                    );
-                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                                    validationOutputData.setSuccess(false);
-                                    validationOutputData.setMessage(errorMsg);
-                                    return validationOutputData;
-                                }
-                            }
-
-                            // RULE 3: Validate 'plots_datapoint' within permissible limits.
-                            if (termObj.getPlotsDatapoint() != null) {
-                                int plotsDatapoint = termObj.getPlotsDatapoint();
-                                if (plotsDatapoint < 2 || plotsDatapoint > 1000) { // Suggested range: [2, 1000]
-                                    errorMsg = String.format(
-                                            AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_PLOTS_DATAPOINT_RANGE,
-                                            termName
-                                    );
-                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                                    validationOutputData.setSuccess(false);
-                                    validationOutputData.setMessage(errorMsg);
-                                    return validationOutputData;
-                                }
-                            }
-
-                            // RULE 4: Validate 'plots_datapoint_delta_in_days'.
-                            if (termObj.getPlotsDatapointDeltaInDays() != null) {
-                                if (termObj.getPlotsDatapointDeltaInDays() <= 0.0) {
-                                    errorMsg = String.format(
-                                            AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_PLOTS_DATAPOINT_DELTA,
-                                            termName
-                                    );
-                                    validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                                    validationOutputData.setSuccess(false);
-                                    validationOutputData.setMessage(errorMsg);
-                                    return validationOutputData;
-                                }
-                            }
                         } else {
-                            // CATEGORY: Custom Term
+                            // CATEGORY: User Defined Term
                             // 'duration_in_days' is mandatory and all numerical values must be positive.
                             if (termObj.getDurationInDays() == null) {
                                 errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MANDATORY_DURATION_IN_DAYS, entry.getKey());
@@ -459,6 +397,13 @@ public class ExperimentValidation {
                             }
                             if (termObj.getPlotsDatapoint() != null && termObj.getPlotsDatapoint() <= 0) {
                                 errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NON_POSITIVE_PLOTS_DATAPOINT, termName);
+                                validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                                validationOutputData.setSuccess(false);
+                                validationOutputData.setMessage(errorMsg);
+                                return validationOutputData;
+                            }
+                            if (termObj.getPlotsDatapointDeltaInDays() != null && termObj.getPlotsDatapointDeltaInDays() <= 0) {
+                                errorMsg = String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NON_POSITIVE_PLOTS_DATAPOINT_DELTA, termName);
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                                 validationOutputData.setSuccess(false);
                                 validationOutputData.setMessage(errorMsg);

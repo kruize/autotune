@@ -203,7 +203,6 @@ public final class KruizeObject implements ExperimentTypeAware {
                             getTermThresholdInDays(KruizeConstants.JSONKeys.LONG_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
                             15, 1));
                 } else {
-                    // custom term
                     throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
                 }
             }
