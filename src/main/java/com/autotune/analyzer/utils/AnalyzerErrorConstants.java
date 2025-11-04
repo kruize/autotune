@@ -208,6 +208,7 @@ public class AnalyzerErrorConstants {
             public static final String INVALID_EXPERIMENT_TYPE = "Invalid experiment_type : %s";
             public static final String INVALID_TERM_NAME_FORMAT = "Term name '%s' is invalid. Only letters, numbers, underscores (_), and hyphens (-) are allowed.";
             public static final String IMMUTABLE_TERM_MODIFICATION = "The term '%s' is immutable. Configuration fields cannot be specified.";
+            public static final String INVALID_DATATYPE_ERROR= "Invalid data type for the field. Ensure all numerical fields are valid numbers. Details: %s";
             // User Defined Term Errors
             public static final String NULL_CUSTOM_TERM_DEFINITION = "Term definition for custom term '%s' cannot be null.";
             public static final String MANDATORY_DURATION_IN_DAYS = "The field 'duration_in_days' is mandatory for the custom term '%s'.";

@@ -912,6 +912,6 @@ public class AnalyzerConstants {
                 Set.of("daily", "weekly", "15 days", "monthly", "quarterly", "half_yearly", "yearly", "short_term", "medium_term", "long_term")
         );
 
-        public static final String TERM_NAME_REGEX = "^[a-zA-Z0-9_-]+$";
+        public static final String TERM_NAME_REGEX = "^[a-zA-Z0-9_ -]+$";
     }
 }

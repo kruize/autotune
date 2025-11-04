@@ -92,15 +92,7 @@ public class CreateExperiment extends HttpServlet {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
             inputData = request.getReader().lines().collect(Collectors.joining());
-            List<CreateExperimentAPIObject> createExperimentAPIObjects;
-            try {
-                createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
-            } catch (JsonSyntaxException e) {
-                LOGGER.error("Error parsing createExperiment JSON: {}", e.getMessage());
-                String userFriendlyError = "Invalid JSON format or data type mismatch. Please ensure all numerical fields are valid numbers. Details: " + e.getMessage();
-                sendErrorResponse(inputData, response, e, HttpServletResponse.SC_BAD_REQUEST, userFriendlyError);
-                return;
-            }
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
             // check for bulk entries and respond accordingly
             if (createExperimentAPIObjects.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
@@ -161,6 +153,13 @@ public class CreateExperiment extends HttpServlet {
             }
         } catch (InvalidExperimentType | JsonParseException e) {
             sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } catch (NumberFormatException e) {
+            // CATCH BLOCK to handle data type conversion errors
+            LOGGER.error("Data type conversion error: {}", e.getMessage());
+            sendErrorResponse(inputData, response, e, HttpServletResponse.SC_BAD_REQUEST, String.format(
+                    AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_DATATYPE_ERROR,
+                    e.getMessage())
+            );
         } catch (Exception e) {
             e.printStackTrace();
             LOGGER.error("Unknown exception caught: " + e.getMessage());
