@@ -51,7 +51,9 @@ public class KruizeNotificationCollectionRegistry {
         createCounterTag("container", null, null, containerLevelNotifications.values());
         for (MappedRecommendationForTimestamp mappedRecommendationForTimestamp : containerData.getContainerRecommendations().getData().values()) {
             HashMap<Integer, RecommendationNotification> timeStampNotificationHashMap = mappedRecommendationForTimestamp.getHigherLevelNotificationMap();
-            createCounterTag("timestamp", null, null, timeStampNotificationHashMap.values());
+            if (timeStampNotificationHashMap != null) {
+                createCounterTag("timestamp", null, null, timeStampNotificationHashMap.values());
+            }
             for (Map.Entry<String, TermRecommendations> entry : mappedRecommendationForTimestamp.getRecommendationForTermHashMap().entrySet()) {
                 String termName = entry.getKey();
                 TermRecommendations termRecommendations = entry.getValue();

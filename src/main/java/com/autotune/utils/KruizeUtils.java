@@ -53,4 +53,43 @@ public final class KruizeUtils {
 		Matcher matcher = URL_PATTERN.matcher(url);
 		return matcher.matches();
 	}
+
+    public static double parseDurationToDays(String durationString) {
+        if (durationString == null || durationString.isBlank()) {
+            throw new IllegalArgumentException("Duration string cannot be null or empty.");
+        }
+
+        // Split the string into number and unit parts (e.g., "30", "min")
+        String[] parts = durationString.trim().split("\\s+");
+        if (parts.length != 2) {
+            throw new IllegalArgumentException("Invalid duration format. Expected: '<value> <unit>' (e.g., '30 min').");
+        }
+
+        double value;
+        try {
+            value = Double.parseDouble(parts[0]);
+            if (value <= 0) {
+                throw new IllegalArgumentException("Duration value must be positive.");
+            }
+        } catch (NumberFormatException e) {
+            throw new IllegalArgumentException("Invalid number in duration string: " + parts[0]);
+        }
+
+        String unit = parts[1].toLowerCase();
+        double totalMinutes;
+
+        // Convert the value to a common base (minutes)
+        if (unit.startsWith("min")) {
+            totalMinutes = value;
+        } else if (unit.startsWith("hour")) {
+            totalMinutes = value * 60.0;
+        } else if (unit.startsWith("day")) {
+            totalMinutes = value * 60.0 * 24.0;
+        } else {
+            throw new IllegalArgumentException("Unsupported time unit: " + unit + ". Supported units are 'min', 'hour', 'day'.");
+        }
+
+        // Convert the total minutes into a fraction of a day
+        return totalMinutes / (60.0 * 24.0); // 1 day = 1440 minutes
+    }
 }
