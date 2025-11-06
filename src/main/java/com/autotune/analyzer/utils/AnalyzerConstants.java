@@ -474,6 +474,9 @@ public class AnalyzerConstants {
         public static final String QUERY_VARIABLE = "For query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String QUERY_VARIABLES = "query_variables";
+        public static final String LAYER_PRESENCE = "layer_presence";
+        public static final String tunables = "tunables";
+
 
         private AutotuneObjectConstants() {
         }
@@ -768,6 +771,11 @@ public class AnalyzerConstants {
         public static final String INVALID_METHOD_NAME = "Method name {} doesn't exist!";
         public static final String MISSING_MANDATORY_PARAMETERS = "Missing mandatory parameters: %s ";
         public static final String VALIDATION_ERROR_MSG = "Validation error message :{}";
+    }
+
+    public static final class LayerConstants {
+        public static final String LAYER_MAP = "layerMap";
+
     }
 
     public static final class K8sObjectConstants {

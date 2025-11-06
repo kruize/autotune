@@ -24,10 +24,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.*;
-import com.autotune.database.table.lm.KruizeBulkJobEntry;
-import com.autotune.database.table.lm.KruizeLMExperimentEntry;
-import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
-import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
+import com.autotune.database.table.lm.*;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
 import io.micrometer.core.instrument.Timer;
@@ -1954,4 +1951,33 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         }
         return false;
     }
+
+    public ValidationOutputData addLayerToDB(KruizeLMLayerEntry kruizeLMLayerEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        //to do
+        Timer.Sample timerAddLayerDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeLMLayerEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+                statusValue = "success";
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save kruize layer due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+                //todo save error to API_ERROR_LOG
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save kruize layer due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        }
+        return validationOutputData;
+    }
+
 }

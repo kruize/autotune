@@ -1,5 +1,6 @@
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.Layer.*;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.kruizeObject.*;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
@@ -33,6 +34,7 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class Converters {
@@ -183,11 +185,11 @@ public class Converters {
         private static void processNamespaceRecommendations(K8sObject k8sObject, KubernetesAPIObject kubernetesAPIObject,
                                                             boolean checkForTimestamp, boolean getLatest, Timestamp monitoringEndTime) {
             NamespaceData clonedNamespaceData = null;
-            if(k8sObject.getNamespaceDataMap() != null && k8sObject.getNamespace() != null && k8sObject.getNamespaceDataMap().containsKey(k8sObject.getNamespace())) {
+            if (k8sObject.getNamespaceDataMap() != null && k8sObject.getNamespace() != null && k8sObject.getNamespaceDataMap().containsKey(k8sObject.getNamespace())) {
                 clonedNamespaceData = Utils.getClone(k8sObject.getNamespaceDataMap().get(k8sObject.getNamespace()), NamespaceData.class);
             }
             if (clonedNamespaceData != null && clonedNamespaceData.getNamespaceRecommendations() != null
-            && clonedNamespaceData.getNamespaceRecommendations().getData() != null) {
+                    && clonedNamespaceData.getNamespaceRecommendations().getData() != null) {
                 HashMap<Timestamp, MappedRecommendationForTimestamp> namespaceRecommendations = clonedNamespaceData.getNamespaceRecommendations().getData();
 
                 if (checkForTimestamp) {
@@ -307,7 +309,7 @@ public class Converters {
                 HashMap<String, ContainerData> containerDataHashMap = new HashMap<>();
                 HashMap<String, NamespaceData> namespaceDataHashMap = new HashMap<>();
 
-                if(containersList != null && !containersList.isEmpty()) {
+                if (containersList != null && !containersList.isEmpty()) {
                     for (ContainerAPIObject containerAPIObject : containersList) {
                         HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
                         HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
@@ -369,18 +371,18 @@ public class Converters {
                     HashMap<Timestamp, IntervalResults> resultsMap = new HashMap<>();
                     NamespaceData namespaceData = new NamespaceData(namespaceAPIObject.getNamespace(), namespaceAPIObject.getNamespaceRecommendations(), metricsMap);
                     HashMap<AnalyzerConstants.MetricName, MetricResults> metricResultsHashMap = new HashMap<>();
-                        for (Metric metric : namespaceAPIObject.getMetrics()) {
-                            metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
-                            MetricResults metricResults = metric.getMetricResult();
-                            metricResults.setName(metric.getName());
-                            IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.getStartTimestamp(),
-                                    updateResultsAPIObject.getEndTimestamp());
-                            metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
-                            intervalResults.setMetricResultsMap(metricResultsHashMap);
-                            resultsMap.put(updateResultsAPIObject.getEndTimestamp(), intervalResults);
-                        }
-                        namespaceData.setResults(resultsMap);
-                        namespaceDataHashMap.put(namespaceData.getNamespace_name(), namespaceData);
+                    for (Metric metric : namespaceAPIObject.getMetrics()) {
+                        metricsMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metric);
+                        MetricResults metricResults = metric.getMetricResult();
+                        metricResults.setName(metric.getName());
+                        IntervalResults intervalResults = new IntervalResults(updateResultsAPIObject.getStartTimestamp(),
+                                updateResultsAPIObject.getEndTimestamp());
+                        metricResultsHashMap.put(AnalyzerConstants.MetricName.valueOf(metric.getName()), metricResults);
+                        intervalResults.setMetricResultsMap(metricResultsHashMap);
+                        resultsMap.put(updateResultsAPIObject.getEndTimestamp(), intervalResults);
+                    }
+                    namespaceData.setResults(resultsMap);
+                    namespaceDataHashMap.put(namespaceData.getNamespace_name(), namespaceData);
 
                     k8sObject.setNamespaceDataMap(namespaceDataHashMap);
                     k8sObjectList.add(k8sObject);
@@ -545,6 +547,155 @@ public class Converters {
 
         public static ConcurrentHashMap<String, KruizeObject> ConvertRecommendationDataToAPIResponse(ConcurrentHashMap<String, KruizeObject> mainKruizeExperimentMap) {
             return null;
+        }
+
+        public static Layer convertInputJSONToCreateLayer(String inputData) throws JsonProcessingException {
+            Layer layer = null;
+
+            if (inputData != null) {
+                JSONObject jsonObject = new JSONObject(inputData);
+                String apiVersion = jsonObject.getString(AnalyzerConstants.API_VERSION);
+                String kind = jsonObject.getString(AnalyzerConstants.KIND);
+
+                // Parse metadata
+                JSONObject metadataObject = jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
+                LayerMetadata metadata = new LayerMetadata();
+                metadata.setName(metadataObject.getString("name"));
+                if (metadataObject.has("description")) {
+                    metadata.setDescription(metadataObject.getString("description"));
+                }
+
+                // Parse layer_presence
+                JSONObject layerPresenceObject = jsonObject.getJSONObject("layer_presence");
+                String presence = layerPresenceObject.getString("presence");
+
+                // Parse detectors
+                List<LayerDetector> detectors = new ArrayList<>();
+                if (layerPresenceObject.has("detectors")) {
+                    JSONArray detectorsArray = layerPresenceObject.getJSONArray("detectors");
+                    for (Object obj : detectorsArray) {
+                        JSONObject detectorObj = (JSONObject) obj;
+                        String detectorType = detectorObj.getString("type");
+                        LayerDetector detector;
+
+                        if ("label".equals(detectorType)) {
+                            // Label-based detection
+                            detector = new LayerDetector(
+                                    detectorType,
+                                    detectorObj.getString("name"),
+                                    detectorObj.getString("value")
+                            );
+                        } else {
+                            // Query-based detection
+                            detector = new LayerDetector(
+                                    detectorType,
+                                    detectorObj.optString("datasource", null),
+                                    detectorObj.optString("query", null),
+                                    detectorObj.optString("key", null),
+                                    detectorObj.has("non_null_is_present") ? detectorObj.getBoolean("non_null_is_present") : null
+                            );
+                        }
+                        detectors.add(detector);
+                    }
+                }
+                LayerPresence layerPresence = new LayerPresence(presence, detectors);
+
+                // Parse tunables
+                Map<String, LayerTunable> tunablesMap = new HashMap<>();
+                if (jsonObject.has("tunables")) {
+                    JSONObject tunablesObject = jsonObject.getJSONObject("tunables");
+                    for (String tunableKey : tunablesObject.keySet()) {
+                        JSONObject tunableObj = tunablesObject.getJSONObject(tunableKey);
+
+                        // Parse tunable metadata
+                        JSONObject metadataObj = tunableObj.getJSONObject("metadata");
+                        String name = metadataObj.getString("name");
+                        String description = metadataObj.optString("description", null);
+                        String valueType = metadataObj.getString("value_type");
+                        String unit = metadataObj.optString("unit", null);
+                        String type = metadataObj.getString("type");
+
+                        // Parse type_def
+                        TypeDef typeDef = null;
+                        if (metadataObj.has("type_def")) {
+                            JSONObject typeDefObj = metadataObj.getJSONObject("type_def");
+                            Bounds bounds = null;
+                            List<String> choices = null;
+
+                            if (typeDefObj.has("bounds")) {
+                                JSONObject boundsObj = typeDefObj.getJSONObject("bounds");
+                                bounds = new Bounds(
+                                        boundsObj.getDouble("lower"),
+                                        boundsObj.getDouble("upper"),
+                                        boundsObj.getDouble("step")
+                                );
+                            }
+
+                            if (typeDefObj.has("choices")) {
+                                JSONArray choicesArray = typeDefObj.getJSONArray("choices");
+                                choices = new ArrayList<>();
+                                for (Object choice : choicesArray) {
+                                    choices.add(choice.toString());
+                                }
+                            }
+
+                            typeDef = new TypeDef(bounds, choices);
+                        }
+
+                        LayerTunableMetadata tunableMetadata = new LayerTunableMetadata(
+                                name, description, valueType, unit, type, typeDef
+                        );
+
+                        // Parse depends_on
+                        LayerDependsOn dependsOn = null;
+                        if (tunableObj.has("depends_on")) {
+                            JSONObject dependsOnObj = tunableObj.getJSONObject("depends_on");
+                            List<String> tunablesList = null;
+                            List<String> metricsList = null;
+
+                            if (dependsOnObj.has("tunables")) {
+                                JSONArray tunablesArray = dependsOnObj.getJSONArray("tunables");
+                                tunablesList = new ArrayList<>();
+                                for (Object t : tunablesArray) {
+                                    tunablesList.add(t.toString());
+                                }
+                            }
+
+                            if (dependsOnObj.has("metrics")) {
+                                JSONArray metricsArray = dependsOnObj.getJSONArray("metrics");
+                                metricsList = new ArrayList<>();
+                                for (Object m : metricsArray) {
+                                    metricsList.add(m.toString());
+                                }
+                            }
+
+                            dependsOn = new LayerDependsOn(tunablesList, metricsList);
+                        }
+
+                        // Parse calculations
+                        List<Calculation> calculations = new ArrayList<>();
+                        if (tunableObj.has("calculations")) {
+                            JSONArray calculationsArray = tunableObj.getJSONArray("calculations");
+                            for (Object calcObj : calculationsArray) {
+                                JSONObject calculationObj = (JSONObject) calcObj;
+                                String target = calculationObj.getString("target");
+                                String expr = calculationObj.getString("expr");
+                                Object fallback = calculationObj.has("fallback") ? calculationObj.get("fallback") : null;  // ✅ Make fallback optional
+
+                                Calculation calculation = new Calculation(target, expr, fallback);
+                                calculations.add(calculation);
+                            }
+                        }
+
+                        LayerTunable layerTunable = new LayerTunable(tunableMetadata, dependsOn, calculations);
+                        tunablesMap.put(tunableKey, layerTunable);
+                    }
+                }
+
+                layer = new Layer(apiVersion, kind, metadata, layerPresence, tunablesMap);
+            }
+
+            return layer;
         }
     }
 }

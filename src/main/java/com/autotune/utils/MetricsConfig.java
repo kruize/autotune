@@ -41,6 +41,8 @@ public class MetricsConfig {
     public static Timer.Builder timerBUpdateMetadataProfile;
     public static Timer timerUpdatePerfProfile;
     public static Timer.Builder timerBUpdatePerfProfile;
+    public static Timer timerCreateLayer;
+    public static Timer.Builder timerBCreateLayer;
 
     private static MetricsConfig INSTANCE;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
@@ -104,6 +106,8 @@ public class MetricsConfig {
         timerBUpdateMetadataProfile = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateMetadataProfile").tag("method", "PUT");
         timerBUpdatePerfProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updatePerformanceProfileInDB");
         timerBUpdatePerfProfile = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updatePerformanceProfile").tag("method", "PUT");
+
+        timerBCreateLayer = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "createLayer").tag("method", "POST");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);

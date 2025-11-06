@@ -69,6 +69,7 @@ public class Analyzer {
         context.addServlet(MetadataProfileService.class, ServerContext.LIST_METADATA_PROFILES);
         context.addServlet(MetadataProfileService.class, ServerContext.DELETE_METADATA_PROFILE);
         context.addServlet(MetadataProfileService.class, ServerContext.UPDATE_METADATA_PROFILE);
+        context.addServlet(LayerService.class, ServerContext.CREATE_LAYER);
 
         // Adding UI support API's
         context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);
