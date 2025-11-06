@@ -5,21 +5,31 @@ import com.google.gson.annotations.SerializedName;
 public class LayerDetector {
     private String type;
 
+    // For query-based detection
     private String datasource;
-
     private String query;
-
     private String key;
-
     @SerializedName("non_null_is_present")
-    private boolean nonNullIsPresent;
+    private Boolean nonNullIsPresent;
 
-    public LayerDetector(String type, String datasource, String query, String key, boolean nonNullIsPresent) {
+    // For label-based detection
+    private String name;
+    private String value;
+
+    // Constructor for query-based detection
+    public LayerDetector(String type, String datasource, String query, String key, Boolean nonNullIsPresent) {
         this.type = type;
         this.datasource = datasource;
         this.query = query;
         this.key = key;
         this.nonNullIsPresent = nonNullIsPresent;
+    }
+
+    // Constructor for label-based detection
+    public LayerDetector(String type, String name, String value) {
+        this.type = type;
+        this.name = name;
+        this.value = value;
     }
 
     public String getType() {
@@ -60,5 +70,21 @@ public class LayerDetector {
 
     public void setNonNullIsPresent(boolean nonNullIsPresent) {
         this.nonNullIsPresent = nonNullIsPresent;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public String getValue() {
+        return value;
+    }
+
+    public void setValue(String value) {
+        this.value = value;
     }
 }

@@ -1091,4 +1091,11 @@ public class KruizeConstants {
         public static final String MESSAGE_RECEIVED_SUCCESSFULLY = "Received Input: Request_Id={}, Value={}, Partition={}, Offset={}";
 
     }
+
+    public static class LayerAPIMessages {
+        public static final String CREATE_LAYER_SUCCESS_MSG = "Layer : %s created successfully.";
+        public static final String VIEW_LAYERS_MSG = " View Layers at /listLayers";
+        public static final String LOAD_LAYER_FAILURE = "Failed to load saved layer data: {}";
+        public static final String ADD_LAYER_TO_DB_WITH_VERSION = "Added Layer : {} into the DB with version: {}";
+    }
 }
