@@ -16,6 +16,7 @@
 package com.autotune.common.data.result;
 
 import com.autotune.analyzer.Layer.Layer;
+import com.autotune.analyzer.Ruleset.RuleSets;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
@@ -35,6 +36,7 @@ public class ContainerData {
     private HashMap<Timestamp, IntervalResults> results;
     private ContainerDeviceList containerDeviceList;
     private HashMap<String, Layer> containerLayers;
+    private RuleSets containerRuleSets;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private ContainerRecommendations containerRecommendations;
     private HashMap<AnalyzerConstants.MetricName, Metric> metrics;
@@ -116,6 +118,14 @@ public class ContainerData {
 
     public HashMap<String, Layer> getContainerLayersMap() {
         return containerLayers;
+    }
+
+    public RuleSets getContainerRuleSets() {
+        return containerRuleSets;
+    }
+
+    public void setContainerRuleSets(RuleSets containerRuleSets) {
+        this.containerRuleSets = containerRuleSets;
     }
 
     @Override
