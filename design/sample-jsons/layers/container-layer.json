@@ -1,0 +1,117 @@
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeLayer",
+  "metadata": {
+    "name": "container",
+    "description": "Kubernetes container resources"
+  },
+  "layer_presence": {
+    "presence": "always"
+  },
+  "tunables": {
+    "cpu-limit": {
+      "metadata": {
+        "name": "cpu-limit",
+        "description": "Recommended CPU limit (cores)",
+        "value_type": "double",
+        "unit": "cores",
+        "type": "range",
+        "type_def": {
+          "bounds": {
+            "lower": 0.10,
+            "upper": 128.0,
+            "step": 0.10
+          }
+        }
+      },
+      "depends_on": {},
+      "calculations": [
+        {
+          "target": "value",
+          "expr": "align_to_step(clamp(percentile((metric:cpu-usage), 0.95) * (1 + min((metric:cpu-throttle).avg * 2.0, 0.30)), bounds.lower, min(bounds.upper, (metric:namespace-cpu-limit).sum ?: bounds.upper)), bounds.step)",
+          "fallback": 1.0
+        }
+      ]
+    },
+    "cpu-request": {
+      "metadata": {
+        "name": "cpu-request",
+        "description": "Recommended CPU request (cores)",
+        "value_type": "double",
+        "unit": "cores",
+        "type": "range",
+        "type_def": {
+          "bounds": {
+            "lower": 0.00,
+            "upper": 128.0,
+            "step": 0.05
+          }
+        }
+      },
+      "depends_on": {
+        "tunables": [
+          "container/cpu-limit"
+        ]
+      },
+      "calculations": [
+        {
+          "target": "value",
+          "expr": "align_to_step(min(percentile((metric:cpu-usage), 0.90) * 1.10, (tunable:container/cpu-limit).value), bounds.step)",
+          "fallback": 0.50
+        }
+      ]
+    },
+    "memory-limit": {
+      "metadata": {
+        "name": "memory-limit",
+        "description": "Recommended Memory limit (bytes)",
+        "value_type": "double",
+        "unit": "bytes",
+        "type": "range",
+        "type_def": {
+          "bounds": {
+            "lower": 67108864,
+            "upper": 4398046511104,
+            "step": 1048576
+          }
+        }
+      },
+      "depends_on": {},
+      "calculations": [
+        {
+          "target": "value",
+          "expr": "align_to_step(clamp(percentile((metric:memory-usage), 0.95) + max((metric:memory-rss).max * 0.10, 134217728), bounds.lower, bounds.upper), bounds.step)",
+          "fallback": 536870912
+        }
+      ]
+    },
+    "memory-request": {
+      "metadata": {
+        "name": "memory-request",
+        "description": "Recommended Memory request (bytes)",
+        "value_type": "double",
+        "unit": "bytes",
+        "type": "range",
+        "type_def": {
+          "bounds": {
+            "lower": 67108864,
+            "upper": 4398046511104,
+            "step": 1048576
+          }
+        }
+      },
+      "depends_on": {
+        "tunables": [
+          "container/memory-limit"
+        ]
+      },
+      "calculations": [
+        {
+          "target": "value",
+          "expr": "align_to_step(min(percentile((metric:memory-usage), 0.90) + max((metric:memory-rss).avg * 0.05, 67108864), (tunable:container/memory-limit).value), bounds.step)",
+          "fallback": 268435456
+        }
+      ]
+    }
+  }
+}
