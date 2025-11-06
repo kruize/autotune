@@ -1,0 +1,1 @@
+CREATE TABLE IF NOT EXISTS kruize_lm_ruleset (api_version VARCHAR(255), kind VARCHAR(255), metadata JSONB, name varchar(255) not null, stack JSONB, rules JSONB, dependencies JSONB, PRIMARY KEY (name));
