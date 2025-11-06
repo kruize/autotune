@@ -25,4 +25,5 @@ public interface RecommendationModel {
     public String getModelName();
     void validate();
 
+    RecommendationConfigItem getFrameWorkRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications);
 }

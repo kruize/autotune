@@ -440,6 +440,7 @@ public class RecommendationEngine {
             // generate recommendation
             try {
                 generateRecommendations(kruizeObject);
+
                 // store the recommendations in the DB
                 validationOutputData = addRecommendationsToDB(mainKruizeExperimentMAP, kruizeObject);
                 if (!validationOutputData.isSuccess()) {
@@ -488,6 +489,7 @@ public class RecommendationEngine {
 
                     // generate recommendations based on each container
                     generateRecommendationsBasedOnContainer(containerData, kruizeObject);
+
                     // TODO: generate recommendations based on kubernetes_object name and type
                     // todo The process of data validation and notification generation is currently tightly coupled and needs to be separated. By doing so, we can avoid additional iterations at kruizeNotificationCollectionRegistry.logNotification. This should be included as part of the code refactor.
                     KruizeNotificationCollectionRegistry kruizeNotificationCollectionRegistry = new KruizeNotificationCollectionRegistry(kruizeObject.getExperimentName(), getInterval_end_time(), containerData.getContainer_name());
@@ -869,11 +871,13 @@ public class RecommendationEngine {
 
             //Get the ENV Recommendations
             RecommendationConfigItem recommendationRuntime = model.getRuntimeRecommendation(filteredResultsMap, notifications);
+            RecommendationConfigItem recommendationFramework = model.getFrameWorkRecommendation(filteredResultsMap, notifications);
             // Create an internal map to send data to populate
             HashMap<String, RecommendationConfigItem> runtimesMapToPopulate = new HashMap<>();
 
             // Add recommended ENV values
             runtimesMapToPopulate.put(RecommendationConstants.RecommendationEngine.RuntimeConstants.JDK_JAVA_OPTIONS, recommendationRuntime);
+            runtimesMapToPopulate.put(RecommendationConstants.RecommendationEngine.RuntimeConstants.QUARKUS_THREAD_POOL_CORE_THREADS, recommendationFramework);
 
 
             // Call the populate method to validate and populate the recommendation object

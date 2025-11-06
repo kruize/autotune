@@ -668,10 +668,35 @@ public class GenericRecommendationModel implements RecommendationModel{
         }
 
         RecommendationConfigItem recommendationConfigItem = null;
+
+
         //Hard coding
         String name = "JDK_JAVA_OPTIONS";
         String value = "-server -XX:MaxRAMPercentage=80 -XX:+ParallelGC";
 
+
+        //JSONArray jvmUsageList = getJVMUsageList(filteredResultsMap);
+        //List<Double> jvmMaxValues = getJVMMaxValues(jvmUsageList);
+
+        // TODO: Set notifications only if notification object is available
+
+        recommendationConfigItem = new RecommendationConfigItem(name, value);
+        return recommendationConfigItem;
+    }
+
+    public RecommendationConfigItem getFrameWorkRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        boolean setNotification = true;
+        if (null == notifications) {
+            LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
+            setNotification = false;
+        }
+
+        RecommendationConfigItem recommendationConfigItem = null;
+
+
+        //Hard coding
+        String name = "QUARKUS_THREAD_POOL_CORE_THREADS";
+        String value = "1";
 
 
         //JSONArray jvmUsageList = getJVMUsageList(filteredResultsMap);
