@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.services;
 
+import com.autotune.analyzer.KruizeCache.KruizeCache;
 import com.autotune.analyzer.exceptions.InvalidExperimentType;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
@@ -140,6 +141,10 @@ public class CreateExperiment extends HttpServlet {
                         validAPIObj.setValidationData(ko.getValidation_data());
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
                         addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+                        // Adding Kruize object to the Cache
+                        // Note: Please update the respective kruize object's container data  with detected layers before
+                        // adding to cache
+                        KruizeCache.getInstance().putExperiment(ko.getExperimentName(), ko);
                     }
                     if (addedToDB.isSuccess()) {
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
