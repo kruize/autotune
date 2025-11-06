@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.common.data.result;
 
+import com.autotune.analyzer.Layer.Layer;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.metrics.Metric;
@@ -23,7 +24,9 @@ import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class ContainerData {
     private String container_image_name;
@@ -31,6 +34,7 @@ public class ContainerData {
     //key is intervalEndTime
     private HashMap<Timestamp, IntervalResults> results;
     private ContainerDeviceList containerDeviceList;
+    private HashMap<String, Layer> containerLayers;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private ContainerRecommendations containerRecommendations;
     private HashMap<AnalyzerConstants.MetricName, Metric> metrics;
@@ -95,6 +99,25 @@ public class ContainerData {
     public void setContainerDeviceList(ContainerDeviceList containerDeviceList) {
         this.containerDeviceList = containerDeviceList;
     }
+
+    public void setLayer(String layerName, Layer layer) {
+        if (containerLayers == null) {
+            containerLayers = new HashMap<>();
+        }
+        containerLayers.put(layerName, layer);
+    }
+
+    public List<Layer> getContainerLayersList() {
+        if (containerLayers == null) {
+            return null;
+        }
+        return new ArrayList<>(containerLayers.values());
+    }
+
+    public HashMap<String, Layer> getContainerLayersMap() {
+        return containerLayers;
+    }
+
     @Override
     public String toString() {
         return "ContainerData{" +
