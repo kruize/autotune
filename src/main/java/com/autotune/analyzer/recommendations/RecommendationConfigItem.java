@@ -19,6 +19,8 @@ public class RecommendationConfigItem {
     private Double amount;
     private String format;
     private String errorMsg;
+    private String name;
+    private String value;
 
     public RecommendationConfigItem(String errorMsg) {
         this.errorMsg = errorMsg;
@@ -27,6 +29,11 @@ public class RecommendationConfigItem {
     public RecommendationConfigItem(Double amount, String format) {
         this.amount = amount;
         this.format = format;
+    }
+
+    public RecommendationConfigItem(String name, String value) {
+        this.name = name;
+        this.value = value;
     }
 
     public RecommendationConfigItem() {
