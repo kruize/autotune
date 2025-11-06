@@ -119,6 +119,8 @@ public class DBConstants {
                 "km.k8s_type = :k8sType, km.datasource = :datasource, km.query_variables = :queryVariables " +
                 "WHERE km.name = :metadataProfileName";
         public static final String DELETE_FROM_PERFORMANCE_PROFILE_BY_NAME = "DELETE FROM KruizePerformanceProfileEntry kpp WHERE kpp.name = :perfProfileName";
+        public static final String SELECT_FROM_LM_LAYER = "from KruizeLMLayerEntry";
+        public static final String SELECT_FROM_LAYER_BY_NAME = "FROM KruizeLMLayerEntry k WHERE k.name = :name";
     }
 
     public static final class TABLE_NAMES {

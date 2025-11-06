@@ -17,6 +17,9 @@
 package com.autotune.database.helper;
 
 import com.autotune.analyzer.Layer.Layer;
+import com.autotune.analyzer.Layer.LayerMetadata;
+import com.autotune.analyzer.Layer.LayerPresence;
+import com.autotune.analyzer.Layer.LayerTunable;
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
@@ -1600,6 +1603,52 @@ public class DBHelpers {
                     e.printStackTrace();
                 }
                 return kruizeLMLayerEntry;
+            }
+
+            public static List<Layer> convertLayerEntryToLayerObject(List<KruizeLMLayerEntry> entries) throws Exception {
+                List<Layer> layers = new ArrayList<>();
+                int failureThreshHold = entries.size();
+                int failureCount = 0;
+
+                for (KruizeLMLayerEntry entry : entries) {
+                    try {
+                        // Parse metadata
+                        JsonNode metadataNode = entry.getMetadata();
+                        String metadata_rawJson = metadataNode.toString();
+                        LayerMetadata metadata = new Gson().fromJson(metadata_rawJson, LayerMetadata.class);
+
+                        // Parse layer_presence
+                        JsonNode layerPresenceNode = entry.getLayer_presence();
+                        String layerPresence_rawJson = layerPresenceNode.toString();
+                        LayerPresence layerPresence = new Gson().fromJson(layerPresence_rawJson, LayerPresence.class);
+
+                        // Parse tunables
+                        JsonNode tunablesNode = entry.getTunables();
+                        String tunables_rawJson = tunablesNode.toString();
+                        Map<String, LayerTunable> tunables = new Gson().fromJson(
+                                tunables_rawJson,
+                                new com.google.gson.reflect.TypeToken<Map<String, LayerTunable>>(){}.getType()
+                        );
+
+                        Layer layer = new Layer(
+                                entry.getApi_version(),
+                                entry.getKind(),
+                                metadata,
+                                layerPresence,
+                                tunables
+                        );
+                        layers.add(layer);
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while reading from Layer DB object due to : {}", e.getMessage());
+                        LOGGER.error(entry.toString());
+                        failureCount++;
+                    }
+                }
+
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the Layers loaded from DB.");
+
+                return layers;
             }
 
         }
