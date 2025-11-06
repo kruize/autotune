@@ -865,4 +865,28 @@ public class ExperimentDBService {
     public Long getExperimentsCountFromDBByProfileName(String perfProfileName) throws Exception {
         return experimentDAO.getExperimentsCountFromDBByProfileName(perfProfileName);
     }
+
+
+    public void loadLayers(Map<String, Layer> layerMap, String layerName) throws Exception {
+        List<KruizeLMLayerEntry> entries;
+
+        // Load specific layer by name or all layers
+        if (null != layerName && !layerName.isEmpty()) {
+            entries = experimentDAO.loadLayerByName(layerName);
+            LOGGER.debug("Loading layer by name: {}", layerName);
+        } else {
+            entries = experimentDAO.loadAllLayers();
+            LOGGER.debug("Loading all layers");
+        }
+
+        if (null != entries && !entries.isEmpty()) {
+            List<Layer> kruizeLayers = DBHelpers.Converters.KruizeObjectConverters.convertLayerEntryToLayerObject(entries);
+            if (!kruizeLayers.isEmpty()) {
+                kruizeLayers.forEach(layer -> {
+                    String name = layer.getMetadata().getName();
+                    layerMap.put(name, layer);
+                });
+            }
+        }
+    }
 }

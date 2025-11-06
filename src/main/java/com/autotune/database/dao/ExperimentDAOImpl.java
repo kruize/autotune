@@ -1980,4 +1980,30 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
+    @Override
+    public List<KruizeLMLayerEntry> loadAllLayers() throws Exception {
+        List<KruizeLMLayerEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_LM_LAYER, KruizeLMLayerEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Layers  due to {}", e.getMessage());
+            throw new Exception("Error while loading existing Layers from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
+
+    @Override
+    public List<KruizeLMLayerEntry> loadLayerByName(String layerName) {
+        List<KruizeLMLayerEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_LAYER_BY_NAME, KruizeLMLayerEntry.class)
+                    .setParameter("name", layerName)
+                    .list();
+        } catch (Exception e) {
+            LOGGER.error("Loading layer by name {} failed: {}", layerName, e.getMessage());
+        }
+        return entries;
+    }
+
+
 }

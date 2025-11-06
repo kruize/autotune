@@ -775,6 +775,7 @@ public class AnalyzerConstants {
 
     public static final class LayerConstants {
         public static final String LAYER_MAP = "layerMap";
+        public static final String LAYER_NAME = "name";
 
     }
 

@@ -1,15 +1,13 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.Layer.Layer;
-import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.PerformanceProfileResponse;
-import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
-import com.google.gson.Gson;
+import com.google.gson.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Serial;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -71,6 +69,41 @@ public class LayerService extends HttpServlet {
         }
     }
 
+
+    /**
+     * Get List of Layers
+     *
+     * @param request
+     * @param response
+     * @throws ServletException
+     * @throws IOException
+     */
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        response.setContentType(JSON_CONTENT_TYPE);
+        response.setCharacterEncoding(CHARACTER_ENCODING);
+        response.setStatus(HttpServletResponse.SC_OK);
+        String gsonStr = "[]";
+
+        Map<String, Layer> kruizeLayerMap = new ConcurrentHashMap<>();
+        String layerName = request.getParameter(AnalyzerConstants.LayerConstants.LAYER_NAME);
+
+        // Fetch specific layer by name or all layers from the DB
+        try {
+            new ExperimentDBService().loadLayers(kruizeLayerMap, layerName);
+            if (!kruizeLayerMap.isEmpty()) {
+                // Convert map to list for JSON response
+                List<Layer> layers = new ArrayList<>(kruizeLayerMap.values());
+                gsonStr = new Gson().toJson(layers);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to load layer data: {} ", e.getMessage());
+            response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+            gsonStr = new Gson().toJson("Failed to load layer from DB: " + e.getMessage());
+        }
+        response.getWriter().println(gsonStr);
+        response.getWriter().close();
+    }
 
     /**
      * Send success response in case of no errors or exceptions.

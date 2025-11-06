@@ -168,4 +168,10 @@ public interface ExperimentDAO {
 
     // Add Layer object  to DB
     public ValidationOutputData addLayerToDB(KruizeLMLayerEntry kruizeLMLayerEntry);
+
+    // load all layers
+    List<KruizeLMLayerEntry> loadAllLayers() throws Exception;
+
+    // load layer by name
+    List<KruizeLMLayerEntry> loadLayerByName(String name) throws Exception;
 }
