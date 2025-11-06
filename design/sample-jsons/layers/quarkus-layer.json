@@ -1,0 +1,59 @@
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeLayer",
+  "metadata": {
+    "name": "quarkus",
+    "description": "Quarkus runtime tuning"
+  },
+  "layer_presence": {
+    "presence": "detectable",
+    "detectors": [
+      {
+        "type": "label",
+        "name": "app.kubernetes.io/layer",
+        "value": "quarkus"
+      }
+    ]
+  },
+  "tunables": {
+    "core-threads": {
+      "metadata": {
+        "name": "core-threads",
+        "description": "Quarkus worker pool core threads",
+        "expression": "-Dquarkus.thread-pool.core-threads={(tunable:quarkus/core-threads).value}",
+        "value_type": "integer",
+        "unit": "threads",
+        "type": "range",
+        "type_def": {
+          "bounds": {
+            "lower": 1,
+            "upper": 256,
+            "step": 1
+          }
+        }
+      },
+      "depends_on": {
+        "tunables": [
+          "container/cpu-limit",
+          "container/cpu-request"
+        ],
+        "metrics": []
+      },
+      "calculations": [
+        {
+          "target": "value",
+          "expr": "clamp(ceil(((tunable:container/cpu-limit).value ?: 1) * (env.QUARKUS_THREADS_FACTOR ?: 2)), bounds.lower, bounds.upper)",
+          "fallback": 4
+        },
+        {
+          "target": "bounds.lower",
+          "expr": "max(env.MIN_CORE_THREADS ?: 1, ceil((tunable:container/cpu-request).value))"
+        },
+        {
+          "target": "bounds.upper",
+          "expr": "min(env.MAX_CORE_THREADS ?: 256, ceil((tunable:container/cpu-limit).value * 16))"
+        }
+      ]
+    }
+  }
+}
