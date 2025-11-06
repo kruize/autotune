@@ -749,5 +749,10 @@ public class RecommendationConstants {
             public static final Integer COST_ACCELERATOR_PERCENTILE = 60;
             public static final Integer PERFORMANCE_ACCELERATOR_PERCENTILE = 98;
         }
+
+        public static class RuntimeConstants {
+            public static final String JDK_JAVA_OPTIONS = "JDK_JAVA_OPTIONS";
+            public static final String JAVA_OPTIONS = "JAVA_OPTIONS";
+        }
     }
 }

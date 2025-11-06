@@ -867,6 +867,14 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
 
+            //Get the ENV Recommendations
+            RecommendationConfigItem recommendationRuntime = model.getRuntimeRecommendation(filteredResultsMap, notifications);
+            // Create an internal map to send data to populate
+            HashMap<String, RecommendationConfigItem> runtimesMapToPopulate = new HashMap<>();
+
+            // Add recommended ENV values
+            runtimesMapToPopulate.put(RecommendationConstants.RecommendationEngine.RuntimeConstants.JDK_JAVA_OPTIONS, recommendationRuntime);
+
 
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
@@ -877,7 +885,8 @@ public class RecommendationEngine {
                     numPods,
                     cpuThreshold,
                     memoryThreshold,
-                    recommendationAcceleratorRequestMap
+                    recommendationAcceleratorRequestMap,
+                    runtimesMapToPopulate
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -1111,8 +1120,7 @@ public class RecommendationEngine {
                                                                                      NamespaceData namespaceData,
                                                                                      Timestamp monitoringEndTime,
                                                                                      RecommendationSettings recommendationSettings,
-                                                                                     HashMap<AnalyzerConstants.ResourceSetting,
-                                                                                             HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentNamespaceConfigMap,
+                                                                                     HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> currentNamespaceConfigMap,
                                                                                      Map.Entry<String, Terms> termEntry) {
         MappedRecommendationForModel mappedRecommendationForModel = new MappedRecommendationForModel();
         // Set CPU threshold to default
@@ -1195,6 +1203,8 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, namespaceRecommendationCpuLimits);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, namespaceRecommendationMemRequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, namespaceRecommendationMemLimits);
+
+
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
                     termEntry,
@@ -1204,6 +1214,7 @@ public class RecommendationEngine {
                     numPodsInNamespace,
                     namespaceCpuThreshold,
                     namespaceMemoryThreshold,
+                    null,
                     null
             );
         } else {
@@ -1228,6 +1239,7 @@ public class RecommendationEngine {
      * @param cpuThreshold                        The CPU usage threshold for the recommendation.
      * @param memoryThreshold                     The memory usage threshold for the recommendation.
      * @param recommendationAcceleratorRequestMap The Map which has Accelerator recommendations
+     * @param runtimeMapToPopulate                The Map to populate runtime recommendations.
      * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
     private boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
@@ -1237,7 +1249,8 @@ public class RecommendationEngine {
                                            int numPods,
                                            double cpuThreshold,
                                            double memoryThreshold,
-                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap) {
+                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap,
+                                           HashMap<String, RecommendationConfigItem> runtimeMapToPopulate) {
         // Check for cpu & memory Thresholds (Duplicate check if the caller is generateRecommendations)
         String recommendationTerm = termEntry.getKey();
         double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
