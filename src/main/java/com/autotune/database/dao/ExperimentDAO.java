@@ -5,10 +5,7 @@ import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.table.*;
-import com.autotune.database.table.lm.KruizeBulkJobEntry;
-import com.autotune.database.table.lm.KruizeLMExperimentEntry;
-import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
-import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
+import com.autotune.database.table.lm.*;
 
 import java.sql.Timestamp;
 import java.util.List;
@@ -168,4 +165,7 @@ public interface ExperimentDAO {
     Long getExperimentsCountFromDBByProfileName(String perfProfileName) throws Exception;
 
     ValidationOutputData updatePerformanceProfileInDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry);
+
+    // Add Layer object  to DB
+    public ValidationOutputData addLayerToDB(KruizeLMLayerEntry kruizeLMLayerEntry);
 }

@@ -37,6 +37,7 @@ public class ServerContext {
     public static final String LIST_EXPERIMENTS = ROOT_CONTEXT + "listExperiments";
     public static final String EXPERIMENTS_SUMMARY = ROOT_CONTEXT + "experimentsSummary";
     public static final String CREATE_EXPERIMENT = ROOT_CONTEXT + "createExperiment";
+    public static final String CREATE_RULESET = ROOT_CONTEXT + "createRuleSet";
     public static final String UPDATE_RESULTS = ROOT_CONTEXT + "updateResults";
     public static final String UPDATE_RECOMMENDATIONS = ROOT_CONTEXT + "updateRecommendations";
     public static final String GENERATE_RECOMMENDATIONS = ROOT_CONTEXT + "generateRecommendations";
@@ -52,6 +53,7 @@ public class ServerContext {
     public static final String LIST_METADATA_PROFILES = ROOT_CONTEXT + "listMetadataProfiles";
     public static final String DELETE_METADATA_PROFILE = ROOT_CONTEXT + "deleteMetadataProfile";
     public static final String UPDATE_METADATA_PROFILE = ROOT_CONTEXT + "updateMetadataProfile";
+    public static final String CREATE_LAYER = ROOT_CONTEXT + "createLayer";
 
 
     public static final String KRUIZE_SERVER_URL = "http://localhost:" + KRUIZE_SERVER_PORT;

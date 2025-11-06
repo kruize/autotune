@@ -16,6 +16,7 @@
 
 package com.autotune.database.helper;
 
+import com.autotune.analyzer.Layer.Layer;
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
@@ -46,6 +47,7 @@ import com.autotune.common.datasource.DataSourceMetadataOperator;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
@@ -1558,6 +1560,48 @@ public class DBHelpers {
                 }
                 return kruizeMetadataProfileEntry;
             }
+
+
+            public static KruizeLMLayerEntry convertLayerObjToLayerDBObj(Layer layer) {
+                KruizeLMLayerEntry kruizeLMLayerEntry = null;
+                try {
+                    kruizeLMLayerEntry = new KruizeLMLayerEntry();
+                    kruizeLMLayerEntry.setApi_version(layer.getApiVersion());
+                    kruizeLMLayerEntry.setKind(layer.getKind());
+
+                    ObjectMapper objectMapper = new ObjectMapper();
+
+                    // Convert metadata to JsonNode
+                    try {
+                        JsonNode metadataNode = objectMapper.readTree(new Gson().toJson(layer.getMetadata()));
+                        kruizeLMLayerEntry.setMetadata(metadataNode);
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating metadata due to : " + e.getMessage());
+                    }
+                    kruizeLMLayerEntry.setName(layer.getMetadata().getName());
+
+                    // Convert layer_presence to JsonNode
+                    try {
+                        kruizeLMLayerEntry.setLayer_presence(
+                                objectMapper.readTree(new Gson().toJson(layer.getLayerPresence())));
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating layer_presence data due to : " + e.getMessage());
+                    }
+
+                    // Convert tunables to JsonNode
+                    try {
+                        kruizeLMLayerEntry.setTunables(
+                                objectMapper.readTree(new Gson().toJson(layer.getTunables())));
+                    } catch (JsonProcessingException e) {
+                        throw new Exception("Error while creating tunables data due to : " + e.getMessage());
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error occurred while converting Layer Object to Layer table due to {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeLMLayerEntry;
+            }
+
         }
 
     }

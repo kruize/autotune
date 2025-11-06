@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.database.service;
 
+import com.autotune.analyzer.Layer.Layer;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
@@ -36,6 +37,7 @@ import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -459,6 +461,24 @@ public class ExperimentDBService {
         }
         return validationOutputData;
     }
+
+    /**
+     * Adds Layer to KruizeLMLayerEntry
+     *
+     * @param kruizeLayer Layer object to be added
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData addLayerToDB(Layer kruizeLayer) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeLMLayerEntry kruizeLMLayerEntry = DBHelpers.Converters.KruizeObjectConverters.convertLayerObjToLayerDBObj(kruizeLayer);
+            validationOutputData = this.experimentDAO.addLayerToDB(kruizeLMLayerEntry);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save Kruize Layer due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
 
 
     /*

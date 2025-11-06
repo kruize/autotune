@@ -51,6 +51,7 @@ public class Analyzer {
         context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENTS);
         context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
         context.addServlet(CreateExperiment.class, ServerContext.CREATE_EXPERIMENT);
+        context.addServlet(CreateRuleSets.class, ServerContext.CREATE_RULESET);
         context.addServlet(UpdateResults.class, ServerContext.UPDATE_RESULTS);
         context.addServlet(UpdateRecommendations.class, ServerContext.UPDATE_RECOMMENDATIONS);
         context.addServlet(GenerateRecommendations.class, ServerContext.GENERATE_RECOMMENDATIONS);
@@ -69,6 +70,7 @@ public class Analyzer {
         context.addServlet(MetadataProfileService.class, ServerContext.LIST_METADATA_PROFILES);
         context.addServlet(MetadataProfileService.class, ServerContext.DELETE_METADATA_PROFILE);
         context.addServlet(MetadataProfileService.class, ServerContext.UPDATE_METADATA_PROFILE);
+        context.addServlet(LayerService.class, ServerContext.CREATE_LAYER);
 
         // Adding UI support API's
         context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);
