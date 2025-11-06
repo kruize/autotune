@@ -2,12 +2,12 @@ package com.autotune.analyzer.Ruleset;
 
 import com.google.gson.annotations.SerializedName;
 
-public class OnVoilation {
+public class onViolation {
 
     @SerializedName("fix")
     private String fix;
 
-    public OnVoilation(String fix) {}
+    public onViolation(String fix) {}
     public String getFix() {
         return fix;
     }

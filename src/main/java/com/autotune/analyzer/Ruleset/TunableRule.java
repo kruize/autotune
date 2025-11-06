@@ -11,7 +11,7 @@ public class TunableRule {
     @SerializedName("expr")
     private String expr;
     @SerializedName("on_violation")
-    private OnVoilation onViolation;
+    private onViolation onViolation;
     @SerializedName("message")
     private String message;
 
