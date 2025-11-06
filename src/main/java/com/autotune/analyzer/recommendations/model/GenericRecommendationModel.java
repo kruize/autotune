@@ -1,5 +1,6 @@
 package com.autotune.analyzer.recommendations.model;
 
+import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -660,14 +661,14 @@ public class GenericRecommendationModel implements RecommendationModel{
     }
 
 
-    public RecommendationConfigItem getRuntimeRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+    public RecommendationConfigEnv getRuntimeRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         boolean setNotification = true;
         if (null == notifications) {
             LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
             setNotification = false;
         }
 
-        RecommendationConfigItem recommendationConfigItem = null;
+        RecommendationConfigEnv recommendationConfigEnv;
         //Hard coding
         String name = "JDK_JAVA_OPTIONS";
         String value = "-server -XX:MaxRAMPercentage=80 -XX:+ParallelGC";
@@ -679,8 +680,8 @@ public class GenericRecommendationModel implements RecommendationModel{
 
         // TODO: Set notifications only if notification object is available
 
-        recommendationConfigItem = new RecommendationConfigItem(name, value);
-        return recommendationConfigItem;
+        recommendationConfigEnv = new RecommendationConfigEnv(name, value);
+        return recommendationConfigEnv;
     }
 
     @Override
