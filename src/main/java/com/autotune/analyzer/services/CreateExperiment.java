@@ -17,6 +17,7 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.KruizeCache.KruizeCache;
+import com.autotune.analyzer.Layer.Layer;
 import com.autotune.analyzer.exceptions.InvalidExperimentType;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
@@ -27,6 +28,8 @@ import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
@@ -34,7 +37,6 @@ import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,10 +49,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -144,6 +143,29 @@ public class CreateExperiment extends HttpServlet {
                         // Adding Kruize object to the Cache
                         // Note: Please update the respective kruize object's container data  with detected layers before
                         // adding to cache
+
+                        LayerDetectionService validationService = new LayerDetectionService();
+                        HashMap<String, Layer> detectedLayers = validationService.detectAllLayers();
+
+                        LOGGER.info("Detected {} layers for experiment {}",
+                                detectedLayers.size(), ko.getExperimentName());
+
+                        // Get kubernetes objects and container data
+                        for (K8sObject k8sObject : ko.getKubernetes_objects()) {
+                            // Get all containers in this k8s object
+                            HashMap<String, ContainerData> containerDataHashmap = k8sObject.getContainerDataMap();
+
+                            // Set layers for each container
+                            for (ContainerData containerData : containerDataHashmap.values()) {
+                                // Add each validated layer
+                                detectedLayers.forEach((layerName, layer) ->
+                                        containerData.setLayer(layerName, layer)
+                                );
+                            }
+                        }
+
+                        LOGGER.info("KruizeObject: {}", ko.getKubernetes_objects());
+
                         KruizeCache.getInstance().putExperiment(ko.getExperimentName(), ko);
                     }
                     if (addedToDB.isSuccess()) {

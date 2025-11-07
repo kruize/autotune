@@ -35,6 +35,7 @@ public class ContainerData {
     //key is intervalEndTime
     private HashMap<Timestamp, IntervalResults> results;
     private ContainerDeviceList containerDeviceList;
+    @SerializedName("layers")
     private HashMap<String, Layer> containerLayers;
     private RuleSets containerRuleSets;
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
