@@ -3,6 +3,7 @@ package com.autotune.analyzer.recommendations.model;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.recommendations.objects.OrderTunable;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -56,6 +57,28 @@ public class GenericRecommendationModel implements RecommendationModel{
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRecommendationModel.class);
+
+    public Object getRuntimeRecommendations(String metric_name, String layer, Map<OrderTunable, Object> context, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+
+        switch (metric_name) {
+            case "maxRamPercentage":
+                return "80";
+            case "gcPolicy":
+                return "-XX:+ParallelGC";
+            case "threadPoolCores":
+                Object cpuLimits = null;
+                //TODO : Can avoid this looping
+                for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
+                    if (entry.getKey().getName().equalsIgnoreCase("cpuLimits") && entry.getKey().getLayer().equalsIgnoreCase("container")) {
+                        cpuLimits = entry.getValue();
+                        break;
+                    }
+                }
+                return (Integer)cpuLimits;
+            default:
+                return null;
+        }
+    }
 
     @Override
     public RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
@@ -668,6 +691,8 @@ public class GenericRecommendationModel implements RecommendationModel{
         }
 
         RecommendationConfigItem recommendationConfigItem = null;
+
+        // Get cpu limit data
 
 
         //Hard coding
