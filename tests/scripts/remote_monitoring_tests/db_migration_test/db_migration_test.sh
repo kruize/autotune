@@ -114,8 +114,8 @@ LOG="${LOG_DIR}/db-migration-test.log"
 pushd ${SCALE_TEST} > /dev/null
 	echo ""
 	echo "Run scalability test to load 50 exps / 15 days data and update Recommendations with ${kruize_image_prev}"
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days"
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days -a migration"
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_prev} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -r ${LOG_DIR}/test_logs_50_15days -a "migration"
 popd > /dev/null 
 	echo ""
 
@@ -141,8 +141,8 @@ pushd ${SCALE_TEST} > /dev/null
 	restore_db=true
 	num_days_of_res=1
 
-	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count}"
-	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count}
+	echo "./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a migration"
+	./remote_monitoring_scale_test_bulk.sh -i ${kruize_image_current} -u ${num_exps} -d ${num_days_of_res} -n ${num_clients} -t ${interval_hours} -q ${query_db_interval} -s ${initial_start_date} -l ${restore_db} -f ${db_backup_file} -r ${LOG_DIR}/test_logs_50_16days -e ${total_results_count} -a "migration"
 
 	echo | tee -a ${LOG}
 	echo ""

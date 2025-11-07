@@ -38,6 +38,7 @@ minutes_jump=15
 interval_hours=6
 initial_start_date="2023-01-10T00:00:00.000Z"
 query_db_interval=10
+testcase=scale_5k
 
 kruize_setup=true
 restore_db=false
@@ -52,7 +53,7 @@ total_results_count=0
 
 function usage() {
 	echo
-	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns] (default - container)]"
+	echo "Usage: [-i Kruize image] [-u No. of experiments (default - 5000)] [-d No. of days of results (default - 15)] [-n No. of clients (default - 20)] [-m results duration interval in mins, (default - 15)] [-t interval hours (default - 6)] [-s Initial start date (default - 2023-01-10T00:00:00.000Z)] [-q query db interval in mins, (default - 10)] [-r <resultsdir path>] [-l restore DB (default - false)] [-f DB file path to restore (default - ./db_backup.sql)] [-b kruize setup (default - true)] [-c Experiment type [container|namespace|container_ns] (default - container)] [-a Test case (default - scale_5k)]"
 	exit -1
 }
 
@@ -91,9 +92,18 @@ function kruize_scale_test_remote_patch() {
 	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
 
 	sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	if [ ${testcase} == "migration" ]; then
+	        sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	else
+	        sed -i 's/memory: "768Mi"/memory: "4Gi"/g' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	        sed -i 's/memory: "100Mi"/memory: "10Gi"/g' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	        sed -i 's/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	fi
+
 }
 
-while getopts r:i:u:d:t:n:m:s:l:f:b:e:q:c:h gopts
+while getopts r:i:u:d:t:n:m:s:l:f:b:e:q:c:a:h gopts
 do
 	case ${gopts} in
 	r)
@@ -137,6 +147,9 @@ do
 		;;
 	e)
 		total_results_count="${OPTARG}"
+		;;
+	a)
+		testcase="${OPTARG}"
 		;;
 	h)
 		usage
