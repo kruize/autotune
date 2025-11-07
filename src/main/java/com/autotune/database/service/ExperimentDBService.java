@@ -36,10 +36,7 @@ import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.*;
-import com.autotune.database.table.lm.KruizeLMExperimentEntry;
-import com.autotune.database.table.lm.KruizeLMLayerEntry;
-import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
-import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
+import com.autotune.database.table.lm.*;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.KruizeConstants;
@@ -475,6 +472,17 @@ public class ExperimentDBService {
             validationOutputData = this.experimentDAO.addLayerToDB(kruizeLMLayerEntry);
         } catch (Exception e) {
             LOGGER.error("Not able to save Kruize Layer due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    public ValidationOutputData addRuleSetToDB(KruizeLMRuleSetEntry kruizeLMRuleSetEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+
+            validationOutputData = this.experimentDAO.addRuleSetToDB(kruizeLMRuleSetEntry);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save rule set due to {}", e.getMessage());
         }
         return validationOutputData;
     }
