@@ -1,0 +1,120 @@
+# Layers
+This article describes how to detect and analyze different application layers with special focus on HotSpot, JVM and Quarkus runtime layers using REST APIs. 
+
+# CreateLayer
+This is quick guide to create metadata profile using input JSON as follows. 
+
+**Request**
+`POST /createLayer`
+``` json
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeLayer",
+  "metadata": {
+    "name": "hotspot",
+    "description": "Hotspot JVM tuning"
+  },
+  "layer_presence": {
+    "presence": "detectable",
+    "detectors": [
+      {
+        "type": "query",
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Eden.+\"}",
+        "key": "pod",
+        "non_null_is_present": true
+      }
+    ]
+  },
+  "tunables": {
+    "maxram-percentage": {
+      "metadata": {
+        "name": "maxram-percentage",
+        "description": "JVM heap as % of container memory limit",
+        "expression": "+XX:MaxRAMPercentage={(tunable:hotspot/maxram-percentage).value}",
+        "value_type": "double",
+        "unit": "percent",
+        "type": "range",
+        "type_def": {
+          "bounds": {
+            "lower": 10,
+            "upper": 90,
+            "step": 1
+          }
+        }
+      },
+      "depends_on": {
+        "tunables": [
+          "container/memory-limit"
+        ],
+        "metrics": [
+          "memory-usage"
+        ]
+      },
+      "calculations": [
+        {
+          "target": "value",
+          "expr": "clamp(100.0 * percentile((metric:memory-usage), 0.95) / max(1e-6, (tunable:container/memory-limit).value * (1.0 - min(env.NON_HEAP_RATIO ?: 0.30, 0.80)) * 1.05), bounds.lower, bounds.upper)",
+          "fallback": 70
+        }
+      ]
+    },
+    "gc-policy": {
+      "metadata": {
+        "name": "gc-policy",
+        "description": "JVM GC policy",
+        "expression": "+XX:+Use{(tunable:hotspot/gc-policy).value}",
+        "value_type": "string",
+        "type": "categorical",
+        "type_def": {
+          "choices": ["SerialGC", "ParallelGC", "G1GC", "ShenandoahGC", "ZGC"]
+        }
+      },
+      "depends_on": {
+        "tunables": [
+          "container/cpu-limit",
+          "container/memory-limit"
+        ],
+        "metrics": []
+      },
+      "calculations": [
+        {
+          "target": "value",
+          "expr": "env.GC_POLICY_OVERRIDE ?: case when (tunable:container/cpu-limit).value < 2 && (tunable:container/memory-limit).value < 4294967296 then \"SerialGC\" when (tunable:container/cpu-limit).value < 4 && (tunable:container/memory-limit).value < 4294967296 then \"ParallelGC\" when (tunable:container/cpu-limit).value < 8 && (tunable:container/memory-limit).value > 4294967296 then \"G1GC\" when (tunable:container/cpu-limit).value < 16 && (tunable:container/memory-limit).value > 12884901888 then \"ShenandoahGC\" else \"ZGC\" end",
+          "fallback": "G1GC"
+        }
+      ]
+    }
+  }
+}
+```
+**Response**
+
+``` json
+{
+    "message": "Layer : container created successfully. View Layers at /listLayers",
+    "httpcode": 201,
+    "documentationLink": "",
+    "status": "SUCCESS"
+}
+```
+
+# List Layers
+
+This is quick guide to retrieve layers created as follows.
+
+**Request**
+`GET /listLayers`
+
+`Note : We can use the above API without passing any parameters and expect all the available layers to be listed as part of response. Optionally, you can also pass 'name' paramter to request /listLayers?name=hotspot, to list specific layer and the API will return response for the specific requested layer`
+
+**Optional Request Parameters**
+
+| Parameter | Type   | Required | Description                               |
+|-----------|--------|----------|-------------------------------------------|
+| name      | string | optional | The name of the metadata profile          |
+
+``` json
+
+
+```
