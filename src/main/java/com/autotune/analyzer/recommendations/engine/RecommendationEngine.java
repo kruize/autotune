@@ -878,6 +878,8 @@ public class RecommendationEngine {
             // Get the Recommendation for every tunable
             for (OrderTunable orderTunable : tunables) {
                 Object value;
+                //No expressions considered for now
+                orderTunable.expression = null;
                 if (orderTunable.expression != null) {
                     // Code to evaluate the expression
                     LOGGER.debug("Using the expression" + orderTunable.expression);
@@ -890,12 +892,13 @@ public class RecommendationEngine {
 
                             recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
                             context.put(orderTunable, recommendationMemRequest.getAmount());
+                            break;
                         case "memory-limit":
                             // TODO: Combine memRequest and Limit cases to avoid duplicacy. Need to find how to update the context.
                             recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
                             //recommendationMemLimits = recommendationMemRequest;
                             context.put(orderTunable, recommendationMemRequest.getAmount());
-
+                            break;
                         case "cpu-request":
                             // Calling requests on limits as we are maintaining limits and requests as same
                             // Maintaining different flow for both of them even though if they are same as in future we might have
@@ -903,20 +906,22 @@ public class RecommendationEngine {
 
                             recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
                             context.put(orderTunable, recommendationCpuRequest.getAmount());
+                            break;
                         case "cpu-limit":
                             recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
                             context.put(orderTunable, recommendationCpuRequest.getAmount());
-
+                            break;
                         case "gpu":
                             recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
                             context.put(orderTunable, recommendationAcceleratorRequestMap);
+                            break;
                         case "maxram-percentage", "gc-policy", "core-threads":
                             Object recommendationRuntimes = null;
                             String metric_name = orderTunable.getName();
                             String layer_name = orderTunable.getLayer();
                             recommendationRuntimes = model.getRuntimeRecommendations(metric_name,layer_name,context, filteredResultsMap, notifications);
                             context.put(orderTunable, recommendationRuntimes);
-
+                            break;
                         default:
                             throw new IllegalStateException("Unexpected value: " + orderTunable.name);
                     }
@@ -933,10 +938,13 @@ public class RecommendationEngine {
                     switch(metric) {
                         case "maxram-percentage":
                             recommendationOpenjdkBuilder.append("-XX:MaxRamPercentage=")
-                                    .append(entry.getValue().toString());
+                                    .append(entry.getValue().toString())
+                                    .append(" ");
+                            break;
                         case "gc-policy":
-                            recommendationOpenjdkBuilder.append(entry.getValue().toString());
-
+                            recommendationOpenjdkBuilder.append(entry.getValue().toString())
+                                    .append(" ");
+                            break;
                     }
                 } else if (entry.getKey().getLayer().equalsIgnoreCase("quarkus")) {
                     switch(metric) {
@@ -944,7 +952,7 @@ public class RecommendationEngine {
                             recommendationQuarkusBuilder
                                     //.append("QUARKUS_THREAD_POOL_CORES=")
                                     .append(entry.getValue().toString());
-                                    //.append(" ");
+                            break;
                     }
                 }
             }
