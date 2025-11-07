@@ -38,7 +38,7 @@ public class ServerContext {
     public static final String EXPERIMENTS_SUMMARY = ROOT_CONTEXT + "experimentsSummary";
     public static final String CREATE_EXPERIMENT = ROOT_CONTEXT + "createExperiment";
     public static final String CREATE_RULESET = ROOT_CONTEXT + "createRuleSet";
-    public static final String LIST_RULESET = ROOT_CONTEXT + "listRuleSet";
+    public static final String LIST_RULESET = ROOT_CONTEXT + "listRuleSets";
     public static final String UPDATE_RESULTS = ROOT_CONTEXT + "updateResults";
     public static final String UPDATE_RECOMMENDATIONS = ROOT_CONTEXT + "updateRecommendations";
     public static final String GENERATE_RECOMMENDATIONS = ROOT_CONTEXT + "generateRecommendations";
