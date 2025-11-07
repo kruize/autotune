@@ -3,6 +3,7 @@ package com.autotune.analyzer.recommendations.model;
 import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.recommendations.objects.OrderTunable;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.IntervalResults;
 
@@ -21,6 +22,7 @@ public interface RecommendationModel {
 
     Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getAcceleratorRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications);
 
+    Object getRuntimeRecommendations(String metricName, String layerName, Map<OrderTunable, Object> context, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications);
     RecommendationConfigEnv getRuntimeRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications);
 
     public String getModelName();

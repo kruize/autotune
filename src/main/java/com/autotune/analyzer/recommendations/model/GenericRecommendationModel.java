@@ -4,6 +4,7 @@ import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.recommendations.objects.OrderTunable;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -57,6 +58,28 @@ public class GenericRecommendationModel implements RecommendationModel{
     }
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRecommendationModel.class);
+
+    public Object getRuntimeRecommendations(String metric_name, String layer, Map<OrderTunable, Object> context, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+
+        switch (metric_name) {
+            case "maxRamPercentage":
+                return "80";
+            case "gcPolicy":
+                return "-XX:+ParallelGC";
+            case "threadPoolCores":
+                Object cpuLimits = null;
+                //TODO : Can avoid this looping
+                for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
+                    if (entry.getKey().getName().equalsIgnoreCase("cpuLimits") && entry.getKey().getLayer().equalsIgnoreCase("container")) {
+                        cpuLimits = entry.getValue();
+                        break;
+                    }
+                }
+                return (Integer)cpuLimits;
+            default:
+                return null;
+        }
+    }
 
     @Override
     public RecommendationConfigItem getCPURequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
@@ -673,6 +696,29 @@ public class GenericRecommendationModel implements RecommendationModel{
         String name = "JDK_JAVA_OPTIONS";
         String value = "-server -XX:MaxRAMPercentage=80 -XX:+ParallelGC";
 
+
+        //JSONArray jvmUsageList = getJVMUsageList(filteredResultsMap);
+        //List<Double> jvmMaxValues = getJVMMaxValues(jvmUsageList);
+
+        // TODO: Set notifications only if notification object is available
+
+        recommendationConfigEnv = new RecommendationConfigEnv(name, value);
+        return recommendationConfigEnv;
+    }
+
+    public RecommendationConfigEnv getFrameWorkRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        boolean setNotification = true;
+        if (null == notifications) {
+            LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
+            setNotification = false;
+        }
+
+        RecommendationConfigEnv recommendationConfigEnv = null;
+
+
+        //Hard coding
+        String name = "QUARKUS_THREAD_POOL_CORE_THREADS";
+        String value = "1";
 
 
         //JSONArray jvmUsageList = getJVMUsageList(filteredResultsMap);
