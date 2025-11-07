@@ -55,6 +55,8 @@ import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.operator.KruizeDeploymentInfo.is_ros_enabled;
+import static com.autotune.operator.KruizeDeploymentInfo.local;
 
 /**
  * REST API to create experiments to Analyser for monitoring metrics.
@@ -144,44 +146,47 @@ public class CreateExperiment extends HttpServlet {
                         // Note: Please update the respective kruize object's container data  with detected layers before
                         // adding to cache
 
-                        LayerDetectionService validationService = new LayerDetectionService();
-                        HashMap<String, Layer> detectedLayers = validationService.detectAllLayers();
+                        // Detect Layers and tag it to containerData only for LM experiments
+                        if (local && ko.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
+                            LayerDetectionService validationService = new LayerDetectionService();
+                            HashMap<String, Layer> detectedLayers = validationService.detectAllLayers();
 
-                        LOGGER.info("Detected {} layers for experiment {}",
-                                detectedLayers.size(), ko.getExperimentName());
+                            LOGGER.info("Detected {} layers for experiment {}",
+                                    detectedLayers.size(), ko.getExperimentName());
 
-                        // Get kubernetes objects and container data
-                        for (K8sObject k8sObject : ko.getKubernetes_objects()) {
-                            // Get all containers in this k8s object
-                            HashMap<String, ContainerData> containerDataHashmap = k8sObject.getContainerDataMap();
+                            // Get kubernetes objects and container data
+                            for (K8sObject k8sObject : ko.getKubernetes_objects()) {
+                                // Get all containers in this k8s object
+                                HashMap<String, ContainerData> containerDataHashmap = k8sObject.getContainerDataMap();
 
-                            // Set layers for each container
-                            for (ContainerData containerData : containerDataHashmap.values()) {
-                                // Add each validated layer
-                                detectedLayers.forEach((layerName, layer) ->
-                                        containerData.setLayer(layerName, layer)
-                                );
-                            }
-                        }
-
-                        // Print layers for all containers in this KruizeObject
-                        for (K8sObject k8sObject : ko.getKubernetes_objects()) {
-                            HashMap<String, ContainerData> containerDataHashmap = k8sObject.getContainerDataMap();
-
-                            for (ContainerData containerData : containerDataHashmap.values()) {
-                                if (containerData.getContainerLayersList() != null) {
-                                    String layerNames = containerData.getContainerLayersList().stream()
-                                            .map(layer -> layer.getMetadata().getName())
-                                            .collect(Collectors.joining(", "));
-                                    LOGGER.info("Experiment '{}' - Container '{}' has layers: [{}]",
-                                            ko.getExperimentName(),
-                                            containerData.getContainer_name(),
-                                            layerNames);
+                                // Set layers for each container
+                                for (ContainerData containerData : containerDataHashmap.values()) {
+                                    // Add each validated layer
+                                    detectedLayers.forEach((layerName, layer) ->
+                                            containerData.setLayer(layerName, layer)
+                                    );
                                 }
                             }
-                        }
 
-                        KruizeCache.getInstance().putExperiment(ko.getExperimentName(), ko);
+                            // Print layers for all containers in this KruizeObject
+                            for (K8sObject k8sObject : ko.getKubernetes_objects()) {
+                                HashMap<String, ContainerData> containerDataHashmap = k8sObject.getContainerDataMap();
+
+                                for (ContainerData containerData : containerDataHashmap.values()) {
+                                    if (containerData.getContainerLayersList() != null) {
+                                        String layerNames = containerData.getContainerLayersList().stream()
+                                                .map(layer -> layer.getMetadata().getName())
+                                                .collect(Collectors.joining(", "));
+                                        LOGGER.info("Experiment '{}' - Container '{}' has layers: [{}]",
+                                                ko.getExperimentName(),
+                                                containerData.getContainer_name(),
+                                                layerNames);
+                                    }
+                                }
+                            }
+
+                            KruizeCache.getInstance().putExperiment(ko.getExperimentName(), ko);
+                        }
                     }
                     if (addedToDB.isSuccess()) {
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
