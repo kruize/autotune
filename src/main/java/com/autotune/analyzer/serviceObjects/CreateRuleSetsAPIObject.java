@@ -6,7 +6,7 @@ import com.google.gson.annotations.SerializedName;
 
 public class CreateRuleSetsAPIObject {
 
-    @SerializedName("apiVerison")
+    @SerializedName("apiVersion")
     private String apiVersion;
     @SerializedName("kind")
     private String kind;
