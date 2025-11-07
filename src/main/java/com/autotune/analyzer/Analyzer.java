@@ -52,6 +52,7 @@ public class Analyzer {
         context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
         context.addServlet(CreateExperiment.class, ServerContext.CREATE_EXPERIMENT);
         context.addServlet(CreateRuleSets.class, ServerContext.CREATE_RULESET);
+        context.addServlet(ListRuleSets.class, ServerContext.LIST_RULESET);
         context.addServlet(UpdateResults.class, ServerContext.UPDATE_RESULTS);
         context.addServlet(UpdateRecommendations.class, ServerContext.UPDATE_RECOMMENDATIONS);
         context.addServlet(GenerateRecommendations.class, ServerContext.GENERATE_RECOMMENDATIONS);
