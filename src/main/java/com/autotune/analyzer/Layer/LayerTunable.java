@@ -40,4 +40,13 @@ public class LayerTunable {
     public void setCalculations(List<Calculation> calculations) {
         this.calculations = calculations;
     }
+
+    @Override
+    public String toString() {
+        return "LayerTunable{" +
+                "metadata=" + metadata +
+                ", dependsOn=" + dependsOn +
+                ", calculations=" + calculations +
+                '}';
+    }
 }

@@ -164,7 +164,22 @@ public class CreateExperiment extends HttpServlet {
                             }
                         }
 
-                        LOGGER.info("KruizeObject: {}", ko.getKubernetes_objects());
+                        // Print layers for all containers in this KruizeObject
+                        for (K8sObject k8sObject : ko.getKubernetes_objects()) {
+                            HashMap<String, ContainerData> containerDataHashmap = k8sObject.getContainerDataMap();
+
+                            for (ContainerData containerData : containerDataHashmap.values()) {
+                                if (containerData.getContainerLayersList() != null) {
+                                    String layerNames = containerData.getContainerLayersList().stream()
+                                            .map(layer -> layer.getMetadata().getName())
+                                            .collect(Collectors.joining(", "));
+                                    LOGGER.info("Experiment '{}' - Container '{}' has layers: [{}]",
+                                            ko.getExperimentName(),
+                                            containerData.getContainer_name(),
+                                            layerNames);
+                                }
+                            }
+                        }
 
                         KruizeCache.getInstance().putExperiment(ko.getExperimentName(), ko);
                     }

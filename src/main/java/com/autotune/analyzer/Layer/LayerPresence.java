@@ -28,4 +28,12 @@ public class LayerPresence {
     public void setDetectors(List<LayerDetector> detectors) {
         this.detectors = detectors;
     }
+
+    @Override
+    public String toString() {
+        return "LayerPresence{" +
+                "presence='" + presence + '\'' +
+                ", detectors=" + detectors +
+                '}';
+    }
 }

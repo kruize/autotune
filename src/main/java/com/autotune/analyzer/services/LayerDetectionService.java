@@ -34,7 +34,7 @@ public class LayerDetectionService {
      * @return List of validated Layer objects that are reachable
      */
     public List<Layer> fetchAndDetectLayers(Map<String, DataSourceInfo> dataSourceInfoMap) {
-        List<Layer> validatedLayers = new ArrayList<>();
+        List<Layer> detectedLayers = new ArrayList<>();
         Map<String, Layer> layerMap = new HashMap<>();
 
         try {
@@ -43,27 +43,24 @@ public class LayerDetectionService {
 
             LOGGER.info("Loaded {} layers from database", layerMap.size());
 
-            // Validate each layer and add to result if successful
+            // detect each layer and add to result if successful
             for (Map.Entry<String, Layer> entry : layerMap.entrySet()) {
                 Layer layer = entry.getValue();
                 String layerName = layer.getMetadata().getName();
 
                 if (detectLayer(layer, dataSourceInfoMap)) {
-                    validatedLayers.add(layer);
-                    LOGGER.info("Layer {} validated successfully", layerName);
+                    detectedLayers.add(layer);
+                    LOGGER.info("Layer {} detected successfully", layerName);
                 } else {
-                    LOGGER.warn("Layer {} validation failed", layerName);
+                    LOGGER.warn("Layer {} detection failed", layerName);
                 }
             }
-
-            LOGGER.info("Successfully validated {} out of {} layers",
-                    validatedLayers.size(), layerMap.size());
 
         } catch (Exception e) {
             LOGGER.error("Error fetching and validating layers: {}", e.getMessage(), e);
         }
 
-        return validatedLayers;
+        return detectedLayers;
     }
 
 
