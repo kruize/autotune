@@ -1,5 +1,6 @@
 package com.autotune.analyzer.recommendations.engine;
 
+import com.autotune.analyzer.KruizeCache.KruizeCache;
 import com.autotune.analyzer.autoscaler.instaslice.InstasliceHelper;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
@@ -336,7 +337,10 @@ public class RecommendationEngine {
                     intervalEndTimeStr);
             setInterval_end_time(interval_end_time);
         }
-        KruizeObject kruizeObject = createKruizeObject(target_cluster);
+//TODO: temporarily fetching the kruize object from the Cache. Will be updated to fetch from DB later
+//        KruizeObject kruizeObject = createKruizeObject(target_cluster);
+        KruizeObject kruizeObject = KruizeCache.getInstance().getExperiment(experimentName);
+        LOGGER.info("KruizeObject = {}", new Gson().toJson(kruizeObject));
         if (null != bulkJobID) kruizeObject.setBulkJobId(bulkJobID);
         if (!kruizeObject.getValidation_data().isSuccess())
             return kruizeObject;
@@ -442,8 +446,6 @@ public class RecommendationEngine {
             // generate recommendation
             try {
                 generateRecommendations(kruizeObject);
-                //TODO: add runtimes recomm here
-                generateRuntimeRecommendations(kruizeObject);
                 // store the recommendations in the DB
                 validationOutputData = addRecommendationsToDB(mainKruizeExperimentMAP, kruizeObject);
                 if (!validationOutputData.isSuccess()) {
@@ -853,13 +855,13 @@ public class RecommendationEngine {
 
             List<OrderTunable> tunables = new ArrayList<>();
 
-            tunables.add(new OrderTunable("memRequest", "container", null));
-            tunables.add(new OrderTunable("cpuRequest", "container", null));
-            tunables.add(new OrderTunable("memLimit", "container", null));
-            tunables.add(new OrderTunable("cpuLimit", "container", null));
-            tunables.add(new OrderTunable("maxRamPercentage", "openjdk", null));
-            tunables.add(new OrderTunable("gcpolicy", "openjdk", null));
-            tunables.add(new OrderTunable("quarkustThreadPoolCores", "quarkus", "cpuRequest * 1"));
+            tunables.add(new OrderTunable("memory-request", "container", null));
+            tunables.add(new OrderTunable("cpu-request", "container", null));
+            tunables.add(new OrderTunable("memory-limit", "container", null));
+            tunables.add(new OrderTunable("cpu-limit", "container", null));
+            tunables.add(new OrderTunable("maxram-percentage", "openjdk", null));
+            tunables.add(new OrderTunable("gc-policy", "openjdk", null));
+            tunables.add(new OrderTunable("core-threads", "quarkus", "cpuRequest * 1"));
 
             RecommendationConfigItem recommendationCpuRequest = null;
             RecommendationConfigItem recommendationCpuLimits = null;
@@ -881,34 +883,34 @@ public class RecommendationEngine {
                     LOGGER.debug("Using the expression" + orderTunable.expression);
                 } else {
                     switch (orderTunable.name) {
-                        case "memRequest":
+                        case "memory-request":
                             // Calling requests on limits as we are maintaining limits and requests as same
                             // Maintaining different flow for both of them even though if they are same as in future we might have
                             // a different implementation for both and this avoids confusion
 
                             recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
                             context.put(orderTunable, recommendationMemRequest.getAmount());
-                        case "memLimit":
+                        case "memory-limit":
                             // TODO: Combine memRequest and Limit cases to avoid duplicacy. Need to find how to update the context.
                             recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
                             //recommendationMemLimits = recommendationMemRequest;
                             context.put(orderTunable, recommendationMemRequest.getAmount());
 
-                        case "cpuRequest":
+                        case "cpu-request":
                             // Calling requests on limits as we are maintaining limits and requests as same
                             // Maintaining different flow for both of them even though if they are same as in future we might have
                             // a different implementation for both and this avoids confusion
 
                             recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
                             context.put(orderTunable, recommendationCpuRequest.getAmount());
-                        case "cpuLimit":
+                        case "cpu-limit":
                             recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
                             context.put(orderTunable, recommendationCpuRequest.getAmount());
 
                         case "gpu":
                             recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
                             context.put(orderTunable, recommendationAcceleratorRequestMap);
-                        case "maxRamPercentage", "gcPolicy", "quarkusThreadPoolCores":
+                        case "maxram-percentage", "gc-policy", "core-threads":
                             Object recommendationRuntimes = null;
                             String metric_name = orderTunable.getName();
                             String layer_name = orderTunable.getLayer();
@@ -929,16 +931,16 @@ public class RecommendationEngine {
                 String metric = entry.getKey().getName();
                 if (entry.getKey().getLayer().equalsIgnoreCase("openjdk")) {
                     switch(metric) {
-                        case "maxRamPercentage":
+                        case "maxram-percentage":
                             recommendationOpenjdkBuilder.append("-XX:MaxRamPercentage=")
                                     .append(entry.getValue().toString());
-                        case "gcpolicy":
+                        case "gc-policy":
                             recommendationOpenjdkBuilder.append(entry.getValue().toString());
 
                     }
                 } else if (entry.getKey().getLayer().equalsIgnoreCase("quarkus")) {
                     switch(metric) {
-                        case "quarkusThreadPoolCores":
+                        case "core-threads":
                             recommendationQuarkusBuilder
                                     //.append("QUARKUS_THREAD_POOL_CORES=")
                                     .append(entry.getValue().toString());
@@ -963,16 +965,15 @@ public class RecommendationEngine {
 
             //Get the ENV Recommendations
             // Create an internal map to send runtimes data to populate
-            HashMap<String, RecommendationConfigItem> runtimesMapToPopulate = new HashMap<>();
-            RecommendationConfigItem recommendationJDKOpenjdk = new RecommendationConfigItem("JDK_JAVA_OPTIONS", recommendationOpenjdkBuilder.toString());
-            RecommendationConfigItem recommendationJAVAOpenjdk = new RecommendationConfigItem("JAVA_OPTIONS", recommendationOpenjdkBuilder.toString());
-            RecommendationConfigItem recommendationQuarkus = new RecommendationConfigItem("QUARKUS_THREAD_POOL_CORE_THREADS", recommendationQuarkusBuilder.toString());
-            // Add recommended ENV values
-            runtimesMapToPopulate.put(RecommendationConstants.RecommendationEngine.RuntimeConstants.JDK_JAVA_OPTIONS, recommendationJDKOpenjdk);
-            runtimesMapToPopulate.put(RecommendationConstants.RecommendationEngine.RuntimeConstants.JAVA_OPTIONS, recommendationJAVAOpenjdk);
-            runtimesMapToPopulate.put(RecommendationConstants.RecommendationEngine.RuntimeConstants.QUARKUS_THREAD_POOL_CORE_THREADS, recommendationQuarkus);
+            RecommendationConfigEnv recommendationJDKOpenjdk = new RecommendationConfigEnv("JDK_JAVA_OPTIONS", recommendationOpenjdkBuilder.toString());
+            RecommendationConfigEnv recommendationJAVAOpenjdk = new RecommendationConfigEnv("JAVA_OPTIONS", recommendationOpenjdkBuilder.toString());
+            RecommendationConfigEnv recommendationQuarkus = new RecommendationConfigEnv("QUARKUS_THREAD_POOL_CORE_THREADS", recommendationQuarkusBuilder.toString());
+            // Add recommended ENV values in the list
+            List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
+            runtimeRecommList.add(recommendationJDKOpenjdk);
+            runtimeRecommList.add(recommendationJAVAOpenjdk);
+            runtimeRecommList.add(recommendationQuarkus);
 
-            RecommendationConfigEnv recommendationRuntime = model.getRuntimeRecommendation(filteredResultsMap, notifications);
 
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
@@ -984,7 +985,7 @@ public class RecommendationEngine {
                     cpuThreshold,
                     memoryThreshold,
                     recommendationAcceleratorRequestMap,
-                    recommendationRuntime
+                    runtimeRecommList
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -1337,7 +1338,7 @@ public class RecommendationEngine {
      * @param cpuThreshold                        The CPU usage threshold for the recommendation.
      * @param memoryThreshold                     The memory usage threshold for the recommendation.
      * @param recommendationAcceleratorRequestMap The Map which has Accelerator recommendations
-     * @param runtimeMapToPopulate                The Object to populate runtime recommendations.
+     * @param runtimeListToPopulate                The Object to populate runtime recommendations.
      * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
     private boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
@@ -1348,7 +1349,7 @@ public class RecommendationEngine {
                                            double cpuThreshold,
                                            double memoryThreshold,
                                            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap,
-                                           RecommendationConfigEnv runtimeMapToPopulate) {
+                                           List<RecommendationConfigEnv> runtimeListToPopulate) {
         // Check for cpu & memory Thresholds (Duplicate check if the caller is generateRecommendations)
         String recommendationTerm = termEntry.getKey();
         double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
@@ -1942,12 +1943,9 @@ public class RecommendationEngine {
             config.setLimits(limitsMap);
         }
 
-        // Set env
-        List<RecommendationConfigEnv> env = new ArrayList<>();
-        env.add(runtimeMapToPopulate);
-
-        if (runtimeMapToPopulate != null) {
-            config.setEnv(env);
+        // Set env list
+        if (runtimeListToPopulate != null) {
+            config.setEnv(runtimeListToPopulate);
         }
 
         // Set Config

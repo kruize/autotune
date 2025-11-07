@@ -62,11 +62,11 @@ public class GenericRecommendationModel implements RecommendationModel{
     public Object getRuntimeRecommendations(String metric_name, String layer, Map<OrderTunable, Object> context, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
 
         switch (metric_name) {
-            case "maxRamPercentage":
+            case "maxram-percentage":
                 return "80";
-            case "gcPolicy":
+            case "gc-policy":
                 return "-XX:+ParallelGC";
-            case "threadPoolCores":
+            case "core-threads":
                 Object cpuLimits = null;
                 //TODO : Can avoid this looping
                 for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
