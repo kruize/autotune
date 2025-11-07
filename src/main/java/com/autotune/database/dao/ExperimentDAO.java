@@ -174,4 +174,9 @@ public interface ExperimentDAO {
 
     // load layer by name
     List<KruizeLMLayerEntry> loadLayerByName(String name) throws Exception;
+
+    public ValidationOutputData addRuleSetToDB(KruizeLMRuleSetEntry kruizeLMRuleSetEntry);
+
+    List<KruizeLMRuleSetEntry> loadAllRuleSet() throws Exception;
+
 }

@@ -1,9 +1,16 @@
 package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.KruizeResponse;
+import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.serviceObjects.CreateRuleSetsAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.ValidationOutputData;
+import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.database.table.lm.KruizeLMRuleSetEntry;
+import com.autotune.utils.KruizeConstants;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
+import jakarta.validation.Valid;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,11 +28,9 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class CreateRuleSets extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
 
-
     /**
-     * It reads the input data from the request, converts it into a List of "KruizeObject" objects using the GSON library.
-     * It then calls a validation function that does nothing for now.
-     *
+     * It reads the input data from the request, converts it into a RuleSet object using GSON.
+     * It validates, converts to DB entry, and saves to database.
      *
      * @param request
      * @param response
@@ -39,7 +44,6 @@ public class CreateRuleSets extends HttpServlet {
 
         String inputData = "";
         CreateRuleSetsAPIObject ruleSetObject = null;
-        PrintWriter out = null;
 
         try {
             // read the json payload
@@ -57,9 +61,16 @@ public class CreateRuleSets extends HttpServlet {
                 throw new Exception("Invalid rule set object");
             }
 
-            // save ruleset to DB
+            // convert api object to database entry
+            KruizeLMRuleSetEntry dbEntry = convertToDBEntry(ruleSetObject);
 
-            // send success
+            // save ruleset to database
+            ValidationOutputData validationOutputData = new ExperimentDAOImpl().addRuleSetToDB(dbEntry);
+            if (!validationOutputData.isSuccess()) {
+                throw new Exception("Failed to save ruleset: " + validationOutputData.getMessage());
+            }
+
+            // send success response
             sendSuccessResponse(response, "RuleSet created successfully");
 
         } catch (Exception e) {
@@ -122,5 +133,43 @@ public class CreateRuleSets extends HttpServlet {
                 errorMsg = e.getMessage();
         }
         response.sendError(httpStatusCode, errorMsg);
+    }
+
+    /**
+     * Convert API object to database entry
+     *
+     * @param apiObject The API object from the request
+     * @return Database entry ready to persist
+     * @throws Exception if conversion fails
+     */
+    private KruizeLMRuleSetEntry convertToDBEntry(CreateRuleSetsAPIObject apiObject) throws Exception {
+        KruizeLMRuleSetEntry entry = new KruizeLMRuleSetEntry();
+
+        // Set simple fields
+        entry.setApi_version(apiObject.getApiVersion());
+        entry.setKind(apiObject.getKind());
+        entry.setName(apiObject.getMetadata().getName());  // Primary key from metadata
+
+        // Convert complex objects to JsonNode
+        Gson gson = new Gson();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        // Convert metadata to JsonNode
+        String metadataJson = gson.toJson(apiObject.getMetadata());
+        entry.setMetadata(objectMapper.readTree(metadataJson));
+
+        // Convert stack to JsonNode
+        String stackJson = gson.toJson(apiObject.getRulesets().getStack());
+        entry.setStack(objectMapper.readTree(stackJson));
+
+        // Convert rules to JsonNode
+        String rulesJson = gson.toJson(apiObject.getRulesets().getRules());
+        entry.setRules(objectMapper.readTree(rulesJson));
+
+        // Convert dependencies to JsonNode
+        String dependenciesJson = gson.toJson(apiObject.getRulesets().getDependencies());
+        entry.setDependencies(objectMapper.readTree(dependenciesJson));
+
+        return entry;
     }
 }

@@ -2006,4 +2006,39 @@ public class ExperimentDAOImpl implements ExperimentDAO {
     }
 
 
+    @Override
+    public ValidationOutputData addRuleSetToDB(KruizeLMRuleSetEntry kruizeLMRuleSetEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeLMRuleSetEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save ruleset due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save ruleset due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    @Override
+    public List<KruizeLMRuleSetEntry> loadAllRuleSet() throws Exception {
+        List<KruizeLMRuleSetEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery("from KruizeLMRuleSetEntry", KruizeLMRuleSetEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load rule set  due to {}", e.getMessage());
+            throw new Exception("Error while loading existing rule set from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
 }
