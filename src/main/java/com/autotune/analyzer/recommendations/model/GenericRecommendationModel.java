@@ -128,7 +128,7 @@ public class GenericRecommendationModel implements RecommendationModel{
                 String jdkVersion = "17.0.2+8";
                 // Hard code again - until the order of tunables is in place.
                 double maxram_percentage = 80;
-                if (layer.equalsIgnoreCase("openjdk")){
+                if (layer.equalsIgnoreCase("hotspot")){
                     gcpolicy = decideHotSpotGCPolicy(jvmHeapSizeMB, maxram_percentage,memLimits,cpuLimits,jdkVersion);
                 }
                 return gcpolicy;

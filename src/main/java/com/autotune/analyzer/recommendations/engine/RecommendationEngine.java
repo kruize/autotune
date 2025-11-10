@@ -971,9 +971,18 @@ public class RecommendationEngine {
                                     .append(entry.getValue().toString());
                             break;
                     }
+                } else if (entry.getKey().getLayer().equalsIgnoreCase("openj9")) {
+                    switch(metric) {
+                        case "maxram-percentage":
+                            recommendationOpenjdkBuilder.append("-XX:MaxRamPercentage=")
+                                    .append(entry.getValue().toString())
+                                    .append(" ");
+                            break;
+                    }
                 }
             }
-
+            // Appending -server for OpenJDK
+            recommendationOpenjdkBuilder.append("-server ");
             // Create an internal map to send data to populate
             HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<>();
             // Add current values
