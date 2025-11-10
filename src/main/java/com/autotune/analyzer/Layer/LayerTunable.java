@@ -17,6 +17,9 @@ public class LayerTunable {
         this.calculations = calculations;
     }
 
+    public LayerTunable() {
+    }
+
     public LayerTunableMetadata getMetadata() {
         return metadata;
     }

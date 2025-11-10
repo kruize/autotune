@@ -1,6 +1,10 @@
 package com.autotune.analyzer.recommendations.engine;
 
 import com.autotune.analyzer.KruizeCache.KruizeCache;
+import com.autotune.analyzer.Layer.Layer;
+import com.autotune.analyzer.Layer.LayerDependsOn;
+import com.autotune.analyzer.Layer.LayerTunable;
+import com.autotune.analyzer.Ruleset.Dependency;
 import com.autotune.analyzer.autoscaler.instaslice.InstasliceHelper;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
@@ -848,30 +852,26 @@ public class RecommendationEngine {
             // Pass Notification object to all callers to update the notifications required
             ArrayList<RecommendationNotification> notifications = new ArrayList<>();
 
-            // Get the order of tunables, layer details , expressions
-            // Assuming the metrics are gathered for all the tunables as per the details above.
-            // Tunables will be added as per the oder of priority
-            // OrderTunable("metric_name" , "layer", "expression" )
+            List<Dependency> dependencies = null;
+            try {
+                dependencies = containerData.getContainerRuleSets().getDependencies();
+            } catch (Exception e) {
+                LOGGER.warn("Dependencies are null or empty: {}", e.getMessage());
+            }
 
-            List<OrderTunable> tunables = new ArrayList<>();
+            HashMap<String, Layer> layerHashMap = containerData.getContainerLayersMap();
+            List<OrderTunable> tunables;
 
-            tunables.add(new OrderTunable("memory-request", "container", null));
-            tunables.add(new OrderTunable("cpu-request", "container", null));
-            tunables.add(new OrderTunable("memory-limit", "container", null));
-            tunables.add(new OrderTunable("cpu-limit", "container", null));
-            tunables.add(new OrderTunable("maxram-percentage", "openjdk", null));
-            tunables.add(new OrderTunable("gc-policy", "openjdk", null));
-            tunables.add(new OrderTunable("core-threads", "quarkus", "cpuRequest * 1"));
-
+            if (dependencies != null) {
+                tunables = buildDynamicOrder(dependencies, layerHashMap);
+            } else {
+                tunables = buildOrderFromLayerMap(layerHashMap);
+            }
             RecommendationConfigItem recommendationCpuRequest = null;
             RecommendationConfigItem recommendationCpuLimits = null;
             RecommendationConfigItem recommendationMemRequest = null;
             RecommendationConfigItem recommendationMemLimits = null;
             Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap = null;
-            Double recommendationMaxRamPercentage = null;
-            String recommendationGcPolicy = null;
-            Integer recommendationQuarkusThreadPoolCores = null;
-
 
             Map<OrderTunable, Object> context = new HashMap<>();
             // process the tunables
@@ -884,6 +884,7 @@ public class RecommendationEngine {
                     // Code to evaluate the expression
                     LOGGER.debug("Using the expression" + orderTunable.expression);
                 } else {
+                    Double amount;
                     switch (orderTunable.name) {
                         case "memory-request":
                             // Calling requests on limits as we are maintaining limits and requests as same
@@ -891,13 +892,21 @@ public class RecommendationEngine {
                             // a different implementation for both and this avoids confusion
 
                             recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
-                            context.put(orderTunable, recommendationMemRequest.getAmount());
+                            amount = null;
+                            if (recommendationMemRequest != null) {
+                                amount = recommendationMemRequest.getAmount();
+                            }
+                            context.put(orderTunable, amount);
                             break;
                         case "memory-limit":
                             // TODO: Combine memRequest and Limit cases to avoid duplicacy. Need to find how to update the context.
                             recommendationMemLimits = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
                             //recommendationMemLimits = recommendationMemRequest;
-                            context.put(orderTunable, recommendationMemLimits.getAmount());
+                            amount = null;
+                            if (recommendationMemLimits != null) {
+                                amount = recommendationMemLimits.getAmount();
+                            }
+                            context.put(orderTunable, amount);
                             break;
                         case "cpu-request":
                             // Calling requests on limits as we are maintaining limits and requests as same
@@ -905,11 +914,19 @@ public class RecommendationEngine {
                             // a different implementation for both and this avoids confusion
 
                             recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
-                            context.put(orderTunable, recommendationCpuRequest.getAmount());
+                            amount = null;
+                            if (recommendationCpuRequest != null) {
+                                amount = recommendationCpuRequest.getAmount();
+                            }
+                            context.put(orderTunable, amount);
                             break;
                         case "cpu-limit":
                             recommendationCpuLimits = model.getCPURequestRecommendation(filteredResultsMap, notifications);
-                            context.put(orderTunable, recommendationCpuLimits.getAmount());
+                            amount = null;
+                            if (recommendationCpuLimits != null) {
+                                amount = recommendationCpuLimits.getAmount();
+                            }
+                            context.put(orderTunable, amount);
                             break;
                         case "gpu":
                             recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
@@ -934,7 +951,7 @@ public class RecommendationEngine {
 
             for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
                 String metric = entry.getKey().getName();
-                if (entry.getKey().getLayer().equalsIgnoreCase("openjdk")) {
+                if (entry.getKey().getLayer().equalsIgnoreCase("hotspot")) {
                     switch(metric) {
                         case "maxram-percentage":
                             recommendationOpenjdkBuilder.append("-XX:MaxRamPercentage=")
@@ -973,14 +990,10 @@ public class RecommendationEngine {
 
             //Get the ENV Recommendations
             // Create an internal map to send runtimes data to populate
-            RecommendationConfigEnv recommendationJDKOpenjdk = new RecommendationConfigEnv("JDK_JAVA_OPTIONS", recommendationOpenjdkBuilder.toString());
-            RecommendationConfigEnv recommendationJAVAOpenjdk = new RecommendationConfigEnv("JAVA_OPTIONS", recommendationOpenjdkBuilder.toString());
-            RecommendationConfigEnv recommendationQuarkus = new RecommendationConfigEnv("QUARKUS_THREAD_POOL_CORE_THREADS", recommendationQuarkusBuilder.toString());
-            // Add recommended ENV values in the list
             List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
-            runtimeRecommList.add(recommendationJDKOpenjdk);
-            runtimeRecommList.add(recommendationJAVAOpenjdk);
-            runtimeRecommList.add(recommendationQuarkus);
+            addIfNotEmpty(runtimeRecommList, "JDK_JAVA_OPTIONS", recommendationOpenjdkBuilder);
+            addIfNotEmpty(runtimeRecommList, "JAVA_OPTIONS", recommendationOpenjdkBuilder);
+            addIfNotEmpty(runtimeRecommList, "QUARKUS_THREAD_POOL_CORE_THREADS", recommendationQuarkusBuilder);
 
 
             // Call the populate method to validate and populate the recommendation object
@@ -1952,7 +1965,7 @@ public class RecommendationEngine {
         }
 
         // Set env list
-        if (runtimeListToPopulate != null) {
+        if (runtimeListToPopulate != null && !runtimeListToPopulate.isEmpty()) {
             config.setEnv(runtimeListToPopulate);
         }
 
@@ -2747,5 +2760,148 @@ public class RecommendationEngine {
                 })
                 .toList();
     }
-}
 
+    public static List<OrderTunable> buildOrderFromLayerMap(Map<String, Layer> layerHashMap) {
+        List<OrderTunable> orderedList = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+
+        for (Layer layer : layerHashMap.values()) {
+            if (layer.getTunables() == null) continue;
+
+            for (Map.Entry<String, LayerTunable> entry : layer.getTunables().entrySet()) {
+                String tunableName = entry.getKey();
+                resolveTunableFromLayer(layer.getMetadata().getName(), tunableName, layerHashMap, orderedList, visited);
+            }
+        }
+
+        LOGGER.info("Ordered list of tunables: {}", orderedList);
+        return orderedList;
+    }
+
+    private static void resolveTunableFromLayer(String layerName, String tunableName,
+                                                Map<String, Layer> layerMap,
+                                                List<OrderTunable> orderedList,
+                                                Set<String> visited) {
+        String fullKey = layerName + "/" + tunableName;
+        if (visited.contains(fullKey)) return;
+        visited.add(fullKey);
+
+        Layer layer = layerMap.get(layerName);
+        if (layer == null || layer.getTunables() == null) {
+            LOGGER.warn("Missing layer or tunables for: {}", layerName);
+            return;
+        }
+
+        LayerTunable tunable = layer.getTunables().get(tunableName);
+        if (tunable == null) {
+            LOGGER.warn("Missing tunable: {}", fullKey);
+            return;
+        }
+
+        // Resolve dependencies recursively
+        LayerDependsOn dependsOn = tunable.getDependsOn();
+        if (dependsOn != null && dependsOn.getTunables() != null) {
+            for (String dep : dependsOn.getTunables()) {
+                String[] parts = dep.split("/", 2);
+                if (parts.length == 2) {
+                    resolveTunableFromLayer(parts[0], parts[1], layerMap, orderedList, visited);
+                }
+            }
+        }
+
+        // Extract expression & metrics
+        String expression = null;
+        if (tunable.getCalculations() != null && !tunable.getCalculations().isEmpty()) {
+            expression = tunable.getCalculations().get(0).getExpr();
+        }
+
+        // Add after dependencies are processed
+        orderedList.add(new OrderTunable(tunableName, layerName, expression));
+    }
+
+    public static List<OrderTunable> buildDynamicOrder(
+            List<Dependency> dependencies,
+            Map<String, Layer> layerHashMap) {
+
+        List<OrderTunable> orderedTunables = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+
+        for (Dependency dep : dependencies) {
+            for (String dependant : dep.getDependants()) {
+                resolveTunable(dependant, layerHashMap, orderedTunables, visited);
+            }
+        }
+
+        return orderedTunables;
+    }
+
+    private static void resolveTunable(String tunableStr,
+                                       Map<String, Layer> layerMap,
+                                       List<OrderTunable> orderedList,
+                                       Set<String> visited) {
+        if (visited.contains(tunableStr)) return;
+        visited.add(tunableStr);
+
+        // Dynamic parse: tunable:<layer>/<tunableName>
+        if (!tunableStr.startsWith("tunable:")) {
+            LOGGER.warn("Skipping invalid entry: {}", tunableStr);
+            return;
+        }
+        String[] parts = tunableStr.substring("tunable:".length()).split("/", 2);
+        if (parts.length != 2) {
+            LOGGER.warn("Malformed tunable string: {}", tunableStr);
+            return;
+        }
+
+        String layerName = parts[0];
+        String tunableName = parts[1];
+
+        Layer layer = layerMap.get(layerName);
+        if (layer == null) {
+            LOGGER.warn("Missing layer: {}", layerName);
+            // Create a dummy placeholder to continue
+            layer = new Layer();
+            layer.setTunables(new HashMap<>());
+        }
+
+        Map<String, LayerTunable> tunables = layer.getTunables();
+        if (tunables == null) {
+            tunables = new HashMap<>();
+            layer.setTunables(tunables);
+        }
+
+        LayerTunable tunable = layer.getTunables().get(tunableName);
+        if (tunable == null) {
+            LOGGER.warn("Missing tunable: {}", layerName + "/" + tunableName);
+            // Create a dummy placeholder tunable
+            tunable = new LayerTunable();
+            tunable.setCalculations(Collections.emptyList());
+            tunable.setDependsOn(new LayerDependsOn());
+            layer.getTunables().put(tunableName, tunable);
+        }
+
+        // Resolve all dependencies first (recursively)
+        LayerDependsOn dependsOn = tunable.getDependsOn();
+        if (dependsOn != null && dependsOn.getTunables() != null) {
+            for (String dep : dependsOn.getTunables()) {
+                resolveTunable("tunable:" + dep, layerMap, orderedList, visited);
+            }
+        }
+
+        // Extract dynamic data
+        String expression = null;
+        if (tunable.getCalculations() != null && !tunable.getCalculations().isEmpty()) {
+            expression = tunable.getCalculations().get(0).getExpr();
+        }
+
+        // Add after dependencies are processed
+        orderedList.add(new OrderTunable(tunableName, layerName, expression));
+    }
+
+    private void addIfNotEmpty(List<RecommendationConfigEnv> list, String name, StringBuilder valueBuilder) {
+        if (valueBuilder != null && !valueBuilder.toString().isEmpty()) {
+            list.add(new RecommendationConfigEnv(name, valueBuilder.toString()));
+        }
+    }
+
+}

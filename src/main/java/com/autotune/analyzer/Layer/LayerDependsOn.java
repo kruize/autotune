@@ -14,6 +14,9 @@ public class LayerDependsOn {
         this.metrics = metrics;
     }
 
+    public LayerDependsOn() {
+    }
+
     public List<String> getTunables() {
         return tunables;
     }
