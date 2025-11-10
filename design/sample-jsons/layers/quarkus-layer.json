@@ -9,9 +9,11 @@
     "presence": "detectable",
     "detectors": [
       {
-        "type": "label",
-        "name": "app.kubernetes.io/layer",
-        "value": "quarkus"
+        "type": "query",
+        "datasource": "prometheus-1",
+        "query": "kube_pod_labels{label_app_kubernetes_io_layer=\"quarkus\",container=\"$CONTAINER$\"}",
+        "key": "pod",
+        "non_null_is_present": true
       }
     ]
   },
