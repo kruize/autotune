@@ -11,7 +11,7 @@
       {
         "type": "query",
         "datasource": "prometheus-1",
-        "query": "kube_pod_labels{label_app_kubernetes_io_layer=\"quarkus\",container=\"$CONTAINER$\"}",
+        "query": "container_cpu_usage_seconds_total{container=\"$CONTAINER$\"} * on(namespace, pod) group_left(label_app_kubernetes_io_layer) kube_pod_labels{label_app_kubernetes_io_layer=\"quarkus\"}",
         "key": "pod",
         "non_null_is_present": true
       }
