@@ -949,11 +949,12 @@ public class RecommendationEngine {
             StringBuilder recommendationQuarkusBuilder = new StringBuilder();
             // Combine Recommendation tunables for each layer
 
+            // Appending -server for hotspot layer
             for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
                 String metric = entry.getKey().getName();
                 if (entry.getKey().getLayer().equalsIgnoreCase("hotspot")) {
-                    // Appending -server for hotspot layer
                     recommendationOpenjdkBuilder.append("-server ");
+                    break;
                 }
             }
 
