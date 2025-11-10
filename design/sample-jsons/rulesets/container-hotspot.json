@@ -1,0 +1,58 @@
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeRuleset",
+  "metadata": {
+    "name": "container-hotspot"
+  },
+  "rulesets": {
+    "stack": {
+      "layers": [
+        {
+          "name": "container",
+          "required": true
+        },
+        {
+          "name": "hotspot",
+          "required": true
+        }
+      ]
+    },
+    "dependencies": [
+      {
+        "primary": "tunable:container/memory-limit",
+        "dependants": [
+          "tunable:container/memory-request",
+          "tunable:hotspot/maxram-percentage"
+        ]
+      },
+      {
+        "primary": "tunable:container/cpu-limit",
+        "dependants": [
+          "tunable:container/cpu-request",
+          "tunable:hotspot/gc-policy"
+        ]
+      }
+    ],
+    "rules": {
+      "layers": {
+        "container": {
+          "tunables": {
+            "cpu-limit": [
+              {
+                "name": "cpu-limit-not-above-namespace-quota",
+                "phase": "final",
+                "expr": "(value <= ((metric:namespace-cpu-limit).sum ?: bounds.upper))",
+                "on_violation": {
+                  "fix": "min(value, (metric:namespace-cpu-limit).sum)"
+                },
+                "message": "cpu-limit capped to namespaceCpuLimit"
+              }
+            ]
+          }
+        },
+        "hotspot": {},
+        "quarkus": {}
+      }
+    }
+  }
+}
