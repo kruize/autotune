@@ -47,6 +47,7 @@ import java.sql.Timestamp;
 import java.util.*;
 
 import static com.autotune.operator.KruizeDeploymentInfo.is_ros_enabled;
+import static com.autotune.operator.KruizeDeploymentInfo.recommendations_url;
 
 public class ExperimentDBService {
     private static final long serialVersionUID = 1L;
@@ -896,5 +897,18 @@ public class ExperimentDBService {
                 });
             }
         }
+    }
+
+    public List<CreateRuleSetsAPIObject> loadRulesets() throws Exception {
+        List<KruizeLMRuleSetEntry> entries = experimentDAO.loadAllRuleSet();
+
+        if(entries == null || entries.isEmpty()){
+            LOGGER.debug("no ruleset in db");
+            return new ArrayList<>();
+        }
+        LOGGER.debug("Converting ruleset db entries to API object");
+        List<CreateRuleSetsAPIObject> ruleset = DBHelpers.Converters.KruizeObjectConverters.convertRuleSetEntryToAPIObject(entries);
+        return ruleset;
+
     }
 }
