@@ -895,9 +895,9 @@ public class RecommendationEngine {
                             break;
                         case "memory-limit":
                             // TODO: Combine memRequest and Limit cases to avoid duplicacy. Need to find how to update the context.
-                            recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
+                            recommendationMemLimits = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
                             //recommendationMemLimits = recommendationMemRequest;
-                            context.put(orderTunable, recommendationMemRequest.getAmount());
+                            context.put(orderTunable, recommendationMemLimits.getAmount());
                             break;
                         case "cpu-request":
                             // Calling requests on limits as we are maintaining limits and requests as same
@@ -908,8 +908,8 @@ public class RecommendationEngine {
                             context.put(orderTunable, recommendationCpuRequest.getAmount());
                             break;
                         case "cpu-limit":
-                            recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
-                            context.put(orderTunable, recommendationCpuRequest.getAmount());
+                            recommendationCpuLimits = model.getCPURequestRecommendation(filteredResultsMap, notifications);
+                            context.put(orderTunable, recommendationCpuLimits.getAmount());
                             break;
                         case "gpu":
                             recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
