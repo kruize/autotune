@@ -2005,6 +2005,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return entries;
     }
 
+    @Override
+    public List<KruizeLMRuleSetEntry> loadAllRuleSet() throws Exception {
+        List<KruizeLMRuleSetEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery("from KruizeLMRuleSetEntry", KruizeLMRuleSetEntry.class).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load rule set  due to {}", e.getMessage());
+            throw new Exception("Error while loading existing rule set from database due to : " + e.getMessage());
+        }
+        return entries;
+    }
 
     @Override
     public ValidationOutputData addRuleSetToDB(KruizeLMRuleSetEntry kruizeLMRuleSetEntry) {
@@ -2029,17 +2040,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         return validationOutputData;
     }
 
-    @Override
-    public List<KruizeLMRuleSetEntry> loadAllRuleSet() throws Exception {
-        List<KruizeLMRuleSetEntry> entries = null;
-        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            entries = session.createQuery("from KruizeLMRuleSetEntry", KruizeLMRuleSetEntry.class).list();
-        } catch (Exception e) {
-            LOGGER.error("Not able to load rule set  due to {}", e.getMessage());
-            throw new Exception("Error while loading existing rule set from database due to : " + e.getMessage());
-        }
-        return entries;
-    }
 
     @Override
     public List<KruizeLMRuleSetEntry> loadRuleSetByName(String ruleSetName) throws Exception {

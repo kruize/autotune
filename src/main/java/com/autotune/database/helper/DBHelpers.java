@@ -20,6 +20,11 @@ import com.autotune.analyzer.Layer.Layer;
 import com.autotune.analyzer.Layer.LayerMetadata;
 import com.autotune.analyzer.Layer.LayerPresence;
 import com.autotune.analyzer.Layer.LayerTunable;
+import com.autotune.analyzer.Ruleset.Metadata;
+import com.autotune.analyzer.Ruleset.RuleSets;
+import com.autotune.analyzer.Ruleset.Stack;
+import com.autotune.analyzer.Ruleset.Rules;
+import com.autotune.analyzer.Ruleset.Dependency;
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
@@ -32,6 +37,7 @@ import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.analyzer.recommendations.NamespaceRecommendations;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
 import com.autotune.analyzer.serviceObjects.*;
+import com.autotune.analyzer.services.CreateRuleSets;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.ExperimentTypeUtil;
@@ -49,10 +55,7 @@ import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceMetadataOperator;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.*;
-import com.autotune.database.table.lm.KruizeLMExperimentEntry;
-import com.autotune.database.table.lm.KruizeLMLayerEntry;
-import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
-import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
+import com.autotune.database.table.lm.*;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -1649,6 +1652,65 @@ public class DBHelpers {
                     throw new Exception("None of the Layers loaded from DB.");
 
                 return layers;
+            }
+
+            public static List<CreateRuleSetsAPIObject> convertRuleSetEntryToAPIObject(List<KruizeLMRuleSetEntry> entries) throws Exception {
+                List<CreateRuleSetsAPIObject> rulesets = new ArrayList<>();
+                int failureThreshHold = entries.size();
+                int failureCount = 0;
+
+                for (KruizeLMRuleSetEntry entry : entries) {
+                    try {
+                        CreateRuleSetsAPIObject apiObject = new CreateRuleSetsAPIObject();
+
+                        // Set simple fields
+                        apiObject.setApiVersion(entry.getApi_version());
+                        apiObject.setKind(entry.getKind());
+
+                        // Parse and set metadata
+                        JsonNode metadataNode = entry.getMetadata();
+                        String metadata_rawJson = metadataNode.toString();
+                        Metadata metadata = new Gson().fromJson(metadata_rawJson, Metadata.class);
+                        apiObject.setMetadata(metadata);
+
+                        // Parse and set stack
+                        JsonNode stackNode = entry.getStack();
+                        String stack_rawJson = stackNode.toString();
+                        Stack stack = new Gson().fromJson(stack_rawJson, Stack.class);
+
+                        // Parse and set rules
+                        JsonNode rulesNode = entry.getRules();
+                        String rules_rawJson = rulesNode.toString();
+                        Rules rules = new Gson().fromJson(rules_rawJson, Rules.class);
+
+                        // Parse and set dependencies
+                        JsonNode dependenciesNode = entry.getDependencies();
+                        String dependencies_rawJson = dependenciesNode.toString();
+                        List<Dependency> dependencies = new Gson().fromJson(
+                                dependencies_rawJson,
+                                new com.google.gson.reflect.TypeToken<List<Dependency>>(){}.getType()
+                        );
+
+                        // Create RuleSets object and set all components
+                        RuleSets ruleSets = new RuleSets();
+                        ruleSets.setStack(stack);
+                        ruleSets.setRules(rules);
+                        ruleSets.setDependencies(dependencies);
+
+                        apiObject.setRulesets(ruleSets);
+
+                        rulesets.add(apiObject);
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while reading from RuleSet DB object due to : {}", e.getMessage());
+                        LOGGER.error(entry.toString());
+                        failureCount++;
+                    }
+                }
+
+                if (failureThreshHold > 0 && failureCount == failureThreshHold)
+                    throw new Exception("None of the RuleSets loaded from DB.");
+
+                return rulesets;
             }
 
         }
