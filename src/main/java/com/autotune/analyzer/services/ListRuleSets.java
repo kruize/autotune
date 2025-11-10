@@ -23,8 +23,19 @@ public class ListRuleSets extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
 
         try {
+            // check name is present
+            String ruleSetName = request.getParameter("name");
+
             // Load all rulesets from DB
-            List<KruizeLMRuleSetEntry> ruleSets = new ExperimentDAOImpl().loadAllRuleSet();
+            List<KruizeLMRuleSetEntry> ruleSets;
+
+            if (ruleSetName == null || ruleSetName.isEmpty()) {
+                // load all
+                ruleSets = new ExperimentDAOImpl().loadAllRuleSet();
+            } else {
+                // load by name
+                ruleSets = new ExperimentDAOImpl().loadRuleSetByName(ruleSetName);
+            }
 
             // Convert to clean JSON using ObjectMapper
             ObjectMapper objectMapper = new ObjectMapper();

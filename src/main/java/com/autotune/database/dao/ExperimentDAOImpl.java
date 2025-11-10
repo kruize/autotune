@@ -2019,7 +2019,6 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             } catch (HibernateException e) {
                 LOGGER.error("Not able to save ruleset due to {}", e.getMessage());
                 if (tx != null) tx.rollback();
-                e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
             }
@@ -2040,5 +2039,74 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             throw new Exception("Error while loading existing rule set from database due to : " + e.getMessage());
         }
         return entries;
+    }
+
+    @Override
+    public List<KruizeLMRuleSetEntry> loadRuleSetByName(String ruleSetName) throws Exception {
+        List<KruizeLMRuleSetEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery("from KruizeLMRuleSetEntry where name = :ruleSetName", KruizeLMRuleSetEntry.class)
+                    .setParameter("ruleSetName", ruleSetName).list();
+        } catch (Exception e) {
+            LOGGER.error("Not able to load ruleset due to {}", e.getMessage());
+            throw new Exception("Error while loading existing ruleset from database due to : " + e.getMessage());
+        }
+
+        return entries;
+    }
+
+    @Override
+    public ValidationOutputData updateRuleSetToDB(KruizeLMRuleSetEntry kruizeLMRuleSetEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.update(kruizeLMRuleSetEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save ruleset due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+
+        } catch (Exception e) {
+            LOGGER.error("Not able to save ruleset due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    @Override
+    public ValidationOutputData deleteRuleSetByName(String ruleSetName) {
+
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                Query query = session.createQuery("delete from KruizeLMRuleSetEntry where name = :name");
+                query.setParameter("name", ruleSetName);
+                int deletedCount = query.executeUpdate();
+                if (deletedCount == 0) {
+                    validationOutputData.setSuccess(false);
+                    validationOutputData.setMessage("No ruleset has been deleted");
+                } else {
+                    validationOutputData.setSuccess(true);
+                }
+                tx.commit();
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to delete ruleset due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to delete ruleset due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        }
+        return validationOutputData;
     }
 }

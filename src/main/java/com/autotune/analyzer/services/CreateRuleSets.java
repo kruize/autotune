@@ -22,8 +22,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.stream.Collectors;
 
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
 
 public class CreateRuleSets extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
@@ -80,6 +79,70 @@ public class CreateRuleSets extends HttpServlet {
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
         }
 
+    }
+
+    @Override
+    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String inputData = "";
+        CreateRuleSetsAPIObject ruleSetObject = null;
+
+        try {
+            request.setCharacterEncoding(CHARACTER_ENCODING);
+            inputData = request.getReader().lines().collect(Collectors.joining());
+            LOGGER.debug("Request body: {}", inputData);
+
+            // convert input json to java obj
+            Gson gson = new Gson();
+            ruleSetObject = gson.fromJson(inputData, CreateRuleSetsAPIObject.class);
+
+            // validate
+            boolean isValid = validateRuleSet(ruleSetObject);
+            if (!isValid) {
+                throw new Exception("Invalid rule set");
+            }
+
+            // convert to db entry
+            KruizeLMRuleSetEntry dbEntry = convertToDBEntry(ruleSetObject);
+
+            // update ruleset to db
+            ValidationOutputData validationOutputData = new ExperimentDAOImpl().updateRuleSetToDB(dbEntry);
+            if (!validationOutputData.isSuccess()) {
+                throw new Exception("Failed to update ruleset: " + validationOutputData.getMessage());
+            }
+
+            sendSuccessResponse(response, "RuleSet updated successfully");
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            LOGGER.error("Unknown exception caught: " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
+        }
+    }
+
+    @Override
+    protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+
+        try {
+            String ruleSetName =  request.getParameter("name");
+
+            if (ruleSetName == null || ruleSetName.isEmpty()) {
+                throw new Exception("RuleSet name is a mandatory parameter for delete operation");
+            }
+
+            LOGGER.debug("Deleting rule set named {}", ruleSetName);
+
+            ValidationOutputData validationOutputData = new ExperimentDAOImpl().deleteRuleSetByName(ruleSetName);
+            if(!validationOutputData.isSuccess()) {
+                throw new Exception("Failed to delete ruleset: " + validationOutputData.getMessage());
+            }
+
+            sendSuccessResponse(response, "RuleSet deleted successfully");
+
+        } catch (Exception e) {
+            LOGGER.error("Unknown exception caught: " + e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Internal Server Error: " + e.getMessage());
+        }
     }
 
     /**
