@@ -26,6 +26,9 @@ public final class Layer {
         this.tunables = tunables;
     }
 
+    public Layer() {
+    }
+
     public String getApiVersion() {
         return apiVersion;
     }
