@@ -78,12 +78,18 @@ public class GenericRecommendationModel implements RecommendationModel{
         int jdkVersion = parseMajorVersion(jdkVersionStr);
 
         if (jvmHeapSizeMB == null || jvmHeapSizeMB == 0) {
-            jvmHeapSizeMB = Math.ceil(maxRAMPercent * memLimit / (1024 * 1024));
+            double memLimitMB = memLimit / (1024 * 1024);
+            jvmHeapSizeMB = Math.ceil(maxRAMPercent * memLimitMB );
+            LOGGER.info("memLimitMB: {}", memLimitMB);
         }
 
-        if (cpuCores == 1 && jvmHeapSizeMB < 4096) {
+        LOGGER.info("jvmHeapSizeMB: {}", jvmHeapSizeMB);
+        LOGGER.info("memLimit: {}", memLimit);
+
+
+        if (cpuCores <= 1 && jvmHeapSizeMB < 4096) {
             return "-XX:+UseSerialGC";
-        } else if (cpuCores >= 2 && jvmHeapSizeMB < 4096) {
+        } else if (cpuCores > 1 && jvmHeapSizeMB < 4096) {
             return "-XX:+UseParallelGC";
         } else if (jvmHeapSizeMB >= 4096) {
             if (jdkVersion >= 17) return "-XX:+UseZGC";
@@ -109,7 +115,7 @@ public class GenericRecommendationModel implements RecommendationModel{
     public Object getRuntimeRecommendations(String metric_name, String layer, Map<OrderTunable, Object> context, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
 
         // Assuming container metrics are already calculated.
-        Double memLimits = (Double) getTunableValue(context, "mem-limit", "container");
+        Double memLimits = (Double) getTunableValue(context, "memory-limit", "container");
         Double cpuLimits = (Double) getTunableValue(context, "cpu-limit", "container");
 
         switch (metric_name) {
