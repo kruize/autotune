@@ -1,0 +1,56 @@
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeLayer",
+  "metadata": {
+    "name": "openj9",
+    "description": "OpenJ9 JVM tuning"
+  },
+  "layer_presence": {
+    "presence": "detectable",
+    "detectors": [
+      {
+        "type": "query",
+        "datasource": "prometheus-1",
+        "query": "jvm_memory_max_bytes{area=\"heap\",id=\"tenured-LOA\",container=\"$CONTAINER$\"}",
+        "key": "pod",
+        "non_null_is_present": true
+      }
+    ]
+  },
+  "tunables": {
+    "maxram-percentage": {
+      "metadata": {
+        "name": "maxram-percentage",
+        "description": "JVM heap as % of container memory limit",
+        "expression": "+XX:MaxRAMPercentage={(tunable:openj9/maxram-percentage).value}",
+        "value_type": "double",
+        "unit": "percent",
+        "type": "range",
+        "type_def": {
+          "bounds": {
+            "lower": 10,
+            "upper": 90,
+            "step": 1
+          }
+        }
+      },
+      "depends_on": {
+        "tunables": [
+          "container/memory-limit"
+        ],
+        "metrics": [
+          "memory-usage",
+          "openj9-tenured-loa",
+          "openj9-tenured-soa"
+        ]
+      },
+      "calculations": [
+        {
+          "target": "value",
+          "expr": "clamp(100.0 * percentile((metric:memory-usage), 0.95) / max(1e-6, (tunable:container/memory-limit).value * (1.0 - min(env.NON_HEAP_RATIO ?: 0.30, 0.80)) * 1.05), bounds.lower, bounds.upper)",
+          "fallback": 70
+        }
+      ]
+    }
+  }
+}
