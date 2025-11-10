@@ -350,7 +350,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/bmenghan/runtimes_hackathon:v7
+          image: quay.io/kruize/autotune_operator:0.7.1
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -572,7 +572,7 @@ metadata:
 spec:
   containers:
     - name: kruize-ui-nginx-container
-      image: quay.io/kruize/kruize-ui:0.0.9
+      image: quay.io/kruize/kruize-ui:0.0.8
       imagePullPolicy: Always
       env:
         - name: KRUIZE_UI_ENV
