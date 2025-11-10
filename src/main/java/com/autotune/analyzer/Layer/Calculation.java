@@ -35,4 +35,13 @@ public class Calculation {
     public void setFallback(Object fallback) {
         this.fallback = fallback;
     }
+
+    @Override
+    public String toString() {
+        return "Calculation{" +
+                "target='" + target + '\'' +
+                ", expr='" + expr + '\'' +
+                ", fallback=" + fallback +
+                '}';
+    }
 }

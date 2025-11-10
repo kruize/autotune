@@ -36,4 +36,13 @@ public class Bounds {
     public void setStep(double step) {
         this.step = step;
     }
+
+    @Override
+    public String toString() {
+        return "Bounds{" +
+                "lower=" + lower +
+                ", upper=" + upper +
+                ", step=" + step +
+                '}';
+    }
 }

@@ -10,8 +10,8 @@
     "detectors": [
       {
         "type": "query",
-        "datasource": "prometheus",
-        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Eden.+\"}",
+        "datasource": "prometheus-1",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=\"Eden Space\",container=\"tfb-server\"}",
         "key": "pod",
         "non_null_is_present": true
       }

@@ -29,4 +29,12 @@ public class LayerDependsOn {
     public void setMetrics(List<String> metrics) {
         this.metrics = metrics;
     }
+
+    @Override
+    public String toString() {
+        return "LayerDependsOn{" +
+                "tunables=" + tunables +
+                ", metrics=" + metrics +
+                '}';
+    }
 }
