@@ -952,6 +952,14 @@ public class RecommendationEngine {
             for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
                 String metric = entry.getKey().getName();
                 if (entry.getKey().getLayer().equalsIgnoreCase("hotspot")) {
+                    // Appending -server for hotspot layer
+                    recommendationOpenjdkBuilder.append("-server ");
+                }
+            }
+
+             for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
+                String metric = entry.getKey().getName();
+                if (entry.getKey().getLayer().equalsIgnoreCase("hotspot")) {
                     switch(metric) {
                         case "maxram-percentage":
                             recommendationOpenjdkBuilder.append("-XX:MaxRamPercentage=")
@@ -981,8 +989,6 @@ public class RecommendationEngine {
                     }
                 }
             }
-            // Appending -server for OpenJDK
-            recommendationOpenjdkBuilder.append("-server ");
             // Create an internal map to send data to populate
             HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<>();
             // Add current values
@@ -997,8 +1003,8 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
 
 
-            //Get the ENV Recommendations
             // Create an internal map to send runtimes data to populate
+            // Add recommended ENV values in the list
             List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
             addIfNotEmpty(runtimeRecommList, "JDK_JAVA_OPTIONS", recommendationOpenjdkBuilder);
             addIfNotEmpty(runtimeRecommList, "JAVA_OPTIONS", recommendationOpenjdkBuilder);
