@@ -24,6 +24,7 @@ import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
+import com.autotune.analyzer.serviceObjects.CreateRuleSetsAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
@@ -35,6 +36,7 @@ import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
+import com.fasterxml.jackson.databind.introspect.TypeResolutionContext;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
 import io.micrometer.core.instrument.Timer;
@@ -183,6 +185,28 @@ public class CreateExperiment extends HttpServlet {
                                     }
                                 }
                             }
+                            // ruleset matching for each container
+                            RuleSetMatchingService ruleSetMatchingService = new RuleSetMatchingService();
+
+                            for (K8sObject k8sObject : ko.getKubernetes_objects()) {
+                                HashMap<String, ContainerData> containerDataHashmap = k8sObject.getContainerDataMap();
+                                for (ContainerData containerData : containerDataHashmap.values()) {
+                                    HashMap<String, Layer> containerLayers = containerData.getContainerLayersMap();
+
+                                    if (containerLayers != null && !containerLayers.isEmpty()) {
+                                        CreateRuleSetsAPIObject matchedRuleSet = ruleSetMatchingService.matchRuleSets(containerLayers);
+
+                                        if (matchedRuleSet != null) {
+                                            LOGGER.info("Matched ruleset '{}' for container '{}' ", matchedRuleSet.getMetadata().getName(), containerData.getContainer_name());
+                                            containerData.setContainerRuleSets(matchedRuleSet.getRulesets());
+                                        } else {
+                                            LOGGER.info("No matched ruleset for container");
+                                        }
+                                    }
+
+                                }
+                            }
+
 
                             KruizeCache.getInstance().putExperiment(ko.getExperimentName(), ko);
                         }
