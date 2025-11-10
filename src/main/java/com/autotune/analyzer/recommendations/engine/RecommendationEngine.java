@@ -854,7 +854,7 @@ public class RecommendationEngine {
 
             List<Dependency> dependencies = containerData.getContainerRuleSets().getDependencies();
             HashMap<String, Layer> layerHashMap = containerData.getContainerLayersMap();
-            List<OrderTunable> tunables = buildDynamicOrder(dependencies, layerHashMap);
+            List<OrderTunable> tunables = buildOrderFromLayerMap(layerHashMap);
 
             RecommendationConfigItem recommendationCpuRequest = null;
             RecommendationConfigItem recommendationCpuLimits = null;
@@ -2737,86 +2737,146 @@ public class RecommendationEngine {
                 .toList();
     }
 
-    public static List<OrderTunable> buildDynamicOrder(
-            List<Dependency> dependencies,
-            Map<String, Layer> layerHashMap) {
-
-        List<OrderTunable> orderedTunables = new ArrayList<>();
+    public static List<OrderTunable> buildOrderFromLayerMap(Map<String, Layer> layerHashMap) {
+        List<OrderTunable> orderedList = new ArrayList<>();
         Set<String> visited = new HashSet<>();
 
-        for (Dependency dep : dependencies) {
-            for (String dependant : dep.getDependants()) {
-                resolveTunable(dependant, layerHashMap, orderedTunables, visited);
+        for (Layer layer : layerHashMap.values()) {
+            if (layer.getTunables() == null) continue;
+
+            for (Map.Entry<String, LayerTunable> entry : layer.getTunables().entrySet()) {
+                String tunableName = entry.getKey();
+                resolveTunableFromLayer(layer.getMetadata().getName(), tunableName, layerHashMap, orderedList, visited);
             }
         }
 
-        return orderedTunables;
+        LOGGER.info("Ordered list of tunables: {}", orderedList);
+        return orderedList;
     }
 
-    private static void resolveTunable(String tunableStr,
-                                       Map<String, Layer> layerMap,
-                                       List<OrderTunable> orderedList,
-                                       Set<String> visited) {
-        if (visited.contains(tunableStr)) return;
-        visited.add(tunableStr);
-
-        // Dynamic parse: tunable:<layer>/<tunableName>
-        if (!tunableStr.startsWith("tunable:")) {
-            LOGGER.warn("Skipping invalid entry: {}", tunableStr);
-            return;
-        }
-        String[] parts = tunableStr.substring("tunable:".length()).split("/", 2);
-        if (parts.length != 2) {
-            LOGGER.warn("Malformed tunable string: {}", tunableStr);
-            return;
-        }
-
-        String layerName = parts[0];
-        String tunableName = parts[1];
+    private static void resolveTunableFromLayer(String layerName, String tunableName,
+                                                Map<String, Layer> layerMap,
+                                                List<OrderTunable> orderedList,
+                                                Set<String> visited) {
+        String fullKey = layerName + "/" + tunableName;
+        if (visited.contains(fullKey)) return;
+        visited.add(fullKey);
 
         Layer layer = layerMap.get(layerName);
-        if (layer == null) {
-            LOGGER.warn("Missing layer: {}", layerName);
-            // Create a dummy placeholder to continue
-            layer = new Layer();
-            layer.setTunables(new HashMap<>());
-        }
-
-        Map<String, LayerTunable> tunables = layer.getTunables();
-        if (tunables == null) {
-            tunables = new HashMap<>();
-            layer.setTunables(tunables);
+        if (layer == null || layer.getTunables() == null) {
+            LOGGER.warn("Missing layer or tunables for: {}", layerName);
+            return;
         }
 
         LayerTunable tunable = layer.getTunables().get(tunableName);
         if (tunable == null) {
-            LOGGER.warn("Missing tunable: {}", layerName + "/" + tunableName);
-            // Create a dummy placeholder tunable
-            tunable = new LayerTunable();
-            tunable.setCalculations(Collections.emptyList());
-            tunable.setDependsOn(new LayerDependsOn());
-            layer.getTunables().put(tunableName, tunable);
+            LOGGER.warn("Missing tunable: {}", fullKey);
+            return;
         }
 
-        // Resolve all dependencies first (recursively)
+        // Resolve dependencies recursively
         LayerDependsOn dependsOn = tunable.getDependsOn();
         if (dependsOn != null && dependsOn.getTunables() != null) {
             for (String dep : dependsOn.getTunables()) {
-                resolveTunable("tunable:" + dep, layerMap, orderedList, visited);
+                String[] parts = dep.split("/", 2);
+                if (parts.length == 2) {
+                    resolveTunableFromLayer(parts[0], parts[1], layerMap, orderedList, visited);
+                }
             }
         }
 
-        // Extract dynamic data
+        // Extract expression & metrics
         String expression = null;
         if (tunable.getCalculations() != null && !tunable.getCalculations().isEmpty()) {
             expression = tunable.getCalculations().get(0).getExpr();
         }
 
-        // TODO: need to check if this required
-        List<String> metrics = dependsOn != null ? dependsOn.getMetrics() : Collections.emptyList();
-
         // Add after dependencies are processed
         orderedList.add(new OrderTunable(tunableName, layerName, expression));
     }
-}
 
+    // TODO: to be used when rulesets are available
+//    public static List<OrderTunable> buildDynamicOrder(
+//            List<Dependency> dependencies,
+//            Map<String, Layer> layerHashMap) {
+//
+//        List<OrderTunable> orderedTunables = new ArrayList<>();
+//        Set<String> visited = new HashSet<>();
+//
+//        for (Dependency dep : dependencies) {
+//            for (String dependant : dep.getDependants()) {
+//                resolveTunable(dependant, layerHashMap, orderedTunables, visited);
+//            }
+//        }
+//
+//        return orderedTunables;
+//    }
+//
+//    private static void resolveTunable(String tunableStr,
+//                                       Map<String, Layer> layerMap,
+//                                       List<OrderTunable> orderedList,
+//                                       Set<String> visited) {
+//        if (visited.contains(tunableStr)) return;
+//        visited.add(tunableStr);
+//
+//        // Dynamic parse: tunable:<layer>/<tunableName>
+//        if (!tunableStr.startsWith("tunable:")) {
+//            LOGGER.warn("Skipping invalid entry: {}", tunableStr);
+//            return;
+//        }
+//        String[] parts = tunableStr.substring("tunable:".length()).split("/", 2);
+//        if (parts.length != 2) {
+//            LOGGER.warn("Malformed tunable string: {}", tunableStr);
+//            return;
+//        }
+//
+//        String layerName = parts[0];
+//        String tunableName = parts[1];
+//
+//        Layer layer = layerMap.get(layerName);
+//        if (layer == null) {
+//            LOGGER.warn("Missing layer: {}", layerName);
+//            // Create a dummy placeholder to continue
+//            layer = new Layer();
+//            layer.setTunables(new HashMap<>());
+//        }
+//
+//        Map<String, LayerTunable> tunables = layer.getTunables();
+//        if (tunables == null) {
+//            tunables = new HashMap<>();
+//            layer.setTunables(tunables);
+//        }
+//
+//        LayerTunable tunable = layer.getTunables().get(tunableName);
+//        if (tunable == null) {
+//            LOGGER.warn("Missing tunable: {}", layerName + "/" + tunableName);
+//            // Create a dummy placeholder tunable
+//            tunable = new LayerTunable();
+//            tunable.setCalculations(Collections.emptyList());
+//            tunable.setDependsOn(new LayerDependsOn());
+//            layer.getTunables().put(tunableName, tunable);
+//        }
+//
+//        // Resolve all dependencies first (recursively)
+//        LayerDependsOn dependsOn = tunable.getDependsOn();
+//        if (dependsOn != null && dependsOn.getTunables() != null) {
+//            for (String dep : dependsOn.getTunables()) {
+//                resolveTunable("tunable:" + dep, layerMap, orderedList, visited);
+//            }
+//        }
+//
+//        // Extract dynamic data
+//        String expression = null;
+//        if (tunable.getCalculations() != null && !tunable.getCalculations().isEmpty()) {
+//            expression = tunable.getCalculations().get(0).getExpr();
+//        }
+//
+//        // TODO: need to check if this required
+//        List<String> metrics = dependsOn != null ? dependsOn.getMetrics() : Collections.emptyList();
+//
+//        // Add after dependencies are processed
+//        orderedList.add(new OrderTunable(tunableName, layerName, expression));
+//    }
+
+
+}
