@@ -1965,7 +1965,7 @@ public class RecommendationEngine {
         }
 
         // Set env list
-        if (runtimeListToPopulate != null) {
+        if (runtimeListToPopulate != null && !runtimeListToPopulate.isEmpty()) {
             config.setEnv(runtimeListToPopulate);
         }
 
