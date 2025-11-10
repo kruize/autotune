@@ -3,6 +3,7 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.Layer.Layer;
 import com.autotune.analyzer.Layer.LayerDetector;
 import com.autotune.analyzer.Layer.LayerPresence;
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.GenericRestApiClient;
@@ -33,7 +34,7 @@ public class LayerDetectionService {
      * @param dataSourceInfoMap Map of datasource names to DataSourceInfo objects
      * @return List of validated Layer objects that are reachable
      */
-    public List<Layer> fetchAndDetectLayers(Map<String, DataSourceInfo> dataSourceInfoMap) {
+    public List<Layer> fetchAndDetectLayers(Map<String, DataSourceInfo> dataSourceInfoMap, String containerName) {
         List<Layer> detectedLayers = new ArrayList<>();
         Map<String, Layer> layerMap = new HashMap<>();
 
@@ -41,14 +42,13 @@ public class LayerDetectionService {
             // Use existing loadLayers() to fetch all layers from DB
             experimentDBService.loadLayers(layerMap, null);
 
-            LOGGER.info("Loaded {} layers from database", layerMap.size());
+            LOGGER.info("Fetched {} layers from database", layerMap.size());
 
             // detect each layer and add to result if successful
             for (Map.Entry<String, Layer> entry : layerMap.entrySet()) {
                 Layer layer = entry.getValue();
                 String layerName = layer.getMetadata().getName();
-
-                if (detectLayer(layer, dataSourceInfoMap)) {
+                if (detectLayer(layer, dataSourceInfoMap, containerName)) {
                     detectedLayers.add(layer);
                     LOGGER.info("Layer {} detected successfully", layerName);
                 } else {
@@ -71,7 +71,7 @@ public class LayerDetectionService {
      * @param dataSourceInfoMap Map of datasource names to DataSourceInfo objects
      * @return true if layer is valid and reachable, false otherwise
      */
-    private boolean detectLayer(Layer layer, Map<String, DataSourceInfo> dataSourceInfoMap) {
+    private boolean detectLayer(Layer layer, Map<String, DataSourceInfo> dataSourceInfoMap, String containerName) {
         try {
             LayerPresence layerPresence = layer.getLayerPresence();
 
@@ -84,7 +84,7 @@ public class LayerDetectionService {
             List<LayerDetector> detectors = layerPresence.getDetectors();
 
             // If detectors are null or empty, consider the layer valid
-            if (detectors == null || detectors.isEmpty()) {
+            if (null == detectors || detectors.isEmpty()) {
                 LOGGER.info("Layer {} has no detectors defined, accepting as valid",
                         layer.getMetadata().getName());
                 return true;
@@ -98,6 +98,7 @@ public class LayerDetectionService {
                 String datasourceName = detector.getDatasource();
                 String query = detector.getQuery();
 
+                query = query.replace("$CONTAINER", containerName);
                 if (datasourceName == null || query == null) {
                     LOGGER.error("Layer {} missing datasource or query information",
                             layer.getMetadata().getName());
@@ -154,45 +155,30 @@ public class LayerDetectionService {
             // Execute the query
             JSONObject response = restClient.fetchMetricsJson("GET", query);
             LOGGER.info("response: {}", response);
-
-            // Check response status
-            if (response != null && response.has("status")) {
-                String status = response.getString("status");
-
-                if ("success".equalsIgnoreCase(status)) {
-                    LOGGER.debug("PromQL query validation successful for datasource {}",
-                            datasourceName);
-                    return true;
-                } else {
-                    LOGGER.warn("PromQL query returned status: {}", status);
-                    return false;
-                }
+            boolean isValid = response != null &&
+                    response.has("status") &&
+                    "success".equalsIgnoreCase(response.getString("status")) &&
+                    response.has("data") &&
+                    response.getJSONObject("data").has("result") &&
+                    !response.getJSONObject("data").getJSONArray("result").isEmpty();
+            if (isValid) {
+                LOGGER.debug("PromQL query validation successful for datasource {}",
+                        datasourceName);
             } else {
-                LOGGER.error("Invalid response format from datasource {}", datasourceName);
-                return false;
+                LOGGER.info("Invalid query response from datasource {}", datasourceName);
             }
-
+            return isValid;
         } catch (Exception e) {
             LOGGER.error("Error validating PromQL query for datasource {}: {}",
                     datasourceName, e.getMessage());
             return false;
         }
     }
-
-    public HashMap<String, Layer> detectAllLayers() throws Exception {
+    public HashMap<String, Layer> detectAllLayers(String containerName) {
         // Load datasources from DB
-        List<DataSourceInfo> dataSources = experimentDBService.loadAllDataSources();
-
-        // Create datasource map
-        Map<String, DataSourceInfo> dataSourceMap = new HashMap<>();
-        for (DataSourceInfo ds : dataSources) {
-            dataSourceMap.put(ds.getName(), ds);
-        }
-
+        Map<String, DataSourceInfo> dataSourceMap = DataSourceCollection.getInstance().getDataSourcesCollection();
         // Validate and get only reachable layers
-        List<Layer> validLayers = fetchAndDetectLayers(dataSourceMap);
-
-        LOGGER.info("Found " + validLayers.size() + " valid layers");
+        List<Layer> validLayers = fetchAndDetectLayers(dataSourceMap, containerName);
         HashMap<String, Layer> detectedLayers = new HashMap<>();
 
         for (Layer layer : validLayers) {
