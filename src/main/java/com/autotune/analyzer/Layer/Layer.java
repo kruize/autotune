@@ -65,4 +65,16 @@ public final class Layer {
     public void setTunables(Map<String, LayerTunable> tunables) {
         this.tunables = tunables;
     }
+
+    @Override
+    public String toString() {
+        return "Layer{" +
+                "apiVersion='" + apiVersion + '\'' +
+                ", kind='" + kind + '\'' +
+                ", metadata=" + metadata +
+                ", name='" + name + '\'' +
+                ", layerPresence=" + layerPresence +
+                ", tunables=" + tunables +
+                '}';
+    }
 }

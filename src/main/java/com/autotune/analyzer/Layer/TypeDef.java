@@ -28,4 +28,12 @@ public class TypeDef {
     public void setChoices(List<String> choices) {
         this.choices = choices;
     }
+
+    @Override
+    public String toString() {
+        return "TypeDef{" +
+                "bounds=" + bounds +
+                ", choices=" + choices +
+                '}';
+    }
 }

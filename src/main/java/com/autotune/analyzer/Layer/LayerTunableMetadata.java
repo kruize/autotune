@@ -74,4 +74,16 @@ public class LayerTunableMetadata {
     public void setTypeDef(TypeDef typeDef) {
         this.typeDef = typeDef;
     }
+
+    @Override
+    public String toString() {
+        return "LayerTunableMetadata{" +
+                "name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", valueType='" + valueType + '\'' +
+                ", unit='" + unit + '\'' +
+                ", type='" + type + '\'' +
+                ", typeDef=" + typeDef +
+                '}';
+    }
 }

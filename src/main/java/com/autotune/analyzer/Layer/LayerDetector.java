@@ -87,4 +87,17 @@ public class LayerDetector {
     public void setValue(String value) {
         this.value = value;
     }
+
+    @Override
+    public String toString() {
+        return "LayerDetector{" +
+                "type='" + type + '\'' +
+                ", datasource='" + datasource + '\'' +
+                ", query='" + query + '\'' +
+                ", key='" + key + '\'' +
+                ", nonNullIsPresent=" + nonNullIsPresent +
+                ", name='" + name + '\'' +
+                ", value='" + value + '\'' +
+                '}';
+    }
 }
