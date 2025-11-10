@@ -11,7 +11,7 @@
       {
         "type": "query",
         "datasource": "prometheus-1",
-        "query": "jvm_memory_used_bytes{area=\"heap\",id=\"Eden Space\",container=\"$CONTAINER$\"}",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=\"Eden Space\"}",
         "key": "pod",
         "non_null_is_present": true
       }
