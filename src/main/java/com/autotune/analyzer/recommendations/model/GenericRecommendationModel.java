@@ -70,12 +70,17 @@ public class GenericRecommendationModel implements RecommendationModel{
                 Object cpuLimits = null;
                 //TODO : Can avoid this looping
                 for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
-                    if (entry.getKey().getName().equalsIgnoreCase("cpuLimits") && entry.getKey().getLayer().equalsIgnoreCase("container")) {
+                    if (entry.getKey().getName().equalsIgnoreCase("cpu-limit") && entry.getKey().getLayer().equalsIgnoreCase("container")) {
                         cpuLimits = entry.getValue();
                         break;
                     }
                 }
-                return (Integer)cpuLimits;
+                if (cpuLimits == null) {
+                    return 0; // or some default value
+                } else {
+                    int ceilValue = (int) Math.ceil(Double.parseDouble(cpuLimits.toString()));
+                    return ceilValue;
+                }
             default:
                 return null;
         }
