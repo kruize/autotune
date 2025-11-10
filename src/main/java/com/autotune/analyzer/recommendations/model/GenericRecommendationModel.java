@@ -1,5 +1,6 @@
 package com.autotune.analyzer.recommendations.model;
 
+import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -61,11 +62,11 @@ public class GenericRecommendationModel implements RecommendationModel{
     public Object getRuntimeRecommendations(String metric_name, String layer, Map<OrderTunable, Object> context, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
 
         switch (metric_name) {
-            case "maxRamPercentage":
+            case "maxram-percentage":
                 return "80";
-            case "gcPolicy":
+            case "gc-policy":
                 return "-XX:+ParallelGC";
-            case "threadPoolCores":
+            case "core-threads":
                 Object cpuLimits = null;
                 //TODO : Can avoid this looping
                 for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
@@ -683,18 +684,14 @@ public class GenericRecommendationModel implements RecommendationModel{
     }
 
 
-    public RecommendationConfigItem getRuntimeRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+    public RecommendationConfigEnv getRuntimeRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         boolean setNotification = true;
         if (null == notifications) {
             LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
             setNotification = false;
         }
 
-        RecommendationConfigItem recommendationConfigItem = null;
-
-        // Get cpu limit data
-
-
+        RecommendationConfigEnv recommendationConfigEnv;
         //Hard coding
         String name = "JDK_JAVA_OPTIONS";
         String value = "-server -XX:MaxRAMPercentage=80 -XX:+ParallelGC";
@@ -705,18 +702,18 @@ public class GenericRecommendationModel implements RecommendationModel{
 
         // TODO: Set notifications only if notification object is available
 
-        recommendationConfigItem = new RecommendationConfigItem(name, value);
-        return recommendationConfigItem;
+        recommendationConfigEnv = new RecommendationConfigEnv(name, value);
+        return recommendationConfigEnv;
     }
 
-    public RecommendationConfigItem getFrameWorkRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+    public RecommendationConfigEnv getFrameWorkRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         boolean setNotification = true;
         if (null == notifications) {
             LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
             setNotification = false;
         }
 
-        RecommendationConfigItem recommendationConfigItem = null;
+        RecommendationConfigEnv recommendationConfigEnv = null;
 
 
         //Hard coding
@@ -729,8 +726,8 @@ public class GenericRecommendationModel implements RecommendationModel{
 
         // TODO: Set notifications only if notification object is available
 
-        recommendationConfigItem = new RecommendationConfigItem(name, value);
-        return recommendationConfigItem;
+        recommendationConfigEnv = new RecommendationConfigEnv(name, value);
+        return recommendationConfigEnv;
     }
 
     @Override

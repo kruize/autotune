@@ -178,6 +178,22 @@ public class AnalyzerConstants {
         requests,
         limits
     }
+    public enum RuntimesSetting {
+            env
+    }
+
+    public enum ConfigType {
+        REQUESTS(ResourceSetting.requests),
+        LIMITS(ResourceSetting.limits),
+        ENV(RuntimesSetting.env);
+
+        private final Enum<?> sourceEnum;
+
+        ConfigType(Enum<?> sourceEnum) {
+            this.sourceEnum = sourceEnum;
+        }
+    }
+
 
     public enum PersistenceType {
         LOCAL,              //Store only local  , Default
