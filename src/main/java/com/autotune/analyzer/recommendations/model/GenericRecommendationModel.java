@@ -59,28 +59,79 @@ public class GenericRecommendationModel implements RecommendationModel{
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GenericRecommendationModel.class);
 
+    public static int parseMajorVersion(String version) {
+        if (version == null || version.isEmpty()) return 8; // default fallback
+        version = version.trim();
+
+        if (version.startsWith("1.")) {
+            return Integer.parseInt(version.substring(2, 3)); // e.g. "1.8" → 8
+        } else {
+            int dotIndex = version.indexOf(".");
+            return (dotIndex != -1)
+                    ? Integer.parseInt(version.substring(0, dotIndex))
+                    : Integer.parseInt(version);
+        }
+    }
+
+    public String decideHotSpotGCPolicy(Double jvmHeapSizeMB, double maxRAMPercent, double memLimit, double cpuCores, String jdkVersionStr) {
+
+        int jdkVersion = parseMajorVersion(jdkVersionStr);
+
+        if (jvmHeapSizeMB == null || jvmHeapSizeMB == 0) {
+            jvmHeapSizeMB = Math.ceil(maxRAMPercent * memLimit / (1024 * 1024));
+        }
+
+        if (cpuCores == 1 && jvmHeapSizeMB < 4096) {
+            return "-XX:+UseSerialGC";
+        } else if (cpuCores >= 2 && jvmHeapSizeMB < 4096) {
+            return "-XX:+UseParallelGC";
+        } else if (jvmHeapSizeMB >= 4096) {
+            if (jdkVersion >= 17) return "-XX:+UseZGC";
+            else if (jdkVersion >= 11) return "-XX:+UseShenandoahGC";
+            else return "-XX:+UseG1GC";
+        } else {
+            return "-XX:+UseG1GC";
+        }
+    }
+
+    public static Object getTunableValue(Map<OrderTunable, Object> context, String name, String layer) {
+        for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
+            OrderTunable key = entry.getKey();
+            if (key.getName().equalsIgnoreCase(name) &&
+                    key.getLayer().equalsIgnoreCase(layer)) {
+                return entry.getValue();
+            }
+        }
+        return null; // Not found
+    }
+
+
     public Object getRuntimeRecommendations(String metric_name, String layer, Map<OrderTunable, Object> context, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+
+        // Assuming container metrics are already calculated.
+        Double memLimits = (Double) getTunableValue(context, "mem-limit", "container");
+        Double cpuLimits = (Double) getTunableValue(context, "cpu-limit", "container");
 
         switch (metric_name) {
             case "maxram-percentage":
                 return "80";
             case "gc-policy":
-                return "-XX:+ParallelGC";
+                String gcpolicy = "";
+                Double jvmHeapSizeMB = null;
+                // hard code the jdkVersion - until the version data is part of metrics.
+                String jdkVersion = "17.0.2+8";
+                // Hard code again - until the order of tunables is in place.
+                double maxram_percentage = 80;
+                if (layer.equalsIgnoreCase("openjdk")){
+                    gcpolicy = decideHotSpotGCPolicy(jvmHeapSizeMB, maxram_percentage,memLimits,cpuLimits,jdkVersion);
+                }
+                return gcpolicy;
             case "core-threads":
-                Object cpuLimits = null;
-                //TODO : Can avoid this looping
-                for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
-                    if (entry.getKey().getName().equalsIgnoreCase("cpu-limit") && entry.getKey().getLayer().equalsIgnoreCase("container")) {
-                        cpuLimits = entry.getValue();
-                        break;
-                    }
-                }
-                if (cpuLimits == null) {
-                    return 0; // or some default value
-                } else {
-                    int ceilValue = (int) Math.ceil(Double.parseDouble(cpuLimits.toString()));
-                    return ceilValue;
-                }
+                    if (cpuLimits != null) {
+                        int ceilValue = (int) Math.ceil(cpuLimits);
+                        return ceilValue;
+                    } else
+                        return null;
             default:
                 return null;
         }
