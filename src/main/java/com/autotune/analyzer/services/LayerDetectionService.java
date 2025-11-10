@@ -98,7 +98,7 @@ public class LayerDetectionService {
                 String datasourceName = detector.getDatasource();
                 String query = detector.getQuery();
 
-                query = query.replace("$CONTAINER", containerName);
+                query = query.replace("$CONTAINER$", containerName);
                 if (datasourceName == null || query == null) {
                     LOGGER.error("Layer {} missing datasource or query information",
                             layer.getMetadata().getName());
