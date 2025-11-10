@@ -149,10 +149,6 @@ public class CreateExperiment extends HttpServlet {
                         // Detect Layers and tag it to containerData only for LM experiments
                         if (local && ko.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.LOCAL)) {
                             LayerDetectionService validationService = new LayerDetectionService();
-                            HashMap<String, Layer> detectedLayers = validationService.detectAllLayers();
-
-                            LOGGER.info("Detected {} layers for experiment {}",
-                                    detectedLayers.size(), ko.getExperimentName());
 
                             // Get kubernetes objects and container data
                             for (K8sObject k8sObject : ko.getKubernetes_objects()) {
@@ -161,7 +157,10 @@ public class CreateExperiment extends HttpServlet {
 
                                 // Set layers for each container
                                 for (ContainerData containerData : containerDataHashmap.values()) {
-                                    // Add each validated layer
+                                    HashMap<String, Layer> detectedLayers = validationService.detectAllLayers(containerData.getContainer_name());
+                                    LOGGER.info("Detected {} layers for experiment {}",
+                                            detectedLayers.size(), ko.getExperimentName());
+                                    // Set each detected layer in ContainerData
                                     detectedLayers.forEach((layerName, layer) ->
                                             containerData.setLayer(layerName, layer)
                                     );

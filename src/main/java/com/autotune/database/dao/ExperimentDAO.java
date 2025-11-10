@@ -175,8 +175,20 @@ public interface ExperimentDAO {
     // load layer by name
     List<KruizeLMLayerEntry> loadLayerByName(String name) throws Exception;
 
+    // add rule set to DB
     public ValidationOutputData addRuleSetToDB(KruizeLMRuleSetEntry kruizeLMRuleSetEntry);
 
+    // load all rule set
     List<KruizeLMRuleSetEntry> loadAllRuleSet() throws Exception;
+
+    // load rule set by name
+    List<KruizeLMRuleSetEntry> loadRuleSetByName(String name) throws Exception;
+
+    // update rule set
+    public ValidationOutputData updateRuleSetToDB(KruizeLMRuleSetEntry kruizeLMRuleSetEntry);
+
+    // delete rule set by name
+    public ValidationOutputData deleteRuleSetByName(String name) throws Exception;
+
 
 }
