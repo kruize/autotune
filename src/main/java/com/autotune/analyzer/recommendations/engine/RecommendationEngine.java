@@ -983,7 +983,7 @@ public class RecommendationEngine {
                 } else if (entry.getKey().getLayer().equalsIgnoreCase("openj9")) {
                     switch(metric) {
                         case "maxram-percentage":
-                            recommendationOpenjdkBuilder.append("-XX:MaxRamPercentage=")
+                            recommendationOpenjdkBuilder.append("-XX:MaxRAMPercentage=")
                                     .append(entry.getValue().toString())
                                     .append(" ");
                             break;
