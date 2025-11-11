@@ -11,7 +11,7 @@
       {
         "type": "query",
         "datasource": "prometheus-1",
-        "query": "jvm_memory_max_bytes{area=\"heap\",id=\"tenured-LOA\",container=\"$CONTAINER$\"}",
+        "query": "jvm_memory_max_bytes{area=\"heap\",id=\"tenured-LOA\"}",
         "key": "pod",
         "non_null_is_present": true
       }
