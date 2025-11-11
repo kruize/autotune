@@ -105,14 +105,11 @@ public class LayerDetectionService {
                     return false;
                 }
 
+                // Appending only container and namespace filters for the hackathon scope
                 String namespace = k8sObject.getNamespace();
-                String deploymentName = k8sObject.getName();
+
                 if (namespace != null && !namespace.isEmpty()) {
                     query = appendFilter(query, "namespace", namespace);
-                }
-
-                if (deploymentName != null && !deploymentName.isEmpty()) {
-                    query = appendFilter(query, "pod", deploymentName + "-.*");
                 }
 
                 // Append container filter to query if containerName is provided
@@ -144,26 +141,34 @@ public class LayerDetectionService {
      * @return Modified query with filter appended
      */
     private String appendFilter(String query, String labelName, String labelValue) {
-        String filter;
+        String filter = labelName + "=\"" + labelValue + "\"";
 
-        if(labelName.equals("pod")) {
-            filter = labelName + "=~\"" + labelValue + "\"";
-        } else {
-            filter = labelName + "=\"" + labelValue + "\"";
-        }
-        
-        // If query has existing filters, append with comma
+        // If query has existing filters, append to FIRST occurrence only
         if (query.contains("{") && query.contains("}")) {
-            return query.replace("}", "," + filter + "}");
+            int openBrace = query.indexOf("{");
+            int closeBrace = query.indexOf("}", openBrace);
+
+            // Check if there's content between the first braces
+            String existingFilters = query.substring(openBrace + 1, closeBrace).trim();
+
+            String beforeBrace = query.substring(0, closeBrace);
+            String afterBrace = query.substring(closeBrace);
+
+            if (existingFilters.isEmpty()) {
+                // Empty braces, add filter without comma
+                return beforeBrace + filter + afterBrace;
+            } else {
+                // Has existing filters, append with comma
+                return beforeBrace + "," + filter + afterBrace;
+            }
         }
-        
+
         // If no filters, add filter after metric name
-        // Find first space or end of string
         int insertPos = query.indexOf(" ");
         if (insertPos == -1) {
             insertPos = query.length();
         }
-        
+
         return query.substring(0, insertPos) + "{" + filter + "}" +
                query.substring(insertPos);
     }
@@ -197,7 +202,6 @@ public class LayerDetectionService {
             baseUrl += "api/v1/query?query=";
             restClient.setBaseURL(baseUrl);
 
-            LOGGER.info("baseUrl is {}", baseUrl);
             LOGGER.info("Validating promQL query: {}", query);
 
             // Execute the query

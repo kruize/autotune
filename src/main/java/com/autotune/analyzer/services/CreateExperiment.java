@@ -160,8 +160,6 @@ public class CreateExperiment extends HttpServlet {
                                 // Set layers for each container
                                 for (ContainerData containerData : containerDataHashmap.values()) {
                                     HashMap<String, Layer> detectedLayers = validationService.detectAllLayers(containerData.getContainer_name(), k8sObject);
-                                    LOGGER.info("Detected {} layers for experiment {}",
-                                            detectedLayers.size(), ko.getExperimentName());
                                     // Set each detected layer in ContainerData
                                     detectedLayers.forEach((layerName, layer) ->
                                             containerData.setLayer(layerName, layer)
