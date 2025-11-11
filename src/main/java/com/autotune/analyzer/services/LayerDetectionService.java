@@ -112,7 +112,7 @@ public class LayerDetectionService {
                 }
 
                 if (deploymentName != null && !deploymentName.isEmpty()) {
-                    query = appendFilter(query, "job", deploymentName);
+                    query = appendFilter(query, "pod", deploymentName + "-.*");
                 }
 
                 // Append container filter to query if containerName is provided
@@ -144,7 +144,13 @@ public class LayerDetectionService {
      * @return Modified query with filter appended
      */
     private String appendFilter(String query, String labelName, String labelValue) {
-        String filter = labelName + "=\"" + labelValue + "\"";
+        String filter;
+
+        if(labelName.equals("pod")) {
+            filter = labelName + "=~\"" + labelValue + "\"";
+        } else {
+            filter = labelName + "=\"" + labelValue + "\"";
+        }
         
         // If query has existing filters, append with comma
         if (query.contains("{") && query.contains("}")) {
