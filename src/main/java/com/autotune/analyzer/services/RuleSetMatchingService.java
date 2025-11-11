@@ -45,9 +45,9 @@ public class RuleSetMatchingService {
                     continue;
                 }
 
-                String[] requiredLayers = rulesetName.split("-");
+                String[] ruleset = rulesetName.split("-");
                 boolean allLayersMatch = true;
-                for (String layerName : requiredLayers) {
+                for (String layerName : ruleset) {
 
                     String layertrim = layerName.trim();
                     if(!detectedLayers.containsKey(layertrim)){
@@ -56,7 +56,7 @@ public class RuleSetMatchingService {
                         break;
                     }
                 }
-                if(allLayersMatch){
+                if(allLayersMatch && ruleset.length == detectedLayers.size()){
                     LOGGER.info("matching ruleset " + rulesetName);
                     return ruleSet;
                 }
