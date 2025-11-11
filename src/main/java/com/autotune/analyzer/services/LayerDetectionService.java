@@ -5,6 +5,7 @@ import com.autotune.analyzer.Layer.LayerDetector;
 import com.autotune.analyzer.Layer.LayerPresence;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.GenericRestApiClient;
 import org.json.JSONObject;
@@ -34,7 +35,7 @@ public class LayerDetectionService {
      * @param dataSourceInfoMap Map of datasource names to DataSourceInfo objects
      * @return List of validated Layer objects that are reachable
      */
-    public List<Layer> fetchAndDetectLayers(Map<String, DataSourceInfo> dataSourceInfoMap, String containerName) {
+    public List<Layer> fetchAndDetectLayers(Map<String, DataSourceInfo> dataSourceInfoMap, String containerName, K8sObject k8sObject) {
         List<Layer> detectedLayers = new ArrayList<>();
         Map<String, Layer> layerMap = new HashMap<>();
 
@@ -48,7 +49,7 @@ public class LayerDetectionService {
             for (Map.Entry<String, Layer> entry : layerMap.entrySet()) {
                 Layer layer = entry.getValue();
                 String layerName = layer.getMetadata().getName();
-                if (detectLayer(layer, dataSourceInfoMap, containerName)) {
+                if (detectLayer(layer, dataSourceInfoMap, containerName, k8sObject)) {
                     detectedLayers.add(layer);
                     LOGGER.info("Layer {} detected successfully", layerName);
                 } else {
@@ -71,7 +72,7 @@ public class LayerDetectionService {
      * @param dataSourceInfoMap Map of datasource names to DataSourceInfo objects
      * @return true if layer is valid and reachable, false otherwise
      */
-    private boolean detectLayer(Layer layer, Map<String, DataSourceInfo> dataSourceInfoMap, String containerName) {
+    private boolean detectLayer(Layer layer, Map<String, DataSourceInfo> dataSourceInfoMap, String containerName, K8sObject k8sObject) {
         try {
             LayerPresence layerPresence = layer.getLayerPresence();
 
@@ -98,11 +99,22 @@ public class LayerDetectionService {
                 String datasourceName = detector.getDatasource();
                 String query = detector.getQuery();
 
-                query = query.replace("$CONTAINER$", containerName);
                 if (datasourceName == null || query == null) {
                     LOGGER.error("Layer {} missing datasource or query information",
                             layer.getMetadata().getName());
                     return false;
+                }
+
+                // Appending only container and namespace filters for the hackathon scope
+                String namespace = k8sObject.getNamespace();
+
+                if (namespace != null && !namespace.isEmpty()) {
+                    query = appendFilter(query, "namespace", namespace);
+                }
+
+                // Append container filter to query if containerName is provided
+                if (containerName != null && !containerName.isEmpty()) {
+                    query = appendFilter(query, "container", containerName);
                 }
 
                 return validatePromQLQuery(query, datasourceName, dataSourceInfoMap);
@@ -118,6 +130,47 @@ public class LayerDetectionService {
                     layer.getMetadata().getName(), e.getMessage(), e);
             return false;
         }
+    }
+
+    /**
+     * Appends a label filter to PromQL query
+     *
+     * @param query Original PromQL query
+     * @param labelName Label name (e.g., "container", "namespace")
+     * @param labelValue Label value
+     * @return Modified query with filter appended
+     */
+    private String appendFilter(String query, String labelName, String labelValue) {
+        String filter = labelName + "=\"" + labelValue + "\"";
+
+        // If query has existing filters, append to FIRST occurrence only
+        if (query.contains("{") && query.contains("}")) {
+            int openBrace = query.indexOf("{");
+            int closeBrace = query.indexOf("}", openBrace);
+
+            // Check if there's content between the first braces
+            String existingFilters = query.substring(openBrace + 1, closeBrace).trim();
+
+            String beforeBrace = query.substring(0, closeBrace);
+            String afterBrace = query.substring(closeBrace);
+
+            if (existingFilters.isEmpty()) {
+                // Empty braces, add filter without comma
+                return beforeBrace + filter + afterBrace;
+            } else {
+                // Has existing filters, append with comma
+                return beforeBrace + "," + filter + afterBrace;
+            }
+        }
+
+        // If no filters, add filter after metric name
+        int insertPos = query.indexOf(" ");
+        if (insertPos == -1) {
+            insertPos = query.length();
+        }
+
+        return query.substring(0, insertPos) + "{" + filter + "}" +
+               query.substring(insertPos);
     }
 
     /**
@@ -149,7 +202,6 @@ public class LayerDetectionService {
             baseUrl += "api/v1/query?query=";
             restClient.setBaseURL(baseUrl);
 
-            LOGGER.info("baseUrl is {}", baseUrl);
             LOGGER.info("Validating promQL query: {}", query);
 
             // Execute the query
@@ -174,11 +226,11 @@ public class LayerDetectionService {
             return false;
         }
     }
-    public HashMap<String, Layer> detectAllLayers(String containerName) {
+    public HashMap<String, Layer> detectAllLayers(String containerName, K8sObject k8sObject) {
         // Load datasources from DB
         Map<String, DataSourceInfo> dataSourceMap = DataSourceCollection.getInstance().getDataSourcesCollection();
         // Validate and get only reachable layers
-        List<Layer> validLayers = fetchAndDetectLayers(dataSourceMap, containerName);
+        List<Layer> validLayers = fetchAndDetectLayers(dataSourceMap, containerName, k8sObject);
         HashMap<String, Layer> detectedLayers = new HashMap<>();
 
         for (Layer layer : validLayers) {
