@@ -15,6 +15,13 @@ import java.util.*;
 import static com.autotune.utils.KruizeConstants.JSONKeys.*;
 import static com.autotune.utils.KruizeConstants.RecommendationEngineConstants.DurationBasedEngine.RecommendationDurationRanges.*;
 
+/**
+ * Terms - Domain model for recommendation calculations.
+ * Contains business logic for duration validation and data availability checks.
+ * Two separate classes have been maintained to ensure separation of concerns and also that API changes don't affect business logic.
+ */
+
+
 public class Terms {
     int days;
     double threshold_in_days;

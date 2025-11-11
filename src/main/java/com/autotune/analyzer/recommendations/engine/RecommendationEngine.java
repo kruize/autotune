@@ -1255,8 +1255,6 @@ public class RecommendationEngine {
             LOGGER.error(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.NULL_RECOMMENDATION_TERM);
             return false;
         }
-        // Remove whitespaces
-//        recommendationTerm = recommendationTerm.trim();
 
         // Check if recommendation is null
         if (null == recommendationModel) {

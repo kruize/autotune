@@ -830,7 +830,7 @@ public class KruizeConstants {
                 public static final double DURATION_YEARLY = 365.0;
 
                 // Duration Thresholds as Strings
-                public static final String THRESHOLD_DAILY = "30 min";
+                public static final String THRESHOLD_DAILY = "30 mins";
                 public static final String THRESHOLD_WEEKLY = "2 days";
                 public static final String THRESHOLD_15_DAYS = "7 days";
                 public static final String THRESHOLD_MONTHLY = "21 days";
@@ -1129,5 +1129,13 @@ public class KruizeConstants {
 
         public static final String MESSAGE_RECEIVED_SUCCESSFULLY = "Received Input: Request_Id={}, Value={}, Partition={}, Offset={}";
 
+    }
+
+    public static final class KRUIZE_UTILS_CONSTANTS {
+        public static final String DURATION_CANNOT_BE_NULL_OR_EMPTY = "Duration string cannot be null or empty.";
+        public static final String INVALID_DURATION_FORMAT = "Invalid duration format. Expected: '<value> <unit>' (e.g., '30 min').";
+        public static final String DURATION_VALUE_MUST_BE_POSITIVE =  "Duration value must be positive.";
+        public static final String INVALID_NUMBER_IN_DURATION_STRING = "Invalid number in duration string: ";
+        public static final String UNSUPPORTED_TIME_UNIT = "Unsupported time unit: {}. Supported units are 'min', 'hour', 'day'.";
     }
 }

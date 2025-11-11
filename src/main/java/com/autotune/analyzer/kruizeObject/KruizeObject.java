@@ -192,7 +192,6 @@ public final class KruizeObject implements ExperimentTypeAware {
             TermDefinition termDefinition = entry.getValue();
 
             if (termDefinition == null || termDefinition.getDurationInDays() == null) {
-//                LOGGER.warn("Term definition or its duration is null for term: {}. Skipping.", termName);
                 continue;
             }
             try {

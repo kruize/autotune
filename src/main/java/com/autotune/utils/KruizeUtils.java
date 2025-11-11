@@ -56,23 +56,23 @@ public final class KruizeUtils {
 
     public static double parseDurationToDays(String durationString) {
         if (durationString == null || durationString.isBlank()) {
-            throw new IllegalArgumentException("Duration string cannot be null or empty.");
+            throw new IllegalArgumentException(KruizeConstants.KRUIZE_UTILS_CONSTANTS.DURATION_CANNOT_BE_NULL_OR_EMPTY);
         }
 
         // Split the string into number and unit parts (e.g., "30", "min")
         String[] parts = durationString.trim().split("\\s+");
         if (parts.length != 2) {
-            throw new IllegalArgumentException("Invalid duration format. Expected: '<value> <unit>' (e.g., '30 min').");
+            throw new IllegalArgumentException(KruizeConstants.KRUIZE_UTILS_CONSTANTS.INVALID_DURATION_FORMAT);
         }
 
         double value;
         try {
             value = Double.parseDouble(parts[0]);
             if (value <= 0) {
-                throw new IllegalArgumentException("Duration value must be positive.");
+                throw new IllegalArgumentException(KruizeConstants.KRUIZE_UTILS_CONSTANTS.DURATION_VALUE_MUST_BE_POSITIVE);
             }
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException("Invalid number in duration string: " + parts[0]);
+            throw new IllegalArgumentException(KruizeConstants.KRUIZE_UTILS_CONSTANTS.INVALID_NUMBER_IN_DURATION_STRING + parts[0]);
         }
 
         String unit = parts[1].toLowerCase();
@@ -86,7 +86,7 @@ public final class KruizeUtils {
         } else if (unit.startsWith("day")) {
             totalMinutes = value * 60.0 * 24.0;
         } else {
-            throw new IllegalArgumentException("Unsupported time unit: " + unit + ". Supported units are 'min', 'hour', 'day'.");
+            throw new IllegalArgumentException(String.format(KruizeConstants.KRUIZE_UTILS_CONSTANTS.UNSUPPORTED_TIME_UNIT, unit));
         }
 
         // Convert the total minutes into a fraction of a day

@@ -17,6 +17,14 @@ package com.autotune.analyzer.kruizeObject;
 
 import com.google.gson.annotations.SerializedName;
 
+/**
+ * TermDefinition - API/Input layer - receives term settings from user via CreateExperiment API
+ * Fields: durationInDays, durationThreshold (String), plotsDatapoint, plotsDatapointDeltaInDays
+ * This class is converted to Terms for use in the recommendation engine.
+ * Two separate classes have been maintained to ensure separation of concerns and also that API changes don't affect business logic.
+ */
+
+
 public class TermDefinition {
 
     @SerializedName("duration_in_days")
