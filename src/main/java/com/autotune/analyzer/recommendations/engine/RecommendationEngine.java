@@ -963,7 +963,7 @@ public class RecommendationEngine {
                 if (entry.getKey().getLayer().equalsIgnoreCase("hotspot")) {
                     switch(metric) {
                         case "maxram-percentage":
-                            recommendationOpenjdkBuilder.append("-XX:MaxRamPercentage=")
+                            recommendationOpenjdkBuilder.append("-XX:MaxRAMPercentage=")
                                     .append(entry.getValue().toString())
                                     .append(" ");
                             break;
