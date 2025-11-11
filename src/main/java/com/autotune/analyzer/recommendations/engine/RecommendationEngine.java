@@ -949,7 +949,16 @@ public class RecommendationEngine {
             StringBuilder recommendationQuarkusBuilder = new StringBuilder();
             // Combine Recommendation tunables for each layer
 
+            // Appending -server for hotspot layer
             for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
+                String metric = entry.getKey().getName();
+                if (entry.getKey().getLayer().equalsIgnoreCase("hotspot")) {
+                    recommendationOpenjdkBuilder.append("-server ");
+                    break;
+                }
+            }
+
+             for (Map.Entry<OrderTunable, Object> entry : context.entrySet()) {
                 String metric = entry.getKey().getName();
                 if (entry.getKey().getLayer().equalsIgnoreCase("hotspot")) {
                     switch(metric) {
@@ -971,9 +980,16 @@ public class RecommendationEngine {
                                     .append(entry.getValue().toString());
                             break;
                     }
+                } else if (entry.getKey().getLayer().equalsIgnoreCase("openj9")) {
+                    switch(metric) {
+                        case "maxram-percentage":
+                            recommendationOpenjdkBuilder.append("-XX:MaxRamPercentage=")
+                                    .append(entry.getValue().toString())
+                                    .append(" ");
+                            break;
+                    }
                 }
             }
-
             // Create an internal map to send data to populate
             HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<>();
             // Add current values
@@ -988,8 +1004,8 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
 
 
-            //Get the ENV Recommendations
             // Create an internal map to send runtimes data to populate
+            // Add recommended ENV values in the list
             List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
             addIfNotEmpty(runtimeRecommList, "JDK_JAVA_OPTIONS", recommendationOpenjdkBuilder);
             addIfNotEmpty(runtimeRecommList, "JAVA_OPTIONS", recommendationOpenjdkBuilder);
