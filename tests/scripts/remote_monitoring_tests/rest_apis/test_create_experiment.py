@@ -751,3 +751,415 @@ def test_create_exp_exptype_dates_columns(cluster_type):
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
+
+# Custom Terms Validation Tests
+@pytest.mark.negative
+@pytest.mark.parametrize("term_name, expected_error_msg", [
+    ("", "Empty term or model value is not allowed"),
+    ("   ", "Empty term or model value is not allowed"),
+    ("test@term", "is invalid. Only letters, numbers, underscores (_), and hyphens (-) are allowed"),
+    ("test#term", "is invalid. Only letters, numbers, underscores (_), and hyphens (-) are allowed"),
+    ("test$term", "is invalid. Only letters, numbers, underscores (_), and hyphens (-) are allowed"),
+])
+def test_create_exp_invalid_term_name(term_name, expected_error_msg, cluster_type):
+    """
+    Test Description: This test validates custom term name validation by passing invalid term names
+    """
+    input_json_file = "../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    # Read the base experiment JSON
+    json_data = read_json_data_from_file(input_json_file)
+
+    # Add custom term with invalid name
+    json_data[0]["recommendation_settings"] = {
+        "threshold": "0.1",
+        "term_settings": {
+            "terms": {
+                term_name: {
+                    "duration_in_days": 2.0
+                }
+            }
+        }
+    }
+
+    tmp_json_file = "/tmp/create_exp_invalid_term_name.json"
+    write_json_data_to_file(tmp_json_file, json_data)
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment with invalid term name
+    response = create_experiment(tmp_json_file)
+    data = response.json()
+    print(data)
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert expected_error_msg in data['message']
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.negative
+def test_create_exp_custom_term_without_duration(cluster_type):
+    """
+    Test Description: This test validates that custom terms require duration_in_days
+    """
+    input_json_file = "../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    # Read the base experiment JSON
+    json_data = read_json_data_from_file(input_json_file)
+
+    # Add custom term without duration_in_days
+    json_data[0]["recommendation_settings"] = {
+        "threshold": "0.1",
+        "term_settings": {
+            "terms": {
+                "my_custom_term": {
+                    "plots_datapoint": 10
+                }
+            }
+        }
+    }
+
+    tmp_json_file = "/tmp/create_exp_custom_term_no_duration.json"
+    write_json_data_to_file(tmp_json_file, json_data)
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment without duration_in_days
+    response = create_experiment(tmp_json_file)
+    data = response.json()
+    print(data)
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert "The field 'duration_in_days' is mandatory" in data['message']
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.negative
+@pytest.mark.parametrize("duration_value, expected_error_msg", [
+    (0, "'duration_in_days' for term 'my_custom_term' must be a positive number"),
+    (-1, "'duration_in_days' for term 'my_custom_term' must be a positive number"),
+    (-5.5, "'duration_in_days' for term 'my_custom_term' must be a positive number"),
+])
+def test_create_exp_custom_term_invalid_duration(duration_value, expected_error_msg, cluster_type):
+    """
+    Test Description: This test validates that duration_in_days must be positive
+    """
+    input_json_file = "../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    # Read the base experiment JSON
+    json_data = read_json_data_from_file(input_json_file)
+
+    # Add custom term with invalid duration
+    json_data[0]["recommendation_settings"] = {
+        "threshold": "0.1",
+        "term_settings": {
+            "terms": {
+                "my_custom_term": {
+                    "duration_in_days": duration_value
+                }
+            }
+        }
+    }
+
+    tmp_json_file = "/tmp/create_exp_custom_term_invalid_duration.json"
+    write_json_data_to_file(tmp_json_file, json_data)
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment with invalid duration
+    response = create_experiment(tmp_json_file)
+    data = response.json()
+    print(data)
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert expected_error_msg in data['message']
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.negative
+@pytest.mark.parametrize("default_term", [
+    "daily", "weekly", "15 days", "monthly", "quarterly",
+    "half_yearly", "yearly", "short_term", "medium_term", "long_term"
+])
+def test_create_exp_modify_default_term(default_term, cluster_type):
+    """
+    Test Description: This test validates that default terms cannot be modified
+    """
+    input_json_file = "../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    # Read the base experiment JSON
+    json_data = read_json_data_from_file(input_json_file)
+
+    # Try to modify a default term
+    json_data[0]["recommendation_settings"] = {
+        "threshold": "0.1",
+        "term_settings": {
+            "terms": {
+                default_term: {
+                    "duration_in_days": 10.0
+                }
+            }
+        }
+    }
+
+    tmp_json_file = "/tmp/create_exp_modify_default_term.json"
+    write_json_data_to_file(tmp_json_file, json_data)
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment with modified default term
+    response = create_experiment(tmp_json_file)
+    data = response.json()
+    print(data)
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert f"The term '{default_term}' is immutable. Configuration fields cannot be specified" in data['message']
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.negative
+@pytest.mark.parametrize("plots_datapoint_value", [0, -1, -10])
+def test_create_exp_custom_term_invalid_plots_datapoint(plots_datapoint_value, cluster_type):
+    """
+    Test Description: This test validates that plots_datapoint must be positive
+    """
+    input_json_file = "../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    # Read the base experiment JSON
+    json_data = read_json_data_from_file(input_json_file)
+
+    # Add custom term with invalid plots_datapoint
+    json_data[0]["recommendation_settings"] = {
+        "threshold": "0.1",
+        "term_settings": {
+            "terms": {
+                "my_custom_term": {
+                    "duration_in_days": 5.0,
+                    "plots_datapoint": plots_datapoint_value
+                }
+            }
+        }
+    }
+
+    tmp_json_file = "/tmp/create_exp_custom_term_invalid_plots.json"
+    write_json_data_to_file(tmp_json_file, json_data)
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment with invalid plots_datapoint
+    response = create_experiment(tmp_json_file)
+    data = response.json()
+    print(data)
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert "'plots_datapoint' for term" in data['message'] and "must be a positive number" in data['message']
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.negative
+@pytest.mark.parametrize("plots_delta_value", [0, -1, -5.5])
+def test_create_exp_custom_term_invalid_plots_delta(plots_delta_value, cluster_type):
+    """
+    Test Description: This test validates that plots_datapoint_delta_in_days must be positive
+    """
+    input_json_file = "../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    # Read the base experiment JSON
+    json_data = read_json_data_from_file(input_json_file)
+
+    # Add custom term with invalid plots_datapoint_delta_in_days
+    json_data[0]["recommendation_settings"] = {
+        "threshold": "0.1",
+        "term_settings": {
+            "terms": {
+                "my_custom_term": {
+                    "duration_in_days": 5.0,
+                    "plots_datapoint_delta_in_days": plots_delta_value
+                }
+            }
+        }
+    }
+
+    tmp_json_file = "/tmp/create_exp_custom_term_invalid_delta.json"
+    write_json_data_to_file(tmp_json_file, json_data)
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment with invalid plots_datapoint_delta_in_days
+    response = create_experiment(tmp_json_file)
+    data = response.json()
+    print(data)
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert "'plots_datapoint_delta_in_days' for term" in data['message'] and "must be a positive number" in data['message']
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.skip(reason="Duration threshold validation not yet implemented")
+@pytest.mark.negative
+@pytest.mark.parametrize("duration_threshold", [
+    "invalid format",
+    "30",
+    "min 30",
+    "-5 days",
+    "0 hours"
+])
+def test_create_exp_custom_term_invalid_duration_threshold(duration_threshold, cluster_type):
+    """
+    Test Description: This test validates duration_threshold format validation
+    NOTE: This test is skipped because duration_threshold validation is not yet implemented
+    """
+    input_json_file = "../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    # Read the base experiment JSON
+    json_data = read_json_data_from_file(input_json_file)
+
+    # Add custom term with invalid duration_threshold
+    json_data[0]["recommendation_settings"] = {
+        "threshold": "0.1",
+        "term_settings": {
+            "terms": {
+                "my_custom_term": {
+                    "duration_in_days": 5.0,
+                    "duration_threshold": duration_threshold
+                }
+            }
+        }
+    }
+
+    tmp_json_file = "/tmp/create_exp_custom_term_invalid_threshold.json"
+    write_json_data_to_file(tmp_json_file, json_data)
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment with invalid duration_threshold
+    response = create_experiment(tmp_json_file)
+    data = response.json()
+    print(data)
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+def test_create_exp_valid_custom_term(cluster_type):
+    """
+    Test Description: This test validates creation of experiment with valid custom term
+    """
+    input_json_file = "../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    # Read the base experiment JSON
+    json_data = read_json_data_from_file(input_json_file)
+
+    # Add valid custom term
+    json_data[0]["recommendation_settings"] = {
+        "threshold": "0.1",
+        "term_settings": {
+            "terms": {
+                "my_custom_term": {
+                    "duration_in_days": 5.0,
+                    "duration_threshold": "3 days",
+                    "plots_datapoint": 5,
+                    "plots_datapoint_delta_in_days": 1.0
+                }
+            }
+        }
+    }
+
+    tmp_json_file = "/tmp/create_exp_valid_custom_term.json"
+    write_json_data_to_file(tmp_json_file, json_data)
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment with valid custom term
+    response = create_experiment(tmp_json_file)
+    data = response.json()
+    print(data)
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+def test_create_exp_mixed_default_and_custom_terms(cluster_type):
+    """
+    Test Description: This test validates creation of experiment with both default and custom terms
+    """
+    input_json_file = "../json_files/create_exp.json"
+    form_kruize_url(cluster_type)
+
+    # Read the base experiment JSON
+    json_data = read_json_data_from_file(input_json_file)
+
+    # Add mixed default and custom terms
+    json_data[0]["recommendation_settings"] = {
+        "threshold": "0.1",
+        "term_settings": {
+            "terms": {
+                "weekly": {},
+                "my_custom_term": {
+                    "duration_in_days": 10.0
+                },
+                "monthly": {}
+            }
+        }
+    }
+
+    tmp_json_file = "/tmp/create_exp_mixed_terms.json"
+    write_json_data_to_file(tmp_json_file, json_data)
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment with mixed terms
+    response = create_experiment(tmp_json_file)
+    data = response.json()
+    print(data)
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    response = delete_experiment(tmp_json_file)
+    print("delete exp = ", response.status_code)
