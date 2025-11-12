@@ -61,14 +61,14 @@ public final class KruizeUtils {
 
         // Split the string into number and unit parts (e.g., "30", "min")
         String[] parts = durationString.trim().split("\\s+");
-        if (parts.length != 2) {
+        if (parts.length != KruizeConstants.KRUIZE_UTILS_CONSTANTS.EXPECTED_DURATION_PARTS) {
             throw new IllegalArgumentException(KruizeConstants.KRUIZE_UTILS_CONSTANTS.INVALID_DURATION_FORMAT);
         }
 
         double value;
         try {
             value = Double.parseDouble(parts[0]);
-            if (value <= 0) {
+            if (value <= KruizeConstants.KRUIZE_UTILS_CONSTANTS.MIN_DURATION_VALUE) {
                 throw new IllegalArgumentException(KruizeConstants.KRUIZE_UTILS_CONSTANTS.DURATION_VALUE_MUST_BE_POSITIVE);
             }
         } catch (NumberFormatException e) {
@@ -79,17 +79,17 @@ public final class KruizeUtils {
         double totalMinutes;
 
         // Convert the value to a common base (minutes)
-        if (unit.startsWith("min")) {
+        if (unit.startsWith(KruizeConstants.TimeUnitsExt.MINUTE_SHORT_LC_PLURAL)) {
             totalMinutes = value;
-        } else if (unit.startsWith("hour")) {
-            totalMinutes = value * 60.0;
-        } else if (unit.startsWith("day")) {
-            totalMinutes = value * 60.0 * 24.0;
+        } else if (unit.startsWith(KruizeConstants.TimeUnitsExt.HOUR_LC_SINGULAR)) {
+            totalMinutes = value * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR;
+        } else if (unit.startsWith(KruizeConstants.TimeUnitsExt.DAY_LC_SINGULAR)) {
+            totalMinutes = value * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY;
         } else {
             throw new IllegalArgumentException(String.format(KruizeConstants.KRUIZE_UTILS_CONSTANTS.UNSUPPORTED_TIME_UNIT, unit));
         }
 
         // Convert the total minutes into a fraction of a day
-        return totalMinutes / (60.0 * 24.0); // 1 day = 1440 minutes
+        return totalMinutes / (KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY); // 1 day = 1440 minutes
     }
 }

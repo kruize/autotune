@@ -48,3 +48,35 @@ The feature is implemented within the `recommendation_settings` section of the *
 | **`duration_threshold`** | String | Optional                          | Minimum data required to generate a recommendation. |
 | **`plots_datapoint`** | Integer| Optional                          | Number of data points for plots. Defaults to one point per day.                                          |
 | **`plots_datapoint_delta_in_days`** | Double | Optional                          | Time interval (in days) between plot points.                                           |
+
+---
+
+### Custom Term Validations
+#### Term Name Requirements
+- Cannot be empty or whitespace only
+- Must contain only: letters, numbers, underscores (_), hyphens (-), and spaces
+- Pattern: `^[a-zA-Z0-9_ -]+$`
+
+#### Fixed Default Terms (Immutable)
+Fixed terms (`daily`, `weekly`, `15 days`, `monthly`, `quarterly`, `half_yearly`, `yearly`, `short_term`, `medium_term`, `long_term`) cannot be modified. No configuration fields can be specified for these terms.
+
+#### User-Defined Terms Requirements
+
+**Mandatory Fields:**
+- `duration_in_days` - must be a positive number (> 0)
+
+**Optional Fields (must be positive if specified):**
+- `plots_datapoint` - must be > 0
+- `plots_datapoint_delta_in_days` - must be > 0
+- `duration_threshold` - format: `"<value> <unit>"` (e.g., `"30 min"`, `"2 days"`)
+  - Supported units: `min`, `hour`, `day`
+
+**Default Values (applied when not specified):**
+- `duration_threshold`: 70% of `duration_in_days`
+- `plots_datapoint`: equals `duration_in_days`
+- `plots_datapoint_delta_in_days`: `1.0` day
+
+#### Mode Restrictions
+- **Auto/Recreate mode**: Only 1 term allowed (multiple terms not supported)
+
+**Note:** All validation errors return **HTTP 400 Bad Request**.

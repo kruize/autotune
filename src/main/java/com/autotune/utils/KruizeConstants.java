@@ -352,6 +352,8 @@ public class KruizeConstants {
         public static final String HOUR_SHORT_UC_SINGULAR = HOUR_SHORT_LC_SINGULAR.toUpperCase();
         public static final String HOUR_SINGLE_LC = "h";
         public static final String HOUR_SINGLE_UC = HOUR_SINGLE_LC.toUpperCase();
+        public static final String DAY_LC_SINGULAR = "day";
+        public static final String DAY_LC_PLURAL = DAY_LC_SINGULAR + "s";
 
         private TimeUnitsExt() {
         }
@@ -1137,5 +1139,9 @@ public class KruizeConstants {
         public static final String DURATION_VALUE_MUST_BE_POSITIVE =  "Duration value must be positive.";
         public static final String INVALID_NUMBER_IN_DURATION_STRING = "Invalid number in duration string: ";
         public static final String UNSUPPORTED_TIME_UNIT = "Unsupported time unit: {}. Supported units are 'min', 'hour', 'day'.";
+
+        // Duration parsing constants
+        public static final int EXPECTED_DURATION_PARTS = 2;
+        public static final int MIN_DURATION_VALUE = 0;
     }
 }
