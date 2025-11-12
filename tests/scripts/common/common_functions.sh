@@ -75,6 +75,33 @@ api_yaml_path="${MANIFESTS}/${module}/${api_yaml}"
 # Path to the directory containing yaml files
 configmap="${AUTOTUNE_REPO}/manifests/autotune/configmaps"
 
+#   Clone git Repos
+function clone_repos() {
+	repo_name=$1
+	echo
+	echo "#######################################"
+	echo "Cloning ${repo_name} git repos"
+	if [ ! -d ${repo_name} ]; then
+		git clone git@github.com:kruize/${repo_name}.git >/dev/null 2>/dev/null
+		if [ $? -ne 0 ]; then
+			git clone https://github.com/kruize/${repo_name}.git 2>/dev/null
+		fi
+		check_err "ERROR: git clone of kruize/${repo_name} failed."
+	fi
+
+	echo "done"
+	echo "#######################################"
+	echo
+}
+
+
+#   Cleanup git Repos
+function delete_repos() {
+	app_name=$1
+	echo "Deleting ${app_name} git repos"
+	rm -rf ${app_name} benchmarks
+}
+
 # checks if the previous command is executed successfully
 # input:Return value of previous command
 # output:Prompts the error message if the return value is not zero and exits
