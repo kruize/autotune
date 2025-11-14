@@ -827,7 +827,7 @@ public class AnalyzerConstants {
     }
 
     public static final class VersionConstants {
-        public static final String CURRENT_KRUIZE_OBJECT_VERSION = "v2.0";
+        public static final String CURRENT_KRUIZE_OBJECT_VERSION = "v3.0";
 
         private VersionConstants() {
 
