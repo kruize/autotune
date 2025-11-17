@@ -28,9 +28,9 @@ Where values for remote_monitoring_scale_test_bulk.sh are:
 
 ```
 usage: remote_monitoring_fault_tolerant_tests.sh 
-        [ -i ] : optional. Kruize docker image to be used for testing
-                 default - quay.io/kruize/autotune:mvp_demo
-	[ -r ] : Results directory path
+    [ -i ] : optional. Kruize docker image to be used for testing
+             default - quay.io/kruize/autotune:mvp_demo
+    [ -r ] : Results directory path
 	[-u No. of experiments (default - 5000)]
 	[-d No. of days of results (default - 15)] 
 	[-n No. of clients (default - 20)]
@@ -38,7 +38,8 @@ usage: remote_monitoring_fault_tolerant_tests.sh
 	[-t interval hours (default - 6)]
 	[-s Initial start date (default - 2023-01-10T00:00:00.000Z)]
 	[-q query db interval in mins, (default - 10)]
-        [-c Experiment type [container|namespace|container_ns] (default - container)]
+    [-c Experiment type [container|namespace|container_ns] (default - container)]
+    [-a Test case (default - scale_5k) Valid values - [scale_5k/migration] migration - Used by db_migration test]"
 ```
 
 For example,
