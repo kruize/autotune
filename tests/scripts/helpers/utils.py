@@ -112,6 +112,7 @@ COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain a
 COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
 COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
 CREATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : %s created successfully."
+CREATE_PERF_PROFILE_DUPLICATE_RECORD_MSG = "Performance Profile already exists: %s"
 UPDATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile '%s' updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles"
 UPDATE_PERF_PROFILE_MISSING_PROFILE_ERROR_MSG = "Validation failed: Performance Profile '%s' not found. Use POST to create a new profile."
 UPDATE_PERF_PROFILE_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the version %.1f"
