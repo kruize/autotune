@@ -92,7 +92,7 @@ function check_log() {
 
 function validate_sysbench_reco() {
 	# Obtain the kruize recommendations for the vpa optimize-sysbench
-	DEMO_LOG_DIR="./"
+	DEMO_LOG_DIR=$1
 	vpa_json="${DEMO_LOG_DIR}/vpa.json"
 	kubectl get vpa "optimize-sysbench" -o json > "${vpa_json}"
 	if [ ! -e "${vpa_json}" ]; then
@@ -257,7 +257,7 @@ function run_demo() {
 			# sleep for sometime for vpa to be created
 			sleep 40
 			echo "Validating vpa recommendations..." | tee -a ${LOG}
-			validate_sysbench_reco | tee -a ${LOG}
+			validate_sysbench_reco "${DEMO_LOG_DIR}" | tee -a ${LOG}
 			echo "Validating vpa recommendations...Done" | tee -a ${LOG}
 
 		fi
