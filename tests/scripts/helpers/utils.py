@@ -118,6 +118,10 @@ UPDATE_PERF_PROFILE_MISSING_PROFILE_ERROR_MSG = "Validation failed: Performance 
 UPDATE_PERF_PROFILE_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the version %.1f"
 UPDATE_PERF_PROFILE_SLO_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the provided SLO data"
 UPDATE_PERF_PROFILE_SUPERSET_ERROR = "Validation failed: Updated profile must be a superset of existing data"
+DELETE_PERF_PROFILE_SUCCESS_MSG = "Performance profile %s deleted successfully. View Performance Profiles at /listPerformanceProfiles"
+DELETE_PERF_PROFILE_MISSING_NAME_ERROR = "Performance profile name is required."
+DELETE_PERF_PROFILE_NON_EXISTENT_NAME_ERROR = "Not Found: performance_profile does not exist: %s"
+DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment"
 
 
 # Kruize Recommendations Notification codes
@@ -219,6 +223,7 @@ TERMS_NOTIFICATION_CODES = {
 
 NAMESPACE_EXPERIMENT_TYPE = "namespace"
 CONTAINER_EXPERIMENT_TYPE = "container"
+PERF_PROFILE_NAME = "test-delete-api"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
