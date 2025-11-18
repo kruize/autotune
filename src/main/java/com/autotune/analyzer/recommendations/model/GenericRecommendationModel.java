@@ -660,6 +660,189 @@ public class GenericRecommendationModel implements RecommendationModel{
     }
 
     @Override
+    public RecommendationConfigItem getCPULimitRecommendation(
+            RecommendationConfigItem recommendedRequest,
+            RecommendationConfigItem currentRequest,
+            RecommendationConfigItem currentLimit,
+            ArrayList<RecommendationNotification> notifications) {
+
+        return calculateResourceLimit(
+            recommendedRequest, 
+            currentRequest, 
+            currentLimit, 
+            notifications, 
+            "CPU"
+        );
+    }
+
+    @Override
+    public RecommendationConfigItem getMemoryLimitRecommendation(
+            RecommendationConfigItem recommendedRequest,
+            RecommendationConfigItem currentRequest,
+            RecommendationConfigItem currentLimit,
+            ArrayList<RecommendationNotification> notifications) {
+
+        return calculateResourceLimit(
+            recommendedRequest, 
+            currentRequest, 
+            currentLimit, 
+            notifications, 
+            "MEMORY"
+        );
+    }
+
+    @Override
+    public RecommendationConfigItem getCPULimitRecommendationForNamespace(
+            RecommendationConfigItem recommendedRequest,
+            RecommendationConfigItem currentRequest,
+            RecommendationConfigItem currentLimit,
+            ArrayList<RecommendationNotification> notifications) {
+
+        return calculateResourceLimit(
+            recommendedRequest, 
+            currentRequest, 
+            currentLimit, 
+            notifications, 
+            "Namespace CPU"
+        );
+    }
+
+    @Override
+    public RecommendationConfigItem getMemoryLimitRecommendationForNamespace(
+            RecommendationConfigItem recommendedRequest,
+            RecommendationConfigItem currentRequest,
+            RecommendationConfigItem currentLimit,
+            ArrayList<RecommendationNotification> notifications) {
+
+        return calculateResourceLimit(
+            recommendedRequest, 
+            currentRequest, 
+            currentLimit, 
+            notifications, 
+            "Namespace MEMORY"
+        );
+    }
+
+    private RecommendationConfigItem calculateResourceLimit(
+            RecommendationConfigItem recommendedRequest,
+            RecommendationConfigItem currentRequest,
+            RecommendationConfigItem currentLimit,
+            ArrayList<RecommendationNotification> notifications,
+            String resourceType) {
+
+        LOGGER.debug("{} limit calculation - adjust_mem_usage flag: {}", resourceType, KruizeDeploymentInfo.adjust_mem_usage);
+
+        // Check if ratio-based calculation is enabled via environment variable
+        if (KruizeDeploymentInfo.adjust_mem_usage) {
+            LOGGER.debug("{}: Using RATIO-based calculation", resourceType);
+            return calculateLimitWithRatio(
+                recommendedRequest, 
+                currentRequest, 
+                currentLimit, 
+                notifications, 
+                resourceType
+            );
+        } else {
+            LOGGER.debug("{}: Using DEFAULT behavior (limit = request)", resourceType);
+            // Default behavior: set limit equal to recommended request
+            boolean setNotification = (notifications != null);
+
+            if (recommendedRequest == null || recommendedRequest.getAmount() == null || recommendedRequest.getAmount() <= 0) {
+                if (setNotification) {
+                    notifications.add(new RecommendationNotification(
+                        RecommendationConstants.RecommendationNotification.ERROR_NO_RECOMMENDED_REQUEST_FOR_LIMIT_CALCULATION
+                    ));
+                }
+                LOGGER.warn("{} limit calculation failed: No valid recommended request available", resourceType);
+                return null;
+            }
+
+            if (setNotification) {
+                notifications.add(new RecommendationNotification(
+                    RecommendationConstants.RecommendationNotification.INFO_RATIO_CALCULATION_DISABLED_USING_REQUEST
+                ));
+            }
+
+            LOGGER.debug("{} Limit: Ratio calculation disabled, using recommended request as limit: {}", 
+                        resourceType, recommendedRequest.getAmount());
+
+            return new RecommendationConfigItem(recommendedRequest.getAmount(), recommendedRequest.getFormat());
+        }
+    }
+
+    private RecommendationConfigItem calculateLimitWithRatio(
+            RecommendationConfigItem recommendedRequest,
+            RecommendationConfigItem currentRequest,
+            RecommendationConfigItem currentLimit,
+            ArrayList<RecommendationNotification> notifications,
+            String resourceType) {
+
+        boolean setNotification = (notifications != null);
+
+        // Validation: Check if recommended request is available
+        if (recommendedRequest == null || recommendedRequest.getAmount() == null || recommendedRequest.getAmount() <= 0) {
+            if (setNotification) {
+                notifications.add(new RecommendationNotification(
+                    RecommendationConstants.RecommendationNotification.ERROR_NO_RECOMMENDED_REQUEST_FOR_LIMIT_CALCULATION
+                ));
+            }
+            LOGGER.warn("{} limit calculation failed: No valid recommended request available", resourceType);
+            return null;
+        }
+
+        // Fallback 1: If no current limit is set, return recommended request as limit
+        if (currentLimit == null || currentLimit.getAmount() == null || currentLimit.getAmount() <= 0) {
+            if (setNotification) {
+                notifications.add(new RecommendationNotification(
+                    RecommendationConstants.RecommendationNotification.INFO_NO_CURRENT_LIMIT_USING_REQUEST_AS_LIMIT
+                ));
+            }
+            LOGGER.info("{} limit set to recommended request: No current limit available", resourceType);
+            return new RecommendationConfigItem(recommendedRequest.getAmount(), recommendedRequest.getFormat());
+        }
+
+        // Fallback 2: If no current request is set, return recommended request as limit
+        if (currentRequest == null || currentRequest.getAmount() == null || currentRequest.getAmount() <= 0) {
+            if (setNotification) {
+                notifications.add(new RecommendationNotification(
+                    RecommendationConstants.RecommendationNotification.INFO_NO_CURRENT_REQUEST_USING_RECOMMENDED_REQUEST_AS_LIMIT
+                ));
+            }
+            LOGGER.info("{} limit set to recommended request: No current request available for ratio calculation", resourceType);
+            return new RecommendationConfigItem(recommendedRequest.getAmount(), recommendedRequest.getFormat());
+        }
+
+        // Main calculation: R = Current Limit (Y) / Current Request (X)
+        double currentRequestValue = currentRequest.getAmount();
+        double currentLimitValue = currentLimit.getAmount();
+        double recommendedRequestValue = recommendedRequest.getAmount();
+
+        double ratio = currentLimitValue / currentRequestValue;
+
+        // Calculate new limit: Y1 = X1 × R
+        double newLimitValue = recommendedRequestValue * ratio;
+
+        // Use the format from current limit, fallback to recommended request format
+        String format = currentLimit.getFormat();
+        if (format == null || format.isEmpty()) {
+            format = recommendedRequest.getFormat();
+        }
+
+        if (setNotification) {
+            notifications.add(new RecommendationNotification(
+                RecommendationConstants.RecommendationNotification.INFO_LIMIT_CALCULATED_USING_RATIO
+            ));
+        }
+
+        LOGGER.debug("{} Limit Ratio Calculation: Current Limit={}, Current Request={}, Ratio={:.4f}, " +
+                    "Recommended Request={}, New Limit={}", 
+                    resourceType, currentLimitValue, currentRequestValue, ratio, 
+                    recommendedRequestValue, newLimitValue);
+
+        return new RecommendationConfigItem(newLimitValue, format);
+    }
+
+    @Override
     public String getModelName() {
         return this.name;
     }
