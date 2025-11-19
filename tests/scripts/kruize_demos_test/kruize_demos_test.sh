@@ -31,12 +31,19 @@ demo=all
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
 KRUIZE_OPERATOR_IMAGE="quay.io/kruize/autotune_operator:0.0.2"
+KRUIZE_OPERATOR=1
 failed=0
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>]"
-	exit -1
+	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-k (use this option to deploy kruize using manifests]"
+	echo "c = supports minikube, kind and openshift cluster-type"
+	echo "i = kruize image. Default - quay.io/kruize/autotune:mvp_demo"
+	echo "o = Kruize operator image. Default - quay.io/kruize/kruize-operator:0.0.2"
+	echo "t = Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)"
+	echo "r = Kruize results dir path. Default - /tmp/kruize_demos_test_results"
+	echo "k = install kruize using deploy scripts."
+	exit 1
 }
 
 function get_kruize_pod_log() {
@@ -194,12 +201,21 @@ function run_demo() {
 	fi
 
 	if [[ "${CLUSTER_TYPE}" == minikube || "${CLUSTER_TYPE}" == "kind" ]]; then
+		# Remote monitoring doesn't support -f option
 		if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
-			CMD="${CMD[@]} -f -k"
+			CMD="${CMD[@]} -f"
 		fi
 	fi
 
-	CLEANUP_CMD="${CMD[@]} -t"
+	# Add -k option to deploy kruize using manifests
+	if [[ "${KRUIZE_OPERATOR}" -eq 0 ]]; then
+		CMD="${CMD[@]} -k"
+	fi
+
+	if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
+		CLEANUP_CMD="${CMD[@]} -t"
+	fi
+
 	DEMO_LOG_DIR="${LOG_DIR}/${DEMO_NAME}"
 
 	mkdir -p "${DEMO_LOG_DIR}"
@@ -282,7 +298,7 @@ function run_demo() {
 	} | tee -a ${LOG}
 }
 
-while getopts c:r:i:o:t:h gopts
+while getopts c:r:i:o:t:kh gopts
 do
 	case ${gopts} in
 	c)
@@ -299,6 +315,9 @@ do
 		;;
 	t)
 		demo="${OPTARG}"		
+		;;
+	k)
+		KRUIZE_OPERATOR=0
 		;;
 	h)
 		usage
