@@ -122,6 +122,7 @@ DELETE_PERF_PROFILE_SUCCESS_MSG = "Performance profile %s deleted successfully. 
 DELETE_PERF_PROFILE_MISSING_NAME_ERROR = "Performance profile name is required."
 DELETE_PERF_PROFILE_NON_EXISTENT_NAME_ERROR = "Not Found: performance_profile does not exist: %s"
 DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment"
+LIST_PERF_PROFILE_NO_PROFILES_MSG = "No performance profiles present!"
 
 
 # Kruize Recommendations Notification codes
