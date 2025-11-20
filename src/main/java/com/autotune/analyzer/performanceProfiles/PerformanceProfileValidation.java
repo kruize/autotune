@@ -29,6 +29,8 @@ import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -154,7 +156,8 @@ public class PerformanceProfileValidation {
                         SloInfo existingSLOData = existingPerformanceProfile.getSloInfo();
                         SloInfo newSLOData = performanceProfile.getSloInfo();
 
-                        if (newSLOData.equals(existingSLOData)) {
+                        Gson gson = new GsonBuilder().create();
+                        if (gson.toJson(existingSLOData).equals(gson.toJson(newSLOData))) {
                             errorString.append(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_SLO_ALREADY_UPDATED,
                                     performanceProfile.getName()));
                             return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
@@ -525,7 +528,7 @@ public class PerformanceProfileValidation {
                 }
 
                 if (!missingMandatoryFields.isEmpty()) {
-                    errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s ", missingMandatoryFields));
+                    errorMsg = errorMsg.concat(String.format("Missing mandatory parameters: %s", missingMandatoryFields));
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(errorMsg);
                     validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
