@@ -253,8 +253,11 @@ def delete_performance_profile(input_json_file, invalid_header=False):
     print("\nDeleting the performance profile...")
     url = URL + "/deletePerformanceProfile"
 
-    performance_profile_name = input_json['name']
-    query_string = f"name={performance_profile_name}"
+    try:
+        performance_profile_name = input_json['name']
+        query_string = f"name={performance_profile_name}"
+    except KeyError:
+        query_string = ""
 
     if query_string:
         url += "?" + query_string

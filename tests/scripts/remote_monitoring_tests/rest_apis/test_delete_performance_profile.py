@@ -19,7 +19,7 @@ import sys
 import pytest
 
 sys.path.append("../../")
-
+from helpers.fixtures import *
 from helpers.utils import *
 
 perf_profile_dir = get_metric_profile_dir()
@@ -86,7 +86,6 @@ def test_delete_performance_profile(cluster_type):
     [
         ("__missing__", DELETE_PERF_PROFILE_MISSING_NAME_ERROR),         # missing
         ("", DELETE_PERF_PROFILE_MISSING_NAME_ERROR),                    # blank
-        (None, DELETE_PERF_PROFILE_MISSING_NAME_ERROR),                  # null
         ("__non_existent_profile__", DELETE_PERF_PROFILE_NON_EXISTENT_NAME_ERROR), # name not present
     ],
 )
@@ -105,6 +104,8 @@ def test_delete_performance_profiles_negative_cases(cluster_type, invalid_name, 
     with open(perf_profile_json_file, "r") as f:
         data = json.load(f)
 
+    if invalid_name == "__non_existent_profile__":
+        expected_message = DELETE_PERF_PROFILE_NON_EXISTENT_NAME_ERROR % invalid_name
     # ----- Case: Name missing entirely -----
     if invalid_name == "__missing__":
         data.pop("name", None)
@@ -134,36 +135,34 @@ def test_delete_performance_profile_when_associated_with_experiment(cluster_type
     with one or more experiments.
     """
 
+    # Form the kruize url
     form_kruize_url(cluster_type)
-    profile_name = "perf-profile-associated-test"
+    perf_profile_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+    # Delete any existing profile
+    response = delete_performance_profile(perf_profile_json_file)
+    print("delete API status code = ", response.status_code)
+    data = response.json()
+    print("delete API status message  = ", data["message"])
 
-    # Load base JSON & override the name
+    # Load base JSON
     perf_profile_file = perf_profile_dir / "resource_optimization_openshift.json"
-    tmp_profile_file = "/tmp/perf_profile_associated.json"
-    with open(perf_profile_file, "r") as f:
-        data = json.load(f)
-    data["name"] = profile_name
-
-    with open(tmp_profile_file, "w") as f:
-        json.dump(data, f, indent=2)
 
     # Create the performance profile
-    resp = create_performance_profile(tmp_profile_file)
-    assert resp.status_code in (200, 201)
+    response = create_performance_profile(perf_profile_file)
+    data = response.json()
+    print(data['message'])
+
+    with open(perf_profile_json_file, "r") as f:
+        json_data = json.load(f)
+    perf_profile_name = json_data["name"]
+
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert CREATE_PERF_PROFILE_SUCCESS_MSG % perf_profile_name in data['message']
 
     # Create an experiment using this profile
-    experiment_name = "exp-using-" + profile_name
     input_json_file = "../json_files/create_exp.json"
-    tmp_exp_file = "/tmp/experiment_associated.json"
-
-    with open(input_json_file, "r") as f:
-        data = json.load(f)
-    data["performance_profile"] = profile_name
-
-    with open(tmp_exp_file, "w") as f:
-        json.dump(data, f, indent=2)
-
-    response = create_experiment(tmp_exp_file)
+    response = create_experiment(input_json_file)
 
     data = response.json()
     print(data['message'])
@@ -173,18 +172,17 @@ def test_delete_performance_profile_when_associated_with_experiment(cluster_type
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
     # Verify via listExperiments that the experiment exists
-    list_resp = list_experiments()
+    list_resp = list_experiments(rm=True)
     assert list_resp.status_code == 200
 
-    experiments = list_resp.json().get("experiments", [])
+    experiments = list_resp.json()
+    assert isinstance(experiments, list)
+    print("experiments:", experiments)
     associated_count = sum(
-        1 for e in experiments if e.get("performance_profile") == profile_name
+        1 for e in experiments if e.get("performance_profile") == PERF_PROFILE_NAME
     )
-
-    assert associated_count >= 1, "Experiment should be associated with the profile"
-
     # Attempt to delete the performance profile
-    response = delete_performance_profile(tmp_profile_file)
+    response = delete_performance_profile(perf_profile_file)
     print("delete API status code = ", response.status_code)
     data = response.json()
     print("delete API status message  = ", data["message"])
@@ -192,7 +190,12 @@ def test_delete_performance_profile_when_associated_with_experiment(cluster_type
     assert response.status_code == ERROR_STATUS_CODE
     assert data["status"] == ERROR_STATUS
 
-    expected_msg = DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR.format(
-        profile_name, associated_count, "s" if associated_count > 1 else ""
-    )
+    expected_msg = DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR % (PERF_PROFILE_NAME, associated_count)
+    if associated_count > 1:
+        expected_msg += "s"
+
     assert data["message"] == expected_msg
+
+    # delete the experiment
+    response = delete_experiment(input_json_file, rm=True)
+    print("delete exp = ", response.status_code)

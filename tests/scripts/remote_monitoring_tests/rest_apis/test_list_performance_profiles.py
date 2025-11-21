@@ -18,9 +18,11 @@ import sys
 
 import pytest
 
+from helpers.list_metric_profiles_validate import *
 sys.path.append("../../")
 
 from helpers.utils import *
+from helpers.fixtures import *
 
 perf_profile_dir = get_metric_profile_dir()
 
@@ -41,8 +43,9 @@ def test_list_performance_profiles_empty(cluster_type):
 
     # get the list profiles response
     response = list_performance_profiles()
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert data['status'] == SUCCESS_STATUS
+    data = response.json()
+    print("response = ", data)
+    assert response.status_code == SUCCESS_200_STATUS_CODE
     assert data['message'] == LIST_PERF_PROFILE_NO_PROFILES_MSG
 
 
@@ -79,11 +82,16 @@ def test_list_performance_profiles_single(cluster_type):
 
     # Call listProfiles
     response = list_performance_profiles()
-    assert response.status_code == SUCCESS_STATUS_CODE
+    assert response.status_code == SUCCESS_200_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
 
     profiles = response.json()
     print("List response:", profiles)
+
+    perf_profile_json = response.json()
+    # Validate the json against the json schema
+    errorMsg = validate_list_metric_profiles_json(perf_profile_json, list_metric_profiles_schema)
+    assert errorMsg == ""
 
     assert isinstance(profiles, list)
     assert len(profiles) >= 1
@@ -124,8 +132,11 @@ def test_list_performance_profiles_multiple(cluster_type):
     # List all profiles
     response = list_performance_profiles()
     profiles = response.json()
-    assert response.status_code == SUCCESS_STATUS_CODE
-    assert profiles['status'] == SUCCESS_STATUS
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+    for profile in profiles:
+        # Validate the json against the json schema
+        errorMsg = validate_list_metric_profiles_json([profile], list_metric_profiles_schema)
+        assert errorMsg == ""
 
     print("Profiles returned:", profiles)
 

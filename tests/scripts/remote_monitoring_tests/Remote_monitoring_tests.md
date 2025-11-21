@@ -147,6 +147,21 @@ The above tests are developed using pytest framework and the tests are run using
 - Creates a resource optimization performance profile using the [createPerformanceProfile API](/design/PerformanceProfileAPI.md)
 - Runs the above tests using pytest
 
+### **Create Performance Profile API tests**
+
+Here are the test scenarios:
+- Create performance profile with a valid version
+- Create performance profile with duplicate data
+- Create performance profile with missing mandatory fields
+- Create performance profile with missing mandatory fields
+
+### **List Performance Profile API tests**
+
+Here are the test scenarios:
+- List performance profile with no profiles
+- List performance profile with only one profile present
+- List performance profile with only multiple profiles present
+
 ### **Update Performance Profile API tests**
 
 Here are the test scenarios:
@@ -156,6 +171,13 @@ Here are the test scenarios:
 - Update performance profile with duplicate SLO data
 - Update performance profile with invalid superset data 
 - Update performance profile with missing mandatory fields
+
+### **Delete Performance Profile API tests**
+
+Here are the test scenarios:
+- Delete performance profile with a valid version
+- Delete performance profile with invalid profile name scenarios
+- Delete performance profile with when its associated with existing experiments
 
 
 ## Prerequisites for running the tests:

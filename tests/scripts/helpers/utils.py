@@ -112,7 +112,7 @@ COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain a
 COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
 COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
 CREATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : %s created successfully."
-CREATE_PERF_PROFILE_DUPLICATE_RECORD_MSG = "Performance Profile already exists: %s"
+CREATE_PERF_PROFILE_DUPLICATE_RECORD_MSG = "Validation failed: Performance Profile already exists: %s"
 UPDATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile '%s' updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles"
 UPDATE_PERF_PROFILE_MISSING_PROFILE_ERROR_MSG = "Validation failed: Performance Profile '%s' not found. Use POST to create a new profile."
 UPDATE_PERF_PROFILE_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the version %.1f"
@@ -121,7 +121,7 @@ UPDATE_PERF_PROFILE_SUPERSET_ERROR = "Validation failed: Updated profile must be
 DELETE_PERF_PROFILE_SUCCESS_MSG = "Performance profile %s deleted successfully. View Performance Profiles at /listPerformanceProfiles"
 DELETE_PERF_PROFILE_MISSING_NAME_ERROR = "Performance profile name is required."
 DELETE_PERF_PROFILE_NON_EXISTENT_NAME_ERROR = "Not Found: performance_profile does not exist: %s"
-DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment"
+DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment."
 LIST_PERF_PROFILE_NO_PROFILES_MSG = "No performance profiles present!"
 
 
@@ -224,7 +224,7 @@ TERMS_NOTIFICATION_CODES = {
 
 NAMESPACE_EXPERIMENT_TYPE = "namespace"
 CONTAINER_EXPERIMENT_TYPE = "container"
-PERF_PROFILE_NAME = "test-delete-api"
+PERF_PROFILE_NAME = "resource-optimization-openshift"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
