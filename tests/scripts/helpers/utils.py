@@ -26,13 +26,21 @@ from datetime import datetime, timedelta
 from kubernetes import client, config
 from pathlib import Path
 from helpers.kruize import get_bulk_job_status
+from helpers.import_metadata_json_validate import *
+from helpers.list_metadata_json_validate import *
+from helpers.list_metadata_json_schema import *
+from helpers.list_metadata_json_verbose_true_schema import *
 
 SUCCESS_STATUS_CODE = 201
 SUCCESS_200_STATUS_CODE = 200
 ERROR_STATUS_CODE = 400
 ERROR_409_STATUS_CODE = 409
+ERROR_404_STATUS_CODE = 404
 DUPLICATE_RECORDS_COUNT = 5
 ERROR_500_STATUS_CODE = 500
+SUCCESS_STATUS_CODE_START = 200
+SUCCESS_STATUS_CODE_END = 300
+
 
 SUCCESS_STATUS = "SUCCESS"
 ERROR_STATUS = "ERROR"
@@ -41,12 +49,20 @@ UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG = "The Start time should precede the End t
 UPDATE_RESULTS_INVALID_METRIC_VALUE_ERROR_MSG = "Performance profile: [avg cannot be negative or blank for the metric variable: "
 UPDATE_RESULTS_INVALID_METRIC_FORMAT_ERROR_MSG = "Performance profile: [ Format value should be among these values: [GiB, Gi, Ei, KiB, E, MiB, G, PiB, K, TiB, M, P, Bytes, cores, T, Ti, MB, KB, Pi, GB, EB, k, m, TB, PB, bytes, kB, Mi, Ki, EiB]"
 UPDATE_RESULTS_FAILED_RECORDS_MSG = f"Out of a total of 100 records, {DUPLICATE_RECORDS_COUNT} failed to save"
+KUBERNETES_OBJECT_NAME_MISMATCH = "Kubernetes Object Names MisMatched"
+KUBERNETES_OBJECT_TYPE_MISMATCH = "Kubernetes Object Types MisMatched"
+CANNOT_PROCESS_ALL_ZERO_METRIC_VALUES = "Cannot process results with all zero metric values"
+MISSING_MANDATORY_PARAMETERS = "Missing one of the following mandatory parameters for experiment"
+MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS = "Expected namespace-level results, but found type, name, and namespace for experiment: namespace_experiment."
+CONTAINER_DATA_NOT_SUPPORTED = "container data not supported"
+UNSUPPORTED_OBJECT_TYPE = "Unsupported object type"
+FAILED_RECORDS_MSG = "Out of a total of 1 records, 1 failed to save"
+THREE_FAILED_RECORDS_MSG = "Out of a total of 3 records, 3 failed to save"
 DUPLICATE_RECORDS_MSG = "An entry for this record already exists!"
 CREATE_EXP_SUCCESS_MSG = "Experiment registered successfully with Kruize. View registered experiments at /listExperiments"
 CREATE_EXP_BULK_ERROR_MSG = "At present, the system does not support bulk entries!"
 CREATE_EXP_CONTAINER_EXP_CONTAINS_NAMESPACE = "Can not specify namespace data for container experiment"
 CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER = "Can not specify container data for namespace experiment"
-CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_REMOTE = "Namespace experiment type is not supported for remote monitoring use case."
 CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE = "Auto or recreate mode is not supported for namespace experiment."
 CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case."
 CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA = "Kubernetes object type is not supported for auto or recreate mode."
@@ -74,7 +90,8 @@ METRIC_PROFILE_NOT_FOUND_MSG = "No metric profiles found!"
 INVALID_LIST_METRIC_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are invalid"
 LIST_METRIC_PROFILES_INVALID_NAME = "Given metric profile name - %s either does not exist or is not valid"
 CREATE_METRIC_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
-CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
+CREATE_METRIC_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s]"
+AGGR_FUNC_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [query, aggregation_functions]"
 CREATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s created successfully. View Metadata Profiles at /listMetadataProfiles"
 METADATA_PROFILE_EXISTS_MSG = "Validation failed: Metadata Profile already exists: %s"
 METADATA_PROFILE_NOT_FOUND_MSG = "No metadata profiles found!"
@@ -82,6 +99,24 @@ INVALID_LIST_METADATA_PROFILE_INPUT_QUERY = "The query param(s) - [%s] is/are in
 LIST_METADATA_PROFILES_INVALID_NAME = "Given metadata profile name - %s either does not exist or is not valid"
 CREATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "Validation failed: JSONObject[\"%s\"] not found."
 CREATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Validation failed: Missing mandatory parameters: [%s] "
+UPDATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s updated successfully. View Metadata Profiles at /listMetadataProfiles"
+UPDATE_METADATA_PROFILE_MISSING_MANDATORY_FIELD_MSG = "JSONObject[\"%s\"] not found."
+UPDATE_METADATA_PROFILE_MISSING_MANDATORY_PARAMETERS_MSG = "Missing mandatory parameters: [%s] "
+INVALID_NAME_PARAMETER_METADATA_PROFILE = "Given metadata profile name - %s either does not exist or is not valid"
+MISMATCH_IN_METADATA_PROFILE_NAMES = "MetadataProfile name in URL: %s, does not match name in request body: %s"
+INVALID_QUERY_PARAMETER_UPDATE_METADATA_PROFILE = "The query param(s) - [%s] is/are invalid"
+MISSING_METADATA_PROFILE_NAME_PARAMETER = "Missing metadata profile 'name' parameter"
+DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully. View Metadata Profiles at /listMetadataProfiles"
+IMPORT_METADATA_INVALID_METADATA_PROFILE_NAME = "MetadataProfile - %s either does not exist or is not valid"
+COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain any MIG-based recommendations"
+COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
+COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
+CREATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : %s created successfully."
+UPDATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile '%s' updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles"
+UPDATE_PERF_PROFILE_MISSING_PROFILE_ERROR_MSG = "Validation failed: Performance Profile '%s' not found. Use POST to create a new profile."
+UPDATE_PERF_PROFILE_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the version %.1f"
+UPDATE_PERF_PROFILE_SLO_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the provided SLO data"
+UPDATE_PERF_PROFILE_SUPERSET_ERROR = "Validation failed: Updated profile must be a superset of existing data"
 
 
 # Kruize Recommendations Notification codes
@@ -192,6 +227,7 @@ create_exp_test_data = {
     "performance_profile": "resource-optimization-openshift",
     "mode": "monitor",
     "target_cluster": "remote",
+    "experiment_type": "container",
     "type": "deployment",
     "name": "tfb-qrh-sample",
     "namespace": "default",
@@ -253,6 +289,90 @@ update_results_test_data = {
     "memoryRSS_format": "MiB"
 }
 
+update_results_namespace_test_data = {
+    "version": "v2.0",
+    "experiment_name": "namespace-demo",
+    "interval_start_time": "2022-01-23T18:25:43.511Z",
+    "interval_end_time": "2022-01-23T18:40:43.511Z",
+    "namespace": "default",
+    "namespaceCpuRequest_name": "namespaceCpuRequest", 
+    "namespaceCpuRequest_sum": 4.4, 
+    "namespaceCpuRequest_format": "cores",
+    "namespaceCpuLimit_name": "namespaceCpuLimit", 
+    "namespaceCpuLimit_sum": 5.4, 
+    "namespaceCpuLimit_format": "cores",
+    "namespaceCpuUsage_name": "namespaceCpuUsage", 
+    "namespaceCpuUsage_min": 0.5, 
+    "namespaceCpuUsage_max": 2.4, 
+    "namespaceCpuUsage_avg": 1.5, 
+    "namespaceCpuUsage_format": "cores",
+    "namespaceCpuThrottle_name": "namespaceCpuThrottle", 
+    "namespaceCpuThrottle_min": 0.045, 
+    "namespaceCpuThrottle_max": 1.09, 
+    "namespaceCpuThrottle_avg": 0.09, 
+    "namespaceCpuThrottle_format": "cores",
+    "namespaceMemoryRequest_name": "namespaceMemoryRequest", 
+    "namespaceMemoryRequest_sum": 250.85, 
+    "namespaceMemoryRequest_format": "MiB",
+    "namespaceMemoryLimit_name": "namespaceMemoryLimit", 
+    "namespaceMemoryLimit_sum": 500, 
+    "namespaceMemoryLimit_format": "MiB",
+    "namespaceMemoryUsage_name": "namespaceMemoryUsage", 
+    "namespaceMemoryUsage_min": 21.5, 
+    "namespaceMemoryUsage_max": 198.4, 
+    "namespaceMemoryUsage_avg": 41.5, 
+    "namespaceMemoryUsage_format": "MiB",
+    "namespaceMemoryRSS_name": "namespaceMemoryRSS", 
+    "namespaceMemoryRSS_min": 26.5, 
+    "namespaceMemoryRSS_max": 125.54, 
+    "namespaceMemoryRSS_avg": 46.5, 
+    "namespaceMemoryRSS_format": "MiB",
+    "namespaceTotalPods_name": "namespaceTotalPods", 
+    "namespaceTotalPods_avg": 2,
+    "namespaceTotalPods_max": 3,
+    "namespaceRunningPods_name": "namespaceRunningPods", 
+    "namespaceRunningPods_avg": 2,
+    "namespaceRunningPods_max": 3
+}
+
+gpu_data_keys = [
+    "acceleratorCoreUsage_min",
+    "acceleratorCoreUsage_max",
+    "acceleratorCoreUsage_avg",
+
+    "acceleratorMemoryUsage_min",
+    "acceleratorMemoryUsage_max",
+    "acceleratorMemoryUsage_avg",
+
+    "acceleratorFrameBufferUsage_min",
+    "acceleratorFrameBufferUsage_max",
+    "acceleratorFrameBufferUsage_avg",
+]
+
+
+gpu_data = {
+    "acceleratorCoreUsage_name": "acceleratorCoreUsage",
+    "acceleratorCoreUsage_min": 25,
+    "acceleratorCoreUsage_max": 67,
+    "acceleratorCoreUsage_avg": 34,
+    "acceleratorCoreUsage_format": "percentage",
+
+    "acceleratorMemoryUsage_name": "acceleratorMemoryUsage",
+    "acceleratorMemoryUsage_min": 25,
+    "acceleratorMemoryUsage_max": 67,
+    "acceleratorMemoryUsage_avg": 34,
+    "acceleratorMemoryUsage_format": "percentage",
+
+    "acceleratorFrameBufferUsage_name": "acceleratorFrameBufferUsage",
+    "acceleratorFrameBufferUsage_min": 5321,
+    "acceleratorFrameBufferUsage_max": 18991,
+    "acceleratorFrameBufferUsage_avg": 11456,
+    "acceleratorFrameBufferUsage_format": "MiB"
+}
+
+update_results_gpu_test_data = {**update_results_test_data, **gpu_data}
+
+
 # version, datasource_name
 import_metadata_test_data = {
     "version": "v1.0",
@@ -263,11 +383,41 @@ import_metadata_test_data = {
 
 test_type = {"blank": "", "null": "null", "invalid": "xyz"}
 
-aggr_info_keys_to_skip = ["cpuRequest_sum", "cpuRequest_avg", "cpuLimit_sum", "cpuLimit_avg", "cpuUsage_sum", "cpuUsage_max",
-                          "cpuUsage_avg", "cpuUsage_min", "cpuThrottle_sum", "cpuThrottle_max", "cpuThrottle_avg",
-                          "memoryRequest_sum", "memoryRequest_avg", "memoryLimit_sum", "memoryRequest_avg",
-                          "memoryLimit_sum", "memoryLimit_avg", "memoryUsage_sum", "memoryUsage_max", "memoryUsage_avg",
-                          "memoryUsage_min", "memoryRSS_sum", "memoryRSS_max", "memoryRSS_avg", "memoryRSS_min"]
+aggr_info_keys_to_skip = [
+    "cpuRequest_sum",
+    "cpuRequest_avg",
+    "cpuLimit_sum",
+    "cpuLimit_avg",
+    "cpuUsage_sum",
+    "cpuUsage_max",
+    "cpuUsage_avg",
+    "cpuUsage_min",
+    "cpuThrottle_sum",
+    "cpuThrottle_max",
+    "cpuThrottle_avg",
+    "memoryRequest_sum",
+    "memoryRequest_avg",
+    "memoryLimit_sum",
+    "memoryLimit_avg",
+    "memoryUsage_sum",
+    "memoryUsage_max",
+    "memoryUsage_avg",
+    "memoryUsage_min",
+    "memoryRSS_sum",
+    "memoryRSS_max",
+    "memoryRSS_avg",
+    "memoryRSS_min"
+    ] + gpu_data_keys
+
+aggr_info_keys_to_skip_namespace = ["namespaceCpuRequest_sum", "namespaceCpuRequest_format",
+                          "namespaceCpuLimit_sum", "namespaceCpuLimit_format", "namespaceCpuUsage_min", "namespaceCpuUsage_max", "namespaceCpuUsage_avg", "namespaceCpuUsage_format",
+                          "namespaceCpuThrottle_min", "namespaceCpuThrottle_max", "namespaceCpuThrottle_avg", "namespaceCpuThrottle_format",
+                          "namespaceMemoryRequest_sum", "namespaceMemoryRequest_format", "namespaceMemoryLimit_sum", "namespaceMemoryLimit_format",
+                           "namespaceMemoryUsage_min", "namespaceMemoryUsage_max", "namespaceMemoryUsage_avg", "namespaceMemoryUsage_format",
+                          "namespaceMemoryRSS_min", "namespaceMemoryRSS_max", "namespaceMemoryRSS_avg", "namespaceMemoryRSS_format",
+                          "namespaceTotalPods_avg", "namespaceTotalPods_max", "namespaceRunningPods_avg", "namespaceRunningPods_max"
+]
+
 
 MIG_PATTERN = r"nvidia\.com/mig-[1-4|7]g\.(5|10|20|40|80)gb"
 
@@ -284,13 +434,19 @@ def generate_test_data(csvfile, test_data, api_name):
                 # skip checking the invalid container name and container image name
                 if key == "container_image_name" or (key == "container_name" and t == "invalid"):
                     continue
-                #  skip checking the aggregation info values
+                # skip checking the invalid or null namespace name
+                if key == "namespace" and (t == "invalid" or t == "null"):
+                    continue
+                #  skip checking the aggregation info values for container and namespace
                 if key in aggr_info_keys_to_skip and t == "null":
+                    continue
+                if key in aggr_info_keys_to_skip_namespace and t == "null":
                     continue
 
                 test_name = t + "_" + key
                 status_code = 400
-                if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"):
+                if api_name == "create_exp" and (test_name == "invalid_experiment_name" or test_name == "invalid_cluster_name"
+                                                 or test_name == "null_experiment_type"):
                     status_code = 201
 
                 if api_name == "import_metadata" and (test_name == "invalid_version" or test_name == "blank_version" or
@@ -449,13 +605,13 @@ def term_based_start_time(input_date_str, term):
 
     return output_date_str
 
-
 def validate_reco_json(create_exp_json, update_results_json, list_reco_json, expected_duration_in_hours=None,
                        test_name=None):
     # Validate experiment
     assert create_exp_json["version"] == list_reco_json["version"]
     assert create_exp_json["experiment_name"] == list_reco_json["experiment_name"]
     assert create_exp_json["cluster_name"] == list_reco_json["cluster_name"]
+    experiment_type = create_exp_json.get("experiment_type")
 
     # Validate kubernetes objects
     if update_results_json is not None and len(update_results_json) > 0:
@@ -465,13 +621,13 @@ def validate_reco_json(create_exp_json, update_results_json, list_reco_json, exp
             create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][i]
             list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][i]
             validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
-                                    list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
+                                    list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type)
     else:
         update_results_kubernetes_obj = None
         create_exp_kubernetes_obj = create_exp_json["kubernetes_objects"][0]
         list_reco_kubernetes_obj = list_reco_json["kubernetes_objects"][0]
         validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
-                                list_reco_kubernetes_obj, expected_duration_in_hours, test_name)
+                                list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type)
 
 def validate_local_monitoring_reco_json(create_exp_json, list_reco_json, expected_duration_in_hours=None, test_name=None):
     # Validate experiment
@@ -510,20 +666,34 @@ def count_results_objects(list_exp_json):
 
 
 def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes_obj, update_results_json,
-                            list_reco_kubernetes_obj, expected_duration_in_hours, test_name):
-    # Validate type, name, namespace
-    if update_results_kubernetes_obj == None:
+                            list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
+
+    if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
+        # validate the containers list, should be empty
+        containers = list_reco_kubernetes_obj["containers"]
+        assert containers == [] or isinstance(containers, list), f"'containers' object should be empty"
+
+        assert list_reco_kubernetes_obj["namespaces"]["namespace"] == create_exp_kubernetes_obj["namespaces"]["namespace"]
+        update_results_namespace = create_exp_kubernetes_obj["namespaces"]
+        list_reco_namespace = list_reco_kubernetes_obj["namespaces"]
+        validate_namespace(update_results_namespace, update_results_json, list_reco_namespace, expected_duration_in_hours, test_name, experiment_type)
+    else:
+        # Validate type, name, namespace
         assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
         assert list_reco_kubernetes_obj["name"] == create_exp_kubernetes_obj["name"]
         assert list_reco_kubernetes_obj["namespace"] == create_exp_kubernetes_obj["namespace"]
 
-        exp_containers_length = len(create_exp_kubernetes_obj["containers"])
-        list_reco_containers_length = len(list_reco_kubernetes_obj["containers"])
+        # Validate type, name, namespace
+        if update_results_kubernetes_obj == None:
+            assert list_reco_kubernetes_obj["type"] == create_exp_kubernetes_obj["type"]
+            assert list_reco_kubernetes_obj["name"] == create_exp_kubernetes_obj["name"]
+            assert list_reco_kubernetes_obj["namespace"] == create_exp_kubernetes_obj["namespace"]
 
-    else:
-        assert list_reco_kubernetes_obj["type"] == update_results_kubernetes_obj["type"]
-        assert list_reco_kubernetes_obj["name"] == update_results_kubernetes_obj["name"]
-        assert list_reco_kubernetes_obj["namespace"] == update_results_kubernetes_obj["namespace"]
+        else:
+            assert list_reco_kubernetes_obj["type"] == update_results_kubernetes_obj["type"]
+            assert list_reco_kubernetes_obj["name"] == update_results_kubernetes_obj["name"]
+            assert list_reco_kubernetes_obj["namespace"] == update_results_kubernetes_obj["namespace"]
+
 
         exp_containers_length = len(create_exp_kubernetes_obj["containers"])
         list_reco_containers_length = len(list_reco_kubernetes_obj["containers"])
@@ -533,22 +703,22 @@ def validate_kubernetes_obj(create_exp_kubernetes_obj, update_results_kubernetes
             f"list reco containers size not same as update results containers size - list_reco = {list_reco_containers_length} \
               create_exp = {exp_containers_length}"
 
-    # Validate if all the containers are present
-    for i in range(exp_containers_length):
-        list_reco_container = None
+        # Validate if all the containers are present
+        for i in range(exp_containers_length):
+            list_reco_container = None
 
-        for j in range(list_reco_containers_length):
-            if list_reco_kubernetes_obj["containers"][j]["container_name"] == \
-                    create_exp_kubernetes_obj["containers"][i]["container_name"]:
-                update_results_container = create_exp_kubernetes_obj["containers"][i]
-                list_reco_container = list_reco_kubernetes_obj["containers"][j]
-                validate_container(update_results_container, update_results_json, list_reco_container,
-                                   expected_duration_in_hours, test_name)
+            for j in range(list_reco_containers_length):
+                if list_reco_kubernetes_obj["containers"][j]["container_name"] == \
+                        create_exp_kubernetes_obj["containers"][i]["container_name"]:
+                    update_results_container = create_exp_kubernetes_obj["containers"][i]
+                    list_reco_container = list_reco_kubernetes_obj["containers"][j]
+                    validate_container(update_results_container, update_results_json, list_reco_container,
+                                       expected_duration_in_hours, test_name, experiment_type)
 
 def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
                             list_reco_kubernetes_obj, expected_duration_in_hours, test_name, experiment_type):
     if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
-        assert list_reco_kubernetes_obj["namespaces"]["namespace_name"] == create_exp_kubernetes_obj["namespaces"]["namespace_name"]
+        assert list_reco_kubernetes_obj["namespaces"]["namespace"] == create_exp_kubernetes_obj["namespaces"]["namespace"]
         list_reco_namespace = list_reco_kubernetes_obj["namespaces"]
         create_exp_namespace = create_exp_kubernetes_obj["namespaces"]
         validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name)
@@ -574,7 +744,7 @@ def validate_local_monitoring_kubernetes_obj(create_exp_kubernetes_obj,
                     validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name)
 
 def validate_container(update_results_container, update_results_json, list_reco_container, expected_duration_in_hours,
-                       test_name):
+                       test_name, experiment_type):
     # Validate container image name and container name
     if update_results_container != None and list_reco_container != None:
         assert list_reco_container["container_image_name"] == update_results_container["container_image_name"], \
@@ -660,7 +830,7 @@ def validate_container(update_results_container, update_results_json, list_reco_
                             for engine_entry in engines_list:
                                 if engine_entry in terms_obj[term]["recommendation_engines"]:
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
-                                    validate_config(engine_obj["config"], metrics)
+                                    validate_config(engine_obj["config"], metrics, experiment_type)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
                         # validate Plots data
                         validate_plots(terms_obj, duration_terms, term)
@@ -675,6 +845,107 @@ def validate_container(update_results_container, update_results_json, list_reco_
         print("Checking for recommendation notifications message...")
         result = check_if_recommendations_are_present(list_reco_container["recommendations"])
         assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
+
+
+#TODO: Extract out the common part from this method which matches with container one to remove redundancy
+def validate_namespace(update_results_namespace, update_results_json, list_reco_namespace, expected_duration_in_hours,
+                       test_name, experiment_type):
+    # Validate container image name and container name
+    if update_results_namespace != None and list_reco_namespace != None:
+        assert list_reco_namespace["namespace"] == update_results_namespace["namespace"], \
+            f"Namespace names did not match! Actual -  {list_reco_namespace['namespace']} Expected - {update_results_namespace['namespace']}"
+
+    # default term value
+    term = SHORT_TERM
+    # Validate timestamps
+    if update_results_json != None:
+        if expected_duration_in_hours == None:
+            duration_in_hours = 0.0
+        else:
+            duration_in_hours = expected_duration_in_hours
+
+        for update_results in update_results_json:
+            interval_end_time = update_results["interval_end_time"]
+            interval_start_time = update_results["interval_start_time"]
+            print(f"interval_end_time = {interval_end_time} interval_start_time = {interval_start_time}")
+
+            # Obtain the metrics
+            metrics = ""
+            namespaces = update_results['kubernetes_objects'][0]['namespaces']
+            if update_results_namespace["namespace"] == namespaces['namespace']:
+                metrics = namespaces["metrics"]
+            if check_if_recommendations_are_present(list_reco_namespace["recommendations"]):
+                terms_obj = list_reco_namespace["recommendations"]["data"][interval_end_time]["recommendation_terms"]
+                current_config = list_reco_namespace["recommendations"]["data"][interval_end_time]["current"]
+
+                duration_terms = {'short_term': 4, 'medium_term': 7, 'long_term': 15}
+                for term in duration_terms.keys():
+                    if check_if_recommendations_are_present(terms_obj[term]):
+                        print(f"reco present for term {term}")
+                        # Validate timestamps [deprecated as monitoring end time is moved to higher level]
+                        # assert cost_obj[term]["monitoring_end_time"] == interval_end_time, \
+                        #    f"monitoring end time {cost_obj[term]['monitoring_end_time']} did not match end timestamp {interval_end_time}"
+
+                        # Validate the precision of the valid duration
+                        duration = terms_obj[term]["duration_in_hours"]
+                        assert validate_duration_in_hours_decimal_precision(duration), f"The value '{duration}' for " \
+                                                                                       f"'{term}' has more than two decimal places"
+
+                        monitoring_start_time = term_based_start_time(interval_end_time, term)
+                        assert terms_obj[term]["monitoring_start_time"] == monitoring_start_time, \
+                            f"actual = {terms_obj[term]['monitoring_start_time']} expected = {monitoring_start_time}"
+
+                        # Validate duration in hrs
+                        if expected_duration_in_hours is None:
+                            duration_in_hours = set_duration_based_on_terms(duration_in_hours, term,
+                                                                            interval_start_time, interval_end_time)
+
+                        if test_name is not None:
+
+                            if MEDIUM_TERM_TEST in test_name and term == MEDIUM_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            elif SHORT_TERM_TEST in test_name and term == SHORT_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            elif LONG_TERM_TEST in test_name and term == LONG_TERM:
+                                assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                    f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                        else:
+                            print(
+                                f"Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}")
+                            assert terms_obj[term]["duration_in_hours"] == duration_in_hours, \
+                                f"Duration in hours did not match! Actual = {terms_obj[term]['duration_in_hours']} expected = {duration_in_hours}"
+                            duration_in_hours = set_duration_based_on_terms(duration_in_hours, term, interval_start_time,
+                                                                            interval_end_time)
+
+                        # Get engine objects
+                        engines_list = ["cost", "performance"]
+
+                        # Extract recommendation engine objects
+                        recommendation_engines_object = None
+                        if "recommendation_engines" in terms_obj[term]:
+                            recommendation_engines_object = terms_obj[term]["recommendation_engines"]
+                        if recommendation_engines_object is not None:
+                            for engine_entry in engines_list:
+                                if engine_entry in terms_obj[term]["recommendation_engines"]:
+                                    engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
+                                    validate_config(engine_obj["config"], metrics, experiment_type)
+                                    validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
+                        # TODO: validate Plots data for namespace experiment_type
+                        # validate_plots(terms_obj, duration_terms, term)
+                    # verify that plots isn't generated in case of no recommendations
+                    else:
+                        assert PLOTS not in terms_obj[term], f"Expected plots to be absent in case of no recommendations"
+            else:
+                data = list_reco_namespace["recommendations"]["data"]
+                assert len(data) == 0, f"Data is not empty! Length of data - Actual = {len(data)} expected = 0"
+
+    else:
+        print("Checking for recommendation notifications message...")
+        result = check_if_recommendations_are_present(list_reco_namespace["recommendations"])
+        assert result == False, f"Recommendations notifications does not contain the expected message - {NOT_ENOUGH_DATA_MSG}"
+
 
 def validate_local_monitoring_container(create_exp_container, list_reco_container, expected_duration_in_hours, test_name):
     # Validate container image name and container name
@@ -770,8 +1041,8 @@ def validate_local_monitoring_container(create_exp_container, list_reco_containe
 def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespace, expected_duration_in_hours, test_name):
     # Validate namespace name
     if create_exp_namespace != None and list_reco_namespace != None:
-        assert create_exp_namespace["namespace_name"] == list_reco_namespace["namespace_name"], \
-            f"Namespace names did not match! Actual -  {list_reco_namespace['namespace_name']} Expected - {create_exp_namespace['namespace_name']}"
+        assert create_exp_namespace["namespace"] == list_reco_namespace["namespace"], \
+            f"Namespace names did not match! Actual -  {list_reco_namespace['namespace']} Expected - {create_exp_namespace['namespace']}"
 
     if expected_duration_in_hours == None:
         duration_in_hours = 0.0
@@ -876,15 +1147,28 @@ def set_duration_based_on_terms(duration_in_hours, term, interval_start_time, in
     return duration_in_hours
 
 
-def validate_config(reco_config, metrics):
+def validate_config(reco_config, metrics, experiment_type):
     cpu_format_type = ""
     memory_format_type = ""
+    # default values corresponds to container experiment type
+    cpu_usage = "cpuUsage"
+    memory_usage = "memoryUsage"
+    filtered_metrics = metrics
 
-    for metric in metrics:
-        if "cpuUsage" == metric["name"]:
+    if experiment_type == NAMESPACE_EXPERIMENT_TYPE:
+        cpu_usage = "namespaceCpuUsage"
+        memory_usage = "namespaceMemoryUsage"
+        # filter out metrics which do not have 'format' value
+        filtered_metrics = [
+            metric for metric in metrics
+            if metric["name"] not in ("namespaceRunningPods", "namespaceTotalPods")
+        ]
+
+    for metric in filtered_metrics:
+        if cpu_usage == metric["name"]:
             cpu_format_type = metric['results']['aggregation_info']['format']
 
-        if "memoryUsage" == metric["name"]:
+        if memory_usage == metric["name"]:
             memory_format_type = metric['results']['aggregation_info']['format']
 
     usage_list = ["requests", "limits"]
@@ -1654,7 +1938,6 @@ def delete_and_create_metadata_profile():
     response = create_metadata_profile(metadata_profile_json_file)
 
     data = response.json()
-    print(data['message'])
 
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
@@ -1680,3 +1963,85 @@ def delete_and_create_metric_profile():
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_METRIC_PROFILE_SUCCESS_MSG % metric_profile_name
+
+
+def import_metadata_list_and_validate(input_json_file, verbose=None, validate_workload=None, namespace=None, workload=None, container=None):
+
+    response = delete_metadata(input_json_file)
+    print("delete metadata = ", response.status_code)
+
+    # Import metadata using the specified json
+    response = import_metadata(input_json_file)
+    metadata_json = response.json()
+
+    # Validate the json against the json schema
+    errorMsg = validate_import_metadata_json(metadata_json, import_metadata_json_schema)
+    assert errorMsg == ""
+
+    json_data = json.load(open(input_json_file))
+    datasource = json_data['datasource_name']
+
+    if verbose is None:
+        verbose = "false"
+
+    response = list_metadata(datasource, verbose=verbose)
+
+    list_metadata_json = response.json()
+    assert response.status_code == SUCCESS_200_STATUS_CODE
+
+    # Validate the json against the json schema
+    if verbose == "false":
+        errorMsg = validate_list_metadata_json(list_metadata_json, list_metadata_json_schema)
+    else :
+        errorMsg = validate_list_metadata_json(list_metadata_json, list_metadata_json_verbose_true_schema)
+    assert errorMsg == ""
+
+    # Validates if the specified namespace, workload and container are present in the metadata json
+    if validate_workload is not None:
+        assert namespace is not None, "namespace must be provided when validate_workload is True."
+        assert workload is not None, "workload must be provided when validate_workload is True."
+        assert container is not None, "container must be provided when validate_workload is True."
+        validate_metadata_workloads(list_metadata_json, namespace, workload, container)
+
+
+# Validates the metadata json if a container exists within the specified namespace and workload.
+def validate_metadata_workloads(metadata_json, namespace, workload, container):
+    print(f"\nValidating workload '{workload}' in metadata json")
+
+    datasources = metadata_json.get('datasources', {})
+    for ds_value in datasources.values():
+        clusters = ds_value.get('clusters', {})
+        for cl_value in clusters.values():
+            namespaces_dict = cl_value.get('namespaces', {})
+
+            assert len(namespaces_dict) == 1, \
+                f"Validation failed: Expected 1 namespace, but found {len(namespaces_dict)}."
+
+            # Check for the specific namespace key
+            namespace_obj = namespaces_dict.get(namespace)
+            if not namespace_obj:
+                continue
+
+            workloads_dict = namespace_obj.get('workloads', {})
+            assert len(workloads_dict) == 1, \
+                f"Validation failed: Expected 1 workload in '{namespace}', but found {len(workloads_dict)}."
+
+            # Check for the specific workload key
+            workload_obj = workloads_dict.get(workload)
+            if not workload_obj:
+                continue
+            
+            # Check for the specific container key
+            containers_dict = workload_obj.get('containers', {})
+            assert len(containers_dict) == 1, \
+                f"Validation failed: Expected 1 container in '{workload}', but found {len(containers_dict)}."
+
+            if containers_dict.get(container):
+                print(f"Validating workload '{workload}' in metadata json..done")
+                return
+
+    # Raise an error if no match was found.
+    raise AssertionError(
+        f"Validation failed: No entry found for namespace='{namespace}', "
+        f"workload='{workload}', and container='{container}'."
+    )

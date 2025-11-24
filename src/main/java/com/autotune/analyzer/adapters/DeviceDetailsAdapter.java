@@ -2,7 +2,7 @@ package com.autotune.analyzer.adapters;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.system.info.device.DeviceDetails;
-import com.autotune.common.data.system.info.device.accelerator.AcceleratorDeviceData;
+import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
 import com.google.gson.TypeAdapter;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
@@ -20,14 +20,14 @@ public class DeviceDetailsAdapter extends TypeAdapter<DeviceDetails> {
         out.beginObject();
         out.name("type").value(value.getType().name());
 
-        if (value instanceof AcceleratorDeviceData accelerator) {
+        if (value instanceof NvidiaAcceleratorDeviceData accelerator) {
             out.name("manufacturer").value(accelerator.getManufacturer());
             out.name("modelName").value(accelerator.getModelName());
             out.name("hostName").value(accelerator.getHostName());
             out.name("UUID").value(accelerator.getUUID());
             out.name("deviceName").value(accelerator.getDeviceName());
-            out.name("isMIGSupported").value(accelerator.isMIGSupported());
-            out.name("isMIGPartition").value(accelerator.isMIGPartition());
+            out.name("isPartitionSupported").value(accelerator.isPartitionSupported());
+            out.name("isPartition").value(accelerator.isPartition());
         }
         // Add for other devices when added
 
@@ -43,8 +43,8 @@ public class DeviceDetailsAdapter extends TypeAdapter<DeviceDetails> {
         String UUID = null;
         String deviceName = null;
         String profile = null;
-        boolean isMIG = false;
-        boolean isMIGPartition = false;
+        boolean isPartitionSupported = false;
+        boolean isPartition = false;
 
         in.beginObject();
         while (in.hasNext()) {
@@ -67,11 +67,11 @@ public class DeviceDetailsAdapter extends TypeAdapter<DeviceDetails> {
                 case "deviceName":
                     deviceName = in.nextString();
                     break;
-                case "isMIGSupported":
-                    isMIG = in.nextBoolean();
+                case "isPartitionSupported":
+                    isPartitionSupported = in.nextBoolean();
                     break;
-                case "isMIGPartition":
-                    isMIGPartition = in.nextBoolean();
+                case "isPartition":
+                    isPartition = in.nextBoolean();
                     break;
                 case "profile":
                     profile = in.nextString();
@@ -83,7 +83,7 @@ public class DeviceDetailsAdapter extends TypeAdapter<DeviceDetails> {
         in.endObject();
 
         if (type != null && type.equals(AnalyzerConstants.DeviceType.ACCELERATOR.name())) {
-            return (DeviceDetails) new AcceleratorDeviceData(modelName, hostName, UUID, deviceName, profile, isMIG, isMIGPartition);
+            return (DeviceDetails) new NvidiaAcceleratorDeviceData(modelName, hostName, UUID, deviceName, profile, isPartitionSupported, isPartition);
         }
         // Add for other device types if implemented in future
 

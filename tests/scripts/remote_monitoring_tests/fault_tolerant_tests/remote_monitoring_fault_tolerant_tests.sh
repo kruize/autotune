@@ -19,7 +19,7 @@
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO="${CURRENT_DIR}/../../../../"
-
+PERFORMANCE_PROFILE_DIR="${REMOTE_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
@@ -31,7 +31,7 @@ CLUSTER_TYPE=minikube
 NAMESPACE=monitoring
 num_exps=3
 
-RESOURCE_OPTIMIZATION_JSON="../json_files/resource_optimization_openshift.json"
+RESOURCE_OPTIMIZATION_JSON="${PERFORMANCE_PROFILE_DIR}/resource_optimization_openshift.json"
 
 target="crc"
 KRUIZE_IMAGE="kruize/autotune_operator:test"

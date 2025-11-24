@@ -2,31 +2,31 @@ package com.autotune.common.data.system.info.device.accelerator;
 
 import com.autotune.analyzer.utils.AnalyzerConstants;
 
-public class AcceleratorDeviceData implements AcceleratorDeviceDetails {
+public class NvidiaAcceleratorDeviceData implements AcceleratorDeviceDetails {
     private final String manufacturer;
     private final String modelName;
     private final String hostName;
     private final String UUID;
     private final String deviceName;
     private final String profile;
-    private boolean isMIGSupported;
-    private boolean isMIGPartition;
+    private final boolean isPartitionSupported;
+    private final boolean isPartition;
 
-    public AcceleratorDeviceData (String modelName,
-                                  String hostName,
-                                  String UUID,
-                                  String deviceName,
-                                  String profile,
-                                  boolean isMIGSupported,
-                                  boolean isMIGPartition) {
+    public NvidiaAcceleratorDeviceData(String modelName,
+                                       String hostName,
+                                       String UUID,
+                                       String deviceName,
+                                       String profile,
+                                       boolean isPartitionSupported,
+                                       boolean isPartition) {
         this.profile = profile;
-        this.isMIGPartition = isMIGPartition;
+        this.isPartition = isPartition;
         this.manufacturer = "NVIDIA";
         this.modelName = modelName;
         this.hostName = hostName;
         this.UUID = UUID;
         this.deviceName = deviceName;
-        this.isMIGSupported = isMIGSupported;
+        this.isPartitionSupported = isPartitionSupported;
     }
 
     @Override
@@ -57,13 +57,14 @@ public class AcceleratorDeviceData implements AcceleratorDeviceDetails {
     public String getProfile() {
         return profile;
     }
-
-    public boolean isMIGPartition() {
-        return isMIGPartition;
+    @Override
+    public boolean isPartition() {
+        return isPartition;
     }
 
-    public boolean isMIGSupported() {
-        return isMIGSupported;
+    @Override
+    public boolean isPartitionSupported() {
+        return isPartitionSupported;
     }
 
     @Override

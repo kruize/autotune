@@ -43,12 +43,15 @@ public class ServerContext {
     public static final String RECOMMEND_RESULTS = ROOT_CONTEXT + "listRecommendations";
     public static final String CREATE_PERF_PROFILE = ROOT_CONTEXT + "createPerformanceProfile";
     public static final String LIST_PERF_PROFILES = ROOT_CONTEXT + "listPerformanceProfiles";
+    public static final String UPDATE_PERF_PROFILE = ROOT_CONTEXT + "updatePerformanceProfile";
+    public static final String DELETE_PERF_PROFILE = ROOT_CONTEXT + "deletePerformanceProfile";
     public static final String CREATE_METRIC_PROFILE = ROOT_CONTEXT + "createMetricProfile";
     public static final String LIST_METRIC_PROFILES = ROOT_CONTEXT + "listMetricProfiles";
     public static final String DELETE_METRIC_PROFILE = ROOT_CONTEXT + "deleteMetricProfile";
     public static final String CREATE_METADATA_PROFILE = ROOT_CONTEXT + "createMetadataProfile";
     public static final String LIST_METADATA_PROFILES = ROOT_CONTEXT + "listMetadataProfiles";
     public static final String DELETE_METADATA_PROFILE = ROOT_CONTEXT + "deleteMetadataProfile";
+    public static final String UPDATE_METADATA_PROFILE = ROOT_CONTEXT + "updateMetadataProfile";
 
 
     public static final String KRUIZE_SERVER_URL = "http://localhost:" + KRUIZE_SERVER_PORT;

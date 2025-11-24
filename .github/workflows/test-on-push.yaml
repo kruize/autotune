@@ -4,7 +4,7 @@ name: Test on Push
 on:
   # Triggers the workflow on push event but only for the mvp_demo branch
   push:
-    branches: [ mvp_demo ]
+    branches: [ mvp_demo, master]
     paths-ignore:
       - 'docs/**'
       - 'design/**'
@@ -22,7 +22,7 @@ jobs:
   build_job:
     needs: get_pr
     # The type of runner that the job will run on
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -50,7 +50,7 @@ jobs:
   deploy_crc:
     # The type of runner that the job will run on
     needs: [build_job, get_pr]
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-24.04
 
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
@@ -59,10 +59,10 @@ jobs:
         run: |
            echo "PR_NUMBER=${{ needs.get_pr.outputs.pr_number }}" >> $GITHUB_ENV
       - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.3.0
+        uses: manusa/actions-setup-minikube@v2.13.1
         with:
-          minikube version: 'v1.16.0'
-          kubernetes version: 'v1.19.2'
+          minikube version: 'v1.31.2'
+          kubernetes version: 'v1.21.6'
       - name: Display cluster info
         run: |
           kubectl cluster-info
@@ -81,7 +81,7 @@ jobs:
           cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           cd tests
           echo "PR_NUMBER = ${{ env.PR_NUMBER }}"
-          ./test_autotune.sh -c minikube -i kruize/autotune_operator:pr_${{ env.PR_NUMBER }} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
+          ./test_autotune.sh -c minikube -i quay.io/kruize/autotune_operator:pr_${{ env.PR_NUMBER }} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
       - name: Capture ffdc logs
         if: always()
         run: |

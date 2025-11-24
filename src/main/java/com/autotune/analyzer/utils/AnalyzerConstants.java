@@ -16,9 +16,9 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.utils.KruizeConstants;
-import software.amazon.awssdk.services.cloudwatchlogs.endpoints.internal.Value;
 
 import java.util.Map;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -106,7 +106,14 @@ public class AnalyzerConstants {
     public static final String WORKLOAD = "workload";
     public static final String CONTAINER = "container";
     public static final int DEFAULT_MEASUREMENT_DURATION_INT = 15;
-
+    public static final String KRUIZE_PROFILE_FILTER = "kruize";
+    public static final String NAMESPACE_PROFILE_FILTER = "openshift-tuning|monitoring";
+    public static final String NAMESPACE_FILTER_IDENTIFIER = ", %s=~\"%s\"";
+    public static final String WORKLOAD_FILTER_IDENTIFIER = ", %s=\"%s\"";
+    public static final String METADATA_PROFILE_QUERY_MATCHER = "sum by \\((.*?)\\)";
+    public static final String COMMA_SPACE_REGEX = "\\s*,\\s*";
+    public static final String RM = "rm";
+    public static final String LM = "lm";
 
     private AnalyzerConstants() {
     }
@@ -215,9 +222,9 @@ public class AnalyzerConstants {
         namespaceTotalPods,
         namespaceRunningPods,
         namespaceMaxDate,
-        gpuCoreUsage,
-        gpuMemoryUsage,
-        acceleratorMigMemoryUsage
+        acceleratorCoreUsage,
+        acceleratorMemoryUsage,
+        acceleratorFrameBufferUsage
     }
 
     public enum K8S_OBJECT_TYPES {
@@ -257,8 +264,103 @@ public class AnalyzerConstants {
         CONTAINER,  // For container-level experiments
         NAMESPACE,  // For namespace-level experiments
         CLUSTER,    // For cluster-wide experiments
-        APPLICATION // For application-specific experiments
+        WORKLOAD // For application-specific experiments
     }
+
+    /**
+     * This enum holds the positional flags which are used by experiment type
+     */
+    public enum ExperimentBitMask {
+        // Infra Bits [0-15]
+        CONTAINER_BIT(0),
+        POD_BIT(1),
+        WORKLOAD_BIT(2),
+        NAMESPACE_BIT(3),
+        NAMESPACE_GROUP_BIT(4),
+        CLUSTER_BIT(5),
+
+        // Resource Bits [16-31]
+        CPU_BIT(16),
+        MEMORY_BIT(17),
+        STORAGE_BIT(18),
+        NETWORK_BIT(19),
+        ACCELERATOR_BIT(20),
+
+        // Runtime Bits [32-47]
+        JVM_BIT(32);
+
+        private final int position;
+
+        ExperimentBitMask(int position) {
+            this.position = position;
+        }
+
+        public int getPosition() {
+            return position;
+        }
+
+        /**
+         * Returns a long with this bit set: 1L << position
+         */
+        public long getMask() {
+            return 1L << position;
+        }
+
+        /**
+         * Checks if this bit is set in the given long value.
+         */
+        public boolean isSet(long value) {
+            return (value & getMask()) != 0;
+        }
+
+        /**
+         * Sets this bit in the given value and returns the updated long.
+         */
+        public long setBit(long value) {
+            return value | getMask();
+        }
+    }
+
+    public enum MetadataProfileQueryIdentifier {
+        NAMESPACE_QUERY_IDENTIFIER(new LinkedHashSet<>(List.of("namespace"))),
+
+        WORKLOAD_QUERY_IDENTIFIER(new LinkedHashSet<>(List.of("namespace", "workload", "workload_type"))),
+
+        CONTAINER_QUERY_IDENTIFIER(new LinkedHashSet<>(List.of("container", "image", "workload", "workload_type", "namespace")));
+
+        private final Set<String> expectedIdentifiers;
+
+        MetadataProfileQueryIdentifier(Set<String> expectedIdentifiers) {
+            this.expectedIdentifiers = expectedIdentifiers;
+        }
+
+        public Set<String> getExpectedIdentifiers() {
+            return expectedIdentifiers;
+        }
+    }
+
+    public enum OperationType {
+        CREATE, UPDATE
+    }
+
+    /**
+     * Validates if the metricName to be updated has supported prefix like namespace, workload, container.
+     * @param metricName Name of the metric to be updated
+     * @return boolean output if the metric name has one of the supported prefixes
+     */
+    public static boolean validateMetricQueryName(String metricName) {
+        List<String> supportedQueryPrefixes = Arrays.asList(AnalyzerConstants.NAMESPACE,
+                AnalyzerConstants.WORKLOAD, AnalyzerConstants.CONTAINER);
+
+        String metricNameLowerCase = metricName.toLowerCase();
+        for (String queryPrefix : supportedQueryPrefixes) {
+            if (metricNameLowerCase.contains(queryPrefix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
 
     public static final class AcceleratorConstants {
         private AcceleratorConstants() {
@@ -369,7 +471,7 @@ public class AnalyzerConstants {
         public static final String HPO_ALGO_IMPL = "hpo_algo_impl";
         public static final String DEFAULT_HPO_ALGO_IMPL = "optuna_tpe";
         public static final String FUNCTION_VARIABLE = "function_variable: ";
-        public static final String QUERY_VARIABLE = "query_variable: ";
+        public static final String QUERY_VARIABLE = "For query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String QUERY_VARIABLES = "query_variables";
 
@@ -475,6 +577,7 @@ public class AnalyzerConstants {
         public static final String VERBOSE = "verbose";
         public static final String FALSE = "false";
         public static final String RM = "rm";
+        public static final String PERF_PROFILE_NAME = "name";
 
         private ServiceConstants() {
         }
@@ -620,6 +723,7 @@ public class AnalyzerConstants {
         public static final String SOURCE = "source";
         public static final String PERFORMANCE_PROFILE_PKG = "com.autotune.analyzer.performanceProfiles.PerformanceProfileInterface.";
         public static final String DEFAULT_PROFILE = "default";
+        public static final Double ZERO_VALUE = 0.0;
 
         //Metric profile constants
         public static final String DEFAULT_API_VERSION = "recommender.com/v1";
@@ -653,6 +757,10 @@ public class AnalyzerConstants {
         public static final String DEFAULT_DATASOURCE = "prometheus";
         public static final String CLUSTER_METADATA_LOCAL_MON_PROFILE = "cluster-metadata-local-monitoring";
         public static final String DEFAULT_MEASUREMENT_DURATION = "15min";
+        public static final String PROFILE_VERSION = "profileVersion";
+        public static final String METADATA = "metadata";
+        public static final String K8STYPE = "k8sType";
+        public static final String ADDITIONAL_LABEL = "ADDITIONAL_LABEL";
     }
 
     public static final class CommonProfileMsgs {
@@ -750,6 +858,9 @@ public class AnalyzerConstants {
 
         public static final int DEFAULT_SLEEP_INTERVAL = 60;
         public static final int DEFAULT_INITIAL_DELAY = 30;
+
+        public static final String REGEX_FOR_DRY_RUN_ERROR = "Message: (.*?)(?=\\. Received status:)";
+
         public static final class SupportedUpdaters {
             public static final String VPA = "vpa";
             public static final String ACCELERATOR = "accelerator";
@@ -790,6 +901,7 @@ public class AnalyzerConstants {
             public static final String CHECKING_AUTO_EXP = "Searching for experiments with auto or recreate mode.";
             public static final String FOUND_INSTASLICE = "Found Instaslice: {}";
             public static final String NO_INSTASLICE_OBJECTS = "No Instaslice objects found in namespace: {}";
+            public static final String POD_READY = "Pod is ready to schedule.";
             private InfoMsgs() {
 
             }

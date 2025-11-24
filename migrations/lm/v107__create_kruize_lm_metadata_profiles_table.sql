@@ -1,0 +1,1 @@
+create table IF NOT EXISTS kruize_lm_metadata_profiles (api_version varchar(255), kind varchar(255), metadata jsonb, name varchar(255) not null, k8s_type varchar(255), profile_version float(53) not null, datasource varchar(255) not null, query_variables jsonb, primary key (name));

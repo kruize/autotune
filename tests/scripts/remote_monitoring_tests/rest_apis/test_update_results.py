@@ -22,6 +22,8 @@ from helpers.utils import *
 from jinja2 import Environment, FileSystemLoader
 
 csvfile = "/tmp/update_results_test_data.csv"
+csvfilen = "/tmp/update_results_namespace_test_data.csv"
+
 
 # Interval end time that is acceptable is measurement_duration + or - 30s
 # interval_start_time - "2022-01-23T18:25:43.511Z"
@@ -41,6 +43,15 @@ missing_metrics = [
     ("Missing_metrics_bulk_res_few_containers_few_individual_metrics_missing", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_containers_few_individual_metrics_missing.json", "Out of a total of 100 records, 4 failed to save", "Metric data is not present for container")
 ]
 
+missing_metrics_namespace = [
+    ("Missing_metrics_single_res_single_namespace", "../json_files/missing_metrics_jsons/update_results_missing_metrics_single_namespace.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Metric data is not present for namespace : default for experiment: namespace-demo"),
+    ("Missing_metrics_single_res_all_namespace", "../json_files/missing_metrics_jsons/update_results_missing_metrics_all_namespace.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Metric data is not present for namespace : test-multiple-import for experiment: namespace-demo. ]"),
+    ("Missing_metrics_bulk_res_single_namespace", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_single_namespace.json", "Out of a total of 3 records, 3 failed to save", "Performance profile: [Metric data is not present for namespace : default for experiment: namespace-demo"),
+    ("Missing_metrics_bulk_res_few_namespaces", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_namespace.json", "Out of a total of 20 records, 1 failed to save", "Performance profile: [Metric data is not present for namespace : default for experiment: namespace-demo"),
+    ("Missing_metrics_bulk_res_few_namespace_few_individual_metrics_missing", "../json_files/missing_metrics_jsons/bulk_update_results_missing_metrics_few_namespaces_few_individual_metrics_missing.json", "Out of a total of 19 records, 1 failed to save", "Performance profile: [Missing one of the following mandatory parameters for experiment - namespace-demo : [namespaceCpuUsage, namespaceMemoryUsage, namespaceMemoryRSS]]"),
+    ("Missing_metrics_mandatory_metrics_single_namespace", "../json_files/missing_metrics_jsons/update_results_missing_mandatory_metrics_single_namespace.json", "Out of a total of 1 records, 1 failed to save", "Performance profile: [Missing one of the following mandatory parameters for experiment - namespace-demo : [namespaceCpuUsage, namespaceMemoryUsage, namespaceMemoryRSS]]")
+
+]
 
 @pytest.mark.negative
 @pytest.mark.parametrize(
@@ -72,7 +83,6 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
     response = create_experiment(input_json_file)
 
     data = response.json()
-    print(data['message'])
     assert response.status_code == SUCCESS_STATUS_CODE
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
@@ -156,6 +166,246 @@ def test_update_results_invalid_tests(test_name, expected_status_code, version, 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+@pytest.mark.negative
+@pytest.mark.parametrize(
+    "test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, namespace, namespaceCpuRequest_name, namespaceCpuRequest_sum, namespaceCpuRequest_format, namespaceCpuLimit_name, namespaceCpuLimit_sum, namespaceCpuLimit_format, namespaceCpuUsage_name, namespaceCpuUsage_min, namespaceCpuUsage_max, namespaceCpuUsage_avg, namespaceCpuUsage_format, namespaceCpuThrottle_name, namespaceCpuThrottle_min, namespaceCpuThrottle_max, namespaceCpuThrottle_avg, namespaceCpuThrottle_format, namespaceMemoryRequest_name, namespaceMemoryRequest_sum, namespaceMemoryRequest_format, namespaceMemoryLimit_name, namespaceMemoryLimit_sum, namespaceMemoryLimit_format, namespaceMemoryUsage_name, namespaceMemoryUsage_min, namespaceMemoryUsage_max, namespaceMemoryUsage_avg, namespaceMemoryUsage_format, namespaceMemoryRSS_name, namespaceMemoryRSS_min, namespaceMemoryRSS_max, namespaceMemoryRSS_avg, namespaceMemoryRSS_format, namespaceTotalPods_name, namespaceTotalPods_avg, namespaceTotalPods_max, namespaceRunningPods_name, namespaceRunningPods_avg, namespaceRunningPods_max,",
+    generate_test_data(csvfilen, update_results_namespace_test_data, "update_results"))
+def test_update_results_invalid_namespace_tests(
+    test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, namespace,
+    namespaceCpuRequest_name, namespaceCpuRequest_sum, namespaceCpuRequest_format,
+    namespaceCpuLimit_name, namespaceCpuLimit_sum, namespaceCpuLimit_format,
+    namespaceCpuUsage_name, namespaceCpuUsage_min, namespaceCpuUsage_max, namespaceCpuUsage_avg, namespaceCpuUsage_format,
+    namespaceCpuThrottle_name, namespaceCpuThrottle_min, namespaceCpuThrottle_max, namespaceCpuThrottle_avg, namespaceCpuThrottle_format,
+    namespaceMemoryRequest_name, namespaceMemoryRequest_sum, namespaceMemoryRequest_format,
+    namespaceMemoryLimit_name, namespaceMemoryLimit_sum, namespaceMemoryLimit_format,
+    namespaceMemoryUsage_name, namespaceMemoryUsage_min, namespaceMemoryUsage_max, namespaceMemoryUsage_avg, namespaceMemoryUsage_format,
+    namespaceMemoryRSS_name, namespaceMemoryRSS_min, namespaceMemoryRSS_max, namespaceMemoryRSS_avg, namespaceMemoryRSS_format,
+    namespaceTotalPods_name, namespaceTotalPods_avg, namespaceTotalPods_max, namespaceRunningPods_name, namespaceRunningPods_avg, namespaceRunningPods_max, cluster_type):
+    """
+    This test function runs negative test scenarios for updating results for a namespace experiment.
+    It creates a namespace experiment, then attempts to update it with invalid data.
+    """
+    print(f"\n*******************************************************")
+    print(f"Test - {test_name}")
+    print("*******************************************************\n")
+    
+    create_exp_json_file = "../json_files/create_exp_namespace.json"
+    form_kruize_url(cluster_type)
+
+    delete_experiment(create_exp_json_file)
+
+    response = create_experiment(create_exp_json_file)
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE, "Experiment creation failed"
+    assert data.get('status') == SUCCESS_STATUS, "Experiment status is not success"
+
+    environment = Environment(loader=FileSystemLoader("../json_files/"))
+    template = environment.get_template("update_results_template_namespace.json")
+    
+    content = template.render(
+        version=version,
+        experiment_name=experiment_name,
+        interval_start_time=interval_start_time,
+        interval_end_time=interval_end_time,
+        namespace=namespace,
+        namespaceCpuRequest_name=namespaceCpuRequest_name,
+        namespaceCpuRequest_sum=namespaceCpuRequest_sum,
+        namespaceCpuRequest_format=namespaceCpuRequest_format,
+        namespaceCpuLimit_name=namespaceCpuLimit_name,
+        namespaceCpuLimit_sum=namespaceCpuLimit_sum,
+        namespaceCpuLimit_format=namespaceCpuLimit_format,
+        namespaceCpuUsage_name=namespaceCpuUsage_name,
+        namespaceCpuUsage_min=namespaceCpuUsage_min,
+        namespaceCpuUsage_max=namespaceCpuUsage_max,
+        namespaceCpuUsage_avg=namespaceCpuUsage_avg,
+        namespaceCpuUsage_format=namespaceCpuUsage_format,
+        namespaceCpuThrottle_name=namespaceCpuThrottle_name,
+        namespaceCpuThrottle_min=namespaceCpuThrottle_min,
+        namespaceCpuThrottle_max=namespaceCpuThrottle_max,
+        namespaceCpuThrottle_avg=namespaceCpuThrottle_avg,
+        namespaceCpuThrottle_format=namespaceCpuThrottle_format,
+        namespaceMemoryRequest_name=namespaceMemoryRequest_name,
+        namespaceMemoryRequest_sum=namespaceMemoryRequest_sum,
+        namespaceMemoryRequest_format=namespaceMemoryRequest_format,
+        namespaceMemoryLimit_name=namespaceMemoryLimit_name,
+        namespaceMemoryLimit_sum=namespaceMemoryLimit_sum,
+        namespaceMemoryLimit_format=namespaceMemoryLimit_format,
+        namespaceMemoryUsage_name=namespaceMemoryUsage_name,
+        namespaceMemoryUsage_min=namespaceMemoryUsage_min,
+        namespaceMemoryUsage_max=namespaceMemoryUsage_max,
+        namespaceMemoryUsage_avg=namespaceMemoryUsage_avg,
+        namespaceMemoryUsage_format=namespaceMemoryUsage_format,
+        namespaceMemoryRSS_name=namespaceMemoryRSS_name,
+        namespaceMemoryRSS_min=namespaceMemoryRSS_min,
+        namespaceMemoryRSS_max=namespaceMemoryRSS_max,
+        namespaceMemoryRSS_avg=namespaceMemoryRSS_avg,
+        namespaceMemoryRSS_format=namespaceMemoryRSS_format,
+        namespaceTotalPods_name=namespaceTotalPods_name,
+        namespaceTotalPods_max=namespaceTotalPods_max,
+        namespaceTotalPods_avg=namespaceTotalPods_avg,
+        namespaceRunningPods_name=namespaceRunningPods_name,
+        namespaceRunningPods_max=namespaceRunningPods_max,
+        namespaceRunningPods_avg=namespaceRunningPods_avg
+    )
+    tmp_json_file = f"/tmp/update_results_namespace_{test_name}.json"
+    with open(tmp_json_file, mode="w", encoding="utf-8") as message:
+        message.write(content)
+
+    response = update_results(tmp_json_file)
+    data = response.json()
+
+    assert response.status_code == int(expected_status_code)
+    actual_message = data.get('message')    
+    response = delete_experiment(create_exp_json_file)
+    print("delete exp = ", response.status_code)
+
+@pytest.mark.negative
+@pytest.mark.parametrize(
+    "test_name, expected_status_code, version, experiment_name, interval_start_time, interval_end_time, kubernetes_obj_type, name, namespace, container_image_name, container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg, cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format, cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min, cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max, cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum, memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum, memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum, memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format, memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min, memoryRSS_format, acceleratorCoreUsage_name, acceleratorCoreUsage_min, acceleratorCoreUsage_max, acceleratorCoreUsage_avg, acceleratorCoreUsage_format, acceleratorMemoryUsage_name, acceleratorMemoryUsage_min, acceleratorMemoryUsage_max, acceleratorMemoryUsage_avg, acceleratorMemoryUsage_format, acceleratorFrameBufferUsage_name, acceleratorFrameBufferUsage_min, acceleratorFrameBufferUsage_max, acceleratorFrameBufferUsage_avg, acceleratorFrameBufferUsage_format",
+    generate_test_data(csvfile, update_results_gpu_test_data, "update_results"))
+def test_update_results_gpu_invalid_tests(test_name, expected_status_code, version, experiment_name, interval_start_time,
+                                      interval_end_time, kubernetes_obj_type, name, namespace, container_image_name,
+                                      container_name, cpuRequest_name, cpuRequest_sum, cpuRequest_avg,
+                                      cpuRequest_format, cpuLimit_name, cpuLimit_sum, cpuLimit_avg, cpuLimit_format,
+                                      cpuUsage_name, cpuUsage_sum, cpuUsage_max, cpuUsage_avg, cpuUsage_min,
+                                      cpuUsage_format, cpuThrottle_name, cpuThrottle_sum, cpuThrottle_max,
+                                      cpuThrottle_avg, cpuThrottle_format, memoryRequest_name, memoryRequest_sum,
+                                      memoryRequest_avg, memoryRequest_format, memoryLimit_name, memoryLimit_sum,
+                                      memoryLimit_avg, memoryLimit_format, memoryUsage_name, memoryUsage_sum,
+                                      memoryUsage_max, memoryUsage_avg, memoryUsage_min, memoryUsage_format,
+                                      memoryRSS_name, memoryRSS_sum, memoryRSS_max, memoryRSS_avg, memoryRSS_min,
+                                      memoryRSS_format, acceleratorCoreUsage_name, acceleratorCoreUsage_min,
+                                      acceleratorCoreUsage_max, acceleratorCoreUsage_avg, acceleratorCoreUsage_format,
+                                      acceleratorMemoryUsage_name, acceleratorMemoryUsage_min,
+                                      acceleratorMemoryUsage_max, acceleratorMemoryUsage_avg,
+                                      acceleratorMemoryUsage_format, acceleratorFrameBufferUsage_name,
+                                      acceleratorFrameBufferUsage_min, acceleratorFrameBufferUsage_max,
+                                      acceleratorFrameBufferUsage_avg, acceleratorFrameBufferUsage_format,cluster_type):
+    print("\n*******************************************************")
+    print("Test - ", test_name)
+    print("*******************************************************\n")
+    input_json_file = "../json_files/create_exp.json"
+
+    form_kruize_url(cluster_type)
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    print(data['message'])
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Create experiment using the specified json
+    result_json_file = "../json_files/update_results_template_accelerator.json"
+    tmp_json_file = "/tmp/update_results_" + test_name + ".json"
+
+    environment = Environment(loader=FileSystemLoader("../json_files/"))
+    template = environment.get_template("update_results_template_accelerator.json")
+
+    if "null" in test_name:
+        field = test_name.replace("null_", "")
+        json_file = "../json_files/update_results_template_accelerator.json"
+        filename = "/tmp/update_results_template_accelerator.json"
+
+        strip_double_quotes_for_field(json_file, field, filename)
+        environment = Environment(loader=FileSystemLoader("/tmp/"))
+        template = environment.get_template("update_results_template_accelerator.json")
+
+    filename = f"/tmp/update_results_{test_name}.json"
+    content = template.render(
+        version=version,
+        experiment_name=experiment_name,
+        interval_start_time=interval_start_time,
+        interval_end_time=interval_end_time,
+        kubernetes_obj_type=kubernetes_obj_type,
+        name=name,
+        namespace=namespace,
+        container_image_name=container_image_name,
+        container_name=container_name,
+
+        cpuRequest_name=cpuRequest_name,
+        cpuRequest_sum=cpuRequest_sum,
+        cpuRequest_avg=cpuRequest_avg,
+        cpuRequest_format=cpuRequest_format,
+
+        cpuLimit_name=cpuLimit_name,
+        cpuLimit_sum=cpuLimit_sum,
+        cpuLimit_avg=cpuLimit_avg,
+        cpuLimit_format=cpuLimit_format,
+
+        cpuUsage_name=cpuUsage_name,
+        cpuUsage_sum=cpuUsage_sum,
+        cpuUsage_max=cpuUsage_max,
+        cpuUsage_avg=cpuUsage_avg,
+        cpuUsage_min=cpuUsage_min,
+        cpuUsage_format=cpuUsage_format,
+
+        cpuThrottle_name=cpuThrottle_name,
+        cpuThrottle_sum=cpuThrottle_sum,
+        cpuThrottle_max=cpuThrottle_max,
+        cpuThrottle_avg=cpuThrottle_avg,
+        cpuThrottle_format=cpuThrottle_format,
+
+        memoryRequest_name=memoryRequest_name,
+        memoryRequest_sum=memoryRequest_sum,
+        memoryRequest_avg=memoryRequest_avg,
+        memoryRequest_format=memoryRequest_format,
+
+        memoryLimit_name=memoryLimit_name,
+        memoryLimit_sum=memoryLimit_sum,
+        memoryLimit_avg=memoryLimit_avg,
+        memoryLimit_format=memoryLimit_format,
+
+        memoryUsage_name=memoryUsage_name,
+        memoryUsage_sum=memoryUsage_sum,
+        memoryUsage_max=memoryUsage_max,
+        memoryUsage_avg=memoryUsage_avg,
+        memoryUsage_min=memoryUsage_min,
+        memoryUsage_format=memoryUsage_format,
+
+        memoryRSS_name=memoryRSS_name,
+        memoryRSS_sum=memoryRSS_sum,
+        memoryRSS_max=memoryRSS_max,
+        memoryRSS_avg=memoryRSS_avg,
+        memoryRSS_min=memoryRSS_min,
+        memoryRSS_format=memoryRSS_format,
+
+        acceleratorCoreUsage_name=acceleratorCoreUsage_name,
+        acceleratorCoreUsage_min=acceleratorCoreUsage_min,
+        acceleratorCoreUsage_max=acceleratorCoreUsage_max,
+        acceleratorCoreUsage_avg=acceleratorCoreUsage_avg,
+        acceleratorCoreUsage_format=acceleratorCoreUsage_format,
+
+        acceleratorMemoryUsage_name=acceleratorMemoryUsage_name,
+        acceleratorMemoryUsage_min=acceleratorMemoryUsage_min,
+        acceleratorMemoryUsage_max=acceleratorMemoryUsage_max,
+        acceleratorMemoryUsage_avg=acceleratorMemoryUsage_avg,
+        acceleratorMemoryUsage_format=acceleratorMemoryUsage_format,
+
+        acceleratorFrameBufferUsage_name=acceleratorFrameBufferUsage_name,
+        acceleratorFrameBufferUsage_min=acceleratorFrameBufferUsage_min,
+        acceleratorFrameBufferUsage_max=acceleratorFrameBufferUsage_max,
+        acceleratorFrameBufferUsage_avg=acceleratorFrameBufferUsage_avg,
+        acceleratorFrameBufferUsage_format=acceleratorFrameBufferUsage_format
+    )
+
+    with open(filename, mode="w", encoding="utf-8") as message:
+        message.write(content)
+
+    response = update_results(tmp_json_file)
+
+    data = response.json()
+    print(data['message'])
+    assert response.status_code == int(expected_status_code)
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
 
 @pytest.mark.negative
 @pytest.mark.parametrize("test_name, result_json_file, expected_message, error_message", missing_metrics)
@@ -170,7 +420,6 @@ def test_update_results_with_missing_metrics_section(test_name, result_json_file
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
-    # Create experiment using the specified json
     response = create_experiment(input_json_file)
 
     data = response.json()
@@ -178,7 +427,6 @@ def test_update_results_with_missing_metrics_section(test_name, result_json_file
     assert data['status'] == SUCCESS_STATUS
     assert data['message'] == CREATE_EXP_SUCCESS_MSG
 
-    # Update results for the experiment
     response = update_results(result_json_file)
 
     data = response.json()
@@ -188,10 +436,8 @@ def test_update_results_with_missing_metrics_section(test_name, result_json_file
     print(data['message'])
     print("**************************")
 
-    # add assertion of expected message
     assert data['message'] == expected_message 
 
-    # add assertion of expected error message
     msg_data=data['data']
     for d in msg_data:
         error_data=d["errors"]
@@ -206,6 +452,273 @@ def test_update_results_with_missing_metrics_section(test_name, result_json_file
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+
+@pytest.mark.negative
+@pytest.mark.parametrize("test_name, result_json_file, expected_message, error_message", missing_metrics_namespace)
+def test_update_results_with_missing_metrics_section_namespace(test_name, result_json_file, expected_message, error_message, cluster_type):
+    """
+    Test Description: This test validates update results for a valid namespace experiment
+                      by updating results with entire metrics section missing or individual metrics missing.
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    response = update_results(result_json_file)
+
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    print("**************************")
+    print(data['message'])
+    print("**************************")
+
+    assert data['message'] == expected_message
+
+    msg_data=data['data']
+    for d in msg_data:
+        error_data=d["errors"]
+        for err in error_data:
+            actual_error_message = err["message"]
+            assert error_message in actual_error_message
+    
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+    
+
+@pytest.mark.negative
+def test_upload_namespace_results_for_container_experiment(cluster_type):
+    """
+    Test Description: This test validates that posting namespace results to a container-based
+                      experiment fails with the expected error.
+    """
+    input_json_file = "../json_files/create_exp.json"
+    result_json_file = "../json_files/update_results_namespace.json"
+
+    create_exp = read_json_data_from_file(input_json_file)
+    update_res = read_json_data_from_file(result_json_file)
+
+    experiment_name = 'container_experiment'
+
+    # Set the same experiment name
+    create_exp[0]['experiment_name'] = experiment_name
+    update_res[0]['experiment_name'] = experiment_name
+
+    # Optional: Write back to file if functions expect file input
+    write_json_data_to_file("/tmp/temp_create_exp.json", create_exp)
+    write_json_data_to_file("/tmp/temp_update_results.json", update_res)
+
+    form_kruize_url(cluster_type)
+    
+    response = delete_experiment("/tmp/temp_create_exp.json")
+    print("delete exp = ", response.status_code)
+
+    response = create_experiment("/tmp/temp_create_exp.json")
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    
+    response = update_results("/tmp/temp_update_results.json")
+    data = response.json()
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    actual_error = data['data'][0]['errors'][0]['message']
+    assert KUBERNETES_OBJECT_TYPE_MISMATCH in actual_error
+
+    response = delete_experiment("/tmp/temp_create_exp.json")
+    print("delete exp = ", response.status_code)
+
+@pytest.mark.negative
+def test_upload_container_results_for_namespace_experiment(cluster_type):
+    """
+    Test Description: This test validates that posting container results to a namespace-based
+                      experiment fails with the expected error.
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+    result_json_file = "../json_files/update_results.json"
+
+    create_exp = read_json_data_from_file(input_json_file)
+    update_res = read_json_data_from_file(result_json_file)
+
+    experiment_name = 'namespace_experiment'
+
+    # Set the same experiment name
+    create_exp[0]['experiment_name'] = experiment_name
+    update_res[0]['experiment_name'] = experiment_name
+
+    # Write back to file if functions expect file input
+    write_json_data_to_file("/tmp/temp_create_exp.json", create_exp)
+    write_json_data_to_file("/tmp/temp_update_results.json", update_res)
+
+    form_kruize_url(cluster_type)
+    
+    response = delete_experiment("/tmp/temp_create_exp.json")
+    print("delete exp = ", response.status_code)
+
+    response = create_experiment("/tmp/temp_create_exp.json")
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    
+    response = update_results("/tmp/temp_update_results.json")
+    data = response.json()
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    actual_error = data['data'][0]['errors'][0]['message']
+    assert MISSING_NAMESPACE_SPECIFIC_UPDATE_RESULTS_FIELDS in actual_error
+
+    response = delete_experiment("/tmp/temp_create_exp.json")
+    print("delete exp = ", response.status_code)
+
+@pytest.mark.negative
+def test_upload_bulk_namespace_results_for_container_experiment(cluster_type):
+    """
+    Test Description: This test validates that posting a mix of namespace and container results
+                      to a container-based experiment fails for the namespace results.
+    """
+    input_json_file = "../json_files/create_exp.json"
+    result_json_file = "../json_files/mixed_bulk_results_container.json" 
+
+    form_kruize_url(cluster_type)
+    
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    response = create_experiment(input_json_file)
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    
+    response = update_results(result_json_file)
+    data = response.json()
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert "failed to save" in data['message']
+    
+    error_found = False
+    for result in data.get('data', []):
+        if result.get('errors'):
+            for error in result['errors']:
+                if "Kubernetes Object Names MisMatched" in error.get('message', ''):
+                    error_found = True
+                    break
+        if error_found:
+            break
+    
+    assert error_found, KUBERNETES_OBJECT_NAME_MISMATCH
+    
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+@pytest.mark.negative
+def test_upload_bulk_container_results_for_namespace_experiment(cluster_type):
+    """
+    Test Description: This test validates that posting a mix of container and namespace results
+                      to a namespace-based experiment fails for the container results.
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+    result_json_file = "../json_files/mixed_bulk_results_namespace.json"
+
+    form_kruize_url(cluster_type)
+    
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    response = create_experiment(input_json_file)
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    
+    response = update_results(result_json_file)
+    data = response.json()
+
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert "failed to save" in data['message']
+    
+    error_found = False
+    for result in data.get('data', []):
+        if result.get('errors'):
+            for error in result['errors']:
+                if MISSING_MANDATORY_PARAMETERS in error.get('message', ''):
+                    error_found = True
+                    break
+        if error_found:
+            break
+            
+    assert error_found, MISSING_MANDATORY_PARAMETERS
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+@pytest.mark.skip(reason="This feature is not yet implemented in the backend code.")
+@pytest.mark.negative
+def test_update_results_with_zero_metric_values_fails(cluster_type):
+    """
+    Test Description: This test validates that updating results fails when all metric values are zero.
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+    tmp_json_file = "/tmp/update_results_zero_metrics_namespace.json"
+
+    form_kruize_url(cluster_type)
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    response = create_experiment(input_json_file)
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    environment = Environment(loader=FileSystemLoader("../json_files/"))
+    template = environment.get_template("update_results_template_namespace.json")
+
+    template_vars = {
+        "version": "v2.0",
+        "experiment_name": "namespace-demo",
+        "interval_start_time": "2022-01-23T18:25:43.511Z",
+        "interval_end_time": "2022-01-23T18:40:43.570Z",
+        "namespace": "default",
+        "namespaceCpuRequest_name": "namespaceCpuRequest", "namespaceCpuRequest_sum": 0.0, "namespaceCpuRequest_format": "cores",
+        "namespaceCpuLimit_name": "namespaceCpuLimit", "namespaceCpuLimit_sum": 0.0, "namespaceCpuLimit_format": "cores",
+        "namespaceCpuUsage_name": "namespaceCpuUsage", "namespaceCpuUsage_min": 0.0, "namespaceCpuUsage_max": 0.0, "namespaceCpuUsage_avg": 0.0, "namespaceCpuUsage_format": "cores",
+        "namespaceCpuThrottle_name": "namespaceCpuThrottle", "namespaceCpuThrottle_min": 0.0, "namespaceCpuThrottle_max": 0.0, "namespaceCpuThrottle_avg": 0.0, "namespaceCpuThrottle_format": "cores",
+        "namespaceMemoryRequest_name": "namespaceMemoryRequest", "namespaceMemoryRequest_sum": 0.0, "namespaceMemoryRequest_format": "MiB",
+        "namespaceMemoryLimit_name": "namespaceMemoryLimit", "namespaceMemoryLimit_sum": 0.0, "namespaceMemoryLimit_format": "MiB",
+        "namespaceMemoryUsage_name": "namespaceMemoryUsage", "namespaceMemoryUsage_min": 0.0, "namespaceMemoryUsage_max": 0.0, "namespaceMemoryUsage_avg": 0.0, "namespaceMemoryUsage_format": "MiB",
+        "namespaceMemoryRSS_name": "namespaceMemoryRSS", "namespaceMemoryRSS_min": 0.0, "namespaceMemoryRSS_max": 0.0, "namespaceMemoryRSS_avg": 0.0, "namespaceMemoryRSS_format": "MiB",
+        "namespaceTotalPods_name": "namespaceTotalPods", "namespaceTotalPods_max": 0, "namespaceTotalPods_avg": 0,
+        "namespaceRunningPods_name": "namespaceRunningPods", "namespaceRunningPods_max": 0, "namespaceRunningPods_avg": 0
+    }
+    
+    content = template.render(**template_vars)
+    
+    with open(tmp_json_file, mode="w", encoding="utf-8") as message:
+        message.write(content)
+
+    response = update_results(tmp_json_file)
+    data = response.json()
+    print(f"Update Results Response: {data.get('message')}")
+    
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert CANNOT_PROCESS_ALL_ZERO_METRIC_VALUES in data['data'][0]['errors'][0]['message']
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
 def test_update_valid_results_after_create_exp(cluster_type):
@@ -238,6 +751,36 @@ def test_update_valid_results_after_create_exp(cluster_type):
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+@pytest.mark.sanity
+def test_update_valid_results_after_create_namespace_exp(cluster_type):
+    """
+    Test Description: This test validates update results for a valid namespace experiment
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/update_results_namespace.json"
+    response = update_results(result_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
 def test_update_multiple_valid_results_single_json_after_create_exp(cluster_type):
@@ -270,6 +813,36 @@ def test_update_multiple_valid_results_single_json_after_create_exp(cluster_type
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+@pytest.mark.sanity
+def test_update_multiple_valid_results_single_json_after_create_namespace_exp(cluster_type):
+    """
+    Test Description: This test validates update results for a valid namespace experiment by posting multiple results
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/multiple_results_single_exp_namespace.json"
+    response = update_results(result_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.sanity
 def test_update_multiple_valid_results_after_create_exp(cluster_type):
@@ -295,6 +868,63 @@ def test_update_multiple_valid_results_after_create_exp(cluster_type):
     find_end_ts = "2022-01-23T18:40:43.570Z"
 
     result_json_file = "../json_files/update_results.json"
+    filename = "/tmp/result.json"
+    for i in range(num_res):
+
+        with open(result_json_file, 'r') as file:
+            data = file.read()
+
+        if i == 0:
+            start_ts = get_datetime()
+        else:
+            start_ts = end_ts
+
+        print("start_ts = ", start_ts)
+        data = data.replace(find_start_ts, start_ts)
+
+        end_ts = increment_timestamp_by_given_mins(start_ts, 15)
+        print("end_ts = ", end_ts)
+        data = data.replace(find_end_ts, end_ts)
+
+        with open(filename, 'w') as file:
+            file.write(data)
+
+        response = update_results(filename, False)
+
+        data = response.json()
+        print("message = ", data['message'])
+
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+@pytest.mark.sanity
+def test_update_multiple_valid_results_after_create_namespace_exp(cluster_type):
+    """
+    Test Description: This test validates update results for a valid namespace experiment
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    # Update results for the experiment
+    num_res = 5
+    find_start_ts = "2022-01-23T18:25:43.511Z"
+    find_end_ts = "2022-01-23T18:40:43.570Z"
+
+    result_json_file = "../json_files/update_results_namespace.json"
     filename = "/tmp/result.json"
     for i in range(num_res):
 
@@ -386,6 +1016,70 @@ def test_update_multiple_valid_results_with_supported_cpu_format_types(format_ty
         assert response.status_code == SUCCESS_STATUS_CODE
         assert data['status'] == SUCCESS_STATUS
 
+
+@pytest.mark.sanity
+@pytest.mark.parametrize("format_type", ["cores", "m"])
+def test_update_multiple_valid_results_for_namespace_experiment_with_supported_cpu_format_types(format_type, cluster_type):
+    """
+    Test Description: This test validates update results for a valid namespace experiment
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    # Update results for the experiment
+    num_res = 96
+    find_start_ts = "2022-01-23T18:25:43.511Z"
+    find_end_ts = "2022-01-23T18:40:43.570Z"
+
+    cpu_format = "cores"
+
+    result_json_file = "../json_files/update_results_namespace.json"
+    filename = "/tmp/result.json"
+    for i in range(num_res):
+
+        with open(result_json_file, 'r') as file:
+            data = file.read()
+
+        if i == 0:
+            start_ts = get_datetime()
+        else:
+            start_ts = end_ts
+
+        print("start_ts = ", start_ts)
+        data = data.replace(find_start_ts, start_ts)
+
+        end_ts = increment_timestamp_by_given_mins(start_ts, 15)
+        print("end_ts = ", end_ts)
+        data = data.replace(find_end_ts, end_ts)
+
+        data = data.replace(cpu_format, format_type)
+
+        with open(filename, 'w') as file:
+            file.write(data)
+
+        response = update_results(filename, False)
+
+        data = response.json()
+        print("message = ", data['message'])
+
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+        assert data['status'] == SUCCESS_STATUS
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+
 @pytest.mark.sanity
 @pytest.mark.parametrize("format_type", ["bytes", "Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "kB", "KB", "MB", "GB", "TB", "PB", "EB", "K", "k", "M", "G", "T", "P", "E"])
 def test_update_multiple_valid_results_with_supported_mem_format_types(format_type, cluster_type):
@@ -413,6 +1107,69 @@ def test_update_multiple_valid_results_with_supported_mem_format_types(format_ty
     memory_format = "MiB"
 
     result_json_file = "../json_files/update_results.json"
+    filename = "/tmp/result.json"
+    for i in range(num_res):
+
+        with open(result_json_file, 'r') as file:
+            data = file.read()
+
+        if i == 0:
+            start_ts = get_datetime()
+        else:
+            start_ts = end_ts
+
+        print("start_ts = ", start_ts)
+        data = data.replace(find_start_ts, start_ts)
+
+        end_ts = increment_timestamp_by_given_mins(start_ts, 15)
+        print("end_ts = ", end_ts)
+        data = data.replace(find_end_ts, end_ts)
+
+        data = data.replace(memory_format, format_type)
+
+        with open(filename, 'w') as file:
+            file.write(data)
+
+        response = update_results(filename, False)
+
+        data = response.json()
+        print("message = ", data['message'])
+
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+@pytest.mark.parametrize("format_type", ["bytes", "Bytes", "KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "Ki", "Mi", "Gi", "Ti", "Pi", "Ei", "kB", "KB", "MB", "GB", "TB", "PB", "EB", "K", "k", "M", "G", "T", "P", "E"])
+def test_update_multiple_valid_results_for_namespace_experiment_with_supported_mem_format_types(format_type, cluster_type):
+    """
+    Test Description: This test validates update results for a valid namespace experiment
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+
+    # Update results for the experiment
+    num_res = 96
+    find_start_ts = "2022-01-23T18:25:43.511Z"
+    find_end_ts = "2022-01-23T18:40:43.570Z"
+
+    memory_format = "MiB"
+
+    result_json_file = "../json_files/update_results_namespace.json"
     filename = "/tmp/result.json"
     for i in range(num_res):
 
@@ -480,7 +1237,7 @@ def test_update_results_multiple_exps_from_same_json_file(cluster_type):
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert data['message'] == 'Out of a total of 3 records, 3 failed to save'
+    assert data['message'] == THREE_FAILED_RECORDS_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -517,7 +1274,7 @@ def test_update_results_multiple_exps_multiple_containers_from_same_json_file(cl
 
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert data['message'] == 'Out of a total of 3 records, 3 failed to save'
+    assert data['message'] == THREE_FAILED_RECORDS_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -553,7 +1310,7 @@ def test_update_results_for_containers_not_present(cluster_type):
     print("message = ", data['message'])
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
-    assert data['message'] == 'Out of a total of 3 records, 3 failed to save'
+    assert data['message'] == THREE_FAILED_RECORDS_MSG
 
 
 @pytest.mark.sanity
@@ -606,7 +1363,7 @@ def test_update_results_multiple_exps_from_diff_json_files(cluster_type):
         print("delete exp = ", response.status_code)
 
 
-# @pytest.mark.negative
+@pytest.mark.negative
 def test_update_valid_results_without_create_exp(cluster_type):
     """
     Test Description: This test validates the behavior of updateResults API by posting results for a non-existing experiment
@@ -629,12 +1386,38 @@ def test_update_valid_results_without_create_exp(cluster_type):
     print("message = ", data['message'])
 
     EXP_NAME_NOT_FOUND_MSG = UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND + experiment_name
-    FAILED_RECORDS_MSG = "Out of a total of 1 records, 1 failed to save"
     assert response.status_code == ERROR_STATUS_CODE
     assert data['status'] == ERROR_STATUS
     assert data['message'] == FAILED_RECORDS_MSG
     assert data['data'][0]['errors'][0]['message'] == EXP_NAME_NOT_FOUND_MSG
 
+@pytest.mark.negative
+def test_update_valid_results_without_create_exp_for_namespace(cluster_type):
+    """
+    Test Description: This test validates the behavior of updateResults API by posting results for a non-existing namespace experiment
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+    json_data = json.load(open(input_json_file))
+
+    experiment_name = json_data[0]['experiment_name']
+    print("experiment_name = ", experiment_name)
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    result_json_file = "../json_files/update_results_namespace.json"
+    response = update_results(result_json_file)
+
+    data = response.json()
+    print("message = ", data['message'])
+
+    EXP_NAME_NOT_FOUND_MSG = UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND + experiment_name
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+    assert data['message'] == FAILED_RECORDS_MSG
+    assert data['data'][0]['errors'][0]['message'] == EXP_NAME_NOT_FOUND_MSG
 
 @pytest.mark.sanity
 def test_update_results_with_same_result(cluster_type):
@@ -678,12 +1461,62 @@ def test_update_results_with_same_result(cluster_type):
     interval_end_time = result_json_data[0]['interval_end_time']
     interval_start_time = result_json_data[0]['interval_start_time']
 
-    TIMESTAMP_PRESENT_MSG = 'An entry for this record already exists!'
-
-    print(TIMESTAMP_PRESENT_MSG)
+    print(DUPLICATE_RECORDS_MSG)
     print(data['data'][0]['errors'][0]['message'])
-    assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
-    assert data['data'][0]['errors'][0]['message'] == TIMESTAMP_PRESENT_MSG
+    assert data['message'] == FAILED_RECORDS_MSG
+    assert data['data'][0]['errors'][0]['message'] == DUPLICATE_RECORDS_MSG
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+def test_update_results_with_same_result_for_namespace_experiment(cluster_type):
+    """
+    Test Description: This test validates update results for a valid namespace experiment
+                        by posting the same results twice.
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+
+    form_kruize_url(cluster_type)
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/update_results_namespace.json"
+    response = update_results(result_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+
+    # Post the same result again
+    response = update_results(result_json_file)
+
+    data = response.json()
+    assert response.status_code == ERROR_STATUS_CODE
+    assert data['status'] == ERROR_STATUS
+
+    exp_json_data = read_json_data_from_file(input_json_file)
+    experiment_name = exp_json_data[0]['experiment_name']
+
+    result_json_data = read_json_data_from_file(result_json_file)
+    interval_end_time = result_json_data[0]['interval_end_time']
+    interval_start_time = result_json_data[0]['interval_start_time']
+
+    print(DUPLICATE_RECORDS_MSG)
+    print(data['data'][0]['errors'][0]['message'])
+    assert data['message'] == FAILED_RECORDS_MSG
+    assert data['data'][0]['errors'][0]['message'] == DUPLICATE_RECORDS_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
@@ -730,17 +1563,69 @@ def test_update_results_with_valid_and_invalid_interval_duration(test_name, inte
     elif test_name == "invalid_zero_diff":
         assert response.status_code == ERROR_STATUS_CODE
         assert data['status'] == ERROR_STATUS
-        assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
+        assert data['message'] == FAILED_RECORDS_MSG
         assert data['data'][0]['errors'][0]['message'] == UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG
     else:
         assert response.status_code == ERROR_STATUS_CODE
         assert data['status'] == ERROR_STATUS
-        assert data['message'] == 'Out of a total of 1 records, 1 failed to save'
+        assert data['message'] == FAILED_RECORDS_MSG
         assert data['data'][0]['errors'][0]['message'] == INVALID_INTERVAL_DURATION_MSG
 
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
 
+
+@pytest.mark.sanity
+@pytest.mark.parametrize("test_name, interval_end_time", interval_end_times)
+def test_update_results_with_valid_and_invalid_interval_duration_for_namespace_experiment(test_name, interval_end_time, cluster_type):
+    """
+    Test Description: This test validates update results by posting results with interval time difference that is not valid for
+    the given measurement duration
+    """
+    input_json_file = "../json_files/create_exp_namespace.json"
+
+    form_kruize_url(cluster_type)
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    assert response.status_code == SUCCESS_STATUS_CODE
+    assert data['status'] == SUCCESS_STATUS
+    assert data['message'] == CREATE_EXP_SUCCESS_MSG
+
+    # Update results for the experiment
+    result_json_file = "../json_files/update_results_namespace.json"
+
+    json_data = read_json_data_from_file(result_json_file)
+    json_data[0]['interval_end_time'] = interval_end_time
+    json_file = "/tmp/update_results_namespace.json"
+
+    write_json_data_to_file(json_file, json_data)
+
+    response = update_results(json_file)
+
+    data = response.json()
+    if test_name == "valid_plus_30s" or test_name == "valid_minus_30s":
+        assert response.status_code == SUCCESS_STATUS_CODE
+        assert data['status'] == SUCCESS_STATUS
+        assert data['message'] == UPDATE_RESULTS_SUCCESS_MSG
+    elif test_name == "invalid_zero_diff":
+        assert response.status_code == ERROR_STATUS_CODE
+        assert data['status'] == ERROR_STATUS
+        assert data['message'] == FAILED_RECORDS_MSG
+        assert data['data'][0]['errors'][0]['message'] == UPDATE_RESULTS_DATE_PRECEDE_ERROR_MSG
+    else:
+        assert response.status_code == ERROR_STATUS_CODE
+        assert data['status'] == ERROR_STATUS
+        assert data['message'] == FAILED_RECORDS_MSG
+        assert data['data'][0]['errors'][0]['message'] == INVALID_INTERVAL_DURATION_MSG
+
+    response = delete_experiment(input_json_file)
+    print("delete exp = ", response.status_code)
 
 @pytest.mark.negative
 def test_update_results__duplicate_records_with_single_exp_multiple_results(cluster_type):
@@ -800,4 +1685,3 @@ def test_update_results__duplicate_records_with_single_exp_multiple_results(clus
     # Delete the experiment
     response = delete_experiment(input_json_file)
     print("delete exp = ", response.status_code)
-

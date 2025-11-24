@@ -60,6 +60,11 @@ Documentation still in progress stay tuned.
   - Example Request and Response
   - Invalid Scenarios
 
+- [Update Metadata Profile API](#update-metadata-profile-api)
+  - Introduction
+  - Example Request and Response
+  - Invalid Scenarios
+
 - [Create Experiment API](#create-experiment-api)
     - Introduction
     - Example Request and Response
@@ -2600,6 +2605,213 @@ Example: `curl -H 'Accept: application/json' -X DELETE http://<URL>:<PORT>/delet
 
 <br>
 
+<a name="update-metadata-profile-api"></a>
+
+
+### Update Metadata Profile API
+
+This is quick guide instructions to update metadata profile as follows.
+
+**Request Parameters**
+
+| Parameter | Type   | Required | Description                      |
+|-----------|--------|----------|----------------------------------|
+| name      | string | required | The name of the metadata profile |
+
+
+**Request with name query parameter**
+
+`PUT /updateMetadataProfile`
+
+`curl -H 'Accept: application/json' -X PUT --data 'copy paste below JSON' http://<URL>:<PORT>/updateMetadataProfile?name=cluster-metadata-local-monitoring`
+
+<details>
+
+Updates the specified metadata profile name, provided metadata profile is already created
+
+<summary><b>Example Request</b></summary>
+
+```json
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeMetadataProfile",
+  "metadata": {
+    "name": "cluster-metadata-local-monitoring"
+  },
+  "profile_version": 1,
+  "k8s_type": "openshift",
+  "datasource": "prometheus",
+  "query_variables": [
+    {
+      "name": "namespacesForAdditionalLabel",
+      "datasource": "prometheus",
+      "value_type": "double",
+      "kubernetes_object": "container",
+      "aggregation_functions": [
+        {
+          "function": "sum",
+          "query": "sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=\"\", namespace=~\"openshift-tuning|monitoring\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+        }
+      ]
+    },
+    {
+      "name": "workloadsForAdditionalLabel",
+      "datasource": "prometheus",
+      "value_type": "double",
+      "kubernetes_object": "container",
+      "aggregation_functions": [
+        {
+          "function": "sum",
+          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\", workload=\"kruize\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+        }
+      ]
+    },
+    {
+      "name": "containerForAdditionalLabel",
+      "datasource": "prometheus",
+      "value_type": "double",
+      "kubernetes_object": "container",
+      "aggregation_functions": [
+        {
+          "function": "sum",
+          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\", container=\"kruize\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+        }
+      ]
+    }
+  ]
+}
+```
+</details>
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+{
+  "message": "Metadata profile: cluster-metadata-local-monitoring updated successfully. View Metadata Profiles at /listMetadataProfiles",
+  "httpcode": 201,
+  "documentationLink": "",
+  "status": "SUCCESS"
+}
+```
+
+</details>
+
+### Invalid Scenarios:
+
+<details>
+<summary><b>Invalid or Non-existing MetadataProfile name</b></summary>
+
+`name="xyz"`(Can be either invalid or non-existing profile name)
+
+`curl -H 'Accept: application/json' -X PUT http://<URL>:<PORT>/updateMetadataProfile?name=xyz`
+
+```json
+{
+  "message": "Given metadata profile name - xyz either does not exist or is not valid",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
+
+<details>
+<summary><b>Missing query parameter</b></summary>
+
+Supported query parameter is `name`
+
+Example: `curl -H 'Accept: application/json' -X PUT http://<URL>:<PORT>/updateMetadataProfile`
+```json
+{
+  "message": "Missing metadata profile 'name' parameter",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
+
+<details>
+<summary><b>Mismatch in JSON payload and input parameter profile names</b></summary>
+
+Supported query parameter is `name`
+
+Example: `curl -H 'Accept: application/json' -X PUT http://<URL>:<PORT>/updateMetadataProfile?name=cluster-metadata-local-monitoring`
+
+<details>
+
+<summary><b>Example Request with non-existing profile name</b></summary>
+
+```json
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeMetadataProfile",
+  "metadata": {
+    "name": "cluster-metadata-local-monitoring1"
+  },
+  "profile_version": 1,
+  "k8s_type": "openshift",
+  "datasource": "prometheus",
+  "query_variables": [
+    {
+      "name": "namespacesForAdditionalLabel",
+      "datasource": "prometheus",
+      "value_type": "double",
+      "kubernetes_object": "container",
+      "aggregation_functions": [
+        {
+          "function": "sum",
+          "query": "sum by (namespace) (avg_over_time(kube_namespace_status_phase{namespace!=\"\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+        }
+      ]
+    },
+    {
+      "name": "workloadsForAdditionalLabel",
+      "datasource": "prometheus",
+      "value_type": "double",
+      "kubernetes_object": "container",
+      "aggregation_functions": [
+        {
+          "function": "sum",
+          "query": "sum by (namespace, workload, workload_type) (avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+        }
+      ]
+    },
+    {
+      "name": "containerForAdditionalLabel",
+      "datasource": "prometheus",
+      "value_type": "double",
+      "kubernetes_object": "container",
+      "aggregation_functions": [
+        {
+          "function": "sum",
+          "query": "sum by (container, image, workload, workload_type, namespace) (avg_over_time(kube_pod_container_info{container!=\"\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]) * on (pod, namespace) group_left(workload, workload_type) avg_over_time(namespace_workload_pod:kube_pod_owner:relabel{workload!=\"\" ADDITIONAL_LABEL}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+        }
+      ]
+    }
+  ]
+}
+```
+</details>
+
+```json
+{
+  "message": "MetadataProfile name in URL: cluster-metadata-local-monitoring, does not match name in request body: cluster-metadata-local-monitoring1",
+  "httpcode": 400,
+  "documentationLink": "",
+  "status": "ERROR"
+}
+```
+
+</details>
+
+<br>
+
 <a name="create-experiment-api"></a>
 
 ### Create Experiment API
@@ -2685,7 +2897,7 @@ If no experiment type is specified, it will default to `container`.
   "kubernetes_objects": [
     {
         "namespaces": {
-            "namespace_name": "test-multiple-import"
+            "namespace": "test-multiple-import"
       }
     }
   ],
@@ -2745,13 +2957,42 @@ If no experiment type is specified, it will default to `container`.
 
 **Request with `model_settings` and `term_settings` field**
 
-Under `recommendation_settings`, the `model_settings` and `term_settings` fields are optional 
-but can be used to specify model and term details. Currently, for monitoring mode user can set
-model as cost and/or performance and terms can be set to short, medium and/or long term.
-By default, it provides recommendations for all three terms and both models.
+Kruize provides both cost and performance recommendations by default,
+but users often have specific optimization goals. For example, if you're only focused on performance, 
+showing cost-related suggestions can lead to confusion and clutter.
 
-If mode is set to auto or recreate then there can only be one term and one model chosen.
-By default, model will be `performance` and term will be set to `short` term.
+So to streamline the user experience, you can now customize the recommendation_settings in your YAML to specify:
+- Models: performance, cost, or a custom model using CPU, memory, and GPU percentiles
+- Terms: short_term, medium_term, or long_term
+
+In monitoring mode, multiple models and terms are supported. By default, it provides recommendations for both models across all three terms.
+In auto or recreate mode, only one model and one term can be set—defaulting to performance and short_term if omitted.
+
+#### How to specify your Custom Model
+
+Under model_settings:
+
+- "models": ["balance"] defines the name of your custom model. This list can have multiple model names as well.
+- "model_tunables" specifies how the model behaves.  For instance, in this example, recommendations will be generated based on the 92nd percentile for CPU, 89th percentile for Memory and the 100th percentile for Accelerators.
+
+```json
+"recommendation_settings": {
+  "threshold": "0.1",
+  "model_settings": {
+    "models": ["balance"],
+    "model_tunables": {
+      "balance": {
+        "memory_percentile": 89,
+        "cpu_percentile": 92,
+        "accelerator_percentile": 100
+      }
+    }
+  },
+  "term_settings": {
+    "terms": ["short"]
+  }
+}
+```
 
 <details>
   <summary><b>Example Request with custom model_settings and term_settings </b></summary>
@@ -2791,7 +3032,13 @@ By default, model will be `performance` and term will be set to `short` term.
     "recommendation_settings": {
       "threshold": "0.1",
       "model_settings": {
-        "models": ["cost"]
+        "models": ["balance"],
+        "model_tunables": {
+          "balance":{
+            "memory_percentile": 89,
+            "cpu_percentile": 92,
+            "accelerator_percentile": 100
+          }
       },
       "term_settings": {
         "terms": ["short"]
@@ -3993,7 +4240,7 @@ When `interval_end_time` is not specified, Kruize will determine the latest time
         "namespace": "default",
         "containers": [],
         "namespaces": {
-          "namespace_name": "default",
+          "namespace": "default",
           "recommendations": {
             "version": "1.0",
             "notifications": {

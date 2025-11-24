@@ -57,6 +57,8 @@ public class Analyzer {
         context.addServlet(ListRecommendations.class, ServerContext.RECOMMEND_RESULTS);
         context.addServlet(PerformanceProfileService.class, ServerContext.CREATE_PERF_PROFILE);
         context.addServlet(PerformanceProfileService.class, ServerContext.LIST_PERF_PROFILES);
+        context.addServlet(PerformanceProfileService.class, ServerContext.UPDATE_PERF_PROFILE);
+        context.addServlet(PerformanceProfileService.class, ServerContext.DELETE_PERF_PROFILE);
         context.addServlet(MetricProfileService.class, ServerContext.CREATE_METRIC_PROFILE);
         context.addServlet(MetricProfileService.class, ServerContext.LIST_METRIC_PROFILES);
         context.addServlet(MetricProfileService.class, ServerContext.DELETE_METRIC_PROFILE);
@@ -66,6 +68,7 @@ public class Analyzer {
         context.addServlet(MetadataProfileService.class, ServerContext.CREATE_METADATA_PROFILE);
         context.addServlet(MetadataProfileService.class, ServerContext.LIST_METADATA_PROFILES);
         context.addServlet(MetadataProfileService.class, ServerContext.DELETE_METADATA_PROFILE);
+        context.addServlet(MetadataProfileService.class, ServerContext.UPDATE_METADATA_PROFILE);
 
         // Adding UI support API's
         context.addServlet(ListNamespaces.class, ServerContext.LIST_NAMESPACES);

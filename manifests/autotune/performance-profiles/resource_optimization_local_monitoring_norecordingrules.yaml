@@ -376,10 +376,10 @@ slo:
       query: 'max(last_over_time(timestamp((sum by (namespace) (container_cpu_usage_seconds_total{namespace="$NAMESPACE$"})) > 0 )[15d:]))'
 
 
-    # GPU Related metrics
+  # GPU Related metrics
 
-    # GPU Core Usage
-  - name: gpuCoreUsage
+  # GPU Core Usage
+  - name: acceleratorCoreUsage
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
@@ -397,8 +397,8 @@ slo:
       - function: min
         query: 'min by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (min_over_time(DCGM_FI_DEV_GPU_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
 
-    # GPU Memory usage
-  - name: gpuMemoryUsage
+  # GPU Memory usage
+  - name: acceleratorMemoryUsage
     datasource: prometheus
     value_type: "double"
     kubernetes_object: "container"
@@ -415,4 +415,22 @@ slo:
       # Minimum of GPU Memory Usage  Percentage for a container in a deployment
       - function: min
         query: 'min by (Hostname,device,modelName,UUID,exported_container,exported_namespace) (min_over_time(DCGM_FI_DEV_MEM_COPY_UTIL{exported_namespace="$NAMESPACE$",exported_container="$CONTAINER_NAME$"}[$MEASUREMENT_DURATION_IN_MIN$m])'
-      
+
+  # GPU Frame Buffer Usage
+  - name: acceleratorFrameBufferUsage
+    datasource: prometheus
+    value_type: "double"
+    kubernetes_object: "container"
+
+    aggregation_functions:
+      # Average Frame Buffer Usage per GPU
+      - function: avg
+        query: 'avg by (Hostname,device,GPU_I_PROFILE,modelName,UUID) (avg_over_time(DCGM_FI_DEV_FB_USED{UUID="$UUID$"}[$MEASUREMENT_DURATION_IN_MIN$m]))'
+
+      # Maximum Frame Buffer Usage per GPU
+      - function: max
+        query: 'max by (Hostname,device,GPU_I_PROFILE,modelName,UUID) (max_over_time(DCGM_FI_DEV_FB_USED{UUID="$UUID$"}[$MEASUREMENT_DURATION_IN_MIN$m]))'
+
+      # Minimum Frame Buffer Usage per GPU
+      - function: min
+        query: 'min by (Hostname,device,GPU_I_PROFILE,modelName,UUID) (min_over_time(DCGM_FI_DEV_FB_USED{UUID="$UUID$"}[$MEASUREMENT_DURATION_IN_MIN$m]))'

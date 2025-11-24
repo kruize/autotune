@@ -179,14 +179,12 @@ public class ExperimentDBService {
     }
 
     public void loadAllPerformanceProfiles(Map<String, PerformanceProfile> performanceProfileMap) throws Exception {
-        if (performanceProfileMap.isEmpty()) {
-            List<KruizePerformanceProfileEntry> entries = experimentDAO.loadAllPerformanceProfiles();
-            if (null != entries && !entries.isEmpty()) {
-                List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertPerformanceProfileEntryToPerformanceProfileObject(entries);
-                if (!performanceProfiles.isEmpty()) {
-                    performanceProfiles.forEach(performanceProfile ->
-                            PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile));
-                }
+        List<KruizePerformanceProfileEntry> entries = experimentDAO.loadAllPerformanceProfiles();
+        if (null != entries && !entries.isEmpty()) {
+            List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters.convertPerformanceProfileEntryToPerformanceProfileObject(entries);
+            if (!performanceProfiles.isEmpty()) {
+                performanceProfiles.forEach(performanceProfile ->
+                        PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile));
             }
         }
     }
@@ -395,6 +393,23 @@ public class ExperimentDBService {
     }
 
     /**
+     * Updates Performance Profile in KruizePerformanceProfileEntry
+     *
+     * @param performanceProfile PerformanceProfile object to be updated
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData updatePerformanceProfileInDB(PerformanceProfile performanceProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
+            validationOutputData = this.experimentDAO.updatePerformanceProfileInDB(kruizePerformanceProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error("Not able to update Performance Profile due to {}", e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
      * Adds Metric Profile to kruizeMetricProfileEntry
      *
      * @param metricProfile Metric profile object to be added
@@ -424,6 +439,23 @@ public class ExperimentDBService {
             validationOutputData = this.experimentDAO.addMetadataProfileToDB(kruizeMetadataProfileEntry);
         } catch (Exception e) {
             LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.ADD_METADATA_PROFILE_TO_DB_ERROR, e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Updates Metadata Profile in kruizeLMMetadataProfileEntry
+     *
+     * @param metadataProfile Metadata profile object to be updated
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData updateMetadataProfileToDB(MetadataProfile metadataProfile) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeLMMetadataProfileEntry kruizeMetadataProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetadataProfileObjToMetadataProfileDBObj(metadataProfile);
+            validationOutputData = this.experimentDAO.updateMetadataProfileToDB(kruizeMetadataProfileEntry);
+        } catch (Exception e) {
+            LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.UPDATE_METADATA_PROFILE_FROM_DB_ERROR, e.getMessage());
         }
         return validationOutputData;
     }
@@ -804,5 +836,13 @@ public class ExperimentDBService {
             return null;
         else
             return dataSourceMetadataInfoList.get(0);
+    }
+
+    public boolean updateExperimentDates(Set<String> experimentNames, Timestamp currentTimestamp) throws Exception {
+        return experimentDAO.updateExperimentDates(experimentNames, currentTimestamp);
+    }
+
+    public Long getExperimentsCountFromDBByProfileName(String perfProfileName) throws Exception {
+        return experimentDAO.getExperimentsCountFromDBByProfileName(perfProfileName);
     }
 }
