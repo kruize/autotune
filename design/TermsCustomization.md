@@ -42,9 +42,9 @@ The feature is implemented within the `recommendation_settings` section of the *
 
 ### Term Parameters
 
-| Parameter                | Type   | Required                          | Description                                                                                              |
-| ------------------------ | ------ | --------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| **`duration_in_days`** | Double | **Mandatory for user-defined terms** | Defines the total lookback window (in days) for historical data.                                          |
-| **`duration_threshold`** | String | Optional                          | Minimum data required to generate a recommendation. |
-| **`plots_datapoint`** | Integer| Optional                          | Number of data points for plots. Defaults to one point per day.                                          |
-| **`plots_datapoint_delta_in_days`** | Double | Optional                          | Time interval (in days) between plot points.                                           |
+| Parameter                | Type   | Required                          | Description                                                                             |
+| ------------------------ | ------ | --------------------------------- |-----------------------------------------------------------------------------------------|
+| **`duration_in_days`** | Double | **Mandatory for user-defined terms** | Defines the total lookback window (in days) for historical data.                        |
+| **`duration_threshold`** | String | Optional                          | Minimum data required to generate a recommendation.                                     |
+| **`plots_datapoint`** | Integer| Optional                          | Number of data points for plots. Defaults to one point per day except short/daily term. |
+| **`plots_datapoint_delta_in_days`** | Double | Optional                          | Time interval (in days) between plot points.                                            |
