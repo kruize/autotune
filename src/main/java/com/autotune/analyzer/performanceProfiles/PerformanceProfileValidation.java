@@ -156,8 +156,10 @@ public class PerformanceProfileValidation {
                         SloInfo existingSLOData = existingPerformanceProfile.getSloInfo();
                         SloInfo newSLOData = performanceProfile.getSloInfo();
 
-                        Gson gson = new GsonBuilder().create();
-                        if (gson.toJson(existingSLOData).equals(gson.toJson(newSLOData))) {
+                        ObjectMapper om = new ObjectMapper();
+                        JsonNode existingSLOJson = om.valueToTree(existingSLOData);
+                        JsonNode newSLOJson = om.valueToTree(newSLOData);
+                        if (newSLOJson.equals(existingSLOJson)) {
                             errorString.append(String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_SLO_ALREADY_UPDATED,
                                     performanceProfile.getName()));
                             return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
