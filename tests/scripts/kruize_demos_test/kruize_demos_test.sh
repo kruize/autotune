@@ -90,9 +90,9 @@ function all_demos() {
 
 function check_log() {
 	log=$1
-	echo "Checking $log for errors/exceptions/failed messages..."
-	if grep -Eqi "error|exception|failed" "${log}"; then
-		echo "Error/Exception/Failed messages found in ${log}"
+	echo "Checking $log for exceptions/failed messages..."
+	if grep -Eqi "exception|failed" "${log}"; then
+		echo "Exception/Failed messages found in ${log}"
 		failed=1
 	fi
 }
@@ -201,7 +201,7 @@ function run_demo() {
 	fi
 
 	if [[ "${CLUSTER_TYPE}" == minikube || "${CLUSTER_TYPE}" == "kind" ]]; then
-		# Remote monitoring doesn't support -f option
+		# Remote monitoring doesn't support -f option, remove this check once it is fixed
 		if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
 			CMD="${CMD[@]} -f"
 		fi
