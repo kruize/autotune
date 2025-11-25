@@ -46,7 +46,9 @@ def test_list_performance_profiles_empty(cluster_type):
     data = response.json()
     print("response = ", data)
     assert response.status_code == SUCCESS_200_STATUS_CODE
-    assert data['message'] == LIST_PERF_PROFILE_NO_PROFILES_MSG
+    # Assert the response is an empty list
+    assert isinstance(data, list)
+    assert len(data) == 0
 
 
 @pytest.mark.perf_profile
@@ -56,21 +58,18 @@ def test_list_performance_profiles_single(cluster_type):
     """
 
     form_kruize_url(cluster_type)
+    perf_profile_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+    # Delete any existing profile
+    response = delete_performance_profile(perf_profile_json_file)
+    print("delete API status code = ", response.status_code)
+    data = response.json()
+    print("delete API status message  = ", data["message"])
 
-    # Create one profile
-    profile_name = "single-profile-test"
-    tmp_json = "/tmp/perf_profile_single.json"
-
-    base_file = perf_profile_dir / "resource_optimization_openshift.json"
-    with open(base_file) as f:
-        data = json.load(f)
-    data["name"] = profile_name
-
-    with open(tmp_json, "w") as f:
-        json.dump(data, f, indent=2)
-
-    # Create performance profile using the specified json
-    response = create_performance_profile(tmp_json)
+    with open(perf_profile_json_file, "r") as f:
+        json_data = json.load(f)
+    profile_name = json_data["name"]
+    # Create one performance profile using the specified json
+    response = create_performance_profile(perf_profile_json_file)
 
     data = response.json()
     print(data['message'])
@@ -107,15 +106,19 @@ def test_list_performance_profiles_multiple(cluster_type):
     """
 
     form_kruize_url(cluster_type)
+    perf_profile_json_file = perf_profile_dir / 'resource_optimization_openshift.json'
+    # Delete any existing profile
+    response = delete_performance_profile(perf_profile_json_file)
+    print("delete API status code = ", response.status_code)
+    data = response.json()
+    print("delete API status message  = ", data["message"])
 
     names = ["profile-A", "profile-B", "profile-C"]
-
-    base_file = perf_profile_dir / "resource_optimization_openshift.json"
 
     # Create 3 profiles
     for name in names:
         tmp_file = f"/tmp/{name}.json"
-        with open(base_file) as f:
+        with open(perf_profile_json_file) as f:
             data = json.load(f)
         data["name"] = name
         with open(tmp_file, "w") as f:
@@ -138,8 +141,6 @@ def test_list_performance_profiles_multiple(cluster_type):
         errorMsg = validate_list_metric_profiles_json([profile], list_metric_profiles_schema)
         assert errorMsg == ""
 
-    print("Profiles returned:", profiles)
-
     assert isinstance(profiles, list)
     assert len(profiles) >= 3
 
@@ -147,3 +148,11 @@ def test_list_performance_profiles_multiple(cluster_type):
     returned_names = [p["name"] for p in profiles]
     for n in names:
         assert n in returned_names
+
+    # Delete all the profiles created above
+    for n in names:
+        tmp_file = f"/tmp/{n}.json"
+        response = delete_performance_profile(tmp_file)
+        print("delete API status code = ", response.status_code)
+        data = response.json()
+        print("delete API status message  = ", data["message"])
