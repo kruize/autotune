@@ -30,9 +30,6 @@ public class BulkServiceValidation {
                 payload.getTime_range().getEnd()), jobID);
         if (validationOutputData != null) return validationOutputData;
 
-        validationOutputData = buildErrorOutput(validateRequestId(payload.getRequestId()), jobID);
-        if (validationOutputData != null) return validationOutputData;
-
         validationOutputData = buildErrorOutput(validateOneToOneMapping(jobID, payload), jobID);
         if (validationOutputData != null) return validationOutputData;
 
@@ -95,16 +92,6 @@ public class BulkServiceValidation {
         } catch (Exception ex) {
             errorMessage = ex.getMessage();
             LOGGER.error(errorMessage);
-        }
-        return errorMessage;
-    }
-
-    public static String validateRequestId(String requestId) {
-        String errorMessage = "";
-        if (requestId == null) {
-            errorMessage = KruizeConstants.KRUIZE_BULK_API.MISSING_REQUEST_ID;
-        } else if (!requestId.matches("^[a-zA-Z0-9]{36}$")) {
-            errorMessage = KruizeConstants.KRUIZE_BULK_API.INVALID_REQUEST_ID;
         }
         return errorMessage;
     }
