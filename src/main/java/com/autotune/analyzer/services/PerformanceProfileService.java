@@ -126,12 +126,13 @@ public class PerformanceProfileService extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         String gsonStr = "[]";
         // Fetch all profiles from the DB
+        Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
         try {
             new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
         } catch (Exception e) {
             LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
         }
-        if (performanceProfilesMap.size() > 0) {
+        if (!performanceProfilesMap.isEmpty()) {
             Collection<PerformanceProfile> values = performanceProfilesMap.values();
             Gson gsonObj = new GsonBuilder()
                     .disableHtmlEscaping()
