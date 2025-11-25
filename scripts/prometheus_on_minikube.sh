@@ -23,7 +23,7 @@ non_interactive=0
 setup=1
 
 # Prometheus release default
-tag="v0.8.0"
+tag="v0.16.0"
 
 function install_prometheus() {
 	echo
@@ -69,9 +69,9 @@ function install_prometheus() {
 		pushd kube-prometheus/manifests >/dev/null
 		echo
 		echo "Info: Installing prometheus"
-		kubectl apply -f setup
+		kubectl apply --server-side -f setup
 		check_err "Error: Unable to setup prometheus"
-		kubectl apply -f .
+		kubectl apply --server-side -f .
 		check_err "Error: Unable to install prometheus"
 		popd >/dev/null
 	popd >/dev/null
