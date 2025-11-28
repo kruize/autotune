@@ -19,25 +19,19 @@ Recommendations are generated for:
 
 Kruize supports both predefined terms (short, medium, long) and custom terms, allowing recommendations to align with your desired observation window. You can also choose between performance-optimized or cost-optimized profiles based on your workload priorities.
 
-## Prerequisites
-Ensure you have one of the clusters: kind, minikube, or openShift.
 
 ## Quick Start
 This guide provides step-by-step instructions for manual setup. For automated setup, skip to the section below.
 
 ### Clone Repositories
-Clone the Autotune Repository
-- Clone the kruize repository using the following command :
+Clone the Autotune & Benchmarks Repository using the following commands:
 
 ```angular2html
 git clone git@github.com:kruize/autotune.git
+git clone git@github.com:kruize/benchmarks.git
+cd autotune
 ```
-### Clone the Kruize Benchmarks Repository
 
-- Clone the kruize benchmarks repository using the following command:
-```angular2html
-$ git clone git@github.com:kruize/benchmarks.git
-```
 Kruize can be installed on kind, minikube or OpenShift, over here we are using kind to show the installation process.
 
 ### Installing Kind/Minikube/OpenShift 
@@ -52,13 +46,11 @@ Kruize can be installed on kind, minikube or OpenShift, over here we are using k
 
 - For Kind: 
 ```angular2html
-cd autotune
 ./scripts/prometheus_on_kind.sh -as
 ```
 
 - For Minikube:
 ```angular2html
-cd autotune
 ./scripts/prometheus_on_minikube.sh -as
 ```
 - For OpenShift: Prometheus is typically pre-installed.
@@ -93,6 +85,8 @@ kubectl port-forward svc/prometheus-k8s -n monitoring 9090:9090 &
 KRUIZE_URL="localhost:8080"
 ```
 ### Install Metric and Metadata Profiles
+Metric Profile: Defines which performance metrics (CPU, memory, etc.) to collect from Prometheus and how to query them.
+
 
 Install metric profile
 
@@ -100,6 +94,8 @@ Install metric profile
 curl -X POST http://${KRUIZE_URL}/createMetricProfile \
   -d @autotune/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json
 ```
+Metadata Profile: Specifies cluster metadata to collect, such as node information, capacity, and resource limits.
+
 Install metadata profile
 ```angular2html
 curl -X POST http://${KRUIZE_URL}/createMetadataProfile \
