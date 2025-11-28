@@ -57,7 +57,13 @@ Kruize can be installed on kind, minikube or OpenShift, over here we are using k
 
 ### Install Benchmarks (Optional)
 
-Follow [benchmarks installation](https://github.com/kruize/benchmarks) instructions for Techempower/Sysbench
+Installing Sysbench for this demo:
+
+```angular2html
+cd benchmarks/sysbench
+kubectl apply -f manifests/
+```
+Follow [benchmarks installation](https://github.com/kruize/benchmarks) instructions if your wish to install other benchmarks.
 
 ### Install Kruize
 
@@ -79,10 +85,10 @@ kubectl port-forward svc/kruize-ui-nginx-service -n monitoring 8081:8080 &
 
 # Prometheus (port 9090) - if needed
 kubectl port-forward svc/prometheus-k8s -n monitoring 9090:9090 &
-
 ```
+export the Kruize URL
 ```angular2html
-KRUIZE_URL="localhost:8080"
+export KRUIZE_URL="localhost:8080"
 ```
 ### Install Metric and Metadata Profiles
 Metric Profile: Defines which performance metrics (CPU, memory, etc.) to collect from Prometheus and how to query them.
@@ -118,14 +124,60 @@ curl --location http://${KRUIZE_URL}/dsmetadata \
 ### Create Experiment
 
 For container-level experiment
+
+This is the Create Experiment JSON having container related details which we will be using for demo. 
+```angular2html
+[{
+  "version": "v2.0",
+  "experiment_name": "monitor_sysbench",
+  "cluster_name": "default",
+  "performance_profile": "resource-optimization-local-monitoring",
+  "metadata_profile": "cluster-metadata-local-monitoring",
+  "mode": "monitor",
+  "target_cluster": "local",
+  "datasource": "prometheus-1",
+  "kubernetes_objects": [
+    {
+      "type": "deployment",
+      "name": "sysbench",
+      "namespace": "default",
+      "containers": [
+        {
+          "container_image_name": "quay.io/kruizehub/sysbench",
+          "container_name": "sysbench"
+        }
+      ]
+    }
+  ],
+  "trial_settings": {
+    "measurement_duration": "2min"
+  },
+  "recommendation_settings": {
+    "threshold": "0.1"
+  }
+}]
+```
+
 ```angular2html
 curl -X POST http://${KRUIZE_URL}/createExperiment \
--d @experiments/container_experiment_local.json
+-d @container_experiment_sysbench.json
 ```
 For namespace-level experiment
+
+In the above json change the experiment name & modify the Kubernetes object to :
+```angular2html
+"kubernetes_objects": [
+      {
+        "namespaces": {
+          "namespace": "default"
+        }
+      }
+    ]
+```
+
 ```angular2html
 curl -X POST http://${KRUIZE_URL}/createExperiment \
--d @experiments/namespace_experiment_local.json
+-d @namespace_experiment_sysbench.json
 ```
 
 ### Generate Recommendations
