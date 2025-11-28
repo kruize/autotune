@@ -20,7 +20,7 @@ Recommendations are generated for:
 Kruize supports both predefined terms (short, medium, long) and custom terms, allowing recommendations to align with your desired observation window. You can also choose between performance-optimized or cost-optimized profiles based on your workload priorities.
 
 
-## Quick Start
+## Getting Started
 This guide provides step-by-step instructions for manual setup. For automated setup, skip to the section below.
 
 ### Clone Repositories
@@ -55,7 +55,7 @@ Kruize can be installed on kind, minikube or OpenShift, over here we are using k
 ```
 - For OpenShift: Prometheus is typically pre-installed.
 
-### Install Benchmarks (Optional)
+### Install Benchmarks
 
 Installing Sysbench for this demo:
 
@@ -67,7 +67,6 @@ Follow [benchmarks installation](https://github.com/kruize/benchmarks) instructi
 
 ### Install Kruize
 
-Direct Installation (Kind/Minikube/OpenShift)
 ```angular2html
 ./deploy.sh -c <cluster-type> -m crc
 # cluster-type can be: kind, minikube, openshift
@@ -78,21 +77,21 @@ For Kind and Minikube clusters, you need to set up port forwarding to access Kru
 
 ```angular2html
 # Kruize API (port 8080)
-kubectl port-forward svc/kruize -n monitoring 8080:8080 &
+kubectl port-forward svc/kruize -n monitoring 8080:8080 
 
 # Kruize UI (port 8081)
-kubectl port-forward svc/kruize-ui-nginx-service -n monitoring 8081:8080 &
+kubectl port-forward svc/kruize-ui-nginx-service -n monitoring 8081:8081 
 
 # Prometheus (port 9090) - if needed
-kubectl port-forward svc/prometheus-k8s -n monitoring 9090:9090 &
+kubectl port-forward svc/prometheus-k8s -n monitoring 9090:9090 
 ```
-export the Kruize URL
+export the Kruize URL 
 ```angular2html
 export KRUIZE_URL="localhost:8080"
+export KRUIZE_UI="localhost:8081"
 ```
 ### Install Metric and Metadata Profiles
-Metric Profile: Defines which performance metrics (CPU, memory, etc.) to collect from Prometheus and how to query them.
-
+**Metric Profile**: Defines which performance metrics (CPU, memory, etc.) to collect from Prometheus.
 
 Install metric profile
 
@@ -100,7 +99,7 @@ Install metric profile
 curl -X POST http://${KRUIZE_URL}/createMetricProfile \
   -d @autotune/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json
 ```
-Metadata Profile: Specifies cluster metadata to collect, such as node information, capacity, and resource limits.
+**Metadata Profile**: Contains queries to collect namespace, workloads and containers data.
 
 Install metadata profile
 ```angular2html
@@ -109,6 +108,7 @@ curl -X POST http://${KRUIZE_URL}/createMetadataProfile \
 ```
 
 ### Import Metadata from Prometheus
+Using the Metadata profile queries dsmetadata api will fetch the cluster metadata.
 
 ```angular2html
 curl --location http://${KRUIZE_URL}/dsmetadata \
@@ -123,9 +123,9 @@ curl --location http://${KRUIZE_URL}/dsmetadata \
 
 ### Create Experiment
 
-For container-level experiment
+- For container-level experiment
 
-This is the Create Experiment JSON having container related details which we will be using for demo. 
+This is the Create Experiment JSON having container related details. 
 ```angular2html
 [{
   "version": "v2.0",
@@ -157,12 +157,12 @@ This is the Create Experiment JSON having container related details which we wil
   }
 }]
 ```
-
+Command to create experiment:
 ```angular2html
 curl -X POST http://${KRUIZE_URL}/createExperiment \
 -d @container_experiment_sysbench.json
 ```
-For namespace-level experiment
+- For namespace-level experiment
 
 In the above json change the experiment name & modify the Kubernetes object to :
 ```angular2html
@@ -174,7 +174,7 @@ In the above json change the experiment name & modify the Kubernetes object to :
       }
     ]
 ```
-
+Command to create namespace experiment:
 ```angular2html
 curl -X POST http://${KRUIZE_URL}/createExperiment \
 -d @namespace_experiment_sysbench.json
@@ -191,7 +191,13 @@ curl -X POST "http://${KRUIZE_URL}/generateRecommendations?experiment_name=<expe
 curl -X GET "http://${KRUIZE_URL}/listRecommendations?experiment_name=<experiment-name>"
 ```
 
-### Looking for a short-cut?
+You can also take a look at the UI to better understand recommendations 
+
+```angular2html
+http://${KRUIZE_UI}
+```
+
+### Quick Start
 
 Kruize has a demos repo that enables users to get a quick start without worrying about the setup and its a great first step for first time users. 
 You can start by running the [Local Monitoring demo](https://github.com/kruize/kruize-demos/tree/main/monitoring/local_monitoring).
