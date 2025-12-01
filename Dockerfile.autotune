@@ -20,7 +20,7 @@ FROM registry.access.redhat.com/ubi9/ubi-minimal:9.6-1760515502 as mvnbuild-jdk2
 ARG USER=autotune
 ARG AUTOTUNE_HOME=/home/$USER
 
-RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y java-25-openjdk-devel \
+RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y java-25-openjdk-devel.x86_64 \
              tar gzip java-25-openjdk-jmods binutils git vim \
      && microdnf clean all 
 
