@@ -25,12 +25,7 @@ public class BulkServiceValidation {
 
         ValidationOutputData validationOutputData;
 
-        validationOutputData = buildErrorOutput(validateTimeRange(
-                payload.getTime_range().getStart(),
-                payload.getTime_range().getEnd()), jobID);
-        if (validationOutputData != null) return validationOutputData;
-
-        validationOutputData = buildErrorOutput(validateOneToOneMapping(jobID, payload), jobID);
+        validationOutputData = buildErrorOutput(validateTimeRange(payload.getTime_range()), jobID);
         if (validationOutputData != null) return validationOutputData;
 
         validationOutputData = buildErrorOutput(validateDatasourceConnection(payload.getDatasource()), jobID);
@@ -48,29 +43,6 @@ public class BulkServiceValidation {
         return null;
     }
 
-
-
-    public static String validateOneToOneMapping(String jobID, BulkInput currentPayloadJson) throws Exception {
-        String errorMessage = "";
-        BulkInput existingPayload;
-        String existingPayloadRequestId;
-        String currentPayloadRequestId;
-        KruizeBulkJobEntry kruizeBulkJobEntry = new ExperimentDAOImpl().findBulkJobById(jobID);
-        if (null != kruizeBulkJobEntry) {
-            BulkJobStatus jobDetails = kruizeBulkJobEntry.getBulkJobStatus();
-            existingPayload = jobDetails.getSummary().getInput();
-            existingPayloadRequestId = jobDetails.getSummary().getInput().getRequestId();
-            currentPayloadRequestId = currentPayloadJson.getRequestId();
-
-            if (currentPayloadRequestId.equals(existingPayloadRequestId)) {
-                if (existingPayload != null && existingPayload.equals(currentPayloadJson)) {
-                    errorMessage = String.format(KruizeConstants.KRUIZE_BULK_API.DUPLICATE_REQ_ID_WITH_SAME_PAYLOAD, currentPayloadJson.getRequestId());
-                    LOGGER.error(errorMessage);
-                }
-            }
-        }
-        return errorMessage;
-    }
 
     public static String validateDatasourceConnection(String datasourceName) {
         String errorMessage = "";
@@ -96,11 +68,15 @@ public class BulkServiceValidation {
         return errorMessage;
     }
 
-    public static String validateTimeRange(String start, String end) {
+    public static String validateTimeRange(BulkInput.TimeRange timeRange) {
         String errorMessage = "";
+        if (timeRange == null) {
+            LOGGER.debug("No time range specified");
+            return errorMessage;
+        }
         try {
-            OffsetDateTime startTime = OffsetDateTime.parse(start);
-            OffsetDateTime endTime = OffsetDateTime.parse(end);
+            OffsetDateTime startTime = OffsetDateTime.parse(timeRange.getStart());
+            OffsetDateTime endTime = OffsetDateTime.parse(timeRange.getEnd());
 
             if (startTime.isAfter(endTime)) {
                 errorMessage = KruizeConstants.KRUIZE_BULK_API.INVALID_START_TIME;
