@@ -20,7 +20,6 @@ import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.workerimpl.BulkJobManager;
 import com.autotune.common.bulk.BulkServiceValidation;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.exceptions.bulk.BulkServiceException;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.table.lm.KruizeBulkJobEntry;
