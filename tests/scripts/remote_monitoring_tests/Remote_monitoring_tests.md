@@ -153,14 +153,13 @@ Here are the test scenarios:
 - Create performance profile with a valid version
 - Create performance profile with duplicate data
 - Create performance profile with missing mandatory fields
-- Create performance profile with missing mandatory fields
 
 ### **List Performance Profile API tests**
 
 Here are the test scenarios:
 - List performance profile with no profiles
 - List performance profile with only one profile present
-- List performance profile with only multiple profiles present
+- List performance profile with multiple profiles present
 
 ### **Update Performance Profile API tests**
 
