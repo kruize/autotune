@@ -23,7 +23,7 @@ non_interactive=0
 setup=1
 
 # Prometheus release default
-tag="v0.13.0"
+tag="v0.16.0"
 
 function install_prometheus() {
 	echo
