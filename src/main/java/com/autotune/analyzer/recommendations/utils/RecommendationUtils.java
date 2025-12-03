@@ -495,6 +495,18 @@ public class RecommendationUtils {
 
         if (modelName.contains("H100") && modelName.contains("80GB"))
             return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_80_GB;
+        // NOTE: Not tested in real time, checks for predictable strings in device name
+        if (modelName.contains("H200"))
+            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H200_141_GB;
+        // NOTE: Not tested in real time, checks for predictable strings in device name
+        if (modelName.contains("B200"))
+            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.B200_180_GB;
+        // NOTE: Not tested in real time, checks for predictable strings in device name
+        if (modelName.contains("RTX") && modelName.contains("PRO") && modelName.contains("5000"))
+            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.BW_RTX_PRO_5000_48_GB;
+        // NOTE: Not tested in real time, checks for predictable strings in device name
+        if (modelName.contains("RTX") && modelName.contains("PRO") && modelName.contains("6000"))
+            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.BW_RTX_PRO_6000_96_GB;
 
         return null;
     }
