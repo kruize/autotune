@@ -14,8 +14,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-### Script to run fault tolerant tests with Kruize in local monitoring mode ##
-#
+### Script to run all the kruize demos ###
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_DEMO_REPO="${CURRENT_DIR}/kruize-demos"
@@ -210,6 +209,12 @@ function run_demo() {
 	# Add -k option to deploy kruize using manifests
 	if [[ "${KRUIZE_OPERATOR}" -eq 0 ]]; then
 		CMD="${CMD[@]} -k"
+	elif
+		# Since Bulk Demo doesn't work with Kruize operator use deploy script to install kruize using -k option
+		# This can be removed once it is fixed
+		if [ "${DEMO_NAME}" != "bulk" ]; then
+			CMD="${CMD[@]} -k"
+		fi
 	fi
 
 	if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
