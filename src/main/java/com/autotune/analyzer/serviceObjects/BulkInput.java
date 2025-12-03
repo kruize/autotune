@@ -174,6 +174,7 @@ public class BulkInput {
             this.end = end;
         }
 
+        @JsonIgnore
         public boolean isEmpty() {
             return (start == null && end == null);
         }
