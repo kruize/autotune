@@ -19,6 +19,11 @@ import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
 
+/**
+ * Represents the configuration for a recommendation term.
+ * Supports duration-based (duration_in_days) or timestamp-based (start/end timestamps) definitions,
+ * with optional time-window filtering via days_of_week and daily time ranges.
+ */
 public class TermDefinition {
 
     @SerializedName("duration_in_days")

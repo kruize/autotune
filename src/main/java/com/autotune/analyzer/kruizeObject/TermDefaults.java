@@ -23,15 +23,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * A utility class that holds the default configurations for all predefined recommendation terms.
- * This provides a single source of truth for term settings like duration, data thresholds, and plotting parameters.
+ * Provides default configurations for all 10 predefined recommendation terms including calendar-based terms
+ * (daily, weekly, 15 days, monthly, quarterly, half_yearly, yearly) and legacy aliases (short_term, medium_term, long_term).
  */
 public final class TermDefaults {
 
-    /**
-     * An unmodifiable, static map containing the default TermDefinition for each standard term.
-     * The keys are the lowercase names of the user-facing terms (e.g., "daily", "weekly").
-     */
     public static final Map<String, TermDefinition> DEFAULTS;
 
     static {

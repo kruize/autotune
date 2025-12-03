@@ -20,6 +20,10 @@ import com.google.gson.annotations.SerializedName;
 import java.util.HashMap;
 import java.util.List;
 
+/**
+ * Container for term configurations in recommendation settings.
+ * Contains a list of term names and their detailed definitions for custom terms.
+ */
 public class TermSettings {
     @SerializedName("terms")
     private List<String> terms;
