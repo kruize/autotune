@@ -286,9 +286,11 @@ public class BulkService extends HttpServlet {
             // Generate a unique jobID
             String jobID = UUID.randomUUID().toString();
             // validate the input params
-            ValidationOutputData validationOutputData = BulkServiceValidation.validate(payload, jobID);
-            if (!validationOutputData.isSuccess()) {
-                throw new Exception(validationOutputData.getMessage());
+            if (payload != null && !payload.isEmpty()) {
+                ValidationOutputData validationOutputData = BulkServiceValidation.validate(payload, jobID);
+                if (!validationOutputData.isSuccess()) {
+                    throw new Exception(validationOutputData.getMessage());
+                }
             }
             BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now(), payload);
 
@@ -334,7 +336,6 @@ public class BulkService extends HttpServlet {
             IOException {
         if (null != e) {
             LOGGER.error(e.toString());
-            e.printStackTrace();
             if (null == errorMsg) errorMsg = e.getMessage();
         }
         response.sendError(httpStatusCode, errorMsg);

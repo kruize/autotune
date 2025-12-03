@@ -28,7 +28,9 @@ public class BulkServiceValidation {
         validationOutputData = buildErrorOutput(validateTimeRange(payload.getTime_range()), jobID);
         if (validationOutputData != null) return validationOutputData;
 
-        validationOutputData = buildErrorOutput(validateDatasourceConnection(payload.getDatasource()), jobID);
+        if (payload.getDatasource() != null) {
+            validationOutputData = buildErrorOutput(validateDatasourceConnection(payload.getDatasource()), jobID);
+        }
 
         if (validationOutputData == null) {
             validationOutputData = new ValidationOutputData(true, "", 200);
@@ -57,7 +59,7 @@ public class BulkServiceValidation {
             }
             LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY, datasourceName);
             DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
-            if (op.isServiceable(dataSourceInfo) == CommonUtils.DatasourceReachabilityStatus.NOT_REACHABLE) {
+            if (dataSourceInfo == null || op.isServiceable(dataSourceInfo) == CommonUtils.DatasourceReachabilityStatus.NOT_REACHABLE) {
                 errorMessage = KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE;
                 LOGGER.error(errorMessage);
             }
@@ -70,7 +72,7 @@ public class BulkServiceValidation {
 
     public static String validateTimeRange(BulkInput.TimeRange timeRange) {
         String errorMessage = "";
-        if (timeRange == null) {
+        if (timeRange == null || timeRange.isEmpty()) {
             LOGGER.debug("No time range specified");
             return errorMessage;
         }

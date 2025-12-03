@@ -43,6 +43,11 @@ public class BulkInput {
     public BulkInput() {
     }
 
+    public boolean isEmpty() {
+        return (filter == null && time_range == null && measurement_duration == null && metadata_profile == null
+                && datasource == null);
+    }
+
     public TimeRange getTime_range() {
         return time_range;
     }
@@ -165,6 +170,18 @@ public class BulkInput {
 
         public void setEnd(String end) {
             this.end = end;
+        }
+
+        public boolean isEmpty() {
+            return (start == null && end == null);
+        }
+
+        @Override
+        public String toString() {
+            return "TimeRange{" +
+                    "start='" + start + '\'' +
+                    ", end='" + end + '\'' +
+                    '}';
         }
     }
 
