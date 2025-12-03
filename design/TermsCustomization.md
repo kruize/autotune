@@ -25,7 +25,20 @@ To simplify usage, Kruize now supports two primary categories of terms, each wit
     - Users can optionally override this threshold by explicitly specifying `duration_threshold` in the configuration.
 
 Note: There is an upper limit to the number of terms user can specify and that is 3. 
----
+
+### Term Parameters
+
+| Parameter                                                                         | Type            | Required                                                                        | Description                                                                            |
+|-----------------------------------------------------------------------------------|-----------------|---------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| **`duration_in_days`**    OR  <br/> **`start_timestamp`** and **`end_timestamp`** | Double          | Either 'duration_in_days' or 'start_timestamp' and 'end_timestamp' is required. | Defines the total lookback window in days or in timestamps.                            |
+| **`duration_threshold`**                                                          | String          | Optional                                                                        | Minimum data required to generate a recommendation.                                    |
+| **`plots_datapoint`**                                                             | Integer         | Optional                                                                        | Number of data points for plots. Defaults to one point per day except short/daily term. |
+| **`plots_datapoint_delta_in_days`**                                               | Double          | Optional                                                                        | Time interval (in days) between plot points.                                           |
+| **`days_of_week`**                                                                | Array of String | Optional                                                                        | Specifies which days (e.g., mon, tue) the term should be active for.                   |
+| **`daily_start_time`**                                                            | String(HH:MM)   | Optional                                                                        | The start time (daily) for data collection (e.g., "07:00").                            |
+| **`daily_end_time`**                                                              | String(HH:MM)   | Optional                                                                        | The end time (daily) for data collection (e.g., "19:00").                              |
+
+
 
 ## API Implementation — `term_settings` Object
 
@@ -60,19 +73,4 @@ The feature is implemented within the `recommendation_settings` section of the *
 }
 ```
 
-Note: start_timestamp and end_timestamp can be used as an alternative to duration_in_days and vice versa. Only one approach is permitted per term.
-
-### Term Parameters
-
-| Parameter                           | Type            | Required                          | Description                                                                             |
-|-------------------------------------|-----------------| --------------------------------- |-----------------------------------------------------------------------------------------|
-| **`duration_in_days`**              | Double          | Mandatory if ‘start_timestamp’ and ‘end_timestamp’ not mentioned | Defines the total lookback window (in days) for historical data.                        |
-| **`duration_threshold`**            | String          | Optional                          | Minimum data required to generate a recommendation.                                     |
-| **`plots_datapoint`**               | Integer         | Optional                          | Number of data points for plots. Defaults to one point per day except short/daily term. |
-| **`plots_datapoint_delta_in_days`** | Double          | Optional                          | Time interval (in days) between plot points.                                            |
-| **`start_timestamp`**               | String          | Mandatory if `duration_in_days` is not present  | Lookback start time. Must be in UTC ISO 8601 format.                                         |  
-| **`end_timestamp`**                 | String          | Mandatory if `duration_in_days` is not present  | Lookback end time. Must be in UTC ISO 8601 format and logically after `start_timestamp`.                                           |
-| **`days_of_week`**                  | Array of String | Optional                          | Specifies which days (e.g., mon, tue) the term should be active for.                                            |
-| **`daily_start_time`**              | String(HH:MM)   | Optional                          | The start time (daily) for data collection (e.g., "07:00").                             |
-| **`daily_end_time`**                | String(HH:MM)   | Optional                          | The end time (daily) for data collection (e.g., "19:00").                               |
 

@@ -1,4 +1,4 @@
-    # Create Experiment
+# Create Experiment
 
 Client will invoke the Kruize createExperiment API for each deployment + namespace. Documentation still in progress stay
 tuned.
