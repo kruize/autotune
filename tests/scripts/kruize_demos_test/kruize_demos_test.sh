@@ -209,7 +209,7 @@ function run_demo() {
 	# Add -k option to deploy kruize using manifests
 	if [[ "${KRUIZE_OPERATOR}" -eq 0 ]]; then
 		CMD="${CMD[@]} -k"
-	elif
+	else
 		# Since Bulk Demo doesn't work with Kruize operator use deploy script to install kruize using -k option
 		# This can be removed once it is fixed
 		if [ "${DEMO_NAME}" != "bulk" ]; then
