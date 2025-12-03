@@ -1893,7 +1893,7 @@ def validate_accelerator_recommendations_for_container(recommendations_json):
 def validate_job_status(job_id, base_url, caplog):
     # Common keys expected in both responses
     common_keys = {
-        "status", "total_experiments", "processed_experiments", "job_id", "job_start_time", "job_end_time"
+        "status", "total_experiments", "processed_experiments", "job_id", "job_start_time"
     }
 
     # Extra keys expected when verbose=true

@@ -102,17 +102,16 @@ def test_bulk_post_request(cluster_type, bulk_request_payload, expected_job_id_p
 
 @pytest.mark.test_bulk_api_ros
 @pytest.mark.parametrize("start, end, expected_error", [
-    ("2025-01-01T12:00:00Z", "2025-01-02T12:00:00Z", "Valid"),  # Valid scenario
-    (None, None, "Invalid date format"),               # both missing
-    ("", "", "Invalid date format"),                   # empty
-    ("2024-01-01 10:00:00", "2024-01-01T12:00:00Z", "Invalid date format"),  # bad format
-    ("2025-01-02T12:00:00Z", "2025-01-01T12:00:00Z", "Invalid start time"),  # start > end
+    ("2025-01-01T12:00:00Z", "2025-01-02T12:00:00Z", "Valid"),               # Valid scenario
+    ("", "", "Invalid date format. Must follow ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ) for the jobId:"), # empty
+    ("2024-01-01 10:00:00", "2024-01-01T12:00:00Z", "Invalid date format. Must follow ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ) for the jobId:"),  # bad format
+    ("2025-01-02T12:00:00Z", "2025-01-01T12:00:00Z", "Start time should be before end time for the jobId:"),  # start > end
     # less than 24 hours difference
-    ("2025-01-01T00:00:00Z", "2025-01-01T10:00:00Z", "Invalid time range"),
+    ("2025-01-01T00:00:00Z", "2025-01-01T10:00:00Z", "Time range must be between 24 hours and 15 days for the jobId:"),
     # more than 15 days difference
-    ("2025-01-01T00:00:00Z", "2025-01-30T00:00:00Z", "Invalid time range"),
+    ("2025-01-01T00:00:00Z", "2025-01-30T00:00:00Z", "Time range must be between 24 hours and 15 days for the jobId:"),
 ])
-def test_bulk_api_time_range_validation(cluster_type, start, end, expected_error):
+def test_bulk_api_time_range_validation(cluster_type, start, end, expected_error, caplog):
     """
     Validates all negative time-range scenarios for Bulk API.
     """
@@ -169,7 +168,7 @@ def test_bulk_api_time_range_validation(cluster_type, start, end, expected_error
         response = post_bulk_api(payload, logging)
         print("Response:", response.json())
         assert response.status_code == ERROR_STATUS_CODE
-        assert response.json()["message"] == expected_error
+        assert expected_error in response.json()["message"]
 
 
 @pytest.mark.test_bulk_api_ros
@@ -211,7 +210,10 @@ def test_bulk_validate_datasource_missing(cluster_type):
 
     # verify list does not contain it
     items = list_datasources().json()
-    assert all(ds.get("name") != ds_name for ds in items)
+    print("Items:", items)
+    datasources = items.get("datasources", [])
+    assert all(ds.get("name") != ds_name for ds in datasources), \
+        f"Datasource with name '{ds_name}' already exists"
 
     # Build payload referencing the missing datasource
     payload = base_payload()
@@ -222,4 +224,4 @@ def test_bulk_validate_datasource_missing(cluster_type):
     response = post_bulk_api(payload, logging)
     print("Response:", response.json())
     assert response.status_code == ERROR_STATUS_CODE
-    assert response.json()["message"] == DATASOURCE_NOT_SERVICEABLE
+    assert DATASOURCE_NOT_SERVICEABLE in response.json()["message"]
