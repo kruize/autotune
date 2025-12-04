@@ -25,6 +25,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.NamespaceData;
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -166,6 +167,15 @@ public class ExperimentValidation {
                             }
                         } else {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            proceed = false;
+                        }
+                        // check if the provided datasource name exists
+                        boolean dataSourceExists = DataSourceCollection.getInstance().getDataSourcesCollection().containsKey(kruizeObject.getDataSource());
+                        if (dataSourceExists) {
+                            LOGGER.debug("DataSource {} exists", kruizeObject.getDataSource());
+                        } else {
+                            errorMsg = String.format(AnalyzerErrorConstants.APIErrors.ListDataSourcesAPI.INVALID_DATASOURCE_NAME_MSG, kruizeObject.getDataSource());
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             proceed = false;
                         }
