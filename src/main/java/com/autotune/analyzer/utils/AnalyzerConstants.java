@@ -448,7 +448,7 @@ public class AnalyzerConstants {
             public static final String B200_PROFILE_7G_180GB = "7g.180gb";
 
             // RTX PRO 5000 Blackwell Profiles
-            public static final String RTX_PRO_5000_PROFILE_1G_12GB = "1g.12gb";
+            public static final String RTX_PRO_5000_PROFILE_1G_12GB = "1g.12gb-me";
             public static final String RTX_PRO_5000_PROFILE_2G_24GB = "2g.24gb-me";
             public static final String RTX_PRO_5000_PROFILE_4G_48GB = "4g.48gb+gfx";
 
