@@ -33,6 +33,9 @@ KRUIZE_OPERATOR_IMAGE="quay.io/kruize/autotune_operator:0.0.2"
 KRUIZE_OPERATOR=1
 failed=0
 
+KRUIZE_DEMOS_REPO="https://github.com/kruize/kruize-demos.git"
+KRUIZE_DEMOS_BRANCH="main"
+
 function usage() {
 	echo
 	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-k (use this option to deploy kruize using manifests]"
@@ -49,8 +52,8 @@ function get_kruize_pod_log() {
 	log=$1
 
 	# Fetch the kruize pod log
-	echo ""
-	echo "Fetch the kruize pod logs and store in ${log}..."
+	echo "" | tee -a ${LOG}
+	echo "Fetch the kruize pod logs and store in ${log}..." | tee -a ${LOG}
 	kruize_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
 	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
@@ -89,9 +92,10 @@ function all_demos() {
 
 function check_log() {
 	log=$1
-	echo "Checking $log for exceptions/failed messages..."
+	echo ""
+	echo "Checking $log for exceptions/failed messages..." | tee -a ${LOG}
 	if grep -Eqi "exception|failed" "${log}"; then
-		echo "Exception/Failed messages found in ${log}"
+		echo "Exception/Failed messages found in ${log}" | tee -a ${LOG}
 		failed=1
 	fi
 }
@@ -212,14 +216,12 @@ function run_demo() {
 	else
 		# Since Bulk Demo doesn't work with Kruize operator use deploy script to install kruize using -k option
 		# This can be removed once it is fixed
-		if [ "${DEMO_NAME}" != "bulk" ]; then
+		if [ "${DEMO_NAME}" == "bulk" ]; then
 			CMD="${CMD[@]} -k"
 		fi
 	fi
 
-	if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
-		CLEANUP_CMD="${CMD[@]} -t"
-	fi
+	CLEANUP_CMD="${CMD[@]} -t"
 
 	DEMO_LOG_DIR="${LOG_DIR}/${DEMO_NAME}"
 
@@ -243,6 +245,9 @@ function run_demo() {
 		# Cleanup before running the test
 		${CLEANUP_CMD[@]} | tee -a ${LOG}
 
+		# Sleep for a few seconds for cleanup to complete
+		sleep 60
+
 		${CMD[@]} | tee -a ${LOG}
 
 		# Copy the demo log to results dir
@@ -264,7 +269,7 @@ function run_demo() {
 			if [ -e "${reco_json}" ]; then
 				cp "${reco_json}" "${DEMO_LOG_DIR}/${reco_json}"
 				if ! grep -qi "Recommendations Are Available" ${reco_json}; then
-					echo "Recommendations not found, check ${DEMO_LOG_DIR}/${reco_json}"
+					echo "Recommendations not found, check ${DEMO_LOG_DIR}/${reco_json}" | tee -a ${LOG}
 					failed=1
 				fi
 			else
@@ -303,7 +308,7 @@ function run_demo() {
 	} | tee -a ${LOG}
 }
 
-while getopts c:r:i:o:t:kh gopts
+while getopts c:r:i:o:a:b:t:kh gopts
 do
 	case ${gopts} in
 	c)
@@ -317,6 +322,12 @@ do
 		;;
 	o)
 		KRUIZE_OPERATOR_IMAGE="${OPTARG}"		
+		;;
+	a)
+		KRUIZE_DEMOS_REPO="${OPTARG}"		
+		;;
+	b)
+		KRUIZE_DEMOS_BRANCH="${OPTARG}"		
 		;;
 	t)
 		demo="${OPTARG}"		
@@ -344,8 +355,14 @@ mkdir -p ${LOG_DIR}
 
 LOG="${LOG_DIR}/kruize-demos.log"
 
-# Clone kruize-demos repo
-clone_repos "kruize-demos"
+# Clone kruize-demos repo from the specified branch
+repo_name="kruize-demos"
+
+if [ ! -d ${repo_name} ]; then
+	echo "Cloning ${repo_name} git repo..." | tee -a ${LOG}
+	git clone -b ${KRUIZE_DEMOS_BRANCH} ${KRUIZE_DEMOS_REPO} > /dev/null 2> /dev/null
+	check_err "ERROR: git clone of kruize/${repo_name} failed." | tee -a ${LOG}
+fi
 
 # Change to demos dir
 cd kruize-demos/monitoring
