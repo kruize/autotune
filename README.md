@@ -19,8 +19,21 @@ Recommendations are generated for:
 
 Kruize supports both predefined terms (short, medium, long) and custom terms, allowing recommendations to align with your desired observation window. You can also choose between performance-optimized or cost-optimized profiles based on your workload priorities.
 
+## Quick Start
 
-## Getting Started
+Kruize has a demos repo that enables users to get a quick start without worrying about the setup and its a great first step for first time users.
+You can start by running the [Local Monitoring demo](https://github.com/kruize/kruize-demos/tree/main/monitoring/local_monitoring).
+
+We recommend you check out the [kruize-demos](https://github.com/kruize/kruize-demos) repo in case you want to know more about VPA demo, GPU demo, HPO demo and a lot more!
+
+## Pre-requisites
+You need access to any Kubernetes environment like Kind, Minikube, or OpenShift with Prometheus running in the cluster. 
+
+To install Prometheus use the following scripts for [Kind](/scripts/prometheus_on_kind.sh) or [Minikube](/scripts/prometheus_on_minikube.sh). OpenShift installs prometheus by default.
+
+Follow [benchmarks installation](https://github.com/kruize/benchmarks) instructions to install sysbench benchmark.
+
+## Generating Recommendations with Kruize
 This guide provides step-by-step instructions for manual setup. For automated setup, skip to the section below.
 
 ### Clone Repositories
@@ -33,37 +46,6 @@ cd autotune
 ```
 
 Kruize can be installed on kind, minikube or OpenShift, over here we are using kind to show the installation process.
-
-### Installing Kind/Minikube/OpenShift 
-
-- For Kind: Install kind if not already installed. [Kind Installation Docs](https://kind.sigs.k8s.io/docs/user/quick-start/)
-
-- For Minikube: Refer the following docs to [install minikube](https://minikube.sigs.k8s.io/docs/start/)
-
-- For OpenShift: Ensure you have an OpenShift cluster running and oc CLI configured.
-
-### Installing Prometheus
-
-- For Kind: 
-```angular2html
-./scripts/prometheus_on_kind.sh -as
-```
-
-- For Minikube:
-```angular2html
-./scripts/prometheus_on_minikube.sh -as
-```
-- For OpenShift: Prometheus is typically pre-installed.
-
-### Install Benchmarks
-
-Installing Sysbench for this demo:
-
-```angular2html
-cd benchmarks/sysbench
-kubectl apply -f manifests/
-```
-Follow [benchmarks installation](https://github.com/kruize/benchmarks) instructions if your wish to install other benchmarks.
 
 ### Install Kruize
 
@@ -197,24 +179,28 @@ You can also take a look at the UI to better understand recommendations
 http://${KRUIZE_UI}
 ```
 
-### Quick Start
-
-Kruize has a demos repo that enables users to get a quick start without worrying about the setup and its a great first step for first time users. 
-You can start by running the [Local Monitoring demo](https://github.com/kruize/kruize-demos/tree/main/monitoring/local_monitoring).
-
-We recommend you check out the [kruize-demos](https://github.com/kruize/kruize-demos) repo in case you want to know more about VPA demo, GPU demo, HPO demo and a lot more!
-
 
 ## Want to Explore Further ?
 If you are looking to:
 
-🔧 Deep dive into APIs and integration → Refer to Developer Guide (placeholder)
+🔧 Deep dive into APIs and integration → Refer to Developer Guide 
 
-🧩 Configure layers, tunables, and advanced runtime controls → Refer to Runtime Guide (placeholder)
+🧩 Configure layers, tunables, and advanced runtime controls → Refer to Runtime Guide
 
 ## Autotune Architecture
 
 See the [Autotune Architecture](/design/README.md) for more details on the architecture.
+
+## See Also
+If you're exploring more around Kruize, here are related repositories you may find useful:
+
+- [kruize-demos](https://github.com/kruize/kruize-demos) - Demo scripts to showcase Kruize functionality
+- [benchmarks](https://github.com/kruize/benchmarks) - Performance benchmarking workloads
+- [kruize-operator](https://github.com/kruize/kruize-operator) - Operator for deploying Kruize in your OpenShift or Kubernetes cluster.
+- [kruize-website](https://github.com/kruize/kruize-website) - Source code for the official Kruize website
+- [kruize-ui](https://github.com/kruize/kruize-ui) - User Interface to interact with Kruize backend
+- [hpo](https://github.com/kruize/hpo) - Hyperparameter Optimization framework
+- [kruize-vpa](https://github.com/kruize/kruize-vpa) - Vertical Pod Autoscaler integration for Kruize
 
 ## Contributing
 
