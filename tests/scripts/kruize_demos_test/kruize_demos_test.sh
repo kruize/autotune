@@ -38,10 +38,12 @@ KRUIZE_DEMOS_BRANCH="main"
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-k (use this option to deploy kruize using manifests]"
+	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-k (use this option to deploy kruize using manifests] [-a Kruize demos git repo URL] [-b Kruize demos branch]"
 	echo "c = supports minikube, kind and openshift cluster-type"
 	echo "i = kruize image. Default - quay.io/kruize/autotune:mvp_demo"
 	echo "o = Kruize operator image. Default - quay.io/kruize/kruize-operator:0.0.2"
+	echo "a = Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git"
+	echo "b = Kruize demos git repo branch. Default - main"
 	echo "t = Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)"
 	echo "r = Kruize results dir path. Default - /tmp/kruize_demos_test_results"
 	echo "k = install kruize using deploy scripts."
