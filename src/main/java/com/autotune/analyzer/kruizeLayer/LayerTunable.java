@@ -1,8 +1,7 @@
-package com.autotune.analyzer.kruizeLayer.layers;
+package com.autotune.analyzer.kruizeLayer;
 
 import com.google.gson.annotations.SerializedName;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class LayerTunable {

@@ -1,4 +1,4 @@
-package com.autotune.analyzer.kruizeLayer.layers;
+package com.autotune.analyzer.kruizeLayer;
 
 import java.util.List;
 
