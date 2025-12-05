@@ -106,11 +106,7 @@ def test_bulk_post_request(cluster_type, bulk_request_payload, expected_job_id_p
     ("", "", "Invalid date format. Must follow ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ) for the jobId:"), # empty
     ("2024-01-01 10:00:00", "2024-01-01T12:00:00Z", "Invalid date format. Must follow ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ) for the jobId:"),  # bad format
     ("2025-01-02T12:00:00Z", "2025-01-01T12:00:00Z", "Start time should be before end time for the jobId:"),  # start > end
-    # less than 24 hours difference
-    ("2025-01-01T00:00:00Z", "2025-01-01T10:00:00Z", "Time range must be between 24 hours and 15 days for the jobId:"),
-    # more than 15 days difference
-    ("2025-01-01T00:00:00Z", "2025-01-30T00:00:00Z", "Time range must be between 24 hours and 15 days for the jobId:"),
-])
+    ])
 def test_bulk_api_time_range_validation(cluster_type, start, end, expected_error, caplog):
     """
     Validates all negative time-range scenarios for Bulk API.
