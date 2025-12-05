@@ -85,10 +85,6 @@ public class BulkServiceValidation {
                 return errorMessage;
             }
 
-            Duration duration = Duration.between(startTime, endTime);
-            if (duration.toHours() < KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY || duration.toDays() > KruizeConstants.TimeConv.MEASUREMENT_DURATION_THRESHOLD_MINUTES) {
-                errorMessage = KruizeConstants.KRUIZE_BULK_API.INVALID_TIME_RANGE;
-            }
         } catch (DateTimeParseException ex) {
             errorMessage = KruizeConstants.KRUIZE_BULK_API.INVALID_DATE_FORMAT;
         } catch (Exception e) {
