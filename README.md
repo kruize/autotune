@@ -209,7 +209,7 @@ We welcome your contributions! See [CONTRIBUTING.md](/CONTRIBUTING.md) for more 
 Join the [Kruize Slack](http://kruizeworkspace.slack.com/) to connect with the community, ask questions, and collaborate!
 
 or Scan the QR Code 
-![Slack QR code](./kruize_slack_QR.jpeg)
+![Slack QR code](docs/images/kruize_slack_QR.jpeg)
 
 ## License
 
