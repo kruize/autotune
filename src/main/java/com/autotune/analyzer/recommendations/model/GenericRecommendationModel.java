@@ -495,6 +495,11 @@ public class GenericRecommendationModel implements RecommendationModel{
     @Override
     public Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getAcceleratorRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
 
+        boolean setNotification = true;
+        if (null == notifications) {
+            LOGGER.error(KruizeConstants.ErrorMsgs.RecommendationErrorMsgs.EMPTY_NOTIFICATIONS_OBJECT);
+            setNotification = false;
+        }
 
         List<Double> acceleratorCoreMaxValues = new ArrayList<>();
         List<Double> acceleratorMemoryMaxValues = new ArrayList<>();
@@ -654,6 +659,12 @@ public class GenericRecommendationModel implements RecommendationModel{
         if (memoryFraction > 1) {
             LOGGER.info(AnalyzerErrorConstants.APIErrors.generateRecommendationsAPI.DATA_IRREGULARITY_DETECTED);
             memoryFraction = 1;
+        }
+
+        // Add notification based on isGpuWorkload and accelerator model name
+        if (isGpuWorkload) {
+            if (RecommendationUtils.checkIfModelIsKruizeSupportedMIG(acceleratorModel))
+                notifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE));
         }
 
         return RecommendationUtils.getMapWithOptimalProfile(acceleratorModel, coreFraction, memoryFraction);

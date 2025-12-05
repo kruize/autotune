@@ -417,7 +417,12 @@ public class RecommendationUtils {
             H100_CHECK = (modelName.contains("H100") && modelName.contains("80GB"));
         }
 
-        return A100_CHECK || H100_CHECK;
+        boolean H200_CHECK = false;
+        if (!A100_CHECK && !H100_CHECK) {
+            H200_CHECK = (modelName.contains("H200"));
+        }
+
+        return A100_CHECK || H100_CHECK || H200_CHECK;
     }
 
     public static Timestamp getNearestTimestamp(HashMap<Timestamp, IntervalResults> containerDataResults, Timestamp targetTime, int minutesRange) {
