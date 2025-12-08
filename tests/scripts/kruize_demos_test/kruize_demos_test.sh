@@ -87,8 +87,8 @@ function remote_monitoring_demo() {
 
 function all_demos() {
 	local_monitoring_demo
-	bulk_demo
 	vpa_demo
+	bulk_demo
 	remote_monitoring_demo	
 }
 
@@ -214,7 +214,9 @@ function run_demo() {
 
 	# Add -k option to deploy kruize using manifests
 	if [[ "${KRUIZE_OPERATOR}" -eq 0 ]]; then
-		CMD="${CMD[@]} -k"
+		if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
+			CMD="${CMD[@]} -k"
+		fi
 	else
 		# Since Bulk Demo doesn't work with Kruize operator use deploy script to install kruize using -k option
 		# This can be removed once it is fixed
@@ -222,6 +224,7 @@ function run_demo() {
 			CMD="${CMD[@]} -k"
 		fi
 	fi
+
 
 	CLEANUP_CMD="${CMD[@]} -t"
 
@@ -245,10 +248,17 @@ function run_demo() {
 	} | tee -a ${LOG}
 	pushd "${DEMO_DIR}" > /dev/null
 		# Cleanup before running the test
+		# For kruize operator to be cleaned up clone the repo
+		if [[ "${KRUIZE_OPERATOR}" -eq 1 ]]; then
+			if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
+				pwd
+				clone_repos "kruize-operator"
+			fi
+		fi
 		${CLEANUP_CMD[@]} | tee -a ${LOG}
 
 		# Sleep for a few seconds for cleanup to complete
-		sleep 60
+		sleep 20
 
 		${CMD[@]} | tee -a ${LOG}
 
@@ -295,6 +305,9 @@ function run_demo() {
 		sleep 5
 		check_log "${KRUIZE_POD_LOG}"
 		sleep 2
+
+		# Cleanup the demo
+		CLEANUP_CMD="${CMD[@]} -t"
 	popd > /dev/null 2>&1
 	{
 		if [ "${failed}" -ne 0 ]; then
