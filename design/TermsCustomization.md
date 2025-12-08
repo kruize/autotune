@@ -4,7 +4,18 @@ A **term** in Kruize defines the duration over which historical data is collecte
 With Terms Customization the users are able to set configurable time frames like 3 days, 10 days, 30 days instead of the default 1 day, 7 days, 15 days.
 And can also define relevant hours like 7 a.m. to 7 p.m. Monday to Friday, directly through the **Create Experiment API**.
 
----
+## Term Parameters
+
+| Parameter                                                                         | Type            | Required                                                                        | Description                                                                            |
+|-----------------------------------------------------------------------------------|-----------------|---------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
+| **`duration_in_days`**    OR  <br/> **`start_timestamp`** and **`end_timestamp`** | Double          | Either 'duration_in_days' or 'start_timestamp' and 'end_timestamp' is required. | Defines the total lookback window in days or in timestamps.                            |
+| **`duration_threshold`**                                                          | String          | Optional                                                                        | Minimum data required to generate a recommendation.                                    |
+| **`plots_datapoint`**                                                             | Integer         | Optional                                                                        | Number of data points for plots. Defaults to one point per day except short/daily term. |
+| **`plots_datapoint_delta_in_days`**                                               | Double          | Optional                                                                        | Time interval (in days) between plot points.                                           |
+| **`days_of_week`**                                                                | Array of String | Optional                                                                        | Specifies which days (e.g., mon, tue) the term should be active for.                   |
+| **`daily_start_time`**                                                            | String(HH:MM)   | Optional                                                                        | The start time (daily) for data collection (e.g., "07:00").                            |
+| **`daily_end_time`**                                                              | String(HH:MM)   | Optional                                                                        | The end time (daily) for data collection (e.g., "19:00").                              |
+
 
 ## Term Categories
 
@@ -12,7 +23,7 @@ To simplify usage, Kruize now supports two primary categories of terms, each wit
 
 1. **Fixed Default Terms**  
    These are predefined, standardized terms provided by Kruize. The duration for the these terms are **immutable** to ensure consistent and predictable results across experiments.
-    - **Examples:** `daily`, `weekly`, `15 days`, `monthly`, `quarterly`, `half-yearly`, `yearly`.
+    - **Supported Terms:** `daily`, `weekly`, `15 days`, `monthly`, `quarterly`, `half-yearly`, `yearly`.
     - duration_in_days is immutable. Users can customize all other parameters.
    
 
@@ -25,19 +36,6 @@ To simplify usage, Kruize now supports two primary categories of terms, each wit
     - Users can optionally override this threshold by explicitly specifying `duration_threshold` in the configuration.
 
 Note: There is an upper limit to the number of terms user can specify and that is 3. 
-
-### Term Parameters
-
-| Parameter                                                                         | Type            | Required                                                                        | Description                                                                            |
-|-----------------------------------------------------------------------------------|-----------------|---------------------------------------------------------------------------------|----------------------------------------------------------------------------------------|
-| **`duration_in_days`**    OR  <br/> **`start_timestamp`** and **`end_timestamp`** | Double          | Either 'duration_in_days' or 'start_timestamp' and 'end_timestamp' is required. | Defines the total lookback window in days or in timestamps.                            |
-| **`duration_threshold`**                                                          | String          | Optional                                                                        | Minimum data required to generate a recommendation.                                    |
-| **`plots_datapoint`**                                                             | Integer         | Optional                                                                        | Number of data points for plots. Defaults to one point per day except short/daily term. |
-| **`plots_datapoint_delta_in_days`**                                               | Double          | Optional                                                                        | Time interval (in days) between plot points.                                           |
-| **`days_of_week`**                                                                | Array of String | Optional                                                                        | Specifies which days (e.g., mon, tue) the term should be active for.                   |
-| **`daily_start_time`**                                                            | String(HH:MM)   | Optional                                                                        | The start time (daily) for data collection (e.g., "07:00").                            |
-| **`daily_end_time`**                                                              | String(HH:MM)   | Optional                                                                        | The end time (daily) for data collection (e.g., "19:00").                              |
-
 
 
 ## API Implementation — `term_settings` Object
