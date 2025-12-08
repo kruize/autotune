@@ -7,7 +7,7 @@ Kruize serves as the powerful backend engine for the Resource Optimization Servi
 
 ## How Kruize Works
 
-Kruize connects to your monitoring stack (such as Prometheus or Thanos) and analyzes historical workload resource usage to generate actionable right-sizing recommendations. By continuously observing real usage patterns, it identifies over- and under-provisioned resources and suggests optimal values to improve performance while reducing costs.
+Kruize connects to your monitoring stack (such as Prometheus or Thanos) and analyzes historical workload resource usage to generate actionable right-sizing recommendations. By continuously observing real usage patterns, it identifies over- and under-provisioned resources and provides right-sizing recommendations — improving performance for under-provisioned workloads and reducing costs for over-provisioned ones.
 
 Recommendations are generated for:
 
