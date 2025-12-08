@@ -75,7 +75,8 @@ LABEL name="Kruize Autotune" \
 WORKDIR $AUTOTUNE_HOME/app
 
 # Create the non root user, same as the one used in the build phase.
-RUN microdnf -y install shadow-utils \
+RUN microdnf update -y \
+    && microdnf -y install shadow-utils \
     && useradd -u ${UID} -s /usr/sbin/nologin default \
     && chown -R ${UID}:0 ${AUTOTUNE_HOME}/app \
     && chmod -R g+rw ${AUTOTUNE_HOME}/app \
