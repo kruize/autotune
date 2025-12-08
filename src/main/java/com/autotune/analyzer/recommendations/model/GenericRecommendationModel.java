@@ -619,7 +619,7 @@ public class GenericRecommendationModel implements RecommendationModel{
         }
 
         if (!isGpuWorkload) {
-            if (!acceleratorCoreMaxValues.isEmpty() && !acceleratorMemoryMaxValues.isEmpty()) {
+            if (!acceleratorCoreMaxValues.isEmpty() || !acceleratorMemoryMaxValues.isEmpty()) {
                 if (setNotification) {
                     notifications.add(new RecommendationNotification(
                             RecommendationConstants.RecommendationNotification.NOTICE_ACCELERATOR_NOT_SUPPORTED));
