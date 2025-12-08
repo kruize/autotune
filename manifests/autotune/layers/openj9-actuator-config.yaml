@@ -36,8 +36,8 @@ tunables:
 
 - name: MaxRAMPercentage
   description: 'Maximum RAM percentage to allocate'
-  value_type: double
-  lower_bound: '25.0'
-  upper_bound: '90.0'
-  step: 5
+  value_type: integer
+  lower_bound: '25'
+  upper_bound: '90'
+  step: 1
 
