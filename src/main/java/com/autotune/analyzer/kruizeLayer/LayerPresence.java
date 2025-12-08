@@ -1,16 +1,18 @@
 package com.autotune.analyzer.kruizeLayer;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.util.List;
 
 public class LayerPresence {
     private String presence;
 
-    private List<LayerDetector> detectors;
+    @SerializedName("label")
+    private List<LayerDetector> labels;
 
-    public LayerPresence(String presence, List<LayerDetector> detectors) {
-        this.presence = presence;
-        this.detectors = detectors;
-    }
+    private List<LayerDetector> queries;
+
+    public LayerPresence() {}
 
     public String getPresence() {
         return presence;
@@ -20,19 +22,42 @@ public class LayerPresence {
         this.presence = presence;
     }
 
-    public List<LayerDetector> getDetectors() {
-        return detectors;
+    public List<LayerDetector> getLabels() {
+        return labels;
     }
 
-    public void setDetectors(List<LayerDetector> detectors) {
-        this.detectors = detectors;
+    public void setLabels(List<LayerDetector> labels) {
+        this.labels = labels;
+    }
+
+    public List<LayerDetector> getQueries() {
+        return queries;
+    }
+
+    public void setQueries(List<LayerDetector> queries) {
+        this.queries = queries;
+    }
+
+    /**
+     * Returns the active list of detectors regardless of whether
+     * they came from 'label' or 'queries'.
+     */
+    public List<LayerDetector> getActiveDetectors() {
+        if (labels != null && !labels.isEmpty()) {
+            return labels;
+        }
+        if (queries != null && !queries.isEmpty()) {
+            return queries;
+        }
+        return new java.util.ArrayList<>(); // Return empty list to prevent NullPointerExceptions
     }
 
     @Override
     public String toString() {
         return "LayerPresence{" +
                 "presence='" + presence + '\'' +
-                ", detectors=" + detectors +
+                ", label=" + labels +
+                ", queries=" + queries +
                 '}';
     }
 }
