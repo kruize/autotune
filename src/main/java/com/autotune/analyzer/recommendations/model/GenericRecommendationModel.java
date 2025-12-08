@@ -619,6 +619,12 @@ public class GenericRecommendationModel implements RecommendationModel{
         }
 
         if (!isGpuWorkload) {
+            if (!acceleratorCoreMaxValues.isEmpty() && !acceleratorMemoryMaxValues.isEmpty()) {
+                if (setNotification) {
+                    notifications.add(new RecommendationNotification(
+                            RecommendationConstants.RecommendationNotification.NOTICE_ACCELERATOR_NOT_SUPPORTED));
+                }
+            }
             return null;
         }
 
@@ -661,13 +667,18 @@ public class GenericRecommendationModel implements RecommendationModel{
             memoryFraction = 1;
         }
 
-        // Add notification based on isGpuWorkload and accelerator model name
-        if (isGpuWorkload) {
-            if (RecommendationUtils.checkIfModelIsKruizeSupportedMIG(acceleratorModel))
-                notifications.add(new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE));
+        Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> returnMap = RecommendationUtils.getMapWithOptimalProfile(acceleratorModel, coreFraction, memoryFraction);
+
+        if (null != returnMap && !returnMap.isEmpty()) {
+            // Add notification based on isGpuWorkload and accelerator model name
+            if (setNotification) {
+                if (RecommendationUtils.checkIfModelIsKruizeSupportedMIG(acceleratorModel))
+                    notifications.add(new RecommendationNotification(
+                            RecommendationConstants.RecommendationNotification.INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE));
+            }
         }
 
-        return RecommendationUtils.getMapWithOptimalProfile(acceleratorModel, coreFraction, memoryFraction);
+        return returnMap;
     }
 
     @Override
