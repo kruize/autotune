@@ -152,6 +152,11 @@ Here are the test scenarios:
   - Sample JSON Payload: Verifies the API correctly processes a structured payload and generates a job_id.
 - Verify the response of the GET job status API for the generated job_id.
   - Tests both verbose=false and verbose=true GET requests for comprehensive verification.
+- Validate bulk API response by passing a valid and multiple invalid time range values.
+  - Job_id will be generated in case of the valid scenario
+  - Corresponding error message will be sent back in case of invalid scenario with Response code 400.
+- Validate bulk API response by passing an invalid datasource name in the input JSON.
+  - Error message will be sent back with the response code 400
 
 ## Prerequisites for running the tests:
 - Minikube setup or access to Openshift cluster

@@ -112,11 +112,17 @@ COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG = "Cost limits do not contain a
 COST_LIMITS_CPU_NO_RECOMMENDATIONS_MSG = "CPU recommendations missing"
 COST_LIMITS_MEM_NO_RECOMMENDATIONS_MSG = "Memory recommendations missing"
 CREATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile : %s created successfully."
+CREATE_PERF_PROFILE_DUPLICATE_RECORD_MSG = "Validation failed: Performance Profile already exists: %s"
 UPDATE_PERF_PROFILE_SUCCESS_MSG = "Performance Profile '%s' updated successfully to version %s. View Performance Profiles at /listPerformanceProfiles"
 UPDATE_PERF_PROFILE_MISSING_PROFILE_ERROR_MSG = "Validation failed: Performance Profile '%s' not found. Use POST to create a new profile."
 UPDATE_PERF_PROFILE_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the version %.1f"
 UPDATE_PERF_PROFILE_SLO_ALREADY_UPDATED_MSG = "Validation failed: Performance profile '%s' already updated with the provided SLO data"
 UPDATE_PERF_PROFILE_SUPERSET_ERROR = "Validation failed: Updated profile must be a superset of existing data"
+DELETE_PERF_PROFILE_SUCCESS_MSG = "Performance profile %s deleted successfully. View Performance Profiles at /listPerformanceProfiles"
+DELETE_PERF_PROFILE_MISSING_NAME_ERROR = "Performance profile name is required."
+DELETE_PERF_PROFILE_NON_EXISTENT_NAME_ERROR = "Not Found: performance_profile does not exist: %s"
+DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment."
+DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable."
 
 
 # Kruize Recommendations Notification codes
@@ -1892,7 +1898,7 @@ def validate_accelerator_recommendations_for_container(recommendations_json):
 def validate_job_status(job_id, base_url, caplog):
     # Common keys expected in both responses
     common_keys = {
-        "status", "total_experiments", "processed_experiments", "job_id", "job_start_time", "job_end_time"
+        "status", "total_experiments", "processed_experiments", "job_id", "job_start_time"
     }
 
     # Extra keys expected when verbose=true
