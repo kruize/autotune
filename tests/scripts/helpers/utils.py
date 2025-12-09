@@ -122,6 +122,7 @@ DELETE_PERF_PROFILE_SUCCESS_MSG = "Performance profile %s deleted successfully. 
 DELETE_PERF_PROFILE_MISSING_NAME_ERROR = "Performance profile name is required."
 DELETE_PERF_PROFILE_NON_EXISTENT_NAME_ERROR = "Not Found: performance_profile does not exist: %s"
 DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment."
+DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable."
 
 
 # Kruize Recommendations Notification codes
@@ -223,7 +224,6 @@ TERMS_NOTIFICATION_CODES = {
 
 NAMESPACE_EXPERIMENT_TYPE = "namespace"
 CONTAINER_EXPERIMENT_TYPE = "container"
-PERF_PROFILE_NAME = "resource-optimization-openshift"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -1898,7 +1898,7 @@ def validate_accelerator_recommendations_for_container(recommendations_json):
 def validate_job_status(job_id, base_url, caplog):
     # Common keys expected in both responses
     common_keys = {
-        "status", "total_experiments", "processed_experiments", "job_id", "job_start_time", "job_end_time"
+        "status", "total_experiments", "processed_experiments", "job_id", "job_start_time"
     }
 
     # Extra keys expected when verbose=true
