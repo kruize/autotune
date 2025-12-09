@@ -504,7 +504,7 @@ public class KruizeConstants {
             public static final String DATASOURCE_URL_SERVICENAME_BOTH_SET = "Datasource url and servicename both can not be set.";
             public static final String MISSING_DATASOURCE_SERVICENAME_AND_URL = "Datasource servicename and url both cannot be empty.";
             public static final String UNSUPPORTED_DATASOURCE_PROVIDER = "Datasource provider is invalid.";
-            public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
+            public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource %s is not serviceable.";
             public static final String DATASOURCE_CONNECTION_FAILED = "Datasource connection refused or timed out.";
             public static final String DATASOURCE_DB_LOAD_FAILED = "Loading saved datasource {} details from db failed: {}";
             public static final String DATASOURCE_DB_AUTH_LOAD_FAILED = "Loading datasource {} AUTH details failed: {}";
@@ -517,7 +517,7 @@ public class KruizeConstants {
             public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
             public static final String INVALID_DATASOURCE_INFO = "Datasource is either missing or is invalid: ";
             public static final String MISSING_DATASOURCE_AUTH = "Auth details are missing for datasource: {}";
-            public static final String DATASOURCE_AUTH_DB_INSERTION_FAILED = "Failed to add auth details to DB: {}";
+            public static final String DATASOURCE_AUTH_DB_INSERTION_FAILED = "Failed to add auth details to DB: %s";
             public static final String DATASOURCE_AUTH_DB_UPDATE_FAILED = "Failed to update auth details in the DB: {}";
             public static final String DATASOURCE_AUTH_UPDATE_INVALID = "The updated authentication configuration is invalid. Reverting to the previous configuration.";
             public static final String DATASOURCE_ACCESS_ERROR_MESSAGE = "An unexpected error occurred while accessing datasource {} details: {}";
