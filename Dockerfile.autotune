@@ -20,9 +20,10 @@ FROM registry.access.redhat.com/ubi10/ubi-minimal:10.1-1764604111 as mvnbuild-jd
 ARG USER=autotune
 ARG AUTOTUNE_HOME=/home/$USER
 
-RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y java-25-openjdk-devel \
-             tar gzip java-25-openjdk-jmods binutils git vim \
-     && microdnf clean all 
+RUN microdnf update --setopt=install_weak_deps=0 --setopt=tsflags=nodocs -y \
+    && microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y java-25-openjdk-devel \
+       tar gzip java-25-openjdk-jmods binutils git vim \
+    && microdnf clean all
 
 RUN mkdir -p /usr/share/maven /usr/share/maven/ref \
   && curl -fsSL -o /tmp/apache-maven.tar.gz https://archive.apache.org/dist/maven/maven-3/3.9.11/binaries/apache-maven-3.9.11-bin.tar.gz \
@@ -58,9 +59,9 @@ ARG AUTOTUNE_HOME=/home/$USER
 ENV LANG='en_US.UTF-8' LANGUAGE='en_US:en' LC_ALL='en_US.UTF-8'
 
 # Install packages needed for Java to function correctly
-RUN microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y tzdata openssl ca-certificates fontconfig \
-             glibc-langpack-en gzip tar \
-    && microdnf update -y \
+RUN microdnf update --setopt=install_weak_deps=0 --setopt=tsflags=nodocs -y \
+    && microdnf --setopt=install_weak_deps=0 --setopt=tsflags=nodocs install -y tzdata openssl ca-certificates fontconfig \
+       glibc-langpack-en gzip tar \
     && microdnf clean all
 
 LABEL name="Kruize Autotune" \
@@ -74,7 +75,8 @@ LABEL name="Kruize Autotune" \
 WORKDIR $AUTOTUNE_HOME/app
 
 # Create the non root user, same as the one used in the build phase.
-RUN microdnf -y install shadow-utils \
+RUN microdnf update -y \
+    && microdnf -y install shadow-utils \
     && useradd -u ${UID} -s /usr/sbin/nologin default \
     && chown -R ${UID}:0 ${AUTOTUNE_HOME}/app \
     && chmod -R g+rw ${AUTOTUNE_HOME}/app \
