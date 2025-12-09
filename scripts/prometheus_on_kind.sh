@@ -23,7 +23,7 @@ non_interactive=0
 setup=1
 
 # Prometheus release default
-tag="v0.13.0"
+tag="v0.16.0"
 
 function install_prometheus() {
 	echo
@@ -68,10 +68,16 @@ function install_prometheus() {
 		git clone -b ${tag} https://github.com/coreos/kube-prometheus.git 2>/dev/null
 		pushd kube-prometheus/manifests >/dev/null
 		echo
+		echo "Info: Installing CRDs"
+		kubectl apply --server-side -f setup
+		check_err "Error: Unable to setup prometheus CRDs"
+		kubectl wait --for condition=Established --timeout=60s crd/servicemonitors.monitoring.coreos.com
+		kubectl wait --for condition=Established --timeout=60s crd/prometheuses.monitoring.coreos.com
+		kubectl wait --for condition=Established --timeout=60s crd/alertmanagers.monitoring.coreos.com
+		kubectl wait --for condition=Established --timeout=60s crd/prometheusrules.monitoring.coreos.com
+		
 		echo "Info: Installing prometheus"
-		kubectl apply -f setup --server-side
-		check_err "Error: Unable to setup prometheus"
-		kubectl apply -f . --server-side
+		kubectl apply -f . 
 		check_err "Error: Unable to install prometheus"
 		popd >/dev/null
 	popd >/dev/null

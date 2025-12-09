@@ -24,11 +24,9 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: kruize/autotune
-      - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.13.1
-        with:
-          minikube version: 'v1.31.2'
-          kubernetes version: 'v1.21.6'
+      - name: Setup Kind Cluster
+        uses: helm/kind-action@v1.13.0
+
       - name: Build crc
         run: |
           echo Build crc
@@ -36,15 +34,15 @@ jobs:
           echo "pr_number=${pr_number}" >> "$GITHUB_ENV"
           ./build.sh -i autotune_operator:pr_${pr_number}
           docker images | grep autotune
-      - name: Check cluster info on minikube
+      - name: Check cluster info on kind
         run: |
-          kubectl cluster-info
-          kubectl get pods -n kube-system
-      - name: Install Prometheus on minikube
+          kind --version
+
+      - name: Install Prometheus on kind 
         run: |
-          echo Install Prometheus on minikube
+          echo Install Prometheus on kind
           cd scripts
-          ./prometheus_on_minikube.sh -as
+          ./prometheus_on_kind.sh -as
       - name: Deploy Kruize in crc mode
         run: |
           echo Deploy kruize in crc mode
@@ -54,7 +52,7 @@ jobs:
           cat ./manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml
           cd tests
           echo "PR_NUMBER = ${{ env.pr_number }}"
-          ./test_autotune.sh -c minikube -i autotune_operator:pr_${{ env.pr_number }} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
+          ./test_autotune.sh -c kind -i autotune_operator:pr_${{ env.pr_number }} --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
       - name: Capture ffdc logs
         if: always()
         run: |
@@ -82,29 +80,25 @@ jobs:
     steps:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v4
-      - name: Setup Minikube
-        uses: manusa/actions-setup-minikube@v2.13.1
-        with:
-          minikube version: 'v1.31.2'
-          kubernetes version: 'v1.21.6'
+      - name: Setup Kind Cluster
+        uses: helm/kind-action@v1.13.0
 
-      - name: Check cluster info on minikube
+      - name: Check cluster info on Kind
         run: |
-          kubectl cluster-info
-          kubectl get pods -n kube-system
+          kind --version
 
-      - name: Install Prometheus on minikube
+      - name: Install Prometheus on kind
         run: |
-          echo Install Prometheus on minikube
+          echo Install Prometheus on kind
           cd scripts
-          ./prometheus_on_minikube.sh -as
+          ./prometheus_on_kind.sh -as
 
       - name: Test with manifest kruize build in crc mode
         run: |
           echo Test with manifest kruize build in crc mode
           echo "***************************************************************"
           cd tests
-          ./test_autotune.sh -c minikube --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
+          ./test_autotune.sh -c kind --testsuite=remote_monitoring_tests --testcase=test_e2e --resultsdir=${GITHUB_WORKSPACE}
 
       - name: Capture ffdc logs
         if: always()

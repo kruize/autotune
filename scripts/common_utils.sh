@@ -29,8 +29,12 @@ function check_running() {
 	err_wait=0
 	counter=0
 	while true; do
-		sleep 2
-		pod_list=$(${kubectl_cmd} get pods | grep ${check_pod} | grep -v "${ignore_ui_pod}" | grep -v "${ignore_db_pod}")
+		sleep 20
+		if [[ ${ignore_ui_pod} == "" || ${ignore_db_pod} == "" ]]; then
+			pod_list=$(${kubectl_cmd} get pods | grep ${check_pod})
+		else
+			pod_list=$(${kubectl_cmd} get pods | grep ${check_pod} | grep -v "${ignore_ui_pod}" | grep -v "${ignore_db_pod}")
+		fi
 		pod_stat=$(echo "${pod_list}" | awk '{ print $3 }')
 		if [[ -z "${pod_list}" ]]; then
 		  echo "Error: No pods found matching ${check_pod}"

@@ -75,6 +75,37 @@ api_yaml_path="${MANIFESTS}/${module}/${api_yaml}"
 # Path to the directory containing yaml files
 configmap="${AUTOTUNE_REPO}/manifests/autotune/configmaps"
 
+# Defaults for kind cluster
+AUTOTUNE_PORT=8080
+SERVER_IP="127.0.0.1"
+
+#   Clone git Repos
+function clone_repos() {
+	repo_name=$1
+	echo
+	echo "#######################################"
+	echo "Cloning ${repo_name} git repos"
+	if [ ! -d ${repo_name} ]; then
+		git clone git@github.com:kruize/${repo_name}.git >/dev/null 2>/dev/null
+		if [ $? -ne 0 ]; then
+			git clone https://github.com/kruize/${repo_name}.git 2>/dev/null
+		fi
+		check_err "ERROR: git clone of kruize/${repo_name} failed."
+	fi
+
+	echo "done"
+	echo "#######################################"
+	echo
+}
+
+
+#   Cleanup git Repos
+function delete_repos() {
+	app_name=$1
+	echo "Deleting ${app_name} git repos"
+	rm -rf ${app_name} benchmarks
+}
+
 # checks if the previous command is executed successfully
 # input:Return value of previous command
 # output:Prompts the error message if the return value is not zero and exits
@@ -165,11 +196,11 @@ function setup() {
 
 	# Deploy autotune
 	echo "Deploying autotune..."
-	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}" "${AUTOTUNE_POD_LOG}"
+	deploy_autotune  "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}" "${AUTOTUNE_POD_LOG}"
 	echo "Deploying autotune...Done"
 
 	case "${cluster_type}" in
-		minikube)
+		minikube|kind)
 			NAMESPACE="monitoring"
 			;;
 		openshift)
@@ -180,10 +211,15 @@ function setup() {
 
 # Check if the prometheus is already deployed , if not invoke the script to deploy prometheus on minikube
 function setup_prometheus() {
+	cluster_type=$1
 	kubectl_cmd="kubectl"
 	prometheus_pod_running=$(${kubectl_cmd} get pods --all-namespaces | grep "prometheus-k8s-1")
 	if [ "${prometheus_pod_running}" == "" ]; then
-		./scripts/prometheus_on_minikube.sh -as
+		if [ "${cluster_type}" == "minikube" ]; then
+			./scripts/prometheus_on_minikube.sh -as
+		elif [ "${cluster_type}" == "kind" ]; then
+			./scripts/prometheus_on_kind.sh -as
+		fi
 	fi
 }
 
@@ -191,46 +227,55 @@ function setup_prometheus() {
 # input: cluster type , autotune image
 # output: Deploy autotune based on the parameter passed
 function deploy_autotune() {
-	cluster_type=$1
-	AUTOTUNE_IMAGE=$2
-	CONFIGMAP_DIR=$3
-	AUTOTUNE_POD_LOG=$4
+	AUTOTUNE_IMAGE=$1
+	CONFIGMAP_DIR=$2
+	AUTOTUNE_POD_LOG=$3
 
+	cluster=${cluster_type}
+	# Adding this check as somewhere cluster_type is going blank, will check this later
+	orig_cluster_type=${cluster_type}
 	pushd ${AUTOTUNE_REPO} > /dev/null
 
 	# Check if the cluster_type is minikube., if so deploy prometheus
 	if [ "${cluster_type}" == "minikube" ]; then
 		echo "Installing Prometheus on minikube" >>/dev/stderr
+		setup_prometheus ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		cluster="minikube"
+	elif [ "${cluster_type}" == "kind" ]; then
+		echo "Installing Prometheus on kind" >>/dev/stderr
 		setup_prometheus >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		cluster="minikube"
 	fi
 
 	echo "Deploying autotune $target"
 	# if both autotune image and configmap is not passed then consider the test-configmap(which has logging level as debug)
 	if [[ -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
 		if [ ${target} == "autotune" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP} -m ${target}"
+			cmd="./deploy.sh -c ${cluster} -d ${CONFIGMAP} -m ${target}"
 		elif [ ${target} == "crc" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -m ${target} -b"
+			cmd="./deploy.sh -c ${cluster} -m ${target} -b"
 		fi
 	# if both autotune image and configmap  is passed
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && ! -z "${CONFIGMAP_DIR}" ]]; then
 		if [ ${target} == "autotune" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP_DIR} -m ${target}"
+			cmd="./deploy.sh -c ${cluster} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP_DIR} -m ${target}"
 		elif [ ${target} == "crc" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m ${target}"
+			cmd="./deploy.sh -c ${cluster} -i ${AUTOTUNE_IMAGE} -m ${target}"
 		fi
 
 	# autotune image is passed but configmap is not passed then consider the test-configmap(which has logging level as debug)
 	elif [[ ! -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
 		if [ ${target} == "autotune" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP} -m ${target}"
+			cmd="./deploy.sh -c ${cluster} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP} -m ${target}"
 		elif [ ${target} == "crc" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m ${target}"
+			cmd="./deploy.sh -c ${cluster} -i ${AUTOTUNE_IMAGE} -m ${target}"
 		fi
 
 	fi
 	echo "Kruize deploy command - ${cmd}"
 	${cmd}
+	echo "Kruize deploy command - Done" 
+	cluster_type=${orig_cluster_type}
 
 	status="$?"
 	# Check if autotune is deployed.
@@ -242,16 +287,14 @@ function deploy_autotune() {
 		exit -1
 	fi
 
-	sleep 30
-
-	if [[ ${cluster_type} == "minikube" || ${cluster_type} == "openshift" ]]; then
+	if [[ ${cluster_type} == "minikube" || ${cluster_type} == "openshift" || ${cluster_type} == "kind" ]]; then
 		sleep 2
 		echo "Capturing Autotune service log into ${AUTOTUNE_POD_LOG}"
 		namespace="openshift-tuning"
-		if [ ${cluster_type} == "minikube" ]; then
+		if [[ ${cluster_type} == "minikube" || ${cluster_type} == "kind" ]]; then
 			namespace="monitoring"
 		fi
-		echo "Namespace = $namespace"
+		echo "Namespace = $namespace Cluster type = $cluster_type"
 		if [ ${target} == "crc" ]; then
 			service="kruize"
 			autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
@@ -276,7 +319,11 @@ function prometheus_cleanup() {
 	kubectl_cmd="kubectl"
 	prometheus_pod_running=$(${kubectl_cmd} get pods --all-namespaces | grep "prometheus-k8s-1"| awk '{print $4}')
 	if [ "${prometheus_pod_running}" == "Running" ]; then
-		./scripts/prometheus_on_minikube.sh -t
+		if [ ${cluster_type} == "kind" ]; then
+			./scripts/prometheus_on_kind.sh -t
+		else
+			./scripts/prometheus_on_minikube.sh -t
+		fi
 	fi
 }
 
@@ -295,7 +342,12 @@ function autotune_cleanup() {
 	fi
 
 	echo  "Removing Autotune dependencies..."
-	cmd="./deploy.sh -c ${cluster_type} -m ${target} -t"
+	cluster="${cluster_type}"
+	if [ ${cluster_type} == "kind" ]; then
+		cluster="minikube"
+		kill_service_port_forward "kruize"
+	fi
+	cmd="./deploy.sh -c ${cluster} -m ${target} -t"
 	echo "CMD = ${cmd}"
 	${cmd} >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	# Remove the prometheus setup
@@ -713,11 +765,13 @@ function run_test() {
 # Form the curl command based on the cluster type
 function form_curl_cmd() {
 	crud_operation=$1
+
 	# Form the curl command based on the cluster type
 	service="autotune"
 	if [ ${target} == "crc" ]; then
 		service="kruize"
 	fi
+
 	case $cluster_type in
 	   openshift)
 		NAMESPACE="openshift-tuning"
@@ -737,7 +791,15 @@ function form_curl_cmd() {
 		echo "SERVER_IP = $SERVER_IP AUTOTUNE_PORT = $AUTOTUNE_PORT"
 		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
 		;;
-	   docker) ;;
+	   kind)
+		NAMESPACE="monitoring"
+
+		echo "service = $service namespace = $NAMESPACE"
+		echo "SERVER_IP = $SERVER_IP AUTOTUNE_PORT = $AUTOTUNE_PORT"
+		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
+		port_forward
+		sleep 30
+		;;
 	   *);;
 	esac
 
@@ -1844,8 +1906,7 @@ function compare_result() {
 
 function create_performance_profile() {
         perf_profile_json=$1
-
-        echo "Forming the curl command to create the performance profile ..."
+	echo "Forming the curl command to create the performance profile ..."
         form_curl_cmd
 
         curl_cmd="${curl_cmd}/createPerformanceProfile -d @${perf_profile_json}"
@@ -1925,7 +1986,7 @@ function kruize_local_ros_patch() {
 	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
 	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
 
-	if [ ${cluster_type} == "minikube" ]; then
+	if [[ ${cluster_type} == "minikube" || ${cluster_type} == "kind" ]]; then
       		if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}; then
       		  	echo "Setting flag 'isROSEnabled' to 'true'"
         		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
@@ -1972,7 +2033,7 @@ function kruize_remote_patch() {
 	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
 
 
-  if [ ${cluster_type} == "minikube" ]; then
+  if [[ ${cluster_type} == "minikube" || ${cluster_type} == "kind" ]]; then
     sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}    #this will remove the entry and use default set by java i.e. isROSEnabled=true and local=false
   elif [ ${cluster_type} == "openshift" ]; then
     sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
@@ -2002,4 +2063,52 @@ function kruize_local_datasource_manifest_patch() {
       sed -i 's/"url": ".*"/"url": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
     fi
   fi
+}
+
+function is_port_in_use() {
+	local port=$1
+	if lsof -i :$port -t >/dev/null 2>&1; then
+		return 0 # Port is in use
+	else
+		return 1 # Port is not in use
+	fi
+}
+
+function port_forward() {
+	kubectl_cmd="kubectl -n monitoring"
+	port_flag="false"
+
+	# enable port forwarding to access the endpoints since 'Kind' doesn't expose external IPs
+	# Start port forwarding for kruize service in the background
+	if is_port_in_use ${AUTOTUNE_PORT}; then
+		echo "Error: Port ${AUTOTUNE_PORT} is already in use. Port forwarding for kruize service cannot be established."
+		port_flag="true"
+	else
+		${kubectl_cmd} port-forward svc/kruize ${AUTOTUNE_PORT}:8080 > /dev/null 2>&1 &
+	fi
+
+	if ${port_flag} = "true"; then
+		false
+		check_err "Error. Issues with port-forwarding. Exiting!"
+	fi
+}
+
+function kill_service_port_forward() {
+	local service_name="$1"
+	if [[ -z "${service_name}" ]]; then
+		echo "Error: Service name is required"
+		return 1
+	fi
+
+	# Find PIDs of port-forward processes for the specific service
+	# Using ps and grep to get exact matches without wildcards
+	local pids=$(ps aux | grep "[k]ubectl" | grep "port-forward" | grep "svc/${service_name}" | awk '{print $2}')
+
+	if [[ -n "${pids}" ]]; then
+		echo "Killing existing port-forward for service: ${service_name}"
+		for pid in ${pids}; do
+			kill "${pid}" 2>/dev/null || true
+		done
+		sleep 1
+	fi
 }

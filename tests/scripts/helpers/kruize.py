@@ -30,7 +30,7 @@ def form_kruize_url(cluster_type, SERVER_IP=None):
         print("\nKRUIZE AUTOTUNE URL = ", URL)
         return
 
-    if (cluster_type == "local"):
+    if (cluster_type == "local" or cluster_type == 'kind'):
         AUTOTUNE_PORT = 8080
         SERVER_IP = '127.0.0.1'
         URL = "http://" + str(SERVER_IP) + ":" + str(AUTOTUNE_PORT)
