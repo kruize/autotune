@@ -782,6 +782,7 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_FILE_PATH = "metadataProfileFilePath";
         public static final String METRIC_PROFILE_FILE_PATH = "metricProfileFilePath";
         public static final String IS_KAFKA_ENABLED = "isKafkaEnabled";
+        public static final String RUNTIMES_RECOMMENDATIONS = "runtimesRecommendations";
     }
 
     public static final class RecommendationEngineConstants {

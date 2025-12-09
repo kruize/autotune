@@ -55,6 +55,8 @@ import java.util.stream.Collectors;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
+import static com.autotune.operator.KruizeDeploymentInfo.local;
+import static com.autotune.operator.KruizeDeploymentInfo.runtimes_recommendations;
 
 /**
  * REST API to create experiments to Analyser for monitoring metrics.
@@ -140,6 +142,10 @@ public class CreateExperiment extends HttpServlet {
                         validAPIObj.setValidationData(ko.getValidation_data());
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
                         addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+                        // check if runtimes flag is enabled, detect the layers and tag it to container data
+                        if (local && runtimes_recommendations) {
+                            //TODO: detect the layers and tag it to container data
+                        }
                     }
                     if (addedToDB.isSuccess()) {
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
