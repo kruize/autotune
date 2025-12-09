@@ -292,8 +292,8 @@ function run_demo() {
 
 		# If demo is VPA check for vpa recommendations
 		if [ "${DEMO_NAME}" == "vpa" ]; then
-			# sleep for 5 mins for vpa to be created
-			sleep 300
+			# sleep for the vpa to be created
+			sleep 500
 			echo "Validating vpa recommendations..." | tee -a ${LOG}
 			validate_sysbench_reco "${DEMO_LOG_DIR}" | tee -a ${LOG}
 			echo "Validating vpa recommendations...Done" | tee -a ${LOG}
