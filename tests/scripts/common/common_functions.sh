@@ -319,7 +319,11 @@ function prometheus_cleanup() {
 	kubectl_cmd="kubectl"
 	prometheus_pod_running=$(${kubectl_cmd} get pods --all-namespaces | grep "prometheus-k8s-1"| awk '{print $4}')
 	if [ "${prometheus_pod_running}" == "Running" ]; then
-		./scripts/prometheus_on_minikube.sh -t
+		if [ ${cluster_type} == "kind" ]; then
+			./scripts/prometheus_on_kind.sh -t
+		else
+			./scripts/prometheus_on_minikube.sh -t
+		fi
 	fi
 }
 
@@ -341,6 +345,7 @@ function autotune_cleanup() {
 	cluster="${cluster_type}"
 	if [ ${cluster_type} == "kind" ]; then
 		cluster="minikube"
+		kill_service_port_forward "kruize"
 	fi
 	cmd="./deploy.sh -c ${cluster} -m ${target} -t"
 	echo "CMD = ${cmd}"
@@ -793,6 +798,7 @@ function form_curl_cmd() {
 		echo "SERVER_IP = $SERVER_IP AUTOTUNE_PORT = $AUTOTUNE_PORT"
 		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
 		port_forward
+		sleep 30
 		;;
 	   *);;
 	esac
@@ -1980,7 +1986,7 @@ function kruize_local_ros_patch() {
 	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
 	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
 
-	if [ ${cluster_type} == "minikube" ]; then
+	if [[ ${cluster_type} == "minikube" || ${cluster_type} == "kind" ]]; then
       		if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}; then
       		  	echo "Setting flag 'isROSEnabled' to 'true'"
         		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
@@ -2027,7 +2033,7 @@ function kruize_remote_patch() {
 	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
 
 
-  if [ ${cluster_type} == "minikube" ]; then
+  if [[ ${cluster_type} == "minikube" || ${cluster_type} == "kind" ]]; then
     sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}    #this will remove the entry and use default set by java i.e. isROSEnabled=true and local=false
   elif [ ${cluster_type} == "openshift" ]; then
     sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
@@ -2084,5 +2090,25 @@ function port_forward() {
 	if ${port_flag} = "true"; then
 		false
 		check_err "Error. Issues with port-forwarding. Exiting!"
+	fi
+}
+
+function kill_service_port_forward() {
+	local service_name="$1"
+	if [[ -z "${service_name}" ]]; then
+		echo "Error: Service name is required"
+		return 1
+	fi
+
+	# Find PIDs of port-forward processes for the specific service
+	# Using ps and grep to get exact matches without wildcards
+	local pids=$(ps aux | grep "[k]ubectl" | grep "port-forward" | grep "svc/${service_name}" | awk '{print $2}')
+
+	if [[ -n "${pids}" ]]; then
+		echo "Killing existing port-forward for service: ${service_name}"
+		for pid in ${pids}; do
+			kill "${pid}" 2>/dev/null || true
+		done
+		sleep 1
 	fi
 }
