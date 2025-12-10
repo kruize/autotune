@@ -25,6 +25,20 @@ def loadNSData():
 
     return (data, createdata, profile_data)
 
+def loadGPUData():
+    json_file = open("./json_files/create_gpu_exp.json", "r")
+    createdata = json.loads(json_file.read())
+
+    json_file = open("./json_files/gpu_results.json", "r")
+    data = json.loads(json_file.read())
+    performance_profile_dir = get_metric_profile_dir()
+    profile_json_path = performance_profile_dir / 'resource_optimization_openshift.json'
+
+    with open(profile_json_path, 'r', encoding='utf-8') as profile_file:
+        profile_data = json.load(profile_file)
+
+    return (data, createdata, profile_data)
+
 def loadData():
     json_file = open("./json_files/create_exp.json", "r")
     createdata = json.loads(json_file.read())
@@ -120,6 +134,8 @@ if __name__ == "__main__":
         data, createdata, profile_data = loadData()
     elif exptype == "namespace":
         data, createdata, profile_data = loadNSData()
+    elif exptype == "gpucontainer":
+        data, createdata, profile_data = loadGPUData()
 
     if args.startdate:
         print(args.startdate)
