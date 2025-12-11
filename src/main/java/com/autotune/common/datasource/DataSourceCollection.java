@@ -30,6 +30,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -39,8 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.*;
-import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_ADDED;
-import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_AUTH_ADDED_DB;
+import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.*;
 
 public class DataSourceCollection {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCollection.class);
@@ -121,7 +121,7 @@ public class DataSourceCollection {
                 // add the data source to DB
                 addedToDB = new ExperimentDBService().addDataSourceToDB(datasource, addedToDB);
                 if (addedToDB.isSuccess()) {
-                    LOGGER.info(DATASOURCE_AUTH_ADDED_DB);
+                    LOGGER.info(DATASOURCE_ADDED_DB);
                 } else {
                     throw new DataSourceNotServiceable(String.format(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE, name));
                 }
@@ -212,8 +212,14 @@ public class DataSourceCollection {
                 }
                 try {
                     URL url = null;
-                    if (!dataSourceURL.isBlank()) {
-                        url = new URI(dataSourceURL).toURL();
+                    try {
+                        if (!dataSourceURL.isBlank()) {
+                            url = new URI(dataSourceURL).toURL();
+                        }
+                    } catch (MalformedURLException | URISyntaxException e) {
+                        LOGGER.error(e.getMessage());
+                        failedDatasources.add(name + " (URL malformed)");
+                        continue;
                     }
                     dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, url, authConfig);
 
@@ -230,7 +236,7 @@ public class DataSourceCollection {
                     successCount++;
                 } catch (UnsupportedDataSourceProvider udp) {
                     LOGGER.error(udp.getMessage());
-                    failedDatasources.add(name + " (unspported DataSourceProvider)");
+                    failedDatasources.add(name + " (unsupported DataSourceProvider)");
                 } catch (MalformedURLException mue) {
                     LOGGER.error("invalid URL for datasource {}: {}", name, mue.getMessage());
                     failedDatasources.add(name + " (invalid URL)");
