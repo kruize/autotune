@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -108,28 +109,27 @@ public class DataSourceCollection {
         if (!provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS) && !provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.THANOS)) {
             throw new UnsupportedDataSourceProvider(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.UNSUPPORTED_DATASOURCE_PROVIDER);
         }
-        else {
-            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY, name);
-            DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
-            if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
-                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
-                // add the authentication details to the DB
-                addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(datasource.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);
+//        Continue validations in case of supported providers
+        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY, name);
+        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
+        if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
+            // add the authentication details to the DB
+            addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(datasource.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);
+            if (addedToDB.isSuccess()) {
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_AUTH_ADDED_DB);
+                // add the data source to DB
+                addedToDB = new ExperimentDBService().addDataSourceToDB(datasource, addedToDB);
                 if (addedToDB.isSuccess()) {
-                    LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_AUTH_ADDED_DB);
-                    // add the data source to DB
-                    addedToDB = new ExperimentDBService().addDataSourceToDB(datasource, addedToDB);
-                    if (addedToDB.isSuccess()) {
-                        LOGGER.info(DATASOURCE_AUTH_ADDED_DB);
-                    } else {
-                        throw new DataSourceNotServiceable(String.format(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE, name));
-                    }
+                    LOGGER.info(DATASOURCE_AUTH_ADDED_DB);
                 } else {
-                    throw new DataSourceAuthFailed(String.format(DATASOURCE_AUTH_DB_INSERTION_FAILED, addedToDB.getMessage()));
+                    throw new DataSourceNotServiceable(String.format(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE, name));
                 }
             } else {
-                throw new DataSourceNotServiceable(String.format(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE, name));
+                throw new DataSourceAuthFailed(String.format(DATASOURCE_AUTH_DB_INSERTION_FAILED, addedToDB.getMessage()));
             }
+        } else {
+            throw new DataSourceNotServiceable(String.format(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE, name));
         }
         dataSourceCollection.put(name, datasource);
         LOGGER.info(DATASOURCE_ADDED);
@@ -211,11 +211,11 @@ public class DataSourceCollection {
                     continue;
                 }
                 try {
-                    if (dataSourceURL.isEmpty()) {
-                        dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, null, authConfig);
-                    } else {
-                        dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL), authConfig);
+                    URL url = null;
+                    if (!dataSourceURL.isBlank()) {
+                        url = new URI(dataSourceURL).toURL();
                     }
+                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, url, authConfig);
 
                     // Attempt to add, addDataSource() returns true if added successfully.
                     boolean added = addDataSource(dataSourceInfo);
