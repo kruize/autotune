@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2020, 2025 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,12 @@ import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.Utils;
+import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 /**
  * Container class for the KruizeLayer kubernetes kind, which is used to tune
@@ -32,26 +34,37 @@ import java.util.HashMap;
  */
 public final class KruizeLayer
 {
-	private final String layerId;
-	private final int level;
-	private final String name;
-	private final String layerName;
-	private final String details;
+    private String apiVersion;
+    private String kind;
+    private LayerMetadata metadata;
+	private String layerId;
+    @SerializedName("layer_level")
+    private int level;
+	private String name;
+    @SerializedName("layer_name")
+    private String layerName;
+	private String details;
 	// If true, apply to all autotuneobjects
-	private final String presence;
+	private String presence;
 
 	// Used to detect the presence of the layer in an application. Autotune runs the query, looks for
 	// the key, and all applications in the query output are matched to the KruizeLayer object.
-	private final ArrayList<LayerPresenceQuery> layerPresenceQueries;
+    @SerializedName("layer_presence")
+    private ArrayList<LayerPresenceQuery> layerPresenceQueries;
 
-	private final String layerPresenceLabel;
-	private final String layerPresenceLabelValue;
+	private String layerPresenceLabel;
+	private String layerPresenceLabelValue;
 
-	private final ArrayList<Tunable> tunables;
+	private ArrayList<Tunable> tunables;
 
-	private final ObjectReference objectReference;
+	private ObjectReference objectReference;
+    @SerializedName("layer_presence")
+    private LayerPresence layerPresence;
 
-	public KruizeLayer(String name,
+    public KruizeLayer() {
+
+    }
+    public KruizeLayer(String name,
 					   String layerName,
 					   int level,
 					   String details,
@@ -149,9 +162,35 @@ public final class KruizeLayer
 		return objectReference;
 	}
 
-	@Override
+    public String getApiVersion() {
+        return apiVersion;
+    }
+
+    public void setApiVersion(String apiVersion) {
+        this.apiVersion = apiVersion;
+    }
+
+    public String getKind() {
+        return kind;
+    }
+
+    public void setKind(String kind) {
+        this.kind = kind;
+    }
+
+    public LayerPresence getLayerPresence() {
+        return layerPresence;
+    }
+
+    public void setLayerPresence(LayerPresence layerPresence) {
+        this.layerPresence = layerPresence;
+    }
+
+    @Override
 	public String toString() {
 		return "KruizeLayer{" +
+                "apiVersion='" + apiVersion + '\'' +
+                ", kind='" + kind + '\'' +
 				"level=" + level +
 				", name='" + name + '\'' +
 				", layerName='" + layerName + '\'' +
@@ -159,7 +198,10 @@ public final class KruizeLayer
 				", layerPresenceQueries='" + layerPresenceQueries + '\'' +
 				", layerPresenceLabel='" + layerPresenceLabel + '\'' +
 				", layerPresenceLabelValue='" + layerPresenceLabelValue + '\'' +
-				", tunables=" + tunables +
+                ", details='" + details + '\'' +
+                ", metadata=" + metadata +
+                ", layerPresence=" + layerPresence +
+                ", tunables=" + tunables +
 				'}';
 	}
 }
