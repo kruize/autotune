@@ -66,6 +66,7 @@ CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER = "Can not specify container data fo
 CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE = "Auto or recreate mode is not supported for namespace experiment."
 CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case."
 CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA = "Kubernetes object type is not supported for auto or recreate mode."
+CREATE_EXP_INVALID_DATASOURCE = "Given datasource name - %s either does not exist or is not valid"
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
 UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE = 'interval_end_time is mandatory'
 UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND = 'Not Found: experiment_name does not exist: '
@@ -224,6 +225,7 @@ TERMS_NOTIFICATION_CODES = {
 
 NAMESPACE_EXPERIMENT_TYPE = "namespace"
 CONTAINER_EXPERIMENT_TYPE = "container"
+PERF_PROFILE_NAME = "resource-optimization-openshift"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
