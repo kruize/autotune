@@ -93,6 +93,10 @@ check_err() {
 # Deploy kruize in remote monitoring mode with the specified docker image
 kruize_crc_start() {
 	kubectl_cmd="kubectl -n ${autotune_ns}"
+	# re-assign cluster_type value to call the common yaml for both minikube and kind
+	if [ "${cluster_type}" == "kind" ]; then
+	  cluster_type="minikube"
+  fi
 	CRC_MANIFEST_FILE_OLD="${CRC_DIR}/${cluster_type}/kruize_${cluster_type}.yaml"
 
 	echo "use yaml build - $use_yaml_build"
