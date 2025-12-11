@@ -49,7 +49,6 @@ public final class KruizeLayer
 
 	// Used to detect the presence of the layer in an application. Autotune runs the query, looks for
 	// the key, and all applications in the query output are matched to the KruizeLayer object.
-    @SerializedName("layer_presence")
     private ArrayList<LayerPresenceQuery> layerPresenceQueries;
 
 	private String layerPresenceLabel;
@@ -184,6 +183,14 @@ public final class KruizeLayer
 
     public void setLayerPresence(LayerPresence layerPresence) {
         this.layerPresence = layerPresence;
+    }
+
+    public LayerMetadata getMetadata() {
+        return metadata;
+    }
+
+    public void setMetadata(LayerMetadata metadata) {
+        this.metadata = metadata;
     }
 
     @Override
