@@ -66,9 +66,9 @@ public class AcceleratorMetaDataService {
         // IMPORTANT: Add it in the ascending order according to GPU Core and Memory Units as we will break the loop upon getting the right one
         h200_141_gb_profiles.add(new AcceleratorProfile(
                 AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H200_PROFILE_1G_18GB,
-                1.0 / 8, //
-                1.0 / 7,
-                7
+                1.0 / 8, // Memory Fraction: memory units available in profile to memory units available on card
+                1.0 / 7, // SM Fraction: Compute units available in profile to Compute units available on card
+                7 // Number of instance of such a profile which could be created from the accelerator card
         ));
         h200_141_gb_profiles.add(new AcceleratorProfile(
                 AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H200_PROFILE_1G_35GB,
