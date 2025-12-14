@@ -519,6 +519,25 @@ public class RecommendationUtils {
                 returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_2_CORES_48GB_GFX, recommendationConfigItem);
             case (AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.RTX_PRO_6000_PROFILE_4G_96GB) ->
                 returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_4_CORES_96GB_GFX, recommendationConfigItem);
+            // Adding H100 94 GB & 96 GB Partitions
+            case (AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_1G_12GB) ->
+                returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_1_CORE_12GB, recommendationConfigItem);
+            case (AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_1G_24GB) ->
+                returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_1_CORE_24GB, recommendationConfigItem);
+            case (AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_2G_24GB) ->
+                returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_2_CORES_24GB, recommendationConfigItem);
+            case (AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_3G_47GB) ->
+                returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_3_CORES_47GB, recommendationConfigItem);
+            case (AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_3G_48GB) ->
+                returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_3_CORES_48GB, recommendationConfigItem);
+            case (AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_4G_47GB) ->
+                returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_4_CORES_47GB, recommendationConfigItem);
+            case (AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_4G_48GB) ->
+                returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_4_CORES_48GB, recommendationConfigItem);
+            case (AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_7G_94GB) ->
+                returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_7_CORES_94GB, recommendationConfigItem);
+            case (AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_7G_96GB) ->
+                returnMap.put(AnalyzerConstants.RecommendationItem.NVIDIA_GPU_PARTITION_7_CORES_96GB, recommendationConfigItem);
         }
             return returnMap;
     }
@@ -537,6 +556,12 @@ public class RecommendationUtils {
 
         if (modelName.contains("H100") && modelName.contains("80GB"))
             return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_80_GB;
+        // NOTE: Not tested in real time, checks for predictable strings in device name
+        if (modelName.contains("H100") && modelName.contains("94GB"))
+            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_94_GB;
+        // NOTE: Not tested in real time, checks for predictable strings in device name
+        if (modelName.contains("H100") && modelName.contains("96GB"))
+            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_96_GB;
         // NOTE: Not tested in real time, checks for predictable strings in device name
         if (modelName.contains("H200"))
             return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H200_141_GB;

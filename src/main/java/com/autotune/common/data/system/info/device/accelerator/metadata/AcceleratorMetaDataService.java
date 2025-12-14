@@ -66,13 +66,13 @@ public class AcceleratorMetaDataService {
         // IMPORTANT: Add it in the ascending order according to GPU Core and Memory Units as we will break the loop upon getting the right one
         h200_141_gb_profiles.add(new AcceleratorProfile(
                 AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H200_PROFILE_1G_18GB,
-                1.0 / 8,
+                1.0 / 8, //
                 1.0 / 7,
                 7
         ));
         h200_141_gb_profiles.add(new AcceleratorProfile(
                 AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H200_PROFILE_1G_35GB,
-                1.0 / 4,
+                1.0 / 4, //
                 1.0 / 7,
                 4
         ));
@@ -179,9 +179,88 @@ public class AcceleratorMetaDataService {
                 1
         ));
 
+        List<AcceleratorProfile> h100_94_gb_profiles =  new ArrayList<>();
+        h100_94_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_1G_12GB,
+                1.0/8,
+                1.0/7,
+                7
+        ));
+        h100_94_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_1G_24GB,
+                1.0/4,
+                1.0/7,
+                1
+        ));
+        h100_94_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_2G_24GB,
+                2.0/8,
+                2.0/7,
+                3
+        ));
+        h100_94_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_3G_47GB,
+                4.0/8,
+                3.0/7,
+                2
+        ));
+        h100_94_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_4G_47GB,
+                4.0/8,
+                4.0/7,
+                1
+        ));
+        h100_94_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_7G_94GB,
+                1,
+                1,
+                1
+        ));
+
+        List<AcceleratorProfile> h100_96_gb_profiles =  new ArrayList<>();
+        h100_96_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_1G_12GB,
+                1.0/8,
+                1.0/7,
+                7
+        ));
+        h100_96_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_1G_24GB,
+                1.0/4,
+                1.0/7,
+                1
+        ));
+        h100_96_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_2G_24GB,
+                2.0/8,
+                2.0/7,
+                3
+        ));
+        h100_96_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_3G_48GB,
+                4.0/8,
+                3.0/7,
+                2
+        ));
+        h100_96_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_4G_48GB,
+                4.0/8,
+                4.0/7,
+                1
+        ));
+        h100_96_gb_profiles.add(new AcceleratorProfile(
+                AnalyzerConstants.AcceleratorConstants.AcceleratorProfiles.H100_PROFILE_7G_96GB,
+                1,
+                1,
+                1
+        ));
+
+
         acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_80_GB, commonProfiles);
         acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_80_GB, commonProfiles);
         acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_40_GB, a100_40_gb_profiles);
+        acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_94_GB, h100_94_gb_profiles);
+        acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_96_GB, h100_96_gb_profiles);
         acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H200_141_GB, h200_141_gb_profiles);
         acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.B200_180_GB, b200_180_gb_profiles);
         acceleratorProfilesMap.put(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.BW_RTX_PRO_5000_48_GB, rtx_pro_5000_48gb_profiles);
@@ -207,6 +286,8 @@ public class AcceleratorMetaDataService {
         if (!modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_80_GB)
                 && !modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_80_GB)
                 && !modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_40_GB)
+                && !modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_94_GB)
+                && !modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_96_GB)
                 && !modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H200_141_GB)
                 && !modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.B200_180_GB)
                 && !modelName.equalsIgnoreCase(AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.BW_RTX_PRO_5000_48_GB)
