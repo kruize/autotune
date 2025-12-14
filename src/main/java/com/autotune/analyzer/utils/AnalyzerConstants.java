@@ -504,6 +504,19 @@ public class AnalyzerConstants {
 
         }
 
+        public static final class AcceleratorNameTokens {
+            private AcceleratorNameTokens() {}
+
+            public static final String A100 = "A100";
+            public static final String H100 = "H100";
+            public static final String H200 = "H200";
+            public static final String RTX = "RTX";
+            public static final String B200 = "B200";
+            public static final String PRO = "PRO";
+            public static final String RTX_5000 = "5000";
+            public static final String RTX_6000 = "6000";
+        }
+
         public static final class AcceleratorAutoscalerLabels {
             private AcceleratorAutoscalerLabels() {
 
