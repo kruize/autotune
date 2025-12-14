@@ -408,21 +408,9 @@ public class RecommendationUtils {
 
         modelName = modelName.toUpperCase();
 
-        boolean A100_CHECK = (modelName.contains("A100") &&
-                (modelName.contains("40GB") || modelName.contains("80GB")));
-
-        boolean H100_CHECK = false;
-
-        if (!A100_CHECK) {
-            H100_CHECK = (modelName.contains("H100") && modelName.contains("80GB"));
-        }
-
-        boolean H200_CHECK = false;
-        if (!A100_CHECK && !H100_CHECK) {
-            H200_CHECK = (modelName.contains("H200"));
-        }
-
-        return A100_CHECK || H100_CHECK || H200_CHECK;
+        return modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.A100)
+                || modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.H100)
+                || modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.H200);
     }
 
     public static Timestamp getNearestTimestamp(HashMap<Timestamp, IntervalResults> containerDataResults, Timestamp targetTime, int minutesRange) {
