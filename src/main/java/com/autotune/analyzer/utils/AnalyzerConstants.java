@@ -499,6 +499,8 @@ public class AnalyzerConstants {
             public static final String GB_40 = "40" + UNIT_GB;
             public static final String GB_80 = "80" + UNIT_GB;
             public static final String GB_141 =  "141" + UNIT_GB;
+            public static final String GB_94 =  "94" + UNIT_GB;
+            public static final String GB_96 =  "96" + UNIT_GB;
 
         }
 

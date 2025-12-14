@@ -628,6 +628,12 @@ public class RecommendationUtils {
         if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_141))
             return 141 * 1024;
 
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_94))
+            return 94 * 1024;
+
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_96))
+            return 96 * 1024;
+
         return -1;
     }
 }
