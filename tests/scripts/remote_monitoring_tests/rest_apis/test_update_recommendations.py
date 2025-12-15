@@ -913,6 +913,10 @@ def test_update_valid_accelerator_recommendations(cluster_type):
                     mig_keys_in_limits = [key for key in cost_limits if re.fullmatch(MIG_PATTERN, key)]
                     assert mig_keys_in_limits, COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG
 
+                    # Check for notification
+                    cost_notifications = short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+                    assert INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE in cost_notifications
+
         response = update_recommendations(experiment_name, None, end_time)
         data = response.json()
         assert response.status_code == SUCCESS_STATUS_CODE
@@ -1052,6 +1056,10 @@ def test_update_invalid_accelerator_name_recommendations(cluster_type):
 
                     mig_keys_in_limits = [key for key in cost_limits if re.fullmatch(MIG_PATTERN, key)]
                     assert not mig_keys_in_limits, f"Unexpected GPU recommendations found: {mig_keys_in_limits}"
+
+                    # Check for notification
+                    cost_notifications = short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+                    assert NOTICE_ACCELERATOR_NOT_SUPPORTED_BY_KRUIZE in cost_notifications
 
         response = update_recommendations(experiment_name, None, end_time)
         data = response.json()
