@@ -224,6 +224,7 @@ TERMS_NOTIFICATION_CODES = {
 
 NAMESPACE_EXPERIMENT_TYPE = "namespace"
 CONTAINER_EXPERIMENT_TYPE = "container"
+PERF_PROFILE_NAME = "resource-optimization-openshift"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
