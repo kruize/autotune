@@ -32,6 +32,7 @@ public final class KruizeLayer
     private String apiVersion;
     private String kind;
     private LayerMetadata metadata;
+	private String layerId;
     @SerializedName("layer_name")
     private String layerName;
     @SerializedName("layer_level")
@@ -59,6 +60,10 @@ public final class KruizeLayer
 
 	public ArrayList<Tunable> getTunables() {
 		return new ArrayList<>(tunables);
+	}
+
+	public String getLayerId() {
+		return layerId;
 	}
 
     public String getApiVersion() {
@@ -98,6 +103,7 @@ public final class KruizeLayer
 		return "KruizeLayer{" +
                 "apiVersion='" + apiVersion + '\'' +
                 ", kind='" + kind + '\'' +
+                ", layerId='" + layerId + '\'' +
                 ", level=" + level +
                 ", layerName='" + layerName + '\'' +
                 ", details='" + details + '\'' +
