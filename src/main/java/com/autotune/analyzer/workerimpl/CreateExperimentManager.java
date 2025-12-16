@@ -27,7 +27,6 @@ import javax.servlet.ServletContext;
 import java.util.Map;
 
 import static com.autotune.analyzer.experiment.Experimentator.startExperiment;
-import static com.autotune.operator.KruizeOperator.addLayerInfo;
 import static com.autotune.operator.KruizeOperator.matchPodsToAutotuneObject;
 
 /**
@@ -52,9 +51,6 @@ public class CreateExperimentManager implements KruizeWorker {
 
         if (kruizeObject.getExperiment_usecase_type().isLocal_experiment() || kruizeObject.getExperiment_usecase_type().isLocal_monitoring()) {
             matchPodsToAutotuneObject(kruizeObject);
-            for (String kruizeConfig : KruizeOperator.autotuneConfigMap.keySet()) {
-                addLayerInfo(KruizeOperator.autotuneConfigMap.get(kruizeConfig), kruizeObject);
-            }
             if (kruizeObject.getExperiment_usecase_type().isLocal_experiment()) {
                 if (!KruizeOperator.deploymentMap.isEmpty() &&
                         KruizeOperator.deploymentMap.get(kruizeObject.getExperimentName()) != null) {
