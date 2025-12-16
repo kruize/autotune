@@ -155,7 +155,46 @@ public class AnalyzerConstants {
         NVIDIA_GPU_PARTITION_2_CORES_10GB("nvidia.com/mig-2g.10gb"),
         NVIDIA_GPU_PARTITION_3_CORES_20GB("nvidia.com/mig-3g.20gb"),
         NVIDIA_GPU_PARTITION_4_CORES_20GB("nvidia.com/mig-4g.20gb"),
-        NVIDIA_GPU_PARTITION_7_CORES_40GB("nvidia.com/mig-7g.40gb");
+        NVIDIA_GPU_PARTITION_7_CORES_40GB("nvidia.com/mig-7g.40gb"),
+
+        // H200 related partitions
+        NVIDIA_GPU_PARTITION_1_CORE_18GB("nvidia.com/mig-1g.18gb"),
+        NVIDIA_GPU_PARTITION_1_CORE_35GB("nvidia.com/mig-1g.35gb"),
+        NVIDIA_GPU_PARTITION_2_CORES_35GB("nvidia.com/mig-2g.35gb"),
+        NVIDIA_GPU_PARTITION_3_CORES_71GB("nvidia.com/mig-3g.71gb"),
+        NVIDIA_GPU_PARTITION_4_CORES_71GB("nvidia.com/mig-4g.71gb"),
+        NVIDIA_GPU_PARTITION_7_CORES_141GB("nvidia.com/mig-7g.141gb"),
+
+        // B200 related partitions
+        NVIDIA_GPU_PARTITION_1_CORE_23GB("nvidia.com/mig-1g.23gb"),
+        NVIDIA_GPU_PARTITION_1_CORE_45GB("nvidia.com/mig-1g.45gb"),
+        NVIDIA_GPU_PARTITION_2_CORES_45GB("nvidia.com/mig-2g.45gb"),
+        NVIDIA_GPU_PARTITION_3_CORES_90GB("nvidia.com/mig-3g.90gb"),
+        NVIDIA_GPU_PARTITION_4_CORES_90GB("nvidia.com/mig-4g.90gb"),
+        NVIDIA_GPU_PARTITION_7_CORES_180GB("nvidia.com/mig-7g.180gb"),
+
+        // RTX PRO 5000 Blackwell related partitions
+        NVIDIA_GPU_PARTITION_1_CORE_12GB("nvidia.com/mig-1g.12gb"),
+        NVIDIA_GPU_PARTITION_2_CORES_24GB_ME("nvidia.com/mig-2g.24gb-me"),
+        NVIDIA_GPU_PARTITION_4_CORES_48GB_GFX("nvidia.com/mig-4g.48gb+gfx"),
+
+        // RTX PRO 6000 Blackwell related partitions
+        NVIDIA_GPU_PARTITION_1_CORE_24GB_GFX("nvidia.com/mig-1g.24gb+gfx"),
+        NVIDIA_GPU_PARTITION_2_CORES_48GB_GFX("nvidia.com/mig-2g.48gb+gfx"),
+        NVIDIA_GPU_PARTITION_4_CORES_96GB_GFX("nvidia.com/mig-4g.96gb+gfx"),
+
+        // H100 94GB related partitions
+        NVIDIA_GPU_PARTITION_1_CORE_24GB("nvidia.com/mig-1g.24gb"),
+        NVIDIA_GPU_PARTITION_2_CORES_24GB("nvidia.com/mig-2g.24gb"),
+        NVIDIA_GPU_PARTITION_3_CORES_47GB("nvidia.com/mig-3g.47gb"),
+        NVIDIA_GPU_PARTITION_4_CORES_47GB("nvidia.com/mig-4g.47gb"),
+        NVIDIA_GPU_PARTITION_7_CORES_94GB("nvidia.com/mig-7g.94gb"),
+
+        // H100 96GB related partitions
+        NVIDIA_GPU_PARTITION_3_CORES_48GB("nvidia.com/mig-3g.48gb"),
+        NVIDIA_GPU_PARTITION_4_CORES_48GB("nvidia.com/mig-4g.48gb"),
+        NVIDIA_GPU_PARTITION_7_CORES_96GB("nvidia.com/mig-7g.96gb");
+
 
         private final String value;
 
@@ -379,6 +418,12 @@ public class AnalyzerConstants {
             public static final String A100_80_GB = "A100-80GB";
             public static final String A100_40_GB = "A100-40GB";
             public static final String H100_80_GB = "H100-80GB";
+            public static final String H100_94_GB = "H100-94GB";
+            public static final String H100_96_GB = "H100-96GB";
+            public static final String H200_141_GB = "H200-141GB";
+            public static final String B200_180_GB = "B200-180GB";
+            public static final String BW_RTX_PRO_5000_48_GB = "RTX-PRO-5000-48GB";
+            public static final String BW_RTX_PRO_6000_96_GB = "RTX-PRO-6000-96GB";
 
             private SupportedAccelerators() {
 
@@ -393,12 +438,52 @@ public class AnalyzerConstants {
             public static final String PROFILE_3G_20GB = "3g.20gb";
             public static final String PROFILE_4G_20GB = "4g.20gb";
             public static final String PROFILE_7G_40GB = "7g.40gb";
+
             // A100 80GB & H100 80GB Profiles
             public static final String PROFILE_1G_20GB = "1g.20gb";
             public static final String PROFILE_2G_20GB = "2g.20gb";
             public static final String PROFILE_3G_40GB = "3g.40gb";
             public static final String PROFILE_4G_40GB = "4g.40gb";
             public static final String PROFILE_7G_80GB = "7g.80gb";
+
+            // H200 Profiles
+            public static final String H200_PROFILE_1G_18GB = "1g.18gb";
+            public static final String H200_PROFILE_1G_35GB = "1g.35gb";
+            public static final String H200_PROFILE_2G_35GB = "2g.35gb";
+            public static final String H200_PROFILE_3G_71GB = "3g.71gb";
+            public static final String H200_PROFILE_4G_71GB = "4g.71gb";
+            public static final String H200_PROFILE_7G_141GB = "7g.141gb";
+
+            // B200 Profiles
+            public static final String B200_PROFILE_1G_23GB = "1g.23gb";
+            public static final String B200_PROFILE_1G_45GB = "1g.45gb";
+            public static final String B200_PROFILE_2G_45GB = "2g.45gb";
+            public static final String B200_PROFILE_3G_90GB = "3g.90gb";
+            public static final String B200_PROFILE_4G_90GB = "4g.90gb";
+            public static final String B200_PROFILE_7G_180GB = "7g.180gb";
+
+            // RTX PRO 5000 Blackwell Profiles
+            public static final String RTX_PRO_5000_PROFILE_1G_12GB = "1g.12gb-me";
+            public static final String RTX_PRO_5000_PROFILE_2G_24GB = "2g.24gb-me";
+            public static final String RTX_PRO_5000_PROFILE_4G_48GB = "4g.48gb+gfx";
+
+            // RTX PRO 6000 Blackwell Profiles
+            public static final String RTX_PRO_6000_PROFILE_1G_24GB = "1g.24gb+gfx";
+            public static final String RTX_PRO_6000_PROFILE_2G_48GB = "2g.48gb+gfx";
+            public static final String RTX_PRO_6000_PROFILE_4G_96GB = "4g.96gb+gfx";
+
+            // H100 94 GB Profiles
+            public static final String H100_PROFILE_1G_12GB = "1g.12gb";
+            public static final String H100_PROFILE_1G_24GB = "1g.24gb";
+            public static final String H100_PROFILE_2G_24GB = "2g.24gb";
+            public static final String H100_PROFILE_3G_47GB = "3g.47gb";
+            public static final String H100_PROFILE_4G_47GB = "4g.47gb";
+            public static final String H100_PROFILE_7G_94GB = "7g.94gb";
+
+            // H100 96 GB Profiles
+            public static final String H100_PROFILE_3G_48GB = "3g.48gb";
+            public static final String H100_PROFILE_4G_48GB = "4g.48gb";
+            public static final String H100_PROFILE_7G_96GB = "7g.96gb";
 
             private AcceleratorProfiles() {
 
@@ -423,6 +508,12 @@ public class AnalyzerConstants {
 
             public static final String CONTROLLER_UID = "controller-uid";
             public static final String BATCH_CONTROLLER_UID = "batch.kubernetes.io/controller-uid";
+        }
+
+        public static final class AcceleratorLogs {
+            private AcceleratorLogs() {}
+
+            public static final String UNSUPPORTED_ACCELERATOR = "Unsupported accelerator detected: {}";
         }
     }
 
