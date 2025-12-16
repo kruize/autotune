@@ -142,3 +142,9 @@ Please refer https://docs.nvidia.com/datacenter/tesla/mig-user-guide/supported-m
     }
 }
 ```
+
+#### MIG Supported Nvidia GPU's which can be optimised by KRUIZE
+
+- Nvidia A100 [Both 40 and 80 GB variants]
+- Nvidia H100 [80, 94 and 96 GB variants ]
+- Nvidia H200 [141 GB variant]
