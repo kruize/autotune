@@ -817,7 +817,7 @@ def test_update_namespace_recommendations_for_diff_reco_terms_with_only_latest(t
 # This test checks if kruize provides GPU recommendations for valid GPU's
 @pytest.mark.sanity
 @pytest.mark.parametrize("gpu_name", SUPPORTED_GPUS)
-def test_update_valid_accelerator_recommendations(cluster_type):
+def test_update_valid_accelerator_recommendations(cluster_type, gpu_name):
     '''
         Creates Experiment +
         update results for GPU workload with 2 records
