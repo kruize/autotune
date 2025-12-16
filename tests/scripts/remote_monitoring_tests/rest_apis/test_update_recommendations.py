@@ -816,6 +816,7 @@ def test_update_namespace_recommendations_for_diff_reco_terms_with_only_latest(t
 # Test for GPU recommendations
 # This test checks if kruize provides GPU recommendations for valid GPU's
 @pytest.mark.sanity
+@pytest.mark.parametrize("gpu_name", SUPPORTED_GPUS)
 def test_update_valid_accelerator_recommendations(cluster_type):
     '''
         Creates Experiment +
@@ -867,6 +868,13 @@ def test_update_valid_accelerator_recommendations(cluster_type):
             update_timestamps = True
             generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
             result_json = read_json_data_from_file(update_results_json_file)
+
+            # Substitute the valid GPU names
+            for kub_obj in result_json[0]["kubernetes_objects"]:
+                for container in kub_obj["containers"]:
+                    for metric in container["metrics"]:
+                        if metric["name"].startswith("accelerator") and "metadata" in metric["results"]:
+                            metric["results"]["metadata"]["accelerator_model_name"] = gpu_name
             if j == 0:
                 start_time = interval_start_time
             else:
