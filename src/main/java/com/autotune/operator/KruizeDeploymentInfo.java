@@ -68,7 +68,7 @@ public class KruizeDeploymentInfo {
     public static String database_admin_username;
     public static String database_admin_password;
     public static String database_ssl_mode;
-    public static Boolean TEST_USE_ONLY_CACHE_JOB_IN_MEM = false;
+    public static Boolean test_use_only_cache_job_in_mem = false;
     public static String job_filter_to_db = "experiments|status|apis|create|response|status_history|notifications";      //Use this constant to store necessary information into DB also can be set via env variable
     public static String cloudwatch_logs_access_key_id;
     public static String cloudwatch_logs_secret_access_key;
@@ -105,7 +105,6 @@ public class KruizeDeploymentInfo {
     public static String kafka_response_filter_include = System.getenv("KAFKA_RESPONSE_FILTER_INCLUDE");
     public static String kafka_response_filter_exclude = System.getenv("KAFKA_RESPONSE_FILTER_EXCLUDE");
     public static Integer kafka_thread_pool_size = 3;
-    public static Boolean runtimes_recommendations = false;
 
 
     private KruizeDeploymentInfo() {

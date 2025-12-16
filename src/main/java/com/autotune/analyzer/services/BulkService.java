@@ -160,7 +160,7 @@ public class BulkService extends HttpServlet {
             boolean verbose = verboseParam != null && Boolean.parseBoolean(verboseParam);
             BulkJobStatus jobDetails;
             // By default cache_job_in_mem set to false , If set it to true it will store in memory
-            if (KruizeDeploymentInfo.TEST_USE_ONLY_CACHE_JOB_IN_MEM) {
+            if (KruizeDeploymentInfo.test_use_only_cache_job_in_mem) {
                 if (jobStatusMap.isEmpty()) {
                     sendErrorResponse(
                             resp,
@@ -285,7 +285,7 @@ public class BulkService extends HttpServlet {
             String jobID = UUID.randomUUID().toString();
             BulkJobStatus jobStatus = new BulkJobStatus(jobID, IN_PROGRESS, Instant.now(), payload);
 
-            if (KruizeDeploymentInfo.TEST_USE_ONLY_CACHE_JOB_IN_MEM)
+            if (KruizeDeploymentInfo.test_use_only_cache_job_in_mem)
                 jobStatusMap.put(jobID, jobStatus);
             else {
                 try {

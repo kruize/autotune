@@ -1,5 +1,6 @@
 package com.autotune.analyzer.recommendations.model;
 
+import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -657,6 +658,17 @@ public class GenericRecommendationModel implements RecommendationModel{
         }
 
         return RecommendationUtils.getMapWithOptimalProfile(acceleratorModel, coreFraction, memoryFraction);
+    }
+
+    /**
+     * @param filteredResultsMap
+     * @param notifications
+     * @return
+     */
+    @Override
+    public RecommendationConfigEnv getRuntimeRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        //TODO: Need to update this
+        return null;
     }
 
     @Override

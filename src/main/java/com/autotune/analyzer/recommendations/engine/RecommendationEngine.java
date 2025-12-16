@@ -867,7 +867,7 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
 
-
+            List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>(); //TODO: need to update this list
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
                     termEntry,
@@ -877,7 +877,8 @@ public class RecommendationEngine {
                     numPods,
                     cpuThreshold,
                     memoryThreshold,
-                    recommendationAcceleratorRequestMap
+                    recommendationAcceleratorRequestMap,
+                    runtimeRecommList
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -1204,7 +1205,8 @@ public class RecommendationEngine {
                     numPodsInNamespace,
                     namespaceCpuThreshold,
                     namespaceMemoryThreshold,
-                    null
+                    null,
+                    null //TODO: temporarily passing this null, will be updated
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -1228,6 +1230,7 @@ public class RecommendationEngine {
      * @param cpuThreshold                        The CPU usage threshold for the recommendation.
      * @param memoryThreshold                     The memory usage threshold for the recommendation.
      * @param recommendationAcceleratorRequestMap The Map which has Accelerator recommendations
+     * @param runtimeListToPopulate                The Object to populate runtime recommendations.
      * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
     private boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
@@ -1237,7 +1240,8 @@ public class RecommendationEngine {
                                            int numPods,
                                            double cpuThreshold,
                                            double memoryThreshold,
-                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap) {
+                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap,
+                                           List<RecommendationConfigEnv> runtimeListToPopulate) {
         // Check for cpu & memory Thresholds (Duplicate check if the caller is generateRecommendations)
         String recommendationTerm = termEntry.getKey();
         double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
@@ -1374,7 +1378,7 @@ public class RecommendationEngine {
             currentMemLimit = internalMapToPopulate.get(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_LIMIT);
 
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
+        Config config = new Config();
         // Create Request Map
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
         // Recommendation Item checks
@@ -1818,7 +1822,7 @@ public class RecommendationEngine {
 
         // Set Request Map
         if (!requestsMap.isEmpty()) {
-            config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+            config.setRequests(requestsMap);
         }
 
         // Check if accelerator map is not empty and add to limits map
@@ -1828,13 +1832,16 @@ public class RecommendationEngine {
 
         // Set Limits Map
         if (!limitsMap.isEmpty()) {
-            config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
+            config.setLimits(limitsMap);
+        }
+
+        // Set env list
+        if (runtimeListToPopulate != null) {
+            config.setEnv(runtimeListToPopulate);
         }
 
         // Set Config
-        if (!config.isEmpty()) {
-            recommendationModel.setConfig(config);
-        }
+        recommendationModel.setConfig(config);
 
         // Check if map is not empty and set requests map to current config
         if (!currentRequestsMap.isEmpty()) {
