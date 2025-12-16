@@ -924,6 +924,8 @@ def test_update_valid_accelerator_recommendations(cluster_type, gpu_name):
                     # Check for notification
                     cost_notifications = short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
                     assert INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE in cost_notifications
+                    perf_notifications = short_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+                    assert INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE in perf_notifications
 
         response = update_recommendations(experiment_name, None, end_time)
         data = response.json()
@@ -1068,6 +1070,8 @@ def test_update_invalid_accelerator_name_recommendations(cluster_type):
                     # Check for notification
                     cost_notifications = short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
                     assert NOTICE_ACCELERATOR_NOT_SUPPORTED_BY_KRUIZE in cost_notifications
+                    perf_notifications = short_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+                    assert NOTICE_ACCELERATOR_NOT_SUPPORTED_BY_KRUIZE in perf_notifications
 
         response = update_recommendations(experiment_name, None, end_time)
         data = response.json()
