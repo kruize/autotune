@@ -509,6 +509,12 @@ public class AnalyzerConstants {
             public static final String CONTROLLER_UID = "controller-uid";
             public static final String BATCH_CONTROLLER_UID = "batch.kubernetes.io/controller-uid";
         }
+
+        public static final class AcceleratorLogs {
+            private AcceleratorLogs() {}
+
+            public static final String UNSUPPORTED_ACCELERATOR = "Unsupported accelerator detected: {}";
+        }
     }
 
     public static final class ExperimentTypes {

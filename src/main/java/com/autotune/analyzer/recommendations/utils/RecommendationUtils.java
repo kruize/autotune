@@ -543,25 +543,28 @@ public class RecommendationUtils {
     }
 
     public static String getSupportedModelBasedOnModelName(String modelName) {
-        if (null == modelName || modelName.isEmpty())
+        if (null == modelName || modelName.isBlank())
             return null;
 
         modelName = modelName.toUpperCase();
 
-        if (modelName.contains("A100") && modelName.contains("40GB"))
-            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_40_GB;
+        if (modelName.contains("A100")) {
+            if (modelName.contains("40GB"))
+                return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_40_GB;
+            // NOTE: Not tested in real time, checks for predictable strings in device name
+            if (modelName.contains("80GB"))
+                return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_80_GB;
+        }
 
-        if (modelName.contains("A100") && modelName.contains("80GB"))
-            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_80_GB;
-
-        if (modelName.contains("H100") && modelName.contains("80GB"))
-            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_80_GB;
         // NOTE: Not tested in real time, checks for predictable strings in device name
-        if (modelName.contains("H100") && modelName.contains("94GB"))
-            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_94_GB;
-        // NOTE: Not tested in real time, checks for predictable strings in device name
-        if (modelName.contains("H100") && modelName.contains("96GB"))
-            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_96_GB;
+        if (modelName.contains("H100")) {
+            if (modelName.contains("80GB"))
+                return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_80_GB;
+            if (modelName.contains("94GB"))
+                return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_94_GB;
+            if (modelName.contains("96GB"))
+                return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_96_GB;
+        }
         // NOTE: Not tested in real time, checks for predictable strings in device name
         if (modelName.contains("H200"))
             return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H200_141_GB;
@@ -569,11 +572,13 @@ public class RecommendationUtils {
         if (modelName.contains("B200"))
             return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.B200_180_GB;
         // NOTE: Not tested in real time, checks for predictable strings in device name
-        if (modelName.contains("RTX") && modelName.contains("PRO") && modelName.contains("5000"))
-            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.BW_RTX_PRO_5000_48_GB;
-        // NOTE: Not tested in real time, checks for predictable strings in device name
-        if (modelName.contains("RTX") && modelName.contains("PRO") && modelName.contains("6000"))
-            return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.BW_RTX_PRO_6000_96_GB;
+        if (modelName.contains("RTX") && modelName.contains("PRO")) {
+            if (modelName.contains("5000"))
+                return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.BW_RTX_PRO_5000_48_GB;
+            if ( modelName.contains("6000"))
+                return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.BW_RTX_PRO_6000_96_GB;
+        }
+        LOGGER.info(AnalyzerConstants.AcceleratorConstants.AcceleratorLogs.UNSUPPORTED_ACCELERATOR, modelName);
 
         return null;
     }
