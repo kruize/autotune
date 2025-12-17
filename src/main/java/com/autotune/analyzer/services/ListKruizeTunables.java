@@ -97,12 +97,53 @@ public class ListKruizeTunables extends HttpServlet {
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        response.setStatus(HttpServletResponse.SC_NOT_IMPLEMENTED);
+        response.setStatus(HttpServletResponse.SC_OK);
         response.setContentType(JSON_CONTENT_TYPE);
         response.setCharacterEncoding(CHARACTER_ENCODING);
 
         JSONArray layersArray = new JSONArray();
-        layersArray.put("Layer CRD loading is not supported in this version. This endpoint is deprecated.");
+        if (KruizeOperator.autotuneConfigMap.isEmpty()) {
+            layersArray.put(LAYER_NOT_FOUND);
+            response.getWriter().println(layersArray.toString(4));
+            return;
+        }
+
+        String sloClass = request.getParameter(AnalyzerConstants.AutotuneObjectConstants.SLO_CLASS);
+        String layerName = request.getParameter(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
+        KruizeLayer kruizeLayer = null;
+
+        if (layerName != null) {
+            if (KruizeOperator.autotuneConfigMap.containsKey(layerName)) {
+                JSONObject layerJson = new JSONObject();
+                kruizeLayer = KruizeOperator.autotuneConfigMap.get(layerName);
+                addLayerDetails(layerJson, kruizeLayer);
+                JSONArray tunablesArray = new JSONArray();
+                addLayerTunableDetails(tunablesArray, kruizeLayer, sloClass);
+                if (!tunablesArray.isEmpty()) {
+                    layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
+                    layersArray.put(layerJson);
+                } else {
+                    if (sloClass != null) {
+                        layersArray.put(ERROR_SLO_CLASS + sloClass + NOT_FOUND);
+                    }
+                }
+            } else {
+                layersArray.put(LAYER_NOT_FOUND);
+            }
+        } else {
+            // No layer parameter was passed in the request
+            for (String layer : KruizeOperator.autotuneConfigMap.keySet()) {
+                JSONObject layerJson = new JSONObject();
+                kruizeLayer = KruizeOperator.autotuneConfigMap.get(layer);
+                addLayerDetails(layerJson, kruizeLayer);
+                JSONArray tunablesArray = new JSONArray();
+                addLayerTunableDetails(tunablesArray, kruizeLayer, sloClass);
+                if (!tunablesArray.isEmpty()) {
+                    layerJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesArray);
+                    layersArray.put(layerJson);
+                }
+            }
+        }
         response.getWriter().println(layersArray.toString(4));
 
     }
