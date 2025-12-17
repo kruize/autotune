@@ -11,24 +11,21 @@ sys.path.append("../../")
 from helpers.utils import get_metric_profile_dir
 
 def loadData(exptype):
-    match exptype:
-        case "container":
-            exp_json_file = "./json_files/create_exp.json"
-            res_json_file = "./json_files/results.json"
-        case "namespace":
-            exp_json_file = "./json_files/create_ns_exp.json"
-            res_json_file = "./json_files/ns_results.json"
-        case "gpucontainer":
-            exp_json_file = "./json_files/create_gpu_exp.json"
-            res_json_file = "./json_files/gpu_results.json"
-        case _:
-             raise ValueError(f"Unknown experiment type: {exptype}")
+    if exptype == "container":
+         exp_json_file = "./json_files/create_exp.json"
+         res_json_file = "./json_files/results.json"
+    elif exptype == "namespace":
+        exp_json_file = "./json_files/create_ns_exp.json"
+        res_json_file = "./json_files/ns_results.json"
+    elif exptype == "gpucontainer":
+        exp_json_file = "./json_files/create_gpu_exp.json"
+        res_json_file = "./json_files/gpu_results.json"
 
     with open(exp_json_file, 'r', encoding='utf-8') as exp_file:
-       create_data = json.load(exp_file)
+        create_data = json.load(exp_file)
 
     with open(res_json_file, 'r', encoding='utf-8') as res_file:
-       data = json.load(res_file)
+        data = json.load(res_file)
 
     performance_profile_dir = get_metric_profile_dir()
     profile_json_path = performance_profile_dir / 'resource_optimization_openshift.json'
