@@ -17,7 +17,6 @@ package com.autotune.analyzer.application;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.utils.KruizeSupportedTypes;
-import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,11 +48,8 @@ public class Tunable {
     private String name;
     private String fullName;
     private double step;
-    @SerializedName("value_type")
     private String valueType;
-    @SerializedName("upper_bound")
     private Double upperBoundValue;
-    @SerializedName("lower_bound")
     private Double lowerBoundValue;
     private String boundUnits;
     private String description;
@@ -208,16 +204,9 @@ public class Tunable {
     public String getName() {
         return name;
     }
-    public void setName(String name) {
-        this.name = name;
-    }
-
 
     public String getFullName() {
         return fullName;
-    }
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
     }
 
     private String getBound(Double boundVal, String boundUnits, String valueType) {
@@ -233,9 +222,6 @@ public class Tunable {
     public Double getUpperBoundValue() {
         return upperBoundValue;
     }
-    public void setUpperBoundValue(Double upperBoundValue) {
-        this.upperBoundValue = upperBoundValue;
-    }
 
     public String getUpperBound() {
         return getBound(upperBoundValue, boundUnits, valueType);
@@ -243,9 +229,6 @@ public class Tunable {
 
     public Double getLowerBoundValue() {
         return lowerBoundValue;
-    }
-    public void setLowerBoundValue(Double lowerBoundValue) {
-        this.lowerBoundValue = lowerBoundValue;
     }
 
     public String getLowerBound() {
@@ -259,10 +242,6 @@ public class Tunable {
     public String getValueType() {
         return valueType;
     }
-    public void setValueType(String valueType) {
-        this.valueType = valueType;
-    }
-
 
     public Map<String, String> getQueries() {
         return queries;
@@ -276,6 +255,10 @@ public class Tunable {
         return description;
     }
 
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
     public void setDescription(String description) {
         this.description = description;
     }
@@ -287,15 +270,14 @@ public class Tunable {
     public double getStep() {
         return step;
     }
-    public void setStep(Double step) {
-        this.step = step;
-    }
 
     public String getLayerName() {
         return layerName;
     }
 
-    public String getStackName() { return stackName; }
+    public String getStackName() {
+        return stackName;
+    }
 
     public void setStackName(String stackName) {
         this.stackName = stackName;
@@ -304,10 +286,6 @@ public class Tunable {
     public List<String> getChoices() {
         return choices;
     }
-    public void setChoices(List<String> choices) {
-        this.choices = choices;
-    }
-
 
     @Override
     public String toString() {
@@ -322,7 +300,6 @@ public class Tunable {
                 ", queries=" + queries +
                 ", sloClassList=" + sloClassList +
                 ", layer=" + layerName +
-                ", choices=" + choices +
                 '}';
     }
 }
