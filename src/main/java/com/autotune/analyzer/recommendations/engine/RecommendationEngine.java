@@ -1815,6 +1815,12 @@ public class RecommendationEngine {
             recommendationModel.addNotification(recommendationNotification);
         }
 
+        // Set env list
+        if (runtimeListToPopulate != null && !runtimeListToPopulate.isEmpty()) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE);
+            engineNotifications.add(recommendationNotification);
+            config.setEnv(runtimeListToPopulate);
+        }
         // set the engine level notifications here
         for (RecommendationNotification recommendationNotification : engineNotifications) {
             recommendationModel.addNotification(recommendationNotification);
@@ -1833,11 +1839,6 @@ public class RecommendationEngine {
         // Set Limits Map
         if (!limitsMap.isEmpty()) {
             config.setLimits(limitsMap);
-        }
-
-        // Set env list
-        if (runtimeListToPopulate != null) {
-            config.setEnv(runtimeListToPopulate);
         }
 
         // Set Config
