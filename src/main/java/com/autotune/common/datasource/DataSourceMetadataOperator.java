@@ -15,19 +15,6 @@
  *******************************************************************************/
 package com.autotune.common.datasource;
 
-import com.autotune.analyzer.metadataProfiles.MetadataProfile;
-import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.common.data.dataSourceMetadata.*;
-import com.autotune.utils.GenericRestApiClient;
-import com.autotune.utils.KruizeConstants;
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import org.json.JSONObject;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.security.KeyManagementException;
@@ -38,7 +25,25 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.autotune.analyzer.metadataProfiles.MetadataProfile;
+import com.autotune.analyzer.metadataProfiles.MetadataProfileCollection;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import com.autotune.common.data.dataSourceMetadata.DataSource;
+import com.autotune.common.data.dataSourceMetadata.DataSourceContainer;
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataHelper;
+import com.autotune.common.data.dataSourceMetadata.DataSourceMetadataInfo;
+import com.autotune.common.data.dataSourceMetadata.DataSourceNamespace;
+import com.autotune.common.data.dataSourceMetadata.DataSourceWorkload;
+import com.autotune.utils.GenericRestApiClient;
+import com.autotune.utils.KruizeConstants;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 /**
  * DataSourceMetadataOperator is an abstraction with CRUD operations to manage DataSourceMetadataInfo Object
@@ -198,8 +203,17 @@ public class DataSourceMetadataOperator {
             String includeRegex = includeResources.getOrDefault(field + "Regex", "");
             String excludeRegex = excludeResources.getOrDefault(field + "Regex", "");
             String filter = constructDynamicFilter(field, includeRegex, excludeRegex);
-            String queryTemplate = getQueryTemplate(field, metadataProfile); // Helper to map fields to PromQL queries
-            queries.put(field, String.format(queryTemplate, filter));
+            String queryTemplate = getQueryTemplate(field, metadataProfile);
+            String filteredQuery;
+            if (queryTemplate.contains("%s")) {
+                filteredQuery = String.format(queryTemplate, filter);
+            } else {
+                filteredQuery = queryTemplate.replace(
+                    field + "!=\"\"",
+                    filter.isEmpty() ? field + "!=\"\"" : filter
+                );
+            }
+            queries.put(field, filteredQuery);
         });
 
         // Construct queries
