@@ -124,6 +124,7 @@ DELETE_PERF_PROFILE_MISSING_NAME_ERROR = "Performance profile name is required."
 DELETE_PERF_PROFILE_NON_EXISTENT_NAME_ERROR = "Not Found: performance_profile does not exist: %s"
 DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment."
 DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable."
+RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE = "Runtimes recommendations are unavailable for the provided datasource."
 
 
 # Kruize Recommendations Notification codes
@@ -1268,6 +1269,26 @@ def get_kruize_pod(namespace):
     pod_name = output.decode('utf-8')
     print(f"pod name = {pod_name}")
     return pod_name.rstrip()
+
+def get_kruize_logs(namespace):
+    """
+    Fetches logs (stdout) from the Kruize pod.
+    Tail defaults to last 500 lines for speed.
+    """
+    tail = 500
+    pod = get_kruize_pod(namespace)
+
+    try:
+        cmd = [
+            "kubectl", "logs",
+            pod,
+            "-n", namespace,
+            f"--tail={tail}"
+        ]
+        logs = subprocess.check_output(cmd, text=True)
+        return logs
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch logs from pod {pod}: {e}")
 
 
 def delete_kruize_pod(namespace):

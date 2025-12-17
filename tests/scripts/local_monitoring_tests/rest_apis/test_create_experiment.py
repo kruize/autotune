@@ -252,3 +252,35 @@ def test_create_multiple_namespace_exp(cluster_type):
 
     response = delete_experiment(input_json_file, rm=False)
     print("delete exp = ", response.status_code)
+
+
+@pytest.mark.sanity
+def test_non_runtime_supported_datasource_logs_message(cluster_type):
+    """
+    Test Description:
+    Creating an experiment with a datasource that exists BUT does not support
+    runtime recommendations should NOT fail the API, but the server should log
+    'RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE'.
+    """
+    input_json_file = "../json_files/create_multiple_namespace_exp.json"
+    form_kruize_url(cluster_type)
+
+    delete_and_create_metadata_profile()
+
+    response = delete_experiment(input_json_file, rm=False)
+    print("delete exp = ", response.status_code)
+
+    # Create experiment using the specified json
+    response = create_experiment(input_json_file)
+
+    data = response.json()
+    print(data['message'])
+
+    # Give server 1–2 seconds to flush logs
+    time.sleep(2)
+
+    # Fetch logs from kruize pod (your helper may differ)
+    logs = get_kruize_logs()
+
+    assert RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE in logs, \
+        "Expected log message not found when using non-runtime-supported datasource"
