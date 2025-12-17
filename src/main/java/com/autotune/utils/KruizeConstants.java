@@ -478,6 +478,7 @@ public class KruizeConstants {
             public static final String CHECK_DATASOURCE_UPDATES = "Datasource {} already exists, Checking for updates...";
             public static final String DATASOURCE_AUTH_CHANGED = "Authentication details for datasource {} have changed. Checking if the datasource is serviceable with the new config...";
             public static final String DATASOURCE_AUTH_UNCHANGED = "No changes detected in the authentication details for datasource {}";
+            public static final String RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE = "Runtimes recommendations are unavailable for the provided datasource.";
 
             private DataSourceInfoMsgs() {
             }

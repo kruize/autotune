@@ -139,7 +139,9 @@ public class Autotune {
                 try {
                     setUpDataSources();
                 } catch (Exception e) {
-                    LOGGER.error(DATASOURCE_CONNECTION_FAILED, e.getMessage());
+                    LOGGER.error(DATASOURCE_CONNECTION_FAILED +"{}", e.getMessage());
+                    LOGGER.info("Exiting...");
+                    System.exit(1);
                 }
 
                 // checking available DataSources

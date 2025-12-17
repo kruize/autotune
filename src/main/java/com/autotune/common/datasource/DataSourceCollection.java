@@ -242,7 +242,7 @@ public class DataSourceCollection {
                     failedDatasources.add(name + " (invalid URL)");
                 } catch (Exception e) {
                     // Catch-all to ensure one datasource failure doesn't stop processing
-                    LOGGER.error("unexpected error when adding datasource {}: {}", name, e.getMessage(), e);
+                    LOGGER.error("unexpected error when adding datasource {}: {}", name, e.getMessage());
                     failedDatasources.add(name + " (exception: " + e.getMessage() + ")");
                 }
             }
