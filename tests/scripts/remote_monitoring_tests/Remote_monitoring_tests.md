@@ -129,7 +129,7 @@ Here are the test scenarios:
 - Update recommendations with unknown experiment_name
 - Update recommendations with unknown end_time
 - Update recommendations with end_time preceding start_time
-- [SANITY] Update recommendations with valid results for MIG accelerator
+- [SANITY] Update recommendations with valid results for Kruize supported MIG accelerator [A100, H100 and H200]
 - [SANITY] Update recommendations with valid results for Non-MIG Accelerator
 
 Namespace Related Test Scenarios:

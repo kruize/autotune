@@ -816,7 +816,8 @@ def test_update_namespace_recommendations_for_diff_reco_terms_with_only_latest(t
 # Test for GPU recommendations
 # This test checks if kruize provides GPU recommendations for valid GPU's
 @pytest.mark.sanity
-def test_update_valid_accelerator_recommendations(cluster_type):
+@pytest.mark.parametrize("gpu_name", SUPPORTED_GPUS)
+def test_update_valid_accelerator_recommendations(cluster_type, gpu_name):
     '''
         Creates Experiment +
         update results for GPU workload with 2 records
@@ -867,6 +868,13 @@ def test_update_valid_accelerator_recommendations(cluster_type):
             update_timestamps = True
             generate_json(find, result_json_file, update_results_json_file, i, update_timestamps)
             result_json = read_json_data_from_file(update_results_json_file)
+
+            # Substitute the valid GPU names
+            for kub_obj in result_json[0]["kubernetes_objects"]:
+                for container in kub_obj["containers"]:
+                    for metric in container["metrics"]:
+                        if metric["name"].startswith("accelerator") and "metadata" in metric["results"]:
+                            metric["results"]["metadata"]["accelerator_model_name"] = gpu_name
             if j == 0:
                 start_time = interval_start_time
             else:
@@ -912,6 +920,12 @@ def test_update_valid_accelerator_recommendations(cluster_type):
                     cost_limits = short_term_recommendation["recommendation_engines"]["cost"]["config"].get("limits", {})
                     mig_keys_in_limits = [key for key in cost_limits if re.fullmatch(MIG_PATTERN, key)]
                     assert mig_keys_in_limits, COST_LIMITS_NO_MIG_RECOMMENDATIONS_AVAILABLE_MSG
+
+                    # Check for notification
+                    cost_notifications = short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+                    assert INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE in cost_notifications
+                    perf_notifications = short_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+                    assert INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE in perf_notifications
 
         response = update_recommendations(experiment_name, None, end_time)
         data = response.json()
@@ -1052,6 +1066,12 @@ def test_update_invalid_accelerator_name_recommendations(cluster_type):
 
                     mig_keys_in_limits = [key for key in cost_limits if re.fullmatch(MIG_PATTERN, key)]
                     assert not mig_keys_in_limits, f"Unexpected GPU recommendations found: {mig_keys_in_limits}"
+
+                    # Check for notification
+                    cost_notifications = short_term_recommendation["recommendation_engines"]["cost"]["notifications"]
+                    assert NOTICE_ACCELERATOR_NOT_SUPPORTED_BY_KRUIZE in cost_notifications
+                    perf_notifications = short_term_recommendation["recommendation_engines"]["performance"]["notifications"]
+                    assert NOTICE_ACCELERATOR_NOT_SUPPORTED_BY_KRUIZE in perf_notifications
 
         response = update_recommendations(experiment_name, None, end_time)
         data = response.json()

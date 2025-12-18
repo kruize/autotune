@@ -408,16 +408,9 @@ public class RecommendationUtils {
 
         modelName = modelName.toUpperCase();
 
-        boolean A100_CHECK = (modelName.contains("A100") &&
-                (modelName.contains("40GB") || modelName.contains("80GB")));
-
-        boolean H100_CHECK = false;
-
-        if (!A100_CHECK) {
-            H100_CHECK = (modelName.contains("H100") && modelName.contains("80GB"));
-        }
-
-        return A100_CHECK || H100_CHECK;
+        return modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.A100)
+                || modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.H100)
+                || modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.H200);
     }
 
     public static Timestamp getNearestTimestamp(HashMap<Timestamp, IntervalResults> containerDataResults, Timestamp targetTime, int minutesRange) {
@@ -548,34 +541,34 @@ public class RecommendationUtils {
 
         modelName = modelName.toUpperCase();
 
-        if (modelName.contains("A100")) {
-            if (modelName.contains("40GB"))
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.A100)) {
+            if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_40))
                 return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_40_GB;
             // NOTE: Not tested in real time, checks for predictable strings in device name
-            if (modelName.contains("80GB"))
+            if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_80))
                 return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.A100_80_GB;
         }
-
         // NOTE: Not tested in real time, checks for predictable strings in device name
-        if (modelName.contains("H100")) {
-            if (modelName.contains("80GB"))
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.H100)) {
+            if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_80))
                 return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_80_GB;
-            if (modelName.contains("94GB"))
+            if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_94))
                 return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_94_GB;
-            if (modelName.contains("96GB"))
+            if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_96))
                 return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H100_96_GB;
         }
         // NOTE: Not tested in real time, checks for predictable strings in device name
-        if (modelName.contains("H200"))
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.H200))
             return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.H200_141_GB;
         // NOTE: Not tested in real time, checks for predictable strings in device name
-        if (modelName.contains("B200"))
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.B200))
             return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.B200_180_GB;
         // NOTE: Not tested in real time, checks for predictable strings in device name
-        if (modelName.contains("RTX") && modelName.contains("PRO")) {
-            if (modelName.contains("5000"))
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.RTX)
+                && modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.PRO)) {
+            if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.RTX_5000))
                 return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.BW_RTX_PRO_5000_48_GB;
-            if ( modelName.contains("6000"))
+            if ( modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorNameTokens.RTX_6000))
                 return AnalyzerConstants.AcceleratorConstants.SupportedAccelerators.BW_RTX_PRO_6000_96_GB;
         }
         LOGGER.info(AnalyzerConstants.AcceleratorConstants.AcceleratorLogs.UNSUPPORTED_ACCELERATOR, modelName);
@@ -619,6 +612,15 @@ public class RecommendationUtils {
 
         if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_80))
             return 80 * 1024;
+
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_141))
+            return 141 * 1024;
+
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_94))
+            return 94 * 1024;
+
+        if (modelName.contains(AnalyzerConstants.AcceleratorConstants.AcceleratorMemory.GB_96))
+            return 96 * 1024;
 
         return -1;
     }

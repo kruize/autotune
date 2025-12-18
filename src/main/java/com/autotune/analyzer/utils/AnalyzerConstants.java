@@ -498,7 +498,23 @@ public class AnalyzerConstants {
             public static final String UNIT_GB = "GB";
             public static final String GB_40 = "40" + UNIT_GB;
             public static final String GB_80 = "80" + UNIT_GB;
+            public static final String GB_141 =  "141" + UNIT_GB;
+            public static final String GB_94 =  "94" + UNIT_GB;
+            public static final String GB_96 =  "96" + UNIT_GB;
 
+        }
+
+        public static final class AcceleratorNameTokens {
+            private AcceleratorNameTokens() {}
+
+            public static final String A100 = "A100";
+            public static final String H100 = "H100";
+            public static final String H200 = "H200";
+            public static final String RTX = "RTX";
+            public static final String B200 = "B200";
+            public static final String PRO = "PRO";
+            public static final String RTX_5000 = "5000";
+            public static final String RTX_6000 = "6000";
         }
 
         public static final class AcceleratorAutoscalerLabels {
