@@ -16,7 +16,7 @@
 
 package com.autotune.analyzer.kruizeLayer.presence;
 
-import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
+import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
 
 import java.util.ArrayList;
 
