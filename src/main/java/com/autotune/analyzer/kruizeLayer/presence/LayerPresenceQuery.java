@@ -17,15 +17,24 @@ package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.google.gson.annotations.SerializedName;
 
 /**
  * Used to detect the presence of the layer in an application. Autotune runs the query, looks for
  * the key, and all applications in the query output are matched to the KruizeLayer object.
  */
 public class LayerPresenceQuery {
-	private final String dataSource;
-	private final String layerPresenceKey;
-	private final String layerPresenceQuery;
+	@SerializedName("datasource")
+	private String dataSource;
+
+	@SerializedName("key")
+	private String layerPresenceKey;
+
+	@SerializedName("query")
+	private String layerPresenceQuery;
+
+	public LayerPresenceQuery() {
+	}
 
 	public LayerPresenceQuery(String datasource,
 							  String layerPresenceQuery,
@@ -40,7 +49,36 @@ public class LayerPresenceQuery {
 		this.layerPresenceKey = layerPresenceKey;
 	}
 
-	public String getLayerPresenceKey() { return layerPresenceKey; }
+	public String getDataSource() {
+		return dataSource;
+	}
 
-	public String getLayerPresenceQuery() {	return layerPresenceQuery; }
+	public void setDataSource(String dataSource) {
+		this.dataSource = dataSource;
+	}
+
+	public String getLayerPresenceKey() {
+		return layerPresenceKey;
+	}
+
+	public void setLayerPresenceKey(String layerPresenceKey) {
+		this.layerPresenceKey = layerPresenceKey;
+	}
+
+	public String getLayerPresenceQuery() {
+		return layerPresenceQuery;
+	}
+
+	public void setLayerPresenceQuery(String layerPresenceQuery) {
+		this.layerPresenceQuery = layerPresenceQuery;
+	}
+
+	@Override
+	public String toString() {
+		return "LayerPresenceQuery{" +
+				"dataSource='" + dataSource + '\'' +
+				", layerPresenceKey='" + layerPresenceKey + '\'' +
+				", layerPresenceQuery='" + layerPresenceQuery + '\'' +
+				'}';
+	}
 }
