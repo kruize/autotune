@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2026 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2025 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,23 +17,21 @@
 package com.autotune.analyzer.kruizeLayer.presence;
 
 import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
-import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
 
 import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Implementation for query-based layer presence detection
  */
 public class QueryBasedPresence implements LayerPresenceDetector {
 
-    private List<LayerPresenceQuery> queries;
+    private ArrayList<LayerPresenceQuery> queries;
 
     public QueryBasedPresence() {
         this.queries = new ArrayList<>();
     }
 
-    public QueryBasedPresence(List<LayerPresenceQuery> queries) {
+    public QueryBasedPresence(ArrayList<LayerPresenceQuery> queries) {
         this.queries = queries != null ? queries : new ArrayList<>();
     }
 
@@ -42,12 +40,12 @@ public class QueryBasedPresence implements LayerPresenceDetector {
         return PresenceType.QUERY;
     }
 
-    public List<LayerPresenceQuery> getQueries() {
+    public ArrayList<LayerPresenceQuery> getQueries() {
         return queries;
     }
 
-    public void setQueries(List<LayerPresenceQuery> queries) {
-        this.queries = queries != null ? queries : new ArrayList<>();
+    public void setQueries(ArrayList<LayerPresenceQuery> queries) {
+        this.queries = queries;
     }
 
     @Override
