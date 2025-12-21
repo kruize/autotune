@@ -16,6 +16,7 @@
 package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.application.Tunable;
+import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
