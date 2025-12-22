@@ -21,7 +21,7 @@ import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.exceptions.*;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
-import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
+import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SelectorInfo;
 import com.autotune.analyzer.kruizeObject.SloInfo;
