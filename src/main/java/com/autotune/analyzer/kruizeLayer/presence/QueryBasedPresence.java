@@ -46,7 +46,7 @@ public class QueryBasedPresence implements LayerPresenceDetector {
     }
 
     public void setQueries(List<LayerPresenceQuery> queries) {
-        this.queries = queries;
+        this.queries = queries != null ? queries : new ArrayList<>();
     }
 
     @Override
