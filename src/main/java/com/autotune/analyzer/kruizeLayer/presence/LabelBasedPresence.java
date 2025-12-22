@@ -44,7 +44,7 @@ public class LabelBasedPresence implements LayerPresenceDetector {
     }
 
     public void setLabel(List<LayerPresenceLabel> label) {
-        this.label = label;
+        this.label = label != null ? label : new ArrayList<>();
     }
 
     /**
