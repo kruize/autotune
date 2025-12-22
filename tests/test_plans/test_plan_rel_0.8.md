@@ -26,6 +26,7 @@ This document describes the test plan for Kruize release 0.8
 * Add new GPU profiles for H200, B200 and Blackwell cards
 * Update Accelerator notifications
 * Test updates for Performance Profile API
+* Test updates for scale test to test gpu containers
 * Upgrade Java to 25 and microdnf updates in Dockerfile
 
 ------
@@ -52,16 +53,17 @@ This document describes the test plan for Kruize release 0.8
 
 | # | ISSUE (NEW FEATURE)                                                        | TEST DESCRIPTION                                                       | TEST DELIVERABLES                                    | RESULTS | COMMENTS |
 |---|----------------------------------------------------------------------------|------------------------------------------------------------------------|------------------------------------------------------|---------|----------|
-| 1 | Add new GPU profiles for H200, B200 and Blackwell cards | Added new testcases | [1717](https://github.com/kruize/autotune/pull/1717) | PASSED  |          |
-| 2 | Update Accelerator notifications | Updates to existing testcases | [1717](https://github.com/kruize/autotune/pull/1717) | PASSED  |          |
+| 1 | Add new GPU profiles for H200, B200 and Blackwell cards | Added new testcases | [1717](https://github.com/kruize/autotune/pull/1717) | PASSED | |
+| 2 | Update Accelerator notifications | Updates to existing testcases | [1717](https://github.com/kruize/autotune/pull/1717) | PASSED | |
+| 3 | Update Bulk API negative tests | Added new test cases | [1708](https://github.com/kruize/autotune/pull/1708) | PASSED |  |
+| 4 | Update scale test for gpu | Updated exisitng test | [1731](https://github.com/kruize/autotune/pull/1731) | PASSED |  |
 
 ### Regression Testing
 
 | # | ISSUE (NEW FEATURE)                                                             | TEST DESCRIPTION                                                                      | TEST DELIVERABLES                                    | RESULTS | COMMENTS |
 |---|---------------------------------------------------------------------------------|---------------------------------------------------------------------------------------|------------------------------------------------------|---------|----------|
-| 1 | Fix vulnerabilities reported by upgrading to latest ubi & netty packages | Tested manually                                                                       |                                                      | PASSED  |          |
-| 2 | Validations in Bulk API for datasource and time ranges   | New functional tests added |  | PASSED  |  |
-| 3 | Demo updates to fix openshift kruize URLs, BSD support in mac and logging issues   | Tested manually |  | PASSED  |  |
+| 1 | Fix vulnerabilities reported by upgrading to latest ubi & netty packages | Tested manually | PR check test | PASSED | |
+| 2 | Demo updates to fix openshift kruize URLs, BSD support in mac and logging issues  | Tested manually |  | PASSED  | |
 
 ---
 
@@ -113,7 +115,7 @@ As part of the release testing, following tests will be executed:
 | 1 | Kruize Remote monitoring Functional testsuite | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | Existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610), [1668](https://github.com/kruize/autotune/issues/1668) |
 | 2 | Fault tolerant test | PASSED | PASSED | |
 | 3 | Stress test | PASSED | PASSED | |
-| 4 | Scalability test (short run) | PASSED | PASSED | Observed an increase in Kruize max memory for container_ns exps by 3GB |
+| 4 | Scalability test (short run) | PASSED | PASSED | Observed an increase in Kruize max memory for container_ns exps by 3GB [Issue 1738](https://github.com/kruize/autotune/issues/1738)|
 | 5 | DB Migration test | PASSED | PASSED | |
 | 6 | Recommendation and box plot values validations | PASSED | PASSED | |
 | 7 | Local Fault tolerant test | PASSED | PASSED | |
