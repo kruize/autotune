@@ -6,7 +6,7 @@
 - [TEST ENVIRONMENT](#test-environment)
 - [TEST DELIVERABLES](#test-deliverables)
     - [New Test Cases Developed](#new-test-cases-developed)
-    - [Regression Testing](#regresion-testing)
+    - [Regression Testing](#regression-testing)
 - [SCALABILITY TESTING](#scalability-testing)
 - [RELEASE TESTING](#release-testing)
 - [TEST METRICS](#test-metrics)
@@ -113,11 +113,11 @@ As part of the release testing, following tests will be executed:
 | 1 | Kruize Remote monitoring Functional testsuite | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | Existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610), [1668](https://github.com/kruize/autotune/issues/1668) |
 | 2 | Fault tolerant test | PASSED | PASSED | |
 | 3 | Stress test | PASSED | PASSED | |
-| 4 | Scalability test (short run) | PASSED | PASSED | |
+| 4 | Scalability test (short run) | PASSED | PASSED | Observed an increase in Kruize max memory for container_ns exps by 3GB |
 | 5 | DB Migration test | PASSED | PASSED | |
 | 6 | Recommendation and box plot values validations | PASSED | PASSED | |
 | 7 | Local Fault tolerant test | PASSED | PASSED | |
-| 8 | Kruize Local Functional tests | TOTAL - 157 , PASSED - 154 / FAILED - 2 / SKIPPED - 1 | TOTAL - 157 , PASSED - 154 / FAILED - 2 / SKIPPED - 1 (openshift) Minikube - TOTAL - 157 , PASSED - 149 / FAILED - 7 / SKIPPED - 1| [Issue 1395](https://github.com/kruize/autotune/issues/1395), [Issue 1273](https://github.com/kruize/autotune/issues/1273), [Issue 1734](https://github.com/kruize/autotune/issues/1734) |
+| 8 | Kruize Local Functional tests | TOTAL - 157 , PASSED - 154 / FAILED - 2 / SKIPPED - 1 | Openshift - TOTAL - 157 , PASSED - 154 / FAILED - 2 / SKIPPED - 1, Minikube - TOTAL - 157 , PASSED - 149 / FAILED - 7 / SKIPPED - 1| [Issue 1395](https://github.com/kruize/autotune/issues/1395), [Issue 1273](https://github.com/kruize/autotune/issues/1273), [Issue 1734](https://github.com/kruize/autotune/issues/1734) |
 
 
 Kruize Demo results
@@ -126,16 +126,16 @@ Kruize Demo results
 |---|:---|:---|:---|:---|:---|
 | 1 | Kruize remote monitoring demo | Openshift | NA | PASSED | |
 | 2 | Kruize remote monitoring demo | Minikube | NA | PASSED | |
-| 3 | Kruize remote monitoring demo | Kind | NA | FAILED with PR 161 | kind support newly added in demo, needs PR 161 |
+| 3 | Kruize remote monitoring demo | Kind | NA | NOT TESTED| kind support in progress [PR 161](https://github.com/kruize/kruize-demos/pull/161) |
 | 4 | Kruize local monitoring demo | Openshift | FAILED | PASSED | [Issue 162](https://github.com/kruize/kruize-demos/issues/162) |
 | 5 | Kruize local monitoring demo | Minikube | FAILED | FAILED | [Issue 127](https://github.com/kruize/kruize-demos/issues/127) |
-| 6 | Kruize local monitoring demo | Kind | FAILED | PASSED |  |
+| 6 | Kruize local monitoring demo | Kind | FAILED | PASSED | Failed as kind/minikube support is not available in 0.0.2 kruize operator |
 | 7 | Kruize bulk monitoring demo | Openshift | FAILED  | PASSED | |
 | 8 | Kruize bulk monitoring demo | Minikube | FAILED  | PASSED | |
 | 9 | Kruize bulk monitoring demo | Kind | FAILED | PASSED | |
 | 10 | Kruize vpa monitoring demo | Openshift | FAILED | PASSED | |
 | 11 | Kruize vpa monitoring demo | Minikube | FAILED | PASSED |  |
-| 12 | Kruize vpa monitoring demo | Kind | FAILED | PASSED | 3 |
+| 12 | Kruize vpa monitoring demo | Kind | FAILED | PASSED |  |
 
 
 ---
