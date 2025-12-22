@@ -19,19 +19,20 @@ package com.autotune.analyzer.kruizeLayer.presence;
 import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implementation for query-based layer presence detection
  */
 public class QueryBasedPresence implements LayerPresenceDetector {
 
-    private ArrayList<LayerPresenceQuery> queries;
+    private List<LayerPresenceQuery> queries;
 
     public QueryBasedPresence() {
         this.queries = new ArrayList<>();
     }
 
-    public QueryBasedPresence(ArrayList<LayerPresenceQuery> queries) {
+    public QueryBasedPresence(List<LayerPresenceQuery> queries) {
         this.queries = queries != null ? queries : new ArrayList<>();
     }
 
@@ -40,11 +41,11 @@ public class QueryBasedPresence implements LayerPresenceDetector {
         return PresenceType.QUERY;
     }
 
-    public ArrayList<LayerPresenceQuery> getQueries() {
+    public List<LayerPresenceQuery> getQueries() {
         return queries;
     }
 
-    public void setQueries(ArrayList<LayerPresenceQuery> queries) {
+    public void setQueries(List<LayerPresenceQuery> queries) {
         this.queries = queries;
     }
 

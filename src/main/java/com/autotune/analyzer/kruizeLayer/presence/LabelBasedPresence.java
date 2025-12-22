@@ -17,19 +17,20 @@
 package com.autotune.analyzer.kruizeLayer.presence;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Implementation for label-based layer presence detection
  */
 public class LabelBasedPresence implements LayerPresenceDetector {
 
-    private ArrayList<LayerPresenceLabel> label;
+    private List<LayerPresenceLabel> label;
 
     public LabelBasedPresence() {
         this.label = new ArrayList<>();
     }
 
-    public LabelBasedPresence(ArrayList<LayerPresenceLabel> label) {
+    public LabelBasedPresence(List<LayerPresenceLabel> label) {
         this.label = label != null ? label : new ArrayList<>();
     }
 
@@ -38,11 +39,11 @@ public class LabelBasedPresence implements LayerPresenceDetector {
         return PresenceType.LABEL;
     }
 
-    public ArrayList<LayerPresenceLabel> getLabel() {
+    public List<LayerPresenceLabel> getLabel() {
         return label;
     }
 
-    public void setLabel(ArrayList<LayerPresenceLabel> label) {
+    public void setLabel(List<LayerPresenceLabel> label) {
         this.label = label;
     }
 

@@ -17,9 +17,9 @@
 package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.kruizeLayer.presence.*;
-import com.google.gson.annotations.SerializedName;
 
 import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Wrapper class for layer_presence that deserializes from YAML
@@ -29,9 +29,9 @@ public class LayerPresence {
 
     private String presence;
 
-    private ArrayList<LayerPresenceQuery> queries;
+    private List<LayerPresenceQuery> queries;
 
-    private ArrayList<LabelBasedPresence.LayerPresenceLabel> label;
+    private List<LabelBasedPresence.LayerPresenceLabel> label;
 
     public LayerPresence() {
     }
@@ -79,19 +79,19 @@ public class LayerPresence {
         this.presence = presence;
     }
 
-    public ArrayList<LayerPresenceQuery> getQueries() {
+    public List<LayerPresenceQuery> getQueries() {
         return queries;
     }
 
-    public void setQueries(ArrayList<LayerPresenceQuery> queries) {
+    public void setQueries(List<LayerPresenceQuery> queries) {
         this.queries = queries;
     }
 
-    public ArrayList<LabelBasedPresence.LayerPresenceLabel> getLabel() {
+    public List<LabelBasedPresence.LayerPresenceLabel> getLabel() {
         return label;
     }
 
-    public void setLabel(ArrayList<LabelBasedPresence.LayerPresenceLabel> label) {
+    public void setLabel(List<LabelBasedPresence.LayerPresenceLabel> label) {
         this.label = label;
     }
 

@@ -18,6 +18,7 @@ package com.autotune.operator;
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.exceptions.*;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
+import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SelectorInfo;
 import com.autotune.analyzer.kruizeObject.SloInfo;
