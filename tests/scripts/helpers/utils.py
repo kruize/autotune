@@ -228,6 +228,24 @@ NAMESPACE_EXPERIMENT_TYPE = "namespace"
 CONTAINER_EXPERIMENT_TYPE = "container"
 PERF_PROFILE_NAME = "resource-optimization-openshift"
 
+# Only NVIDIA-A100-SXM4-40GB is tested on real machine,
+# Rest of them are best guess and assumptions
+# TODO: Need to be updated after comparing with real time data
+SUPPORTED_GPUS = [
+"NVIDIA-A100-SXM4-40GB",
+"NVIDIA-A100-SXM4-80GB",
+"NVIDIA-A100-PCIE-40GB",
+"NVIDIA-A100-PCIE-80GB",
+"NVIDIA-H100-SXM5-80GB",
+"NVIDIA-H100-SXM5-94GB",
+"NVIDIA-H100-SXM5-96GB",
+"NVIDIA-H100-PCIE-80GB",
+"NVIDIA-H100-PCIE-94GB",
+"NVIDIA-H100-PCIE-96GB",
+"NVIDIA-H200-PCIE-141GB"
+]
+PERF_PROFILE_NAME = "resource-optimization-openshift"
+
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
     "version": "v2.0",

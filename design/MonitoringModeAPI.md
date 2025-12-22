@@ -617,6 +617,8 @@ For container experiment with accelerator metrics:
 ```
 </details>
 
+For more information, Please refer [Kruize Accelerator Support Documentation](AcceleratorSupport.md)
+
 <details>
 <summary><b>Example Request Namespace Experiment</b></summary>
 
