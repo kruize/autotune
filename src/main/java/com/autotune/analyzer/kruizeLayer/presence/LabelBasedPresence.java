@@ -16,6 +16,8 @@
 
 package com.autotune.analyzer.kruizeLayer.presence;
 
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
+
 import java.util.ArrayList;
 import java.util.List;
 

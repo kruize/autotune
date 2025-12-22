@@ -16,6 +16,8 @@
 
 package com.autotune.analyzer.kruizeLayer.presence;
 
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
+
 /**
  * Interface for different layer presence detection strategies
  */
@@ -26,13 +28,4 @@ public interface LayerPresenceDetector {
      * @return PresenceType enum value
      */
     PresenceType getType();
-
-    /**
-     * Enum for different types of presence detection
-     */
-    enum PresenceType {
-        ALWAYS,
-        QUERY,
-        LABEL
-    }
 }

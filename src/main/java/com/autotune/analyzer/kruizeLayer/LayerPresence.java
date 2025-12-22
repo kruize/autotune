@@ -17,8 +17,7 @@
 package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.kruizeLayer.presence.*;
-
-import java.util.ArrayList;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
 import java.util.List;
 
 /**
@@ -33,8 +32,7 @@ public class LayerPresence {
 
     private List<LabelBasedPresence.LayerPresenceLabel> label;
 
-    public LayerPresence() {
-    }
+    public LayerPresence() {}
 
     /**
      * Factory method to get the appropriate LayerPresenceDetector implementation
@@ -54,12 +52,7 @@ public class LayerPresence {
         }
 
         // Default to presence always
-        if (presence != null) {
-            return new PresenceAlways(presence);
-        }
-
-        // If nothing is set, default to "always"
-        return new PresenceAlways("always");
+        return new PresenceAlways();
     }
 
     /**
@@ -67,7 +60,7 @@ public class LayerPresence {
      *
      * @return PresenceType
      */
-    public LayerPresenceDetector.PresenceType getType() {
+    public PresenceType getType() {
         return getDetector().getType();
     }
 

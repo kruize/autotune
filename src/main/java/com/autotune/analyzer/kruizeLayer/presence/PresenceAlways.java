@@ -16,37 +16,23 @@
 
 package com.autotune.analyzer.kruizeLayer.presence;
 
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
+
 /**
  * Implementation for layers that are always present
  */
 public class PresenceAlways implements LayerPresenceDetector {
 
-    private String presence;
+    public PresenceAlways() {}
 
-    public PresenceAlways() {
-    }
-
-    public PresenceAlways(String presence) {
-        this.presence = presence;
-    }
 
     @Override
     public PresenceType getType() {
         return PresenceType.ALWAYS;
     }
 
-    public String getPresence() {
-        return presence;
-    }
-
-    public void setPresence(String presence) {
-        this.presence = presence;
-    }
-
     @Override
     public String toString() {
-        return "PresenceAlways{" +
-                "presence='" + presence + '\'' +
-                '}';
+        return "PresenceAlways{}";
     }
 }
