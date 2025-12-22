@@ -10,12 +10,22 @@ sys.path.append("../../")
 
 from helpers.utils import get_metric_profile_dir
 
-def loadNSData():
-    json_file = open("./json_files/create_ns_exp.json", "r")
-    createdata = json.loads(json_file.read())
+def loadData(exptype):
+    if exptype == "container":
+         exp_json_file = "./json_files/create_exp.json"
+         res_json_file = "./json_files/results.json"
+    elif exptype == "namespace":
+        exp_json_file = "./json_files/create_ns_exp.json"
+        res_json_file = "./json_files/ns_results.json"
+    elif exptype == "gpucontainer":
+        exp_json_file = "./json_files/create_gpu_exp.json"
+        res_json_file = "./json_files/gpu_results.json"
 
-    json_file = open("./json_files/ns_results.json", "r")
-    data = json.loads(json_file.read())
+    with open(exp_json_file, 'r', encoding='utf-8') as exp_file:
+        create_data = json.load(exp_file)
+
+    with open(res_json_file, 'r', encoding='utf-8') as res_file:
+        data = json.load(res_file)
 
     performance_profile_dir = get_metric_profile_dir()
     profile_json_path = performance_profile_dir / 'resource_optimization_openshift.json'
@@ -23,21 +33,7 @@ def loadNSData():
     with open(profile_json_path, 'r', encoding='utf-8') as profile_file:
        profile_data = json.load(profile_file)
 
-    return (data, createdata, profile_data)
-
-def loadData():
-    json_file = open("./json_files/create_exp.json", "r")
-    createdata = json.loads(json_file.read())
-
-    json_file = open("./json_files/results.json", "r")
-    data = json.loads(json_file.read())
-    performance_profile_dir = get_metric_profile_dir()
-    profile_json_path = performance_profile_dir / 'resource_optimization_openshift.json'
-
-    with open(profile_json_path, 'r', encoding='utf-8') as profile_file:
-        profile_data = json.load(profile_file)
-
-    return (data, createdata, profile_data)
+    return (data, create_data, profile_data)
 
 def updateRecommendation(experiment_name, endDate):
     try:
@@ -116,10 +112,8 @@ if __name__ == "__main__":
         'Content-Type': 'application/json'
     }
     timeout = (60, 60)
-    if exptype == "container":
-        data, createdata, profile_data = loadData()
-    elif exptype == "namespace":
-        data, createdata, profile_data = loadNSData()
+
+    data, createdata, profile_data = loadData(exptype)
 
     if args.startdate:
         print(args.startdate)
