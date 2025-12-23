@@ -114,7 +114,7 @@ As part of the release testing, following tests will be executed:
 
 | # | TEST SUITE | EXPECTED RESULTS | ACTUAL RESULTS | COMMENTS |
 |:---|:---|:---|:---|:---|
-| 1 | Kruize Remote monitoring Functional testsuite | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | Existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610), [1668](https://github.com/kruize/autotune/issues/1668) |
+| 1 | Kruize Remote monitoring Functional testsuite | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | TOTAL - 738, PASSED - 695 / FAILED - 42 / SKIPPED - 1 | Existing issues - [559](https://github.com/kruize/autotune/issues/559), [610](https://github.com/kruize/autotune/issues/610) |
 | 2 | Fault tolerant test | PASSED | PASSED | |
 | 3 | Stress test | PASSED | PASSED | |
 | 4 | Scalability test (short run) | PASSED | PASSED | Observed an increase in Kruize max memory for container_ns exps by 3GB [Issue 1738](https://github.com/kruize/autotune/issues/1738)|
