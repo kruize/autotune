@@ -123,8 +123,8 @@ public class ServiceHelpers {
         if (tunable.getValueType().equalsIgnoreCase(CATEGORICAL_TYPE)) {
             tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES, tunable.getChoices());
         } else {
-            tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBound());
-            tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBound());
+            tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND, tunable.getUpperBoundValue());
+            tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND, tunable.getLowerBoundValue());
             tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.STEP, tunable.getStep());
         }
     }
