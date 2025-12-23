@@ -89,7 +89,9 @@ Short Scalability run
 | **0.7.1-rc2** (27 Oct) | 5K namespace / 72L / 3L | 2h 54m | 0.52 / 0.29 | 0.1 / 0.08 | 0.28 / 0.18 | 10523 | 5.52 | 25.6 |
 | **0.8** (19 Dec) | 5K namespace / 72L / 3L | 2h 57m | 0.54 / 0.3 | 0.1 / 0.07 | 0.29 / 0.19 | 10520 | 6.41 | 23.6 |
 | **0.7.1-rc2** (28 Oct) | 4.5k cont, 500 ns / 72L / 3L | 4h 20m | 0.81 / 0.46 | 0.13 / 0.1 | 0.38 / 0.26 | 20628 | 6.87 | 40.0 |
-| **0.8** (19 Dec) | 4.5k cont, 500 ns / 72L / 3L | 4h 20m | 0.84 / 0.48 | 0.13 / 0.1 | 0.42 / 0.29 | 20627 | 6.31 | 43.0 |
+| **0.8** (19 Dec) | 4.5k cont, 500 ns / 72L / 3L | 4h 28m | 0.84 / 0.48 | 0.13 / 0.1 | 0.42 / 0.29 | 20627 | 6.31 | 43.0 |
+| **0.7.1-rc2** (22 Dec - run2) | 4.5k cont, 500 ns / 72L / 3L | 4h 31m | 0.84 / 0.48 | 0.14 / 0.11 | 0.41 / 0.28 | 20628 | 7.17 | 40.81 |
+| **0.8** (22 Dec - run2) | 4.5k cont, 500 ns / 72L / 3L | 4h 37m | 0.86 / 0.49 | 0.14 / 0.11 | 0.43 / 0.31 | 20627 | 6.54 | 42.57 |
 | **0.8** (19 Dec) | 5k gpucontainer / 72L / 3L | 7h 40m | 1.56 / 0.86 | 0.21 / 0.19 | 0.7 / 0.53 | 31140 | 10.68 | 30.97 |
 
 
@@ -128,16 +130,16 @@ Kruize Demo results
 |---|:---|:---|:---|:---|:---|
 | 1 | Kruize remote monitoring demo | Openshift | NA | PASSED | |
 | 2 | Kruize remote monitoring demo | Minikube | NA | PASSED | |
-| 3 | Kruize remote monitoring demo | Kind | NA | NOT TESTED| kind support in progress [PR 161](https://github.com/kruize/kruize-demos/pull/161) |
-| 4 | Kruize local monitoring demo | Openshift | FAILED | PASSED | [Issue 162](https://github.com/kruize/kruize-demos/issues/162) |
-| 5 | Kruize local monitoring demo | Minikube | FAILED | FAILED | [Issue 127](https://github.com/kruize/kruize-demos/issues/127) |
-| 6 | Kruize local monitoring demo | Kind | FAILED | PASSED | Failed as kind/minikube support is not available in 0.0.2 kruize operator |
-| 7 | Kruize bulk monitoring demo | Openshift | FAILED  | PASSED | |
-| 8 | Kruize bulk monitoring demo | Minikube | FAILED  | PASSED | |
-| 9 | Kruize bulk monitoring demo | Kind | FAILED | PASSED | |
-| 10 | Kruize vpa monitoring demo | Openshift | FAILED | PASSED | |
-| 11 | Kruize vpa monitoring demo | Minikube | FAILED | PASSED |  |
-| 12 | Kruize vpa monitoring demo | Kind | FAILED | PASSED |  |
+| 3 | Kruize remote monitoring demo | Kind | NA | PASSED| |
+| 4 | Kruize local monitoring demo | Openshift | PASSED | PASSED ||
+| 5 | Kruize local monitoring demo | Minikube | NA | FAILED | [Issue 127](https://github.com/kruize/kruize-demos/issues/127), [Issue 1739](https://github.com/kruize/autotune/issues/1739) |
+| 6 | Kruize local monitoring demo | Kind | NA | PASSED | Kind/minikube support is not available in Kruize operator 0.0.2 |
+| 7 | Kruize bulk monitoring demo | Openshift | NA | PASSED | Kruize operator 0.0.2 does not support Bulk |
+| 8 | Kruize bulk monitoring demo | Minikube | NA | FAILED | Kind/minikube support is not available in Kruize operator 0.0.2, [Issue 1739](https://github.com/kruize/autotune/issues/1739) |
+| 9 | Kruize bulk monitoring demo | Kind | NA | PASSED | Kruize operator 0.0.2 does not support Bulk |
+| 10 | Kruize vpa monitoring demo | Openshift | PASSED | PASSED | |
+| 11 | Kruize vpa monitoring demo | Minikube | NA | FAILED | Kind/minikube support is not available in Kruize operator 0.0.2, [Issue 1739](https://github.com/kruize/autotune/issues/1739)|
+| 12 | Kruize vpa monitoring demo | Kind | NA | PASSED | Kind/minikube support is not available in Kruize operator 0.0.2 |
 
 
 ---
