@@ -252,7 +252,7 @@ echo "SCALE_LOG_DIR = $SCALE_LOG_DIR"
 
 if [ "${exp_type}" == "container_ns" ]; then
 	container_ns_scale_test
-elif [[ "${exp_type}" == "container" || "${exp_type}" == "namespace" ]]; then
+elif [[ "${exp_type}" == "container" || "${exp_type}" == "namespace" || "${exp_type}" == "gpucontainer" ]]; then
 	scale_test
 fi
 
