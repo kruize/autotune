@@ -82,10 +82,17 @@ public class Tunable {
         }
 
         /*
-         * Bounds cannot be negative.
-         * upperBound has to be greater than lowerBound.
-         * step has to be lesser than or equal to the difference between the two bounds.
+         * Validation rules:
+         * - step must be strictly positive (> 0)
+         * - Bounds cannot be negative
+         * - upperBound has to be greater than lowerBound
+         * - step has to be lesser than or equal to the difference between the two bounds
          */
+        if (step <= 0) {
+            throw new InvalidBoundsException("ERROR: Tunable: " + name +
+                    " has invalid step; step must be > 0, got: " + step);
+        }
+
         if (upperBoundValue < 0 ||
             lowerBoundValue < 0 ||
             lowerBoundValue >= upperBoundValue ||

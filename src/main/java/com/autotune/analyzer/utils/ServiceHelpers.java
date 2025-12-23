@@ -206,8 +206,8 @@ public class ServiceHelpers {
             for (String applicationTunableName : applicationSearchSpace.getTunablesMap().keySet()) {
                 Tunable tunable = applicationSearchSpace.getTunablesMap().get(applicationTunableName);
                 JSONObject tunableJson = new JSONObject();
-                // Pass the full name here that includes the layer and stack names
-                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
+                // Pass the full name here that includes the layer and stack names (format: stackName|layerName|tunableName)
+                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, applicationTunableName);
                 // searchSpace is passing only the tunable value and not a string
                 tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
                 // check the tunable type and if it's categorical then we need to add the list of the values else we'll take the upper, lower bound values
