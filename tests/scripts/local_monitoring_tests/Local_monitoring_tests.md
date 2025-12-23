@@ -262,3 +262,48 @@ It can be run as shown in the example below:
 **_invalid_**: an invalid path to the token
 
 **_empty_**: a blank input in place of the token file path
+
+### Datasource Availability/Serviceability Test:
+
+Kruize supports multiple datasources such as Prometheus and Thanos Querier. During startup, Kruize validates the reachability of all configured datasources before proceeding.
+
+The datasource availability/serviceability test is part of the functional test bucket and is implemented as a standalone shell script, similar to the authentication tests.
+It validates Kruize behavior when one or more datasources are reachable or unreachable.
+
+Kruize startup behavior follows these rules:
+
+* Kruize continues startup if at least one datasource is reachable.
+* Kruize logs an error for each unreachable datasource.
+* Kruize fails startup only when all configured datasources are unreachable.
+
+The test can be run using the command below:
+
+```
+./test_autotune.sh -c <cluster-type> -i <image-name> -r benchmarks/ --testsuite=datasource_reachability_tests
+```
+
+#### Scenarios
+
+**both-valid**
+
+Both Prometheus and Thanos Querier datasources are reachable.
+
+**✔ Expected:** Kruize starts successfully.
+
+**prom-valid-thanos-invalid**
+
+Prometheus is reachable and Thanos Querier is unreachable.
+
+**✔ Expected:** Kruize starts successfully and logs an error for Thanos.
+
+**prom-invalid-thanos-valid**
+
+Prometheus is unreachable and Thanos Querier is reachable.
+
+**✔ Expected:** Kruize starts successfully and logs an error for Prometheus.
+
+**both-invalid**
+
+Both Prometheus and Thanos Querier datasources are unreachable.
+
+**❌ Expected:** Kruize fails to start and exits with an error.
