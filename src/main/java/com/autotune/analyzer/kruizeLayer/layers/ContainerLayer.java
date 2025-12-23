@@ -37,7 +37,11 @@ public class ContainerLayer extends GenericLayer implements Layer {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerLayer.class);
 
     @Override
+    // TODO: DEPRECATED - This method uses removed Tunable.getBoundUnits()
+    // Need to refactor to handle units differently or remove this functionality
+    // See issue: [add issue number]
     public void prepTunable(Tunable tunable, JSONObject tunableJSON, ContainerConfigData containerConfigData) {
+        /* COMMENTED OUT - Uses removed getBoundUnits() method
         String tunableName = tunable.getName();
 
         Map<String, Quantity> requestPropertiesMap = containerConfigData.getRequestPropertiesMap();
@@ -60,6 +64,7 @@ public class ContainerLayer extends GenericLayer implements Layer {
         }
         containerConfigData.setRequestPropertiesMap(requestPropertiesMap);
         containerConfigData.setLimitPropertiesMap(requestPropertiesMap);
+        */
     }
 
 

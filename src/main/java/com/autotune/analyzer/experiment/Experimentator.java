@@ -122,6 +122,9 @@ public class Experimentator implements Runnable {
                     MAX_NUMBER_OF_TRIALS,
                     NUMBER_OF_PARALLEL_TRIALS);
 
+            // TODO: DEPRECATED - Tunable setStackName and setFullName methods removed
+            // Need to refactor experiment tracking without these fields
+            // See issue: [add issue number]
             for (String stackName : kruizeExperiment.getApplicationDeployment().getApplicationServiceStackMap().keySet()) {
                 ApplicationServiceStack applicationServiceStack = kruizeExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(stackName);
                 for (String layerName : applicationServiceStack.getApplicationServiceStackLayers().keySet()) {
@@ -132,8 +135,10 @@ public class Experimentator implements Runnable {
                                 .append(layerName)
                                 .append("|")
                                 .append(tunable.getName());
+                        /* COMMENTED OUT - setStackName and setFullName methods removed
                         tunable.setStackName(stackName);
                         tunable.setFullName(tunableFullName.toString());
+                        */
                         applicationSearchSpace.getTunablesMap().put(tunableFullName.toString(), tunable);
                     }
                 }

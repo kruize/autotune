@@ -17,14 +17,11 @@ package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
-import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-
-import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.CATEGORICAL_TYPE;
 
 /**
  * Check if the KruizeLayer object in the kubernetes cluster is valid
@@ -76,13 +73,16 @@ public class ValidateKruizeLayer
 			errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.NO_TUNABLES);
 		}
 
-		// Validate slo_class in tunables
+		// TODO: DEPRECATED - Tunable validation removed sloClassList field
+		// Need to update validation logic for new simplified Tunable class
+		// See issue: [add issue number]
 		ArrayList<Tunable> tunableArrayList = (ArrayList<Tunable>) map.get(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
 		if (tunableArrayList != null) {
 			for (Tunable tunable : tunableArrayList) {
 				if (tunable.getName().trim().isEmpty()) {
 					errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.TUNABLE_NAME_EMPTY);
 				}
+				/* COMMENTED OUT - sloClassList validation removed
 				for (String slo_class : tunable.getSloClassList()) {
 					if (!KruizeSupportedTypes.SLO_CLASSES_SUPPORTED.contains(slo_class)) {
 						errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.INVALID_SLO_CLASS).append(tunable.getName()).append("\n");
@@ -92,6 +92,7 @@ public class ValidateKruizeLayer
 						errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.ZERO_STEP);
 					}
 				}
+				*/
 			}
 		}
 		return errorString;

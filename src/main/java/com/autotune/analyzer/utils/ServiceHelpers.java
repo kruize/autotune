@@ -26,7 +26,6 @@ import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.k8sObjects.K8sObject;
-import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import org.json.JSONArray;
@@ -138,7 +137,11 @@ public class ServiceHelpers {
      * @param kruizeLayer
      * @param sloClass
      */
+    // TODO: DEPRECATED - This method uses removed Tunable fields (sloClassList, queries)
+    // Need to refactor or remove this method for simplified Tunable class
+    // See issue: [add issue number]
     public static void addLayerTunableDetails(JSONArray tunablesArray, KruizeLayer kruizeLayer, String sloClass) {
+        /* COMMENTED OUT - Uses removed sloClassList and getQueries()
         for (Tunable tunable : kruizeLayer.getTunables()) {
             if (sloClass == null || tunable.sloClassList.contains(sloClass)) {
                 JSONObject tunableJson = new JSONObject();
@@ -152,6 +155,7 @@ public class ServiceHelpers {
                 tunablesArray.put(tunableJson);
             }
         }
+        */
     }
 
     /**
@@ -203,7 +207,7 @@ public class ServiceHelpers {
                 Tunable tunable = applicationSearchSpace.getTunablesMap().get(applicationTunableName);
                 JSONObject tunableJson = new JSONObject();
                 // Pass the full name here that includes the layer and stack names
-                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getFullName());
+                tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.NAME, tunable.getName());
                 // searchSpace is passing only the tunable value and not a string
                 tunableJson.put(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE, tunable.getValueType());
                 // check the tunable type and if it's categorical then we need to add the list of the values else we'll take the upper, lower bound values

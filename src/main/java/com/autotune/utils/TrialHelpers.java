@@ -192,6 +192,10 @@ public class TrialHelpers {
         for (Metric metric : sloInfo.getFunctionVariables()) {
             podMetricsHashMap.put(metric.getName(), metric);
         }
+        // TODO: DEPRECATED - This code uses removed Tunable fields (stackName, queries, layerName)
+        // Need to refactor trial preparation logic
+        // See issue: [add issue number]
+        /* COMMENTED OUT - Uses removed getStackName(), getQueries(), getLayerName()
         JSONArray trialConfigArray = new JSONArray(trialConfigJson);
         for (Object trialConfigObject : trialConfigArray) {
             JSONObject trialConfig = (JSONObject) trialConfigObject;
@@ -236,6 +240,7 @@ public class TrialHelpers {
                 LOGGER.error("New Trial: tunable: " + tunableName + " No container metrics");
             }
         }
+        */
         TrialDetails trialDetails = new TrialDetails(String.valueOf(trialNumber), configData);
         trialDetails.setStartTime(Timestamp.from(Instant.now()));
         trialsMap.put(String.valueOf(trialNumber), trialDetails);

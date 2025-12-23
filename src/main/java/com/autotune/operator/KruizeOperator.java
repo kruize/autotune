@@ -25,9 +25,7 @@ import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SelectorInfo;
 import com.autotune.analyzer.kruizeObject.SloInfo;
-import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileDeployment;
-import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.performanceProfiles.utils.PerformanceProfileUtil;
@@ -35,7 +33,6 @@ import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.autotune.common.k8sObjects.KubernetesContexts;
@@ -53,7 +50,6 @@ import io.fabric8.kubernetes.api.model.ObjectReference;
 import io.fabric8.kubernetes.api.model.Pod;
 import io.fabric8.kubernetes.api.model.apps.Deployment;
 import io.fabric8.kubernetes.api.model.apps.ReplicaSet;
-import io.fabric8.kubernetes.client.KubernetesClientException;
 import io.fabric8.kubernetes.client.Watcher;
 import io.fabric8.kubernetes.client.WatcherException;
 import io.fabric8.kubernetes.client.dsl.base.CustomResourceDefinitionContext;
@@ -582,8 +578,12 @@ public class KruizeOperator {
             String layerName = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
             String details = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.DETAILS);
             int level = autotuneConfigJson.optInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
-            JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
+            // TODO: DEPRECATED - This JSON-based tunable parsing uses old Tunable constructors
+            // Need to migrate to YAML-based layer loading with new simplified Tunable class
             ArrayList<Tunable> tunableArrayList = new ArrayList<>();
+
+            /*** COMMENTED OUT - Old JSON-based tunable parsing that uses removed fields
+             JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
 
             for (Object tunablesObject : tunablesJsonArray) {
                 JSONObject tunableJson = (JSONObject) tunablesObject;
@@ -619,7 +619,7 @@ public class KruizeOperator {
                     /**
                      * check the tunable type, if it's categorical then we need to add the choices
                      * and then invoke the corresponding constructor
-                     */
+
                     if (tunableValueType.equalsIgnoreCase("categorical")) {
                         JSONArray categoricalChoicesJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES);
                         for (Object categoricalChoiceObject : categoricalChoicesJson) {
@@ -639,6 +639,7 @@ public class KruizeOperator {
                     e.printStackTrace();
                 }
             }
+            */
 
             String resourceVersion = metadataJson.optString(AnalyzerConstants.RESOURCE_VERSION);
             String uid = metadataJson.optString(AnalyzerConstants.UID);
@@ -873,7 +874,10 @@ public class KruizeOperator {
             return;
         }
 
-        ArrayList<Tunable> tunables = new ArrayList<>();
+        // TODO: DEPRECATED - Tunable class refactored to remove queries, sloClassList, layerName fields
+        // This code needs to be refactored to work with simplified Tunable class
+        ArrayList<Tunable> tunables = new ArrayList<>(kruizeLayer.getTunables());
+        /* COMMENTED OUT - Old tunable copying logic
         for (Tunable tunable : kruizeLayer.getTunables()) {
             try {
                 Map<String, String> queries = new HashMap<>(tunable.getQueries());
@@ -902,6 +906,7 @@ public class KruizeOperator {
             } catch (InvalidBoundsException ignored) {
             }
         }
+        */
 
         // Create autotuneconfigcopy with updated tunables arraylist
         KruizeLayer kruizeLayerCopy = null;
