@@ -96,9 +96,11 @@ function kruize_scale_test_remote_patch() {
 	if [ ${testcase} == "migration" ]; then
 	        sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
 	else
-	        sed -i 's/memory: "768Mi"/memory: "4Gi"/g' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	        sed -i 's/memory: "100Mi"/memory: "10Gi"/g' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-	        sed -i 's/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+		sed -i -e '/requests:/,/limits:/ { s/memory: "768Mi"/memory: "4Gi"/ }' -e '/limits:/,/resources:/ { s/memory: "768Mi"/memory: "8Gi"/ }' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+
+                sed -i -e '/requests:/,/limits:/ { s/memory: "100Mi"/memory: "10Gi"/ }' -e '/limits:/,/resources:/ { s/memory: "100Mi"/memory: "30Gi"/ }' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+                sed -i 's/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+                cp ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT} ${LOG_DIR}
 	fi
 
 }
