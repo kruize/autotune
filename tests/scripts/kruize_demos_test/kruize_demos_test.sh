@@ -30,11 +30,12 @@ demo=all
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
 KRUIZE_OPERATOR_IMAGE="quay.io/kruize/autotune_operator:0.0.2"
-KRUIZE_OPERATOR=1
+KRUIZE_OPERATOR=0
 failed=0
 
 KRUIZE_DEMOS_REPO="https://github.com/kruize/kruize-demos.git"
 KRUIZE_DEMOS_BRANCH="main"
+SETUP=0
 
 function usage() {
 	echo
@@ -192,39 +193,35 @@ function run_demo() {
 	DEMO_DIR=$2
 
 	if [[ "${DEMO_NAME}" == "local_monitoring" ]]; then
-		CMD=(./local_monitoring_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -o ${KRUIZE_OPERATOR_IMAGE})
-		JSONS=(container_experiment_local_recommendation.json namespace_experiment_local_recommendation.json)
+		CMD=(./local_monitoring_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE})
+		JSONS=(container_experiment_sysbench_recommendation.json namespace_experiment_sysbench_recommendation.json)
 	elif [[ "${DEMO_NAME}" == "remote_monitoring" ]]; then
 		CMD=(./remote_monitoring_demo.sh -c ${CLUSTER_TYPE} -o ${KRUIZE_IMAGE})
 		JSONS=(recommendations_data.json)
 	elif [[ "${DEMO_NAME}" == "bulk" ]]; then
-		CMD=(./bulk_service_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -o ${KRUIZE_OPERATOR_IMAGE})
-		JSONS=(recommendations_data.json job_status.json)
+		CMD=(./bulk_service_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE})
+		JSONS=(recommendations_data.json)
 	elif [[ "${DEMO_NAME}" == "vpa" ]]; then
-		CMD=(./vpa_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -o ${KRUIZE_OPERATOR_IMAGE})
+		CMD=(./vpa_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE})
 		JSONS=(container_vpa_experiment_sysbench_recommendation.json)
+	fi
+
+	if [ "${KRUIZE_OPERATOR}" == 1 ]; then
+		if [ "${KRUIZE_OPERATOR_IMAGE}" != "" ]; then
+			CMD+=( -o ${KRUIZE_OPERATOR_IMAGE})
+		fi
 	fi
 
 	if [[ "${CLUSTER_TYPE}" == minikube || "${CLUSTER_TYPE}" == "kind" ]]; then
 		# Remote monitoring doesn't support -f option, remove this check once it is fixed
 		if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
-			CMD="${CMD[@]} -f"
+			# Use -f to do the cluster and prometheus setup if not done already
+			if [[ "${SETUP}" == 0 ]]; then
+				CMD+=( -f)
+				SETUP=1
+			fi
 		fi
 	fi
-
-	# Add -k option to deploy kruize using manifests
-	if [[ "${KRUIZE_OPERATOR}" -eq 0 ]]; then
-		if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
-			CMD="${CMD[@]} -k"
-		fi
-	else
-		# Since Bulk Demo doesn't work with Kruize operator use deploy script to install kruize using -k option
-		# This can be removed once it is fixed
-		if [ "${DEMO_NAME}" == "bulk" ]; then
-			CMD="${CMD[@]} -k"
-		fi
-	fi
-
 
 	CLEANUP_CMD="${CMD[@]} -t"
 
@@ -235,15 +232,15 @@ function run_demo() {
 
 	{
 		echo
-		echo "*******************************************************"
+		echo "********************************************************************"
 		echo "Running ${DEMO_NAME} demo..." 
-		echo "*******************************************************"
+		echo "********************************************************************"
 		echo
 	
 		echo "DEMO_NAME = $DEMO_NAME"
 		echo "DEMO_DIR = $DEMO_DIR"
 		echo "CMD = ${CMD[@]}"
-		echo "JSONS = ${JSONS[@]}"
+		echo "EXPECTED JSONS = ${JSONS[@]}"
 		echo
 	} | tee -a ${LOG}
 	pushd "${DEMO_DIR}" > /dev/null
@@ -255,7 +252,8 @@ function run_demo() {
 				clone_repos "kruize-operator"
 			fi
 		fi
-		${CLEANUP_CMD[@]} | tee -a ${LOG}
+		pwd
+		#${CLEANUP_CMD[@]} | tee -a ${LOG}
 
 		# Sleep for a few seconds for cleanup to complete
 		sleep 20
@@ -293,7 +291,7 @@ function run_demo() {
 		# If demo is VPA check for vpa recommendations
 		if [ "${DEMO_NAME}" == "vpa" ]; then
 			# sleep for the vpa to be created
-			sleep 500
+			sleep 60
 			echo "Validating vpa recommendations..." | tee -a ${LOG}
 			validate_sysbench_reco "${DEMO_LOG_DIR}" | tee -a ${LOG}
 			echo "Validating vpa recommendations...Done" | tee -a ${LOG}
@@ -306,8 +304,6 @@ function run_demo() {
 		check_log "${KRUIZE_POD_LOG}"
 		sleep 2
 
-		# Cleanup the demo
-		CLEANUP_CMD="${CMD[@]} -t"
 	popd > /dev/null 2>&1
 	{
 		if [ "${failed}" -ne 0 ]; then
@@ -316,9 +312,9 @@ function run_demo() {
 			echo "Kruize ${DEMO_NAME} passed!"
 		fi
 		echo 
-		echo "*******************************************************"
+		echo "********************************************************************"
 		echo "Running ${DEMO_NAME} demo...Done"
-		echo "*******************************************************"
+		echo "********************************************************************"
 		echo
 	} | tee -a ${LOG}
 }
@@ -365,10 +361,10 @@ if [ "${CLUSTER_TYPE}" == "openshift" ]; then
 fi
 
 start_time=$(get_date)
-LOG_DIR="${RESULTS_DIR}/kruize-demos-results-$(date +%Y%m%d%H%M)"
+LOG_DIR="${RESULTS_DIR}/kruize-demos-test-results-$(date +%Y%m%d%H%M)"
 mkdir -p ${LOG_DIR}
 
-LOG="${LOG_DIR}/kruize-demos.log"
+LOG="${LOG_DIR}/kruize-demos-test.log"
 
 # Clone kruize-demos repo from the specified branch
 repo_name="kruize-demos"
