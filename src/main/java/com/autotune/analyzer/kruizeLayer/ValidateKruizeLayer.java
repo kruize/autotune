@@ -19,6 +19,7 @@ import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.utils.KruizeSupportedTypes;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -73,26 +74,13 @@ public class ValidateKruizeLayer
 			errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.NO_TUNABLES);
 		}
 
-		// TODO: DEPRECATED - Tunable validation removed sloClassList field
-		// Need to update validation logic for new simplified Tunable class
-		// See issue: [add issue number]
+		// SLO class and step validation removed - Tunable no longer contains sloClassList field
 		ArrayList<Tunable> tunableArrayList = (ArrayList<Tunable>) map.get(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
 		if (tunableArrayList != null) {
 			for (Tunable tunable : tunableArrayList) {
 				if (tunable.getName().trim().isEmpty()) {
 					errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.TUNABLE_NAME_EMPTY);
 				}
-				/* COMMENTED OUT - sloClassList validation removed
-				for (String slo_class : tunable.getSloClassList()) {
-					if (!KruizeSupportedTypes.SLO_CLASSES_SUPPORTED.contains(slo_class)) {
-						errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.INVALID_SLO_CLASS).append(tunable.getName()).append("\n");
-					}
-
-					if (!tunable.getValueType().equals(CATEGORICAL_TYPE) && tunable.getStep() == 0) {
-						errorString.append(AnalyzerErrorConstants.AutotuneConfigErrors.ZERO_STEP);
-					}
-				}
-				*/
 			}
 		}
 		return errorString;

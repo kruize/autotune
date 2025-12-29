@@ -137,25 +137,20 @@ public class ServiceHelpers {
      * @param kruizeLayer
      * @param sloClass
      */
-    // TODO: DEPRECATED - This method uses removed Tunable fields (sloClassList, queries)
-    // Need to refactor or remove this method for simplified Tunable class
-    // See issue: [add issue number]
     public static void addLayerTunableDetails(JSONArray tunablesArray, KruizeLayer kruizeLayer, String sloClass) {
-        /* COMMENTED OUT - Uses removed sloClassList and getQueries()
+        // SLO class filtering removed - Tunable.sloClassList field no longer exists
+        // Query URL lookup removed - Tunable.getQueries() method no longer exists
+        // Queries now managed by LayerPresence at the layer level, not per tunable
         for (Tunable tunable : kruizeLayer.getTunables()) {
-            if (sloClass == null || tunable.sloClassList.contains(sloClass)) {
+            if (sloClass == null) {
                 JSONObject tunableJson = new JSONObject();
                 addTunable(tunableJson, tunable);
-                String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.monitoring_agent);
                 String query = AnalyzerConstants.NONE;
-                if (tunableQuery != null && !tunableQuery.isEmpty()) {
-                    query = tunableQuery;
-                }
                 tunableJson.put(AnalyzerConstants.ServiceConstants.QUERY_URL, query);
                 tunablesArray.put(tunableJson);
             }
         }
-        */
+
     }
 
     /**

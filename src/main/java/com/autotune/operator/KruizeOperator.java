@@ -578,12 +578,8 @@ public class KruizeOperator {
             String layerName = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
             String details = autotuneConfigJson.optString(AnalyzerConstants.AutotuneConfigConstants.DETAILS);
             int level = autotuneConfigJson.optInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
-            // TODO: DEPRECATED - This JSON-based tunable parsing uses old Tunable constructors
-            // Need to migrate to YAML-based layer loading with new simplified Tunable class
             ArrayList<Tunable> tunableArrayList = new ArrayList<>();
-
-            /*** COMMENTED OUT - Old JSON-based tunable parsing that uses removed fields
-             JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
+            JSONArray tunablesJsonArray = autotuneConfigJson.optJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLES);
 
             for (Object tunablesObject : tunablesJsonArray) {
                 JSONObject tunableJson = (JSONObject) tunablesObject;
@@ -603,15 +599,9 @@ public class KruizeOperator {
                 String tunableName = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.NAME);
                 String tunableValueType = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.VALUE_TYPE);
 
-                ArrayList<String> sloClassList = new ArrayList<>();
-                JSONArray sloClassJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.SLO_CLASS);
+                // SLO class parsing removed - Tunable class no longer maintains sloClassList field
+                // SLO class filtering now handled at the layer level, not per tunable
 
-                for (Object sloClassObject : sloClassJson) {
-                    String sloClass = (String) sloClassObject;
-                    sloClassList.add(sloClass);
-                }
-                String upperBound = "";
-                String lowerBound = "";
                 double step = 1;
                 List<String> choices = new ArrayList<>();
                 Tunable tunable;
@@ -619,6 +609,7 @@ public class KruizeOperator {
                     /**
                      * check the tunable type, if it's categorical then we need to add the choices
                      * and then invoke the corresponding constructor
+                     */
 
                     if (tunableValueType.equalsIgnoreCase("categorical")) {
                         JSONArray categoricalChoicesJson = tunableJson.getJSONArray(AnalyzerConstants.AutotuneConfigConstants.TUNABLE_CHOICES);
@@ -626,20 +617,19 @@ public class KruizeOperator {
                             String categoricalChoice = (String) categoricalChoiceObject;
                             choices.add(categoricalChoice);
                         }
-                        tunable = new Tunable(tunableName, tunableValueType, queriesMap, sloClassList, layerName, choices);
+                        tunable = new Tunable(tunableName, tunableValueType, choices);
                     } else {
-                        upperBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND);
-                        lowerBound = tunableJson.optString(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND);
+                        Double upperBound = tunableJson.optDouble(AnalyzerConstants.AutotuneConfigConstants.UPPER_BOUND);
+                        Double lowerBound = tunableJson.optDouble(AnalyzerConstants.AutotuneConfigConstants.LOWER_BOUND);
                         // Read in step from the tunable, set it to '1' if not specified.
                         step = tunableJson.optDouble(AutotuneConfigConstants.STEP, 1);
-                        tunable = new Tunable(tunableName, tunableValueType, queriesMap, sloClassList, layerName, step, upperBound, lowerBound);
+                        tunable = new Tunable(tunableName, tunableValueType, step, upperBound, lowerBound);
                     }
                     tunableArrayList.add(tunable);
                 } catch (InvalidBoundsException e) {
                     e.printStackTrace();
                 }
             }
-            */
 
             String resourceVersion = metadataJson.optString(AnalyzerConstants.RESOURCE_VERSION);
             String uid = metadataJson.optString(AnalyzerConstants.UID);
@@ -874,39 +864,32 @@ public class KruizeOperator {
             return;
         }
 
-        // TODO: DEPRECATED - Tunable class refactored to remove queries, sloClassList, layerName fields
-        // This code needs to be refactored to work with simplified Tunable class
         ArrayList<Tunable> tunables = new ArrayList<>(kruizeLayer.getTunables());
-        /* COMMENTED OUT - Old tunable copying logic
+
+        // Query map and metadata copying removed - Tunable simplified to contain only name, bounds, and value type
+        // Queries now managed by LayerPresence (QueryBasedPresence), and layerName stored at KruizeLayer level
         for (Tunable tunable : kruizeLayer.getTunables()) {
             try {
-                Map<String, String> queries = new HashMap<>(tunable.getQueries());
 
                 Tunable tunableCopy;
                 if (tunable.getValueType().equalsIgnoreCase("categorical")) {
                     tunableCopy = new Tunable(tunable.getName(),
                             tunable.getValueType(),
-                            queries,
-                            tunable.getSloClassList(),
-                            tunable.getLayerName(),
                             tunable.getChoices()
                     );
                 } else {
                     tunableCopy = new Tunable(tunable.getName(),
                             tunable.getValueType(),
-                            queries,
-                            tunable.getSloClassList(),
-                            tunable.getLayerName(),
                             tunable.getStep(),
-                            tunable.getUpperBound(),
-                            tunable.getLowerBound()
+                            tunable.getUpperBoundValue(),
+                            tunable.getLowerBoundValue()
                     );
                 }
                 tunables.add(tunableCopy);
             } catch (InvalidBoundsException ignored) {
             }
         }
-        */
+
 
         // Create autotuneconfigcopy with updated tunables arraylist
         KruizeLayer kruizeLayerCopy = null;

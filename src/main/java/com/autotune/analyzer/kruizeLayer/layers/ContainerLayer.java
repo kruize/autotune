@@ -37,11 +37,9 @@ public class ContainerLayer extends GenericLayer implements Layer {
     private static final Logger LOGGER = LoggerFactory.getLogger(ContainerLayer.class);
 
     @Override
-    // TODO: DEPRECATED - This method uses removed Tunable.getBoundUnits()
-    // Need to refactor to handle units differently or remove this functionality
-    // See issue: [add issue number]
     public void prepTunable(Tunable tunable, JSONObject tunableJSON, ContainerConfigData containerConfigData) {
-        /* COMMENTED OUT - Uses removed getBoundUnits() method
+        // getBoundUnits() concatenation removed - Tunable no longer stores unit information
+        // Units are now implicitly defined by the tunable value itself (e.g., "500m" for CPU)
         String tunableName = tunable.getName();
 
         Map<String, Quantity> requestPropertiesMap = containerConfigData.getRequestPropertiesMap();
@@ -50,21 +48,19 @@ public class ContainerLayer extends GenericLayer implements Layer {
         }
         switch (tunableName) {
             case CPU_REQUEST:
-                String cpu = tunableJSON.getDouble(TUNABLE_VALUE) +
-                        tunable.getBoundUnits();
+                String cpu = String.valueOf(tunableJSON.getDouble(TUNABLE_VALUE));
                 LOGGER.debug("CPU Request: " + cpu);
                 requestPropertiesMap.put(KruizeConstants.JSONKeys.CPU, new Quantity(cpu));
                 break;
             case MEM_REQUEST:
-                String memory = tunableJSON.getDouble(TUNABLE_VALUE) +
-                        tunable.getBoundUnits();
+                String memory = String.valueOf(tunableJSON.getDouble(TUNABLE_VALUE));
                 LOGGER.debug("Mem Request: " + memory);
                 requestPropertiesMap.put(KruizeConstants.JSONKeys.MEMORY, new Quantity(memory));
                 break;
         }
         containerConfigData.setRequestPropertiesMap(requestPropertiesMap);
         containerConfigData.setLimitPropertiesMap(requestPropertiesMap);
-        */
+
     }
 
 
