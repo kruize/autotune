@@ -29,7 +29,7 @@ demo=all
 
 target="crc"
 KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
-KRUIZE_OPERATOR_IMAGE="quay.io/kruize/autotune_operator:0.0.2"
+KRUIZE_OPERATOR_IMAGE="quay.io/kruize/kruize-operator:0.0.2"
 KRUIZE_OPERATOR=0
 failed=0
 
@@ -39,7 +39,7 @@ SETUP=0
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-k (use this option to deploy kruize using manifests] [-a Kruize demos git repo URL] [-b Kruize demos branch]"
+	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch]"
 	echo "c = supports minikube, kind and openshift cluster-type"
 	echo "i = kruize image. Default - quay.io/kruize/autotune:mvp_demo"
 	echo "o = Kruize operator image. Default - quay.io/kruize/kruize-operator:0.0.2"
@@ -47,7 +47,6 @@ function usage() {
 	echo "b = Kruize demos git repo branch. Default - main"
 	echo "t = Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)"
 	echo "r = Kruize results dir path. Default - /tmp/kruize_demos_test_results"
-	echo "k = install kruize using deploy scripts."
 	exit 1
 }
 
@@ -319,7 +318,7 @@ function run_demo() {
 	} | tee -a ${LOG}
 }
 
-while getopts c:r:i:o:a:b:t:kh gopts
+while getopts c:r:i:o:a:b:t:h gopts
 do
 	case ${gopts} in
 	c)
@@ -342,9 +341,6 @@ do
 		;;
 	t)
 		demo="${OPTARG}"		
-		;;
-	k)
-		KRUIZE_OPERATOR=0
 		;;
 	h)
 		usage
