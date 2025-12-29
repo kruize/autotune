@@ -3,7 +3,7 @@ package com.autotune.analyzer.experiment;
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
 import com.autotune.analyzer.application.ApplicationServiceStack;
-import com.autotune.analyzer.application.Tunable;
+import com.autotune.analyzer.kruizeLayer.Tunable;
 import com.autotune.common.trials.ExperimentSummary;
 import com.autotune.common.trials.ExperimentTrial;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;

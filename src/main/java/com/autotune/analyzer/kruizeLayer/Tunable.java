@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.application;
+package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
     import com.google.gson.annotations.SerializedName;

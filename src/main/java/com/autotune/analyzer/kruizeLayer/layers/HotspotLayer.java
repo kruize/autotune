@@ -15,7 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.kruizeLayer.layers;
 
-import com.autotune.analyzer.application.Tunable;
+import com.autotune.analyzer.kruizeLayer.Tunable;
 import com.autotune.common.trials.ContainerConfigData;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import org.json.JSONObject;

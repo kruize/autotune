@@ -15,6 +15,7 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
+import com.autotune.analyzer.kruizeLayer.Tunable;
 import com.autotune.analyzer.kruizeObject.ObjectiveFunction;
 
 import java.util.HashMap;

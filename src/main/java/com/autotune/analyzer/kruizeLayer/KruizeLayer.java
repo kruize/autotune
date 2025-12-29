@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.kruizeLayer;
 
-import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
 import com.autotune.analyzer.utils.AnalyzerConstants;

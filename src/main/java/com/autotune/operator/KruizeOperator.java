@@ -17,7 +17,7 @@ package com.autotune.operator;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationServiceStack;
-import com.autotune.analyzer.application.Tunable;
+import com.autotune.analyzer.kruizeLayer.Tunable;
 import com.autotune.analyzer.exceptions.*;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
