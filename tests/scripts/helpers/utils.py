@@ -958,8 +958,8 @@ def validate_namespace(update_results_namespace, update_results_json, list_reco_
                                     engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
                                     validate_config(engine_obj["config"], metrics, experiment_type)
                                     validate_variation(current_config, engine_obj["config"], engine_obj["variation"])
-                        # TODO: validate Plots data for namespace experiment_type
-                        # validate_plots(terms_obj, duration_terms, term)
+                        # validate Plots data for namespace experiment_type
+                        validate_plots(terms_obj, duration_terms, term)
                     # verify that plots isn't generated in case of no recommendations
                     else:
                         assert PLOTS not in terms_obj[term], f"Expected plots to be absent in case of no recommendations"
@@ -1134,6 +1134,11 @@ def validate_local_monitoring_namespace(create_exp_namespace, list_reco_namespac
                             engine_obj = terms_obj[term]["recommendation_engines"][engine_entry]
                             validate_config_local_monitoring(engine_obj["config"])
                             validate_variation_local_monitoring(current_config, engine_obj["config"], engine_obj["variation"], engine_obj)
+                # validate Plots data
+                validate_plots(terms_obj, duration_terms, term)
+            # verify that plots isn't generated in case of no recommendations
+            else:
+                assert PLOTS not in terms_obj[term], f"Expected plots to be absent in case of no recommendations"
     else:
         notifications = list_reco_namespace["recommendations"]["notifications"]
         if NOTIFICATION_CODE_FOR_NOT_ENOUGH_DATA in notifications:
