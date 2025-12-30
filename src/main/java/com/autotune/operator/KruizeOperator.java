@@ -41,6 +41,7 @@ import com.autotune.common.target.kubernetes.service.impl.KubernetesServicesImpl
 import com.autotune.common.variables.Variables;
 import com.autotune.utils.EventLogger;
 import com.autotune.utils.KubeEventLogger;
+import com.autotune.utils.Utils;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.Gson;
@@ -133,8 +134,8 @@ public class KruizeOperator {
                     case "ADDED":
                         kruizeLayer = getAutotuneConfig(resource, KubernetesContexts.getAutotuneVariableContext());
                         if (kruizeLayer != null) {
-                            autotuneConfigMap.put(kruizeLayer.getName(), kruizeLayer);
-                            LOGGER.info("Added autotuneconfig " + kruizeLayer.getName());
+                            autotuneConfigMap.put(kruizeLayer.getLayerName(), kruizeLayer);
+                            LOGGER.info("Added autotuneconfig " + kruizeLayer.getLayerName());
                             addLayerInfo(kruizeLayer, null);
                         }
                         break;
@@ -142,8 +143,8 @@ public class KruizeOperator {
                         kruizeLayer = getAutotuneConfig(resource, KubernetesContexts.getAutotuneVariableContext());
                         if (kruizeLayer != null) {
                             deleteExistingConfig(resource);
-                            autotuneConfigMap.put(kruizeLayer.getName(), kruizeLayer);
-                            LOGGER.info("Added modified autotuneconfig " + kruizeLayer.getName());
+                            autotuneConfigMap.put(kruizeLayer.getLayerName(), kruizeLayer);
+                            LOGGER.info("Added modified autotuneconfig " + kruizeLayer.getLayerName());
                             addLayerInfo(kruizeLayer, null);
                         }
                         break;
@@ -644,17 +645,12 @@ public class KruizeOperator {
                     resourceVersion,
                     uid);
 
-            return new KruizeLayer(name,
-                    layerName,
-                    level,
-                    details,
-                    presence,
-                    layerPresenceQueries,
-                    layerPresenceLabel,
-                    layerPresenceLabelValue,
-                    tunableArrayList,
-                    objectReference);
-        } catch (JSONException | InvalidValueException | NullPointerException e) {
+            return new KruizeLayer(name, namespace, apiVersion, kind,
+                    layerName, level, details,
+                    presence, layerPresenceQueries,
+                    layerPresenceLabel, layerPresenceLabelValue,
+                    tunableArrayList);
+        } catch (JSONException | NullPointerException e) {
             e.printStackTrace();
             return null;
         }
@@ -668,7 +664,7 @@ public class KruizeOperator {
      * @param kruizeObject
      */
     private static void addDefaultLayer(KruizeLayer layer, KruizeObject kruizeObject) {
-        String presence = layer.getPresence();
+        String presence = layer.getLayerPresence().getPresence();
         // Add to all monitored applications in the cluster
         if (presence.equals(AnalyzerConstants.PRESENCE_ALWAYS)) {
             if (kruizeObject == null) {
@@ -711,7 +707,7 @@ public class KruizeOperator {
                 podList = kubernetesServices.getPodsBy(null);
             }
             if (podList == null) {
-                LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+                LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getLayerName());
                 return;
             }
             DataSourceInfo autotuneDataSource = null;
@@ -721,7 +717,7 @@ public class KruizeOperator {
                 e.printStackTrace();
             }
             ArrayList<String> appsForAllQueries = new ArrayList<>();
-            ArrayList<LayerPresenceQuery> layerPresenceQueries = layer.getLayerPresenceQueries();
+            List<LayerPresenceQuery> layerPresenceQueries = layer.getLayerPresence().getQueries();
             // Check if a layer has a datasource query that validates its presence
             if (layerPresenceQueries != null && !layerPresenceQueries.isEmpty()) {
                 for (LayerPresenceQuery layerPresenceQuery : layerPresenceQueries) {
@@ -731,7 +727,7 @@ public class KruizeOperator {
                                 layerPresenceQuery.getLayerPresenceKey());
                         appsForAllQueries.addAll(apps);
                     } catch (MalformedURLException | NullPointerException e) {
-                        LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+                        LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getLayerName());
                     }
                 }
                 // We now have a list of apps that have the label and the key specified by the user.
@@ -774,10 +770,10 @@ public class KruizeOperator {
                         }
                     }
                 } else {
-                    LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+                    LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getLayerName());
                 }
             } else {
-                LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+                LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getLayerName());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -805,8 +801,12 @@ public class KruizeOperator {
         KubernetesServices kubernetesServices = null;
         try {
             kubernetesServices = new KubernetesServicesImpl();
-            String layerPresenceLabel = layer.getLayerPresenceLabel();
-            String layerPresenceLabelValue = layer.getLayerPresenceLabelValue();
+            String layerPresenceLabel = null;
+            String layerPresenceLabelValue = null;
+            if (layer.getLayerPresence() != null && layer.getLayerPresence().getLabel() != null && !layer.getLayerPresence().getLabel().isEmpty()) {
+                layerPresenceLabel = layer.getLayerPresence().getLabel().get(0).getName();
+                layerPresenceLabelValue = layer.getLayerPresence().getLabel().get(0).getValue();
+            }
             if (layerPresenceLabel != null) {
                 List<Pod> podList = null;
                 if (kruizeObject != null) {
@@ -816,7 +816,7 @@ public class KruizeOperator {
                 }
 
                 if (podList.isEmpty()) {
-                    LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getName());
+                    LOGGER.warn(AnalyzerErrorConstants.AutotuneConfigErrors.COULD_NOT_GET_LIST_OF_APPLICATIONS + layer.getLayerName());
                     return;
                 }
                 for (Pod pod : podList) {
@@ -860,7 +860,7 @@ public class KruizeOperator {
     private static void addLayerInfoToApplication(ApplicationServiceStack applicationServiceStack, KruizeLayer kruizeLayer) {
         // Check if layer already exists
         if (!applicationServiceStack.getApplicationServiceStackLayers().isEmpty() &&
-                applicationServiceStack.getApplicationServiceStackLayers().containsKey(kruizeLayer.getName())) {
+                applicationServiceStack.getApplicationServiceStackLayers().containsKey(kruizeLayer.getLayerName())) {
             return;
         }
 
@@ -891,24 +891,10 @@ public class KruizeOperator {
         }
 
 
-        // Create autotuneconfigcopy with updated tunables arraylist
-        KruizeLayer kruizeLayerCopy = null;
-        try {
-            kruizeLayerCopy = new KruizeLayer(
-                    kruizeLayer.getName(),
-                    kruizeLayer.getLayerName(),
-                    kruizeLayer.getLevel(),
-                    kruizeLayer.getDetails(),
-                    kruizeLayer.getPresence(),
-                    kruizeLayer.getLayerPresenceQueries(),
-                    kruizeLayer.getLayerPresenceLabel(),
-                    kruizeLayer.getLayerPresenceLabelValue(),
-                    tunables,
-                    kruizeLayer.getObjectReference());
-        } catch (InvalidValueException ignored) {
-        }
+        // Create layer copy with updated tunables
+        KruizeLayer kruizeLayerCopy = Utils.getClone(kruizeLayer, KruizeLayer.class);
 
-        LOGGER.info("Added layer " + kruizeLayer.getName() + " to stack " + applicationServiceStack.getStackName());
-        applicationServiceStack.getApplicationServiceStackLayers().put(kruizeLayer.getName(), kruizeLayerCopy);
+        LOGGER.info("Added layer " + kruizeLayer.getLayerName() + " to stack " + applicationServiceStack.getStackName());
+        applicationServiceStack.getApplicationServiceStackLayers().put(kruizeLayer.getLayerName(), kruizeLayerCopy);
     }
 }

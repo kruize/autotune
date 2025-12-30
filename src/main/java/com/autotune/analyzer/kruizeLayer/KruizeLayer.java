@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2020, 2021 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2020, 2025 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,14 +15,11 @@
  *******************************************************************************/
 package com.autotune.analyzer.kruizeLayer;
 
-import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
-import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.utils.Utils;
-import io.fabric8.kubernetes.api.model.ObjectReference;
-
+import com.autotune.analyzer.kruizeLayer.presence.LabelBasedPresence;
+import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
 /**
  * Container class for the KruizeLayer kubernetes kind, which is used to tune
@@ -32,133 +29,123 @@ import java.util.HashMap;
  */
 public final class KruizeLayer
 {
-	private final String layerId;
-	private final int level;
-	private final String name;
-	private final String layerName;
-	private final String details;
-	// If true, apply to all autotuneobjects
-	private final String presence;
+	private String apiVersion;
+	private String kind;
+	private LayerMetadata metadata;;
+	@SerializedName("layer_name")
+	private String layerName;
+	@SerializedName("layer_level")
+	private int layerLevel;
+	private String details;
+	@SerializedName("layer_presence")
+	private LayerPresence layerPresence;
+	private ArrayList<Tunable> tunables;
 
-	// Used to detect the presence of the layer in an application. Autotune runs the query, looks for
-	// the key, and all applications in the query output are matched to the KruizeLayer object.
-	private final ArrayList<LayerPresenceQuery> layerPresenceQueries;
+	public KruizeLayer() {
+	}
 
-	private final String layerPresenceLabel;
-	private final String layerPresenceLabelValue;
+	public KruizeLayer(String name, String namespace, String apiVersion, String kind,
+					   String layerName, int layerLevel, String details,
+					   String presence, List<LayerPresenceQuery> queries,
+					   String labelName, String labelValue,
+					   ArrayList<Tunable> tunables) {
+		this.apiVersion = apiVersion;
+		this.kind = kind;
+		this.layerName = layerName;
+		this.layerLevel = layerLevel;
+		this.details = details;
+		this.tunables = tunables;
 
-	private final ArrayList<Tunable> tunables;
+		// Create LayerMetadata
+		this.metadata = new LayerMetadata();
+		this.metadata.setName(name);
 
-	private final ObjectReference objectReference;
-
-	public KruizeLayer(String name,
-					   String layerName,
-					   int level,
-					   String details,
-					   String presence,
-					   ArrayList<LayerPresenceQuery> layerPresenceQueries,
-					   String layerPresenceLabel,
-					   String layerPresenceLabelValue,
-					   ArrayList<Tunable> tunables,
-					   ObjectReference objectReference) throws InvalidValueException {
-
-		HashMap<String, Object> map = new HashMap<>();
-		map.put(AnalyzerConstants.AutotuneConfigConstants.NAME, name);
-		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, layerName);
-		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, level);
-		map.put(AnalyzerConstants.AutotuneConfigConstants.PRESENCE, presence);
-		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_QUERIES, layerPresenceQueries);
-		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL, layerPresenceLabel);
-		map.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_PRESENCE_LABEL_VALUE, layerPresenceLabelValue);
-		map.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunables);
-
-		StringBuilder error = ValidateKruizeLayer.validate(map);
-		if (error.toString().isEmpty()) {
-			this.name = name;
-			this.layerName = layerName;
-			this.presence = presence;
-			this.level = level;
-			this.details = details;
-			this.layerPresenceQueries = new ArrayList<>(layerPresenceQueries);
-			this.layerPresenceLabel = layerPresenceLabel;
-			this.layerPresenceLabelValue = layerPresenceLabelValue;
-			this.tunables = new ArrayList<>(tunables);
-			this.layerId = Utils.generateID(toString());
-			this.objectReference = objectReference;
-		} else {
-			throw new InvalidValueException(error.toString());
+		// Create LayerPresence
+		this.layerPresence = new LayerPresence();
+		this.layerPresence.setPresence(presence);
+		if (queries != null && !queries.isEmpty()) {
+			this.layerPresence.setQueries(queries);
+		}
+		if (labelName != null && labelValue != null) {
+			LabelBasedPresence.LayerPresenceLabel label = new LabelBasedPresence.LayerPresenceLabel(labelName, labelValue);
+			this.layerPresence.setLabel(new ArrayList<>(java.util.Arrays.asList(label)));
 		}
 	}
 
-	public KruizeLayer(KruizeLayer copy) {
-		this.layerId = copy.getLayerId();
-		this.name = copy.getName();
-		this.layerName = copy.getLayerName();
-		this.level = copy.getLevel();
-		this.details = copy.getDetails();
-		this.layerPresenceQueries = new ArrayList<>(copy.getLayerPresenceQueries());
-		this.layerPresenceLabel = copy.getLayerPresenceLabel();
-		this.layerPresenceLabelValue = copy.getLayerPresenceLabelValue();
-		this.presence = copy.presence;
-
-		this.tunables = new ArrayList<>(copy.getTunables());
-		this.objectReference = copy.getObjectReference();
+	public String getApiVersion() {
+		return apiVersion;
 	}
 
-	public int getLevel() {
-		return level;
+	public void setApiVersion(String apiVersion) {
+		this.apiVersion = apiVersion;
 	}
 
-	public String getDetails() {
-		return details;
+	public String getKind() {
+		return kind;
 	}
 
-	public String getName() {
-		return name;
+	public void setKind(String kind) {
+		this.kind = kind;
+	}
+
+	public LayerMetadata getMetadata() {
+		return metadata;
+	}
+
+	public void setMetadata(LayerMetadata metadata) {
+		this.metadata = metadata;
 	}
 
 	public String getLayerName() {
 		return layerName;
 	}
 
-	public String getPresence() {
-		return presence;
+	public void setLayerName(String layerName) {
+		this.layerName = layerName;
+	}
+
+	public int getLayerLevel() {
+		return layerLevel;
+	}
+
+	public void setLayerLevel(int layerLevel) {
+		this.layerLevel = layerLevel;
+	}
+
+	public String getDetails() {
+		return details;
+	}
+
+	public void setDetails(String details) {
+		this.details = details;
+	}
+
+	public LayerPresence getLayerPresence() {
+		return layerPresence;
+	}
+
+	public void setLayerPresence(LayerPresence layerPresence) {
+		this.layerPresence = layerPresence;
 	}
 
 	public ArrayList<Tunable> getTunables() {
-		return new ArrayList<>(tunables);
+		return tunables;
 	}
 
-	public ArrayList<LayerPresenceQuery> getLayerPresenceQueries() {
-		return layerPresenceQueries;
-	}
-
-	public String getLayerPresenceLabel() {
-		return layerPresenceLabel;
-	}
-
-	public String getLayerPresenceLabelValue() {
-		return layerPresenceLabelValue;
-	}
-
-	public String getLayerId() {
-		return layerId;
-	}
-
-	public ObjectReference getObjectReference() {
-		return objectReference;
+	public void setTunables(ArrayList<Tunable> tunables) {
+		this.tunables = tunables;
 	}
 
 	@Override
 	public String toString() {
 		return "KruizeLayer{" +
-				"level=" + level +
-				", name='" + name + '\'' +
+				"apiVersion='" + apiVersion + '\'' +
+				", kind='" + kind + '\'' +
+				", layerLevel=" + layerLevel +
 				", layerName='" + layerName + '\'' +
-				", presence='" + presence + '\'' +
-				", layerPresenceQueries='" + layerPresenceQueries + '\'' +
-				", layerPresenceLabel='" + layerPresenceLabel + '\'' +
-				", layerPresenceLabelValue='" + layerPresenceLabelValue + '\'' +
+				", details='" + details + '\'' +
+				", metadata=" + metadata +
+				", layerPresence=" + layerPresence +
 				", tunables=" + tunables +
 				'}';
 	}

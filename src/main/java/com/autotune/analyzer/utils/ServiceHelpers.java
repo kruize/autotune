@@ -104,10 +104,9 @@ public class ServiceHelpers {
      * @param kruizeLayer
      */
     public static void addLayerDetails(JSONObject layerJson, KruizeLayer kruizeLayer) {
-        layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_ID, kruizeLayer.getLayerId());
         layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, kruizeLayer.getLayerName());
         layerJson.put(AnalyzerConstants.ServiceConstants.LAYER_DETAILS, kruizeLayer.getDetails());
-        layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, kruizeLayer.getLevel());
+        layerJson.put(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL, kruizeLayer.getLayerLevel());
     }
 
     /**
