@@ -15,7 +15,7 @@ public class KruizeLMLayerEntry {
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode metadata;
     @Id
-    private String name;
+    private String layer_name;
     private Integer layer_level;
     private String details;
     @JdbcTypeCode(SqlTypes.JSON)
@@ -48,12 +48,12 @@ public class KruizeLMLayerEntry {
         this.metadata = metadata;
     }
 
-    public String getName() {
-        return name;
+    public String getLayer_name() {
+        return layer_name;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setLayer_name(String layer_name) {
+        this.layer_name = layer_name;
     }
 
     public Integer getLayer_level() {
