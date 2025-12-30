@@ -47,12 +47,20 @@ def base_payload():
         "time_range": {}
     }
 
+def filtered_payload():
+    payload = base_payload()
+    payload["filter"]["include"]["namespace"] = ["default"]
+    payload["filter"]["include"]["workload"] = ["sysbench"]
+    payload["filter"]["include"]["containers"] = ["sysbench"]
+    return payload
+
 @pytest.mark.test_bulk_api_ros
 @pytest.mark.sanity
 @pytest.mark.parametrize("bulk_request_payload, expected_job_id_present", [
     ({}, True),  # Test with an empty payload to check if a job_id is created.
-    (base_payload(),True)  # Test with a sample payload with some JSON content
-])
+    (base_payload(),True),  # Test with a sample payload with some JSON content
+    (filtered_payload(), True)  # Test with payload with filters
+])    
 def test_bulk_post_request(cluster_type, bulk_request_payload, expected_job_id_present, caplog):
     form_kruize_url(cluster_type)
     URL = get_kruize_url()
@@ -221,3 +229,197 @@ def test_bulk_validate_datasource_missing(cluster_type):
     print("Response:", response.json())
     assert response.status_code == ERROR_STATUS_CODE
     assert DATASOURCE_NOT_SERVICEABLE in response.json()["message"]
+
+
+@pytest.mark.test_bulk_api_ros
+@pytest.mark.sanity
+def test_bulk_api_filter_application(cluster_type, caplog):
+    """
+    Validate that filters applied in POST bulk API
+    (namespace, workload, container)
+    are correctly reflected in GET bulk API metadata response.
+    """
+
+    # --------------------------------------------------
+    # Step 0: Setup
+    # --------------------------------------------------
+    form_kruize_url(cluster_type)
+
+    payload = filtered_payload()
+
+    delete_and_create_metric_profile()
+    delete_and_create_metadata_profile()
+
+    with caplog.at_level(logging.INFO):
+
+        # --------------------------------------------------
+        # Step 1: POST Bulk API
+        # --------------------------------------------------
+        response = post_bulk_api(payload, logging)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+
+        job_id = response.json().get("job_id")
+        assert job_id, "job_id not found in bulk POST response"
+
+        logger.info(f"Bulk job created with job_id: {job_id}")
+
+        # --------------------------------------------------
+        # Step 2: Poll GET Bulk API until metadata is available
+        # --------------------------------------------------
+        metadata = None
+
+        for _ in range(10):
+            get_response = get_bulk_job_status(
+                job_id,
+                include="metadata",
+                logger=logging
+            )
+
+            assert get_response.status_code == SUCCESS_200_STATUS_CODE
+            result = get_response.json()
+
+            metadata = result.get("metadata", {})
+            if metadata.get("datasources"):
+                break
+
+            logger.info("Bulk job still processing, retrying...")
+            time.sleep(5)
+
+        assert metadata and metadata.get("datasources"), \
+            "Bulk job did not return metadata within expected time"
+
+        datasources = metadata["datasources"]
+
+        # --------------------------------------------------
+        # Step 3: Expected filters
+        # --------------------------------------------------
+        expected_namespace = payload["filter"]["include"]["namespace"][0]
+        expected_workload = payload["filter"]["include"]["workload"][0]
+        expected_container = payload["filter"]["include"]["containers"][0]
+
+        # --------------------------------------------------
+        # Step 4: Validate metadata hierarchy
+        # --------------------------------------------------
+        for ds_name, ds_data in datasources.items():
+            clusters = ds_data.get("clusters", {})
+            assert clusters, f"No clusters found in datasource {ds_name}"
+
+            for cluster_name, cluster_data in clusters.items():
+                namespaces = cluster_data.get("namespaces", {})
+                assert namespaces, "No namespaces found in cluster metadata"
+
+                # Namespace filter
+                assert list(namespaces.keys()) == [expected_namespace], \
+                    f"Unexpected namespaces: {list(namespaces.keys())}"
+
+                ns_data = namespaces[expected_namespace]
+                workloads = ns_data.get("workloads", {})
+                assert workloads, "No workloads found under namespace"
+
+                # Workload filter
+                assert list(workloads.keys()) == [expected_workload], \
+                    f"Unexpected workloads: {list(workloads.keys())}"
+
+                wl_data = workloads[expected_workload]
+                containers = wl_data.get("containers", {})
+                assert containers, "No containers found under workload"
+
+                # Container filter
+                assert list(containers.keys()) == [expected_container], \
+                    f"Unexpected containers: {list(containers.keys())}"
+
+        logger.info(
+            "Bulk API filter validation successful for namespace, workload, and container"
+        )
+
+@pytest.mark.test_bulk_api_ros
+@pytest.mark.sanity
+def test_bulk_api_namespace_only_filter(cluster_type, caplog):
+    """
+    Validate that when only namespace filter is provided:
+    - Bulk API returns metadata only for that namespace
+    - All workloads/containers under that namespace are included
+    - No other namespaces appear in metadata
+    """
+
+    # --------------------------------------------------
+    # Step 0: Setup
+    # --------------------------------------------------
+    form_kruize_url(cluster_type)
+
+    payload = base_payload()
+    payload["filter"]["include"]["namespace"] = ["default"]
+
+    delete_and_create_metric_profile()
+    delete_and_create_metadata_profile()
+
+    with caplog.at_level(logging.INFO):
+
+        # --------------------------------------------------
+        # Step 1: POST Bulk API
+        # --------------------------------------------------
+        response = post_bulk_api(payload, logging)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+
+        job_id = response.json().get("job_id")
+        assert job_id, "job_id not found in bulk POST response"
+
+        logger.info(f"Bulk job created with job_id: {job_id}")
+
+        # --------------------------------------------------
+        # Step 2: Poll GET Bulk API until metadata is available
+        # --------------------------------------------------
+        metadata = None
+
+        for _ in range(10):
+            get_response = get_bulk_job_status(
+                job_id,
+                include="metadata",
+                logger=logging
+            )
+            assert get_response.status_code == SUCCESS_200_STATUS_CODE
+
+            result = get_response.json()
+            metadata = result.get("metadata", {})
+
+            if metadata.get("datasources"):
+                break
+
+            logger.info("Bulk job still processing, retrying...")
+            time.sleep(5)
+
+        assert metadata and metadata.get("datasources"), \
+            "Bulk job did not return metadata within expected time"
+
+        datasources = metadata["datasources"]
+
+        # --------------------------------------------------
+        # Step 3: Validate namespace-only filtering
+        # --------------------------------------------------
+        expected_namespace = payload["filter"]["include"]["namespace"][0]
+
+        for ds_name, ds_data in datasources.items():
+            clusters = ds_data.get("clusters", {})
+            assert clusters, f"No clusters found for datasource {ds_name}"
+
+            for cluster_name, cluster_data in clusters.items():
+                namespaces = cluster_data.get("namespaces", {})
+                assert namespaces, "No namespaces found in cluster metadata"
+
+                # Only expected namespace must exist
+                assert list(namespaces.keys()) == [expected_namespace], \
+                    f"Unexpected namespaces found: {list(namespaces.keys())}"
+
+                ns_data = namespaces[expected_namespace]
+                workloads = ns_data.get("workloads", {})
+                assert workloads, "No workloads found under namespace"
+
+                # Ensure workloads and containers are present
+                for wl_name, wl_data in workloads.items():
+                    containers = wl_data.get("containers", {})
+                    assert containers, \
+                        f"No containers found for workload {wl_name}"
+
+        logger.info(
+            "Namespace-only filter validation successful"
+        )
