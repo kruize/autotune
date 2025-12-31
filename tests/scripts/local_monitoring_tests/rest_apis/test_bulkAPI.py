@@ -292,7 +292,7 @@ def test_bulk_validate_datasource_missing(cluster_type):
         ),
     ]
 )
-def test_bulk_api_filter_application_new(
+def test_bulk_api_filter_application(
     cluster_type,
     filter_setup,
     expected,
