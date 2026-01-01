@@ -34,7 +34,6 @@ public class ApplicationSearchSpace
 	private final Integer totalTrials;
 	private final Integer parallelTrials;
 
-	Map<String, Tunable> tunablesMap;
 
 	public ApplicationSearchSpace(String experimentName,
 								  String experimentId,
@@ -53,7 +52,6 @@ public class ApplicationSearchSpace
 		this.totalTrials = totalTrials;
 		this.parallelTrials = parallelTrials;
 
-		this.tunablesMap = new HashMap<>();
 	}
 
 	public String getExperimentName() {	return experimentName;	}
@@ -72,10 +70,6 @@ public class ApplicationSearchSpace
 
 	public String getDirection() {
 		return direction;
-	}
-
-	public Map<String, Tunable> getTunablesMap() {
-		return tunablesMap;
 	}
 
 	public String getValueType() {

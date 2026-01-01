@@ -15,8 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
-import com.autotune.analyzer.kruizeLayer.KruizeLayer;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -47,12 +45,10 @@ public class ApplicationServiceStack
 {
 	private final String stackName;
 	private final String containerName;
-	private Map<String, KruizeLayer> applicationServiceStackLayers;
 
 	public ApplicationServiceStack(String stackName, String containerName) {
 		this.stackName = stackName;
 		this.containerName = containerName;
-		this.applicationServiceStackLayers = new HashMap<>();
 	}
 
 	public String getContainerName() {
@@ -63,16 +59,11 @@ public class ApplicationServiceStack
 		return stackName;
 	}
 
-	public Map<String, KruizeLayer> getApplicationServiceStackLayers() {
-		return applicationServiceStackLayers;
-	}
-
 	@Override
 	public String toString() {
 		return "ApplicationServiceStack{" +
 				"stackName='" + stackName + '\'' +
 				", containerName='" + containerName + '\'' +
-				", stackLayers=" + applicationServiceStackLayers +
 				'}';
 	}
 }

@@ -16,11 +16,8 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.application.ApplicationSearchSpace;
-import com.autotune.analyzer.application.ApplicationServiceStack;
-import com.autotune.analyzer.application.Tunable;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.experiment.KruizeExperiment;
-import com.autotune.analyzer.kruizeLayer.layers.Layer;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
@@ -192,50 +189,7 @@ public class TrialHelpers {
         for (Metric metric : sloInfo.getFunctionVariables()) {
             podMetricsHashMap.put(metric.getName(), metric);
         }
-        JSONArray trialConfigArray = new JSONArray(trialConfigJson);
-        for (Object trialConfigObject : trialConfigArray) {
-            JSONObject trialConfig = (JSONObject) trialConfigObject;
-            String tunableName = trialConfig.getString(TUNABLE_NAME);
-            Tunable tunable = kruizeExperiment.getApplicationSearchSpace().getTunablesMap().get(tunableName);
-            if (tunable == null) {
-                LOGGER.error("ERROR: tunable is null for tunableName: " + tunableName);
-            }
-            ApplicationServiceStack applicationServiceStack = kruizeExperiment.getApplicationDeployment().getApplicationServiceStackMap().get(tunable.getStackName());
-            String tunableQuery = tunable.getQueries().get(KruizeDeploymentInfo.monitoring_agent);
-            Class<Layer> classRef = KruizeDeploymentInfo.getLayer(tunable.getLayerName());
-            try {
-                Object inst = classRef.getDeclaredConstructor().newInstance();
-                Method method = classRef.getMethod("prepTunable", Tunable.class, JSONObject.class, ContainerConfigData.class);
-                method.invoke(inst, tunable, trialConfig, configData);
-                configData.setContainerName(applicationServiceStack.getContainerName());
-            } catch (NoSuchMethodException e) {
-                e.printStackTrace();
-            } catch (InvocationTargetException e) {
-                e.printStackTrace();
-            } catch (InstantiationException e) {
-                e.printStackTrace();
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
-            }
-            if (tunableQuery != null && !tunableQuery.isEmpty()) {
-                Metric queryMetric = new Metric(tunable.getName(),
-                        tunableQuery,
-                        KruizeDeploymentInfo.monitoring_agent,
-                        tunable.getValueType(), null);
-                if (containerMetricsHashMap != null
-                        && !containerMetricsHashMap.isEmpty()
-                        && containerMetricsHashMap.containsKey(applicationServiceStack.getContainerName())) {
-                    containerMetricsHashMap.get(applicationServiceStack.getContainerName())
-                            .put(queryMetric.getName(), queryMetric);
-                } else {
-                    HashMap<String, Metric> localMetricMap = new HashMap<>();
-                    localMetricMap.put(queryMetric.getName(), queryMetric);
-                    containerMetricsHashMap.put(applicationServiceStack.getContainerName(), localMetricMap);
-                }
-            } else {
-                LOGGER.error("New Trial: tunable: " + tunableName + " No container metrics");
-            }
-        }
+
         TrialDetails trialDetails = new TrialDetails(String.valueOf(trialNumber), configData);
         trialDetails.setStartTime(Timestamp.from(Instant.now()));
         trialsMap.put(String.valueOf(trialNumber), trialDetails);
