@@ -23,20 +23,12 @@ SCRIPTS_DIR="${CURRENT_DIR}"
 . ${SCRIPTS_DIR}/common/common_functions.sh
 
 # Source the test suite scripts
-. ${SCRIPTS_DIR}/da/da_app_autotune_yaml_tests.sh
-. ${SCRIPTS_DIR}/da/da_kruize_layer_yaml_tests.sh
-. ${SCRIPTS_DIR}/da/da_basic_api_tests.sh
-. ${SCRIPTS_DIR}/da/modify_kruize_layer_tests.sh
-. ${SCRIPTS_DIR}/da/configmap_yaml_tests.sh
-. ${SCRIPTS_DIR}/da/autotune_id_tests.sh
-. ${SCRIPTS_DIR}/da/kruize_layer_id_tests.sh
-. ${SCRIPTS_DIR}/em/em_standalone_tests.sh
 . ${SCRIPTS_DIR}/remote_monitoring_tests/remote_monitoring_tests.sh
 . ${SCRIPTS_DIR}/local_monitoring_tests/local_monitoring_tests.sh
 . ${SCRIPTS_DIR}/local_monitoring_tests/authentication_tests.sh
 
 # Iterate through the commandline options
-while getopts i:o:r:-: gopts
+while getopts i:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -47,21 +39,12 @@ do
 			tctype=*)
 				tctype=${OPTARG#*=}
 				;;
-			testmodule=*)
-				testmodule=${OPTARG#*=}
-				;;
 			testsuite=*)
 				testsuite=${OPTARG#*=}
 				;;
 			testcase=*)
 				testcase=${OPTARG#*=}
 				;;
-		  servicename=*)
-      	servicename=${OPTARG#*=}
-        ;;
-		  datasource_namespace=*)
-		    datasource_namespace=${OPTARG#*=}
-        ;;
 			resultsdir=*)
 				resultsdir=${OPTARG#*=}
 				;;
@@ -72,9 +55,6 @@ do
 		;;
 	i)
 		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"
-		;;
-	r)
-		APP_REPO="${OPTARG}"
 		;;
 	esac
 done
@@ -93,99 +73,9 @@ mkdir -p "${RESULTS}"
 
 SETUP_LOG="${TEST_DIR}/setup.log"
 
-if [ "$testsuite" != "remote_monitoring_tests" ] && [ "$testsuite" != "local_monitoring_tests" ]; then
-	CONFIGMAP="${RESULTS}/test_configmap"
-	mkdir ${CONFIGMAP}
-
-	# Replace configmap logging level to debug for testing purpose
-	find="info"
-	replace="debug"
-	config_yaml="${CONFIGMAP}/${cluster_type}-config.yaml"
-	cp "${configmap}/${cluster_type}-config.yaml" "${config_yaml}"
-
-	# Update the config map yaml with specified field
-	update_yaml ${find} ${replace} ${config_yaml}
-fi
-
-# Set of functional tests to be performed
-# input: Result directory to store the functional test results
-# output: Perform the set of functional tests
-function functional_test() {
-	if [ "${sanity}" -eq "1" ]; then
-		testcase=""
-		# perform the basic api tests
-		basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
-	else
-		execute_da_testsuites
-		execute_em_testsuites
-	fi
-}
-
-# Execute all tests for DA (Dependency Analyzer) module
-function execute_da_testsuites() {
-	# perform the application autotune yaml tests
-	app_autotune_yaml_tests > >(tee "${RESULTS}/app_autotune_yaml_tests.log") 2>&1
-
-	testcase=""
-	# perform the autotune config yaml tests
-	kruize_layer_yaml_tests > >(tee "${RESULTS}/kruize_layer_yaml_tests.log") 2>&1
-
-	testcase=""
-	# perform the basic api tests
-	basic_api_tests > >(tee "${RESULTS}/basic_api_tests.log") 2>&1
-
-	testcase=""
-	# Modify existing autotuneconfig yamls and check for API results
-	modify_kruize_layer_tests > >(tee "${RESULTS}/modify_kruize_layer_tests.log") 2>&1
-
-	testcase=""
-	# perform the configmap yaml tests
-	configmap_yaml_tests > >(tee "${RESULTS}/configmap_yaml_tests.log") 2>&1
-
-	testcase=""
-	# validate the autotune object id
-	autotune_id_tests > >(tee "${RESULTS}/autotune_id_tests.log") 2>&1
-
-	testcase=""
-	# validate the autotune config object id
-	kruize_layer_id_tests > >(tee "${RESULTS}/kruize_layer_id_tests.log") 2>&1
-}
-
-# Execute all tests for EM (Experiment Manager) module
-function execute_em_testsuites() {
-        testcase=""
-        # perform the EM API tests
-        em_standalone_tests > >(tee "${RESULTS}/em_standalone_tests.log") 2>&1
-}
-
-# Execute all tests for Remote monitoring
-function execute_remote_monitoring_testsuites() {
-        testcase=""
-        # perform the Remote monitoring tests
-        remote_monitoring_tests > >(tee "${RESULTS}/remote_monitoring_tests.log") 2>&1
-}
-
 # Perform the specific testsuite if specified
-if [ ! -z "${testmodule}" ]; then
-	case "${testmodule}" in
-	da)
-		# Execute tests for Dependency Analyzer Module
-		execute_da_testsuites
-		;;
-	em)
-		# Execute tests for Experiment Manager (EM) Module
-		execute_em_testsuites
-		;;
-	esac
-elif [ ! -z "${testsuite}" ]; then
-	if [ "${testsuite}" == "sanity" ]; then
-		sanity=1
-		functional_test
-	else
-		${testsuite} > >(tee "${RESULTS}/${testsuite}.log") 2>&1
-	fi
-elif [[ -z "${testcase}" && -z "${testsuite}" && -z "${testmodule}" ]]; then
-	functional_test
+if [ ! -z "${testsuite}" ]; then
+	${testsuite} > >(tee "${RESULTS}/${testsuite}.log") 2>&1
 fi
 
 echo ""

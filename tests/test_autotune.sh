@@ -27,25 +27,12 @@ resultsdir="${CURRENT_DIR}"
 # usage of the test script
 function usage() { 
 	echo ""
-	echo "Usage: $0 -c [minikube] [-t terminate or cleanup kruize] -r [location of benchmarks] [-i autotune image] [--tctype=functional|system] [--testmodule=Autotune module to be tested] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-u user] [-p password] [-n namespace] [--resultsdir=results directory] [--skipsetup specifying this flag skips autotune & application setup] [--cleanup_prometheus specifying this flag along with -t option cleans up prometheus setup]"
+	echo "Usage: $0 -c [minikube] [-t terminate or cleanup kruize] -r [location of benchmarks] [-i autotune image] [--tctype=functional|system] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-n namespace] [--resultsdir=results directory] [--skipsetup specifying this flag skips autotune & application setup] [--cleanup_prometheus specifying this flag along with -t option cleans up prometheus setup]"
 	echo ""
-	echo "Example: $0 -c minikube --tctype=functional --testsuite=app_autotune_yaml_tests --testcase=slo_class -r /home/benchmarks --resultsdir=/home/results"
-	echo "Example: $0 -c minikube --testmodule=da -r /home/benchmarks --resultsdir=/home/results"
+	echo "Example: $0 -c minikube --testsuite=remote_monitoring_tests --resultsdir=/home/results"
 	echo ""
-	test_module_usage
 	test_suite_usage
 	echo ""
-	exit -1
-}
-
-# List of testmodules supported
-# output: Display the names of the supported test module
-function test_module_usage() {
-	echo "Supported Test modules are:"
-	for array in "${TEST_MODULE_ARRAY[@]}"
-	do
-		echo "		           ${array}"
-	done
 	exit -1
 }
 
@@ -75,27 +62,6 @@ function check_cluster_type() {
 		echo "Error: Cluster type **${cluster_type}** is not supported  "
 		usage
 	esac
-}
-
-# check if the specified testmodule type exists
-# input: testmodule
-# output: if the specified test module is supported or not 
-function check_testmodule_type() {
-	for tm in ${TEST_MODULE_ARRAY[@]}
-	do
-		if [ "${testmodule}" == "${tm}" ]; then
-			matched=1
-		fi
-	done
-	
-	if [ "${testmodule}" == "help" ]; then
-		test_module_usage
-	fi
-	
-	if [ "${matched}" -eq "0" ]; then
-		echo "Error: Invalid testmodule **${testmodule}** "
-		test_module_usage
-	fi
 }
 
 # check if the specified testsuite type exists
@@ -133,7 +99,7 @@ function check_testcase_type() {
 }
 
 # Iterate through the commandline options
-while getopts c:ti:k:n:p:su:r:y:o:-: gopts
+while getopts c:ti:k:s:-: gopts
 do
 	case ${gopts} in
 	-)
@@ -153,12 +119,6 @@ do
 			testcase=*)
 				testcase=${OPTARG#*=}
 				;;
-		  servicename=*)
-      	servicename=${OPTARG#*=}
-        ;;
-		  datasource_namespace=*)
-		    datasource_namespace=${OPTARG#*=}
-        ;;
 			resultsdir=*)
 				resultsdir=${OPTARG#*=}
 				;;
@@ -183,20 +143,8 @@ do
 	k)
 		kurl="${OPTARG}"
 		;;
-	n)
-		autotune_ns="${OPTARG}"
-		;;
-	p)
-		password="${OPTARG}"
-		;;
 	s)
 		setup=1
-		;;
-	u)
-		user="${OPTARG}"
-		;;
-	r)
-		APP_REPO="${OPTARG}"
 		;;
 	[?])
 		usage
@@ -219,45 +167,20 @@ if [ ! -z "${testcase}" ]; then
 	fi
 fi
 
-# It is necessary to pass datasource namespace when servicename is specified
-if [ ! -z "${servicename}" ]; then
-	if [ -z "${datasource_namespace}" ]; then
-		echo "Error: Do specify the datasource namespace"
-		exit -1
-	fi
-fi
-
-# check for benchmarks directory path
-if [[ "${testsuite}" != "remote_monitoring_tests" && "${testsuite}" != "local_monitoring_tests" ]]; then
-	if [ -z "${APP_REPO}" ]; then
-		echo "Error: Do specify the benchmarks directory path"
-		usage
-	else
-		if [ ! -d "${APP_REPO}" ]; then
-			echo "Error: benchmark directory does not exists"
-			usage
-		fi
-	fi
-else
-	APP_REPO="NA"
-fi
-
 if [ "${setup}" -ne "0" ]; then
 	# Call the proper setup function based on the cluster_type
 	echo -n "############# Performing ${tctype} test for autotune #############"
 	if [ ${skip_setup} -eq 1 ]; then
-		#if [ ${testsuite} == "remote_monitoring_tests" ]; then
 		if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
-			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --servicename=${servicename} --datasource_namespace=${datasource_namespace} --resultsdir=${resultsdir} -r ${APP_REPO} --skipsetup
+			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} --skipsetup
 		else
-			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --servicename=${servicename} --datasource_namespace=${datasource_namespace} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} -r ${APP_REPO} --skipsetup
+			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} --skipsetup
 		fi
 	else
 		if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
-		#if [ ${testsuite} == "remote_monitoring_tests" ]; then
-			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --servicename=${servicename} --datasource_namespace=${datasource_namespace} --resultsdir=${resultsdir} -r ${APP_REPO}
+			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} 
 		else
-			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testmodule=${testmodule} --testsuite=${testsuite} --testcase=${testcase} --servicename=${servicename} --datasource_namespace=${datasource_namespace} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} -r ${APP_REPO}
+			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE}
 		fi
 	fi
 
