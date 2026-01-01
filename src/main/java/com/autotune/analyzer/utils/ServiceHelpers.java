@@ -96,6 +96,36 @@ public class ServiceHelpers {
         experimentJson.put(AnalyzerConstants.ServiceConstants.DEPLOYMENTS, deploymentArray);
     }
 
+    /**
+     * Add application search space details to JSON array for HPO
+     * TODO: This method needs to be updated with tunables support once new layer design is integrated
+     *
+     * @param outputJsonArray JSON array to add the search space to
+     * @param applicationSearchSpace Application search space object
+     */
+    public static void addApplicationToSearchSpace(JSONArray outputJsonArray, ApplicationSearchSpace applicationSearchSpace) {
+        if (applicationSearchSpace == null) {
+            return;
+        }
+
+        JSONObject applicationJson = new JSONObject();
+        applicationJson.put(AnalyzerConstants.ServiceConstants.EXPERIMENT_NAME, applicationSearchSpace.getExperimentName());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.DIRECTION, applicationSearchSpace.getDirection());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.OBJECTIVE_FUNCTION, applicationSearchSpace.getObjectiveFunction());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.EXPERIMENT_ID, applicationSearchSpace.getExperimentId());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.HPO_ALGO_IMPL, applicationSearchSpace.getHpoAlgoImpl());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.VALUE_TYPE, applicationSearchSpace.getValueType());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.TOTAL_TRIALS, applicationSearchSpace.getTotalTrials());
+        applicationJson.put(AnalyzerConstants.AutotuneObjectConstants.PARALLEL_TRIALS, applicationSearchSpace.getParallelTrials());
+
+        // TODO: Add tunables support here once new layer design is integrated
+        // For now, creating an empty tunables array to maintain JSON structure
+        JSONArray tunablesJsonArray = new JSONArray();
+        applicationJson.put(AnalyzerConstants.AutotuneConfigConstants.TUNABLES, tunablesJsonArray);
+
+        outputJsonArray.put(applicationJson);
+    }
+
     public static class KruizeObjectOperations {
         private KruizeObjectOperations() {
 
