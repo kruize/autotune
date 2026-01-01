@@ -23,6 +23,7 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -93,7 +94,7 @@ public class DataSourceCollection {
      *
      * @param datasource DataSourceInfo object containing details of datasource
      */
-    public boolean addDataSource(DataSourceInfo datasource) throws DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DataSourceNotServiceable, UnsupportedDataSourceProvider, DataSourceAuthFailed {
+    public void addDataSource(DataSourceInfo datasource) throws DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DataSourceNotServiceable, UnsupportedDataSourceProvider, DataSourceAuthFailed {
         final String name = datasource.getName();
         final String provider = datasource.getProvider();
         final String url = String.valueOf(datasource.getUrl());
@@ -133,7 +134,6 @@ public class DataSourceCollection {
         }
         dataSourceCollection.put(name, datasource);
         LOGGER.info(DATASOURCE_ADDED);
-        return true;
     }
 
     /**
@@ -142,14 +142,13 @@ public class DataSourceCollection {
      * @param configFileName name of the config file mounted
      */
     public void addDataSourcesFromConfigFile(String configFileName) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        JSONArray dataSourceArr = null;
+        JSONArray dataSourceArr = new JSONArray();
         int successCount = 0;
         List<String> failedDatasources = new ArrayList<>();
         try {
             dataSourceArr = new JSONArray(KruizeDeploymentInfo.datasource_via_env);
         } catch (Exception e) {
             LOGGER.error("Datasource configuration failed due to : {}", e.getMessage());
-            return;
         }
 
         for (Object dataSourceObj : dataSourceArr) {
@@ -223,13 +222,9 @@ public class DataSourceCollection {
                     }
                     dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, url, authConfig);
 
-                    // Attempt to add, addDataSource() returns true if added successfully.
-                    boolean added = addDataSource(dataSourceInfo);
-                    if (added) {
-                        successCount++;
-                    } else {
-                        failedDatasources.add(name + " (not serviceable)");
-                    }
+                    // Attempt to add, addDataSource() returns corresponding exception if it fails. Increment the success count otherwise.
+                    addDataSource(dataSourceInfo);
+                    successCount++;
                 } catch (DataSourceAlreadyExist dataSourceAlreadyExist) {
                     LOGGER.warn("datasource '{}' already exists in DB, skipping add: {}", name, dataSourceAlreadyExist.getMessage());
                     // If already exists, consider it a success (it is present)
