@@ -16,8 +16,13 @@
 package com.autotune.analyzer.kruizeLayer.layers;
 
 import com.autotune.analyzer.application.Tunable;
+import com.autotune.analyzer.kruizeLayer.TunableSpec;
 import com.autotune.common.trials.ContainerConfigData;
 import org.json.JSONObject;
+
+import java.util.List;
+import java.util.Map;
+
 /**
  * 	Interface layer gets implemented by Quarkus, Hotspot etc
  */
@@ -27,4 +32,5 @@ public interface Layer {
 	 */
 	void prepTunable(Tunable tunable, JSONObject tunableJSON, ContainerConfigData containerConfigData);
 	void parseTunableResults(Tunable tunable);
+	Map<String, List<TunableSpec>> getTunableDependencies();
 }

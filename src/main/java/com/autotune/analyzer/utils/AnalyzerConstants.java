@@ -1014,4 +1014,25 @@ public class AnalyzerConstants {
             }
         }
     }
+
+    public static final class LayerConstants {
+        private LayerConstants() {}
+
+        public static final String CONTAINER_LAYER = "container";
+        public static final String HOTSPOT_LAYER = "hotspot";
+        public static final String QUARKUS_LAYER = "quarkus";
+
+        public static final class TunablesConstants {
+            private TunablesConstants() {}
+
+            // Container tunables
+            public static final String MEMORY_LIMIT = "memory-limit";
+            public static final String CPU_LIMIT =  "cpu-limit";
+            // Hotspot tunables
+            public static final String MAX_RAM_PERC = "maxram-percentage";
+            public static final String GC_POLICY = "gc-policy";
+            // Quarkus tunables
+            public static final String CORE_THREADS = "core-threads";
+        }
+    }
 }
