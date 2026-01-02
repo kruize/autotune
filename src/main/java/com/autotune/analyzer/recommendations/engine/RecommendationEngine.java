@@ -866,11 +866,7 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
 
-            DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(kruizeObject.getDataSource());
-            List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
-            if (KruizeSupportedTypes.RUNTIMES_SUPPORTED_DATASOURCES.contains(dataSourceInfo.getServiceName())) {
-                //TODO: add logic to handle runtimes env
-            }
+            List<RecommendationConfigEnv> runtimeRecommList = handleRuntimeRecommendations(kruizeObject);
 
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
@@ -891,6 +887,29 @@ public class RecommendationEngine {
         }
         return mappedRecommendationForModel;
     }
+
+    /**
+     * Method to handle the runtimes recommendations logic
+     * @param kruizeObject to get the datasource
+     * @return
+     */
+    private List<RecommendationConfigEnv> handleRuntimeRecommendations(KruizeObject kruizeObject) {
+        List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
+        String datasourceName = kruizeObject.getDataSource();
+        if (datasourceName == null) {
+            LOGGER.warn("Datasource missing, skipping runtime recommendations");
+            return null;
+        }
+        DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(datasourceName);
+        if (dataSourceInfo == null ||
+                !KruizeSupportedTypes.RUNTIMES_SUPPORTED_DATASOURCES
+                        .contains(dataSourceInfo.getServiceName())) {
+            return null;
+        }
+        // TODO: add runtime env logic
+        return runtimeRecommList;
+    }
+
 
     private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
         try {
