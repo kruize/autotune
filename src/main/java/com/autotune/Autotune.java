@@ -138,41 +138,37 @@ public class Autotune {
                 // setting up DataSources
                 try {
                     setUpDataSources();
+                    // checking available DataSources
+                    checkAvailableDataSources();
+                    // load available metric profiles from db
+                    loadMetricProfilesFromDB();
+
+                    if (KruizeDeploymentInfo.is_ros_enabled) {
+                        // setting up metric profile
+                        try {
+                            setUpMetricProfile();
+                        } catch (Exception e) {
+                            LOGGER.error(SET_UP_DEFAULT_METRIC_PROFILE_ERROR, e.getMessage());
+                        }
+                    }
+
+                    // load available metadata profiles from db
+                    loadMetadataProfilesFromDB();
+
+                    if (KruizeDeploymentInfo.is_ros_enabled) {
+                        // setting up metadata profile
+                        try {
+                            setUpMetadataProfile();
+                        } catch (Exception e) {
+                            LOGGER.error(SET_UP_DEFAULT_METADATA_PROFILE_ERROR, e.getMessage());
+                        }
+                    }
+
+                    // start updater service
+                    startAutoscalerService();
                 } catch (Exception e) {
                     LOGGER.error(DATASOURCE_CONNECTION_FAILED +"{}", e.getMessage());
-                    LOGGER.info("Exiting...");
-                    System.exit(1);
                 }
-
-                // checking available DataSources
-                checkAvailableDataSources();
-                // load available metric profiles from db
-                loadMetricProfilesFromDB();
-
-                if (KruizeDeploymentInfo.is_ros_enabled) {
-                    // setting up metric profile
-                    try {
-                        setUpMetricProfile();
-                    } catch (Exception e) {
-                        LOGGER.error(SET_UP_DEFAULT_METRIC_PROFILE_ERROR, e.getMessage());
-                    }
-                }
-
-                // load available metadata profiles from db
-                loadMetadataProfilesFromDB();
-
-                if (KruizeDeploymentInfo.is_ros_enabled) {
-                    // setting up metadata profile
-                    try {
-                        setUpMetadataProfile();
-                    } catch (Exception e) {
-                        LOGGER.error(SET_UP_DEFAULT_METADATA_PROFILE_ERROR, e.getMessage());
-                    }
-                }
-
-
-                // start updater service
-                startAutoscalerService();
             }
 
             // close the existing session factory before recreating
@@ -256,11 +252,15 @@ public class Autotune {
         DataSourceCollection dataSourceCollection = DataSourceCollection.getInstance();
         LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.CHECKING_AVAILABLE_DATASOURCE);
         HashMap<String, DataSourceInfo> dataSources = dataSourceCollection.getDataSourcesCollection();
-        for (String name : dataSources.keySet()) {
-            DataSourceInfo dataSource = dataSources.get(name);
-            String dataSourceName = dataSource.getName();
-            String url = dataSource.getUrl().toString();
-            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
+        if (dataSources.isEmpty()) {
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.MISSING_DATASOURCE_INFO);
+        } else {
+            for (String name : dataSources.keySet()) {
+                DataSourceInfo dataSource = dataSources.get(name);
+                String dataSourceName = dataSource.getName();
+                String url = dataSource.getUrl().toString();
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_FOUND + dataSourceName + ", " + url);
+            }
         }
     }
 
