@@ -22,10 +22,10 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.MetricName.*;
 
 public class PlotManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlotManager.class);
-    private HashMap<Timestamp, IntervalResults> resultsMap;
-    private Terms recommendationTerm;
-    private Timestamp monitoringStartTime;
-    private Timestamp monitoringEndTime;
+    private final HashMap<Timestamp, IntervalResults> resultsMap;
+    private final Terms recommendationTerm;
+    private final Timestamp monitoringStartTime;
+    private final Timestamp monitoringEndTime;
 
     public PlotManager(HashMap<Timestamp, IntervalResults> resultsMap, Terms recommendationTerm, Timestamp monitoringStartTime, Timestamp monitoringEndTime) {
         this.resultsMap = resultsMap;
@@ -44,13 +44,6 @@ public class PlotManager {
         sortedResultsHashMap.putAll(resultsMap);
         // Retrieve entries within the specified range
         Map<Timestamp, IntervalResults> resultInRange = sortedResultsHashMap.subMap(monitoringEndTime, true, monitoringStartTime, false);
-
-        int delimiterNumber = (int) (resultInRange.size() / recommendationTerm.getPlots_datapoints());
-
-        // Convert set to list
-        List<Timestamp> timestampList = new LinkedList<>(resultInRange.keySet());
-        // Sort the LinkedList
-        Collections.sort(timestampList);
 
         Map<Timestamp, PlotData.PlotPoint> plotsDataMap = new HashMap<>();
         Timestamp incrementStartTime = monitoringStartTime;
