@@ -1107,6 +1107,7 @@ public class RecommendationEngine {
                             mappedRecommendationForTerm.setPlots(new PlotManager(namespaceData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots(AnalyzerConstants.ExperimentType.NAMESPACE));
                         } catch (Exception e) {
                             status = String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.BOX_PLOTS_FAILURE, e.getMessage());
+                            LOGGER.debug(status);
                         } finally {
                             if (timerBoxPlots != null) {
                                 MetricsConfig.timerBoxPlots = MetricsConfig.timerBBoxPlots.tag(KruizeConstants.DataSourceConstants
