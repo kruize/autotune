@@ -22,12 +22,18 @@ SCRIPTS_DIR="${CURRENT_DIR}/scripts"
 # Source the common functions scripts
 . ${SCRIPTS_DIR}/common/common_functions.sh
 
+# Source the test suite scripts
+. ${SCRIPTS_DIR}/remote_monitoring_tests/remote_monitoring_tests.sh
+. ${SCRIPTS_DIR}/local_monitoring_tests/local_monitoring_tests.sh
+. ${SCRIPTS_DIR}/local_monitoring_tests/authentication_tests.sh
+
+
 resultsdir="${CURRENT_DIR}"
 
 # usage of the test script
 function usage() { 
 	echo ""
-	echo "Usage: $0 -c [minikube] [-t terminate or cleanup kruize] -r [location of benchmarks] [-i autotune image] [--tctype=functional|system] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [-n namespace] [--resultsdir=results directory] [--skipsetup specifying this flag skips autotune & application setup] [--cleanup_prometheus specifying this flag along with -t option cleans up prometheus setup]"
+	echo "Usage: $0 -c [minikube] [-t terminate or cleanup kruize] [-i autotune image] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to check] [--resultsdir=results directory] [--skipsetup specifying this flag skips autotune setup] [--cleanup_prometheus specifying this flag along with -t option cleans up prometheus setup]"
 	echo ""
 	echo "Example: $0 -c minikube --testsuite=remote_monitoring_tests --resultsdir=/home/results"
 	echo ""
@@ -85,39 +91,24 @@ function check_testsuite_type() {
 	fi
 }
 
-# Check the test type 
-# input: test type
-# output: If test type is not supported then stop the test
-function check_testcase_type() {
-	case "${tctype}" in
-	functional|system)
-		;;
-	*)
-		echo "Error: Test case type **${tctype}** is not supported"
-		exit -1
-	esac
-}
-
 # Iterate through the commandline options
-while getopts c:ti:k:s:-: gopts
+while getopts c:ti:s:-: gopts
 do
 	case ${gopts} in
 	-)
 		case "${OPTARG}" in
-			tctype=*)
-				tctype=${OPTARG#*=}
-				check_testcase_type
-				;;
-			testmodule=*)
-				testmodule=${OPTARG#*=}
-				check_testmodule_type
-				;;
 			testsuite=*)
 				testsuite=${OPTARG#*=}
 				check_testsuite_type
 				;;
 			testcase=*)
 				testcase=${OPTARG#*=}
+				;;
+			servicename=*)
+      				servicename=${OPTARG#*=}
+        			;;
+			datasource_namespace=*)
+				datasource_namespace=${OPTARG#*=}
 				;;
 			resultsdir=*)
 				resultsdir=${OPTARG#*=}
@@ -128,7 +119,6 @@ do
 			cleanup_prometheus)
 				cleanup_prometheus=1
 				;;
-
 		esac
 		;;
 	c)
@@ -139,9 +129,6 @@ do
 		;;
 	i)
 		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"		
-		;;
-	k)
-		kurl="${OPTARG}"
 		;;
 	s)
 		setup=1
@@ -154,11 +141,6 @@ done
 # Check if the cluster type is supported
 check_cluster_type
 
-# Set the testcase type to default if it is not specified 
-if [ -z "${tctype}" ]; then
-	tctype="functional"
-fi
-
 # It is necessary to pass testsuite name when testcase is specified
 if [ ! -z "${testcase}" ]; then
 	if [ -z "${testsuite}" ]; then
@@ -167,37 +149,38 @@ if [ ! -z "${testcase}" ]; then
 	fi
 fi
 
+# Set the root for result directory
+RESULTS_ROOT_DIR="${resultsdir}/kruize_test_results"
+mkdir -p ${RESULTS_ROOT_DIR}
+
+# create the result directory with a time stamp
+RESULTS="${RESULTS_ROOT_DIR}/kruize_${testsuite}_$(date +%Y%m%d:%T)"
+mkdir -p "${RESULTS}"
+
 if [ "${setup}" -ne "0" ]; then
 	# Call the proper setup function based on the cluster_type
-	echo -n "############# Performing ${tctype} test for autotune #############"
-	if [ ${skip_setup} -eq 1 ]; then
-		if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
-			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} --skipsetup
-		else
-			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE} --skipsetup
-		fi
-	else
-		if [ -z "${AUTOTUNE_DOCKER_IMAGE}" ]; then
-			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} 
-		else
-			${SCRIPTS_DIR}/${tctype}_tests.sh --cluster_type=${cluster_type} --tctype=${tctype} --testsuite=${testsuite} --testcase=${testcase} --resultsdir=${resultsdir} -i ${AUTOTUNE_DOCKER_IMAGE}
-		fi
+	echo -n "############# Performing tests for Kruize #############"
+
+	# Perform the specific testsuite if specified
+	if [ ! -z "${testsuite}" ]; then
+        	${testsuite} > >(tee "${RESULTS}/${testsuite}.log") 2>&1
 	fi
 
-	TEST_RESULT=$?
+	echo ""
+	echo "*********************************************************************************"
+	echo "~~~~~~~~~~~~~~~~~~~~~~~~~~~~ Overall summary of the tests ~~~~~~~~~~~~~~~~~~~~~~~"
+	overallsummary  ${FAILED_TEST_SUITE}
+	echo ""
+	echo "*********************************************************************************"
+
+	if [ "${TOTAL_TESTS_FAILED}" -ne "0" ]; then
+        	exit 1
+	else
+        	exit 0
+	fi
+
 	echo "########################################################################"
 	echo ""
-	if [ "${TEST_RESULT}" -ne "0" ]; then
-		exit 1
-	else
-		exit 0
-	fi
 else
-  #TODO: the target for local monitoring is temporarily set to "crc" for the demo
-	if [ ${testsuite} == "remote_monitoring_tests" ] || [ ${testsuite} == "local_monitoring_tests" ] ; then
-		target="crc"
-	else
-		target="autotune"
-	fi
 	autotune_cleanup
 fi

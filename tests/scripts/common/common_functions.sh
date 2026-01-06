@@ -35,16 +35,15 @@ TEST_SUITE_ARRAY=("remote_monitoring_tests"
 "local_monitoring_tests"
 "authentication_tests")
 
-AUTOTUNE_IMAGE="kruize/autotune_operator:test"
+AUTOTUNE_DOCKER_IMAGE="quay.io/kruizehub/autotune_test_image:mvp_demo"
 total_time=0
 matched=0
-sanity=0
 setup=1
 skip_setup=0
 
 cleanup_prometheus=0
 
-target="autotune"
+target="crc"
 
 #   Clone git Repos
 function clone_repos() {
@@ -136,12 +135,9 @@ function time_diff() {
 	echo $diffsec
 }
 
-# Set up the autotune
-# input: configmap directory and flag which indicates whether or not to do the deployment status check. It has to be set to "1" in case of configmap yaml test
+# Set up autotune
 function setup() {
 	AUTOTUNE_POD_LOG=$1
-	CONFIGMAP_DIR=$2
-	ignore_deployment_status_check=$3
 
 	# remove the existing autotune objects
 	autotune_cleanup ${TEST_SUITE_DIR}
@@ -154,7 +150,8 @@ function setup() {
 
 	# Deploy autotune
 	echo "Deploying autotune..."
-	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${CONFIGMAP_DIR}" "${AUTOTUNE_POD_LOG}"
+	
+	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${AUTOTUNE_POD_LOG}"
 	echo "Deploying autotune...Done"
 
 	case "${cluster_type}" in
@@ -182,8 +179,7 @@ function setup_prometheus() {
 function deploy_autotune() {
 	cluster_type=$1
 	AUTOTUNE_IMAGE=$2
-	CONFIGMAP_DIR=$3
-	AUTOTUNE_POD_LOG=$4
+	AUTOTUNE_POD_LOG=$3
 
 	pushd ${AUTOTUNE_REPO} > /dev/null
 
@@ -193,39 +189,14 @@ function deploy_autotune() {
 		setup_prometheus >> ${AUTOTUNE_SETUP_LOG} 2>&1
 	fi
 
-	echo "Deploying autotune $target"
-	# if both autotune image and configmap is not passed then consider the test-configmap(which has logging level as debug)
-	if [[ -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
-		if [ ${target} == "autotune" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -d ${CONFIGMAP} -m ${target}"
-		elif [ ${target} == "crc" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -m ${target} -b"
-		fi
-	# if both autotune image and configmap  is passed
-	elif [[ ! -z "${AUTOTUNE_IMAGE}" && ! -z "${CONFIGMAP_DIR}" ]]; then
-		if [ ${target} == "autotune" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP_DIR} -m ${target}"
-		elif [ ${target} == "crc" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m ${target}"
-		fi
-
-	# autotune image is passed but configmap is not passed then consider the test-configmap(which has logging level as debug)
-	elif [[ ! -z "${AUTOTUNE_IMAGE}" && -z "${CONFIGMAP_DIR}" ]]; then
-		if [ ${target} == "autotune" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -d ${CONFIGMAP} -m ${target}"
-		elif [ ${target} == "crc" ]; then
-			cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m ${target}"
-		fi
-
-	fi
+	echo "Deploying autotune"
+	cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m ${target}"
 	echo "Kruize deploy command - ${cmd}"
 	${cmd}
 
 	status="$?"
 	# Check if autotune is deployed.
-	# Ignore the status check if ignore_deployment_status_check is set to "1".
-	# In case of configmap yaml tests we need not check if autotune has deployed properly during the setup since it is done as part of the test.
-	if [[ "${status}" -eq "1" && "${ignore_deployment_status_check}" != "1" ]]; then
+	if [[ "${status}" -eq "1" ]]; then
 		echo "Error deploying autotune" >>/dev/stderr
 		echo "See ${AUTOTUNE_SETUP_LOG}" >>/dev/stderr
 		exit -1
@@ -241,19 +212,11 @@ function deploy_autotune() {
 			namespace="monitoring"
 		fi
 		echo "Namespace = $namespace"
-		if [ ${target} == "crc" ]; then
-			service="kruize"
-			autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
-			echo "autotune_pod = $autotune_pod"
-			echo "kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &"
-			kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &
-		else
-			service="autotune"
-			autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | cut -d " " -f1)
-			echo "autotune_pod = $autotune_pod"
-			echo "kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &"
-			kubectl -n ${namespace} logs -f ${autotune_pod} -c autotune > "${AUTOTUNE_POD_LOG}" 2>&1 &
-		fi
+		service="kruize"
+		autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
+		echo "autotune_pod = $autotune_pod"
+		echo "kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &"
+		kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &
 	fi
 
 	popd > /dev/null
@@ -527,10 +490,7 @@ function error_message() {
 function form_curl_cmd() {
 	crud_operation=$1
 	# Form the curl command based on the cluster type
-	service="autotune"
-	if [ ${target} == "crc" ]; then
-		service="kruize"
-	fi
+	service="kruize"
 	case $cluster_type in
 	   openshift)
 		NAMESPACE="openshift-tuning"
@@ -818,17 +778,11 @@ function match_ids() {
 # input : Log file path to store the pod information
 function get_autotune_pod_log() {
 	log=$1
-	# Fetch the autotune container log
-	container="autotune"
+	# Fetch the container log
 
 	echo "target = $target"
-	if [ ${target} == "crc" ]; then
-		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
-		pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
-	else
-		autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep autotune | cut -d " " -f1)
-		pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE}  -c ${container})
-	fi
+	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
+	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
 	echo "${pod_log_msg}" > "${log}"
 }
 
@@ -990,35 +944,34 @@ function kruize_remote_patch() {
 	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
 	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
 
-
-  if [ ${cluster_type} == "minikube" ]; then
-    sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}    #this will remove the entry and use default set by java i.e. isROSEnabled=true and local=false
-  elif [ ${cluster_type} == "openshift" ]; then
-    sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-    sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-    sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-  fi
+	if [ ${cluster_type} == "minikube" ]; then
+		sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}    #this will remove the entry and use default set by java i.e. isROSEnabled=true and local=false
+	elif [ ${cluster_type} == "openshift" ]; then
+		sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+		sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+		sed -i 's/\([[:space:]]*\)\(memory:\)[[:space:]]*".*"/\1\2 "2Gi"/; s/\([[:space:]]*\)\(cpu:\)[[:space:]]*".*"/\1\2 "2"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+	fi
 }
 
 #
 # Modify "serviceName" and "namespace" datasource manifest fields based on input parameters
 #
 function kruize_local_datasource_manifest_patch() {
-  CRC_DIR="./manifests/crc/default-db-included-installation"
-  KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
-  KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
+	CRC_DIR="./manifests/crc/default-db-included-installation"
+	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
+	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
 
-  if [ ${cluster_type} == "minikube" ]; then
-    if [[ ! -z "${servicename}" &&  ! -z "${datasource_namespace}" ]]; then
-     sed -i 's/"serviceName": "[^"]*"/"serviceName": "'${servicename}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
-     sed -i 's/"namespace": "[^"]*"/"namespace": "'${datasource_namespace}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
-     sed -i 's/"url": ".*"/"url": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
-    fi
-  elif [ ${cluster_type} == "openshift" ]; then
-    if [[ ! -z "${servicename}" &&  ! -z "${datasource_namespace}" ]]; then
-      sed -i 's/"serviceName": "[^"]*"/"serviceName": "'${servicename}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-      sed -i 's/"namespace": "[^"]*"/"namespace": "'${datasource_namespace}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-      sed -i 's/"url": ".*"/"url": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-    fi
-  fi
+	if [ ${cluster_type} == "minikube" ]; then
+		if [[ ! -z "${servicename}" &&  ! -z "${datasource_namespace}" ]]; then
+			sed -i 's/"serviceName": "[^"]*"/"serviceName": "'${servicename}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+			sed -i 's/"namespace": "[^"]*"/"namespace": "'${datasource_namespace}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+			sed -i 's/"url": ".*"/"url": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
+		fi
+	elif [ ${cluster_type} == "openshift" ]; then
+		if [[ ! -z "${servicename}" &&  ! -z "${datasource_namespace}" ]]; then
+			sed -i 's/"serviceName": "[^"]*"/"serviceName": "'${servicename}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+			sed -i 's/"namespace": "[^"]*"/"namespace": "'${datasource_namespace}'"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+			sed -i 's/"url": ".*"/"url": ""/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
+		fi
+	fi
 }

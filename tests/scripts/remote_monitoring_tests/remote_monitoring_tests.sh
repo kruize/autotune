@@ -15,12 +15,12 @@
 # limitations under the License.
 #
 #
-##### Script to perform basic tests for EM #####
+##### Script to perform remote monitoring tests #####
 
 
 # Get the absolute path of current directory
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-REMOTE_MONITORING_TEST_DIR="${CURRENT_DIR}/remote_monitoring_tests"
+REMOTE_MONITORING_TEST_DIR="${CURRENT_DIR}/scripts/remote_monitoring_tests"
 PERF_PROFILE_DIR="${REMOTE_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
@@ -63,7 +63,10 @@ function remote_monitoring_tests() {
 		echo "Setting up kruize..." | tee -a ${LOG}
 		echo "${KRUIZE_SETUP_LOG}"
 		echo "Removing isROSEnabled=false and local=true"
-    kruize_remote_patch
+		pwd
+		kruize_remote_patch
+		echo "Removing isROSEnabled=false and local=true...done"
+
 		setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
 	        echo "Setting up kruize...Done" | tee -a ${LOG}
 	

@@ -20,8 +20,9 @@
 
 # Get the absolute path of current directory
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-LOCAL_MONITORING_TEST_DIR="${CURRENT_DIR}/local_monitoring_tests"
+LOCAL_MONITORING_TEST_DIR="${CURRENT_DIR}/scripts/local_monitoring_tests"
 METRIC_PROFILE_DIR="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
+KRUIZE_REPO="${CURRENT_DIR}/.."
 
 # Source the common functions scripts
 . ${LOCAL_MONITORING_TEST_DIR}/../common/common_functions.sh
@@ -58,10 +59,10 @@ function local_monitoring_tests() {
 
 	mkdir -p ${TEST_SUITE_DIR}
 
-  # check for 'isROSEnabled' flag
-  kruize_local_ros_patch
-  # check for 'servicename' and 'datasource_namespace' input variables
-  kruize_local_datasource_manifest_patch
+	# check for 'isROSEnabled' flag
+	kruize_local_ros_patch
+	# check for 'servicename' and 'datasource_namespace' input variables
+	kruize_local_datasource_manifest_patch
 
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
