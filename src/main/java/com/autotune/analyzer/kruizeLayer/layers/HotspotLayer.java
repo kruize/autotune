@@ -16,13 +16,15 @@
 package com.autotune.analyzer.kruizeLayer.layers;
 
 import com.autotune.analyzer.application.Tunable;
+import com.autotune.analyzer.kruizeLayer.TunableSpec;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.trials.ContainerConfigData;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
+import java.util.*;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.TRUE;
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
@@ -35,6 +37,18 @@ import static com.autotune.utils.KruizeConstants.JSONKeys.*;
  */
 public class HotspotLayer extends GenericLayer implements Layer {
     private static final Logger LOGGER = LoggerFactory.getLogger(HotspotLayer.class);
+    private static final Map<String, List<TunableSpec>> DEPENDENCIES;
+    static {
+        DEPENDENCIES = Map.of(AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC, List.of(
+                new TunableSpec(AnalyzerConstants.LayerConstants.CONTAINER_LAYER,
+                        AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT)
+        ), AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY, List.of(
+                new TunableSpec(AnalyzerConstants.LayerConstants.CONTAINER_LAYER,
+                        AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT),
+                new TunableSpec(AnalyzerConstants.LayerConstants.CONTAINER_LAYER,
+                        AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT)
+        ));
+    }
     /**
      * Currently the following hotspot tunables are supported
      * -server -XX:+UseG1GC -XX:MaxRAMPercentage=70
@@ -134,5 +148,10 @@ public class HotspotLayer extends GenericLayer implements Layer {
     @Override
     public void parseTunableResults(Tunable tunable) {
 
+    }
+
+    @Override
+    public Map<String, List<TunableSpec>> getTunableDependencies() {
+        return DEPENDENCIES;
     }
 }

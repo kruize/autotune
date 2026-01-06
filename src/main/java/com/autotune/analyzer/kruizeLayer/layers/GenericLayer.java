@@ -21,10 +21,11 @@ import io.fabric8.kubernetes.api.model.EnvVar;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+
 /**
  * Layer object used to store Generic Container config details.
  */
-public class GenericLayer implements Layer {
+public abstract class GenericLayer implements Layer {
 
     public void prepTunable(Tunable tunable, JSONObject tunableJSON, ContainerConfigData containerConfigData) {
         String tunableName = tunable.getName();

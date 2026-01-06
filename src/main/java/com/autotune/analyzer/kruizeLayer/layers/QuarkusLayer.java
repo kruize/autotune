@@ -16,6 +16,7 @@
 package com.autotune.analyzer.kruizeLayer.layers;
 
 import com.autotune.analyzer.application.Tunable;
+import com.autotune.analyzer.kruizeLayer.TunableSpec;
 import com.autotune.common.trials.ContainerConfigData;
 import io.fabric8.kubernetes.api.model.EnvVar;
 import org.json.JSONObject;
@@ -23,6 +24,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 import static com.autotune.analyzer.utils.AnalyzerConstants.AutotuneConfigConstants.TUNABLE_VALUE;
 import static com.autotune.analyzer.utils.AnalyzerConstants.QuarkusConstants.QUARKUS;
@@ -64,5 +67,10 @@ public class QuarkusLayer extends GenericLayer implements Layer {
     @Override
     public void parseTunableResults(Tunable tunable) {
 
+    }
+
+    @Override
+    public Map<String, List<TunableSpec>> getTunableDependencies() {
+        return null;
     }
 }
