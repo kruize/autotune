@@ -41,7 +41,6 @@ public class Analyzer {
 
     public static void addServlets(ServletContextHandler context) {
         context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENTS);
-        context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
         context.addServlet(CreateExperiment.class, ServerContext.CREATE_EXPERIMENT);
         context.addServlet(UpdateResults.class, ServerContext.UPDATE_RESULTS);
         context.addServlet(UpdateRecommendations.class, ServerContext.UPDATE_RECOMMENDATIONS);
