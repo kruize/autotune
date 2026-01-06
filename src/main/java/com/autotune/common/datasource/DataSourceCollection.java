@@ -23,21 +23,25 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
 import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.*;
-import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_ADDED;
-import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_AUTH_ADDED_DB;
+import static com.autotune.utils.KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.*;
 
 public class DataSourceCollection {
     private static final Logger LOGGER = LoggerFactory.getLogger(DataSourceCollection.class);
@@ -90,7 +94,7 @@ public class DataSourceCollection {
      *
      * @param datasource DataSourceInfo object containing details of datasource
      */
-    public void addDataSource(DataSourceInfo datasource) throws DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DataSourceNotServiceable, UnsupportedDataSourceProvider {
+    public void addDataSource(DataSourceInfo datasource) throws DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DataSourceNotServiceable, UnsupportedDataSourceProvider, DataSourceAuthFailed {
         final String name = datasource.getName();
         final String provider = datasource.getProvider();
         final String url = String.valueOf(datasource.getUrl());
@@ -103,34 +107,33 @@ public class DataSourceCollection {
             throw new DataSourceAlreadyExist(DATASOURCE_ALREADY_EXIST);
         }
 
-        if (provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS) || provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.THANOS)) {
-            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY, name);
-            DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
-            if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
-                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
-                // add the authentication details to the DB
-                addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(datasource.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);
-                if (addedToDB.isSuccess()) {
-                    LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_AUTH_ADDED_DB);
-                    // add the data source to DB
-                    addedToDB = new ExperimentDBService().addDataSourceToDB(datasource, addedToDB);
-                    if (addedToDB.isSuccess()) {
-                        LOGGER.info(DATASOURCE_AUTH_ADDED_DB);
-                    } else {
-                        LOGGER.error("{}: {}", DATASOURCE_NOT_SERVICEABLE, addedToDB.getMessage());
-                    }
-                } else {
-                    LOGGER.error(DATASOURCE_AUTH_DB_INSERTION_FAILED, addedToDB.getMessage());
-                }
-                dataSourceCollection.put(name, datasource);
-                LOGGER.info(DATASOURCE_ADDED);
-            } else {
-                throw new DataSourceNotServiceable(DATASOURCE_NOT_SERVICEABLE);
-            }
-        } else {
+        if (!provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.PROMETHEUS) && !provider.equalsIgnoreCase(KruizeConstants.SupportedDatasources.THANOS)) {
             throw new UnsupportedDataSourceProvider(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.UNSUPPORTED_DATASOURCE_PROVIDER);
         }
-
+//        Continue validations in case of supported providers
+        LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.VERIFYING_DATASOURCE_REACHABILITY, name);
+        DataSourceOperatorImpl op = DataSourceOperatorImpl.getInstance().getOperator(KruizeConstants.SupportedDatasources.PROMETHEUS);
+        if (op.isServiceable(datasource) == CommonUtils.DatasourceReachabilityStatus.REACHABLE) {
+            LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_SERVICEABLE);
+            // add the authentication details to the DB
+            addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(datasource.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);
+            if (addedToDB.isSuccess()) {
+                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_AUTH_ADDED_DB);
+                // add the data source to DB
+                addedToDB = new ExperimentDBService().addDataSourceToDB(datasource, addedToDB);
+                if (addedToDB.isSuccess()) {
+                    LOGGER.info(DATASOURCE_ADDED_DB);
+                } else {
+                    throw new DataSourceNotServiceable(String.format(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE, name));
+                }
+            } else {
+                throw new DataSourceAuthFailed(String.format(DATASOURCE_AUTH_DB_INSERTION_FAILED, addedToDB.getMessage()));
+            }
+        } else {
+            throw new DataSourceNotServiceable(String.format(KruizeConstants.DataSourceConstants.DataSourceErrorMsgs.DATASOURCE_NOT_SERVICEABLE, name));
+        }
+        dataSourceCollection.put(name, datasource);
+        LOGGER.info(DATASOURCE_ADDED);
     }
 
     /**
@@ -138,8 +141,10 @@ public class DataSourceCollection {
      *
      * @param configFileName name of the config file mounted
      */
-    public void addDataSourcesFromConfigFile(String configFileName) throws UnsupportedDataSourceProvider, DataSourceNotServiceable, DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        JSONArray dataSourceArr = null;
+    public void addDataSourcesFromConfigFile(String configFileName) throws IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
+        JSONArray dataSourceArr = new JSONArray();
+        int successCount = 0;
+        List<String> failedDatasources = new ArrayList<>();
         try {
             dataSourceArr = new JSONArray(KruizeDeploymentInfo.datasource_via_env);
         } catch (Exception e) {
@@ -155,6 +160,7 @@ public class DataSourceCollection {
             try {
                 dataSourceInfo = new ExperimentDBService().loadDataSourceFromDBByName(name);
             } catch (Exception e) {
+                // considering missing DB entry as 'not present' and attempt to add.
                 LOGGER.error(DATASOURCE_DB_LOAD_FAILED, name, e.getMessage());
             }
             if (null != dataSourceInfo) {
@@ -172,17 +178,21 @@ public class DataSourceCollection {
                         ValidationOutputData addedToDB = new ExperimentDBService().addAuthenticationDetailsToDB(dataSourceInfo.getAuthenticationConfig(), KruizeConstants.JSONKeys.DATASOURCE);
                         if (addedToDB.isSuccess()) {
                             LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceSuccessMsgs.DATASOURCE_AUTH_UPDATED_DB);
+                            successCount++;
                         } else {
                             LOGGER.error(DATASOURCE_AUTH_DB_UPDATE_FAILED, addedToDB.getMessage());
+                            failedDatasources.add(name + " (Auth update failed: " + addedToDB.getMessage() + ")");
                         }
                     } else {
                         LOGGER.error(DATASOURCE_AUTH_UPDATE_INVALID);
+                        successCount++;
                     }
                 } else {
                     LOGGER.debug(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.DATASOURCE_AUTH_UNCHANGED, name);
-                    return;
+                    successCount++;
                 }
             } else {
+                // if nothing loaded from DB, continue adding this into the DB
                 String provider = dataSourceObject.optString(KruizeConstants.DataSourceConstants.DATASOURCE_PROVIDER);
                 LOGGER.info(provider);
                 String serviceName = dataSourceObject.optString(KruizeConstants.DataSourceConstants.DATASOURCE_SERVICE_NAME);
@@ -195,15 +205,51 @@ public class DataSourceCollection {
 
                 // Validate input
                 if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) { //TODO: add validations for auth
+                    LOGGER.warn("validation failed for datasource {}, skipping", name);
+                    failedDatasources.add(name + " (validation failed)");
                     continue;
                 }
-                if (dataSourceURL.isEmpty()) {
-                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, null, authConfig);
-                } else {
-                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, new URL(dataSourceURL), authConfig);
+                try {
+                    URL url = null;
+                    try {
+                        if (!dataSourceURL.isBlank()) {
+                            url = new URI(dataSourceURL).toURL();
+                        }
+                    } catch (MalformedURLException | URISyntaxException e) {
+                        LOGGER.error(e.getMessage());
+                        failedDatasources.add(name + " (URL malformed)");
+                        continue;
+                    }
+                    dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, url, authConfig);
+
+                    // Attempt to add, addDataSource() returns corresponding exception if it fails. Increment the success count otherwise.
+                    addDataSource(dataSourceInfo);
+                    successCount++;
+                } catch (DataSourceAlreadyExist dataSourceAlreadyExist) {
+                    LOGGER.warn("datasource '{}' already exists in DB, skipping add: {}", name, dataSourceAlreadyExist.getMessage());
+                    // If already exists, consider it a success (it is present)
+                    successCount++;
+                } catch (UnsupportedDataSourceProvider udp) {
+                    LOGGER.error(udp.getMessage());
+                    failedDatasources.add(name + " (unsupported DataSourceProvider)");
+                } catch (MalformedURLException mue) {
+                    LOGGER.error("invalid URL for datasource {}: {}", name, mue.getMessage());
+                    failedDatasources.add(name + " (invalid URL)");
+                } catch (Exception e) {
+                    // Catch-all to ensure one datasource failure doesn't stop processing
+                    LOGGER.error("unexpected error when adding datasource {}: {}", name, e.getMessage());
+                    failedDatasources.add(name + " (exception: " + e.getMessage() + ")");
                 }
-                // add/update the datasource
-                addDataSource(dataSourceInfo);
+            }
+        }
+        // if none succeeded, abort
+        if (successCount == 0) {
+            LOGGER.error("No datasources could be added or are serviceable. Failures: {}", failedDatasources);
+            throw new IllegalStateException("None of the configured datasources are accessible/serviceable. Aborting startup.");
+        } else {
+            LOGGER.info("Datasource add summary: successCount={}, failures={}", successCount, failedDatasources.size());
+            if (!failedDatasources.isEmpty()) {
+                LOGGER.warn("The following datasources failed to be added/serviceable: {}", failedDatasources);
             }
         }
     }
@@ -278,7 +324,7 @@ public class DataSourceCollection {
      * @param newDataSource DataSourceInfo object with updated values
      *                                                                                                                                                                                                                                                                                                                                                                      TODO: add db related operations
      */
-    public void updateDataSource(String name, DataSourceInfo newDataSource) throws UnsupportedDataSourceProvider, DataSourceNotServiceable, DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DataSourceDoesNotExist {
+    public void updateDataSource(String name, DataSourceInfo newDataSource) throws UnsupportedDataSourceProvider, DataSourceNotServiceable, DataSourceAlreadyExist, IOException, NoSuchAlgorithmException, KeyStoreException, KeyManagementException, DataSourceDoesNotExist, DataSourceAuthFailed {
 
         if (dataSourceCollection.containsKey(name)) {
             dataSourceCollection.remove(name);

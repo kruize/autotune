@@ -25,11 +25,14 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.NamespaceData;
+import com.autotune.common.datasource.DataSourceCollection;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.KruizeSupportedTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -166,6 +169,19 @@ public class ExperimentValidation {
                             }
                         } else {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METADATA_PROFILE_FIELD;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            proceed = false;
+                        }
+                        // check if the provided datasource name exists
+                        DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(kruizeObject.getDataSource());
+                        if (dataSourceInfo != null) {
+                            LOGGER.debug("DataSource {} exists", kruizeObject.getDataSource());
+                            // check if the datasource supports runtime recommendations
+                            if (!KruizeSupportedTypes.RUNTIMES_SUPPORTED_DATASOURCES.contains(dataSourceInfo.getServiceName())) {
+                                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE);
+                            }
+                        } else {
+                            errorMsg = String.format(AnalyzerErrorConstants.APIErrors.ListDataSourcesAPI.INVALID_DATASOURCE_NAME_MSG, kruizeObject.getDataSource());
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             proceed = false;
                         }

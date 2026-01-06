@@ -132,6 +132,13 @@ data:
           "serviceName": "prometheus-k8s",
           "namespace": "monitoring",
           "url": ""
+        },
+        {
+          "name": "thanos-1",
+          "provider": "prometheus",
+          "serviceName": "thanos-querier",
+          "namespace": "monitoring",
+          "url": ""          
         }
       ]
     }
@@ -156,7 +163,7 @@ spec:
     spec:
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.7.1
+          image: quay.io/kruize/autotune_operator:0.8
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -221,7 +228,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.7.1
+              image: quay.io/kruize/autotune_operator:0.8
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -347,7 +354,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.7.1
+              image: quay.io/kruize/autotune_operator:0.8
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
