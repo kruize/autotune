@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer;
 
-import com.autotune.analyzer.experiment.Experimentator;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileDeployment;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.services.*;
@@ -26,8 +25,6 @@ import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 
 public class Analyzer {
     public static void start(ServletContextHandler contextHandler) {
-
-        Experimentator.start();
         KruizeOperator kruizeOperator = new KruizeOperator();
 
         try {

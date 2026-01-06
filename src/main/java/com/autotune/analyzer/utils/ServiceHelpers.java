@@ -17,7 +17,6 @@ package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
 import com.autotune.analyzer.application.ApplicationSearchSpace;
-import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
@@ -62,8 +61,7 @@ public class ServiceHelpers {
     }
 
     /**
-     * Copy over the array of deployments and the included stack names for the given
-     * Autotune Object to the JSON Object provided
+     * Copy over the array of deployments for the given Autotune Object to the JSON Object provided
      *
      * @param experimentJson JSON object to be updated
      * @param kruizeObject
@@ -79,17 +77,6 @@ public class ServiceHelpers {
             ApplicationDeployment applicationDeployment = deploymentMap.get(kruizeObject.getExperimentName()).get(deploymentName);
             deploymentJson.put(AnalyzerConstants.ServiceConstants.DEPLOYMENT_NAME, applicationDeployment.getDeploymentName());
             deploymentJson.put(AnalyzerConstants.ServiceConstants.NAMESPACE, applicationDeployment.getNamespace());
-            JSONArray stackArray = new JSONArray();
-            if (!applicationDeployment.getApplicationServiceStackMap().isEmpty()) {
-                for (String stackName : applicationDeployment.getApplicationServiceStackMap().keySet()) {
-                    ApplicationServiceStack applicationServiceStack = applicationDeployment.getApplicationServiceStackMap().get(stackName);
-                    JSONObject stackJson = new JSONObject();
-                    stackJson.put(AnalyzerConstants.ServiceConstants.STACK_NAME, stackName);
-                    stackJson.put(AnalyzerConstants.ServiceConstants.CONTAINER_NAME, applicationServiceStack.getContainerName());
-                    stackArray.put(stackJson);
-                }
-            }
-            deploymentJson.put(AnalyzerConstants.ServiceConstants.STACKS, stackArray);
             deploymentArray.put(deploymentJson);
         }
 

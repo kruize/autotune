@@ -16,7 +16,6 @@
 package com.autotune.operator;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
-import com.autotune.analyzer.application.ApplicationServiceStack;
 import com.autotune.analyzer.exceptions.*;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
@@ -185,8 +184,7 @@ public class KruizeOperator {
                 return;
             }
 
-            // We now have a list of pods. Get the stack (ie docker image) for each pod.
-            // Add the unique set of stacks and create an ApplicationServiceStack object for each.
+            // We now have a list of pods. Match them to deployments.
             for (Pod pod : podList) {
                 ObjectMeta podMetadata = pod.getMetadata();
                 String podTemplateHash = podMetadata.getLabels().get(POD_TEMPLATE_HASH);
@@ -224,18 +222,6 @@ public class KruizeOperator {
                             deploymentMap.put(experimentName, depMap);
                         } else {
                             applicationDeployment = deploymentMap.get(experimentName).get(deploymentName);
-                        }
-                        // Check docker image id for each container in the pod
-                        for (Container container : pod.getSpec().getContainers()) {
-                            String containerImageName = container.getImage();
-                            String containerName = container.getName();
-                            ApplicationServiceStack applicationServiceStack = new ApplicationServiceStack(containerImageName,
-                                    containerName);
-                            assert (applicationDeployment == null);
-                            // Add the container image if it has not already been added to the deployment
-                            if (!applicationDeployment.getApplicationServiceStackMap().containsKey(containerImageName)) {
-                                applicationDeployment.getApplicationServiceStackMap().put(containerImageName, applicationServiceStack);
-                            }
                         }
                         break;
                     }
