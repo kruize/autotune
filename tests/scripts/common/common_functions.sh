@@ -181,7 +181,7 @@ function deploy_autotune() {
 	AUTOTUNE_IMAGE=$2
 	AUTOTUNE_POD_LOG=$3
 
-	pushd ${AUTOTUNE_REPO} > /dev/null
+	#pushd ${AUTOTUNE_REPO} > /dev/null
 
 	# Check if the cluster_type is minikube., if so deploy prometheus
 	if [ "${cluster_type}" == "minikube" ]; then
@@ -219,7 +219,7 @@ function deploy_autotune() {
 		kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &
 	fi
 
-	popd > /dev/null
+	#popd > /dev/null
 }
 
 # Remove the prometheus setup

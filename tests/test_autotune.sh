@@ -149,6 +149,14 @@ if [ ! -z "${testcase}" ]; then
 	fi
 fi
 
+# It is necessary to pass datasource namespace when servicename is specified
+if [ ! -z "${servicename}" ]; then
+	if [ -z "${datasource_namespace}" ]; then
+		echo "Error: Do specify the datasource namespace"
+		exit -1
+	fi
+fi
+
 # Set the root for result directory
 RESULTS_ROOT_DIR="${resultsdir}/kruize_test_results"
 mkdir -p ${RESULTS_ROOT_DIR}

@@ -22,6 +22,7 @@
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 REMOTE_MONITORING_TEST_DIR="${CURRENT_DIR}/scripts/remote_monitoring_tests"
 PERF_PROFILE_DIR="${REMOTE_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
+KRUIZE_REPO="${CURRENT_DIR}/.."
 
 # Source the common functions scripts
 . ${REMOTE_MONITORING_TEST_DIR}/../common/common_functions.sh
@@ -64,6 +65,7 @@ function remote_monitoring_tests() {
 		echo "${KRUIZE_SETUP_LOG}"
 		echo "Removing isROSEnabled=false and local=true"
 		pwd
+		pushd "${KRUIZE_REPO}" > /dev/null
 		kruize_remote_patch
 		echo "Removing isROSEnabled=false and local=true...done"
 
@@ -74,6 +76,7 @@ function remote_monitoring_tests() {
 
 		# create performance profile
 		create_performance_profile ${perf_profile_json}
+		popd > /dev/null
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi

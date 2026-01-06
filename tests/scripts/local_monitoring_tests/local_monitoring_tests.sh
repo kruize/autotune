@@ -59,23 +59,24 @@ function local_monitoring_tests() {
 
 	mkdir -p ${TEST_SUITE_DIR}
 
-	# check for 'isROSEnabled' flag
-	kruize_local_ros_patch
-	# check for 'servicename' and 'datasource_namespace' input variables
-	kruize_local_datasource_manifest_patch
-
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
+		pushd "${KRUIZE_REPO}" > /dev/null
+		# check for 'isROSEnabled' flag
+		kruize_local_ros_patch
+		# check for 'servicename' and 'datasource_namespace' input variables
+		kruize_local_datasource_manifest_patch
 		echo "Setting up kruize..." | tee -a ${LOG}
 		echo "${KRUIZE_SETUP_LOG}"
 		setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
 	        echo "Setting up kruize...Done" | tee -a ${LOG}
 
 		sleep 60
-
+		popd > /dev/null
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi
+
 
 	# If testcase is not specified run all tests
 	if [ -z "${testcase}" ]; then
