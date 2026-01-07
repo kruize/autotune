@@ -150,7 +150,7 @@ function setup() {
 
 	# Deploy autotune
 	echo "Deploying autotune..."
-	
+
 	deploy_autotune  "${cluster_type}" "${KRUIZE_DOCKER_IMAGE}" "${KRUIZE_POD_LOG}"
 	echo "Deploying autotune...Done"
 
@@ -503,6 +503,26 @@ function form_curl_cmd() {
 		echo "service = $service namespace = $NAMESPACE"
 		AUTOTUNE_PORT=$(kubectl -n ${NAMESPACE} get svc ${service} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
 		SERVER_IP=$(minikube ip)
+		echo "SERVER_IP = $SERVER_IP AUTOTUNE_PORT = $AUTOTUNE_PORT"
+		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
+		;;
+	  kind)
+		NAMESPACE="monitoring"
+		KIND_NODE_NAME="kind-control-plane"
+
+		echo "service = $service namespace = $NAMESPACE"
+		AUTOTUNE_PORT=$(kubectl get svc "$service" -n "${NAMESPACE}" -o jsonpath='{.spec.ports[0].nodePort}')
+		if [ -z "${AUTOTUNE_PORT}" ]; then
+      echo "ERROR: Failed to get NodePort for service $service"
+      exit 1
+    fi
+    # Get KIND node IP (Docker network IP)
+    SERVER_IP=$(docker inspect "${KIND_NODE_NAME}" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+
+    if [ -z "${SERVER_IP}" ]; then
+      echo "ERROR: Failed to get IP for KIND node ${KIND_NODE_NAME}"
+      exit 1
+    fi
 		echo "SERVER_IP = $SERVER_IP AUTOTUNE_PORT = $AUTOTUNE_PORT"
 		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
 		;;
@@ -894,7 +914,7 @@ function kruize_local_ros_patch() {
 	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
 	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
 
-	if [ ${cluster_type} == "minikube" ]; then
+	if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "kind" ]; then
       		if grep -q '"isROSEnabled": "false"' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}; then
       		  	echo "Setting flag 'isROSEnabled' to 'true'"
         		sed -i 's/"isROSEnabled": "false"/"isROSEnabled": "true"/' ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
@@ -940,7 +960,7 @@ function kruize_remote_patch() {
 	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
 	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
 
-	if [ ${cluster_type} == "minikube" ]; then
+	if [ ${cluster_type} == "minikube" ] || [ ${cluster_type} == "kind" ]; then
 		sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}    #this will remove the entry and use default set by java i.e. isROSEnabled=true and local=false
 	elif [ ${cluster_type} == "openshift" ]; then
 		sed -i -E 's/"isROSEnabled": "false",?\s*//g; s/"local": "true",?\s*//g'  ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
