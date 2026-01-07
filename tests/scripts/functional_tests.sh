@@ -94,7 +94,7 @@ mkdir -p "${RESULTS}"
 
 SETUP_LOG="${TEST_DIR}/setup.log"
 
-if [ "$testsuite" != "remote_monitoring_tests" ] && [ "$testsuite" != "local_monitoring_tests" ]; then
+if [ "$testsuite" != "remote_monitoring_tests" ] && [ "$testsuite" != "local_monitoring_tests" ] && [ "$testsuite" != "datasource_tests" ]; then
 	CONFIGMAP="${RESULTS}/test_configmap"
 	mkdir ${CONFIGMAP}
 

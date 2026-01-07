@@ -279,7 +279,7 @@ Kruize startup behavior follows these rules:
 The test can be run using the command below:
 
 ```
-./test_autotune.sh -c <cluster-type> -i <image-name> -r benchmarks/ --testsuite=datasource_reachability_tests
+./test_autotune.sh -c <cluster-type> -i <image-name> -r benchmarks/ --testsuite=datasource_tests
 ```
 
 #### Scenarios

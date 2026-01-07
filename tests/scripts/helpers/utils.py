@@ -1288,12 +1288,18 @@ def get_kruize_pod(namespace):
     print(f"pod name = {pod_name}")
     return pod_name.rstrip()
 
-def get_kruize_logs(namespace):
+def get_kruize_logs(cluster_type):
     """
     Fetches logs (stdout) from the Kruize pod.
     Tail defaults to last 500 lines for speed.
     """
     tail = 500
+    # get the namespace based on cluster
+    if cluster_type == "minikube":
+        namespace = "monitoring"
+    else:
+        namespace = "openshift-tuning"
+
     pod = get_kruize_pod(namespace)
 
     try:

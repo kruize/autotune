@@ -262,7 +262,7 @@ def test_non_runtime_supported_datasource_logs_message(cluster_type):
     runtime recommendations should NOT fail the API, but the server should log
     'RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE'.
     """
-    input_json_file = "../json_files/create_multiple_namespace_exp.json"
+    input_json_file = "../json_files/create_tfb_exp.json"
     form_kruize_url(cluster_type)
 
     delete_and_create_metadata_profile()
@@ -280,7 +280,7 @@ def test_non_runtime_supported_datasource_logs_message(cluster_type):
     time.sleep(2)
 
     # Fetch logs from kruize pod (your helper may differ)
-    logs = get_kruize_logs()
+    logs = get_kruize_logs(cluster_type)
 
     assert RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE in logs, \
         "Expected log message not found when using non-runtime-supported datasource"
