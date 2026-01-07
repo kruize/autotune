@@ -63,7 +63,7 @@ First, cleanup any previous instances of autotune using the below command:
 Use the below command to test :
 
 ```
-<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube -r [location of benchmarks]  [-i autotune image] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--skipsetup] [--cleanup_prometheus] [-t cleanup kruize setup]
+<AUTOTUNE_REPO>/tests/test_autotune.sh -c minikube [-i autotune image] [--testsuite=Group of tests that you want to perform] [--testcase=Particular test case that you want to test] [-n namespace] [--resultsdir=results directory] [--skipsetup] [--cleanup_prometheus] [-t cleanup kruize setup]
 ```
 
 Where values for test_autotune.sh are:
@@ -71,7 +71,6 @@ Where values for test_autotune.sh are:
 ```
 usage: test_autotune.sh [ -c ] : cluster type. Supported type - minikube
                         [ -i ] : optional. Autotune docker image to be used for testing, default - kruize/autotune_operator:test
-			[ -r ] : Location of benchmarks
 			[ --testsuite ] : Testsuite to run. Use testsuite=help, to list the supported testsuites
 			[ --testcase ] : Testcase to run. Use testcase=help along with the testsuite name to list the supported testcases in that testsuite
 			[ -n ] : optional. Namespace to deploy autotune
