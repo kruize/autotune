@@ -177,9 +177,10 @@ public class ExperimentValidation {
                         if (dataSourceInfo != null) {
                             LOGGER.debug("DataSource {} exists", kruizeObject.getDataSource());
                             // check if the datasource supports runtime recommendations
-                            if (!KruizeSupportedTypes.RUNTIMES_SUPPORTED_DATASOURCES.contains(dataSourceInfo.getServiceName())) {
-                                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE);
-                            }
+                            //TODO: temporarily commented for testing
+//                            if (!KruizeSupportedTypes.RUNTIMES_SUPPORTED_DATASOURCES.contains(dataSourceInfo.getServiceName())) {
+//                                LOGGER.info(KruizeConstants.DataSourceConstants.DataSourceInfoMsgs.RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE);
+//                            }
                         } else {
                             errorMsg = String.format(AnalyzerErrorConstants.APIErrors.ListDataSourcesAPI.INVALID_DATASOURCE_NAME_MSG, kruizeObject.getDataSource());
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
