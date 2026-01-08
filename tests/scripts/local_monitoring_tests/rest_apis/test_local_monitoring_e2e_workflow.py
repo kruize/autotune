@@ -20,6 +20,7 @@ import pytest
 import sys
 import time
 import shutil
+import ast
 sys.path.append("../../")
 
 from helpers.fixtures import *
@@ -163,19 +164,24 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
        version="v2.0", experiment_name="monitor-sysbench", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
        metadata_profile="cluster-metadata-local-monitoring", mode="monitor", target_cluster="local", datasource="prometheus-1",
        experiment_type="container", kubernetes_obj_type="deployment", name="sysbench", namespace="default", namespace_name=None,
-       container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min", threshold="0.1"
+       container_image_name="quay.io/kruizehub/sysbench", container_name="sysbench", measurement_duration="2min", threshold="0.1", models=["cost","performance"], terms=["short","medium","long"]
     )
 
     namespace_exp_content = template.render(
         version="v2.0", experiment_name="monitor-ns", cluster_name="default", performance_profile="resource-optimization-local-monitoring",
         metadata_profile="cluster-metadata-local-monitoring", mode="monitor", target_cluster="local", datasource="prometheus-1",
         experiment_type="namespace", kubernetes_obj_type=None, name=None, namespace=None, namespace_name="default",
-        container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1"
+        container_image_name=None, container_name=None, measurement_duration="2min", threshold="0.1", models=["cost","performance"], terms=["short","medium","long"]
     )
 
     # Convert rendered content to a dictionary
     container_exp_json_content = json.loads(container_exp_content)
     container_exp_json_content[0]["kubernetes_objects"][0].pop("namespaces")
+
+    if container_exp_json_content[0]["recommendation_settings"].get("model_settings") is not None:
+        container_exp_json_content[0]["recommendation_settings"]["model_settings"]["models"] = ast.literal_eval(container_exp_json_content[0]["recommendation_settings"]["model_settings"]["models"])
+    if container_exp_json_content[0]["recommendation_settings"].get("term_settings") is not None:
+        container_exp_json_content[0]["recommendation_settings"]["term_settings"]["terms"] = ast.literal_eval(container_exp_json_content[0]["recommendation_settings"]["term_settings"]["terms"])
 
     # Convert rendered content to a dictionary
     namespace_exp_json_content = json.loads(namespace_exp_content)
@@ -183,6 +189,12 @@ def test_list_recommendations_multiple_exps_for_datasource_workloads(cluster_typ
     namespace_exp_json_content[0]["kubernetes_objects"][0].pop("name")
     namespace_exp_json_content[0]["kubernetes_objects"][0].pop("namespace")
     namespace_exp_json_content[0]["kubernetes_objects"][0].pop("containers")
+
+    if namespace_exp_json_content[0]["recommendation_settings"].get("model_settings") is not None:
+        namespace_exp_json_content[0]["recommendation_settings"]["model_settings"]["models"] = ast.literal_eval(namespace_exp_json_content[0]["recommendation_settings"]["model_settings"]["models"])
+    if namespace_exp_json_content[0]["recommendation_settings"].get("term_settings") is not None:
+        namespace_exp_json_content[0]["recommendation_settings"]["term_settings"]["terms"] = ast.literal_eval(namespace_exp_json_content[0]["recommendation_settings"]["term_settings"]["terms"])
+
 
     # Write the final JSON to the temp file
     with open(tmp_container_exp_json_file, mode="w", encoding="utf-8") as message:

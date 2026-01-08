@@ -129,12 +129,35 @@ Here are the test scenarios:
 - Create namespace experiment specifying containers 
 - Create container experiment specifying namespaces
 - Create multiple experiments with valid namespace
+- Create namespace experiment with single model cost
+- Create namespace experiment with single model performance
+- Create namespace experiment with both cost and performance model
+- Create namespace experiment with single term short
+- Create namespace experiment with single term medium
+- Create namespace experiment with single term long
+- Create namespace experiment with short, medium, long term
+- Create namespace experiment specifying namespace experiment type with single model and term
+- Create namespace experiment specifying namespace experiment type with double model
+- Create container experiment without specifying experiment type with model
+- Create container experiment without specifying experiment type with term
+- Create container experiment without specifying experiment type with model and term
+- Create auto mode experiment without specifying experiment type
+- Create auto mode experiment without specifying experiment type with model
+- Create auto mode experiment without specifying experiment type with term
+- Create recreate mode experiment without specifying experiment type
+- Create recreate mode experiment without specifying experiment type with model
+- Create recreate mode experiment without specifying experiment type with term
+- Test with invalid values such as blank, null or an invalid value for model, term and both model and term
+
+
 
 ### **List Recommendations API tests**
 
 Here are the test scenarios:
 
 - List recommendations for a valid namespace experiment
+- List recommendations for a valid namespace experiment single model and term
+- List recommendations for a valid namespace experiment multiple model and term
 
 
 The above tests are developed using pytest framework and the tests are run using shell script wrapper that does the following:
