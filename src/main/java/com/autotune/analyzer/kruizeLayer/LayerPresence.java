@@ -17,6 +17,7 @@
 package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.kruizeLayer.presence.*;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
 import java.util.List;
 
@@ -43,11 +44,12 @@ public class LayerPresence {
     public LayerPresenceDetector getDetector() {
         // Check for default presence
         if (presence != null && !presence.isEmpty()) {
-            if ("always".equalsIgnoreCase(presence.trim())) {
+            if (LayerConstants.DEFAULT_PRESENCE.equalsIgnoreCase(presence.trim())) {
                 return new PresenceAlways();
             } else {
                 throw new IllegalArgumentException(
-                        "Invalid presence value: '" + presence + "'. Expected 'always'");
+                        "Invalid presence value: '" + presence + "'. Expected '" +
+                        LayerConstants.DEFAULT_PRESENCE + "'");
             }
 
         }
@@ -107,7 +109,6 @@ public class LayerPresence {
                 "presence='" + presence + '\'' +
                 ", queries=" + queries +
                 ", label=" + label +
-                ", type=" + getType() +
                 '}';
     }
 }
