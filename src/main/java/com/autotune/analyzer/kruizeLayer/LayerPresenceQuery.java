@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2022, 2022 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2026 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
-package com.autotune.analyzer.kruizeLayer.presence;
+package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.utils.KruizeSupportedTypes;
@@ -43,7 +43,10 @@ public class LayerPresenceQuery {
 		if (KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(datasource)) {
 			this.dataSource = datasource;
 		} else {
-			throw new MonitoringAgentNotSupportedException();
+			throw new MonitoringAgentNotSupportedException(
+				"Unsupported monitoring agent datasource: '" + datasource + "'. " +
+				"Supported datasources: " + KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED
+			);
 		}
 		this.layerPresenceQuery = layerPresenceQuery;
 		this.layerPresenceKey = layerPresenceKey;

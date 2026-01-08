@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2025 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2026 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,7 +30,7 @@ public class LayerPresence {
 
     private List<LayerPresenceQuery> queries;
 
-    private List<LabelBasedPresence.LayerPresenceLabel> label;
+    private List<LayerPresenceLabel> label;
 
     public LayerPresence() {}
 
@@ -41,6 +41,17 @@ public class LayerPresence {
      * @return LayerPresenceDetector implementation
      */
     public LayerPresenceDetector getDetector() {
+        // Check for default presence
+        if (presence != null && !presence.isEmpty()) {
+            if ("always".equalsIgnoreCase(presence.trim())) {
+                return new PresenceAlways();
+            } else {
+                throw new IllegalArgumentException(
+                        "Invalid presence value: '" + presence + "'. Expected 'always'");
+            }
+
+        }
+
         // Check for query-based presence
         if (queries != null && !queries.isEmpty()) {
             return new QueryBasedPresence(queries);
@@ -51,8 +62,10 @@ public class LayerPresence {
             return new LabelBasedPresence(label);
         }
 
-        // Default to presence always
-        return new PresenceAlways();
+        // No valid configuration found
+        throw new IllegalStateException(
+                "Invalid LayerPresence configuration: must specify either " +
+                "presence='always', queries, or label");
     }
 
     /**
@@ -80,11 +93,11 @@ public class LayerPresence {
         this.queries = queries;
     }
 
-    public List<LabelBasedPresence.LayerPresenceLabel> getLabel() {
+    public List<LayerPresenceLabel> getLabel() {
         return label;
     }
 
-    public void setLabel(List<LabelBasedPresence.LayerPresenceLabel> label) {
+    public void setLabel(List<LayerPresenceLabel> label) {
         this.label = label;
     }
 
