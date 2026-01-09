@@ -15,17 +15,16 @@
 # limitations under the License.
 #
 #
-##### Script to perform basic tests for EM #####
+##### Script to perform tests for Local monitoring #####
 
 
 # Get the absolute path of current directory
-CURRENT_DIR="$(dirname "$(realpath "$0")")"
-LOCAL_MONITORING_TEST_DIR="${CURRENT_DIR}/scripts/local_monitoring_tests"
-METRIC_PROFILE_DIR="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
-KRUIZE_REPO="${CURRENT_DIR}/.."
+LOCAL_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/local_monitoring_tests"
+METRIC_PROFILE_DIR="${KRUIZE_REPO}/manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
-. ${LOCAL_MONITORING_TEST_DIR}/../common/common_functions.sh
+. ${KRUIZE_REPO}/tests/scripts/common/common_functions.sh
+
 
 # Tests to validate Local monitoring mode in Kruize
 function local_monitoring_tests() {

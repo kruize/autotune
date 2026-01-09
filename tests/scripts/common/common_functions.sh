@@ -18,7 +18,7 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-AUTOTUNE_REPO="${CURRENT_DIR}/../.."
+KRUIZE_REPO="${CURRENT_DIR}/.."
 
 # variables to keep track of overall tests performed
 TOTAL_TESTS_FAILED=0
@@ -181,8 +181,6 @@ function deploy_autotune() {
 	AUTOTUNE_IMAGE=$2
 	AUTOTUNE_POD_LOG=$3
 
-	#pushd ${AUTOTUNE_REPO} > /dev/null
-
 	# Check if the cluster_type is minikube., if so deploy prometheus
 	if [ "${cluster_type}" == "minikube" ]; then
 		echo "Installing Prometheus on minikube" >>/dev/stderr
@@ -218,8 +216,6 @@ function deploy_autotune() {
 		echo "kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &"
 		kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &
 	fi
-
-	#popd > /dev/null
 }
 
 # Remove the prometheus setup
@@ -240,10 +236,10 @@ function autotune_cleanup() {
 	# If autotune cleanup is invoke through -t option then setup.log will inside the given result directory
 	if [ ! -z "${RESULTS_LOG}" ]; then
 		AUTOTUNE_SETUP_LOG="${RESULTS_LOG}/autotune_setup.log"
-		pushd ${AUTOTUNE_REPO} > /dev/null
+		pushd ${KRUIZE_REPO} > /dev/null
 	else
 		AUTOTUNE_SETUP_LOG="autotune_setup.log"
-		pushd ${AUTOTUNE_REPO}/autotune > /dev/null
+		pushd ${KRUIZE_REPO}/autotune > /dev/null
 	fi
 
 	echo  "Removing Autotune dependencies..."

@@ -19,13 +19,11 @@
 
 
 # Get the absolute path of current directory
-CURRENT_DIR="$(dirname "$(realpath "$0")")"
-REMOTE_MONITORING_TEST_DIR="${CURRENT_DIR}/scripts/remote_monitoring_tests"
-PERF_PROFILE_DIR="${REMOTE_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
-KRUIZE_REPO="${CURRENT_DIR}/.."
+REMOTE_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/remote_monitoring_tests"
+PERF_PROFILE_DIR="${KRUIZE_REPO}/manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
-. ${REMOTE_MONITORING_TEST_DIR}/../common/common_functions.sh
+#. ${KRUIZE_REPO}/tests/scripts/common/common_functions.sh
 
 # Tests to validate Remote monitoring mode in Kruize 
 function remote_monitoring_tests() {
