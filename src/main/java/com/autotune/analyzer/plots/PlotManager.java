@@ -73,9 +73,9 @@ public class PlotManager {
     PlotData.UsageData getUsageData(Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName) {
         // stream through the results value and extract the CPU values
         try {
-            if (metricName.equals(AnalyzerConstants.MetricName.cpuUsage) ||  metricName.equals(AnalyzerConstants.MetricName.namespaceCpuUsage)) {
+            if (metricName == AnalyzerConstants.MetricName.cpuUsage || metricName == AnalyzerConstants.MetricName.namespaceCpuUsage) {
                 JSONArray cpuValues;
-                if (metricName.equals(AnalyzerConstants.MetricName.namespaceCpuUsage)) {
+                if (metricName == (AnalyzerConstants.MetricName.namespaceCpuUsage)) {
                     cpuValues = CostBasedRecommendationModel.getNamespaceCPUUsageList(resultInRange);
                 } else {
                     cpuValues = CostBasedRecommendationModel.getCPUUsageList(resultInRange);
@@ -104,7 +104,7 @@ public class PlotManager {
                 boolean memDataAvailable = false;
                 JSONObject jsonObject;
                 for (IntervalResults intervalResults: resultInRange.values()) {
-                    if (metricName.equals(namespaceMemoryUsage)) {
+                    if (metricName == (namespaceMemoryUsage)) {
                         jsonObject = GenericRecommendationModel.calculateNamespaceMemoryUsage(intervalResults);
                     } else {
                         jsonObject = GenericRecommendationModel.calculateMemoryUsage(intervalResults);
