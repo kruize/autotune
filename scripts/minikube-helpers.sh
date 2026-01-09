@@ -188,24 +188,11 @@ function minikube_crc_start() {
 	echo
 	echo "###   Installing kruize for minikube"
 	echo
-	# If autotune_ns was not set by the user
-	if [ -z "$autotune_ns" ]; then
-		autotune_ns="monitoring"
-	fi
-	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
-
-	kruize_crc_start
+  deploy_crc_common
 }
 
 function minikube_crc_terminate() {
-	# If autotune_ns was not set by the user
-	if [ -z "$autotune_ns" ]; then
-		autotune_ns="monitoring"
-	fi
-	kubectl_cmd="kubectl -n ${autotune_ns}"
-	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}
-
 	echo -n "###   Removing Kruize for minikube"
 	echo
-	${kubectl_cmd} delete -f ${CRC_MANIFEST_FILE} 2>/dev/null
+  terminate_crc_common "$KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE"
 }

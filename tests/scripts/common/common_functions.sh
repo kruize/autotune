@@ -526,7 +526,7 @@ function form_curl_cmd() {
 		echo "SERVER_IP = $SERVER_IP AUTOTUNE_PORT = $AUTOTUNE_PORT"
 		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
 		;;
-	   docker) ;;
+		docker) ;;
 	   *);;
 	esac
 

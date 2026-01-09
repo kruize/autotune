@@ -131,3 +131,66 @@ kruize_crc_start() {
 		rm ${CRC_MANIFEST_FILE_OLD}
 	fi
 }
+
+deploy_crc_common() {
+  # Default namespace handling
+  if [ -z "$autotune_ns" ]; then
+    case "$cluster_type" in
+      openshift)
+        autotune_ns="openshift-tuning"
+        ;;
+      *)
+        autotune_ns="monitoring"
+        ;;
+    esac
+  fi
+
+  kubectl create namespace "${autotune_ns}" 2>/dev/null || true
+
+  # cluster-specific prometheus checks:
+  case "$cluster_type" in
+    minikube)
+      check_prometheus_installation
+      ;;
+    kind)
+      check_prometheus_installation_on_kind
+      ;;
+    openshift)
+      check_openshift_prometheus_installation
+      ;;
+    *)
+      echo "ERROR: Unknown cluster type '$cluster_type'"
+      exit 1
+      ;;
+  esac
+
+  # Manifest selection by cluster type
+    case "$cluster_type" in
+      openshift)
+        CRC_MANIFEST_FILE="${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+        ;;
+      *)
+        CRC_MANIFEST_FILE="${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}"
+        ;;
+    esac
+
+  kruize_crc_start
+}
+
+# terminate_crc_common cluster_type namespace manifest
+terminate_crc_common() {
+	CRC_MANIFEST_FILE=$1
+  if [ -z "$autotune_ns" ]; then
+      case "$cluster_type" in
+        openshift)
+          autotune_ns="${AUTOTUNE_OPENSHIFT_NAMESPACE}"
+          ;;
+        *)
+          autotune_ns="monitoring"
+          ;;
+      esac
+	fi
+
+	kubectl_cmd="kubectl -n ${autotune_ns}"
+	${kubectl_cmd} delete -f "${CRC_MANIFEST_FILE}" 2>/dev/null
+}

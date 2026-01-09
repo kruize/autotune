@@ -185,24 +185,11 @@ function openshift_crc_start() {
 	echo
 	echo "###   Installing kruize for openshift"
 	echo
-	# If autotune_ns was not set by the user
-	if [ -z "$autotune_ns" ]; then
-		autotune_ns=${AUTOTUNE_OPENSHIFT_NAMESPACE}
-	fi
-	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-
-	kruize_crc_start
+  deploy_crc_common
 }
 
 function openshift_crc_terminate() {
-	# If autotune_ns was not set by the user
-	if [ -z "$autotune_ns" ]; then
-		autotune_ns=${AUTOTUNE_OPENSHIFT_NAMESPACE}
-	fi
-	kubectl_cmd="kubectl -n ${autotune_ns}"
-	CRC_MANIFEST_FILE=${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
-
 	echo -n "###   Removing Kruize for openshift"
 	echo
-	${kubectl_cmd} delete -f ${CRC_MANIFEST_FILE} 2>/dev/null
+  terminate_crc_common "$KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT"
 }
