@@ -239,7 +239,7 @@ public class DataSourceCollection {
         }
         // if none succeeded, abort
         if (successCount == 0) {
-            throw new IllegalStateException(NO_DATASOURCE_SERVICEABLE + " Failures: {}" + failedDatasources);
+            throw new IllegalStateException(NO_DATASOURCE_SERVICEABLE + " Failures: " + failedDatasources);
         } else {
             LOGGER.info(DATASOURCE_ADD_SUMMARY, successCount, failedDatasources.size());
             if (!failedDatasources.isEmpty()) {
