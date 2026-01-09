@@ -35,7 +35,7 @@ TEST_SUITE_ARRAY=("remote_monitoring_tests"
 "local_monitoring_tests"
 "authentication_tests")
 
-AUTOTUNE_DOCKER_IMAGE="quay.io/kruizehub/autotune_test_image:mvp_demo"
+KRUIZE_DOCKER_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
 total_time=0
 matched=0
 setup=1
@@ -137,7 +137,7 @@ function time_diff() {
 
 # Set up autotune
 function setup() {
-	AUTOTUNE_POD_LOG=$1
+	KRUIZE_POD_LOG=$1
 
 	# remove the existing autotune objects
 	autotune_cleanup ${TEST_SUITE_DIR}
@@ -151,7 +151,7 @@ function setup() {
 	# Deploy autotune
 	echo "Deploying autotune..."
 	
-	deploy_autotune  "${cluster_type}" "${AUTOTUNE_DOCKER_IMAGE}" "${AUTOTUNE_POD_LOG}"
+	deploy_autotune  "${cluster_type}" "${KRUIZE_DOCKER_IMAGE}" "${KRUIZE_POD_LOG}"
 	echo "Deploying autotune...Done"
 
 	case "${cluster_type}" in
@@ -178,17 +178,17 @@ function setup_prometheus() {
 # output: Deploy autotune based on the parameter passed
 function deploy_autotune() {
 	cluster_type=$1
-	AUTOTUNE_IMAGE=$2
-	AUTOTUNE_POD_LOG=$3
+	KRUIZE_IMAGE=$2
+	KRUIZE_POD_LOG=$3
 
 	# Check if the cluster_type is minikube., if so deploy prometheus
 	if [ "${cluster_type}" == "minikube" ]; then
 		echo "Installing Prometheus on minikube" >>/dev/stderr
-		setup_prometheus >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		setup_prometheus >> ${KRUIZE_SETUP_LOG} 2>&1
 	fi
 
 	echo "Deploying autotune"
-	cmd="./deploy.sh -c ${cluster_type} -i ${AUTOTUNE_IMAGE} -m ${target}"
+	cmd="./deploy.sh -c ${cluster_type} -i ${KRUIZE_IMAGE} -m ${target}"
 	echo "Kruize deploy command - ${cmd}"
 	${cmd}
 
@@ -196,7 +196,7 @@ function deploy_autotune() {
 	# Check if autotune is deployed.
 	if [[ "${status}" -eq "1" ]]; then
 		echo "Error deploying autotune" >>/dev/stderr
-		echo "See ${AUTOTUNE_SETUP_LOG}" >>/dev/stderr
+		echo "See ${KRUIZE_SETUP_LOG}" >>/dev/stderr
 		exit -1
 	fi
 
@@ -204,17 +204,17 @@ function deploy_autotune() {
 
 	if [[ ${cluster_type} == "minikube" || ${cluster_type} == "openshift" ]]; then
 		sleep 2
-		echo "Capturing Autotune service log into ${AUTOTUNE_POD_LOG}"
+		echo "Capturing Autotune service log into ${KRUIZE_POD_LOG}"
 		namespace="openshift-tuning"
 		if [ ${cluster_type} == "minikube" ]; then
 			namespace="monitoring"
 		fi
 		echo "Namespace = $namespace"
 		service="kruize"
-		autotune_pod=$(kubectl get pod -n ${namespace} | grep ${service} | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
-		echo "autotune_pod = $autotune_pod"
-		echo "kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &"
-		kubectl -n ${namespace} logs -f ${autotune_pod} > "${AUTOTUNE_POD_LOG}" 2>&1 &
+		kruize_pod=$(kubectl get pod -n ${namespace} | grep ${service} | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
+		echo "kruize_pod = $kruize_pod"
+		echo "kubectl -n ${namespace} logs -f ${kruize_pod} > "${KRUIZE_POD_LOG}" 2>&1 &"
+		kubectl -n ${namespace} logs -f ${kruize_pod} > "${KRUIZE_POD_LOG}" 2>&1 &
 	fi
 }
 
@@ -235,17 +235,17 @@ function autotune_cleanup() {
 
 	# If autotune cleanup is invoke through -t option then setup.log will inside the given result directory
 	if [ ! -z "${RESULTS_LOG}" ]; then
-		AUTOTUNE_SETUP_LOG="${RESULTS_LOG}/autotune_setup.log"
+		KRUIZE_SETUP_LOG="${RESULTS_LOG}/kruize_setup.log"
 		pushd ${KRUIZE_REPO} > /dev/null
 	else
-		AUTOTUNE_SETUP_LOG="autotune_setup.log"
+		KRUIZE_SETUP_LOG="kruize_setup.log"
 		pushd ${KRUIZE_REPO}/autotune > /dev/null
 	fi
 
 	echo  "Removing Autotune dependencies..."
 	cmd="./deploy.sh -c ${cluster_type} -m ${target} -t"
 	echo "CMD = ${cmd}"
-	${cmd} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+	${cmd} >> ${KRUIZE_SETUP_LOG} 2>&1
 	# Remove the prometheus setup
 	if [ "${cleanup_prometheus}" -eq "1" ]; then
 		prometheus_cleanup
@@ -406,9 +406,9 @@ function app_cleanup() {
 	echo
 	echo -n "Removing ${app_name} app..."
 	if [ ${app_name} == "tfb-qrh" ]; then
-		${APP_REPO}/${APP_FOLDER}/scripts/tfb-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		${APP_REPO}/${APP_FOLDER}/scripts/tfb-cleanup.sh -c ${cluster_type} >> ${KRUIZE_SETUP_LOG} 2>&1
 	else
-		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${AUTOTUNE_SETUP_LOG} 2>&1
+		${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-cleanup.sh -c ${cluster_type} >> ${KRUIZE_SETUP_LOG} 2>&1
 	fi
 	echo "done"
 }
@@ -433,15 +433,15 @@ function deploy_app() {
 	# Invoke the deploy script from app benchmark
 	if [ ${cluster_type} == "openshift" ]; then
 		if [ ${app_name} == "tfb-qrh" ]; then
-			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${cluster_type} -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${cluster_type} -s ${kurl} -i ${num_instances}  >> ${KRUIZE_SETUP_LOG} 2>&1
                 else
-			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-openshift.sh -s ${kurl} -i ${num_instances}  >> ${KRUIZE_SETUP_LOG} 2>&1
 		fi
 	else
 		if [ ${app_name} == "tfb-qrh" ]; then
-			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${cluster_type} -s "localhost" -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+			${APP_REPO}/${APP_FOLDER}/scripts/tfb-deploy.sh --clustertype=${cluster_type} -s "localhost" -i ${num_instances}  >> ${KRUIZE_SETUP_LOG} 2>&1
 		else
-			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${AUTOTUNE_SETUP_LOG} 2>&1
+			${APP_REPO}/${APP_FOLDER}/scripts/${app_name}-deploy-${cluster_type}.sh -i ${num_instances}  >> ${KRUIZE_SETUP_LOG} 2>&1
 		fi
 	fi
 	echo "done"
@@ -753,7 +753,7 @@ function deploy_app_dependencies() {
 
 	echo "yaml dir= ${yaml_dir}" | tee -a ${LOG}
 	echo -n "Applying application autotune yaml..." | tee -a ${LOG}
-	kubectl apply -f ${yaml_dir} >> ${AUTOTUNE_SETUP_LOG}
+	kubectl apply -f ${yaml_dir} >> ${KRUIZE_SETUP_LOG}
 	echo "done" | tee -a ${LOG}
 }
 
@@ -777,8 +777,8 @@ function get_autotune_pod_log() {
 	# Fetch the container log
 
 	echo "target = $target"
-	autotune_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
-	pod_log_msg=$(kubectl logs ${autotune_pod} -n ${NAMESPACE})
+	kruize_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
+	pod_log_msg=$(kubectl logs ${kruize_pod} -n ${NAMESPACE})
 	echo "${pod_log_msg}" > "${log}"
 }
 

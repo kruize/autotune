@@ -173,9 +173,9 @@ update_yaml_with_token() {
 		/name: kruize$/,/containers:/{
 			/^        - name: kruize$/{
 				n
-				s|image: .*|image: '"$AUTOTUNE_IMAGE"'|
+				s|image: .*|image: '"$KRUIZE_IMAGE"'|
 			}
 		}
 	}' "$YAML_FILE"
-  echo "Updated image in YAML to $AUTOTUNE_IMAGE"
+  echo "Updated image in YAML to $KRUIZE_IMAGE"
 }

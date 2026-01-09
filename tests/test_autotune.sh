@@ -105,8 +105,8 @@ do
 				testcase=${OPTARG#*=}
 				;;
 			servicename=*)
-      				servicename=${OPTARG#*=}
-        			;;
+      			servicename=${OPTARG#*=}
+        		;;
 			datasource_namespace=*)
 				datasource_namespace=${OPTARG#*=}
 				;;
@@ -128,7 +128,7 @@ do
 		setup=0
 		;;
 	i)
-		AUTOTUNE_DOCKER_IMAGE="${OPTARG}"		
+		KRUIZE_DOCKER_IMAGE="${OPTARG}"		
 		;;
 	s)
 		setup=1
@@ -162,7 +162,7 @@ RESULTS_ROOT_DIR="${resultsdir}/kruize_test_results"
 mkdir -p ${RESULTS_ROOT_DIR}
 
 # create the result directory with a time stamp
-RESULTS="${RESULTS_ROOT_DIR}/kruize_${testsuite}_$(date +%Y%m%d:%T)"
+RESULTS="${RESULTS_ROOT_DIR}/kruize_${testsuite}_$(date +%Y%m%d-%H%M%S)"
 mkdir -p "${RESULTS}"
 
 if [ "${setup}" -ne "0" ]; then

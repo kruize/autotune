@@ -64,16 +64,16 @@ function remote_monitoring_tests() {
 		echo "Removing isROSEnabled=false and local=true"
 		pwd
 		pushd "${KRUIZE_REPO}" > /dev/null
-		kruize_remote_patch
-		echo "Removing isROSEnabled=false and local=true...done"
+			kruize_remote_patch
+			echo "Removing isROSEnabled=false and local=true...done"
 
-		setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
-	        echo "Setting up kruize...Done" | tee -a ${LOG}
-	
-		sleep 60
+			setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
+				echo "Setting up kruize...Done" | tee -a ${LOG}
+		
+			sleep 60
 
-		# create performance profile
-		create_performance_profile ${perf_profile_json}
+			# create performance profile
+			create_performance_profile ${perf_profile_json}
 		popd > /dev/null
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
