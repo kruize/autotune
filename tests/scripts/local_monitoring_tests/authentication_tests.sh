@@ -16,9 +16,8 @@
 #
 #
 
-# Get the absolute path of current directory
-CURRENT_DIR="$(dirname "$(realpath "$0")")"
-LOCAL_MONITORING_TEST_DIR="${CURRENT_DIR}/scripts/local_monitoring_tests"
+# Get the path of the test dir
+LOCAL_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/local_monitoring_tests"
 
 # Source the common functions scripts
 . ${LOCAL_MONITORING_TEST_DIR}/../common/common_functions.sh
