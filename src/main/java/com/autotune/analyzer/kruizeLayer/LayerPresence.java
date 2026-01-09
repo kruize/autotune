@@ -31,7 +31,7 @@ public class LayerPresence {
 
     private List<LayerPresenceQuery> queries;
 
-    private List<LabelBasedPresence.LayerPresenceLabel> label;
+    private List<LayerPresenceLabel> label;
 
     public LayerPresence() {
     }
@@ -87,11 +87,11 @@ public class LayerPresence {
         this.queries = queries;
     }
 
-    public List<LabelBasedPresence.LayerPresenceLabel> getLabel() {
+    public List<LayerPresenceLabel> getLabel() {
         return label;
     }
 
-    public void setLabel(List<LabelBasedPresence.LayerPresenceLabel> label) {
+    public void setLabel(List<LayerPresenceLabel> label) {
         this.label = label;
     }
 
