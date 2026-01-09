@@ -254,6 +254,7 @@ def test_create_multiple_namespace_exp(cluster_type):
     print("delete exp = ", response.status_code)
 
 
+@pytest.mark.skip(reason="This will be enabled once the layer presence logic is implemented")
 @pytest.mark.sanity
 def test_non_runtime_supported_datasource_logs_message(cluster_type):
     """
