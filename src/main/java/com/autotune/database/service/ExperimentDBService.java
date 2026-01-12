@@ -18,6 +18,7 @@ package com.autotune.database.service;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.metadataProfiles.utils.MetadataProfileUtil;
@@ -36,6 +37,7 @@ import com.autotune.database.helper.DBConstants;
 import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -456,6 +458,23 @@ public class ExperimentDBService {
             validationOutputData = this.experimentDAO.updateMetadataProfileToDB(kruizeMetadataProfileEntry);
         } catch (Exception e) {
             LOGGER.error(KruizeConstants.MetadataProfileConstants.MetadataProfileErrorMsgs.UPDATE_METADATA_PROFILE_FROM_DB_ERROR, e.getMessage());
+        }
+        return validationOutputData;
+    }
+
+    /**
+     * Adds Layer to kruizeLMLayerEntry
+     *
+     * @param kruizeLayer Layer object to be added
+     * @return ValidationOutputData object
+     */
+    public ValidationOutputData addLayerToDB(KruizeLayer kruizeLayer) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        try {
+            KruizeLMLayerEntry kruizeLayerEntry = DBHelpers.Converters.KruizeObjectConverters.convertLayerObjectToLayerDBObj(kruizeLayer);
+            validationOutputData = this.experimentDAO.addLayerToDB(kruizeLayerEntry);
+        } catch (Exception e) {
+            LOGGER.error("Failed to add layer to database: {}", e.getMessage());
         }
         return validationOutputData;
     }
