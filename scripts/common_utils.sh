@@ -94,12 +94,12 @@ check_err() {
 kruize_crc_start() {
 	kubectl_cmd="kubectl -n ${autotune_ns}"
 	# Preserve original cluster_type
-  manifest_cluster_type="${cluster_type}"
+	manifest_cluster_type="${cluster_type}"
 
-  # Normalize for manifest reuse
-  if [ "${cluster_type}" = "kind" ]; then
-    manifest_cluster_type="minikube"
-  fi
+	# Normalize for manifest reuse
+	if [ "${cluster_type}" = "kind" ]; then
+		manifest_cluster_type="minikube"
+	fi
 	CRC_MANIFEST_FILE_OLD="${CRC_DIR}/${manifest_cluster_type}/kruize_${manifest_cluster_type}.yaml"
 
 	echo "use yaml build - $use_yaml_build"
@@ -165,23 +165,23 @@ deploy_crc_common() {
   esac
 
   # Manifest selection by cluster type
-    case "$cluster_type" in
-      openshift)
-        CRC_MANIFEST_FILE="${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
-        ;;
-      *)
-        CRC_MANIFEST_FILE="${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}"
-        ;;
-    esac
+	case "$cluster_type" in
+		openshift)
+			CRC_MANIFEST_FILE="${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
+			;;
+		*)
+			CRC_MANIFEST_FILE="${KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE}"
+			;;
+	esac
 
-  kruize_crc_start
+	kruize_crc_start
 }
 
 # terminate_crc_common cluster_type namespace manifest
 terminate_crc_common() {
 	CRC_MANIFEST_FILE=$1
-  if [ -z "$autotune_ns" ]; then
-      case "$cluster_type" in
+	if [ -z "$autotune_ns" ]; then
+		case "$cluster_type" in
         openshift)
           autotune_ns="${AUTOTUNE_OPENSHIFT_NAMESPACE}"
           ;;

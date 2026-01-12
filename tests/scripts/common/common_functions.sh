@@ -487,54 +487,70 @@ function form_curl_cmd() {
 	crud_operation=$1
 	# Form the curl command based on the cluster type
 	service="kruize"
-	case $cluster_type in
-	   openshift)
-		NAMESPACE="openshift-tuning"
-		oc expose svc/${service} -n ${NAMESPACE}
+	case "${cluster_type}" in
+		openshift)
+			NAMESPACE="openshift-tuning"
+			oc expose svc/"${service}" -n "${NAMESPACE}"
 
-		SERVER_IP=($(oc status --namespace=${NAMESPACE} | grep ${service} | grep port | cut -d " " -f1 | cut -d "/" -f3))
-	        echo "IP = $SERVER_IP"
+			SERVER_IP=$(oc status --namespace="${NAMESPACE}" \
+				| grep "${service}" \
+				| grep port \
+				| cut -d " " -f1 \
+				| cut -d "/" -f3)
 
-		AUTOTUNE_URL="http://${SERVER_IP}"
+			echo "IP = ${SERVER_IP}"
+			AUTOTUNE_URL="http://${SERVER_IP}"
 		;;
-	   minikube)
-		NAMESPACE="monitoring"
 
-		echo "service = $service namespace = $NAMESPACE"
-		AUTOTUNE_PORT=$(kubectl -n ${NAMESPACE} get svc ${service} --no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
-		SERVER_IP=$(minikube ip)
-		echo "SERVER_IP = $SERVER_IP AUTOTUNE_PORT = $AUTOTUNE_PORT"
-		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
+		minikube)
+			NAMESPACE="monitoring"
+
+			echo "service = ${service} namespace = ${NAMESPACE}"
+			AUTOTUNE_PORT=$(kubectl -n "${NAMESPACE}" get svc "${service}" \
+				--no-headers -o=custom-columns=PORT:.spec.ports[*].nodePort)
+
+			SERVER_IP=$(minikube ip)
+			echo "SERVER_IP = ${SERVER_IP} AUTOTUNE_PORT = ${AUTOTUNE_PORT}"
+			AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
 		;;
-	  kind)
-		NAMESPACE="monitoring"
-		KIND_NODE_NAME="kind-control-plane"
 
-		echo "service = $service namespace = $NAMESPACE"
-		AUTOTUNE_PORT=$(kubectl get svc "$service" -n "${NAMESPACE}" -o jsonpath='{.spec.ports[0].nodePort}')
-		if [ -z "${AUTOTUNE_PORT}" ]; then
-      echo "ERROR: Failed to get NodePort for service $service"
-      exit 1
-    fi
-    # Get KIND node IP (Docker network IP)
-    SERVER_IP=$(docker inspect "${KIND_NODE_NAME}" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+		kind)
+			NAMESPACE="monitoring"
+			KIND_NODE_NAME="kind-control-plane"
 
-    if [ -z "${SERVER_IP}" ]; then
-      echo "ERROR: Failed to get IP for KIND node ${KIND_NODE_NAME}"
-      exit 1
-    fi
-		echo "SERVER_IP = $SERVER_IP AUTOTUNE_PORT = $AUTOTUNE_PORT"
-		AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
+			echo "service = ${service} namespace = ${NAMESPACE}"
+			AUTOTUNE_PORT=$(kubectl get svc "${service}" -n "${NAMESPACE}" \
+				-o jsonpath='{.spec.ports[0].nodePort}')
+
+			if [ -z "${AUTOTUNE_PORT}" ]; then
+				echo "ERROR: Failed to get NodePort for service ${service}"
+				exit 1
+			fi
+
+			# Get KIND node IP (Docker network IP)
+			SERVER_IP=$(docker inspect "${KIND_NODE_NAME}" \
+				--format '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}')
+
+			if [ -z "${SERVER_IP}" ]; then
+				echo "ERROR: Failed to get IP for KIND node ${KIND_NODE_NAME}"
+				exit 1
+			fi
+
+			echo "SERVER_IP = ${SERVER_IP} AUTOTUNE_PORT = ${AUTOTUNE_PORT}"
+			AUTOTUNE_URL="http://${SERVER_IP}:${AUTOTUNE_PORT}"
 		;;
-		docker) ;;
-	   *);;
+
+		docker)
+		;;
+
+		*)
+		;;
 	esac
 
 	curl_cmd="curl -s -H 'Accept: application/json' ${AUTOTUNE_URL}"
 	if [ "${crud_operation}" == "update" ]; then
-        	curl_cmd="curl -s -X PUT -H 'Accept: application/json' ${AUTOTUNE_URL}"
-        fi
-
+		curl_cmd="curl -s -X PUT -H 'Accept: application/json' ${AUTOTUNE_URL}"
+	fi
 	echo "curl_cmd = ${curl_cmd}"
 }
 

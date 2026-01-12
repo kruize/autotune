@@ -185,11 +185,11 @@ function openshift_crc_start() {
 	echo
 	echo "###   Installing kruize for openshift"
 	echo
-  deploy_crc_common
+	deploy_crc_common
 }
 
 function openshift_crc_terminate() {
 	echo -n "###   Removing Kruize for openshift"
 	echo
-  terminate_crc_common "$KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT"
+	terminate_crc_common "$KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT"
 }

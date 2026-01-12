@@ -33,10 +33,10 @@ function check_prometheus_installation_on_kind() {
 }
 
 function kind_crc_start() {
-  echo
-  echo "#######################################"
-  echo "Checking if kind is installed"
-  check_kind
+	echo
+	echo "#######################################"
+	echo "Checking if kind is installed"
+	check_kind
 	deploy_crc_common
 }
 
@@ -56,19 +56,19 @@ function check_kind() {
 	fi
 	echo "✅ 'kind' is installed."
 
-  # 2. Check if a kind cluster is running
-  # (Matches default 'kind' or any user-defined kind cluster name)
-  KIND_CLUSTER_COUNT=$(kind get clusters 2>/dev/null | wc -l)
+	# 2. Check if a kind cluster is running
+	# (Matches default 'kind' or any user-defined kind cluster name)
+	KIND_CLUSTER_COUNT=$(kind get clusters 2>/dev/null | wc -l)
 
-  if [ "$KIND_CLUSTER_COUNT" -eq 0 ]; then
-    echo "❌ ERROR: No running Kind cluster found!"
-    echo "👉 Please start a cluster before running this script, e.g.:"
-    echo "   kind create cluster"
-    exit 1
-  fi
+	if [ "$KIND_CLUSTER_COUNT" -eq 0 ]; then
+		echo "❌ ERROR: No running Kind cluster found!"
+		echo "👉 Please start a cluster before running this script, e.g.:"
+		echo "   kind create cluster"
+		exit 1
+	fi
 
-  echo "✅ A Kind cluster is running:"
-  kind get clusters
-  echo
+	echo "✅ A Kind cluster is running:"
+	kind get clusters
+	echo
 }
 

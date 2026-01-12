@@ -188,11 +188,11 @@ function minikube_crc_start() {
 	echo
 	echo "###   Installing kruize for minikube"
 	echo
-  deploy_crc_common
+	deploy_crc_common
 }
 
 function minikube_crc_terminate() {
 	echo -n "###   Removing Kruize for minikube"
 	echo
-  terminate_crc_common "$KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE"
+	terminate_crc_common "$KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE"
 }
