@@ -23,7 +23,6 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONArray;
-import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.KeyManagementException;
 import java.security.KeyStoreException;
@@ -181,7 +179,7 @@ public class DataSourceCollection {
                             successCount++;
                         } else {
                             LOGGER.error(DATASOURCE_AUTH_DB_UPDATE_FAILED, addedToDB.getMessage());
-                            failedDatasources.add(name + " (Auth update failed: " + addedToDB.getMessage() + ")");
+                            failedDatasources.add(name + " (Auth update failed)");
                         }
                     } else {
                         LOGGER.error(DATASOURCE_AUTH_UPDATE_INVALID);
@@ -205,51 +203,47 @@ public class DataSourceCollection {
 
                 // Validate input
                 if (!validateInput(name, provider, serviceName, dataSourceURL, namespace)) { //TODO: add validations for auth
-                    LOGGER.warn("validation failed for datasource {}, skipping", name);
+                    LOGGER.warn(DATASOURCE_VALIDATION_FAILURE, name);
                     failedDatasources.add(name + " (validation failed)");
                     continue;
                 }
                 try {
                     URL url = null;
-                    try {
-                        if (!dataSourceURL.isBlank()) {
-                            url = new URI(dataSourceURL).toURL();
-                        }
-                    } catch (MalformedURLException | URISyntaxException e) {
-                        LOGGER.error(e.getMessage());
-                        failedDatasources.add(name + " (URL malformed)");
-                        continue;
+                    if (!dataSourceURL.isBlank()) {
+                        url = new URI(dataSourceURL).toURL();
                     }
                     dataSourceInfo = new DataSourceInfo(name, provider, serviceName, namespace, url, authConfig);
 
                     // Attempt to add, addDataSource() returns corresponding exception if it fails. Increment the success count otherwise.
                     addDataSource(dataSourceInfo);
                     successCount++;
-                } catch (DataSourceAlreadyExist dataSourceAlreadyExist) {
-                    LOGGER.warn("datasource '{}' already exists in DB, skipping add: {}", name, dataSourceAlreadyExist.getMessage());
+                } catch (DataSourceNotServiceable dns) {
+                    LOGGER.warn(dns.getMessage());
+                    failedDatasources.add(name + " (not serviceable)");
+                } catch (DataSourceAlreadyExist dae) {
+                    LOGGER.warn(dae.getMessage());
                     // If already exists, consider it a success (it is present)
                     successCount++;
                 } catch (UnsupportedDataSourceProvider udp) {
                     LOGGER.error(udp.getMessage());
                     failedDatasources.add(name + " (unsupported DataSourceProvider)");
                 } catch (MalformedURLException mue) {
-                    LOGGER.error("invalid URL for datasource {}: {}", name, mue.getMessage());
-                    failedDatasources.add(name + " (invalid URL)");
+                    LOGGER.error(mue.getMessage());
+                    failedDatasources.add(name + " (URL malformed)");
                 } catch (Exception e) {
                     // Catch-all to ensure one datasource failure doesn't stop processing
-                    LOGGER.error("unexpected error when adding datasource {}: {}", name, e.getMessage());
-                    failedDatasources.add(name + " (exception: " + e.getMessage() + ")");
+                    LOGGER.error(DATASOURCE_ACCESS_ERROR_MESSAGE, name, e.getMessage());
+                    failedDatasources.add(name + ": " + e.getMessage());
                 }
             }
         }
         // if none succeeded, abort
         if (successCount == 0) {
-            LOGGER.error("No datasources could be added or are serviceable. Failures: {}", failedDatasources);
-            throw new IllegalStateException("None of the configured datasources are accessible/serviceable. Aborting startup.");
+            throw new IllegalStateException(NO_DATASOURCE_SERVICEABLE + " Failures: " + failedDatasources);
         } else {
-            LOGGER.info("Datasource add summary: successCount={}, failures={}", successCount, failedDatasources.size());
+            LOGGER.info(DATASOURCE_ADD_SUMMARY, successCount, failedDatasources.size());
             if (!failedDatasources.isEmpty()) {
-                LOGGER.warn("The following datasources failed to be added/serviceable: {}", failedDatasources);
+                LOGGER.warn(UNSERVICEABLE_DATASOURCE, failedDatasources);
             }
         }
     }

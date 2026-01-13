@@ -493,6 +493,7 @@ public class KruizeConstants {
             public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
             public static final String DATASOURCE_AUTH_ADDED_DB = "Auth details added to the DB successfully.";
             public static final String DATASOURCE_AUTH_UPDATED_DB = "Auth details updated in the DB successfully.";
+            public static final String DATASOURCE_ADD_SUMMARY = "Datasource add summary: successCount={}, failures={}";
 
             private DataSourceSuccessMsgs() {
             }
@@ -522,6 +523,9 @@ public class KruizeConstants {
             public static final String DATASOURCE_AUTH_DB_UPDATE_FAILED = "Failed to update auth details in the DB: {}";
             public static final String DATASOURCE_AUTH_UPDATE_INVALID = "The updated authentication configuration is invalid. Reverting to the previous configuration.";
             public static final String DATASOURCE_ACCESS_ERROR_MESSAGE = "An unexpected error occurred while accessing datasource {} details: {}";
+            public static final String NO_DATASOURCE_SERVICEABLE = "No datasource could be added or are serviceable.";
+            public static final String UNSERVICEABLE_DATASOURCE = "The following datasource failed to be added/serviceable: {}";
+            public static final String DATASOURCE_VALIDATION_FAILURE = "Validation failed for datasource {}";
 
             private DataSourceErrorMsgs() {
             }
