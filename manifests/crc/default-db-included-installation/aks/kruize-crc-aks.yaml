@@ -132,13 +132,6 @@ data:
           "serviceName": "prometheus-k8s",
           "namespace": "monitoring",
           "url": ""
-        },
-        {
-          "name": "thanos-1",
-          "provider": "prometheus",
-          "serviceName": "thanos-querier",
-          "namespace": "monitoring",
-          "url": ""          
         }
       ]
     }
