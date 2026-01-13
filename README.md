@@ -2,8 +2,7 @@
 
 # Kruize 🚀 – Intelligent Kubernetes Resource Optimization
 
-**TL;DR:** <br/>
-Kruize analyzes your Kubernetes workload metrics and automatically generates right-sizing recommendations for CPU, memory, and GPU resources — reducing costs and improving performance without manual tuning.
+TL;DR: Kruize analyzes your Kubernetes workload metrics and automatically generates right-sizing recommendations for CPU, memory, and GPU resources — reducing costs and improving performance without manual tuning.
 ---
 
 Kruize is an open-source optimization tool for Kubernetes that helps you achieve significant cost savings and optimal performance with minimal effort. It continuously monitors your applications and provides right-sizing recommendations for container and namespace resources like CPU and memory, as well as NVIDIA GPU MIG slices.
@@ -30,15 +29,17 @@ You can start by running the [Local Monitoring demo](https://github.com/kruize/k
 
 We recommend you check out the [kruize-demos](https://github.com/kruize/kruize-demos) repo in case you want to know more about VPA demo, GPU demo, HPO demo and a lot more!
 
-## Pre-requisites
-You need access to any Kubernetes environment like Kind, Minikube, or OpenShift with Prometheus running in the cluster. 
+## Generating Recommendations with Kruize
+This guide provides step-by-step instructions for manual setup. For automated setup, skip to the section below.
+
+### Pre-requisites
+You need access to any Kubernetes environment like Kind, Minikube, or OpenShift with Prometheus running in the cluster.
 
 To install Prometheus use the following scripts for [Kind](/scripts/prometheus_on_kind.sh) or [Minikube](/scripts/prometheus_on_minikube.sh). OpenShift installs prometheus by default.
 
 Follow [benchmarks installation](https://github.com/kruize/benchmarks) instructions to install sysbench benchmark.
 
-## Generating Recommendations with Kruize
-This guide provides step-by-step instructions for manual setup. For automated setup, skip to the section below.
+The following instructions assume that a Kubernetes cluster and Prometheus are installed on your machine, and the application for which you want to generate recommendations has been running for at least 30 minutes.
 
 ### Clone Repositories
 Clone the Autotune & Benchmarks Repository using the following commands:
@@ -58,53 +59,22 @@ Kruize can be installed on kind, minikube or OpenShift, over here we are using k
 # cluster-type can be: kind, minikube, openshift
 ```
 
-### Port Forwarding (Kind/Minikube Only)
-For Kind and Minikube clusters, you need to set up port forwarding to access Kruize services:
+### Install Metadata and Metric Profiles
+**Metadata Profile**: Contains queries to collect namespace, workload and container data from your monitoring system. It tells Kruize how to fetch metrics from your specific environment (Prometheus/Thanos endpoints, query formats, cluster-specific labels). Without it, Kruize cannot retrieve data even if the metrics exist.
 
+Install metadata profile
 ```angular2html
-# Kruize API (port 8080)
-kubectl port-forward svc/kruize -n monitoring 8080:8080 
-
-# Kruize UI (port 8081)
-kubectl port-forward svc/kruize-ui-nginx-service -n monitoring 8081:8081 
-
-# Prometheus (port 9090) - if needed
-kubectl port-forward svc/prometheus-k8s -n monitoring 9090:9090 
+curl -X POST http://${KRUIZE_URL}/createMetadataProfile \
+-d @autotune/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json
 ```
-export the Kruize URL 
-```angular2html
-export KRUIZE_URL="localhost:8080"
-export KRUIZE_UI="localhost:8081"
-```
-### Install Metric and Metadata Profiles
-**Metric Profile**: Defines which performance metrics (CPU, memory, etc.) to collect from Prometheus.
+
+**Metric Profile**: Defines what metrics to monitor (CPU, memory, response time) and optimization goals (minimize cost, maintain performance SLOs). It tells Kuize what "good performance" means for your application. Without it, Kruize cannot determine the right trade-offs between cost and performance.
 
 Install metric profile
 
 ```angular2html
 curl -X POST http://${KRUIZE_URL}/createMetricProfile \
   -d @autotune/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json
-```
-**Metadata Profile**: Contains queries to collect namespace, workloads and containers data.
-
-Install metadata profile
-```angular2html
-curl -X POST http://${KRUIZE_URL}/createMetadataProfile \
-  -d @autotune/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json
-```
-
-### Import Metadata from Prometheus
-Using the Metadata profile queries dsmetadata api will fetch the cluster metadata.
-
-```angular2html
-curl --location http://${KRUIZE_URL}/dsmetadata \
-  --header 'Content-Type: application/json' \
-  --data '{
-    "version": "v1.0",
-    "datasource_name": "prometheus-1",
-    "metadata_profile": "cluster-metadata-local-monitoring",
-    "measurement_duration": "15mins"
-  }'
 ```
 
 ### Create Experiment
@@ -177,23 +147,14 @@ curl -X POST "http://${KRUIZE_URL}/generateRecommendations?experiment_name=<expe
 curl -X GET "http://${KRUIZE_URL}/listRecommendations?experiment_name=<experiment-name>"
 ```
 
-You can also take a look at the UI to better understand recommendations 
-
-```angular2html
-http://${KRUIZE_UI}
-```
-
-
-## Want to Explore Further ?
-If you are looking to:
-
-🔧 Deep dive into APIs and integration → Refer to Developer Guide 
-
-🧩 Configure layers, tunables, and advanced runtime controls → Refer to Runtime Guide
+You can also take a look at the UI to better understand recommendations.
 
 ## Autotune Architecture
 
 See the [Autotune Architecture](/design/README.md) for more details on the architecture.
+
+## API Documentation
+For complete API specifications and examples, see the [Kruize API Documentation](design/KruizeLocalAPI.md).
 
 ## See Also
 If you're exploring more around Kruize, here are related repositories you may find useful:
