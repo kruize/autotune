@@ -49,6 +49,12 @@ public interface ExperimentDAO {
     // Add Layer to DB
     public ValidationOutputData addLayerToDB(KruizeLMLayerEntry kruizeLayerEntry);
 
+    // If Kruize restarts load all layers
+    List<KruizeLMLayerEntry> loadAllLayers() throws Exception;
+
+    // Load a single Layer based on layer name
+    List<KruizeLMLayerEntry> loadLayerByName(String layerName) throws Exception;
+
     // Add DataSource to DB
     ValidationOutputData addDataSourceToDB(KruizeDataSourceEntry kruizeDataSourceEntry, ValidationOutputData validationOutputData);
 

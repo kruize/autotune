@@ -483,6 +483,22 @@ public class ExperimentDBService {
         return validationOutputData;
     }
 
+    /**
+     * Load all layers from the database and populate them into the provided map
+     *
+     * @param layerMap Map to store the loaded layers (key: layer_name, value: KruizeLayer)
+     * @throws Exception if there's an error loading or converting layers
+     */
+    public void loadAllLayers(Map<String, KruizeLayer> layerMap) throws Exception {
+        List<KruizeLMLayerEntry> entries = experimentDAO.loadAllLayers();
+        if (null != entries && !entries.isEmpty()) {
+            List<KruizeLayer> kruizeLayers = DBHelpers.Converters.KruizeObjectConverters.convertLayerEntryToLayerObject(entries);
+            if (!kruizeLayers.isEmpty()) {
+                kruizeLayers.forEach(layer -> layerMap.put(layer.getLayerName(), layer));
+            }
+        }
+    }
+
 
     /*
      * This is a Java method that loads all experiments from the database using an experimentDAO object.
