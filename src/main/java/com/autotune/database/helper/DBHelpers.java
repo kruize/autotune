@@ -1571,13 +1571,10 @@ public class DBHelpers {
              * @param kruizeLayer KruizeLayer object to be converted
              * @return KruizeLMLayerEntry database entry object
              */
-            public static KruizeLMLayerEntry convertLayerObjectToLayerDBObj(KruizeLayer kruizeLayer) throws Exception {
-                if (kruizeLayer == null) {
-                    throw new IllegalArgumentException("KruizeLayer cannot be null");
-                }
-
+            public static KruizeLMLayerEntry convertLayerObjectToLayerDBObj(com.autotune.analyzer.kruizeLayer.KruizeLayer kruizeLayer) {
+                KruizeLMLayerEntry kruizeLayerEntry = null;
                 try {
-                    KruizeLMLayerEntry kruizeLayerEntry = new KruizeLMLayerEntry();
+                    kruizeLayerEntry = new KruizeLMLayerEntry();
                     kruizeLayerEntry.setApi_version(kruizeLayer.getApiVersion());
                     kruizeLayerEntry.setKind(kruizeLayer.getKind());
                     kruizeLayerEntry.setLayer_name(kruizeLayer.getLayerName());
