@@ -29,7 +29,7 @@ public class Terms {
         this.name = name;
         this.days = days;
         this.threshold_in_days = threshold_in_days;
-	this.plots_datapoints = plots_datapoints;
+	    this.plots_datapoints = plots_datapoints;
         this.plots_datapoints_delta_in_days = plots_datapoints_delta_in_days;
     }
 
@@ -264,5 +264,16 @@ public class Terms {
 
     public void setPlots_datapoints_delta_in_days(double plots_datapoints_delta_in_days) {
         this.plots_datapoints_delta_in_days = plots_datapoints_delta_in_days;
+    }
+
+    @Override
+    public String toString() {
+        return "Terms{" +
+                "days=" + days +
+                ", threshold_in_days=" + threshold_in_days +
+                ", name='" + name + '\'' +
+                ", plots_datapoints=" + plots_datapoints +
+                ", plots_datapoints_delta_in_days=" + plots_datapoints_delta_in_days +
+                '}';
     }
 }
