@@ -15,7 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer;
 
-import com.autotune.analyzer.experiment.Experimentator;
 import com.autotune.analyzer.metadataProfiles.MetadataProfileDeployment;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
 import com.autotune.analyzer.services.*;
@@ -26,8 +25,6 @@ import org.eclipse.jetty.ee8.servlet.ServletContextHandler;
 
 public class Analyzer {
     public static void start(ServletContextHandler contextHandler) {
-
-        Experimentator.start();
         KruizeOperator kruizeOperator = new KruizeOperator();
 
         try {
@@ -43,13 +40,7 @@ public class Analyzer {
     }
 
     public static void addServlets(ServletContextHandler context) {
-        context.addServlet(ListStacks.class, ServerContext.LIST_STACKS);
-        context.addServlet(ListStackLayers.class, ServerContext.LIST_STACK_LAYERS);
-        context.addServlet(ListStackTunables.class, ServerContext.LIST_STACK_TUNABLES);
-        context.addServlet(ListKruizeTunables.class, ServerContext.LIST_KRUIZE_TUNABLES);
-        context.addServlet(SearchSpace.class, ServerContext.SEARCH_SPACE);
         context.addServlet(ListExperiments.class, ServerContext.LIST_EXPERIMENTS);
-        context.addServlet(ExperimentsSummary.class, ServerContext.EXPERIMENTS_SUMMARY);
         context.addServlet(CreateExperiment.class, ServerContext.CREATE_EXPERIMENT);
         context.addServlet(UpdateResults.class, ServerContext.UPDATE_RESULTS);
         context.addServlet(UpdateRecommendations.class, ServerContext.UPDATE_RECOMMENDATIONS);
