@@ -113,9 +113,9 @@ kruize_crc_start() {
 					$2=image_name;
 					printf"          %s %s\n", $1, $2;
 				} else if ($1=="image:" && prev=="kruize-ui-nginx-container") {
-	        			$2=ui_image_name;
-			        	printf"      %s %s\n", $1, $2;
-			        } else { print }
+					$2=ui_image_name;
+					printf"      %s %s\n", $1, $2;
+				} else { print }
 			 }' ${CRC_MANIFEST_FILE_OLD} >${CRC_MANIFEST_FILE}
 	fi
 
@@ -133,38 +133,38 @@ kruize_crc_start() {
 }
 
 deploy_crc_common() {
-  # Default namespace handling
-  if [ -z "$autotune_ns" ]; then
-    case "$cluster_type" in
-      openshift)
-        autotune_ns="openshift-tuning"
-        ;;
-      *)
-        autotune_ns="monitoring"
-        ;;
-    esac
-  fi
+	# Default namespace handling
+	if [ -z "$autotune_ns" ]; then
+		case "$cluster_type" in
+			openshift)
+				autotune_ns="openshift-tuning"
+				;;
+			*)
+				autotune_ns="monitoring"
+				;;
+		esac
+	fi
 
-  kubectl create namespace "${autotune_ns}" 2>/dev/null || true
+	kubectl create namespace "${autotune_ns}" 2>/dev/null || true
 
-  # cluster-specific prometheus checks:
-  case "$cluster_type" in
-    minikube)
-      check_prometheus_installation
-      ;;
-    kind)
-      check_prometheus_installation_on_kind
-      ;;
-    openshift)
-      check_openshift_prometheus_installation
-      ;;
-    *)
-      echo "ERROR: Unknown cluster type '$cluster_type'"
-      exit 1
-      ;;
-  esac
+	# cluster-specific prometheus checks:
+	case "$cluster_type" in
+		minikube)
+			check_prometheus_installation
+			;;
+		kind)
+			check_prometheus_installation_on_kind
+			;;
+		openshift)
+			check_openshift_prometheus_installation
+			;;
+		*)
+			echo "ERROR: Unknown cluster type '$cluster_type'"
+			exit 1
+			;;
+	esac
 
-  # Manifest selection by cluster type
+	# Manifest selection by cluster type
 	case "$cluster_type" in
 		openshift)
 			CRC_MANIFEST_FILE="${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}"
@@ -182,13 +182,13 @@ terminate_crc_common() {
 	CRC_MANIFEST_FILE=$1
 	if [ -z "$autotune_ns" ]; then
 		case "$cluster_type" in
-        openshift)
-          autotune_ns="${AUTOTUNE_OPENSHIFT_NAMESPACE}"
-          ;;
-        *)
-          autotune_ns="monitoring"
-          ;;
-      esac
+			openshift)
+				autotune_ns="${AUTOTUNE_OPENSHIFT_NAMESPACE}"
+				;;
+			*)
+				autotune_ns="monitoring"
+				;;
+		esac
 	fi
 
 	kubectl_cmd="kubectl -n ${autotune_ns}"

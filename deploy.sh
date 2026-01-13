@@ -190,7 +190,7 @@ done
 # Call the proper setup function based on the cluster_type
 if [ ${setup} == 1 ]; then
 	if [ ${target} == "crc" ]; then
-    ${cluster_type}_crc_start
+		${cluster_type}_crc_start
 	else
 		${cluster_type}_start
 	fi

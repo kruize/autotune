@@ -62,11 +62,11 @@ function check_cluster_type() {
 		usage
 	fi
 	case "${cluster_type}" in
-	minikube|openshift|kind)
+    minikube|openshift|kind)
 		;;
-	*)
-		echo "Error: Cluster type **${cluster_type}** is not supported  "
-		usage
+	  *)
+      echo "Error: Cluster type **${cluster_type}** is not supported  "
+      usage
 	esac
 }
 
