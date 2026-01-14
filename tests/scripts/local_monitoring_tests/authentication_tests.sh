@@ -51,7 +51,7 @@ function authentication_tests() {
   pushd "${KRUIZE_REPO}" > /dev/null
 		setup "${KRUIZE_POD_LOG}" >> "${KRUIZE_SETUP_LOG}" 2>&1
 		echo "Setting up kruize...Done" | tee -a ${LOG}
-	  sleep 15
+	  sleep 60
 	popd > /dev/null
 
   if [ "$cluster_type" == "minikube" ] || [ "$cluster_type" == "kind" ]; then

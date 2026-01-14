@@ -63,13 +63,13 @@ function datasource_tests() {
 		echo "Invalid cluster type found: ${cluster_type}"
 		return
 	fi
+	cleanup_datasources_from_yaml
 	echo "Setting up kruize..." | tee -a ${LOG}
 	echo "${KRUIZE_SETUP_LOG}"
-	cleanup_datasources_from_yaml
 	pushd "${KRUIZE_REPO}" > /dev/null
     setup "${KRUIZE_POD_LOG}" >> "${KRUIZE_SETUP_LOG}" 2>&1
     echo "Setting up kruize...Done" | tee -a ${LOG}
-    sleep 10
+    sleep 60
 	popd > /dev/null
 	# restore the yaml once the setup is done
 	mv "${YAML_FILE}.pre_setup.bak" "$YAML_FILE"
@@ -90,10 +90,13 @@ function datasource_tests() {
 
 		if [ "${TESTS_FAILED}" -ne "0" ]; then
 			FAILED_CASES+=("${scenario}")
+		  ((TOTAL_TESTS_FAILED++))
+			TESTS_FAILED=0
 		fi
 		((suffix++))
 	done
 
+	TESTS_FAILED=${TOTAL_TESTS_FAILED}
 	TESTS=$(($TESTS_PASSED + $TESTS_FAILED))
 	TOTAL_TESTS_FAILED=${TESTS_FAILED}
 	TOTAL_TESTS_PASSED=${TESTS_PASSED}
@@ -171,6 +174,7 @@ cleanup_datasources_from_yaml() {
   sed -i '
   /"datasource"[[:space:]]*:[[:space:]]*\[/,/]/d
   ' "$YAML_FILE"
+  echo "Done"
 }
 
 update_yaml_with_datasources() {
@@ -208,11 +212,11 @@ update_yaml_with_datasources() {
 				s|image: .*|image: '"$AUTOTUNE_IMAGE"'|
 			}
 		}
-	}' "$YAML_FILE"
+	}' "${YAML_FILE}.ds.bak"
   echo "Updated image in YAML to $AUTOTUNE_IMAGE"
 }
 
 restore_yaml() {
 	mv "${YAML_FILE}".ds.bak "$YAML_FILE"
-	mv "${YAML_FILE}".image.bak "$YAML_FILE"
+	mv "${YAML_FILE}".ds.bak.image.bak "$YAML_FILE"
 }
