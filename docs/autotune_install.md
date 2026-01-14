@@ -66,6 +66,9 @@ $ sudo install minikube-linux-amd64 /usr/local/bin/minikube
 ```
 
 Recommended container runtimes are `containerd` or `cri-o`
+
+**Note:** This setup does NOT work with the default Docker runtime. With Kubernetes v1.24+, the Docker container runtime is not recommended as Dockershim has been removed.
+
 ```
 $ minikube start --container-runtime=containerd/cri-o --cpus=8 --memory=16384M
 ```
