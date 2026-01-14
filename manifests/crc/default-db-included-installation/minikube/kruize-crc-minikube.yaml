@@ -514,3 +514,23 @@ spec:
                 name: kruizeconfig
           restartPolicy: OnFailure
 ---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kruize-to-prometheus
+  namespace: monitoring
+spec:
+  podSelector:
+    matchLabels:
+      app.kubernetes.io/name: prometheus
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: kruize
+      ports:
+        - protocol: TCP
+          port: 9090
+---
