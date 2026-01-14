@@ -66,8 +66,11 @@ function datasource_tests() {
 	echo "Setting up kruize..." | tee -a ${LOG}
 	echo "${KRUIZE_SETUP_LOG}"
 	cleanup_datasources_from_yaml
-	setup "${KRUIZE_POD_LOG}" >> "${KRUIZE_SETUP_LOG}" 2>&1
-	echo "Setting up kruize...Done" | tee -a ${LOG}
+	pushd "${KRUIZE_REPO}" > /dev/null
+    setup "${KRUIZE_POD_LOG}" >> "${KRUIZE_SETUP_LOG}" 2>&1
+    echo "Setting up kruize...Done" | tee -a ${LOG}
+    sleep 10
+	popd > /dev/null
 	# restore the yaml once the setup is done
 	mv "${YAML_FILE}.pre_setup.bak" "$YAML_FILE"
 
@@ -125,7 +128,7 @@ run_datasource_scenario() {
 
 	$kubectl_cmd apply -f "$YAML_FILE" > /dev/null
   $kubectl_cmd rollout restart deployment kruize
-  sleep 3
+  sleep 10
 
 	if $kubectl_cmd wait --for=condition=Ready pod -l app=$APP_DEPLOYMENT --timeout=120s > /dev/null 2>&1; then
 		echo "Kruize Pod is Ready"
@@ -134,7 +137,8 @@ run_datasource_scenario() {
 		$kubectl_cmd logs "$POD_NAME" > "$POD_LOG" 2>&1
 
 		if [[ "$scenario" == "both-invalid" ]]; then
-      if grep -i "No datasources could be added or are serviceable" "$POD_LOG"; then
+		  echo "inside both-invalid"
+      if grep -i "No datasource could be added or are serviceable" "$POD_LOG"; then
         echo "Expected failure detected (both datasources invalid)"
         ((TESTS_PASSED++))
       else
@@ -142,7 +146,7 @@ run_datasource_scenario() {
         ((TESTS_FAILED++))
       fi
     else
-      if grep -i "No datasources could be added" "$POD_LOG"; then
+      if grep -i "No datasource could be added" "$POD_LOG"; then
         echo "Unexpected startup failure"
         ((TESTS_FAILED++))
       else
