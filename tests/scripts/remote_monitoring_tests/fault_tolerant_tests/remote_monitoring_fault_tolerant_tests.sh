@@ -18,12 +18,11 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-KRUIZE_REPO="${CURRENT_DIR}/../../../../"
-PERFORMANCE_PROFILE_DIR="${REMOTE_MONITORING_TEST_DIR}/../../../manifests/autotune/performance-profiles"
+KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../../"
+PERFORMANCE_PROFILE_DIR="${KRUIZE_REPO_PATH}/manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
-
 
 RESULTS_DIR=/tmp/kruize_fault_tolerant_test_results
 APP_NAME=kruize
@@ -101,7 +100,7 @@ KRUIZE_SETUP_LOG="${LOG_DIR}/kruize_setup.log"
 # Setup kruize
 echo "Setting up kruize..." | tee -a ${LOG}
 cluster_type=${CLUSTER_TYPE}
-pushd ${KRUIZE_REPO} > /dev/null
+pushd ${KRUIZE_REPO_PATH} > /dev/null
 	kruize_remote_patch
         echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG}" | tee -a ${LOG}
         ./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${KRUIZE_SETUP_LOG} 2>&1
