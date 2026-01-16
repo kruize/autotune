@@ -66,6 +66,7 @@ CREATE_EXP_NAMESPACE_EXP_CONTAINS_CONTAINER = "Can not specify container data fo
 CREATE_EXP_NAMESPACE_EXP_NOT_SUPPORTED_FOR_VPA_MODE = "Auto or recreate mode is not supported for namespace experiment."
 CREATE_EXP_VPA_NOT_SUPPORTED_FOR_REMOTE = "Auto or recreate mode is not supported for remote monitoring use case."
 CREATE_EXP_INVALID_KUBERNETES_OBJECT_FOR_VPA = "Kubernetes object type is not supported for auto or recreate mode."
+CREATE_EXP_INVALID_DATASOURCE = "Given datasource name - %s either does not exist or is not valid"
 UPDATE_RECOMMENDATIONS_MANDATORY_DEFAULT_MESSAGE = 'experiment_name is mandatory'
 UPDATE_RECOMMENDATIONS_MANDATORY_INTERVAL_END_DATE = 'interval_end_time is mandatory'
 UPDATE_RECOMMENDATIONS_EXPERIMENT_NOT_FOUND = 'Not Found: experiment_name does not exist: '
@@ -122,7 +123,8 @@ DELETE_PERF_PROFILE_SUCCESS_MSG = "Performance profile %s deleted successfully. 
 DELETE_PERF_PROFILE_MISSING_NAME_ERROR = "Performance profile name is required."
 DELETE_PERF_PROFILE_NON_EXISTENT_NAME_ERROR = "Not Found: performance_profile does not exist: %s"
 DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR = "Performance Profile '%s' cannot be deleted as it is currently associated with %d experiment."
-DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable."
+DATASOURCE_NOT_SERVICEABLE = "Datasource %s is not serviceable."
+RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE = "Runtimes recommendations are unavailable for the provided datasource."
 
 
 # Kruize Recommendations Notification codes
@@ -165,8 +167,6 @@ INFO_COST_RECOMMENDATIONS_AVAILABLE_CODE = "112101"
 INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE_CODE = "112102"
 INFO_RECOMMENDATIONS_AVAILABLE_CODE = "111000"
 INFO_SHORT_TERM_RECOMMENDATIONS_AVAILABLE_CODE = "111101"
-INFO_ACCELERATOR_RECOMMENDATIONS_AVAILABLE = "128001"
-NOTICE_ACCELERATOR_NOT_SUPPORTED_BY_KRUIZE = "328001"
 
 CPU_REQUEST_OPTIMISED_CODE = "323004"
 CPU_LIMIT_OPTIMISED_CODE = "323005"
@@ -244,6 +244,7 @@ SUPPORTED_GPUS = [
 "NVIDIA-H100-PCIE-96GB",
 "NVIDIA-H200-PCIE-141GB"
 ]
+PERF_PROFILE_NAME = "resource-optimization-openshift"
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -1291,6 +1292,32 @@ def get_kruize_pod(namespace):
     pod_name = output.decode('utf-8')
     print(f"pod name = {pod_name}")
     return pod_name.rstrip()
+
+def get_kruize_logs(cluster_type):
+    """
+    Fetches logs (stdout) from the Kruize pod.
+    Tail defaults to last 500 lines for speed.
+    """
+    tail = 500
+    # get the namespace based on cluster
+    if cluster_type == "minikube":
+        namespace = "monitoring"
+    else:
+        namespace = "openshift-tuning"
+
+    pod = get_kruize_pod(namespace)
+
+    try:
+        cmd = [
+            "kubectl", "logs",
+            pod,
+            "-n", namespace,
+            f"--tail={tail}"
+        ]
+        logs = subprocess.check_output(cmd, text=True)
+        return logs
+    except Exception as e:
+        raise RuntimeError(f"Failed to fetch logs from pod {pod}: {e}")
 
 
 def delete_kruize_pod(namespace):

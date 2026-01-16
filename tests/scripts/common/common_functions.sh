@@ -33,7 +33,8 @@ TESTS=0
 
 TEST_SUITE_ARRAY=("remote_monitoring_tests"
 "local_monitoring_tests"
-"authentication_tests")
+"authentication_tests"
+"datasource_tests")
 
 KRUIZE_DOCKER_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
 total_time=0
