@@ -6,7 +6,7 @@ For operator source code, see the [kruize-operator repository](https://github.co
 
 ## Prerequisites
 
-- OpenShift Container Platform 4.x or later
+- OpenShift Container Platform 4.10+ or later
 - Cluster admin access
 - Prometheus monitoring (included by default in OpenShift)
 - `oc` CLI tool configured
@@ -108,7 +108,7 @@ oc get route kruize-ui-nginx-service -n openshift-tuning -o jsonpath='{.spec.hos
 oc get route kruize -n openshift-tuning -o jsonpath='{.spec.host}'
 ```
 
-Then open `http://<ui-hostname>` in your browser.
+Then open `http://<KRUIZE_UI_URL>` in your browser.
 
 ### Step 3: Install Required Profiles
 
@@ -131,45 +131,25 @@ curl -X POST "${KRUIZE_URL}/createMetricProfile" \
 ## Using Kruize UI
 
 ### Create Experiment via UI
-#### 1. Connect to Datasource & Import Metadata
 
-Instead of manually entering details, import workload information from Prometheus:
-
-1. In the Kruize UI, click **DataSources** in the left sidebar
-2. You will see your connected datasource (e.g., `prometheus-1`)
-3. Click the **Import Metadata** button
-4. A list of Clusters, Namespaces, and Workloads will appear
-5. Find the workload you want to optimize (e.g., `aws-ebs-csi-driver-controller`)
-6. Click the **Plus (+)** icon next to that workload
-
-#### 2. Confirm Experiment JSON
-
-1. Kruize will automatically generate the experiment JSON
-2. A page titled **"Create Experiment JSON"** will appear
-3. Verify the details:
+1. In the Kruize UI, click **DataSources** in the left sidebar. You will see your connected datasource (e.g., `prometheus-1`)
+2. Click the **Import Metadata** button. Find the workload you want to optimize (e.g., `aws-ebs-csi-driver-controller`)
+3. Click the **Plus (+)** icon next to that workload. Kruize will automatically generate the experiment JSON
+4. A page titled **"Create Experiment JSON"** will appear. Verify the details:
    - `experiment_name`
    - `container_name`
    - `image_name`
-4. Click **Submit** or **Create** to finalize the experiment
+5. Click **Create** to finalize the experiment
 
 ### View Recommendations
 
-#### 1. Navigate to Experiments
-
 1. Click **Experiments** in the left sidebar
 2. Click on your experiment name (e.g., `aws-ebs-csi-driver-node`)
-
-#### 2. Check Status
-
-- You should see status: **"Generating Recommendations"** (green indicator)
+3. You should see: **"Generating Recommendations"** 
 - **Note**: If you see "CPU Usage is less than a millicore", the workload is idle but data collection is active
-
-#### 3. Analyze Recommendations
-
-1. Toggle between **Cost Optimizations** and **Performance Optimizations** tabs
-2. Review the CPU/Memory suggestions:
+4. Toggle between **Cost Optimizations** and **Performance Optimizations** tabs
+5. Review the CPU/Memory suggestions:
    - **Current Settings**: Your existing resource requests/limits
    - **Recommended Settings**: Optimized values based on actual usage
-   - **Savings**: Estimated cost reduction or performance improvement
-3. View charts showing historical usage patterns
-4. Download recommendations for implementation
+6. View charts showing historical usage patterns
+7. Download recommendations for implementation
