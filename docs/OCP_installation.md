@@ -6,12 +6,12 @@ For operator source code, see the [kruize-operator repository](https://github.co
 
 ## Prerequisites
 
-- OpenShift Container Platform 4.10+ or later
+- OpenShift Container Platform 4.10+
 - Cluster admin access
 - Prometheus monitoring (included by default in OpenShift)
 - `oc` CLI tool configured
 
-## Installating Kruize Operator and Kruize
+## Installing Kruize Operator and Kruize
 
 ### Step 1: Add OperatorHub.io Catalog Source
 
@@ -45,10 +45,12 @@ oc get catalogsource -n openshift-marketplace
 2. Search for **kruize**
 3. Click the **Kruize Operator** tile
 4. Click **Install**
+![KruizeOperator_install.png](images/KruizeOperator_install.png)
 5. Configure:
    - **Update approval**: Automatic (recommended)
    - **Namespace**: openshift-tuning (recommended)
 6. Click **Install** and wait for the status to show **Succeeded**.
+
 
 Once the kruize operator is up and running you can follow the next steps to install kruize.
 
@@ -68,9 +70,9 @@ oc get pods -n openshift-tuning
 
 ### Step 1: Expose Kruize Services
 
-Kruize has two services:
-- **kruize-ui-nginx-service** - The web UI (port 8080)
-- **kruize** - The backend API (port 8080)
+Kruize has two services which can be exposed:
+- **kruize-ui-nginx-service** - The web UI 
+- **kruize** - The backend Kruize Service
 
 Get routes for both:
 
@@ -123,17 +125,22 @@ curl -X POST "${KRUIZE_URL}/createMetricProfile" \
 1. In the Kruize UI, click **DataSources** in the left sidebar. You will see your connected datasource (e.g., `prometheus-1`)
 2. Click the **Import Metadata** button. Find the workload you want to optimize (e.g., `aws-ebs-csi-driver-controller`)
 3. Click the **Plus (+)** icon next to that workload. Kruize will automatically generate the experiment JSON
+
+![datasource_ui.png](images/datasource_ui.png)
 4. A page titled **"Create Experiment JSON"** will appear. Verify the details:
    - `experiment_name`
    - `container_name`
    - `image_name`
 5. Click **Create** to finalize the experiment
 
+![CreateExperiment_ui.png](images/CreateExperiment_ui.png)
+
 ### View Recommendations
 
 1. Click **Experiments** in the left sidebar
 2. Click on your experiment name (e.g., `aws-ebs-csi-driver-node`)
 3. You should see: **"Generating Recommendations"** 
+![Recommendations_ui.png](images/Recommendations_ui.png)
 - **Note**: If you see "CPU Usage is less than a millicore", the workload is idle but data collection is active
 4. Toggle between **Cost Optimizations** and **Performance Optimizations** tabs
 5. Review the CPU/Memory suggestions:
@@ -141,3 +148,5 @@ curl -X POST "${KRUIZE_URL}/createMetricProfile" \
    - **Recommended Settings**: Optimized values based on actual usage
 6. View charts showing historical usage patterns
 7. Download recommendations for implementation
+
+You can now use Kruize to generate and apply resource optimization recommendations for your workloads.
