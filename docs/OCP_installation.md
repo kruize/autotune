@@ -72,7 +72,7 @@ Kruize has two services:
 - **kruize-ui-nginx-service** - The web UI (port 8080)
 - **kruize** - The backend API (port 8080)
 
-Create routes for both:
+Get routes for both:
 
 ```bash
 # Expose the UI service
@@ -87,9 +87,6 @@ export KRUIZE_UI_URL="http://$(oc get route kruize-ui-nginx-service -n openshift
 # Get the API URL
 export KRUIZE_URL="http://$(oc get route kruize -n openshift-tuning -o jsonpath='{.spec.host}')"
 
-# Display both URLs
-echo "Kruize UI URL: ${KRUIZE_UI_URL}"
-echo "Kruize API URL: ${KRUIZE_URL}"
 ```
 
 ### Step 2: Access Kruize UI in Browser
@@ -98,15 +95,6 @@ echo "Kruize API URL: ${KRUIZE_URL}"
 2. Open your web browser
 3. Paste the URL and press Enter
 4. You should see the Kruize dashboard with tabs for DataSources, Experiments, and more
-
-**Alternative - Get URLs directly:**
-```bash
-# UI URL
-oc get route kruize-ui-nginx-service -n openshift-tuning -o jsonpath='{.spec.host}'
-
-# API URL
-oc get route kruize -n openshift-tuning -o jsonpath='{.spec.host}'
-```
 
 Then open `http://<KRUIZE_UI_URL>` in your browser.
 
