@@ -22,11 +22,12 @@ Recommendations are generated for:
 Kruize supports both predefined terms (short, medium, long) and custom terms, allowing recommendations to align with your desired observation window. You can also choose between performance-optimized or cost-optimized profiles based on your workload priorities.
 
 ## Quick Start
-
+### Operator-Based Deployment
 Kruize can be installed via the Kruize operator which simplifies deployment and management of Kruize on Kubernetes and OpenShift clusters. It provides a declarative way to configure and deploy Kruize components including the core Kruize service and UI through Custom Resource Definitions (CRDs).
 
 Here is the documentation for installing Kruize via Operator [OCP_installation.md](/docs/OCP_installation.md).
 
+### Standalone Demo
 Kruize has a demos repo that enables users to get a quick start without worrying about the setup and its a great first step for first time users.
 You can start by running the [Local Monitoring demo](https://github.com/kruize/kruize-demos/tree/main/monitoring/local_monitoring).
 
