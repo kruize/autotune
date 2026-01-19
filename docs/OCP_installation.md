@@ -26,7 +26,7 @@ For operator source code, see the [kruize-operator repository](https://github.co
 6. Click **Install** and wait for the status to show **Succeeded**.
 
 
-Once the Kruize operator is up and running you can follow the next steps to install Kruize.
+Once the Kruize operator is up and running, you can follow the next steps to install Kruize.
 
 ### Step 2: Create Kruize Instance
 
@@ -35,14 +35,16 @@ Once the Kruize operator is up and running you can follow the next steps to inst
 3. Click **Create instance**
 4. Review the YAML and click **Create**
 
-Verify if Kruize deployment is up and running:
+Verify that the Kruize deployment is up and running:
 ```bash
 oc get pods -n openshift-tuning
 ```
 
 ## Accessing Kruize UI
 
-### Step 1: Create Routes via OpenShift Console
+### Step 1: Accessing Routes via OpenShift Console
+
+Note: If routes are already present for kruize then this step can be skipped.
 
 Since the operator does not expose the services by default, you must create routes manually through the OpenShift Console. You need to create two routes: one for the API (to install profiles) and one for the UI (to view the dashboard).
 
