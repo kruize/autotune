@@ -118,7 +118,7 @@ As part of the release testing, following tests will be executed:
 | 5 | DB Migration test | PASSED | NA | |
 | 6 | Recommendation and box plot values validations | PASSED | PASSED | |
 | 7 | Local Fault tolerant test | PASSED | PASSED | |
-| 8 | Kruize Local Functional tests | TOTAL - 167 , PASSED -  / FAILED -  / SKIPPED - 1 | TOTAL - 167, PASSED - 161 / FAILED - 5 / SKIPPED - 1 | [Issue 1395](https://github.com/kruize/autotune/issues/1395), [Issue 1273](https://github.com/kruize/autotune/issues/1273), [Issue 1734](https://github.com/kruize/autotune/issues/1734) |
+| 8 | Kruize Local Functional tests | TOTAL - 167 , PASSED - 163 / FAILED - 3 / SKIPPED - 1 | TOTAL - 167, PASSED - 163 / FAILED - 3 / SKIPPED - 1 | [Issue 1395](https://github.com/kruize/autotune/issues/1395), [Issue 1273](https://github.com/kruize/autotune/issues/1273), [Issue 1734](https://github.com/kruize/autotune/issues/1734) |
 
 
 Kruize Demo results
@@ -127,16 +127,16 @@ Kruize Demo results
 |---|:---|:---|:---|:---|:---|
 | 1 | Kruize remote monitoring demo | Openshift | NA | PASSED  | |
 | 2 | Kruize remote monitoring demo | Minikube | NA | PASSED | |
-| 3 | Kruize remote monitoring demo | Kind | NA | | |
+| 3 | Kruize remote monitoring demo | Kind | NA | PASSED | |
 | 4 | Kruize local monitoring demo | Openshift | PASSED | PASSED | |
-| 5 | Kruize local monitoring demo | Minikube |  | PASSED | |
+| 5 | Kruize local monitoring demo | Minikube | PASSED | PASSED | |
 | 6 | Kruize local monitoring demo | Kind | PASSED | PASSED | |
 | 7 | Kruize bulk monitoring demo | Openshift | NA | FAILED | Kruize operator 0.0.3 does not support Bulk, [Issue 1259](https://github.com/kruize/autotune/issues/1259) |
 | 8 | Kruize bulk monitoring demo | Minikube | NA | PASSED |  Kruize operator 0.0.3 does not support Bulk |
 | 9 | Kruize bulk monitoring demo | Kind | NA | PASSED | Kruize operator 0.0.3 does not support Bulk |
 | 10 | Kruize vpa monitoring demo | Openshift | PASSED | PASSED | |
 | 11 | Kruize vpa monitoring demo | Minikube |  | PASSED | |
-| 12 | Kruize vpa monitoring demo | Kind | FAILED | PASSED |  |
+| 12 | Kruize vpa monitoring demo | Kind | FAILED | PASSED | [Issue 171](https://github.com/kruize/kruize-demos/issues/171) |
 
 
 ---
