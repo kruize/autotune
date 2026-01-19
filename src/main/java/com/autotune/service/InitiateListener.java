@@ -151,26 +151,14 @@ public class InitiateListener implements ServletContextListener {
           Kruize Performance Profile configuration
          */
         if(KruizeDeploymentInfo.is_ros_enabled){
-            ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
-            try {
-                new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
-            } catch (Exception e) {
-                LOGGER.error("Failed to load performance profile: {} ", e.getMessage());
-            }
-            sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
+            sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, ProfileService.getPerformanceProfileMap());
         }
 
         if(KruizeDeploymentInfo.local == true) {
             /*
             Kruize Metric Profile configuration
             */
-            ConcurrentHashMap<String, PerformanceProfile> metricProfilesMap = new ConcurrentHashMap<>();
-            try {
-                new ExperimentDBService().loadAllMetricProfiles(metricProfilesMap);
-            } catch (Exception e) {
-                LOGGER.error("Failed to load metric profile: {} ", e.getMessage());
-            }
-            sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.METRIC_PROFILE_MAP, metricProfilesMap);
+            sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.METRIC_PROFILE_MAP, ProfileService.getMetricProfileMap());
         }
     }
 

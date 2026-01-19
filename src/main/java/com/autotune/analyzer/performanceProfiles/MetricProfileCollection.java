@@ -21,6 +21,7 @@ import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.service.ProfileService;
 import com.autotune.utils.KruizeConstants;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -54,8 +55,7 @@ public class MetricProfileCollection {
     public void loadMetricProfilesFromDB() {
         try {
             LOGGER.info(KruizeConstants.MetricProfileConstants.CHECKING_AVAILABLE_METRIC_PROFILE_FROM_DB);
-            Map<String, PerformanceProfile> availableMetricProfiles = new HashMap<>();
-            new ExperimentDBService().loadAllMetricProfiles(availableMetricProfiles);
+            Map<String, PerformanceProfile> availableMetricProfiles = ProfileService.getMetricProfileMap();
             if (availableMetricProfiles.isEmpty()) {
                 LOGGER.info(KruizeConstants.MetricProfileConstants.NO_METRIC_PROFILE_FOUND_IN_DB);
             }else {

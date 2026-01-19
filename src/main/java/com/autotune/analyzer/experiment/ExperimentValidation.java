@@ -31,6 +31,7 @@ import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
+import com.autotune.service.ProfileService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import org.slf4j.Logger;
@@ -116,21 +117,12 @@ public class ExperimentValidation {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                         } else {
-                            // fetch the Performance / Metric Profile from the DB
-                            try {
-                                if (KruizeDeploymentInfo.is_ros_enabled && target_cluster.equalsIgnoreCase(AnalyzerConstants.REMOTE)) { // todo call this in function and use across every where
-                                    new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
-                                } else {
-                                    new ExperimentDBService().loadMetricProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
-                                }
-                            } catch (Exception e) {
-                                LOGGER.error("Loading saved Performance Profile {} failed: {} ", expName, e.getMessage());
-                            }
-                            if (null == performanceProfilesMap.get(kruizeObject.getPerformanceProfile())) {
+                            if (!ProfileService.isExists(kruizeObject.getPerformanceProfile())) {
                                 errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getPerformanceProfile();
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                            } else
+                            } else {
                                 proceed = true;
+                            }
                         }
                     } else {
                         if (null == kruizeObject.getSloInfo()) {

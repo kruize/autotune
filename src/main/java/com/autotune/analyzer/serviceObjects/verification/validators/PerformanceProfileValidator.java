@@ -22,6 +22,7 @@ import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
 import com.autotune.analyzer.serviceObjects.verification.annotators.PerformanceProfileCheck;
 import com.autotune.analyzer.services.UpdateResults;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.service.ProfileService;
 import jakarta.validation.ConstraintValidator;
 import jakarta.validation.ConstraintValidatorContext;
 import org.slf4j.Logger;
@@ -51,15 +52,9 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
         */
         try {
             KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
-            if (UpdateResults.performanceProfilesMap.isEmpty() || !UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
-                ConcurrentHashMap<String, PerformanceProfile> tempPerformanceProfilesMap = new ConcurrentHashMap<>();
-                new ExperimentDBService().loadAllPerformanceProfiles(tempPerformanceProfilesMap);
-                UpdateResults.performanceProfilesMap.putAll(tempPerformanceProfilesMap);
-            }
-            PerformanceProfile performanceProfile = null;
-            if (UpdateResults.performanceProfilesMap.containsKey(kruizeObject.getPerformanceProfile())) {
-                performanceProfile = UpdateResults.performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
-            } else {
+
+            PerformanceProfile performanceProfile = ProfileService.getPerformanceProfile(kruizeObject.getPerformanceProfile());
+            if (performanceProfile == null) {
                 throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, kruizeObject.getPerformanceProfile()));
             }
 

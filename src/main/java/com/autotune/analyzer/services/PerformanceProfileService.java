@@ -30,6 +30,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.service.ProfileService;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
@@ -94,6 +95,7 @@ public class PerformanceProfileService extends HttpServlet {
             if (validationOutputData.isSuccess()) {
                 ValidationOutputData addedToDB = new ExperimentDBService().addPerformanceProfileToDB(performanceProfile);
                 if (addedToDB.isSuccess()) {
+                    ProfileService.addPerformanceProfile(performanceProfile);
                     performanceProfilesMap.put(performanceProfile.getName(), performanceProfile);
                     getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
                     LOGGER.debug("Added Performance Profile : {} into the DB with version: {}",
@@ -125,13 +127,8 @@ public class PerformanceProfileService extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
         String gsonStr = "[]";
-        // Fetch all profiles from the DB
-        Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
-        try {
-            new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
-        } catch (Exception e) {
-            LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
-        }
+        // Fetch all profiles from the cache. Initialize from DB if required.
+        Map<String, PerformanceProfile> performanceProfilesMap = ProfileService.getPerformanceProfileMap();
         if (!performanceProfilesMap.isEmpty()) {
             Collection<PerformanceProfile> values = performanceProfilesMap.values();
             Gson gsonObj = new GsonBuilder()
@@ -190,6 +187,7 @@ public class PerformanceProfileService extends HttpServlet {
                     LOGGER.info("{}", String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
                             profileName, incomingPerfProfile.getProfile_version()));
                     performanceProfilesMap.put(incomingPerfProfile.getName(), incomingPerfProfile);
+                    ProfileService.addPerformanceProfile(incomingPerfProfile);
                     getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
                     sendSuccessResponse(
                             response,
@@ -250,6 +248,7 @@ public class PerformanceProfileService extends HttpServlet {
             }
             // remove the profile from the local storage as well
             performanceProfilesMap.remove(perfProfileName);
+            ProfileService.removePerformanceProfile(perfProfileName);
             sendSuccessResponse(resp, String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName));
         } catch (Exception e) {
             LOGGER.error("{}",String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION, perfProfileName, e.getMessage()));
