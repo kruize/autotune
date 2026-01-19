@@ -104,6 +104,7 @@ public class MetadataProfileService extends HttpServlet{
             } else
                 sendErrorResponse(response, null, validationOutputData.getErrorCode(), validationOutputData.getMessage());
         } catch (Exception e) {
+            LOGGER.error("Failed to create metric profile", e);
             sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR, KruizeConstants.MetadataProfileConstants.METADATA_PROFILE_VALIDATION_FAILURE + e.getMessage());
         }
     }
