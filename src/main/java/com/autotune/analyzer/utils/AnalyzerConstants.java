@@ -279,7 +279,9 @@ public class AnalyzerConstants {
         namespaceMaxDate,
         acceleratorCoreUsage,
         acceleratorMemoryUsage,
-        acceleratorFrameBufferUsage
+        acceleratorFrameBufferUsage,
+        jvmInfo,
+        jvmInfoTotal
     }
 
     public enum K8S_OBJECT_TYPES {
