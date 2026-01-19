@@ -397,17 +397,17 @@ public class AnalyzerErrorConstants {
             public static final String TUNABLE_EMPTY_CHOICES = "Tunable '%s' is categorical but has null or empty choices list";
         }
 
-    public static final class ListLayerAPI {
-        public ListLayerAPI() {
+        public static final class ListLayerAPI {
+            public ListLayerAPI() {
+            }
+            public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+            public static final String INVALID_LAYER_NAME_EXCPTN = "Invalid Layer Name";
+            public static final String INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exist or is not valid";
+            public static final String NO_LAYERS_EXCPTN = "No layers";
+            public static final String NO_LAYERS = "No layers found!";
+            public static final String LOAD_LAYER_ERROR = "Failed to load layer data: %s";
+            public static final String LOAD_ALL_LAYERS_ERROR = "Failed to load all layers: %s";
         }
-        public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
-        public static final String INVALID_LAYER_NAME_EXCPTN = "Invalid Layer Name";
-        public static final String INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exist or is not valid";
-        public static final String NO_LAYERS_EXCPTN = "No layers";
-        public static final String NO_LAYERS = "No layers found!";
-        public static final String LOAD_LAYER_ERROR = "Failed to load layer data: %s";
-        public static final String LOAD_ALL_LAYERS_ERROR = "Failed to load all layers: %s";
-    }
     }
 
     public static final class ConversionErrors {

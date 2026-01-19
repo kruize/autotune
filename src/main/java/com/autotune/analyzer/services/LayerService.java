@@ -180,6 +180,7 @@ public class LayerService extends HttpServlet {
 
                         Gson gsonObj = createGsonObject();
                         String gsonStr = gsonObj.toJson(kruizeLayers);
+
                         response.getWriter().println(gsonStr);
                         response.getWriter().close();
                     }
