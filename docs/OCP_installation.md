@@ -13,7 +13,17 @@ For operator source code, see the [kruize-operator repository](https://github.co
 
 ## Installing Kruize Operator and Kruize
 
-### Step 1: Install Kruize Operator
+### Step 1: Create openshift-tuning Project 
+
+Before installing the Kruize Operator, you need to create the `openshift-tuning` project if it's not already present:
+
+1. Navigate to **Administration → Namespace**
+2. Click **Create Project** on the top right corner
+3. Enter **openshift-tuning** as the Name
+4. Click **Create**
+![Create_openshift_tuning_project.png](images/Create_openshift_tuning_project.png)
+
+### Step 2: Install Kruize Operator
 
 1. Navigate to **Ecosystem → OperatorHub/Software Catalog**
 2. Search for **kruize**
@@ -22,13 +32,13 @@ For operator source code, see the [kruize-operator repository](https://github.co
 ![Install.png](images/Install_operator.png)
 5. Configure:
    - **Update approval**: Automatic (recommended)
-   - **Namespace**: openshift-tuning (recommended)
+   - **Installed Namespace**: openshift-tuning
 6. Click **Install** and wait for the status to show **Succeeded**.
 
 
 Once the Kruize operator is up and running, you can follow the next steps to install Kruize.
 
-### Step 2: Create Kruize Instance
+### Step 3: Create Kruize Instance
 
 1. Navigate to **Ecosystem → Installed Operators**
 2. Click **Kruize Operator**
@@ -51,7 +61,7 @@ Since the operator does not expose the services by default, you must create rout
 **Navigate to Routes:**
 
 1. In the Administrator perspective, go to **Networking → Routes**.
-2. Ensure the **Project** dropdown at the top is set to **openshift-tuning** (or your installation namespace).
+2. Ensure the **Project** dropdown at the top is set to **openshift-tuning** (or your installation project).
 3. Click the **Plus (+) icon** (Import YAML) in the top-right.
 
 **Create the API Route:**
