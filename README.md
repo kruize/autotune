@@ -63,6 +63,19 @@ Kruize can be installed on kind, minikube, or OpenShift. In this guide, we use k
 # For other cluster types, use: ./deploy.sh -c minikube or ./deploy.sh -c openshift
 ```
 
+### Expose Kruize Services
+
+Before proceeding :
+- **For OpenShift**: Expose Kruize & UI service via routes
+- **For Kind/Minikube**: Port-forward Kruize & UI services
+
+**Port-forward commands for Kind/Minikube:**
+```bash
+kubectl port-forward svc/kruize -n monitoring 8080:8080 &
+kubectl port-forward svc/kruize-ui-nginx-service -n monitoring 8081:80 &
+export KRUIZE_URL="http://localhost:8080"
+```
+
 ### Install Metadata and Metric Profiles
 **Metadata Profile**: Contains queries to collect namespace, workload and container data from your monitoring system. It tells Kruize how to fetch metrics from your specific environment (Prometheus/Thanos endpoints, query formats, cluster-specific labels). Without it, Kruize cannot retrieve data even if the metrics exist.
 
