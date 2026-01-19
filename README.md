@@ -125,7 +125,7 @@ curl -X POST http://${KRUIZE_URL}/createExperiment -d @container_experiment_sysb
 ```
 - For namespace-level experiment
 
-In the above json change the experiment name & modify the Kubernetes object to :
+In the above JSON, change the experiment name & modify the Kubernetes object to :
 ```json
 "kubernetes_objects": [
       {
