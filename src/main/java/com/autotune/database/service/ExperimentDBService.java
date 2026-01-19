@@ -40,6 +40,7 @@ import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
+import com.autotune.service.ProfileService;
 import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -386,6 +387,9 @@ public class ExperimentDBService {
         try {
             KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
             validationOutputData = this.experimentDAO.addPerformanceProfileToDB(kruizePerformanceProfileEntry);
+            if (validationOutputData.isSuccess()){
+                ProfileService.addPerformanceProfile(performanceProfile);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to save Performance Profile due to {}", e.getMessage());
         }
@@ -403,6 +407,9 @@ public class ExperimentDBService {
         try {
             KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
             validationOutputData = this.experimentDAO.updatePerformanceProfileInDB(kruizePerformanceProfileEntry);
+            if (validationOutputData.isSuccess()){
+                ProfileService.addPerformanceProfile(performanceProfile);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to update Performance Profile due to {}", e.getMessage());
         }
@@ -420,6 +427,9 @@ public class ExperimentDBService {
         try {
             KruizeMetricProfileEntry kruizeMetricProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetricProfileObjToMetricProfileDBObj(metricProfile);
             validationOutputData = this.experimentDAO.addMetricProfileToDB(kruizeMetricProfileEntry);
+            if (validationOutputData.isSuccess()) {
+                ProfileService.addMetricProfile(metricProfile);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to save Metric Profile due to {}", e.getMessage());
         }

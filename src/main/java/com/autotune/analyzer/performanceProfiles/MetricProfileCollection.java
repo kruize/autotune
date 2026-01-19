@@ -48,10 +48,6 @@ public class MetricProfileCollection {
         return metricProfileCollectionInstance;
     }
 
-    public HashMap<String, PerformanceProfile> getMetricProfileCollection() {
-        return metricProfileCollection;
-    }
-
     public void loadMetricProfilesFromDB() {
         try {
             LOGGER.info(KruizeConstants.MetricProfileConstants.CHECKING_AVAILABLE_METRIC_PROFILE_FROM_DB);
@@ -70,19 +66,6 @@ public class MetricProfileCollection {
         }
     }
 
-
-    public void addMetricProfile(PerformanceProfile metricProfile) {
-        String metricProfileName = metricProfile.getMetadata().get("name").asText();
-
-        LOGGER.info(KruizeConstants.MetricProfileConstants.ADDING_METRIC_PROFILE + "{}", metricProfileName);
-
-        if(metricProfileCollection.containsKey(metricProfileName)) {
-            LOGGER.error(KruizeConstants.MetricProfileConstants.METRIC_PROFILE_ALREADY_EXISTS + "{}", metricProfileName);
-        } else {
-            LOGGER.info(KruizeConstants.MetricProfileConstants.METRIC_PROFILE_ADDED, metricProfileName);
-            metricProfileCollection.put(metricProfileName, metricProfile);
-        }
-    }
 
     public void addMetricProfileFromConfigFile() {
         try {

@@ -7,7 +7,6 @@ import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
-import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.plots.PlotManager;
 import com.autotune.analyzer.recommendations.*;
@@ -33,6 +32,7 @@ import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.metrics.KruizeNotificationCollectionRegistry;
 import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.service.ProfileService;
 import com.autotune.utils.GenericRestApiClient;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.MetricsConfig;
@@ -1954,7 +1954,7 @@ public class RecommendationEngine {
     public void fetchMetricsBasedOnProfileAndDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception, FetchMetricsError {
         try {
             String metricProfileName = kruizeObject.getPerformanceProfile();
-            PerformanceProfile metricProfile = MetricProfileCollection.getInstance().getMetricProfileCollection().get(metricProfileName);
+            PerformanceProfile metricProfile = ProfileService.getMetricProfile(metricProfileName);
             if (null == metricProfile) {
                 LOGGER.error("MetricProfile does not exist or is not valid: {}", metricProfileName);
                 return;

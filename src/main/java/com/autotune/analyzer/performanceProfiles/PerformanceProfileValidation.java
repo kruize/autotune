@@ -410,7 +410,7 @@ public class PerformanceProfileValidation {
                 }
                 // check if the performance profile already exists
                 if (ProfileService.isExists(metricProfile.getName())) {
-                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METRIC_PROFILE).append(metricProfile.getMetadata().get("name").asText());
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METRIC_PROFILE).append(metricProfile.getName());
                     return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
                 }
 

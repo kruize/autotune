@@ -12,8 +12,8 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ProfileService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileService.class);
-    private static volatile Map<String, PerformanceProfile> performanceProfileMap;
-    private static volatile Map<String, PerformanceProfile> metricProfileMap;
+    private static volatile ConcurrentHashMap<String, PerformanceProfile> performanceProfileMap;
+    private static volatile ConcurrentHashMap<String, PerformanceProfile> metricProfileMap;
 
     private static void init() {
         if (null == performanceProfileMap || null == metricProfileMap) {
@@ -59,7 +59,7 @@ public class ProfileService {
         performanceProfileMap.put(performanceProfile.getName(), performanceProfile);
     }
 
-    public static Map<String, PerformanceProfile> getPerformanceProfileMap() {
+    public static ConcurrentHashMap<String, PerformanceProfile> getPerformanceProfileMap() {
         init();
         LOGGER.info("Retrieve performance profile cache. Current size : {}", performanceProfileMap.size());
         return performanceProfileMap;
@@ -83,7 +83,7 @@ public class ProfileService {
         return metricProfileMap.put(metricProfile.getName(), metricProfile) != null;
     }
 
-    public static Map<String, PerformanceProfile> getMetricProfileMap() {
+    public static ConcurrentHashMap<String, PerformanceProfile> getMetricProfileMap() {
         init();
         LOGGER.info("Retrieve metric profile cache. Current size : {}", metricProfileMap.size());
         return metricProfileMap;
