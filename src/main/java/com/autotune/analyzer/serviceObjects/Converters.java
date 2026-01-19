@@ -1,6 +1,9 @@
 package com.autotune.analyzer.serviceObjects;
 
 import com.autotune.analyzer.exceptions.InvalidValueException;
+import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
+import com.autotune.analyzer.kruizeLayer.*;
+import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
 import com.autotune.analyzer.kruizeObject.*;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
@@ -536,6 +539,76 @@ public class Converters {
                 metadataProfile = new MetadataProfile(apiVersion, kind, metadata, profileVersion, k8sType, datasource, queryVariablesList);
             }
             return metadataProfile;
+        }
+
+        public static KruizeLayer convertInputJSONToCreateLayer(String inputData) throws Exception, MonitoringAgentNotSupportedException {
+            KruizeLayer kruizeLayer = null;
+
+            if (inputData != null) {
+                JSONObject jsonObject = new JSONObject(inputData);
+                String apiVersion = jsonObject.getString(AnalyzerConstants.API_VERSION);
+                String kind = jsonObject.getString(AnalyzerConstants.KIND);
+
+                // Parse metadata
+                JSONObject metadataObject = jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
+                String name = metadataObject.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
+
+                // Parse basic layer fields
+                String layerName = jsonObject.getString("layer_name");
+                int layerLevel = jsonObject.getInt("layer_level");
+                String details = jsonObject.has("details") ? jsonObject.getString("details") : null;
+
+                // Parse layer_presence
+                String presence = null;
+                List<LayerPresenceQuery> queries = null;
+                String labelName = null;
+                String labelValue = null;
+
+                if (jsonObject.has("layer_presence")) {
+                    JSONObject layerPresenceObject = jsonObject.getJSONObject("layer_presence");
+                    presence = layerPresenceObject.has("presence") ? layerPresenceObject.getString("presence") : null;
+
+                    // Parse queries array if present
+                    if (layerPresenceObject.has("queries")) {
+                        JSONArray queriesArray = layerPresenceObject.getJSONArray("queries");
+                        queries = new ArrayList<>();
+                        for (Object queryObj : queriesArray) {
+                            JSONObject queryJsonObject = (JSONObject) queryObj;
+                            String datasource = queryJsonObject.getString("datasource");
+                            String query = queryJsonObject.getString("query");
+                            String key = queryJsonObject.has("key") ? queryJsonObject.getString("key") : null;
+                            LayerPresenceQuery layerPresenceQuery = new LayerPresenceQuery(datasource, query, key);
+                            queries.add(layerPresenceQuery);
+                        }
+                    }
+
+                    // Parse label array if present
+                    if (layerPresenceObject.has("label")) {
+                        JSONArray labelArray = layerPresenceObject.getJSONArray("label");
+                        if (labelArray.length() > 0) {
+                            JSONObject labelObject = labelArray.getJSONObject(0);
+                            labelName = labelObject.getString("name");
+                            labelValue = labelObject.getString("value");
+                        }
+                    }
+                }
+
+                // Parse tunables array
+                ArrayList<Tunable> tunables = null;
+                if (jsonObject.has("tunables")) {
+                    JSONArray tunablesArray = jsonObject.getJSONArray("tunables");
+                    tunables = new ArrayList<>();
+                    for (Object tunableObj : tunablesArray) {
+                        JSONObject tunableJsonObject = (JSONObject) tunableObj;
+                        Tunable tunable = new Gson().fromJson(tunableJsonObject.toString(), Tunable.class);
+                        tunables.add(tunable);
+                    }
+                }
+
+                kruizeLayer = new KruizeLayer(name, null, apiVersion, kind, layerName, layerLevel,
+                        details, presence, queries, labelName, labelValue, tunables);
+            }
+            return kruizeLayer;
         }
 
 

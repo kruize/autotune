@@ -362,8 +362,11 @@ public class AnalyzerErrorConstants {
         }
 
         public static final class CreateLayerAPI {
-            private CreateLayerAPI() {
+            public CreateLayerAPI() {
             }
+            public static final String INVALID_LAYER_JSON = "Invalid Layer JSON";
+            public static final String LAYER_ALREADY_EXISTS = "Layer already exists with name: %s";
+            public static final String ADD_LAYER_TO_DB_FAILURE = "Failed to add layer to database: %s";
 
             // Tunable validation errors
             public static final String TUNABLE_MIXED_CONFIG = "Tunable '%s' cannot have both categorical choices and numeric bounds/step configured. Use either choices for categorical or upper_bound/lower_bound/step for numeric tunables.";
@@ -381,6 +384,18 @@ public class AnalyzerErrorConstants {
             // Categorical validation errors
             public static final String TUNABLE_EMPTY_CHOICES = "Tunable '%s' is categorical but has null or empty choices list";
         }
+
+    public static final class ListLayerAPI {
+        public ListLayerAPI() {
+        }
+        public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+        public static final String INVALID_LAYER_NAME_EXCPTN = "Invalid Layer Name";
+        public static final String INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exist or is not valid";
+        public static final String NO_LAYERS_EXCPTN = "No layers";
+        public static final String NO_LAYERS = "No layers found!";
+        public static final String LOAD_LAYER_ERROR = "Failed to load layer data: %s";
+        public static final String LOAD_ALL_LAYERS_ERROR = "Failed to load all layers: %s";
+    }
     }
 
     public static final class ConversionErrors {
