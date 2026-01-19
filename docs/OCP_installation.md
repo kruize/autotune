@@ -19,14 +19,14 @@ For operator source code, see the [kruize-operator repository](https://github.co
 2. Search for **kruize**
 3. Click the **Kruize Operator** tile, it should be the community version.
 4. Click **Install**
-![KruizeOperator_install.png](images/KruizeOperator_install.png)
+![Install.png](images/Install_operator.png)
 5. Configure:
    - **Update approval**: Automatic (recommended)
    - **Namespace**: openshift-tuning (recommended)
 6. Click **Install** and wait for the status to show **Succeeded**.
 
 
-Once the kruize operator is up and running you can follow the next steps to install kruize.
+Once the Kruize operator is up and running you can follow the next steps to install Kruize.
 
 ### Step 2: Create Kruize Instance
 
@@ -144,7 +144,7 @@ Now that the profiles are installed, you can access the Kruize UI:
 
 ### Create Experiment via UI
 
-1. In the Kruize UI, click **DataSources** in the left sidebar. You will see your connected datasource (e.g., `prometheus-1`)
+1. In the Kruize UI, click **DataSources** in the left sidebar. You will see your connected data source (e.g., `prometheus-1`)
 2. Click the **Import Metadata** button. Find the workload you want to optimize (e.g., `aws-ebs-csi-driver-controller`)
 3. Click the **Plus (+)** icon next to that workload. Kruize will automatically generate the experiment JSON
 
@@ -162,7 +162,7 @@ Now that the profiles are installed, you can access the Kruize UI:
 1. Click **Experiments** in the left sidebar
 2. Click on your experiment name (e.g., `aws-ebs-csi-driver-node`)
 3. You should see: **"Generating Recommendations"** 
-![Recommendations_ui.png](images/Recommendations_ui.png)
+![Recommendations_ui.png](images/Recommendations_kruizeui.png)
 - **Note**: If you see "CPU Usage is less than a millicore", the workload is idle but data collection is active
 4. Toggle between **Cost Optimizations** and **Performance Optimizations** tabs
 5. Review the CPU/Memory suggestions:

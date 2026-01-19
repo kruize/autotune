@@ -54,31 +54,33 @@ git clone git@github.com:kruize/benchmarks.git
 cd autotune
 ```
 
-Kruize can be installed on kind, minikube or OpenShift, over here we are using kind to show the installation process.
+Kruize can be installed on kind, minikube, or OpenShift. In this guide, we use kind to show the installation process.
 
 ### Install Kruize
 
-```bash 
-./deploy.sh -c <cluster-type> -m crc
-# cluster-type can be: kind, minikube, openshift
+```bash
+./deploy.sh -c kind -m crc
+# For other cluster types, use: ./deploy.sh -c minikube or ./deploy.sh -c openshift
 ```
 
 ### Install Metadata and Metric Profiles
 **Metadata Profile**: Contains queries to collect namespace, workload and container data from your monitoring system. It tells Kruize how to fetch metrics from your specific environment (Prometheus/Thanos endpoints, query formats, cluster-specific labels). Without it, Kruize cannot retrieve data even if the metrics exist.
 
-Install metadata profile
+Install metadata profile:
 ```bash
-curl -X POST http://${KRUIZE_URL}/createMetadataProfile 
--d @autotune/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json
+curl -X POST http://${KRUIZE_URL}/createMetadataProfile \
+  -H "Content-Type: application/json" \
+  -d @manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json
 ```
 
 **Metric Profile**: Defines what metrics to monitor (CPU, memory, response time) and optimization goals (minimize cost, maintain performance SLOs). It tells Kruize what "good performance" means for your application. Without it, Kruize cannot determine the right trade-offs between cost and performance.
 
-Install metric profile
+Install metric profile:
 
 ```bash
 curl -X POST http://${KRUIZE_URL}/createMetricProfile \
-  -d @autotune/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json
+  -H "Content-Type: application/json" \
+  -d @manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json
 ```
 
 ### Create Experiment
