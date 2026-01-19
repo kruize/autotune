@@ -426,6 +426,7 @@ public class PerformanceProfileValidation {
                 }
             }
         } catch (Exception e){
+            LOGGER.error("Exception occurred while validating metric profile data", e);
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage(errorString.toString());
             validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

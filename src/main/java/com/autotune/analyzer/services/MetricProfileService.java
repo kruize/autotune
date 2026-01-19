@@ -88,7 +88,9 @@ public class MetricProfileService extends HttpServlet {
             Map<String, PerformanceProfile> metricProfilesMap = new ConcurrentHashMap<>();
             String inputData = request.getReader().lines().collect(Collectors.joining());
             PerformanceProfile metricProfile = Converters.KruizeObjectConverters.convertInputJSONToCreateMetricProfile(inputData);
+            LOGGER.info("Metric Profile : {} # {}", metricProfile.getName(), metricProfile.getMetadata().get("name"));
             ValidationOutputData validationOutputData = PerformanceProfileUtil.validateAndAddMetricProfile(metricProfilesMap, metricProfile);
+            LOGGER.info("Metric Profile is valid? {}", validationOutputData.isSuccess());
             if (validationOutputData.isSuccess()) {
                 ValidationOutputData addedToDB = new ExperimentDBService().addMetricProfileToDB(metricProfile);
                 if (addedToDB.isSuccess()) {
