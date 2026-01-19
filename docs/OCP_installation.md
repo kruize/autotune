@@ -13,37 +13,11 @@ For operator source code, see the [kruize-operator repository](https://github.co
 
 ## Installing Kruize Operator and Kruize
 
-### Step 1: Add OperatorHub.io Catalog Source
+### Step 1: Install Kruize Operator
 
-1. Log in to OpenShift Console as Administrator
-2. Click the **Plus (+) icon** (Import YAML) in the top-right
-3. Paste and create:
-
-```yaml
-apiVersion: operators.coreos.com/v1alpha1
-kind: CatalogSource
-metadata:
-  name: operatorhubio-catalog
-  namespace: openshift-marketplace
-spec:
-  sourceType: grpc
-  image: quay.io/operatorhubio/catalog:latest
-  displayName: OperatorHub.io Community
-  publisher: OperatorHub.io
-```
-
-4. Wait 1-2 minutes for catalog sync
-
-Verify:
-```bash
-oc get catalogsource -n openshift-marketplace
-```
-
-### Step 2: Install Kruize Operator
-
-1. Navigate to **Operators → OperatorHub**
+1. Navigate to **Ecosystem → OperatorHub/Software Catalog**
 2. Search for **kruize**
-3. Click the **Kruize Operator** tile
+3. Click the **Kruize Operator** tile, it should be the community version.
 4. Click **Install**
 ![KruizeOperator_install.png](images/KruizeOperator_install.png)
 5. Configure:
@@ -54,9 +28,9 @@ oc get catalogsource -n openshift-marketplace
 
 Once the kruize operator is up and running you can follow the next steps to install kruize.
 
-### Step 3: Create Kruize Instance
+### Step 2: Create Kruize Instance
 
-1. Navigate to **Operators → Installed Operators**
+1. Navigate to **Ecosystem → Installed Operators**
 2. Click **Kruize Operator**
 3. Click **Create instance**
 4. Review the YAML and click **Create**
@@ -68,41 +42,80 @@ oc get pods -n openshift-tuning
 
 ## Accessing Kruize UI
 
-### Step 1: Expose Kruize Services
+### Step 1: Create Routes via OpenShift Console
 
-Kruize has two services which can be exposed:
-- **kruize-ui-nginx-service** - The web UI 
-- **kruize** - The backend Kruize Service
+Since the operator does not expose the services by default, you must create routes manually through the OpenShift Console. You need to create two routes: one for the API (to install profiles) and one for the UI (to view the dashboard).
 
-Get routes for both:
+**Navigate to Routes:**
 
-```bash
-# Expose the UI service
-oc expose svc/kruize-ui-nginx-service -n openshift-tuning
+1. In the Administrator perspective, go to **Networking → Routes**.
+2. Ensure the **Project** dropdown at the top is set to **openshift-tuning** (or your installation namespace).
+3. Click the **Plus (+) icon** (Import YAML) in the top-right.
 
-# Expose the API service (needed for profiles installation)
-oc expose svc/kruize -n openshift-tuning
+**Create the API Route:**
 
-# Get the UI URL
-export KRUIZE_UI_URL="http://$(oc get route kruize-ui-nginx-service -n openshift-tuning -o jsonpath='{.spec.host}')"
+Paste this YAML and click **Create** to create the Kruize API route:
 
-# Get the API URL
-export KRUIZE_URL="http://$(oc get route kruize -n openshift-tuning -o jsonpath='{.spec.host}')"
-
+```yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: kruize-route
+  namespace: openshift-tuning
+spec:
+  to:
+    kind: Service
+    name: kruize
+  port:
+    targetPort: kruize-port
 ```
 
-### Step 2: Access Kruize UI in Browser
+**Create the UI Route:**
 
-1. Copy the **Kruize UI URL** displayed from the command above
-2. Open your web browser
-3. Paste the URL and press Enter
-4. You should see the Kruize dashboard with tabs for DataSources, Experiments, and more
+Click the **Plus (+) icon** again, paste this YAML and click **Create** to create the Kruize UI route:
 
-Then open `http://<KRUIZE_UI_URL>` in your browser.
+```yaml
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: kruize-ui-route
+  namespace: openshift-tuning
+spec:
+  to:
+    kind: Service
+    name: kruize-ui-nginx-service
+  port:
+    targetPort: 8080
+```
 
-### Step 3: Install Required Profiles
+### Step 2: Configure API URL for Profile Installation
+
+After creating the routes, you need to export the Kruize API URL for use in profile installation.
+
+1. Navigate to **Networking → Routes** in the OpenShift Console (if not already there).
+2. Copy the URL under the **Location** column for **kruize-route**.
+3. Run the following command in your terminal (replace with your copied URL):
+
+```bash
+export KRUIZE_URL="<PASTE_YOUR_KRUIZE_ROUTE_URL_HERE>"
+```
+
+**Note**: This variable is required for installing profiles in the next steps.
+
+### Step 3: Clone Kruize Repository
+
+To install the required profiles, you need to clone the Kruize repository:
+
+```bash
+git clone https://github.com/kruize/autotune.git
+cd autotune
+```
+
+### Step 4: Install Required Profiles
 
 Before creating experiments, you must install Metadata and Metric profiles. These define how Kruize collects and analyzes metrics.
+
+**Note**: Make sure you are in the `autotune` directory cloned in the previous step.
 
 ```bash
 # Install Metadata Profile
@@ -117,6 +130,15 @@ curl -X POST "${KRUIZE_URL}/createMetricProfile" \
 ```
 
 **Note**: If you receive a "Profile already exists" error, you can safely ignore it.
+
+### Step 5: Access Kruize UI in Browser
+
+Now that the profiles are installed, you can access the Kruize UI:
+
+1. Navigate to **Networking → Routes** in the OpenShift Console
+2. Copy the URL under the **Location** column for **kruize-ui-route**
+3. Open your web browser and paste the URL
+4. You should see the Kruize dashboard with tabs for DataSources, Experiments, and more
 
 ## Using Kruize UI
 

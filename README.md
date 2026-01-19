@@ -28,7 +28,7 @@ Kruize can be installed via the Kruize operator which simplifies deployment and 
 Here is the documentation for installing Kruize via Operator [OCP_installation.md](/docs/OCP_installation.md).
 
 ### Standalone Demo
-Kruize has a demos repo that enables users to get a quick start without worrying about the setup and its a great first step for first time users.
+Kruize has a demos repo that enables users to get a quick start without worrying about the setup, and it's a great first-step for first time users.
 You can start by running the [Local Monitoring demo](https://github.com/kruize/kruize-demos/tree/main/monitoring/local_monitoring).
 
 We recommend you check out the [kruize-demos](https://github.com/kruize/kruize-demos) repo in case you want to know more about VPA demo, GPU demo, HPO demo and a lot more!
@@ -36,19 +36,19 @@ We recommend you check out the [kruize-demos](https://github.com/kruize/kruize-d
 ## Generating Recommendations with Kruize
 This guide provides step-by-step instructions for manual setup. For automated setup, skip to the section below.
 
-### Pre-requisites
+### Prerequisites
 You need access to any Kubernetes environment like Kind, Minikube, or OpenShift with Prometheus running in the cluster.
 
-To install Prometheus use the following scripts for [Kind](/scripts/prometheus_on_kind.sh) or [Minikube](/scripts/prometheus_on_minikube.sh). OpenShift installs prometheus by default.
+To install Prometheus, use the following scripts for [Kind](/scripts/prometheus_on_kind.sh) or [Minikube](/scripts/prometheus_on_minikube.sh). OpenShift installs Prometheus by default.
 
 Follow [benchmarks installation](https://github.com/kruize/benchmarks) instructions to install sysbench benchmark.
 
 The following instructions assume that a Kubernetes cluster and Prometheus are installed on your machine, and the application for which you want to generate recommendations has been running for at least 30 minutes.
 
 ### Clone Repositories
-Clone the Autotune & Benchmarks Repository using the following commands:
+Clone the Kruize & Benchmarks repositories using the following commands:
 
-```angular2html
+```bash
 git clone git@github.com:kruize/autotune.git
 git clone git@github.com:kruize/benchmarks.git
 cd autotune
@@ -58,7 +58,7 @@ Kruize can be installed on kind, minikube or OpenShift, over here we are using k
 
 ### Install Kruize
 
-```angular2html
+```bash 
 ./deploy.sh -c <cluster-type> -m crc
 # cluster-type can be: kind, minikube, openshift
 ```
@@ -67,16 +67,16 @@ Kruize can be installed on kind, minikube or OpenShift, over here we are using k
 **Metadata Profile**: Contains queries to collect namespace, workload and container data from your monitoring system. It tells Kruize how to fetch metrics from your specific environment (Prometheus/Thanos endpoints, query formats, cluster-specific labels). Without it, Kruize cannot retrieve data even if the metrics exist.
 
 Install metadata profile
-```angular2html
-curl -X POST http://${KRUIZE_URL}/createMetadataProfile \
+```bash
+curl -X POST http://${KRUIZE_URL}/createMetadataProfile 
 -d @autotune/manifests/autotune/metadata-profiles/bulk_cluster_metadata_local_monitoring.json
 ```
 
-**Metric Profile**: Defines what metrics to monitor (CPU, memory, response time) and optimization goals (minimize cost, maintain performance SLOs). It tells Kuize what "good performance" means for your application. Without it, Kruize cannot determine the right trade-offs between cost and performance.
+**Metric Profile**: Defines what metrics to monitor (CPU, memory, response time) and optimization goals (minimize cost, maintain performance SLOs). It tells Kruize what "good performance" means for your application. Without it, Kruize cannot determine the right trade-offs between cost and performance.
 
 Install metric profile
 
-```angular2html
+```bash
 curl -X POST http://${KRUIZE_URL}/createMetricProfile \
   -d @autotune/manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json
 ```
@@ -85,8 +85,8 @@ curl -X POST http://${KRUIZE_URL}/createMetricProfile \
 
 - For container-level experiment
 
-This is the Create Experiment JSON having container related details. 
-```angular2html
+This is the Create Experiment JSON that has container-related details. 
+```json
 [{
   "version": "v2.0",
   "experiment_name": "monitor_sysbench",
@@ -118,14 +118,13 @@ This is the Create Experiment JSON having container related details.
 }]
 ```
 Command to create experiment:
-```angular2html
-curl -X POST http://${KRUIZE_URL}/createExperiment \
--d @container_experiment_sysbench.json
+```bash
+curl -X POST http://${KRUIZE_URL}/createExperiment -d @container_experiment_sysbench.json
 ```
 - For namespace-level experiment
 
 In the above json change the experiment name & modify the Kubernetes object to :
-```angular2html
+```json
 "kubernetes_objects": [
       {
         "namespaces": {
@@ -135,15 +134,14 @@ In the above json change the experiment name & modify the Kubernetes object to :
     ]
 ```
 Command to create namespace experiment:
-```angular2html
-curl -X POST http://${KRUIZE_URL}/createExperiment \
--d @namespace_experiment_sysbench.json
+```bash
+curl -X POST http://${KRUIZE_URL}/createExperiment -d @namespace_experiment_sysbench.json
 ```
 
 ### Generate Recommendations
 Wait for at least 2 data points to be collected (approx. 30 minutes with default settings), then:
 
-```angular2html
+```bash
 # Generate recommendations for container experiment
 curl -X POST "http://${KRUIZE_URL}/generateRecommendations?experiment_name=<experiment-name>"
 
@@ -153,9 +151,9 @@ curl -X GET "http://${KRUIZE_URL}/listRecommendations?experiment_name=<experimen
 
 You can also take a look at the UI to better understand recommendations.
 
-## Autotune Architecture
+## Kruize Architecture
 
-See the [Autotune Architecture](/design/README.md) for more details on the architecture.
+See the [Kruize Architecture](/design/README.md) for more details on the architecture.
 
 ## API Documentation
 For complete API specifications and examples, see the [Kruize API Documentation](design/KruizeLocalAPI.md).
