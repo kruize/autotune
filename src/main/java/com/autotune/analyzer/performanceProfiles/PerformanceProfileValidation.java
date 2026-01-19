@@ -410,7 +410,11 @@ public class PerformanceProfileValidation {
                     errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRIC_PROFILE_METADATA);
                 }
                 // check if the performance profile already exists
+<<<<<<< HEAD
                 if (ProfileCache.isExists(metricProfile.getName(), ProfileType.METRIC)) {
+=======
+                if (ProfileService.isExists(metricProfile.getName())) {
+>>>>>>> dac025e6 (Additional changes)
                     errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METRIC_PROFILE).append(metricProfile.getName());
                     return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
                 }
