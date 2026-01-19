@@ -17,7 +17,7 @@ For operator source code, see the [kruize-operator repository](https://github.co
 
 1. Navigate to **Ecosystem → OperatorHub/Software Catalog**
 2. Search for **kruize**
-3. Click the **Kruize Operator** tile, it should be the community version.
+3. Click the **Kruize Operator** tile. It should be the community version.
 4. Click **Install**
 ![Install.png](images/Install_operator.png)
 5. Configure:
