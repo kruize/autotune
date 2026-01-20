@@ -41,7 +41,7 @@ You need access to any Kubernetes environment like Kind, Minikube, or OpenShift 
 
 To install Prometheus, use the following scripts for [Kind](/scripts/prometheus_on_kind.sh) or [Minikube](/scripts/prometheus_on_minikube.sh). OpenShift installs Prometheus by default.
 
-Follow [benchmarks installation](https://github.com/kruize/benchmarks) instructions to install sysbench benchmark.
+Follow [benchmarks installation](https://github.com/kruize/benchmarks/tree/master/sysbench) instructions to install sysbench benchmark.
 
 The following instructions assume that a Kubernetes cluster and Prometheus are installed on your machine, and the application for which you want to generate recommendations has been running for at least 30 minutes.
 
@@ -94,6 +94,21 @@ Install metric profile:
 curl -X POST http://${KRUIZE_URL}/createMetricProfile \
   -H "Content-Type: application/json" \
   -d @manifests/autotune/performance-profiles/resource_optimization_local_monitoring.json
+```
+Import metadata: Imports metadata from your datasource to discover workloads running in your cluster.
+
+```bash
+curl -X POST http://${KRUIZE_URL}/dsmetadata \
+  -H 'Accept: application/json' \
+  --data 'copy paste below JSON' 
+```
+```json 
+{
+"version": "v1.0",
+"datasource_name": "prometheus-1",
+"metadata_profile": "cluster-metadata-local-monitoring",
+"measurement_duration": "15min"
+}
 ```
 
 ### Create Experiment
