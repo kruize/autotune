@@ -63,6 +63,10 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class CreateExperiment extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
+    
+    // Singleton instances to avoid creating new objects on each request
+    private static final Gson gson = new Gson();
+    private static final ExperimentDBService experimentDBService = new ExperimentDBService();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -92,7 +96,34 @@ public class CreateExperiment extends HttpServlet {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
             inputData = request.getReader().lines().collect(Collectors.joining());
-            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(gson.fromJson(inputData, CreateExperimentAPIObject[].class));
+            
+            // Early check: Verify if any experiments already exist (avoid unnecessary processing)
+            String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
+            boolean rmTable = (null != rm && AnalyzerConstants.BooleanString.TRUE.equalsIgnoreCase(rm.trim()));
+            for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                String experimentName = createExperimentAPIObject.getExperimentName();
+                if (experimentName != null) {
+                    Map<String, KruizeObject> tempExpMap = new ConcurrentHashMap<>();
+                    try {
+                        // Check if experiment exists in database
+                        if (rmTable) {
+                            experimentDBService.loadExperimentFromDBByName(tempExpMap, experimentName);
+                        } else {
+                            experimentDBService.loadLMExperimentFromDBByName(tempExpMap, experimentName);
+                        }
+                        // If experiment found, return 409 Conflict
+                        if (!tempExpMap.isEmpty()) {
+                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                            return;
+                        }
+                    } catch (Exception e) {
+                        // If DB query fails, log and continue with normal validation
+                        LOGGER.debug("Database check for experiment {} failed: {}", experimentName, e.getMessage());
+                    }
+                }
+            }
+            
             // check for bulk entries and respond accordingly
             if (createExperimentAPIObjects.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
@@ -138,7 +169,7 @@ public class CreateExperiment extends HttpServlet {
                                 .findAny()
                                 .orElse(null);
                         validAPIObj.setValidationData(ko.getValidation_data());
-                        addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+                        addedToDB = experimentDBService.addExperimentToDB(validAPIObj);
                     }
                     if (addedToDB.isSuccess()) {
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
@@ -181,7 +212,7 @@ public class CreateExperiment extends HttpServlet {
         boolean rmTable = (null != rm && AnalyzerConstants.BooleanString.TRUE.equalsIgnoreCase(rm.trim()));
         try {
             inputData = request.getReader().lines().collect(Collectors.joining());
-            CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
+            CreateExperimentAPIObject[] createExperimentAPIObjects = gson.fromJson(inputData, CreateExperimentAPIObject[].class);
             if (createExperimentAPIObjects.length > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
@@ -189,9 +220,9 @@ public class CreateExperiment extends HttpServlet {
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                     try {
                         if(rmTable) {
-                            new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                            experimentDBService.loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
                         } else {
-                            new ExperimentDBService().loadLMExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                            experimentDBService.loadLMExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
                         }
                     } catch (Exception e) {
                         LOGGER.error("Loading saved experiment {} failed: {} ", ko.getExperimentName(), e.getMessage());
@@ -229,7 +260,7 @@ public class CreateExperiment extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_CREATED);
         PrintWriter out = response.getWriter();
         out.append(
-                new Gson().toJson(
+                gson.toJson(
                         new KruizeResponse(message + " View registered experiments at /listExperiments", HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
