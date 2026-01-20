@@ -249,6 +249,19 @@ data:
                 "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
               }
           }
+        },
+        {
+          "name": "thanos-1",
+          "provider": "prometheus",
+          "serviceName": "thanos-querier",
+          "namespace": "openshift-monitoring",
+          "url": "",
+          "authentication": {
+              "type": "bearer",
+              "credentials": {
+                "tokenFilePath": "/var/run/secrets/kubernetes.io/serviceaccount/token"
+              }
+          }
         }
       ]
     }
@@ -350,7 +363,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.8
+          image: quay.io/kruize/autotune_operator:0.8.1
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
@@ -430,7 +443,7 @@ spec:
         spec:
           containers:
             - name: kruizecronjob
-              image: quay.io/kruize/autotune_operator:0.8
+              image: quay.io/kruize/autotune_operator:0.8.1
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume
@@ -471,7 +484,7 @@ spec:
         spec:
           containers:
             - name: kruizedeletejob
-              image: quay.io/kruize/autotune_operator:0.8
+              image: quay.io/kruize/autotune_operator:0.8.1
               imagePullPolicy: Always
               volumeMounts:
                 - name: config-volume

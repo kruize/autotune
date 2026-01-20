@@ -15,9 +15,6 @@
  *******************************************************************************/
 package com.autotune.analyzer.application;
 
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * ApplicationDeployment contains the details of a deployment associated with an AutotuneObject
  */
@@ -26,15 +23,12 @@ public class ApplicationDeployment {
 	private final String experimentName;
 	private final String namespace;
 	private String status;
-	private Map<String, ApplicationServiceStack> applicationServiceStackMap;
 
 	public ApplicationDeployment(String deploymentName, String experimentName, String namespace, String status) {
 		this.deploymentName = deploymentName;
 		this.experimentName = experimentName;
 		this.namespace = namespace;
 		this.status = status;
-
-		this.applicationServiceStackMap = new HashMap<>();
 	}
 
 	public String getDeploymentName() {
@@ -53,7 +47,4 @@ public class ApplicationDeployment {
 		this.status = status;
 	}
 
-	public Map<String, ApplicationServiceStack> getApplicationServiceStackMap() {
-		return applicationServiceStackMap;
-	}
 }

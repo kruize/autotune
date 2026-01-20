@@ -18,7 +18,6 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
-import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -37,7 +36,6 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.TrialHelpers;
 import com.google.gson.*;
 import io.micrometer.core.instrument.Timer;
 import org.json.JSONArray;
@@ -54,7 +52,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static com.autotune.analyzer.experiment.Experimentator.experimentsMap;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
 
 /**
@@ -201,7 +198,7 @@ public class ListExperiments extends HttpServlet {
                                 // Modify the JSON response here based on query params.
                                 gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName, rmTable);
                                 if (gsonStr.isEmpty()) {
-                                    gsonStr = generateDefaultResponse();
+                                    gsonStr = "[]";
                                 }
                                 response.getWriter().println(gsonStr);
                                 response.getWriter().close();
@@ -285,19 +282,6 @@ public class ListExperiments extends HttpServlet {
 
     private boolean isValidBooleanValue(String value) {
         return value != null && (value.equals("true") || value.equals("false"));
-    }
-
-    private String generateDefaultResponse() {
-        JSONArray experimentTrialJSONArray = new JSONArray();
-        for (String deploymentName : experimentsMap.keySet()) {
-            KruizeExperiment kruizeExperiment = experimentsMap.get(deploymentName);
-            for (int trialNum : kruizeExperiment.getExperimentTrials().keySet()) {
-                ExperimentTrial experimentTrial = kruizeExperiment.getExperimentTrials().get(trialNum);
-                JSONArray experimentTrialJSON = new JSONArray(TrialHelpers.experimentTrialToJSON(experimentTrial));
-                experimentTrialJSONArray.put(experimentTrialJSON.get(0));
-            }
-        }
-        return experimentTrialJSONArray.toString(4);
     }
 
     private void loadExperimentsFromDatabase(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
