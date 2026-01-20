@@ -25,6 +25,7 @@ import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.analyzer.utils.ExperimentCache;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
@@ -63,6 +64,12 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class CreateExperiment extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
+    
+    private final ExperimentCache experimentCache = new ExperimentCache();
+    
+    // Singleton instances to avoid creating new objects on each request
+    private final Gson gson = new Gson();
+    private final ExperimentDBService experimentDBService = new ExperimentDBService();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -92,7 +99,8 @@ public class CreateExperiment extends HttpServlet {
             // Set the character encoding of the request to UTF-8
             request.setCharacterEncoding(CHARACTER_ENCODING);
             inputData = request.getReader().lines().collect(Collectors.joining());
-            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(new Gson().fromJson(inputData, CreateExperimentAPIObject[].class));
+            List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(gson.fromJson(inputData, CreateExperimentAPIObject[].class));
+            
             // check for bulk entries and respond accordingly
             if (createExperimentAPIObjects.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
@@ -100,6 +108,16 @@ public class CreateExperiment extends HttpServlet {
             } else {
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
                 for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    // Check if experiment already exists before processing
+                    String experimentName = createExperimentAPIObject.getExperimentName();
+                    if (experimentName != null) {
+                        // Use ExperimentCache to check if experiment exists
+                        if (experimentCache.isExists(experimentName)) {
+                            LOGGER.debug("Experiment {} already exists, returning 409", experimentName);
+                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                            return;
+                        }
+                    }
                     createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
                     createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
                     // validating the kubernetes objects and experiment type
@@ -132,19 +150,25 @@ public class CreateExperiment extends HttpServlet {
                 KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidation_data().isSuccess())).findAny().orElse(null);
                 if (null == invalidKruizeObject) {
                     ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
+                    boolean allSuccessful = true;
                     for (KruizeObject ko : kruizeExpList) {
                         CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
                                 .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
                                 .findAny()
                                 .orElse(null);
                         validAPIObj.setValidationData(ko.getValidation_data());
-                        addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+                        addedToDB = experimentDBService.addExperimentToDB(validAPIObj);
+                        if (addedToDB.isSuccess()) {
+                            experimentCache.add(ko.getExperimentName());
+                        } else {
+                            allSuccessful = false;
+                        }
                     }
-                    if (addedToDB.isSuccess()) {
+                    if (allSuccessful) {
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
                         statusValue = "success";
                     } else {
-                        sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                        sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB != null ? addedToDB.getMessage() : "Failed to add experiments to database");
                     }
                 } else {
                     sendErrorResponse(inputData, response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
@@ -181,39 +205,30 @@ public class CreateExperiment extends HttpServlet {
         boolean rmTable = (null != rm && AnalyzerConstants.BooleanString.TRUE.equalsIgnoreCase(rm.trim()));
         try {
             inputData = request.getReader().lines().collect(Collectors.joining());
-            CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
+            CreateExperimentAPIObject[] createExperimentAPIObjects = gson.fromJson(inputData, CreateExperimentAPIObject[].class);
             if (createExperimentAPIObjects.length > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
             } else {
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
-                    try {
-                        if(rmTable) {
-                            new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
-                        } else {
-                            new ExperimentDBService().loadLMExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
-                        }
-                    } catch (Exception e) {
-                        LOGGER.error("Loading saved experiment {} failed: {} ", ko.getExperimentName(), e.getMessage());
-                    }
-                }
-
-                for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                     String expName = ko.getExperimentName();
-                    if (!mKruizeExperimentMap.isEmpty() && mKruizeExperimentMap.containsKey(expName)) {
-                        ValidationOutputData validationOutputData;
-                        if(rmTable) {
-                            validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
-                        } else {
-                            validationOutputData = new ExperimentDAOImpl().deleteKruizeLMExperimentEntryByName(expName);
-                        }
-                        if (validationOutputData.isSuccess()) {
-                            mKruizeExperimentMap.remove(ko.getExperimentName());
-                        } else {
-                            throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
-                        }
-                    } else
+                    
+                    // Use ExperimentCache to check if experiment exists (instead of loading from DB)
+                    if (!experimentCache.isExists(expName)) {
                         throw new Exception("Experiment not found!");
+                    }
+                    
+                    ValidationOutputData validationOutputData;
+                    if(rmTable) {
+                        validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
+                    } else {
+                        validationOutputData = new ExperimentDAOImpl().deleteKruizeLMExperimentEntryByName(expName);
+                    }
+                    if (validationOutputData.isSuccess()) {
+                        experimentCache.remove(expName);
+                    } else {
+                        throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
+                    }
                 }
                 sendSuccessResponse(response, "Experiment deleted successfully.");
             }
@@ -229,7 +244,7 @@ public class CreateExperiment extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_CREATED);
         PrintWriter out = response.getWriter();
         out.append(
-                new Gson().toJson(
+                gson.toJson(
                         new KruizeResponse(message + " View registered experiments at /listExperiments", HttpServletResponse.SC_CREATED, "", "SUCCESS")
                 )
         );
