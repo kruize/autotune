@@ -157,7 +157,7 @@ Now that the profiles are installed, you can access the Kruize UI:
 ### Create Experiment via UI
 
 1. In the Kruize UI, click **DataSources** in the left sidebar. You will see your connected data source (e.g., `prometheus-1`)
-2. Click the **Import Metadata** button. Find the workload you want to optimize (e.g., `aws-ebs-csi-driver-controller`)
+2. Click the **Import Metadata** button. Then click on the cluster name (eg. default). Find the workload you want to optimize (e.g., `aws-ebs-csi-driver-controller`)
 3. Click the **Plus (+)** icon next to that workload. Kruize will automatically generate the experiment JSON
 
 ![datasource_ui.png](images/datasource_ui.png)
