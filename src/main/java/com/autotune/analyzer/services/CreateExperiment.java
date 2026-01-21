@@ -98,39 +98,37 @@ public class CreateExperiment extends HttpServlet {
             inputData = request.getReader().lines().collect(Collectors.joining());
             List<CreateExperimentAPIObject> createExperimentAPIObjects = Arrays.asList(gson.fromJson(inputData, CreateExperimentAPIObject[].class));
             
-            // Early check: Verify if any experiments already exist (avoid unnecessary processing)
-            String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
-            boolean rmTable = (null != rm && AnalyzerConstants.BooleanString.TRUE.equalsIgnoreCase(rm.trim()));
-            for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
-                String experimentName = createExperimentAPIObject.getExperimentName();
-                if (experimentName != null) {
-                    Map<String, KruizeObject> tempExpMap = new ConcurrentHashMap<>();
-                    try {
-                        // Check if experiment exists in database
-                        if (rmTable) {
-                            experimentDBService.loadExperimentFromDBByName(tempExpMap, experimentName);
-                        } else {
-                            experimentDBService.loadLMExperimentFromDBByName(tempExpMap, experimentName);
-                        }
-                        // If experiment found, return 409 Conflict
-                        if (!tempExpMap.isEmpty()) {
-                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
-                            return;
-                        }
-                    } catch (Exception e) {
-                        // If DB query fails, log and continue with normal validation
-                        LOGGER.debug("Database check for experiment {} failed: {}", experimentName, e.getMessage());
-                    }
-                }
-            }
-            
             // check for bulk entries and respond accordingly
             if (createExperimentAPIObjects.size() > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
             } else {
+                // Get rm parameter for database mode selection
+                String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
+                boolean rmTable = (null != rm && AnalyzerConstants.BooleanString.TRUE.equalsIgnoreCase(rm.trim()));
+                
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
                 for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+                    // Check if experiment already exists before processing
+                    String experimentName = createExperimentAPIObject.getExperimentName();
+                    if (experimentName != null) {
+                        try {
+                            // Check if experiment exists in database
+                            if (rmTable) {
+                                experimentDBService.loadExperimentFromDBByName(mKruizeExperimentMap, experimentName);
+                            } else {
+                                experimentDBService.loadLMExperimentFromDBByName(mKruizeExperimentMap, experimentName);
+                            }
+                            // If experiment found, return 409 Conflict
+                            if (mKruizeExperimentMap.containsKey(experimentName)) {
+                                sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                                return;
+                            }
+                        } catch (Exception e) {
+                            // If DB query fails, log and continue with normal validation
+                            LOGGER.debug("Database check for experiment {} failed: {}", experimentName, e.getMessage());
+                        }
+                    }
                     createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
                     createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
                     // validating the kubernetes objects and experiment type
