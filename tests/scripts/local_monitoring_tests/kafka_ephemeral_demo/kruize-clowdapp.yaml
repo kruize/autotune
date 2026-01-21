@@ -1,0 +1,300 @@
+---
+apiVersion: v1
+kind: Template
+metadata:
+  name: kruize
+objects:
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdApp
+  metadata:
+    name: kruize
+  spec:
+    envName: ${ENV_NAME}
+    deployments:
+    - name: recommendations
+      replicas: ${{KRUIZE_REPLICA_COUNT}}
+      webServices:
+        private:
+          enabled: true
+      podSpec:
+        image: ${KRUIZE_IMAGE}:${KRUIZE_IMAGE_TAG}
+        command: ["sh"]
+        args: ["-c", "export DB_CONFIG_FILE=${ACG_CONFIG} && export KRUIZE_CONFIG_FILE=/etc/config/kruizeconfigjson && export datasource='[{ \"name\": \"thanos-ee-2\",\"provider\": \"prometheus\",\"serviceName\": \"\",\"namespace\": \"\",\"url\": \"http://thanos-query-frontend-thanos-bench.apps.kruize-scalelab.h0b5.p1.openshiftapps.com/\"}]' && bash target/bin/Autotune"]
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 10000
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 300
+          timeoutSeconds: 300
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 10000
+            scheme: HTTP
+          initialDelaySeconds: 30
+          periodSeconds: 300
+          timeoutSeconds: 5
+        env:
+          - name: JAVA_TOOL_OPTIONS
+            value: "-XX:MaxRAMPercentage=80"
+          - name: CLOWDER_ENABLED
+            value: ${CLOWDER_ENABLED}
+          - name: AUTOTUNE_SERVER_PORT
+            value: ${KRUIZE_PORT}
+          - name: AUTH_TOKEN
+            value: ""
+          - name: LOGGING_LEVEL
+            value: ${KRUIZE_LOGGING_LEVEL}
+          - name: ROOT_LOGGING_LEVEL
+            value: "error"
+          - name: dbdriver
+            value: "jdbc:postgresql://"
+          - name: clustertype
+            value: "kubernetes"
+          - name: k8stype
+            value: "openshift"
+          - name: authtype
+            value: "openshift"
+          - name: monitoringagent
+            value: "prometheus"
+          - name: monitoringservice
+            value: "prometheus-k8s"
+          - name: monitoringendpoint
+            value: "prometheus-k8s"
+          - name: savetodb
+            value: "true"
+          - name: local
+            value: "true"
+          - name: LOG_ALL_HTTP_REQ_AND_RESPONSE
+            value: "true"
+          - name: hibernate_dialect
+            value: "org.hibernate.dialect.PostgreSQLDialect"
+          - name: hibernate_driver
+            value: "org.postgresql.Driver"
+          - name: hibernate_c3p0minsize
+            value: "5"
+          - name: hibernate_c3p0maxsize
+            value: "10"
+          - name: hibernate_c3p0timeout
+            value: "300"
+          - name: hibernate_c3p0maxstatements
+            value: "100"
+          - name: hibernate_hbm2ddlauto
+            value: "none"
+          - name: hibernate_showsql
+            value: "false"
+          - name: hibernate_timezone
+            value: "UTC"
+          - name: SSL_CERT_DIR
+            value: ${SSL_CERT_DIR}
+          - name: logging_cloudwatch_logStream
+            value: ${KRUIZE_CW_LOG_STREAM}
+          - name: logging_cloudwatch_logLevel
+            value: ${KRUIZE_CW_LOGGING_LEVEL}
+          - name: plots
+            value: ${PLOTS_DATA}
+          - name: experimentsURL
+            value: "http://kruize-recommendations.ephemeral-2wiwwi.svc.cluster.local:10000/createExperiment"
+          - name: recommendationsURL
+            value: "http://kruize-recommendations.ephemeral-2wiwwi.svc.cluster.local:10000/generateRecommendations?experiment_name=%s"
+          - name: isKafkaEnabled
+            value: "true"
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            value: "env-ephemeral-2wiwwi-a5135414-kafka-bootstrap.ephemeral-2wiwwi.svc.cluster.local:9092"
+          - name: KAFKA_BOOTSTRAP_SERVERS
+            value: "env-ephemeral-2wiwwi-a5135414-kafka-bootstrap.ephemeral-2wiwwi.svc.cluster.local:9092"
+          - name: KAFKA_TOPICS
+            value: "recommendations-topic,error-topic,summary-topic"
+          - name: KAFKA_RESPONSE_FILTER_INCLUDE
+            value: "experiments|apis|recommendations|response"
+          - name: KAFKA_RESPONSE_FILTER_EXCLUDE
+            value: ""
+    kafkaTopics:
+      - topicName: recommendations-topic
+        partitions: 1
+      - topicName: error-topic
+        partitions: 1
+      - topicName: summary-topic
+        partitions: 1
+    jobs:
+      - name: delete-kruize-partitions
+        schedule: ${KRUIZE_PARTITION_INTERVAL}
+        podSpec:
+          name: kruizecrondeletejob
+          image: ${KRUIZE_IMAGE}:${KRUIZE_IMAGE_TAG}
+          imagePullPolicy: Always
+          restartPolicy: OnFailure
+          command: [ "sh" ]
+          args: [ "-c", "export DB_CONFIG_FILE=${ACG_CONFIG} && /home/autotune/app/target/bin/RetentionPartition" ]
+          env:
+            - name: CLOWDER_ENABLED
+              value: ${CLOWDER_ENABLED}
+            - name: SSL_CERT_DIR
+              value: ${SSL_CERT_DIR}
+            - name: START_AUTOTUNE
+              value: "false"
+            - name: LOGGING_LEVEL
+              value: "info"
+            - name: ROOT_LOGGING_LEVEL
+              value: "error"
+            - name: dbdriver
+              value: "jdbc:postgresql://"
+            - name: clustertype
+              value: "kubernetes"
+            - name: k8stype
+              value: "openshift"
+            - name: authtype
+              value: "openshift"
+            - name: monitoringagent
+              value: "prometheus"
+            - name: monitoringservice
+              value: "prometheus-k8s"
+            - name: monitoringendpoint
+              value: "prometheus-k8s"
+            - name: savetodb
+              value: "true"
+            - name: hibernate_dialect
+              value: "org.hibernate.dialect.PostgreSQLDialect"
+            - name: hibernate_driver
+              value: "org.postgresql.Driver"
+            - name: hibernate_c3p0minsize
+              value: "5"
+            - name: hibernate_c3p0maxsize
+              value: "10"
+            - name: hibernate_c3p0timeout
+              value: "300"
+            - name: hibernate_c3p0maxstatements
+              value: "100"
+            - name: hibernate_hbm2ddlauto
+              value: "none"
+            - name: hibernate_showsql
+              value: "false"
+            - name: hibernate_timezone
+              value: "UTC"
+            - name: deletepartitionsthreshold
+              value: "16"
+            - name: local
+              value: "false"
+      - name: create-kruize-partitions
+        schedule: "0 0 25 * *" # Run on 25th of every month at midnight
+        podSpec:
+          image: ${KRUIZE_IMAGE}:${KRUIZE_IMAGE_TAG}
+          command: ["sh"]
+          args: ["-c", "export DB_CONFIG_FILE=${ACG_CONFIG} && /home/autotune/app/target/bin/CreatePartition"]
+          env:
+            - name: CLOWDER_ENABLED
+              value: ${CLOWDER_ENABLED}
+            - name: SSL_CERT_DIR
+              value: ${SSL_CERT_DIR}
+            - name: START_AUTOTUNE
+              value: "false"
+            - name: LOGGING_LEVEL
+              value: "info"
+            - name: ROOT_LOGGING_LEVEL
+              value: "error"
+            - name: dbdriver
+              value: "jdbc:postgresql://"
+            - name: clustertype
+              value: "kubernetes"
+            - name: k8stype
+              value: "openshift"
+            - name: authtype
+              value: "openshift"
+            - name: monitoringagent
+              value: "prometheus"
+            - name: monitoringservice
+              value: "prometheus-k8s"
+            - name: monitoringendpoint
+              value: "prometheus-k8s"
+            - name: savetodb
+              value: "true"
+            - name: hibernate_dialect
+              value: "org.hibernate.dialect.PostgreSQLDialect"
+            - name: hibernate_driver
+              value: "org.postgresql.Driver"
+            - name: hibernate_c3p0minsize
+              value: "5"
+            - name: hibernate_c3p0maxsize
+              value: "10"
+            - name: hibernate_c3p0timeout
+              value: "300"
+            - name: hibernate_c3p0maxstatements
+              value: "100"
+            - name: hibernate_hbm2ddlauto
+              value: "none"
+            - name: hibernate_showsql
+              value: "false"
+            - name: hibernate_timezone
+              value: "UTC"
+            - name: local
+              value: "false"
+    database:
+      name: postgres
+      version: 13
+
+- apiVersion: cloud.redhat.com/v1alpha1
+  kind: ClowdJobInvocation
+  metadata:
+    name: create-kruize-partitions
+  spec:
+    appName: kruize
+    jobs:
+      - create-kruize-partitions
+
+parameters:
+- description : ClowdEnvironment name
+  name: ENV_NAME
+  required: true
+- description: Is clowder enabled
+  name: CLOWDER_ENABLED
+  value: "True"
+- description: Kruize image name
+  name: KRUIZE_IMAGE
+  required: true
+  value: quay.io/cloudservices/autotune
+- description: Kruize image tag
+  name: KRUIZE_IMAGE_TAG
+  required: true
+  value: "96be0e5"
+- description: Kruize server port
+  name: KRUIZE_PORT
+  required: true
+  value: "10000"
+- description: Initial kruize cpu request.
+  displayName: KRUIZE CPU Request
+  name: CPU_REQUEST_KRUIZE
+  required: true
+  value: 500m
+- description: Initial amount of memory kruize container will request.
+  displayName: KRUIZE Memory Request
+  name: MEMORY_REQUEST_KRUIZE
+  required: true
+  value: 1Gi
+- description: Maximum amount of CPU kruize container can use.
+  displayName: KRUIZE CPU Limit
+  name: CPU_LIMIT_KRUIZE
+  required: true
+  value: '1'
+- description: Maximum amount of memory kruize container can use.
+  displayName: KRUIZE Memory Limit
+  name: MEMORY_LIMIT_KRUIZE
+  required: true
+  value: 2Gi
+- description: Replica count for kruize pod
+  name: KRUIZE_REPLICA_COUNT
+  value: "1"
+- name: SSL_CERT_DIR
+  value: '/etc/ssl/certs:/etc/pki/tls/certs:/system/etc/security/cacerts:/cdapp/certs'
+- name: KRUIZE_LOGGING_LEVEL
+  value: "info"
+- name: KRUIZE_PARTITION_INTERVAL
+  value: "0 0 * * *" # Run the cronjob every day at midnight. Earlier it was set for 16th day
+- name: KRUIZE_CW_LOG_STREAM
+  value: "kruize-recommendations"
+- name: KRUIZE_CW_LOGGING_LEVEL
+  value: "INFO"
+- name: PLOTS_DATA
+  value: "false"
+
