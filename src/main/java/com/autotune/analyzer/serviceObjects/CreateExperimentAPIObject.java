@@ -63,6 +63,8 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
     public Timestamp creationDate;
     @SerializedName(KruizeConstants.JSONKeys.UPDATE_DATE)
     public Timestamp updateDate;
+    @SerializedName(KruizeConstants.JSONKeys.REQUEST_ID)
+    private String requestId; // this gets logged to uniquely identify each request
 
     public CreateExperimentAPIObject() {
     }
@@ -189,6 +191,10 @@ public class CreateExperimentAPIObject extends BaseSO implements ExperimentTypeA
 
     public void setUpdateDate(Timestamp updateDate) {
         this.updateDate = updateDate;
+    }
+
+    public String getRequestId() {
+        return requestId;
     }
 
     @Override

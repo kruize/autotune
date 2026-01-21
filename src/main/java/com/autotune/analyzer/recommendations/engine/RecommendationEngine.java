@@ -4,6 +4,7 @@ import com.autotune.analyzer.autoscaler.instaslice.InstasliceHelper;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
+import com.autotune.analyzer.experiment.ExperimentInitiator;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
@@ -73,13 +74,14 @@ public class RecommendationEngine {
     private Timestamp interval_end_time;
     private List<String> modelNames;
     private Map<String, RecommendationTunables> modelTunable;
+    private String requestId;
 
 
-    public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
+    public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr, String requestId) {
         this.experimentName = experimentName;
         this.intervalEndTimeStr = intervalEndTimeStr;
         this.intervalStartTimeStr = intervalStartTimeStr;
-
+        this.requestId = requestId;
     }
 
     private static int getNumPods(Map<Timestamp, IntervalResults> filteredResultsMap) {
@@ -293,6 +295,11 @@ public class RecommendationEngine {
 
         // Check if interval_start_time is provided
         // TODO: to be considered in future
+
+        // validate request_id, if present
+        if (requestId != null) {
+            validationFailureMsg = ExperimentInitiator.validateRequestId(requestId);
+        }
 
         return validationFailureMsg;
     }

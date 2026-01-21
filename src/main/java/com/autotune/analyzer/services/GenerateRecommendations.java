@@ -100,7 +100,7 @@ public class GenerateRecommendations extends HttpServlet {
             Timestamp interval_end_time, interval_start_time;
 
             // create recommendation engine object
-            RecommendationEngine recommendationEngine = new RecommendationEngine(experiment_name, intervalEndTimeStr, intervalStartTimeStr);
+            RecommendationEngine recommendationEngine = new RecommendationEngine(experiment_name, intervalEndTimeStr, intervalStartTimeStr, null);
             // validate and create KruizeObject if successful
             String validationMessage = recommendationEngine.validate_local();
             if (validationMessage.isEmpty()) {

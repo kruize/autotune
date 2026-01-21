@@ -33,7 +33,6 @@ import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -126,6 +125,10 @@ public class CreateExperiment extends HttpServlet {
                     KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
                     if (null != kruizeObject)
                         kruizeExpList.add(kruizeObject);
+                    // log request_id if available
+                    if (createExperimentAPIObject.getRequestId() != null) {
+                        LOGGER.info("request_id : {}", createExperimentAPIObject.getRequestId());
+                    }
                 }
                 new ExperimentInitiator().validateAndAddNewExperiments(mKruizeExperimentMap, kruizeExpList);
                 //TODO: UX needs to be modified - Handle response for the multiple objects

@@ -82,6 +82,7 @@ public final class KruizeObject implements ExperimentTypeAware {
     private transient String bulkJobId;
     private Timestamp creation_date;
     private Timestamp update_date;
+    private transient String requestId;
 
     public KruizeObject(String experimentName,
                         String clusterName,
@@ -398,6 +399,13 @@ public final class KruizeObject implements ExperimentTypeAware {
         this.metadataProfile = metadataProfile;
     }
 
+    public String getRequestId() {
+        return requestId;
+    }
+
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
+    }
 
     @Override
     public String toString() {

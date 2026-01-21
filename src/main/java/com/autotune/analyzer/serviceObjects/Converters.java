@@ -110,6 +110,8 @@ public class Converters {
                 }
                 kruizeObject.setCreation_date(createExperimentAPIObject.getCreationDate());
                 kruizeObject.setUpdate_date(createExperimentAPIObject.getUpdateDate());
+                // add request_id
+                kruizeObject.setRequestId(createExperimentAPIObject.getRequestId());
             } catch (Exception e) {
                 LOGGER.error("failed to convert CreateExperimentAPIObj To KruizeObject due to {} ", e.getMessage());
                 LOGGER.debug(createExperimentAPIObject.toString());

@@ -54,6 +54,8 @@ public class UpdateResultsAPIObject extends BaseSO {
     private List<KruizeResponse> errors;
 
     private KruizeObject kruizeObject;
+    @SerializedName(KruizeConstants.JSONKeys.REQUEST_ID)
+    private String requestId; // this gets logged to uniquely identify each request
 
     public Timestamp getStartTimestamp() {
         return startTimestamp;
@@ -107,6 +109,10 @@ public class UpdateResultsAPIObject extends BaseSO {
     public interface EvaluateRemainingConstraints {
     }
     public interface EvaluatePerformanceProfileConstraints {
+    }
+
+    public String getRequestId() {
+        return requestId;
     }
 
     @GroupSequence({UpdateResultsAPIObject.class, InitialValidation.class, EvaluatePerformanceProfileConstraints.class, EvaluateRemainingConstraints.class})

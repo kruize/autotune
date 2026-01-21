@@ -70,7 +70,7 @@ public class AutoscalerImpl implements Autoscaler {
         try {
             LOGGER.debug(AnalyzerConstants.AutoscalerConstants.InfoMsgs.GENERATING_RECOMMENDATIONS, experimentName);
             // generating latest recommendations for experiment
-            RecommendationEngine recommendationEngine = new RecommendationEngine(experimentName, null, null);
+            RecommendationEngine recommendationEngine = new RecommendationEngine(experimentName, null, null, null);
             int calCount = 0;
             String validationMessage = recommendationEngine.validate_local();
             if (validationMessage.isEmpty()) {

@@ -15,17 +15,15 @@
  *******************************************************************************/
 package com.autotune.analyzer.experiment;
 
-import com.autotune.analyzer.exceptions.InvalidModelException;
-import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.UpdateResultsAPIObject;
-import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.result.ExperimentResultData;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.Validation;
@@ -160,6 +158,18 @@ public class ExperimentInitiator {
                     failedUpdateResultsAPIObjects.add(object);
                     continue;
                 }
+                // log and validate requestId
+                if (null != object.getRequestId()) {
+                    String requestId = object.getRequestId();
+                    LOGGER.info("request_id : {}", requestId);
+                    errorMsg = validateRequestId(requestId);
+                    if (!errorMsg.isEmpty()) {
+                        errorReasons.add(errorMsg);
+                        object.setErrors(getErrorMap(errorReasons));
+                        failedUpdateResultsAPIObjects.add(object);
+                        continue;
+                    }
+                }
                 object.setKruizeObject(mainKruizeExperimentMAP.get(object.getExperimentName()));
                 Set<ConstraintViolation<UpdateResultsAPIObject>> violations = new HashSet<>();
                 try {
@@ -202,7 +212,7 @@ public class ExperimentInitiator {
             failedDBObjects = new ExperimentDBService().addResultsToDB(resultDataList);
             failedUpdateResultsAPIObjects.addAll(failedDBObjects);
         }
-        //Derive successful experiments by filtering out failed ones
+        // Derive successful experiments by filtering out failed ones
         Set<String> failedExperimentNames = failedUpdateResultsAPIObjects.stream()
                 .map(UpdateResultsAPIObject::getExperimentName)
                 .collect(Collectors.toSet());
@@ -259,6 +269,15 @@ public class ExperimentInitiator {
 
     public List<UpdateResultsAPIObject> getFailedUpdateResultsAPIObjects() {
         return failedUpdateResultsAPIObjects;
+    }
+
+    public static String validateRequestId(String requestId) {
+        String errorMessage = "";
+        String pattern = "^[a-zA-Z0-9]{" + KruizeConstants.KRUIZE_CONFIG_DEFAULT_VALUE.REQUEST_ID_LENGTH + "}$";
+        if (!requestId.matches(pattern)) {
+            errorMessage = KruizeConstants.ErrorMsgs.APIErrorMsgs.INVALID_REQUEST_ID;
+        }
+        return errorMessage;
     }
 
 
