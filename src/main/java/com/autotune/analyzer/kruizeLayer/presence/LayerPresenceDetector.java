@@ -37,6 +37,4 @@ public interface LayerPresenceDetector {
      * @throws Exception if detection fails due to connectivity or other issues
      */
     boolean detectPresence(String namespace, String workloadName) throws Exception;
-
-
 }
