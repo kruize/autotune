@@ -65,8 +65,8 @@ public class CreateExperiment extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
     
     // Singleton instances to avoid creating new objects on each request
-    private static final Gson gson = new Gson();
-    private static final ExperimentDBService experimentDBService = new ExperimentDBService();
+    private final Gson gson = new Gson();
+    private final ExperimentDBService experimentDBService = new ExperimentDBService();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
