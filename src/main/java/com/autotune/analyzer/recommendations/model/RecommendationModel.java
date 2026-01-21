@@ -20,6 +20,32 @@ public interface RecommendationModel {
 
     Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getAcceleratorRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications);
 
+     // CPU and Memory Limit recommendation methods with ratio-based calculation
+    RecommendationConfigItem getCPULimitRecommendation(
+            RecommendationConfigItem recommendedRequest,
+            RecommendationConfigItem currentRequest,
+            RecommendationConfigItem currentLimit,
+            ArrayList<RecommendationNotification> notifications);
+
+    RecommendationConfigItem getMemoryLimitRecommendation(
+            RecommendationConfigItem recommendedRequest,
+            RecommendationConfigItem currentRequest,
+            RecommendationConfigItem currentLimit,
+            ArrayList<RecommendationNotification> notifications);
+
+    // CPU and Memory Limit recommendation methods for Namespace with ratio-based calculation
+    RecommendationConfigItem getCPULimitRecommendationForNamespace(
+            RecommendationConfigItem recommendedRequest,
+            RecommendationConfigItem currentRequest,
+            RecommendationConfigItem currentLimit,
+            ArrayList<RecommendationNotification> notifications);
+
+    RecommendationConfigItem getMemoryLimitRecommendationForNamespace(
+            RecommendationConfigItem recommendedRequest,
+            RecommendationConfigItem currentRequest,
+            RecommendationConfigItem currentLimit,
+            ArrayList<RecommendationNotification> notifications);
+            
     public String getModelName();
     void validate();
 
