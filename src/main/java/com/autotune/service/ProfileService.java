@@ -37,55 +37,55 @@ public class ProfileService {
 
     public static boolean isExists(String profileName) {
         init();
-        LOGGER.info("Check for profile : {}", profileName);
+        LOGGER.info("[ProfileService] Check for profile : {}", profileName);
         return performanceProfileMap.containsKey(profileName) || metricProfileMap.containsKey(profileName);
     }
 
     public static PerformanceProfile getPerformanceProfile(String profileName) {
         init();
-        LOGGER.info("Retrieve performance profile : {}", profileName);
+        LOGGER.info("[ProfileService] Retrieve performance profile : {}", profileName);
         return performanceProfileMap.get(profileName);
     }
 
     public static void removePerformanceProfile(String  performanceProfileName) {
         init();
-        LOGGER.info("Delete performance profile : {}", performanceProfileName);
+        LOGGER.info("[ProfileService] Delete performance profile : {}", performanceProfileName);
         performanceProfileMap.remove(performanceProfileName);
     }
 
     public static void addPerformanceProfile(PerformanceProfile performanceProfile) {
         init();
-        LOGGER.info("Add performance profile : {}", performanceProfile.getName());
+        LOGGER.info("[ProfileService] Add performance profile : {}", performanceProfile.getName());
         performanceProfileMap.put(performanceProfile.getName(), performanceProfile);
     }
 
     public static ConcurrentHashMap<String, PerformanceProfile> getPerformanceProfileMap() {
         init();
-        LOGGER.info("Retrieve performance profile cache. Current size : {}", performanceProfileMap.size());
+        LOGGER.info("[ProfileService] Retrieve performance profile cache. Current size : {}", performanceProfileMap.size());
         return performanceProfileMap;
     }
 
     public static PerformanceProfile getMetricProfile(String metricProfileName) {
         init();
-        LOGGER.info("Retrieve metric profile : {}", metricProfileName);
+        LOGGER.info("[ProfileService] Retrieve metric profile : {}", metricProfileName);
         return metricProfileMap.get(metricProfileName);
     }
 
     public static boolean removeMetricProfile(String  metricProfileName) {
         init();
-        LOGGER.info("Delete metric profile : {}", metricProfileName);
+        LOGGER.info("[ProfileService] Delete metric profile : {}", metricProfileName);
         return metricProfileMap.remove(metricProfileName) != null;
     }
 
     public static boolean addMetricProfile(PerformanceProfile metricProfile) {
         init();
-        LOGGER.info("Add metric profile : {}", metricProfile.getName());
+        LOGGER.info("[ProfileService] Add metric profile : {}", metricProfile.getName());
         return metricProfileMap.put(metricProfile.getName(), metricProfile) != null;
     }
 
     public static ConcurrentHashMap<String, PerformanceProfile> getMetricProfileMap() {
         init();
-        LOGGER.info("Retrieve metric profile cache. Current size : {}", metricProfileMap.size());
+        LOGGER.info("[ProfileService] Retrieve metric profile cache. Current size : {}", metricProfileMap.size());
         return metricProfileMap;
     }
 }
