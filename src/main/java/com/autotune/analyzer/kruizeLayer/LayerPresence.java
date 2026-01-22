@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2025 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2026 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,8 @@
 package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.kruizeLayer.presence.*;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,6 +45,18 @@ public class LayerPresence {
      * @return LayerPresenceDetector implementation
      */
     public LayerPresenceDetector getDetector() {
+        // Check for default presence
+        if (presence != null && !presence.isEmpty()) {
+            if (LayerConstants.DEFAULT_PRESENCE.equalsIgnoreCase(presence.trim())) {
+                return new PresenceAlways();
+            } else {
+                throw new IllegalArgumentException(
+                        "Invalid presence value: '" + presence + "'. Expected '" +
+                                LayerConstants.DEFAULT_PRESENCE + "'");
+            }
+
+        }
+
         // Check for query-based presence
         if (queries != null && !queries.isEmpty()) {
             return new QueryBasedPresence(queries);
@@ -53,13 +67,9 @@ public class LayerPresence {
             return new LabelBasedPresence(label);
         }
 
-        // Default to presence always
-        if (presence != null) {
-            return new PresenceAlways(presence);
-        }
+        // No valid configuration found
+        throw new IllegalStateException( "Invalid LayerPresence configuration: must specify either " + "presence='always', queries, or label");
 
-        // If nothing is set, default to "always"
-        return new PresenceAlways("always");
     }
 
     /**
@@ -67,7 +77,7 @@ public class LayerPresence {
      *
      * @return PresenceType
      */
-    public LayerPresenceDetector.PresenceType getType() {
+    public PresenceType getType() {
         return getDetector().getType();
     }
 
@@ -101,7 +111,6 @@ public class LayerPresence {
                 "presence='" + presence + '\'' +
                 ", queries=" + queries +
                 ", label=" + label +
-                ", type=" + getType() +
                 '}';
     }
 }

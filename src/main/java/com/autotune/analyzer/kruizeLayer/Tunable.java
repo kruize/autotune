@@ -34,10 +34,10 @@ public class Tunable {
     private String valueType;
 
     @SerializedName("upper_bound")
-    private Double upperBoundValue;
+    private String upperBoundValue;
 
     @SerializedName("lower_bound")
-    private Double lowerBoundValue;
+    private String lowerBoundValue;
 
     private double step;
 
@@ -59,7 +59,7 @@ public class Tunable {
      * @param lowerBoundValue Lower bound
      * @throws InvalidBoundsException if bounds are invalid
      */
-    public Tunable(String name, String valueType, double step, Double upperBoundValue, Double lowerBoundValue)
+    public Tunable(String name, String valueType, double step, String upperBoundValue, String lowerBoundValue)
             throws InvalidBoundsException {
         this.name = name;
         this.valueType = valueType;
@@ -113,27 +113,38 @@ public class Tunable {
                     " has null bounds; both upperBound and lowerBound must be set");
         }
 
+        // Parse strings to doubles for numeric validation
+        double upper, lower;
+        try {
+            upper = Double.parseDouble(upperBoundValue);
+            lower = Double.parseDouble(lowerBoundValue);
+        } catch (NumberFormatException e) {
+            throw new InvalidBoundsException("ERROR: Tunable: " + name +
+                    " has non-numeric bounds: upper=" + upperBoundValue +
+                    ", lower=" + lowerBoundValue);
+        }
+
         if (step <= 0) {
             throw new InvalidBoundsException("ERROR: Tunable: " + name +
                     " has invalid step; step must be > 0, got: " + step);
         }
 
-        if (upperBoundValue < 0 || lowerBoundValue < 0) {
+        if (upper < 0 || lower < 0) {
             throw new InvalidBoundsException("ERROR: Tunable: " + name +
-                    " has negative bounds; upperBound: " + upperBoundValue +
-                    " lowerBound: " + lowerBoundValue);
+                    " has negative bounds; upperBound: " + upper +
+                    " lowerBound: " + lower);
         }
 
-        if (lowerBoundValue >= upperBoundValue) {
+        if (lower >= upper) {
             throw new InvalidBoundsException("ERROR: Tunable: " + name +
-                    " has invalid bounds; lowerBound (" + lowerBoundValue +
-                    ") must be less than upperBound (" + upperBoundValue + ")");
+                    " has invalid bounds; lowerBound (" + lower +
+                    ") must be less than upperBound (" + upper + ")");
         }
 
-        if (step > (upperBoundValue - lowerBoundValue)) {
+        if (step > (upper - lower)) {
             throw new InvalidBoundsException("ERROR: Tunable: " + name +
                     " has invalid step; step (" + step +
-                    ") must be <= (upperBound - lowerBound) (" + (upperBoundValue - lowerBoundValue) + ")");
+                    ") must be <= (upperBound - lowerBound) (" + (upper - lower) + ")");
         }
     }
 
@@ -160,11 +171,11 @@ public class Tunable {
         return valueType;
     }
 
-    public Double getUpperBoundValue() {
+    public String getUpperBoundValue() {
         return upperBoundValue;
     }
 
-    public Double getLowerBoundValue() {
+    public String getLowerBoundValue() {
         return lowerBoundValue;
     }
 
@@ -189,11 +200,11 @@ public class Tunable {
         this.valueType = valueType;
     }
 
-    public void setUpperBoundValue(Double upperBoundValue) {
+    public void setUpperBoundValue(String upperBoundValue) {
         this.upperBoundValue = upperBoundValue;
     }
 
-    public void setLowerBoundValue(Double lowerBoundValue) {
+    public void setLowerBoundValue(String lowerBoundValue) {
         this.lowerBoundValue = lowerBoundValue;
     }
 
