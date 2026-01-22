@@ -39,7 +39,7 @@ public class Tunable {
     @SerializedName("lower_bound")
     private String lowerBoundValue;
 
-    private double step;
+    private Double step;
 
     private List<String> choices;
 
@@ -59,7 +59,7 @@ public class Tunable {
      * @param lowerBoundValue Lower bound
      * @throws InvalidBoundsException if bounds are invalid
      */
-    public Tunable(String name, String valueType, double step, String upperBoundValue, String lowerBoundValue)
+    public Tunable(String name, String valueType, Double step, String upperBoundValue, String lowerBoundValue)
             throws InvalidBoundsException {
         this.name = name;
         this.valueType = valueType;
@@ -179,7 +179,7 @@ public class Tunable {
         return lowerBoundValue;
     }
 
-    public double getStep() {
+    public Double getStep() {
         return step;
     }
 
@@ -208,7 +208,7 @@ public class Tunable {
         this.lowerBoundValue = lowerBoundValue;
     }
 
-    public void setStep(double step) {
+    public void setStep(Double step) {
         this.step = step;
     }
 
