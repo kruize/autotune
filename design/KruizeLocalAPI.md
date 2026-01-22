@@ -65,6 +65,16 @@ Documentation still in progress stay tuned.
   - Example Request and Response
   - Invalid Scenarios
 
+- [Create Layer API](#create-layer-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
+- [List Layers API](#list-layers-api)
+    - Introduction
+    - Example Request and Response
+    - Invalid Scenarios
+
 - [Create Experiment API](#create-experiment-api)
     - Introduction
     - Example Request and Response
@@ -2811,6 +2821,280 @@ Example: `curl -H 'Accept: application/json' -X PUT http://<URL>:<PORT>/updateMe
 </details>
 
 <br>
+
+<a name="create-layer-api"></a>
+
+### Create Layer API
+
+Creates a new layer configuration that defines tunable parameters and layer presence detection for application optimization.
+
+**Request**
+
+`POST /createLayer`
+
+`curl -H 'Accept: application/json' -X POST --data 'copy paste below JSON' http://<URL>:<PORT>/createLayer`
+
+<details>
+
+<summary><b>Example Request</b></summary>
+
+### Example Request
+
+```json
+{
+  "apiVersion": "v1.0",
+  "kind": "Layer",
+  "metadata": {
+    "name": "jvm-layer"
+  },
+  "layer_name": "jvm",
+  "layer_level": 1,
+  "details": "JVM tuning layer with both bounded and categorical tunables",
+  "layer_presence": {
+    "queries": [
+      {
+        "datasource": "prometheus",
+        "query": "jvm_info"
+      }
+    ]
+  },
+  "tunables": [
+    {
+      "name": "heapSize",
+      "value_type": "double",
+      "upper_bound": "8192",
+      "lower_bound": "512",
+      "step": 256
+    },
+    {
+      "name": "threadPoolSize",
+      "value_type": "integer",
+      "upper_bound": "200",
+      "lower_bound": "10",
+      "step": 10
+    },
+    {
+      "name": "garbageCollector",
+      "value_type": "categorical",
+      "choices": ["G1GC", "ParallelGC", "ZGC", "ShenandoahGC"]
+    },
+    {
+      "name": "compilerMode",
+      "value_type": "categorical",
+      "choices": ["C1", "C2", "tiered"]
+    }
+  ]
+}
+```
+
+**Layer Presence Configuration**
+
+The `layer_presence` object can have one of three configurations:
+
+- **Always present**: `{"presence": "always"}`
+- **Query-based**: `{"queries": [{"datasource": "prometheus", "query": "..."}]}`
+- **Label-based**: `{"label": [{"name": "label_name", "value": "label_value"}]}`
+
+**Tunables Configuration**
+
+Each tunable can be either:
+
+- **Bounded (numeric)**: Requires `value_type`, `upper_bound`, `lower_bound`, and `step`
+- **Categorical**: Requires `value_type: "categorical"` and `choices` array
+
+</details>
+
+**Response**
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+
+```json
+{
+  "message": "Layer created successfully. View Layers at /listLayers",
+  "httpcode": 201,
+  "documentationLink": "",
+  "status": "SUCCESS"
+}
+```
+
+</details>
+
+**Error Responses**
+
+| HTTP Status Code | Description                                                          |
+|------------------|----------------------------------------------------------------------|
+| 400              | Invalid request body: missing required fields                       |
+| 400              | Layer with name 'container-layer' already exists                     |
+| 400              | Invalid bounds: upperBound must be greater than lowerBound           |
+| 400              | Invalid step: step must be > 0                                       |
+| 400              | Invalid categorical tunable: choices cannot be empty                 |
+| 400              | Tunable with valueType 'categorical' cannot have bounds/step         |
+| 400              | Numeric tunable must have bounds and step                            |
+| 500              | Internal Server Error                                                |
+
+---
+
+<a name="list-layers-api"></a>
+
+### List Layers API
+
+Retrieves a list of all configured layers or a specific layer by name.
+
+**Request with layer_name parameter**
+
+`GET /listLayers`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listLayers?layer_name=<layer_name>`
+
+Returns the layer details of the specified layer
+<br><br>
+
+**Request for all layers**
+
+`GET /listLayers`
+
+`curl -H 'Accept: application/json' http://<URL>:<PORT>/listLayers`
+
+Returns all configured layers
+
+**Response for all layers**
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+[
+  {
+    "apiVersion": "v1.0",
+    "kind": "Layer",
+    "metadata": {
+      "name": "container-layer"
+    },
+    "layer_name": "container",
+    "layer_level": 0,
+    "details": "Container resource optimization layer",
+    "layer_presence": {
+      "presence": "always"
+    },
+    "tunables": [
+      {
+        "name": "memoryRequest",
+        "value_type": "double",
+        "upper_bound": "4.0",
+        "lower_bound": "1.0",
+        "step": 0.1
+      },
+      {
+        "name": "cpuRequest",
+        "value_type": "double",
+        "upper_bound": "2.0",
+        "lower_bound": "0.5",
+        "step": 0.25
+      }
+    ]
+  },
+  {
+    "apiVersion": "v1.0",
+    "kind": "Layer",
+    "metadata": {
+      "name": "runtime-layer"
+    },
+    "layer_name": "runtime",
+    "layer_level": 1,
+    "details": "Runtime configuration layer",
+    "layer_presence": {
+      "queries": [
+        {
+          "datasource": "prometheus",
+          "query": "container_runtime_info"
+        }
+      ]
+    },
+    "tunables": [
+      {
+        "name": "garbageCollector",
+        "value_type": "categorical",
+        "choices": ["G1GC", "ParallelGC", "ZGC", "ShenandoahGC"]
+      }
+    ]
+  }
+]
+```
+
+</details>
+
+**Response for layer_name - `jvm`**
+
+<details>
+<summary><b>Example Response</b></summary>
+
+### Example Response
+
+```json
+[
+  {
+    "apiVersion": "v1.0",
+    "kind": "Layer",
+    "metadata": {
+      "name": "jvm-layer"
+    },
+    "layer_name": "jvm",
+    "layer_level": 1,
+    "details": "JVM tuning layer with both bounded and categorical tunables",
+    "layer_presence": {
+      "queries": [
+        {
+          "datasource": "prometheus",
+          "query": "jvm_info"
+        }
+      ]
+    },
+    "tunables": [
+      {
+        "name": "heapSize",
+        "value_type": "double",
+        "upper_bound": "8192",
+        "lower_bound": "512",
+        "step": 256
+      },
+      {
+        "name": "threadPoolSize",
+        "value_type": "integer",
+        "upper_bound": "200",
+        "lower_bound": "10",
+        "step": 10
+      },
+      {
+        "name": "garbageCollector",
+        "value_type": "categorical",
+        "choices": ["G1GC", "ParallelGC", "ZGC", "ShenandoahGC"]
+      },
+      {
+        "name": "compilerMode",
+        "value_type": "categorical",
+        "choices": ["C1", "C2", "tiered"]
+      }
+    ]
+  }
+]
+```
+
+</details>
+
+**Error Responses**
+
+| HTTP Status Code | Description                                    |
+|------------------|------------------------------------------------|
+| 404              | Layer with name 'xyz' not found                |
+| 500              | Internal Server Error                          |
+
+**Note**: For categorical tunables, the `step`, `upper_bound`, and `lower_bound` fields will not be present in the response. Only `value_type` and `choices` will be returned.
 
 <a name="create-experiment-api"></a>
 
