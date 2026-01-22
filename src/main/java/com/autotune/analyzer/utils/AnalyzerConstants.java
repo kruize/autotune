@@ -635,6 +635,26 @@ public class AnalyzerConstants {
     }
 
     /**
+     * Contains constants related to KruizeLayer presence detection
+     */
+    public static final class LayerConstants {
+
+        /**
+         * Enum for different types of layer presence detection
+         */
+        public enum PresenceType {
+            ALWAYS,
+            QUERY,
+            LABEL
+        }
+
+        public static final String DEFAULT_PRESENCE = "always";
+
+        private LayerConstants() {
+        }
+    }
+
+    /**
      * Contains Strings used in REST services
      */
     public static final class ServiceConstants {
