@@ -19,8 +19,6 @@ package com.autotune.analyzer.kruizeLayer;
 import com.autotune.analyzer.kruizeLayer.presence.*;
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
-
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -35,8 +33,7 @@ public class LayerPresence {
 
     private List<LayerPresenceLabel> label;
 
-    public LayerPresence() {
-    }
+    public LayerPresence() {}
 
     /**
      * Factory method to get the appropriate LayerPresenceDetector implementation
@@ -51,8 +48,8 @@ public class LayerPresence {
                 return new PresenceAlways();
             } else {
                 throw new IllegalArgumentException(
-                        "Invalid presence value: '" + presence + "'. Expected '" +
-                                LayerConstants.DEFAULT_PRESENCE + "'");
+                        "Invalid presence value: '" + presence + "'. Expected '"
+                                + LayerConstants.DEFAULT_PRESENCE + "'");
             }
 
         }
@@ -68,7 +65,7 @@ public class LayerPresence {
         }
 
         // No valid configuration found
-        throw new IllegalStateException( "Invalid LayerPresence configuration: must specify either " + "presence='always', queries, or label");
+        throw new IllegalStateException( "Invalid LayerPresence configuration: must specify either presence='always', queries, or label");
 
     }
 

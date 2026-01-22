@@ -40,7 +40,7 @@ public final class KruizeLayer {
     public KruizeLayer() {
     }
 
-    public KruizeLayer(String name, String namespace, String apiVersion, String kind,
+    public KruizeLayer(String name, String apiVersion, String kind,
                        String layerName, int layerLevel, String details,
                        String presence, List<LayerPresenceQuery> queries,
                        String labelName, String labelValue,

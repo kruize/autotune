@@ -25,6 +25,7 @@ public class PresenceAlways implements LayerPresenceDetector {
 
     public PresenceAlways() {}
 
+
     @Override
     public PresenceType getType() {
         return PresenceType.ALWAYS;
@@ -32,7 +33,6 @@ public class PresenceAlways implements LayerPresenceDetector {
 
     @Override
     public String toString() {
-        return "PresenceAlways{" +
-                '}';
+        return "PresenceAlways{}";
     }
 }

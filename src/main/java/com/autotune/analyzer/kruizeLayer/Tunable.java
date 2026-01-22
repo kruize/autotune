@@ -124,6 +124,11 @@ public class Tunable {
                     ", lower=" + lowerBoundValue);
         }
 
+        if (step == null) {
+            throw new InvalidBoundsException("ERROR: Tunable: " + name +
+                    " has null step; step must be set for bounded tunables");
+        }
+
         if (step <= 0) {
             throw new InvalidBoundsException("ERROR: Tunable: " + name +
                     " has invalid step; step must be > 0, got: " + step);
