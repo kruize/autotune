@@ -14,6 +14,7 @@ public class ProfileService {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileService.class);
     private static volatile ConcurrentHashMap<String, PerformanceProfile> performanceProfileMap;
     private static volatile ConcurrentHashMap<String, PerformanceProfile> metricProfileMap;
+    private static boolean remoteMode = false;
 
     private static void init() {
         if (null == performanceProfileMap || null == metricProfileMap) {
@@ -22,10 +23,12 @@ public class ProfileService {
                     performanceProfileMap = new ConcurrentHashMap<>();
                     metricProfileMap = new ConcurrentHashMap<>();
                     try {
-                        if (KruizeDeploymentInfo.is_ros_enabled) //ROS always deploy Kruize in REMOTE mode only.
+                        if (KruizeDeploymentInfo.is_ros_enabled && !KruizeDeploymentInfo.local) { //ROS always deploy Kruize in REMOTE mode only.
                             new ExperimentDBService().loadAllPerformanceProfiles(performanceProfileMap);
-                        else
+                            remoteMode = true;
+                        } else {
                             new ExperimentDBService().loadAllMetricProfiles(metricProfileMap);
+                        }
                         LOGGER.info("Profile cache is initialized successfully.");
                     } catch (Exception e) {
                         LOGGER.error("Failed to load performance profiles from database.", e);
@@ -37,55 +40,56 @@ public class ProfileService {
 
     public static boolean isExists(String profileName) {
         init();
-        LOGGER.info("[ProfileService] Check for profile : {}", profileName);
-        return performanceProfileMap.containsKey(profileName) || metricProfileMap.containsKey(profileName);
+        if (remoteMode) {
+            LOGGER.info("[ProfileService] Check for performance profile : {}", profileName);
+            return performanceProfileMap.containsKey(profileName);
+        } else {
+            LOGGER.info("[ProfileService] Check for metric profile : {}", profileName);
+            return metricProfileMap.containsKey(profileName);
+        }
     }
 
-    public static PerformanceProfile getPerformanceProfile(String profileName) {
+    public static PerformanceProfile getProfile(String profileName) {
         init();
-        LOGGER.info("[ProfileService] Retrieve performance profile : {}", profileName);
-        return performanceProfileMap.get(profileName);
+        if (remoteMode) {
+            LOGGER.info("[ProfileService] Check for performance profile : {}", profileName);
+            return performanceProfileMap.get(profileName);
+        } else {
+            LOGGER.info("[ProfileService] Check for metric profile : {}", profileName);
+            return metricProfileMap.get(profileName);
+        }
     }
 
-    public static void removePerformanceProfile(String  performanceProfileName) {
+    public static PerformanceProfile removeProfile(String profileName) {
         init();
-        LOGGER.info("[ProfileService] Delete performance profile : {}", performanceProfileName);
-        performanceProfileMap.remove(performanceProfileName);
+        if (remoteMode) {
+            LOGGER.info("[ProfileService] Removing performance profile : {}", profileName);
+            return performanceProfileMap.remove(profileName);
+        } else {
+            LOGGER.info("[ProfileService] Removing metric profile : {}", profileName);
+            return metricProfileMap.remove(profileName);
+        }
     }
 
-    public static void addPerformanceProfile(PerformanceProfile performanceProfile) {
+    public static void addProfile(PerformanceProfile profile) {
         init();
-        LOGGER.info("[ProfileService] Add performance profile : {}", performanceProfile.getName());
-        performanceProfileMap.put(performanceProfile.getName(), performanceProfile);
+        if (remoteMode) {
+            LOGGER.info("[ProfileService] Adding performance profile : {}", profile.getName());
+            performanceProfileMap.put(profile.getName(), profile);
+        } else {
+            LOGGER.info("[ProfileService] Adding metric profile : {}", profile.getName());
+            metricProfileMap.put(profile.getName(), profile);
+        }
     }
 
-    public static ConcurrentHashMap<String, PerformanceProfile> getPerformanceProfileMap() {
+    public static ConcurrentHashMap<String, PerformanceProfile> getProfileMap() {
         init();
-        LOGGER.info("[ProfileService] Retrieve performance profile cache. Current size : {}", performanceProfileMap.size());
-        return performanceProfileMap;
-    }
-
-    public static PerformanceProfile getMetricProfile(String metricProfileName) {
-        init();
-        LOGGER.info("[ProfileService] Retrieve metric profile : {}", metricProfileName);
-        return metricProfileMap.get(metricProfileName);
-    }
-
-    public static boolean removeMetricProfile(String  metricProfileName) {
-        init();
-        LOGGER.info("[ProfileService] Delete metric profile : {}", metricProfileName);
-        return metricProfileMap.remove(metricProfileName) != null;
-    }
-
-    public static boolean addMetricProfile(PerformanceProfile metricProfile) {
-        init();
-        LOGGER.info("[ProfileService] Add metric profile : {}", metricProfile.getName());
-        return metricProfileMap.put(metricProfile.getName(), metricProfile) != null;
-    }
-
-    public static ConcurrentHashMap<String, PerformanceProfile> getMetricProfileMap() {
-        init();
-        LOGGER.info("[ProfileService] Retrieve metric profile cache. Current size : {}", metricProfileMap.size());
-        return metricProfileMap;
+        if (remoteMode) {
+            LOGGER.info("[ProfileService] Retrieve performance profile cache. Current size : {}", performanceProfileMap.size());
+            return performanceProfileMap;
+        } else {
+            LOGGER.info("[ProfileService] Retrieve metric profile cache. Current size : {}", metricProfileMap.size());
+            return metricProfileMap;
+        }
     }
 }

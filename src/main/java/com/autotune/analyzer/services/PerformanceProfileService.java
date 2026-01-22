@@ -122,7 +122,7 @@ public class PerformanceProfileService extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         String gsonStr = "[]";
         // Fetch all profiles from the cache. Initialize from DB if required.
-        Map<String, PerformanceProfile> performanceProfilesMap = ProfileService.getPerformanceProfileMap();
+        Map<String, PerformanceProfile> performanceProfilesMap = ProfileService.getProfileMap();
         if (!performanceProfilesMap.isEmpty()) {
             Collection<PerformanceProfile> values = performanceProfilesMap.values();
             Gson gsonObj = new GsonBuilder()
@@ -239,7 +239,7 @@ public class PerformanceProfileService extends HttpServlet {
                 return;
             }
             // remove the profile from the local storage as well
-            ProfileService.removePerformanceProfile(perfProfileName);
+            ProfileService.removeProfile(perfProfileName);
             sendSuccessResponse(resp, String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName));
         } catch (Exception e) {
             LOGGER.error("{}",String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION, perfProfileName, e.getMessage()));

@@ -388,7 +388,7 @@ public class ExperimentDBService {
             KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
             validationOutputData = this.experimentDAO.addPerformanceProfileToDB(kruizePerformanceProfileEntry);
             if (validationOutputData.isSuccess()){
-                ProfileService.addPerformanceProfile(performanceProfile);
+                ProfileService.addProfile(performanceProfile);
             }
         } catch (Exception e) {
             LOGGER.error("Not able to save Performance Profile due to {}", e.getMessage());
@@ -408,7 +408,7 @@ public class ExperimentDBService {
             KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
             validationOutputData = this.experimentDAO.updatePerformanceProfileInDB(kruizePerformanceProfileEntry);
             if (validationOutputData.isSuccess()){
-                ProfileService.addPerformanceProfile(performanceProfile);
+                ProfileService.addProfile(performanceProfile);
             }
         } catch (Exception e) {
             LOGGER.error("Not able to update Performance Profile due to {}", e.getMessage());
@@ -428,7 +428,7 @@ public class ExperimentDBService {
             KruizeMetricProfileEntry kruizeMetricProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetricProfileObjToMetricProfileDBObj(metricProfile);
             validationOutputData = this.experimentDAO.addMetricProfileToDB(kruizeMetricProfileEntry);
             if (validationOutputData.isSuccess()) {
-                ProfileService.addMetricProfile(metricProfile);
+                ProfileService.addProfile(metricProfile);
             }
         } catch (Exception e) {
             LOGGER.error("Not able to save Metric Profile due to {}", e.getMessage());

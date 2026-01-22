@@ -117,7 +117,7 @@ public class PerformanceProfileValidation {
         if (validationOutputData.isSuccess()) {
             StringBuilder errorString = new StringBuilder();
             // check if the performance profile already exists
-            PerformanceProfile existingPerformanceProfile = ProfileService.getPerformanceProfile(performanceProfile.getName());
+            PerformanceProfile existingPerformanceProfile = ProfileService.getProfile(performanceProfile.getName());
             switch (operationType) {
                 case CREATE:
                     if (existingPerformanceProfile != null) {

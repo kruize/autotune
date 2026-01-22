@@ -53,7 +53,7 @@ public class PerformanceProfileValidator implements ConstraintValidator<Performa
         try {
             KruizeObject kruizeObject = updateResultsAPIObject.getKruizeObject();
 
-            PerformanceProfile performanceProfile = ProfileService.getPerformanceProfile(kruizeObject.getPerformanceProfile());
+            PerformanceProfile performanceProfile = ProfileService.getProfile(kruizeObject.getPerformanceProfile());
             if (performanceProfile == null) {
                 throw new Exception(String.format("%s%s", MISSING_PERF_PROFILE, kruizeObject.getPerformanceProfile()));
             }

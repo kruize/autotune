@@ -51,7 +51,7 @@ public class MetricProfileCollection {
     public void loadMetricProfilesFromDB() {
         try {
             LOGGER.info(KruizeConstants.MetricProfileConstants.CHECKING_AVAILABLE_METRIC_PROFILE_FROM_DB);
-            Map<String, PerformanceProfile> availableMetricProfiles = ProfileService.getMetricProfileMap();
+            Map<String, PerformanceProfile> availableMetricProfiles = ProfileService.getProfileMap();
             if (availableMetricProfiles.isEmpty()) {
                 LOGGER.info(KruizeConstants.MetricProfileConstants.NO_METRIC_PROFILE_FOUND_IN_DB);
             }else {

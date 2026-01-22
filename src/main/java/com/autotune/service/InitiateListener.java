@@ -151,14 +151,14 @@ public class InitiateListener implements ServletContextListener {
           Kruize Performance Profile configuration
          */
         if(KruizeDeploymentInfo.is_ros_enabled){
-            sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, ProfileService.getPerformanceProfileMap());
+            sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, ProfileService.getProfileMap());
         }
 
         if(KruizeDeploymentInfo.local == true) {
             /*
             Kruize Metric Profile configuration
             */
-            sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.METRIC_PROFILE_MAP, ProfileService.getMetricProfileMap());
+            sce.getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.METRIC_PROFILE_MAP, ProfileService.getProfileMap());
         }
     }
 

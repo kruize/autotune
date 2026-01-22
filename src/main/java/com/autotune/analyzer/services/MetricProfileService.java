@@ -146,12 +146,12 @@ public class MetricProfileService extends HttpServlet {
                 try {
                     if (null != metricProfileName && !metricProfileName.isEmpty()) {
                         internalVerbose = "true";
-                        PerformanceProfile metricsProfile = ProfileService.getMetricProfile(metricProfileName);
+                        PerformanceProfile metricsProfile = ProfileService.getProfile(metricProfileName);
                         if (metricsProfile != null) {
                             metricProfilesMap.put(metricProfileName, metricsProfile);
                         }
                     } else {
-                        metricProfilesMap = ProfileService.getMetricProfileMap();
+                        metricProfilesMap = ProfileService.getProfileMap();
                     }
 
                     // Check if metric profile exists
@@ -335,7 +335,7 @@ public class MetricProfileService extends HttpServlet {
             // delete the metric profile from DB
             deletedMetricProfileFromDB = new ExperimentDAOImpl().deleteKruizeMetricProfileEntryByName(metricProfileName);
             if (deletedMetricProfileFromDB.isSuccess()) {
-                ProfileService.removeMetricProfile(metricProfileName);
+                ProfileService.removeProfile(metricProfileName);
                 LOGGER.debug(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_FROM_DB_SUCCESS_MSG);
             } else {
                 LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_FROM_DB_FAILURE_MSG, deletedMetricProfileFromDB.getMessage());

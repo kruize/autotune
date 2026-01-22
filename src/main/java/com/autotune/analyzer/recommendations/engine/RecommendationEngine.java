@@ -1954,7 +1954,7 @@ public class RecommendationEngine {
     public void fetchMetricsBasedOnProfileAndDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception, FetchMetricsError {
         try {
             String metricProfileName = kruizeObject.getPerformanceProfile();
-            PerformanceProfile metricProfile = ProfileService.getMetricProfile(metricProfileName);
+            PerformanceProfile metricProfile = ProfileService.getProfile(metricProfileName);
             if (null == metricProfile) {
                 LOGGER.error("MetricProfile does not exist or is not valid: {}", metricProfileName);
                 return;
