@@ -26,12 +26,13 @@ public class ProfileService {
                         if (KruizeDeploymentInfo.is_ros_enabled && !KruizeDeploymentInfo.local) { //ROS always deploy Kruize in REMOTE mode only.
                             new ExperimentDBService().loadAllPerformanceProfiles(performanceProfileMap);
                             remoteMode = true;
+                            LOGGER.info("Profile cache is initialized successfully with {} profiles.", performanceProfileMap.size());
                         } else {
                             new ExperimentDBService().loadAllMetricProfiles(metricProfileMap);
+                            LOGGER.info("Metric cache is initialized successfully with {} profiles.", metricProfileMap.size());
                         }
-                        LOGGER.info("Profile cache is initialized successfully.");
                     } catch (Exception e) {
-                        LOGGER.error("Failed to load performance profiles from database.", e);
+                        LOGGER.error("Failed to initialize profile cache.", e);
                     }
                 }
             }
