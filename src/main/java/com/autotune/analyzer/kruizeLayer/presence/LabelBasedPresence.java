@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2025 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2026 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@
 package com.autotune.analyzer.kruizeLayer.presence;
 
 import com.autotune.analyzer.kruizeLayer.LayerPresenceLabel;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -46,7 +47,7 @@ public class LabelBasedPresence implements LayerPresenceDetector {
     }
 
     public void setLabel(List<LayerPresenceLabel> label) {
-        this.label = label;
+        this.label = label != null ? label : new ArrayList<>();
     }
 
     @Override
