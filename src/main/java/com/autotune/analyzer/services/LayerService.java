@@ -201,26 +201,36 @@ public class LayerService extends HttpServlet {
      */
     private KruizeLMLayerEntry convertToLayerEntry(KruizeLayer kruizeLayer) throws Exception {
         KruizeLMLayerEntry entry = new KruizeLMLayerEntry();
-        ObjectMapper mapper = new ObjectMapper();
+        Gson gson = new Gson();
+        ObjectMapper objectMapper = new ObjectMapper();
 
         entry.setApi_version(kruizeLayer.getApiVersion());
         entry.setKind(kruizeLayer.getKind());
 
         // Convert metadata to JsonNode
-        JsonNode metadataNode = mapper.valueToTree(kruizeLayer.getMetadata());
-        entry.setMetadata(metadataNode);
+        if (kruizeLayer.getMetadata() != null) {
+            String metadataJson = gson.toJson(kruizeLayer.getMetadata());
+            JsonNode metadataNode = objectMapper.readTree(metadataJson);
+            entry.setMetadata(metadataNode);
+        }
 
         entry.setLayer_name(kruizeLayer.getLayerName());
         entry.setLayer_level(kruizeLayer.getLayerLevel());
         entry.setDetails(kruizeLayer.getDetails());
 
         // Convert layer_presence to JsonNode
-        JsonNode layerPresenceNode = mapper.valueToTree(kruizeLayer.getLayerPresence());
-        entry.setLayer_presence(layerPresenceNode);
+        if (kruizeLayer.getLayerPresence() != null) {
+            String layerPresenceJson = gson.toJson(kruizeLayer.getLayerPresence());
+            JsonNode layerPresenceNode = objectMapper.readTree(layerPresenceJson);
+            entry.setLayer_presence(layerPresenceNode);
+        }
 
         // Convert tunables to JsonNode
-        JsonNode tunablesNode = mapper.valueToTree(kruizeLayer.getTunables());
-        entry.setTunables(tunablesNode);
+        if (kruizeLayer.getTunables() != null) {
+            String tunablesJson = gson.toJson(kruizeLayer.getTunables());
+            JsonNode tunablesNode = objectMapper.readTree(tunablesJson);
+            entry.setTunables(tunablesNode);
+        }
 
         return entry;
     }
