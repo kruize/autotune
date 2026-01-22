@@ -22,6 +22,7 @@ import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
@@ -157,8 +158,17 @@ public class LayerService extends HttpServlet {
                     }
 
                     if (!error) {
+                        // Convert database objects to domain objects for clean JSON serialization
+                        List<KruizeLayer> kruizeLayers = new ArrayList<>();
+                        for (KruizeLMLayerEntry entry : layerEntries) {
+                            KruizeLayer layer = DBHelpers.Converters.KruizeObjectConverters.convertLayerDBObjToLayerObject(entry);
+                            if (layer != null) {
+                                kruizeLayers.add(layer);
+                            }
+                        }
+
                         Gson gsonObj = createGsonObject();
-                        String gsonStr = gsonObj.toJson(layerEntries);
+                        String gsonStr = gsonObj.toJson(kruizeLayers);
                         response.getWriter().println(gsonStr);
                         response.getWriter().close();
                     }
