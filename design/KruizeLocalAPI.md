@@ -2827,6 +2827,7 @@ Example: `curl -H 'Accept: application/json' -X PUT http://<URL>:<PORT>/updateMe
 ### Create Layer API
 
 Creates a new layer configuration that defines tunable parameters and layer presence detection for application optimization.
+Kruize currently supports hotspot, openj9, and quarkus layers.
 
 **Request**
 
@@ -2842,46 +2843,68 @@ Creates a new layer configuration that defines tunable parameters and layer pres
 
 ```json
 {
-  "apiVersion": "v1.0",
-  "kind": "Layer",
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeLayer",
   "metadata": {
-    "name": "jvm-layer"
+    "name": "hotspot"
   },
-  "layer_name": "jvm",
+  "layer_name": "hotspot",
   "layer_level": 1,
-  "details": "JVM tuning layer with both bounded and categorical tunables",
+  "details": "hotspot tunables",
   "layer_presence": {
     "queries": [
       {
         "datasource": "prometheus",
-        "query": "jvm_info"
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Eden.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Tenured.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Old.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Eden.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Tenured.+\"}",
+        "key": "pod"
+      },
+      {
+        "datasource": "prometheus",
+        "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Old.+\"}",
+        "key": "pod"
       }
     ]
   },
   "tunables": [
     {
-      "name": "heapSize",
-      "value_type": "double",
-      "upper_bound": "8192",
-      "lower_bound": "512",
-      "step": 256
+      "name": "GCPolicy",
+      "description": "Garbage collection policy",
+      "value_type": "categorical",
+      "choices": [
+        "G1GC",
+        "ParallelGC",
+        "SerialGC",
+        "ShenandoahGC",
+        "ZGC"
+      ]
     },
     {
-      "name": "threadPoolSize",
+      "name": "MaxRAMPercentage",
+      "description": "Maximum RAM percentage to allocate",
       "value_type": "integer",
-      "upper_bound": "200",
-      "lower_bound": "10",
-      "step": 10
-    },
-    {
-      "name": "garbageCollector",
-      "value_type": "categorical",
-      "choices": ["G1GC", "ParallelGC", "ZGC", "ShenandoahGC"]
-    },
-    {
-      "name": "compilerMode",
-      "value_type": "categorical",
-      "choices": ["C1", "C2", "tiered"]
+      "lower_bound": "25",
+      "upper_bound": "90",
+      "step": 1
     }
   ]
 }
@@ -2889,11 +2912,12 @@ Creates a new layer configuration that defines tunable parameters and layer pres
 
 **Layer Presence Configuration**
 
-The `layer_presence` object can have one of three configurations:
+The `layer_presence` object can have one of the following configurations:
 
 - **Always present**: `{"presence": "always"}`
 - **Query-based**: `{"queries": [{"datasource": "prometheus", "query": "..."}]}`
-- **Label-based**: `{"label": [{"name": "label_name", "value": "label_value"}]}`
+
+**Note:** Label-based presence detection is not yet supported and will be added in a future release.
 
 **Tunables Configuration**
 
@@ -2914,7 +2938,7 @@ Each tunable can be either:
 
 ```json
 {
-  "message": "Layer created successfully. View Layers at /listLayers",
+  "message": "Layer : <layer_name> created successfully. View Layers at /listLayers",
   "httpcode": 201,
   "documentationLink": "",
   "status": "SUCCESS"
@@ -2925,16 +2949,16 @@ Each tunable can be either:
 
 **Error Responses**
 
-| HTTP Status Code | Description                                                          |
-|------------------|----------------------------------------------------------------------|
-| 400              | Invalid request body: missing required fields                       |
-| 400              | Layer with name 'container-layer' already exists                     |
-| 400              | Invalid bounds: upperBound must be greater than lowerBound           |
-| 400              | Invalid step: step must be > 0                                       |
-| 400              | Invalid categorical tunable: choices cannot be empty                 |
-| 400              | Tunable with valueType 'categorical' cannot have bounds/step         |
-| 400              | Numeric tunable must have bounds and step                            |
-| 500              | Internal Server Error                                                |
+| HTTP Status Code | Description                                                      |
+|------------------|------------------------------------------------------------------|
+| 400              | Invalid request body: missing required fields                    |
+| 400              | Layer with name 'container-layer' already exists                 |
+| 400              | Invalid bounds: `upper_bound` must be greater than `lower_bound` |
+| 400              | Invalid step: step must be > 0                                   |
+| 400              | Invalid categorical tunable: choices cannot be empty             |
+| 400              | Tunable with valueType 'categorical' cannot have bounds/step     |
+| 400              | Numeric tunable must have bounds and step                        |
+| 500              | Internal Server Error                                            |
 
 ---
 
@@ -2971,56 +2995,68 @@ Returns all configured layers
 ```json
 [
   {
-    "apiVersion": "v1.0",
-    "kind": "Layer",
+    "apiVersion": "recommender.com/v1",
+    "kind": "KruizeLayer",
     "metadata": {
-      "name": "container-layer"
+      "name": "hotspot"
     },
-    "layer_name": "container",
-    "layer_level": 0,
-    "details": "Container resource optimization layer",
-    "layer_presence": {
-      "presence": "always"
-    },
-    "tunables": [
-      {
-        "name": "memoryRequest",
-        "value_type": "double",
-        "upper_bound": "4.0",
-        "lower_bound": "1.0",
-        "step": 0.1
-      },
-      {
-        "name": "cpuRequest",
-        "value_type": "double",
-        "upper_bound": "2.0",
-        "lower_bound": "0.5",
-        "step": 0.25
-      }
-    ]
-  },
-  {
-    "apiVersion": "v1.0",
-    "kind": "Layer",
-    "metadata": {
-      "name": "runtime-layer"
-    },
-    "layer_name": "runtime",
+    "layer_name": "hotspot",
     "layer_level": 1,
-    "details": "Runtime configuration layer",
+    "details": "hotspot tunables",
     "layer_presence": {
       "queries": [
         {
           "datasource": "prometheus",
-          "query": "container_runtime_info"
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Old.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Old.+\"}",
+          "key": "pod"
         }
       ]
     },
     "tunables": [
       {
-        "name": "garbageCollector",
+        "name": "GCPolicy",
+        "description": "Garbage collection policy",
         "value_type": "categorical",
-        "choices": ["G1GC", "ParallelGC", "ZGC", "ShenandoahGC"]
+        "choices": [
+          "G1GC",
+          "ParallelGC",
+          "SerialGC",
+          "ShenandoahGC",
+          "ZGC"
+        ]
+      },
+      {
+        "name": "MaxRAMPercentage",
+        "description": "Maximum RAM percentage to allocate",
+        "value_type": "integer",
+        "lower_bound": "25",
+        "upper_bound": "90",
+        "step": 1
       }
     ]
   }
