@@ -36,6 +36,7 @@ failed=0
 KRUIZE_DEMOS_REPO="https://github.com/kruize/kruize-demos.git"
 KRUIZE_DEMOS_BRANCH="main"
 SETUP=0
+WAIT_TIME=1800
 
 function usage() {
 	echo
@@ -48,6 +49,7 @@ function usage() {
 	echo "t = Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)"
 	echo "r = Kruize results dir path. Default - /tmp/kruize_demos_test_results"
 	echo "k = Disable operator and install kruize using deploy scripts instead."
+	echo "w = Wait time for metrics to be available before recommedations are generated in bulk demo on a fresh cluster setup. Default 1800s"
 	exit 1
 }
 
@@ -58,7 +60,7 @@ function get_kruize_pod_log() {
 	echo "" | tee -a ${LOG}
 	echo "Fetch the kruize pod logs and store in ${log}..." | tee -a ${LOG}
 	kruize_pod=$(kubectl get pods -n ${NAMESPACE} -l app=kruize -o jsonpath='{.items[0].metadata.name}')
-	#kruize_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
+	echo "kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &" | tee -a ${LOG}
 	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
 }
 
@@ -209,7 +211,7 @@ function run_demo() {
 
 	if [ "${KRUIZE_OPERATOR}" == 1 ]; then
 		if [ "${KRUIZE_OPERATOR_IMAGE}" != "" ]; then
-			if [[ "${DEMO_NAME}" != "remote_monitoring" || "${DEMO_NAME}" != "bulk" ]]; then
+			if [[ "${DEMO_NAME}" != "remote_monitoring" && "${DEMO_NAME}" != "bulk" ]]; then
 				CMD+=( -o ${KRUIZE_OPERATOR_IMAGE})
 			fi
 		fi
@@ -223,6 +225,9 @@ function run_demo() {
 				CMD+=( -f)
 				SETUP=1
 			fi
+		fi
+		if [ "${DEMO_NAME}" == "bulk" ]; then
+			CMD+=( -w ${WAIT_TIME})
 		fi
 	fi
 
