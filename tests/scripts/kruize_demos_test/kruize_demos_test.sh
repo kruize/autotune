@@ -59,9 +59,18 @@ function get_kruize_pod_log() {
 	# Fetch the kruize pod log
 	echo "" | tee -a ${LOG}
 	echo "Fetch the kruize pod logs and store in ${log}..." | tee -a ${LOG}
+	
+	# Get the kruize pod name
 	kruize_pod=$(kubectl get pods -n ${NAMESPACE} -l app=kruize -o jsonpath='{.items[0].metadata.name}')
-	echo "kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &" | tee -a ${LOG}
-	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
+
+	# Check if kruize_pod is empty
+	if [ -z "${kruize_pod}" ]; then
+		error_msg="Error: No kruize pod found in namespace ${NAMESPACE}, unable to fetch kruize pod log"
+		echo "${error_msg}" | tee -a ${LOG}
+	else
+		echo "kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &" | tee -a ${LOG}
+		kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
+	fi
 }
 
 function local_monitoring_demo() {
@@ -333,7 +342,7 @@ function run_demo() {
 	} | tee -a ${LOG}
 }
 
-while getopts c:r:i:o:a:b:t:kh gopts
+while getopts c:w:r:i:o:a:b:t:kh gopts
 do
 	case ${gopts} in
 	c)
@@ -344,6 +353,9 @@ do
 		;;
 	i)
 		KRUIZE_IMAGE="${OPTARG}"		
+		;;
+	w)
+		WAIT_TIME="${OPTARG}"
 		;;
 	o)
 		KRUIZE_OPERATOR_IMAGE="${OPTARG}"		
