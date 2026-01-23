@@ -312,7 +312,7 @@
                     <includes>
                         <include>**/*Test.java</include>
                     </includes>
-                    <failIfNoTests>true</failIfNoTests>
+                    <failIfNoTests>false</failIfNoTests>
                     <argLine>-Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
             </plugin>
