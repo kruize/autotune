@@ -133,6 +133,11 @@ public class RecommendationConstants {
                 RecommendationConstants.RecommendationNotificationMsgConstant.MODEL_RECOMMENDATIONS_AVAILABLE,
                 RecommendationConstants.RecommendationNotificationTypes.INFO
         ),
+        INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE(
+                NotificationCodes.INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE,
+                RecommendationNotificationMsgConstant.RUNTIMES_RECOMMENDATIONS_AVAILABLE,
+                RecommendationConstants.RecommendationNotificationTypes.INFO
+        ),
         INFO_NOT_ENOUGH_DATA(
                 RecommendationConstants.NotificationCodes.INFO_NOT_ENOUGH_DATA,
                 RecommendationConstants.RecommendationNotificationMsgConstant.NOT_ENOUGH_DATA,
@@ -335,6 +340,7 @@ public class RecommendationConstants {
         public static final int INFO_COST_RECOMMENDATIONS_AVAILABLE = 112101;
         public static final int INFO_PERFORMANCE_RECOMMENDATIONS_AVAILABLE = 112102;
         public static final int INFO_MODEL_RECOMMENDATIONS_AVAILABLE = 112103;
+        public static final int INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE = 112104;
 
         public static final int COST_ENGINE_END = 112199;
         public static final int SECTION_INFO_SUBSECTION_GENERAL_INFO_SUBSYSTEM_GENERAL_END = 112999;
@@ -676,6 +682,7 @@ public class RecommendationConstants {
         public static final String COST_RECOMMENDATIONS_AVAILABLE = "Cost Recommendations Available";
         public static final String PERFORMANCE_RECOMMENDATIONS_AVAILABLE = "Performance Recommendations Available";
         public static final String MODEL_RECOMMENDATIONS_AVAILABLE = "Model Recommendations Available";
+        public static final String RUNTIMES_RECOMMENDATIONS_AVAILABLE = "Runtimes Recommendations Available";
         public static final String RECOMMENDATIONS_AVAILABLE = "Recommendations Are Available";
         public static final String SHORT_TERM_RECOMMENDATIONS_AVAILABLE = "Short Term Recommendations Available";
         public static final String MEDIUM_TERM_RECOMMENDATIONS_AVAILABLE = "Medium Term Recommendations Available";

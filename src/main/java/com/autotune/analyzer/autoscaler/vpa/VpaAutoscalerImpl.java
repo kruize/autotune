@@ -22,6 +22,7 @@ import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.exceptions.UnableToCreateVPAException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.autoscaler.AutoscalerImpl;
 import com.autotune.analyzer.recommendations.term.Terms;
@@ -276,7 +277,7 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     }
                     // vpa changes for models
                     String user_model = kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0);
-                    HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> recommendationsConfig;
+                    Config recommendationsConfig;
 
                     if (KruizeConstants.JSONKeys.COST.equalsIgnoreCase(user_model)) {
                         recommendationsConfig = termRecommendations.getCostRecommendations().getConfig();
@@ -286,8 +287,8 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                         throw new IllegalArgumentException("Unknown model: "+ user_model);
                     }
 
-                    Double cpuRecommendationValue = recommendationsConfig.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.CPU).getAmount();
-                    Double memoryRecommendationValue = recommendationsConfig.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.MEMORY).getAmount();
+                    Double cpuRecommendationValue = recommendationsConfig.getRequests().get(AnalyzerConstants.RecommendationItem.CPU).getAmount();
+                    Double memoryRecommendationValue = recommendationsConfig.getRequests().get(AnalyzerConstants.RecommendationItem.MEMORY).getAmount();
 
                     LOGGER.debug(String.format(AnalyzerConstants.AutoscalerConstants.InfoMsgs.RECOMMENDATION_VALUE,
                             AnalyzerConstants.RecommendationItem.CPU, containerName, cpuRecommendationValue));

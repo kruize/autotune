@@ -26,6 +26,7 @@ import com.autotune.common.data.result.IntervalResults;
 import com.autotune.common.data.result.NamespaceData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.common.data.system.info.device.accelerator.NvidiaAcceleratorDeviceData;
+import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.exceptions.DataSourceNotExist;
 import com.autotune.common.k8sObjects.K8sObject;
@@ -33,10 +34,7 @@ import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.metrics.KruizeNotificationCollectionRegistry;
 import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.utils.GenericRestApiClient;
-import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.Utils;
+import com.autotune.utils.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
@@ -699,7 +697,7 @@ public class RecommendationEngine {
                             model,
                             containerData,
                             monitoringEndTime,
-                            kruizeObject.getRecommendation_settings(),
+                            kruizeObject,
                             currentConfig,
                             termsEntry);
 
@@ -776,7 +774,7 @@ public class RecommendationEngine {
 
     private MappedRecommendationForModel generateRecommendationBasedOnModel(Timestamp monitoringStartTime, RecommendationModel model, ContainerData containerData,
                                                                             Timestamp monitoringEndTime,
-                                                                            RecommendationSettings recommendationSettings,
+                                                                            KruizeObject kruizeObject,
                                                                             HashMap<AnalyzerConstants.ResourceSetting,
                                                                                     HashMap<AnalyzerConstants.RecommendationItem,
                                                                                             RecommendationConfigItem>> currentConfigMap,
@@ -787,6 +785,7 @@ public class RecommendationEngine {
         double cpuThreshold = DEFAULT_CPU_THRESHOLD;
         // Set Memory threshold to default
         double memoryThreshold = DEFAULT_MEMORY_THRESHOLD;
+        RecommendationSettings recommendationSettings = kruizeObject.getRecommendation_settings();
         if (null != recommendationSettings) {
             Double threshold = recommendationSettings.getThreshold();
             if (null == threshold) {
@@ -867,6 +866,7 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
 
+            List<RecommendationConfigEnv> runtimeRecommList = handleRuntimeRecommendations(kruizeObject);
 
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
@@ -877,7 +877,8 @@ public class RecommendationEngine {
                     numPods,
                     cpuThreshold,
                     memoryThreshold,
-                    recommendationAcceleratorRequestMap
+                    recommendationAcceleratorRequestMap,
+                    runtimeRecommList
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -886,6 +887,29 @@ public class RecommendationEngine {
         }
         return mappedRecommendationForModel;
     }
+
+    /**
+     * Method to handle the runtimes recommendations logic
+     * @param kruizeObject to get the datasource
+     * @return
+     */
+    private List<RecommendationConfigEnv> handleRuntimeRecommendations(KruizeObject kruizeObject) {
+        List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
+        String datasourceName = kruizeObject.getDataSource();
+        if (datasourceName == null) {
+            LOGGER.warn("Datasource missing, skipping runtime recommendations");
+            return null;
+        }
+        DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(datasourceName);
+        if (dataSourceInfo == null ||
+                !KruizeSupportedTypes.RUNTIMES_SUPPORTED_DATASOURCES
+                        .contains(dataSourceInfo.getServiceName())) {
+            return null;
+        }
+        // TODO: add runtime env logic
+        return runtimeRecommList;
+    }
+
 
     private void generateRecommendationsBasedOnNamespace(NamespaceData namespaceData, KruizeObject kruizeObject) {
         try {
@@ -1225,7 +1249,8 @@ public class RecommendationEngine {
                     numPodsInNamespace,
                     namespaceCpuThreshold,
                     namespaceMemoryThreshold,
-                    null
+                    null,
+                    null //TODO: temporarily passing this null, will be updated
             );
         } else {
             RecommendationNotification notification = new RecommendationNotification(
@@ -1249,6 +1274,7 @@ public class RecommendationEngine {
      * @param cpuThreshold                        The CPU usage threshold for the recommendation.
      * @param memoryThreshold                     The memory usage threshold for the recommendation.
      * @param recommendationAcceleratorRequestMap The Map which has Accelerator recommendations
+     * @param runtimeListToPopulate                The Object to populate runtime recommendations.
      * @return {@code true} if the internal map was successfully populated; {@code false} otherwise.
      */
     private boolean populateRecommendation(Map.Entry<String, Terms> termEntry,
@@ -1258,7 +1284,8 @@ public class RecommendationEngine {
                                            int numPods,
                                            double cpuThreshold,
                                            double memoryThreshold,
-                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap) {
+                                           Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap,
+                                           List<RecommendationConfigEnv> runtimeListToPopulate) {
         // Check for cpu & memory Thresholds (Duplicate check if the caller is generateRecommendations)
         String recommendationTerm = termEntry.getKey();
         double hours = termEntry.getValue().getDays() * KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.
@@ -1395,7 +1422,7 @@ public class RecommendationEngine {
             currentMemLimit = internalMapToPopulate.get(RecommendationConstants.RecommendationEngine.InternalConstants.CURRENT_MEMORY_LIMIT);
 
 
-        HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> config = new HashMap<>();
+        Config config = new Config();
         // Create Request Map
         HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> requestsMap = new HashMap<>();
         // Recommendation Item checks
@@ -1832,6 +1859,12 @@ public class RecommendationEngine {
             recommendationModel.addNotification(recommendationNotification);
         }
 
+        // Set env list
+        if (runtimeListToPopulate != null && !runtimeListToPopulate.isEmpty()) {
+            RecommendationNotification recommendationNotification = new RecommendationNotification(RecommendationConstants.RecommendationNotification.INFO_RUNTIMES_RECOMMENDATIONS_AVAILABLE);
+            engineNotifications.add(recommendationNotification);
+            config.setEnv(runtimeListToPopulate);
+        }
         // set the engine level notifications here
         for (RecommendationNotification recommendationNotification : engineNotifications) {
             recommendationModel.addNotification(recommendationNotification);
@@ -1839,7 +1872,7 @@ public class RecommendationEngine {
 
         // Set Request Map
         if (!requestsMap.isEmpty()) {
-            config.put(AnalyzerConstants.ResourceSetting.requests, requestsMap);
+            config.setRequests(requestsMap);
         }
 
         // Check if accelerator map is not empty and add to limits map
@@ -1849,13 +1882,11 @@ public class RecommendationEngine {
 
         // Set Limits Map
         if (!limitsMap.isEmpty()) {
-            config.put(AnalyzerConstants.ResourceSetting.limits, limitsMap);
+            config.setLimits(limitsMap);
         }
 
         // Set Config
-        if (!config.isEmpty()) {
-            recommendationModel.setConfig(config);
-        }
+        recommendationModel.setConfig(config);
 
         // Check if map is not empty and set requests map to current config
         if (!currentRequestsMap.isEmpty()) {
@@ -2644,6 +2675,12 @@ public class RecommendationEngine {
                     );
                 })
                 .toList();
+    }
+
+    private void addIfNotEmpty(List<RecommendationConfigEnv> list, String name, StringBuilder valueBuilder) {
+        if (valueBuilder != null && !valueBuilder.toString().isEmpty()) {
+            list.add(new RecommendationConfigEnv(name, valueBuilder.toString()));
+        }
     }
 }
 
