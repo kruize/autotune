@@ -40,32 +40,17 @@ public final class KruizeLayer {
     public KruizeLayer() {
     }
 
-    public KruizeLayer(String name, String apiVersion, String kind,
+    public KruizeLayer(String apiVersion, String kind, LayerMetadata metadata,
                        String layerName, int layerLevel, String details,
-                       String presence, List<LayerPresenceQuery> queries,
-                       String labelName, String labelValue,
-                       ArrayList<Tunable> tunables) {
+                       LayerPresence layerPresence, ArrayList<Tunable> tunables) {
         this.apiVersion = apiVersion;
         this.kind = kind;
+        this.metadata = metadata;
         this.layerName = layerName;
         this.layerLevel = layerLevel;
         this.details = details;
+        this.layerPresence = layerPresence;
         this.tunables = tunables;
-
-        // Create LayerMetadata
-        this.metadata = new LayerMetadata();
-        this.metadata.setName(name);
-
-        // Create LayerPresence
-        this.layerPresence = new LayerPresence();
-        this.layerPresence.setPresence(presence);
-        if (queries != null && !queries.isEmpty()) {
-            this.layerPresence.setQueries(queries);
-        }
-        if (labelName != null && labelValue != null) {
-            LayerPresenceLabel label = new LayerPresenceLabel(labelName, labelValue);
-            this.layerPresence.setLabel(new ArrayList<>(java.util.Arrays.asList(label)));
-        }
     }
 
     public String getApiVersion() {
