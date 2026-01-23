@@ -6,7 +6,6 @@ import com.autotune.operator.KruizeDeploymentInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ProfileService {
@@ -41,34 +40,39 @@ public class ProfileService {
 
     public static boolean isExists(String profileName) {
         init();
+        boolean found = false;
         if (remoteMode) {
-            LOGGER.info("[ProfileService] Check for performance profile : {}", profileName);
-            return performanceProfileMap.containsKey(profileName);
+            found  = performanceProfileMap.containsKey(profileName);
+            LOGGER.info("[ProfileService] Check for performance profile: {}; found: {}", profileName, found);
         } else {
-            LOGGER.info("[ProfileService] Check for metric profile : {}", profileName);
-            return metricProfileMap.containsKey(profileName);
+            found = metricProfileMap.containsKey(profileName);
+            LOGGER.info("[ProfileService] Check for metric profile: {}; found: {}", profileName, found);
         }
+        return found;
     }
 
     public static PerformanceProfile getProfile(String profileName) {
         init();
+        PerformanceProfile performanceProfile = null;
         if (remoteMode) {
-            LOGGER.info("[ProfileService] Check for performance profile : {}", profileName);
-            return performanceProfileMap.get(profileName);
+            performanceProfile = performanceProfileMap.get(profileName);
+            LOGGER.info("[ProfileService] Retrieving performance profile: {}; found: {}", profileName, performanceProfile!=null);
         } else {
-            LOGGER.info("[ProfileService] Check for metric profile : {}", profileName);
-            return metricProfileMap.get(profileName);
+            performanceProfile = metricProfileMap.get(profileName);
+            LOGGER.info("[ProfileService] Retrieving metric profile: {}; found: {}", profileName, performanceProfile!=null);
         }
+        return performanceProfile;
     }
 
-    public static PerformanceProfile removeProfile(String profileName) {
+    public static void removeProfile(String profileName) {
         init();
+        PerformanceProfile performanceProfile = null;
         if (remoteMode) {
-            LOGGER.info("[ProfileService] Removing performance profile : {}", profileName);
-            return performanceProfileMap.remove(profileName);
+            performanceProfile = performanceProfileMap.remove(profileName);
+            LOGGER.info("[ProfileService] Removing performance profile: {}; deleted? {}", profileName, performanceProfile!=null);
         } else {
-            LOGGER.info("[ProfileService] Removing metric profile : {}", profileName);
-            return metricProfileMap.remove(profileName);
+            performanceProfile = metricProfileMap.remove(profileName);
+            LOGGER.info("[ProfileService] Removing metrics profile: {}; deleted? {}", profileName, performanceProfile!=null);
         }
     }
 

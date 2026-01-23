@@ -53,7 +53,6 @@ public class ExperimentValidation {
     private boolean success;
     private String errorMessage;
     private Map<String, KruizeObject> mainKruizeExperimentMAP;
-    private Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
     private Map<String, MetadataProfile> metadataProfilesMap = new HashMap<>();
 
     //Mandatory fields
@@ -211,7 +210,7 @@ public class ExperimentValidation {
                 break;
             }
             // set Performance Profile metrics in the Kruize Object
-            PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            PerformanceProfile performanceProfile = ProfileService.getProfile(kruizeObject.getPerformanceProfile());
             try {
                 HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
                 for (Metric metric : performanceProfile.getSloInfo().getFunctionVariables()) {
