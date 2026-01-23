@@ -16,7 +16,6 @@
 
 package com.autotune.analyzer.kruizeLayer;
 
-import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
 import com.google.gson.annotations.SerializedName;
 import java.util.ArrayList;
 import java.util.List;
