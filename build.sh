@@ -22,7 +22,7 @@ AUTOTUNE_DOCKER_REPO="kruize/autotune_operator"
 AUTOTUNE_VERSION="$(grep -A 1 "autotune" "${ROOT_DIR}"/pom.xml | grep version | awk -F '>' '{ split($2, a, "<"); print a[1] }')"
 AUTOTUNE_DOCKER_IMAGE=${AUTOTUNE_DOCKER_REPO}:${AUTOTUNE_VERSION}
 DEV_MODE=0
-BUILD_PARAMS="--pull --no-cache"
+BUILD_PARAMS="--pull --no-cache --platform linux/amd64,linux/arm64"
 
 function usage() {
 	echo "Usage: $0 [-d] [-v version_string] [-i autotune_docker_image]"
