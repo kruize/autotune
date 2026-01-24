@@ -218,6 +218,22 @@ public class AnalyzerConstants {
         limits
     }
 
+    public enum RuntimesSetting {
+        env
+    }
+
+    public enum ConfigType {
+        REQUESTS(ResourceSetting.requests),
+        LIMITS(ResourceSetting.limits),
+        ENV(RuntimesSetting.env);
+
+        private final Enum<?> sourceEnum;
+
+        ConfigType(Enum<?> sourceEnum) {
+            this.sourceEnum = sourceEnum;
+        }
+    }
+
     public enum PersistenceType {
         LOCAL,              //Store only local  , Default
         HYBRID,             //Store data both in db and local
@@ -632,6 +648,26 @@ public class AnalyzerConstants {
         private AutotuneConfigConstants() {
         }
 
+    }
+
+    /**
+     * Contains constants related to KruizeLayer presence detection
+     */
+    public static final class LayerConstants {
+
+        /**
+         * Enum for different types of layer presence detection
+         */
+        public enum PresenceType {
+            ALWAYS,
+            QUERY,
+            LABEL
+        }
+
+        public static final String DEFAULT_PRESENCE = "always";
+
+        private LayerConstants() {
+        }
     }
 
     /**
