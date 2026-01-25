@@ -1,0 +1,46 @@
+apiVersion: "recommender.com/v1"
+kind: "KruizeLayer"
+metadata:
+  name: "hotspot"
+layer_name: hotspot
+layer_level: 1
+details: hotspot tunables
+layer_presence:
+  queries:
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~".+Eden.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~".+Tenured.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~".+Old.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"Eden.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"Tenured.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"Old.+"}'
+    key: pod
+tunables:
+# Enable zGC if Java >=17
+- name: GCPolicy
+  description: 'Garbage collection policy'
+  value_type: categorical
+  choices:
+    - 'G1GC'
+    - 'ParallelGC'
+    - 'SerialGC'
+    - 'ShenandoahGC'
+    - 'ZGC'
+
+- name: MaxRAMPercentage
+  description: 'Maximum RAM percentage to allocate'
+  value_type: integer
+  lower_bound: '25'
+  upper_bound: '90'
+  step: 1
+

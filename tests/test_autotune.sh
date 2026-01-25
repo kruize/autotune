@@ -26,6 +26,7 @@ SCRIPTS_DIR="${CURRENT_DIR}/scripts"
 . ${SCRIPTS_DIR}/remote_monitoring_tests/remote_monitoring_tests.sh
 . ${SCRIPTS_DIR}/local_monitoring_tests/local_monitoring_tests.sh
 . ${SCRIPTS_DIR}/local_monitoring_tests/authentication_tests.sh
+. ${SCRIPTS_DIR}/local_monitoring_tests/datasource_tests.sh
 
 
 resultsdir="${CURRENT_DIR}"
@@ -62,11 +63,11 @@ function check_cluster_type() {
 		usage
 	fi
 	case "${cluster_type}" in
-	minikube|openshift)
+    minikube|openshift|kind)
 		;;
-	*)
-		echo "Error: Cluster type **${cluster_type}** is not supported  "
-		usage
+	  *)
+      echo "Error: Cluster type **${cluster_type}** is not supported  "
+      usage
 	esac
 }
 
@@ -128,7 +129,7 @@ do
 		setup=0
 		;;
 	i)
-		KRUIZE_DOCKER_IMAGE="${OPTARG}"		
+		KRUIZE_DOCKER_IMAGE="${OPTARG}"
 		;;
 	s)
 		setup=1

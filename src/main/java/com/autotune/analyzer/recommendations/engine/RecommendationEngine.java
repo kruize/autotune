@@ -751,7 +751,7 @@ public class RecommendationEngine {
                         String status = KruizeConstants.APIMessages.SUCCESS;   // TODO avoid this constant at multiple place
                         try {
                             timerBoxPlots = Timer.start(MetricsConfig.meterRegistry());
-                            mappedRecommendationForTerm.setPlots(new PlotManager(containerData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots());
+                            mappedRecommendationForTerm.setPlots(new PlotManager(containerData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots(AnalyzerConstants.ExperimentType.CONTAINER));
                         } catch (Exception e) {
                             status = String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.BOX_PLOTS_FAILURE, e.getMessage());
                         } finally {
@@ -1120,6 +1120,27 @@ public class RecommendationEngine {
                     mappedRecommendationForTerm.addNotification(recommendationNotification);
                 }
                 mappedRecommendationForTerm.setMonitoringStartTime(monitoringStartTime);
+                // generate plots when minimum data is available for the term
+                if (KruizeDeploymentInfo.plots) {
+                    if (null != monitoringStartTime) {
+                        Timer.Sample timerBoxPlots = null;
+                        String status = KruizeConstants.APIMessages.SUCCESS;
+                        try {
+                            timerBoxPlots = Timer.start(MetricsConfig.meterRegistry());
+                            LOGGER.debug("terms: {}",terms);
+                            mappedRecommendationForTerm.setPlots(new PlotManager(namespaceData.getResults(), terms, monitoringStartTime, monitoringEndTime).generatePlots(AnalyzerConstants.ExperimentType.NAMESPACE));
+                        } catch (Exception e) {
+                            status = String.format(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.BOX_PLOTS_FAILURE, e.getMessage());
+                            LOGGER.debug(status);
+                        } finally {
+                            if (timerBoxPlots != null) {
+                                MetricsConfig.timerBoxPlots = MetricsConfig.timerBBoxPlots.tag(KruizeConstants.DataSourceConstants
+                                        .DataSourceQueryJSONKeys.STATUS, status).register(MetricsConfig.meterRegistry());
+                                timerBoxPlots.stop(MetricsConfig.timerBoxPlots);
+                            }
+                        }
+                    }
+                }
 
             }
             Terms.setDurationBasedOnTermNamespace(namespaceData, mappedRecommendationForTerm, recommendationTerm);

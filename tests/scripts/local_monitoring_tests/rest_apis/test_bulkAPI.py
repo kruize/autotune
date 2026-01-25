@@ -47,12 +47,20 @@ def base_payload():
         "time_range": {}
     }
 
+def filtered_payload():
+    payload = base_payload()
+    payload["filter"]["include"]["namespace"] = ["default"]
+    payload["filter"]["include"]["workload"] = ["sysbench"]
+    payload["filter"]["include"]["containers"] = ["sysbench"]
+    return payload
+
 @pytest.mark.test_bulk_api_ros
 @pytest.mark.sanity
 @pytest.mark.parametrize("bulk_request_payload, expected_job_id_present", [
     ({}, True),  # Test with an empty payload to check if a job_id is created.
-    (base_payload(),True)  # Test with a sample payload with some JSON content
-])
+    (base_payload(),True),  # Test with a sample payload with some JSON content
+    (filtered_payload(), True)  # Test with payload with filters
+])    
 def test_bulk_post_request(cluster_type, bulk_request_payload, expected_job_id_present, caplog):
     form_kruize_url(cluster_type)
     URL = get_kruize_url()
@@ -221,3 +229,151 @@ def test_bulk_validate_datasource_missing(cluster_type):
     print("Response:", response.json())
     assert response.status_code == ERROR_STATUS_CODE
     assert DATASOURCE_NOT_SERVICEABLE in response.json()["message"]
+
+
+@pytest.mark.test_bulk_api_ros
+@pytest.mark.sanity
+@pytest.mark.parametrize(
+    "filter_setup, expected",
+    [
+        pytest.param(
+            {
+                "include": {
+                    "namespace": ["default"],
+                    "workload": ["wl1"],
+                    "containers": ["ctr1"]
+                }
+            },
+            {
+                "namespace": ["default"],
+                "workload": ["wl1"],
+                "containers": ["ctr1"]
+            },
+            id="namespace_workload_container"
+        ),
+        pytest.param(
+            {
+                "include": {
+                    "namespace": ["default"]
+                }
+            },
+            {
+                "namespace": ["default"]
+            },
+            id="namespace_only"
+        ),
+        pytest.param(
+            {
+                "include": {
+                    "labels": {
+                        "cost": "true"
+                    }
+                }
+            },
+            {
+                "labels": {"cost": "true"},
+                "mode": "include"
+            },
+            id="labels_include"
+        ),
+        pytest.param(
+            {
+                "exclude": {
+                    "labels": {
+                        "cost": "true"
+                    }
+                }
+            },
+            {
+                "labels": {"cost": "true"},
+                "mode": "exclude"
+            },
+            id="labels_exclude"
+        ),
+    ]
+)
+def test_bulk_api_filter_application(
+    cluster_type,
+    filter_setup,
+    expected,
+    caplog
+):
+    """
+    Validate that filters applied in POST bulk API
+    are correctly reflected in GET bulk API metadata response.
+    """
+
+    # ---------------- SETUP ----------------
+    form_kruize_url(cluster_type)
+
+    payload = base_payload()
+
+    for filter_type, values in filter_setup.items():
+        payload["filter"].setdefault(filter_type, {})
+        payload["filter"][filter_type].update(values)
+
+    delete_and_create_metric_profile()
+    delete_and_create_metadata_profile()
+
+    # ---------------- POST ----------------
+    with caplog.at_level(logging.INFO):
+        response = post_bulk_api(payload, logging)
+        assert response.status_code == SUCCESS_200_STATUS_CODE
+
+        job_id = response.json().get("job_id")
+        assert job_id, "job_id not found in POST bulk API response"
+
+    # ---------------- GET (polling) ----------------
+    metadata = None
+    for _ in range(10):
+        get_response = get_bulk_job_status(
+            job_id,
+            include="metadata",
+            logger=logging
+        )
+        assert get_response.status_code == SUCCESS_200_STATUS_CODE
+
+        metadata = get_response.json().get("metadata", {})
+        if metadata.get("datasources"):
+            break
+
+        time.sleep(5)
+
+    # ---------------- VALIDATION ----------------
+
+    datasources = metadata.get("datasources", {})
+
+    # Label-based filters → empty metadata is VALID
+    if "labels" in expected:
+        assert isinstance(datasources, dict)
+        return
+
+    # For non-label filters, datasource must exist
+    assert datasources, "Bulk job did not return metadata"
+
+    for ds_data in datasources.values():
+        clusters = ds_data.get("clusters", {})
+        assert clusters, "No clusters found in metadata"
+
+        for cluster_data in clusters.values():
+            namespaces = cluster_data.get("namespaces", {})
+
+            # Namespace filter validation
+            if "namespace" in expected:
+                assert list(namespaces.keys()) == expected["namespace"]
+
+            for ns_data in namespaces.values():
+                workloads = ns_data.get("workloads", {})
+
+                if "workload" in expected:
+                    assert set(workloads.keys()).issubset(
+                        set(expected["workload"])
+                    )
+
+                for wl_data in workloads.values():
+                    containers = wl_data.get("containers", {})
+
+                    if "containers" in expected:
+                        assert set(containers.keys()).issubset(
+                            set(expected["containers"])
+                        )

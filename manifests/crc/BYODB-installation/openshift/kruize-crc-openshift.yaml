@@ -120,7 +120,7 @@ spec:
               done
       containers:
         - name: kruize
-          image: quay.io/kruize/autotune_operator:0.8
+          image: quay.io/kruize/autotune_operator:0.8.1
           imagePullPolicy: Always
           volumeMounts:
             - name: config-volume
