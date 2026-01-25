@@ -29,6 +29,7 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
@@ -50,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -63,6 +65,8 @@ import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSO
 public class CreateExperiment extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
+    
+    private static final Set<String> experimentNamesCache = ConcurrentHashMap.newKeySet();
     
     // Singleton instances to avoid creating new objects on each request
     private final Gson gson = new Gson();
@@ -103,24 +107,32 @@ public class CreateExperiment extends HttpServlet {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
             } else {
-                // Get rm parameter for database mode selection
-                String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
-                boolean rmTable = (null != rm && AnalyzerConstants.BooleanString.TRUE.equalsIgnoreCase(rm.trim()));
+                // Use deployment info to determine database mode selection
+                boolean rmTable = KruizeDeploymentInfo.is_ros_enabled;
                 
                 List<KruizeObject> kruizeExpList = new ArrayList<>();
                 for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
                     // Check if experiment already exists before processing
                     String experimentName = createExperimentAPIObject.getExperimentName();
                     if (experimentName != null) {
+                        // Check cache first to avoid DB call
+                        if (experimentNamesCache.contains(experimentName)) {
+                            LOGGER.debug("Experiment {} found in cache, returning 409", experimentName);
+                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                            return;
+                        }
+                        
                         try {
-                            // Check if experiment exists in database
+                            // Check if experiment exists in database only if not in cache
                             if (rmTable) {
                                 experimentDBService.loadExperimentFromDBByName(mKruizeExperimentMap, experimentName);
                             } else {
                                 experimentDBService.loadLMExperimentFromDBByName(mKruizeExperimentMap, experimentName);
                             }
-                            // If experiment found, return 409 Conflict
+                            // If experiment found in DB, add to cache and return 409 Conflict
                             if (mKruizeExperimentMap.containsKey(experimentName)) {
+                                experimentNamesCache.add(experimentName);
+                                LOGGER.debug("Experiment {} found in DB, added to cache and returning 409", experimentName);
                                 sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
                                 return;
                             }
@@ -170,6 +182,9 @@ public class CreateExperiment extends HttpServlet {
                         addedToDB = experimentDBService.addExperimentToDB(validAPIObj);
                     }
                     if (addedToDB.isSuccess()) {
+                        for (KruizeObject ko : kruizeExpList) {
+                            experimentNamesCache.add(ko.getExperimentName());
+                        }
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
                         statusValue = "success";
                     } else {
@@ -205,9 +220,8 @@ public class CreateExperiment extends HttpServlet {
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
         String inputData = "";
-        String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
-        // Check if rm is not null and set to true
-        boolean rmTable = (null != rm && AnalyzerConstants.BooleanString.TRUE.equalsIgnoreCase(rm.trim()));
+        // Use deployment info to determine database mode selection
+        boolean rmTable = KruizeDeploymentInfo.is_ros_enabled;
         try {
             inputData = request.getReader().lines().collect(Collectors.joining());
             CreateExperimentAPIObject[] createExperimentAPIObjects = gson.fromJson(inputData, CreateExperimentAPIObject[].class);
@@ -238,6 +252,7 @@ public class CreateExperiment extends HttpServlet {
                         }
                         if (validationOutputData.isSuccess()) {
                             mKruizeExperimentMap.remove(ko.getExperimentName());
+                            experimentNamesCache.remove(expName);
                         } else {
                             throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
                         }
