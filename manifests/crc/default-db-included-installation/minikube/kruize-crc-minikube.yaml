@@ -229,7 +229,7 @@ data:
         "c3p0timeout": 300,
         "c3p0maxstatements": 50,
         "hbm2ddlauto": "none",
-        "showsql": "true",
+        "showsql": "false",
         "timezone": "UTC"
       },
       "logging" : {

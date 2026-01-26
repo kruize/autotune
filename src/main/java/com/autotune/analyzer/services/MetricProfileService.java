@@ -93,7 +93,7 @@ public class MetricProfileService extends HttpServlet {
                 ValidationOutputData addedToDB = new ExperimentDBService().addMetricProfileToDB(metricProfile);
                 if (addedToDB.isSuccess()) {
                     LOGGER.debug(KruizeConstants.MetricProfileAPIMessages.ADD_METRIC_PROFILE_TO_DB_WITH_VERSION,
-                            metricProfile.getName(), metricProfile.getProfile_version());
+                            metricProfileName, metricProfile.getProfile_version());
                     sendSuccessResponse(response, String.format(KruizeConstants.MetricProfileAPIMessages.CREATE_METRIC_PROFILE_SUCCESS_MSG, metricProfile.getName()));
                 } else {
                     sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
