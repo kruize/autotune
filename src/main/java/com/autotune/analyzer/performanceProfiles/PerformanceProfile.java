@@ -110,6 +110,7 @@ public class PerformanceProfile {
         this.profile_version = profile_version;
         this.k8s_type = k8s_type;
         this.sloInfo = sloInfo;
+        this.name = metadata != null ? (metadata.get("name") != null ? metadata.get("name").asText() : null) : null;
     }
 
     public String getName() {

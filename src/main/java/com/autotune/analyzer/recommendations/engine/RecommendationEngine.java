@@ -7,7 +7,6 @@ import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
-import com.autotune.analyzer.performanceProfiles.MetricProfileCollection;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.plots.PlotManager;
 import com.autotune.analyzer.recommendations.*;
@@ -1985,7 +1984,7 @@ public class RecommendationEngine {
     public void fetchMetricsBasedOnProfileAndDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception, FetchMetricsError {
         try {
             String metricProfileName = kruizeObject.getPerformanceProfile();
-            PerformanceProfile metricProfile = MetricProfileCollection.getInstance().getMetricProfileCollection().get(metricProfileName);
+            PerformanceProfile metricProfile = ProfileCache.getProfile(metricProfileName, ProfileType.METRIC);
             if (null == metricProfile) {
                 LOGGER.error("MetricProfile does not exist or is not valid: {}", metricProfileName);
                 return;

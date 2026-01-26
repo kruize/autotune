@@ -21,16 +21,15 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.AggregationFunctions;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.analyzer.kruizeObject.SloInfo;
-import com.autotune.database.service.ExperimentDBService;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.utils.ProfileCache;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.autotune.utils.ProfileType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,14 +116,9 @@ public class PerformanceProfileValidation {
 
         // If the mandatory values are present, proceed for further validation else return the validation object directly
         if (validationOutputData.isSuccess()) {
-            try {
-                new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
-            } catch (Exception e) {
-                LOGGER.error("Loading saved performance profiles failed: {} ", e.getMessage());
-            }
             StringBuilder errorString = new StringBuilder();
             // check if the performance profile already exists
-            PerformanceProfile existingPerformanceProfile = performanceProfilesMap.get(performanceProfile.getName());
+            PerformanceProfile existingPerformanceProfile = ProfileCache.getProfile(performanceProfile.getName(), ProfileType.PERFORMANCE);
             switch (operationType) {
                 case CREATE:
                     if (existingPerformanceProfile != null) {
@@ -410,20 +404,14 @@ public class PerformanceProfileValidation {
 
             // If the mandatory values are present,proceed for further validation else return the validation object directly
             if (validationOutputData.isSuccess()) {
-                try {
-                    new ExperimentDBService().loadAllMetricProfiles(performanceProfilesMap);
-                } catch (Exception e) {
-                    LOGGER.error("Loading saved metric profiles failed: {} ", e.getMessage());
-                }
-
                 // Check if metadata exists
                 JsonNode metadata = metricProfile.getMetadata();
                 if (null == metadata) {
                     errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRIC_PROFILE_METADATA);
                 }
                 // check if the performance profile already exists
-                if (null != performanceProfilesMap.get(metricProfile.getMetadata().get("name").asText())) {
-                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METRIC_PROFILE).append(metricProfile.getMetadata().get("name").asText());
+                if (ProfileCache.isExists(metricProfile.getName(), ProfileType.METRIC)) {
+                    errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METRIC_PROFILE).append(metricProfile.getName());
                     return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
                 }
 
@@ -439,6 +427,7 @@ public class PerformanceProfileValidation {
                 }
             }
         } catch (Exception e){
+            LOGGER.error("Exception occurred while validating metric profile data", e);
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage(errorString.toString());
             validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);

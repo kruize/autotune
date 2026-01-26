@@ -21,8 +21,9 @@ import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
+import com.autotune.utils.ProfileCache;
 import com.autotune.utils.KruizeConstants;
-import org.json.JSONObject;
+import com.autotune.utils.ProfileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,15 +48,10 @@ public class MetricProfileCollection {
         return metricProfileCollectionInstance;
     }
 
-    public HashMap<String, PerformanceProfile> getMetricProfileCollection() {
-        return metricProfileCollection;
-    }
-
     public void loadMetricProfilesFromDB() {
         try {
             LOGGER.info(KruizeConstants.MetricProfileConstants.CHECKING_AVAILABLE_METRIC_PROFILE_FROM_DB);
-            Map<String, PerformanceProfile> availableMetricProfiles = new HashMap<>();
-            new ExperimentDBService().loadAllMetricProfiles(availableMetricProfiles);
+            Map<String, PerformanceProfile> availableMetricProfiles = ProfileCache.getProfileMap(ProfileType.METRIC);
             if (availableMetricProfiles.isEmpty()) {
                 LOGGER.info(KruizeConstants.MetricProfileConstants.NO_METRIC_PROFILE_FOUND_IN_DB);
             }else {
@@ -70,19 +66,6 @@ public class MetricProfileCollection {
         }
     }
 
-
-    public void addMetricProfile(PerformanceProfile metricProfile) {
-        String metricProfileName = metricProfile.getMetadata().get("name").asText();
-
-        LOGGER.info(KruizeConstants.MetricProfileConstants.ADDING_METRIC_PROFILE + "{}", metricProfileName);
-
-        if(metricProfileCollection.containsKey(metricProfileName)) {
-            LOGGER.error(KruizeConstants.MetricProfileConstants.METRIC_PROFILE_ALREADY_EXISTS + "{}", metricProfileName);
-        } else {
-            LOGGER.info(KruizeConstants.MetricProfileConstants.METRIC_PROFILE_ADDED, metricProfileName);
-            metricProfileCollection.put(metricProfileName, metricProfile);
-        }
-    }
 
     public void addMetricProfileFromConfigFile() {
         try {

@@ -31,8 +31,9 @@ import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
+import com.autotune.utils.ProfileCache;
 import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.KruizeSupportedTypes;
+import com.autotune.utils.ProfileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -52,7 +53,6 @@ public class ExperimentValidation {
     private boolean success;
     private String errorMessage;
     private Map<String, KruizeObject> mainKruizeExperimentMAP;
-    private Map<String, PerformanceProfile> performanceProfilesMap = new HashMap<>();
     private Map<String, MetadataProfile> metadataProfilesMap = new HashMap<>();
 
     //Mandatory fields
@@ -116,21 +116,18 @@ public class ExperimentValidation {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                         } else {
-                            // fetch the Performance / Metric Profile from the DB
-                            try {
-                                if (KruizeDeploymentInfo.is_ros_enabled && target_cluster.equalsIgnoreCase(AnalyzerConstants.REMOTE)) { // todo call this in function and use across every where
-                                    new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
-                                } else {
-                                    new ExperimentDBService().loadMetricProfileFromDBByName(performanceProfilesMap, kruizeObject.getPerformanceProfile());
-                                }
-                            } catch (Exception e) {
-                                LOGGER.error("Loading saved Performance Profile {} failed: {} ", expName, e.getMessage());
+                            boolean found = false;
+                            if (KruizeDeploymentInfo.is_ros_enabled && AnalyzerConstants.REMOTE.equalsIgnoreCase(target_cluster)) {
+                                found = ProfileCache.isExists(kruizeObject.getPerformanceProfile(), ProfileType.PERFORMANCE);
+                            } else {
+                                found = ProfileCache.isExists(kruizeObject.getPerformanceProfile(), ProfileType.METRIC);
                             }
-                            if (null == performanceProfilesMap.get(kruizeObject.getPerformanceProfile())) {
+                            if (!found) {
                                 errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getPerformanceProfile();
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
-                            } else
+                            } else {
                                 proceed = true;
+                            }
                         }
                     } else {
                         if (null == kruizeObject.getSloInfo()) {
@@ -219,7 +216,13 @@ public class ExperimentValidation {
                 break;
             }
             // set Performance Profile metrics in the Kruize Object
-            PerformanceProfile performanceProfile = performanceProfilesMap.get(kruizeObject.getPerformanceProfile());
+            PerformanceProfile performanceProfile = null;
+            if (KruizeDeploymentInfo.is_ros_enabled && AnalyzerConstants.REMOTE.equalsIgnoreCase(kruizeObject.getTarget_cluster())) {
+                performanceProfile = ProfileCache.getProfile(kruizeObject.getPerformanceProfile(), ProfileType.PERFORMANCE);
+            } else {
+                performanceProfile = ProfileCache.getProfile(kruizeObject.getPerformanceProfile(), ProfileType.METRIC);
+            }
+
             try {
                 HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
                 for (Metric metric : performanceProfile.getSloInfo().getFunctionVariables()) {
