@@ -31,9 +31,9 @@ import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
-import com.autotune.service.ProfileService;
+import com.autotune.utils.ProfileCache;
 import com.autotune.utils.KruizeConstants;
-import com.autotune.utils.KruizeSupportedTypes;
+import com.autotune.utils.ProfileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -116,7 +116,13 @@ public class ExperimentValidation {
                             errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.SLO_REDUNDANCY_ERROR;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                         } else {
-                            if (!ProfileService.isExists(kruizeObject.getPerformanceProfile())) {
+                            boolean found = false;
+                            if (KruizeDeploymentInfo.is_ros_enabled && AnalyzerConstants.REMOTE.equalsIgnoreCase(target_cluster)) {
+                                found = ProfileCache.isExists(kruizeObject.getPerformanceProfile(), ProfileType.PERFORMANCE);
+                            } else {
+                                found = ProfileCache.isExists(kruizeObject.getPerformanceProfile(), ProfileType.METRIC);
+                            }
+                            if (!found) {
                                 errorMsg = AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + kruizeObject.getPerformanceProfile();
                                 validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             } else {
@@ -210,7 +216,13 @@ public class ExperimentValidation {
                 break;
             }
             // set Performance Profile metrics in the Kruize Object
-            PerformanceProfile performanceProfile = ProfileService.getProfile(kruizeObject.getPerformanceProfile());
+            PerformanceProfile performanceProfile = null;
+            if (KruizeDeploymentInfo.is_ros_enabled && AnalyzerConstants.REMOTE.equalsIgnoreCase(kruizeObject.getTarget_cluster())) {
+                performanceProfile = ProfileCache.getProfile(kruizeObject.getPerformanceProfile(), ProfileType.PERFORMANCE);
+            } else {
+                performanceProfile = ProfileCache.getProfile(kruizeObject.getPerformanceProfile(), ProfileType.METRIC);
+            }
+
             try {
                 HashMap<AnalyzerConstants.MetricName, Metric> metricsMap = new HashMap<>();
                 for (Metric metric : performanceProfile.getSloInfo().getFunctionVariables()) {

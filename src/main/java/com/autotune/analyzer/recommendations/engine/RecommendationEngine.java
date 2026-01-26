@@ -33,7 +33,6 @@ import com.autotune.common.utils.CommonUtils;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.metrics.KruizeNotificationCollectionRegistry;
 import com.autotune.operator.KruizeDeploymentInfo;
-import com.autotune.service.ProfileService;
 import com.autotune.utils.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -1985,7 +1984,7 @@ public class RecommendationEngine {
     public void fetchMetricsBasedOnProfileAndDatasource(KruizeObject kruizeObject, Timestamp interval_end_time, Timestamp interval_start_time, DataSourceInfo dataSourceInfo) throws Exception, FetchMetricsError {
         try {
             String metricProfileName = kruizeObject.getPerformanceProfile();
-            PerformanceProfile metricProfile = ProfileService.getProfile(metricProfileName);
+            PerformanceProfile metricProfile = ProfileCache.getProfile(metricProfileName, ProfileType.METRIC);
             if (null == metricProfile) {
                 LOGGER.error("MetricProfile does not exist or is not valid: {}", metricProfileName);
                 return;

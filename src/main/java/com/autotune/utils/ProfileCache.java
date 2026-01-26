@@ -1,4 +1,4 @@
-package com.autotune.service;
+package com.autotune.utils;
 
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.database.service.ExperimentDBService;
@@ -8,25 +8,26 @@ import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-public class ProfileService {
+public class ProfileCache {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ProfileService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ProfileCache.class);
     private static volatile ConcurrentHashMap<String, PerformanceProfile> performanceProfileMap;
     private static volatile ConcurrentHashMap<String, PerformanceProfile> metricProfileMap;
     private static boolean remoteMode = false;
 
-    private static void init() {
+    public static void init() {
         if (null == performanceProfileMap || null == metricProfileMap) {
-            synchronized (ProfileService.class) {
+            synchronized (ProfileCache.class) {
                 if (null == performanceProfileMap || null == metricProfileMap) {
                     performanceProfileMap = new ConcurrentHashMap<>();
                     metricProfileMap = new ConcurrentHashMap<>();
                     try {
-                        if (KruizeDeploymentInfo.is_ros_enabled && !KruizeDeploymentInfo.local) { //ROS always deploy Kruize in REMOTE mode only.
+                        if (KruizeDeploymentInfo.is_ros_enabled) { //ROS always deploy Kruize in REMOTE mode only.
                             new ExperimentDBService().loadAllPerformanceProfiles(performanceProfileMap);
                             remoteMode = true;
                             LOGGER.info("Profile cache is initialized successfully with {} profiles.", performanceProfileMap.size());
-                        } else {
+                        }
+                        if (KruizeDeploymentInfo.local) {
                             new ExperimentDBService().loadAllMetricProfiles(metricProfileMap);
                             LOGGER.info("Metric cache is initialized successfully with {} profiles.", metricProfileMap.size());
                         }
@@ -38,63 +39,65 @@ public class ProfileService {
         }
     }
 
-    public static boolean isExists(String profileName) {
+    public static boolean isExists(String profileName, ProfileType profileType) {
         init();
         boolean found = false;
-        if (remoteMode) {
+        if (ProfileType.PERFORMANCE.equals(profileType)) {
             found  = performanceProfileMap.containsKey(profileName);
             LOGGER.info("[ProfileService] Check for performance profile: {}; found: {}", profileName, found);
-        } else {
+        } else if (ProfileType.METRIC.equals(profileType)) {
             found = metricProfileMap.containsKey(profileName);
             LOGGER.info("[ProfileService] Check for metric profile: {}; found: {}", profileName, found);
         }
         return found;
     }
 
-    public static PerformanceProfile getProfile(String profileName) {
+    public static PerformanceProfile getProfile(String profileName, ProfileType profileType) {
         init();
         PerformanceProfile performanceProfile = null;
-        if (remoteMode) {
+        if (ProfileType.PERFORMANCE.equals(profileType)) {
             performanceProfile = performanceProfileMap.get(profileName);
-            LOGGER.info("[ProfileService] Retrieving performance profile: {}; found: {}", profileName, performanceProfile!=null);
-        } else {
+            LOGGER.info("[ProfileService] Retrieving performance profile: {}; found: {}", profileName, performanceProfile != null);
+        } else if  (ProfileType.METRIC.equals(profileType)) {
             performanceProfile = metricProfileMap.get(profileName);
-            LOGGER.info("[ProfileService] Retrieving metric profile: {}; found: {}", profileName, performanceProfile!=null);
+            LOGGER.info("[ProfileService] Retrieving metric profile: {}; found: {}", profileName, performanceProfile != null);
         }
         return performanceProfile;
     }
 
-    public static void removeProfile(String profileName) {
+    public static void removeProfile(String profileName, ProfileType profileType) {
         init();
         PerformanceProfile performanceProfile = null;
-        if (remoteMode) {
+        if (ProfileType.PERFORMANCE.equals(profileType)) {
             performanceProfile = performanceProfileMap.remove(profileName);
             LOGGER.info("[ProfileService] Removing performance profile: {}; deleted? {}", profileName, performanceProfile!=null);
-        } else {
+        } else if (ProfileType.METRIC.equals(profileType)) {
             performanceProfile = metricProfileMap.remove(profileName);
             LOGGER.info("[ProfileService] Removing metrics profile: {}; deleted? {}", profileName, performanceProfile!=null);
         }
     }
 
-    public static void addProfile(PerformanceProfile profile) {
+    public static void addProfile(PerformanceProfile profile, ProfileType profileType) {
         init();
-        if (remoteMode) {
+        if (ProfileType.PERFORMANCE.equals(profileType)) {
             LOGGER.info("[ProfileService] Adding performance profile : {}", profile.getName());
             performanceProfileMap.put(profile.getName(), profile);
-        } else {
+        } else if (ProfileType.METRIC.equals(profileType)) {
             LOGGER.info("[ProfileService] Adding metric profile : {}", profile.getName());
             metricProfileMap.put(profile.getName(), profile);
         }
     }
 
-    public static ConcurrentHashMap<String, PerformanceProfile> getProfileMap() {
+    public static ConcurrentHashMap<String, PerformanceProfile> getProfileMap(ProfileType profileType) {
         init();
-        if (remoteMode) {
+        if (ProfileType.PERFORMANCE.equals(profileType)) {
             LOGGER.info("[ProfileService] Retrieve performance profile cache. Current size : {}", performanceProfileMap.size());
             return performanceProfileMap;
-        } else {
+        } else if (ProfileType.METRIC.equals(profileType)) {
             LOGGER.info("[ProfileService] Retrieve metric profile cache. Current size : {}", metricProfileMap.size());
             return metricProfileMap;
+        } else {
+            return null;
         }
     }
 }

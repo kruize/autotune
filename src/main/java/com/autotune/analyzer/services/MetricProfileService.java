@@ -32,9 +32,10 @@ import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
-import com.autotune.service.ProfileService;
+import com.autotune.utils.ProfileCache;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.autotune.utils.ProfileType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.gson.*;
@@ -146,12 +147,12 @@ public class MetricProfileService extends HttpServlet {
                 try {
                     if (null != metricProfileName && !metricProfileName.isEmpty()) {
                         internalVerbose = "true";
-                        PerformanceProfile metricsProfile = ProfileService.getProfile(metricProfileName);
+                        PerformanceProfile metricsProfile = ProfileCache.getProfile(metricProfileName, ProfileType.METRIC);
                         if (metricsProfile != null) {
                             metricProfilesMap.put(metricProfileName, metricsProfile);
                         }
                     } else {
-                        metricProfilesMap = ProfileService.getProfileMap();
+                        metricProfilesMap = ProfileCache.getProfileMap(ProfileType.METRIC);
                     }
 
                     // Check if metric profile exists
@@ -258,7 +259,7 @@ public class MetricProfileService extends HttpServlet {
 
         try {
             // load specified metric profile
-            if (ProfileService.isExists(metricProfileName)) {
+            if (ProfileCache.isExists(metricProfileName, ProfileType.METRIC)) {
                 try {
                     // Deletes database and in-memory metric profile object stored
                     deleteMetricProfile(metricProfileName);
@@ -335,7 +336,7 @@ public class MetricProfileService extends HttpServlet {
             // delete the metric profile from DB
             deletedMetricProfileFromDB = new ExperimentDAOImpl().deleteKruizeMetricProfileEntryByName(metricProfileName);
             if (deletedMetricProfileFromDB.isSuccess()) {
-                ProfileService.removeProfile(metricProfileName);
+                ProfileCache.removeProfile(metricProfileName, ProfileType.METRIC);
                 LOGGER.debug(KruizeConstants.MetricProfileAPIMessages.DELETE_METRIC_PROFILE_FROM_DB_SUCCESS_MSG);
             } else {
                 LOGGER.error(AnalyzerErrorConstants.APIErrors.DeleteMetricProfileAPI.DELETE_METRIC_PROFILE_FROM_DB_FAILURE_MSG, deletedMetricProfileFromDB.getMessage());

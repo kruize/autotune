@@ -24,9 +24,10 @@ import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.experimentManager.utils.EMConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
-import com.autotune.service.ProfileService;
+import com.autotune.utils.ProfileCache;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
+import com.autotune.utils.ProfileType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
@@ -117,7 +118,7 @@ public class PerformanceProfileValidation {
         if (validationOutputData.isSuccess()) {
             StringBuilder errorString = new StringBuilder();
             // check if the performance profile already exists
-            PerformanceProfile existingPerformanceProfile = ProfileService.getProfile(performanceProfile.getName());
+            PerformanceProfile existingPerformanceProfile = ProfileCache.getProfile(performanceProfile.getName(), ProfileType.PERFORMANCE);
             switch (operationType) {
                 case CREATE:
                     if (existingPerformanceProfile != null) {
@@ -409,7 +410,7 @@ public class PerformanceProfileValidation {
                     errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_METRIC_PROFILE_METADATA);
                 }
                 // check if the performance profile already exists
-                if (ProfileService.isExists(metricProfile.getName())) {
+                if (ProfileCache.isExists(metricProfile.getName(), ProfileType.METRIC)) {
                     errorString.append(AnalyzerErrorConstants.AutotuneObjectErrors.DUPLICATE_METRIC_PROFILE).append(metricProfile.getName());
                     return new ValidationOutputData(false, errorString.toString(), HttpServletResponse.SC_CONFLICT);
                 }

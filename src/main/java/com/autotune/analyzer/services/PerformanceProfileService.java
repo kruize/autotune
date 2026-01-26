@@ -30,8 +30,9 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.database.service.ExperimentDBService;
-import com.autotune.service.ProfileService;
+import com.autotune.utils.ProfileCache;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.ProfileType;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -122,7 +123,7 @@ public class PerformanceProfileService extends HttpServlet {
         response.setStatus(HttpServletResponse.SC_OK);
         String gsonStr = "[]";
         // Fetch all profiles from the cache. Initialize from DB if required.
-        Map<String, PerformanceProfile> performanceProfilesMap = ProfileService.getProfileMap();
+        Map<String, PerformanceProfile> performanceProfilesMap = ProfileCache.getProfileMap(ProfileType.PERFORMANCE);
         if (!performanceProfilesMap.isEmpty()) {
             Collection<PerformanceProfile> values = performanceProfilesMap.values();
             Gson gsonObj = new GsonBuilder()
@@ -216,7 +217,7 @@ public class PerformanceProfileService extends HttpServlet {
         }
         try {
             // Load profile
-            if (!ProfileService.isExists(perfProfileName)) {
+            if (!ProfileCache.isExists(perfProfileName, ProfileType.PERFORMANCE)) {
                 sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST,
                         AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + perfProfileName);
                 return;
@@ -239,7 +240,7 @@ public class PerformanceProfileService extends HttpServlet {
                 return;
             }
             // remove the profile from the local storage as well
-            ProfileService.removeProfile(perfProfileName);
+            ProfileCache.removeProfile(perfProfileName, ProfileType.PERFORMANCE);
             sendSuccessResponse(resp, String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName));
         } catch (Exception e) {
             LOGGER.error("{}",String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION, perfProfileName, e.getMessage()));
