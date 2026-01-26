@@ -13,7 +13,6 @@ public class ProfileCache {
     private static final Logger LOGGER = LoggerFactory.getLogger(ProfileCache.class);
     private static volatile ConcurrentHashMap<String, PerformanceProfile> performanceProfileMap;
     private static volatile ConcurrentHashMap<String, PerformanceProfile> metricProfileMap;
-    private static boolean remoteMode = false;
 
     public static void init() {
         if (null == performanceProfileMap || null == metricProfileMap) {
@@ -24,7 +23,6 @@ public class ProfileCache {
                     try {
                         if (KruizeDeploymentInfo.is_ros_enabled) { //ROS always deploy Kruize in REMOTE mode only.
                             new ExperimentDBService().loadAllPerformanceProfiles(performanceProfileMap);
-                            remoteMode = true;
                             LOGGER.info("Profile cache is initialized successfully with {} profiles.", performanceProfileMap.size());
                         }
                         if (KruizeDeploymentInfo.local) {
