@@ -16,6 +16,7 @@
 
 package com.autotune.analyzer.kruizeLayer;
 
+import com.autotune.analyzer.exceptions.InvalidBoundsException;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import org.slf4j.Logger;
@@ -149,7 +150,7 @@ public class LayerValidation {
             // Validate individual tunable using existing Tunable.validate() method
             try {
                 tunable.validate();
-            } catch (Exception e) {
+            } catch (InvalidBoundsException e) {
                 errors.add(e.getMessage());
             }
         }
