@@ -71,7 +71,6 @@ class BulkJobManagerMockedTest {
         container = mock(DataSourceContainer.class);
         when(container.getContainerName()).thenReturn("sysbench");
 
-        // Default format (reset per test if needed)
         KruizeDeploymentInfo.experiment_name_format =
                 "%datasource%-%clustername%-%namespace%-%workloadname%-%workloadtype%-%containername%";
 
