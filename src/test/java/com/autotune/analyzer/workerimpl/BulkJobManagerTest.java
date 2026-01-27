@@ -1,5 +1,6 @@
 package com.autotune.analyzer.workerimpl;
 
+import org.junit.jupiter.api.AfterEach;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -14,7 +15,6 @@ import com.autotune.common.data.dataSourceMetadata.DataSourceContainer;
 import com.autotune.common.data.dataSourceMetadata.DataSourceNamespace;
 import com.autotune.common.data.dataSourceMetadata.DataSourceWorkload;
 import com.autotune.operator.KruizeDeploymentInfo;
-
 
 /**
  * Unit Test with Mocking Template Principles
@@ -39,7 +39,6 @@ import com.autotune.operator.KruizeDeploymentInfo;
  *    Assertions must be predictable and repeatable across environments
  *    and test runs.
  */
-
 class BulkJobManagerMockedTest {
 
     private BulkJobManager bulkJobManager;
@@ -51,12 +50,18 @@ class BulkJobManagerMockedTest {
     private DataSourceWorkload workload;
     private DataSourceContainer container;
 
+    // Preserve static state to avoid cross-test leakage
+    private String originalExperimentNameFormat;
+
     @BeforeEach
     void setup() {
-        bulkInput = mock(BulkInput.class);
-        jobStatus = mock(BulkJobStatus.class);
+        // Capture static/global state
+        originalExperimentNameFormat = KruizeDeploymentInfo.experiment_name_format;
 
+        bulkInput = mock(BulkInput.class);
         when(bulkInput.getDatasource()).thenReturn("prometheus");
+
+        jobStatus = mock(BulkJobStatus.class);
 
         cluster = mock(DataSourceCluster.class);
         when(cluster.getDataSourceClusterName()).thenReturn("cluster1");
@@ -75,6 +80,12 @@ class BulkJobManagerMockedTest {
                 "%datasource%-%clustername%-%namespace%-%workloadname%-%workloadtype%-%containername%";
 
         bulkJobManager = new BulkJobManager("job-123", jobStatus, bulkInput);
+    }
+
+    @AfterEach
+    void tearDown() {
+        // Restore static/global state
+        KruizeDeploymentInfo.experiment_name_format = originalExperimentNameFormat;
     }
 
     @Test
