@@ -18,6 +18,7 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.LayerValidation;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
@@ -68,6 +69,16 @@ public class LayerService extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             KruizeLayer kruizeLayer = Converters.KruizeObjectConverters.convertInputJSONToCreateLayer(inputData);
+
+            // Validate layer using LayerValidation helper
+            LayerValidation validation = new LayerValidation();
+            ValidationOutputData validationResult = validation.validate(kruizeLayer);
+
+            if (!validationResult.isSuccess()) {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST,
+                        "Validation failed: " + validationResult.getMessage());
+                return;
+            }
 
             // Validate that layer doesn't already exist
             ExperimentDAOImpl experimentDAO = new ExperimentDAOImpl();

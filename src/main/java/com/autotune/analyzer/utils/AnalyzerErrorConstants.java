@@ -362,8 +362,20 @@ public class AnalyzerErrorConstants {
         }
 
         public static final class CreateLayerAPI {
-            public CreateLayerAPI() {
+            private CreateLayerAPI() {
             }
+
+            // Layer validation errors
+            public static final String LAYER_METADATA_NAME_NULL = "metadata.name cannot be null or empty";
+            public static final String LAYER_NAME_NULL = "layer_name cannot be null or empty";
+            public static final String LAYER_PRESENCE_NULL = "layer_presence cannot be null";
+            public static final String LAYER_TUNABLES_NULL_OR_EMPTY = "tunables cannot be null or empty - layer must have at least one tunable";
+            public static final String LAYER_LEVEL_NEGATIVE = "layer_level cannot be negative; got: %d";
+            public static final String LAYER_PRESENCE_MISSING = "layer_presence configuration missing: must specify exactly one of: presence='always', queries, or label";
+            public static final String LAYER_PRESENCE_MULTIPLE_TYPES = "layer_presence cannot specify multiple types. Choose exactly one: presence, queries, or label";
+            public static final String LAYER_DUPLICATE_TUNABLE_NAMES = "Layer contains duplicate tunable names: %s";
+
+            // General layer errors
             public static final String INVALID_LAYER_JSON = "Invalid Layer JSON";
             public static final String LAYER_ALREADY_EXISTS = "Layer already exists with name: %s";
             public static final String ADD_LAYER_TO_DB_FAILURE = "Failed to add layer to database: %s";
