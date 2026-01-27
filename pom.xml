@@ -26,6 +26,8 @@
         <hibernate-Validator>8.0.1.Final</hibernate-Validator>
         <micrometer-version>1.9.9</micrometer-version>
         <awssdk-version>2.40.5</awssdk-version>
+        <argLine></argLine>
+        <surefireArgLine>-Dnet.bytebuddy.experimental=true</surefireArgLine>
     </properties>
     <dependencies>
         <dependency>
@@ -286,11 +288,8 @@
                 <artifactId>maven-surefire-plugin</artifactId>
                 <version>3.1.2</version>
                 <configuration>
-                    <includes>
-                        <include>**/*Test.java</include>
-                    </includes>
                     <failIfNoTests>true</failIfNoTests>
-                    <argLine>-Dnet.bytebuddy.experimental=true</argLine>
+                    <argLine>${argLine} ${surefireArgLine}</argLine>
                 </configuration>
             </plugin>
         </plugins>
