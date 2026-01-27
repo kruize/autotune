@@ -280,8 +280,7 @@ public class AnalyzerConstants {
         acceleratorCoreUsage,
         acceleratorMemoryUsage,
         acceleratorFrameBufferUsage,
-        jvmInfo,
-        jvmInfoTotal
+        jvmRuntimeInfo
     }
 
     public enum K8S_OBJECT_TYPES {

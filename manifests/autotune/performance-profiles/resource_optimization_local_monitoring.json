@@ -476,24 +476,16 @@
       {
         "name": "jvmRuntimeInfo",
         "datasource": "prometheus",
-        "value_type": "object",
+        "value_type": "double",
         "kubernetes_object": "container",
         "aggregation_functions": [
           {
-            "function": "metadata",
-            "query": "jvm_info_total{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}",
+            "function": "sum",
+            "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info_total{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})"
           },
           {
-            "function": "metadata",
-            "query": "jvm_info{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"}",
-          },
-          {
-            "function": "metadata",
-            "query": "jvm_info_total{container=\"$CONTAINER_NAME$\"}",
-          },
-          {
-            "function": "metadata",
-            "query": "jvm_info{container=\"$CONTAINER_NAME$\"}",
+            "function": "avg",
+            "query": "avg by(container, namespace, runtime, vendor, version)(jvm_info{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})"
           }
         ]
       }
