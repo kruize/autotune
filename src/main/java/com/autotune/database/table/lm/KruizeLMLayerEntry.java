@@ -23,6 +23,23 @@ import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+/**
+ * This is a Java class named KruizeLMLayerEntry annotated with JPA annotations.
+ * It represents a table named kruize_lm_layer in a relational database.
+ * <p>
+ * The class has the following fields:
+ * <p>
+ * api_version: A string representing the API version of the layer.
+ * kind: A string representing the kind/type of the layer.
+ * metadata: A JSON object containing layer metadata (e.g., name).
+ * layer_name: A unique identifier for the layer (primary key).
+ * layer_level: An integer representing the hierarchy level of the layer.
+ * details: A string containing additional details or description of the layer.
+ * layer_presence: A JSON object defining how to detect the layer's presence (presence, queries, or label).
+ * tunables: A JSON array containing the tunable parameters for this layer.
+ * <p>
+ * The KruizeLMLayerEntry class also has getters and setters for all its fields.
+ */
 @Entity
 @Table(name = "kruize_lm_layer")
 public class KruizeLMLayerEntry {
