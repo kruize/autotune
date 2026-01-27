@@ -1,6 +1,7 @@
 package com.autotune.analyzer.recommendations.model;
 
-import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
+import com.autotune.analyzer.kruizeLayer.LayerTunable;
+import com.autotune.analyzer.kruizeLayer.Tunable;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -683,13 +684,15 @@ public class GenericRecommendationModel implements RecommendationModel{
     }
 
     /**
+     * @param metricName 
+     * @param tunables
+     * @param context
      * @param filteredResultsMap
      * @param notifications
      * @return
      */
     @Override
-    public RecommendationConfigEnv getRuntimeRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
-        //TODO: Need to update this
+    public Object getRuntimeRecommendations(String metricName, List<Tunable> tunables, Map<LayerTunable, Object> context, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
         return null;
     }
 

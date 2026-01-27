@@ -1,5 +1,6 @@
 package com.autotune.analyzer.serviceObjects;
 
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.recommendations.ContainerRecommendations;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.utils.KruizeConstants;
@@ -7,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Simulating the ContainerData class for the create experiment API
@@ -17,6 +19,7 @@ public class ContainerAPIObject {
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATIONS)
     private ContainerRecommendations containerRecommendations;
     private List<Metric> metrics;
+    private Map<String, KruizeLayer> layerMap;
 
     public ContainerAPIObject(String container_name, String container_image_name, ContainerRecommendations containerRecommendations, List<Metric> metrics) {
         this.container_name = container_name;
@@ -44,6 +47,14 @@ public class ContainerAPIObject {
 
     public List<Metric> getMetrics() {
         return metrics;
+    }
+
+    public Map<String, KruizeLayer> getLayerMap() {
+        return layerMap;
+    }
+
+    public void setLayerMap(Map<String, KruizeLayer> layerMap) {
+        this.layerMap = layerMap;
     }
 
     @Override
