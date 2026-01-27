@@ -2019,50 +2019,6 @@ public class RecommendationEngine {
         }
     }
 
-    private long getEpochTime(GenericRestApiClient client, String namespace, String containerName, String workload,
-                              String workload_type, DataSourceInfo dataSourceInfo, String maxDateQuery) throws Exception {
-        LOGGER.debug(KruizeConstants.APIMessages.CONTAINER_USAGE_INFO);
-        String queryToEncode = null;
-        if (null == maxDateQuery || maxDateQuery.isEmpty()) {
-            throw new NullPointerException("maxDate query cannot be empty or null");
-        }
-        LOGGER.debug("maxDateQuery: {}", maxDateQuery);
-        queryToEncode = maxDateQuery
-                .replace(AnalyzerConstants.NAMESPACE_VARIABLE, namespace)
-                .replace(AnalyzerConstants.CONTAINER_VARIABLE, containerName)
-                .replace(AnalyzerConstants.WORKLOAD_VARIABLE, workload)
-                .replace(AnalyzerConstants.WORKLOAD_TYPE_VARIABLE, workload_type);
-
-        String dateMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATE_ENDPOINT_WITH_QUERY,
-                dataSourceInfo.getUrl(),
-                URLEncoder.encode(queryToEncode, CHARACTER_ENCODING)
-        );
-        LOGGER.debug(dateMetricsUrl);
-        client.setBaseURL(dateMetricsUrl);
-        JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
-        JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
-        JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
-        // Process fetched metrics
-        if (null != resultArray && !resultArray.isEmpty()) {
-            resultArray = resultArray.get(0)
-                    .getAsJsonObject().getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.VALUE);
-            return resultArray.get(0).getAsLong();
-        } else {
-            throw new Exception("Failed to get the results");
-        }
-    }
-
-    private String getJVMQueryByName(PerformanceProfile metricProfile, String metricName) {
-        List<Metric> metrics = metricProfile.getSloInfo().getFunctionVariables();
-        for (Metric metric : metrics) {
-            String name = metric.getName();
-            if (name.equals(metricName)) {
-                return metric.getQuery();
-            }
-        }
-        return null;
-    }
-
     /**
      * Fetches namespace metrics based on the specified datasource using queries from the metricProfile for the given time interval.
      *
@@ -2199,7 +2155,7 @@ public class RecommendationEngine {
 
                                         // Prepare interval results
                                         prepareIntervalResults(namespaceDataResults, namespaceIntervalResults, namespaceResMap, namespaceMetricResults,
-                                                namespaceMetricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
+                                                namespaceMetricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format, null);
                                     }
                                 }
                             } catch (Exception e) {
@@ -2475,6 +2431,10 @@ public class RecommendationEngine {
                                 JSONObject genericJsonObject = client.fetchMetricsJson(KruizeConstants.APIMessages.GET, "");
                                 JsonObject jsonObject = new Gson().fromJson(genericJsonObject.toString(), JsonObject.class);
                                 JsonArray resultArray = jsonObject.getAsJsonObject(KruizeConstants.JSONKeys.DATA).getAsJsonArray(KruizeConstants.DataSourceConstants.DataSourceQueryJSONKeys.RESULT);
+                                JsonObject metric = null;
+                                if (!resultArray.isEmpty()) {
+                                    metric = resultArray.get(0).getAsJsonObject().getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
+                                }
 
                                 // Skipping if Result array is null or empty
                                 if (null == resultArray || resultArray.isEmpty())
@@ -2616,7 +2576,7 @@ public class RecommendationEngine {
 
                                         // Prepare interval results
                                         prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults,
-                                                metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format);
+                                                metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format, metric);
                                     }
                                 }
                             } catch (Exception e) {
@@ -2659,7 +2619,7 @@ public class RecommendationEngine {
     private void prepareIntervalResults(Map<Timestamp, IntervalResults> dataResultsMap, IntervalResults intervalResults,
                                         HashMap<AnalyzerConstants.MetricName, MetricResults> resMap, MetricResults metricResults,
                                         MetricAggregationInfoResults metricAggregationInfoResults, Timestamp sTime, Timestamp eTime, Metric metricEntry,
-                                        Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry, double value, String format) throws Exception {
+                                        Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry, double value, String format, JsonObject metricObject) throws Exception {
         try {
             if (dataResultsMap.containsKey(eTime)) {
                 intervalResults = dataResultsMap.get(eTime);
@@ -2677,12 +2637,20 @@ public class RecommendationEngine {
                 metricAggregationInfoResults = new MetricAggregationInfoResults();
             }
 
-            Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
-            method.invoke(metricAggregationInfoResults, value);
-            metricAggregationInfoResults.setFormat(format);
-            metricResults.setAggregationInfoResult(metricAggregationInfoResults);
-            metricResults.setName(metricEntry.getName());
-            metricResults.setFormat(format);
+            if (metricObject != null && metricEntry.getName().equals(AnalyzerConstants.MetricName.jvmRuntimeInfo.toString())) {
+                MetricMetadataResults meta = new MetricMetadataResults();
+                meta.setVendor(metricObject.get("vendor").getAsString());
+                meta.setRuntime(metricObject.get("runtime").getAsString());
+                meta.setVersion(metricObject.get("version").getAsString());
+                metricResults.setMetricMetadataResults(meta);
+            } else {
+                Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
+                method.invoke(metricAggregationInfoResults, value);
+                metricAggregationInfoResults.setFormat(format);
+                metricResults.setAggregationInfoResult(metricAggregationInfoResults);
+                metricResults.setName(metricEntry.getName());
+                metricResults.setFormat(format);
+            }
             resMap.put(metricName, metricResults);
             intervalResults.setMetricResultsMap(resMap);
             intervalResults.setIntervalStartTime(sTime);  //Todo this will change
