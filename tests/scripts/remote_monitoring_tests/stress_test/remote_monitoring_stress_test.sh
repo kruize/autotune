@@ -19,7 +19,7 @@
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
 KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
-PERFORMANCE_PROFILE_DIR="${KRUIZE_REPO_PATH}manifests/autotune/performance-profiles"
+PERFORMANCE_PROFILE_DIR="${KRUIZE_REPO_PATH}/manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
