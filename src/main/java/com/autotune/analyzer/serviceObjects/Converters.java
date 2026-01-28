@@ -3,7 +3,6 @@ package com.autotune.analyzer.serviceObjects;
 import com.autotune.analyzer.exceptions.InvalidValueException;
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.kruizeLayer.*;
-import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
 import com.autotune.analyzer.kruizeObject.*;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
@@ -605,8 +604,24 @@ public class Converters {
                     }
                 }
 
-                kruizeLayer = new KruizeLayer(name, null, apiVersion, kind, layerName, layerLevel,
-                        details, presence, queries, labelName, labelValue, tunables);
+                // Create LayerMetadata object
+                LayerMetadata metadata = new LayerMetadata();
+                metadata.setName(name);
+
+                // Create LayerPresence object
+                LayerPresence layerPresence = new LayerPresence();
+                layerPresence.setPresence(presence);
+                layerPresence.setQueries(queries);
+
+                // Convert label name/value to List<LayerPresenceLabel> if present
+                if (labelName != null && labelValue != null) {
+                    List<LayerPresenceLabel> labels = new ArrayList<>();
+                    labels.add(new LayerPresenceLabel(labelName, labelValue));
+                    layerPresence.setLabel(labels);
+                }
+
+                kruizeLayer = new KruizeLayer(apiVersion, kind, metadata, layerName, layerLevel,
+                        details, layerPresence, tunables);
             }
             return kruizeLayer;
         }
