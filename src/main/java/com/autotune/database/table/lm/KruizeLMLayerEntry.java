@@ -16,12 +16,19 @@
 
 package com.autotune.database.table.lm;
 
+import com.autotune.analyzer.kruizeLayer.*;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.ArrayList;
 
 /**
  * This is a Java class named KruizeLMLayerEntry annotated with JPA annotations.
@@ -43,6 +50,8 @@ import org.hibernate.type.SqlTypes;
 @Entity
 @Table(name = "kruize_lm_layer")
 public class KruizeLMLayerEntry {
+    private static final Logger LOGGER = LoggerFactory.getLogger(KruizeLMLayerEntry.class);
+
     private String api_version;
     private String kind;
     @JdbcTypeCode(SqlTypes.JSON)
@@ -119,5 +128,98 @@ public class KruizeLMLayerEntry {
 
     public void setTunables(JsonNode tunables) {
         this.tunables = tunables;
+    }
+
+    @Override
+    public String toString() {
+        return "KruizeLMLayerEntry{" +
+                "api_version='" + api_version + '\'' +
+                ", kind='" + kind + '\'' +
+                ", metadata=" + metadata +
+                ", layer_name='" + layer_name + '\'' +
+                ", layer_level=" + layer_level +
+                ", details='" + details + '\'' +
+                ", layer_presence=" + layer_presence +
+                ", tunables=" + tunables +
+                '}';
+    }
+
+    /**
+     * Converts this database entry to a KruizeLayer domain object
+     *
+     * @return KruizeLayer object with all fields populated from this entry
+     */
+    public KruizeLayer getKruizeLayer() {
+        KruizeLayer layer = new KruizeLayer();
+        layer.setApiVersion(this.api_version);
+        layer.setKind(this.kind);
+        layer.setMetadata(convertJsonNodeToLayerMetadata(this.metadata));
+        layer.setLayerName(this.layer_name);
+        layer.setLayerLevel(this.layer_level);
+        layer.setDetails(this.details);
+        layer.setLayerPresence(convertJsonNodeToLayerPresence(this.layer_presence));
+        layer.setTunables(convertJsonNodeToTunables(this.tunables));
+        return layer;
+    }
+
+    /**
+     * Converts JsonNode to LayerMetadata object
+     *
+     * @param jsonNode The JsonNode to convert
+     * @return LayerMetadata object, or null if jsonNode is null/empty
+     */
+    private LayerMetadata convertJsonNodeToLayerMetadata(JsonNode jsonNode) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (jsonNode == null || jsonNode.isNull()) {
+            return null;
+        }
+
+        try {
+            return objectMapper.treeToValue(jsonNode, LayerMetadata.class);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed to convert JsonNode to LayerMetadata: {}", e.getMessage());
+            throw new RuntimeException("Failed to convert JsonNode to LayerMetadata", e);
+        }
+    }
+
+    /**
+     * Converts JsonNode to LayerPresence object
+     *
+     * @param jsonNode The JsonNode to convert
+     * @return LayerPresence object, or null if jsonNode is null/empty
+     */
+    private LayerPresence convertJsonNodeToLayerPresence(JsonNode jsonNode) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (jsonNode == null || jsonNode.isNull()) {
+            return null;
+        }
+
+        try {
+            return objectMapper.treeToValue(jsonNode, LayerPresence.class);
+        } catch (JsonProcessingException e) {
+            LOGGER.error("Failed to convert JsonNode to LayerPresence: {}", e.getMessage());
+            throw new RuntimeException("Failed to convert JsonNode to LayerPresence", e);
+        }
+    }
+
+    /**
+     * Converts JsonNode to ArrayList of Tunable objects
+     *
+     * @param jsonNode The JsonNode to convert
+     * @return ArrayList of Tunable objects, or empty list if jsonNode is null/empty
+     */
+    private ArrayList<Tunable> convertJsonNodeToTunables(JsonNode jsonNode) {
+        ObjectMapper objectMapper = new ObjectMapper();
+        if (jsonNode == null || jsonNode.isNull()) {
+            return new ArrayList<>();
+        }
+
+        try {
+            return objectMapper.convertValue(jsonNode,
+                    objectMapper.getTypeFactory().constructCollectionType(ArrayList.class, Tunable.class));
+        } catch (Exception e) {
+            LOGGER.error("Failed to convert JsonNode to ArrayList<Tunable>: {}", e.getMessage());
+            throw new RuntimeException("Failed to convert JsonNode to ArrayList<Tunable>", e);
+        }
     }
 }
