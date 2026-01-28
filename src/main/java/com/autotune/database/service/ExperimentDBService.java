@@ -46,6 +46,7 @@ import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.util.*;
 
@@ -474,7 +475,10 @@ public class ExperimentDBService {
             KruizeLMLayerEntry kruizeLayerEntry = DBHelpers.Converters.KruizeObjectConverters.convertLayerObjectToLayerDBObj(kruizeLayer);
             validationOutputData = this.experimentDAO.addLayerToDB(kruizeLayerEntry);
         } catch (Exception e) {
-            LOGGER.error("Failed to add layer to database: {}", e.getMessage());
+            LOGGER.error("Failed to add layer to database: {}", e.getMessage(), e);
+            validationOutputData.setSuccess(false);
+            validationOutputData.setMessage("Failed to add layer to database: " + e.getMessage());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
     }

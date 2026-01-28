@@ -1566,10 +1566,13 @@ public class DBHelpers {
              * @param kruizeLayer KruizeLayer object to be converted
              * @return KruizeLMLayerEntry database entry object
              */
-            public static KruizeLMLayerEntry convertLayerObjectToLayerDBObj(com.autotune.analyzer.kruizeLayer.KruizeLayer kruizeLayer) {
-                KruizeLMLayerEntry kruizeLayerEntry = null;
+            public static KruizeLMLayerEntry convertLayerObjectToLayerDBObj(com.autotune.analyzer.kruizeLayer.KruizeLayer kruizeLayer) throws Exception {
+                if (kruizeLayer == null) {
+                    throw new IllegalArgumentException("KruizeLayer cannot be null");
+                }
+
                 try {
-                    kruizeLayerEntry = new KruizeLMLayerEntry();
+                    KruizeLMLayerEntry kruizeLayerEntry = new KruizeLMLayerEntry();
                     kruizeLayerEntry.setApi_version(kruizeLayer.getApiVersion());
                     kruizeLayerEntry.setKind(kruizeLayer.getKind());
                     kruizeLayerEntry.setLayer_name(kruizeLayer.getLayerName());
@@ -1578,40 +1581,29 @@ public class DBHelpers {
 
                     ObjectMapper objectMapper = new ObjectMapper();
 
-                    // Convert metadata object to JsonNode
+                    // Convert metadata object to JsonNode using ObjectMapper directly
                     if (kruizeLayer.getMetadata() != null) {
-                        try {
-                            JsonNode metadataNode = objectMapper.readTree(new Gson().toJson(kruizeLayer.getMetadata()));
-                            kruizeLayerEntry.setMetadata(metadataNode);
-                        } catch (JsonProcessingException e) {
-                            throw new Exception("Error processing layer metadata: " + e.getMessage());
-                        }
+                        JsonNode metadataNode = objectMapper.valueToTree(kruizeLayer.getMetadata());
+                        kruizeLayerEntry.setMetadata(metadataNode);
                     }
 
-                    // Convert layer_presence object to JsonNode
+                    // Convert layer_presence object to JsonNode using ObjectMapper directly
                     if (kruizeLayer.getLayerPresence() != null) {
-                        try {
-                            JsonNode layerPresenceNode = objectMapper.readTree(new Gson().toJson(kruizeLayer.getLayerPresence()));
-                            kruizeLayerEntry.setLayer_presence(layerPresenceNode);
-                        } catch (JsonProcessingException e) {
-                            throw new Exception("Error processing layer presence: " + e.getMessage());
-                        }
+                        JsonNode layerPresenceNode = objectMapper.valueToTree(kruizeLayer.getLayerPresence());
+                        kruizeLayerEntry.setLayer_presence(layerPresenceNode);
                     }
 
-                    // Convert tunables list to JsonNode
+                    // Convert tunables list to JsonNode using ObjectMapper directly
                     if (kruizeLayer.getTunables() != null) {
-                        try {
-                            JsonNode tunablesNode = objectMapper.readTree(new Gson().toJson(kruizeLayer.getTunables()));
-                            kruizeLayerEntry.setTunables(tunablesNode);
-                        } catch (JsonProcessingException e) {
-                            throw new Exception("Error processing layer tunables: " + e.getMessage());
-                        }
+                        JsonNode tunablesNode = objectMapper.valueToTree(kruizeLayer.getTunables());
+                        kruizeLayerEntry.setTunables(tunablesNode);
                     }
+
+                    return kruizeLayerEntry;
                 } catch (Exception e) {
-                    LOGGER.error("Failed to convert KruizeLayer to database object: {}", e.getMessage());
-                    e.printStackTrace();
+                    LOGGER.error("Failed to convert KruizeLayer to database object: {}", e.getMessage(), e);
+                    throw new Exception("Error converting KruizeLayer to database object: " + e.getMessage(), e);
                 }
-                return kruizeLayerEntry;
             }
         }
 

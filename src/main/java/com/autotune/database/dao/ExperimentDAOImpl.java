@@ -42,6 +42,7 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -671,15 +672,17 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 validationOutputData.setSuccess(true);
                 statusValue = "success";
             } catch (HibernateException e) {
-                LOGGER.error("Not able to save layer due to {}", e.getMessage());
+                LOGGER.error("Not able to save layer due to: {}", e.getMessage(), e);
                 if (tx != null) tx.rollback();
-                e.printStackTrace();
                 validationOutputData.setSuccess(false);
                 validationOutputData.setMessage(e.getMessage());
+                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             }
         } catch (Exception e) {
-            LOGGER.error("Not able to save layer due to {}", e.getMessage());
+            LOGGER.error("Not able to save layer due to: {}", e.getMessage(), e);
+            validationOutputData.setSuccess(false);
             validationOutputData.setMessage(e.getMessage());
+            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         } finally {
             if (null != timerAddLayerDB) {
                 MetricsConfig.timerAddLayerDB = MetricsConfig.timerBAddLayerDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
