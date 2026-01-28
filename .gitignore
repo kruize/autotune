@@ -1,1 +1,7 @@
 __pycache__/
+
+# IntelliJ
+.idea
+*.ipr
+*.iml
+*.iws

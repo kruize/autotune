@@ -30,7 +30,9 @@ import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.system.info.device.DeviceDetails;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.utils.ProfileCache;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.ProfileType;
 import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
@@ -64,7 +66,6 @@ public class PerformanceProfileService extends HttpServlet {
     @Serial
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(PerformanceProfileService.class);
-    private ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap;
     private static final Gson gson = new GsonBuilder()
             .disableHtmlEscaping()  // Prevents escaping of quotes
             .setPrettyPrinting()
@@ -73,8 +74,6 @@ public class PerformanceProfileService extends HttpServlet {
     @Override
     public void init(ServletConfig config) throws ServletException {
         super.init(config);
-        performanceProfilesMap = (ConcurrentHashMap<String, PerformanceProfile>) getServletContext()
-                .getAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP);
     }
 
     /**
@@ -94,8 +93,6 @@ public class PerformanceProfileService extends HttpServlet {
             if (validationOutputData.isSuccess()) {
                 ValidationOutputData addedToDB = new ExperimentDBService().addPerformanceProfileToDB(performanceProfile);
                 if (addedToDB.isSuccess()) {
-                    performanceProfilesMap.put(performanceProfile.getName(), performanceProfile);
-                    getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
                     LOGGER.debug("Added Performance Profile : {} into the DB with version: {}",
                             performanceProfile.getName(), performanceProfile.getProfile_version());
                     sendSuccessResponse(response, "Performance Profile : " + performanceProfile.getName() + " created successfully.");
@@ -125,13 +122,8 @@ public class PerformanceProfileService extends HttpServlet {
         response.setCharacterEncoding(CHARACTER_ENCODING);
         response.setStatus(HttpServletResponse.SC_OK);
         String gsonStr = "[]";
-        // Fetch all profiles from the DB
-        Map<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
-        try {
-            new ExperimentDBService().loadAllPerformanceProfiles(performanceProfilesMap);
-        } catch (Exception e) {
-            LOGGER.error("Failed to load saved experiment data: {} ", e.getMessage());
-        }
+        // Fetch all profiles from the cache. Initialize from DB if required.
+        Map<String, PerformanceProfile> performanceProfilesMap = ProfileCache.getProfileMap(ProfileType.PERFORMANCE);
         if (!performanceProfilesMap.isEmpty()) {
             Collection<PerformanceProfile> values = performanceProfilesMap.values();
             Gson gsonObj = new GsonBuilder()
@@ -189,8 +181,6 @@ public class PerformanceProfileService extends HttpServlet {
                 if (updatedInDB.isSuccess()) {
                     LOGGER.info("{}", String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
                             profileName, incomingPerfProfile.getProfile_version()));
-                    performanceProfilesMap.put(incomingPerfProfile.getName(), incomingPerfProfile);
-                    getServletContext().setAttribute(AnalyzerConstants.PerformanceProfileConstants.PERF_PROFILE_MAP, performanceProfilesMap);
                     sendSuccessResponse(
                             response,
                             String.format(KruizeConstants.APIMessages.PERFORMANCE_PROFILE_UPDATE_SUCCESS,
@@ -227,12 +217,12 @@ public class PerformanceProfileService extends HttpServlet {
         }
         try {
             // Load profile
-            new ExperimentDBService().loadPerformanceProfileFromDBByName(performanceProfilesMap, perfProfileName);
-            if (null == performanceProfilesMap.get(perfProfileName)) {
+            if (!ProfileCache.isExists(perfProfileName, ProfileType.PERFORMANCE)) {
                 sendErrorResponse(resp, null, HttpServletResponse.SC_BAD_REQUEST,
                         AnalyzerErrorConstants.AutotuneObjectErrors.MISSING_PERF_PROFILE + perfProfileName);
                 return;
             }
+
             // Check if the profile is associated with any of the existing experiments
             // fetch experiments if any, associated with the mentioned profile name
             Long experimentsCount = new ExperimentDBService().getExperimentsCountFromDBByProfileName(perfProfileName);
@@ -242,6 +232,7 @@ public class PerformanceProfileService extends HttpServlet {
                                 perfProfileName, experimentsCount, experimentsCount > 1 ? "s" : ""));
                 return;
             }
+
             // Delete profile
             ValidationOutputData result = new ExperimentDAOImpl().deletePerformanceProfileByName(perfProfileName);
             if (!result.isSuccess()) {
@@ -249,7 +240,7 @@ public class PerformanceProfileService extends HttpServlet {
                 return;
             }
             // remove the profile from the local storage as well
-            performanceProfilesMap.remove(perfProfileName);
+            ProfileCache.removeProfile(perfProfileName, ProfileType.PERFORMANCE);
             sendSuccessResponse(resp, String.format(KruizeConstants.APIMessages.PERF_PROFILE_DELETION_SUCCESS, perfProfileName));
         } catch (Exception e) {
             LOGGER.error("{}",String.format(AnalyzerErrorConstants.AutotuneObjectErrors.PERF_PROFILE_DELETION_EXCEPTION, perfProfileName, e.getMessage()));

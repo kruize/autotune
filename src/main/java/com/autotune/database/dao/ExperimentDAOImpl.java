@@ -545,6 +545,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 tx.commit();
                 validationOutputData.setSuccess(true);
                 statusValue = "success";
+
             } catch (HibernateException e) {
                 LOGGER.error("Not able to save metric profile due to {}", e.getMessage());
                 if (tx != null) tx.rollback();

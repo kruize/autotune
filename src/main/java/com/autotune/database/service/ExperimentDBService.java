@@ -40,7 +40,9 @@ import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
+import com.autotune.utils.ProfileCache;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.ProfileType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -386,6 +388,9 @@ public class ExperimentDBService {
         try {
             KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
             validationOutputData = this.experimentDAO.addPerformanceProfileToDB(kruizePerformanceProfileEntry);
+            if (validationOutputData.isSuccess()){
+                ProfileCache.addProfile(performanceProfile, ProfileType.PERFORMANCE);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to save Performance Profile due to {}", e.getMessage());
         }
@@ -403,6 +408,9 @@ public class ExperimentDBService {
         try {
             KruizePerformanceProfileEntry kruizePerformanceProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertPerfProfileObjToPerfProfileDBObj(performanceProfile);
             validationOutputData = this.experimentDAO.updatePerformanceProfileInDB(kruizePerformanceProfileEntry);
+            if (validationOutputData.isSuccess()){
+                ProfileCache.addProfile(performanceProfile, ProfileType.PERFORMANCE);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to update Performance Profile due to {}", e.getMessage());
         }
@@ -420,6 +428,9 @@ public class ExperimentDBService {
         try {
             KruizeMetricProfileEntry kruizeMetricProfileEntry = DBHelpers.Converters.KruizeObjectConverters.convertMetricProfileObjToMetricProfileDBObj(metricProfile);
             validationOutputData = this.experimentDAO.addMetricProfileToDB(kruizeMetricProfileEntry);
+            if (validationOutputData.isSuccess()) {
+                ProfileCache.addProfile(metricProfile, ProfileType.METRIC);
+            }
         } catch (Exception e) {
             LOGGER.error("Not able to save Metric Profile due to {}", e.getMessage());
         }
@@ -589,42 +600,6 @@ public class ExperimentDBService {
         loadLMRecommendationsFromDBByName(mainKruizeExperimentMap, experimentName, bulkJobId);
     }
 
-    public void loadPerformanceProfileFromDBByName(Map<String, PerformanceProfile> performanceProfileMap, String performanceProfileName) throws Exception {
-        List<KruizePerformanceProfileEntry> entries = experimentDAO.loadPerformanceProfileByName(performanceProfileName);
-        if (null != entries && !entries.isEmpty()) {
-            List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters
-                    .convertPerformanceProfileEntryToPerformanceProfileObject(entries);
-            if (!performanceProfiles.isEmpty()) {
-                for (PerformanceProfile performanceProfile : performanceProfiles) {
-                    if (null != performanceProfile) {
-                        PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile);
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Fetches Metric Profile by name from kruizeMetricProfileEntry
-     *
-     * @param metricProfileMap  Map to store metric profile loaded from the database
-     * @param metricProfileName Metric profile name to be fetched
-     * @return ValidationOutputData object
-     */
-    public void loadMetricProfileFromDBByName(Map<String, PerformanceProfile> metricProfileMap, String metricProfileName) throws Exception {
-        List<KruizeMetricProfileEntry> entries = experimentDAO.loadMetricProfileByName(metricProfileName);
-        if (null != entries && !entries.isEmpty()) {
-            List<PerformanceProfile> metricProfiles = DBHelpers.Converters.KruizeObjectConverters
-                    .convertMetricProfileEntryToMetricProfileObject(entries);
-            if (!metricProfiles.isEmpty()) {
-                for (PerformanceProfile performanceProfile : metricProfiles) {
-                    if (null != performanceProfile) {
-                        PerformanceProfileUtil.addMetricProfile(metricProfileMap, performanceProfile);
-                    }
-                }
-            }
-        }
-    }
 
     /**
      * Fetches Metadata Profile by name from kruizeMetadataProfileEntry

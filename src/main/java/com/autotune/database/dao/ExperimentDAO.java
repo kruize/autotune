@@ -32,7 +32,6 @@ public interface ExperimentDAO {
     // Add recommendation  to DB
     public ValidationOutputData addRecommendationToDB(KruizeLMRecommendationEntry recommendationEntry);
 
-
     // Add Performance Profile  to DB
     public ValidationOutputData addPerformanceProfileToDB(KruizePerformanceProfileEntry kruizePerformanceProfileEntry);
 
@@ -60,7 +59,6 @@ public interface ExperimentDAO {
     // If Kruize object restarts load all experiment which are in inprogress
     public List<KruizeExperimentEntry> loadAllExperiments() throws Exception;
 
-
     public List<KruizeLMExperimentEntry> loadAllLMExperiments() throws Exception;
 
     // If Kruize object restarts load all results from the experiments which are in inprogress
@@ -86,7 +84,6 @@ public interface ExperimentDAO {
     // Load a single experiment based on experimentName
     List<KruizeLMExperimentEntry> loadLMExperimentByName(String experimentName) throws Exception;
 
-
     // Load a single data source based on name
     List<KruizeDataSourceEntry> loadDataSourceByName(String name) throws Exception;
 
@@ -99,12 +96,6 @@ public interface ExperimentDAO {
 
     // Load all recommendations of a particular experiment
     List<KruizeLMRecommendationEntry> loadLMRecommendationsByExperimentName(String experimentName, String bulkJobId) throws Exception;
-
-    // Load a single Performance Profile based on name
-    List<KruizePerformanceProfileEntry> loadPerformanceProfileByName(String performanceProfileName) throws Exception;
-
-    // Load a single Metric Profile based on name
-    List<KruizeMetricProfileEntry> loadMetricProfileByName(String metricProfileName) throws Exception;
 
     // Load a single Metadata Profile based on name
     List<KruizeLMMetadataProfileEntry> loadMetadataProfileByName(String metadataProfileName) throws Exception;
