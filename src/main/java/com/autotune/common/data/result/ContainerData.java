@@ -117,6 +117,10 @@ public class ContainerData {
         return layerMap;
     }
 
+    /**
+     * Sets the layer map only if the provided map is non-null and non-empty.
+     * Passing null or an empty map leaves the existing layerMap unchanged.
+     */
     public void setLayerMap(Map<String, KruizeLayer> layerMap) {
         if (null != layerMap && !layerMap.isEmpty())
             this.layerMap = layerMap;
