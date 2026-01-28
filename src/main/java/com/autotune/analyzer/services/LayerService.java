@@ -18,10 +18,12 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.exceptions.MonitoringAgentNotSupportedException;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.LayerValidation;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.database.dao.ExperimentDAOImpl;
+import com.autotune.database.helper.DBHelpers;
 import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
@@ -67,6 +69,16 @@ public class LayerService extends HttpServlet {
         try {
             String inputData = request.getReader().lines().collect(Collectors.joining());
             KruizeLayer kruizeLayer = Converters.KruizeObjectConverters.convertInputJSONToCreateLayer(inputData);
+
+            // Validate layer using LayerValidation helper
+            LayerValidation validation = new LayerValidation();
+            ValidationOutputData validationResult = validation.validate(kruizeLayer);
+
+            if (!validationResult.isSuccess()) {
+                sendErrorResponse(response, null, HttpServletResponse.SC_BAD_REQUEST,
+                        "Validation failed: " + validationResult.getMessage());
+                return;
+            }
 
             // Validate that layer doesn't already exist
             ExperimentDAOImpl experimentDAO = new ExperimentDAOImpl();
@@ -157,8 +169,17 @@ public class LayerService extends HttpServlet {
                     }
 
                     if (!error) {
+                        // Convert database objects to domain objects for clean JSON serialization
+                        List<KruizeLayer> kruizeLayers = new ArrayList<>();
+                        for (KruizeLMLayerEntry entry : layerEntries) {
+                            KruizeLayer layer = DBHelpers.Converters.KruizeObjectConverters.convertLayerDBObjToLayerObject(entry);
+                            if (layer != null) {
+                                kruizeLayers.add(layer);
+                            }
+                        }
+
                         Gson gsonObj = createGsonObject();
-                        String gsonStr = gsonObj.toJson(layerEntries);
+                        String gsonStr = gsonObj.toJson(kruizeLayers);
                         response.getWriter().println(gsonStr);
                         response.getWriter().close();
                     }
@@ -191,26 +212,36 @@ public class LayerService extends HttpServlet {
      */
     private KruizeLMLayerEntry convertToLayerEntry(KruizeLayer kruizeLayer) throws Exception {
         KruizeLMLayerEntry entry = new KruizeLMLayerEntry();
-        ObjectMapper mapper = new ObjectMapper();
+        Gson gson = new Gson();
+        ObjectMapper objectMapper = new ObjectMapper();
 
         entry.setApi_version(kruizeLayer.getApiVersion());
         entry.setKind(kruizeLayer.getKind());
 
         // Convert metadata to JsonNode
-        JsonNode metadataNode = mapper.valueToTree(kruizeLayer.getMetadata());
-        entry.setMetadata(metadataNode);
+        if (kruizeLayer.getMetadata() != null) {
+            String metadataJson = gson.toJson(kruizeLayer.getMetadata());
+            JsonNode metadataNode = objectMapper.readTree(metadataJson);
+            entry.setMetadata(metadataNode);
+        }
 
         entry.setLayer_name(kruizeLayer.getLayerName());
         entry.setLayer_level(kruizeLayer.getLayerLevel());
         entry.setDetails(kruizeLayer.getDetails());
 
         // Convert layer_presence to JsonNode
-        JsonNode layerPresenceNode = mapper.valueToTree(kruizeLayer.getLayerPresence());
-        entry.setLayer_presence(layerPresenceNode);
+        if (kruizeLayer.getLayerPresence() != null) {
+            String layerPresenceJson = gson.toJson(kruizeLayer.getLayerPresence());
+            JsonNode layerPresenceNode = objectMapper.readTree(layerPresenceJson);
+            entry.setLayer_presence(layerPresenceNode);
+        }
 
         // Convert tunables to JsonNode
-        JsonNode tunablesNode = mapper.valueToTree(kruizeLayer.getTunables());
-        entry.setTunables(tunablesNode);
+        if (kruizeLayer.getTunables() != null) {
+            String tunablesJson = gson.toJson(kruizeLayer.getTunables());
+            JsonNode tunablesNode = objectMapper.readTree(tunablesJson);
+            entry.setTunables(tunablesNode);
+        }
 
         return entry;
     }

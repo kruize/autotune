@@ -16,6 +16,7 @@
 package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
+import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.List;
@@ -34,12 +35,12 @@ public class Tunable {
     private String valueType;
 
     @SerializedName("upper_bound")
-    private Double upperBoundValue;
+    private String upperBoundValue;
 
     @SerializedName("lower_bound")
-    private Double lowerBoundValue;
+    private String lowerBoundValue;
 
-    private double step;
+    private Double step;
 
     private List<String> choices;
 
@@ -59,7 +60,7 @@ public class Tunable {
      * @param lowerBoundValue Lower bound
      * @throws InvalidBoundsException if bounds are invalid
      */
-    public Tunable(String name, String valueType, double step, Double upperBoundValue, Double lowerBoundValue)
+    public Tunable(String name, String valueType, Double step, String upperBoundValue, String lowerBoundValue)
             throws InvalidBoundsException {
         this.name = name;
         this.valueType = valueType;
@@ -85,15 +86,31 @@ public class Tunable {
     }
 
     /**
-     * Validates bounded tunables after deserialization or setter usage.
+     * Validates tunables after deserialization or setter usage.
      * Should be called explicitly after using setters.
      *
      * @throws InvalidBoundsException if validation fails
      */
     public void validate() throws InvalidBoundsException {
-        if (choices != null && !choices.isEmpty()) {
+        boolean hasCategorical = (choices != null && !choices.isEmpty());
+        boolean hasBounds = (upperBoundValue != null || lowerBoundValue != null || step != null);
+
+        // Check for mixed configuration (both categorical and numeric)
+        if (hasCategorical && hasBounds) {
+            throw new InvalidBoundsException("ERROR: Tunable: " +
+                    String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_MIXED_CONFIG, name));
+        }
+
+        // Check for missing configuration (neither categorical nor numeric)
+        if (!hasCategorical && !hasBounds) {
+            throw new InvalidBoundsException("ERROR: Tunable: " +
+                    String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_MISSING_CONFIG, name));
+        }
+
+        // Validate based on type
+        if (hasCategorical) {
             validateCategorical();
-        } else if (upperBoundValue != null || lowerBoundValue != null) {
+        } else {
             validateBounds();
         }
     }
@@ -109,31 +126,47 @@ public class Tunable {
      */
     private void validateBounds() throws InvalidBoundsException {
         if (upperBoundValue == null || lowerBoundValue == null) {
-            throw new InvalidBoundsException("ERROR: Tunable: " + name +
-                    " has null bounds; both upperBound and lowerBound must be set");
+            throw new InvalidBoundsException("ERROR: Tunable: " +
+                    String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_NULL_BOUNDS, name));
+        }
+
+        // Parse strings to doubles for numeric validation
+        double upper, lower;
+        try {
+            upper = Double.parseDouble(upperBoundValue);
+            lower = Double.parseDouble(lowerBoundValue);
+        } catch (NumberFormatException e) {
+            throw new InvalidBoundsException("ERROR: Tunable: " +
+                    String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_NON_NUMERIC_BOUNDS,
+                            name, upperBoundValue, lowerBoundValue));
+        }
+
+        if (step == null) {
+            throw new InvalidBoundsException("ERROR: Tunable: " +
+                    String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_NULL_STEP, name));
         }
 
         if (step <= 0) {
-            throw new InvalidBoundsException("ERROR: Tunable: " + name +
-                    " has invalid step; step must be > 0, got: " + step);
+            throw new InvalidBoundsException("ERROR: Tunable: " +
+                    String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_INVALID_STEP, name, step));
         }
 
-        if (upperBoundValue < 0 || lowerBoundValue < 0) {
-            throw new InvalidBoundsException("ERROR: Tunable: " + name +
-                    " has negative bounds; upperBound: " + upperBoundValue +
-                    " lowerBound: " + lowerBoundValue);
+        if (upper < 0 || lower < 0) {
+            throw new InvalidBoundsException("ERROR: Tunable: " +
+                    String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_NEGATIVE_BOUNDS,
+                            name, upper, lower));
         }
 
-        if (lowerBoundValue >= upperBoundValue) {
-            throw new InvalidBoundsException("ERROR: Tunable: " + name +
-                    " has invalid bounds; lowerBound (" + lowerBoundValue +
-                    ") must be less than upperBound (" + upperBoundValue + ")");
+        if (lower >= upper) {
+            throw new InvalidBoundsException("ERROR: Tunable: " +
+                    String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_INVALID_BOUND_RANGE,
+                            name, lower, upper));
         }
 
-        if (step > (upperBoundValue - lowerBoundValue)) {
-            throw new InvalidBoundsException("ERROR: Tunable: " + name +
-                    " has invalid step; step (" + step +
-                    ") must be <= (upperBound - lowerBound) (" + (upperBoundValue - lowerBoundValue) + ")");
+        if (step > (upper - lower)) {
+            throw new InvalidBoundsException("ERROR: Tunable: " +
+                    String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_STEP_TOO_LARGE,
+                            name, step, (upper - lower)));
         }
     }
 
@@ -142,8 +175,8 @@ public class Tunable {
      */
     private void validateCategorical() {
         if (choices == null || choices.isEmpty()) {
-            throw new IllegalArgumentException("ERROR: Tunable: " + name +
-                    " is categorical but has null or empty choices list");
+            throw new IllegalArgumentException("ERROR: Tunable: " +
+                    String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_EMPTY_CHOICES, name));
         }
     }
 
@@ -160,15 +193,15 @@ public class Tunable {
         return valueType;
     }
 
-    public Double getUpperBoundValue() {
+    public String getUpperBoundValue() {
         return upperBoundValue;
     }
 
-    public Double getLowerBoundValue() {
+    public String getLowerBoundValue() {
         return lowerBoundValue;
     }
 
-    public double getStep() {
+    public Double getStep() {
         return step;
     }
 
@@ -189,15 +222,15 @@ public class Tunable {
         this.valueType = valueType;
     }
 
-    public void setUpperBoundValue(Double upperBoundValue) {
+    public void setUpperBoundValue(String upperBoundValue) {
         this.upperBoundValue = upperBoundValue;
     }
 
-    public void setLowerBoundValue(Double lowerBoundValue) {
+    public void setLowerBoundValue(String lowerBoundValue) {
         this.lowerBoundValue = lowerBoundValue;
     }
 
-    public void setStep(double step) {
+    public void setStep(Double step) {
         this.step = step;
     }
 

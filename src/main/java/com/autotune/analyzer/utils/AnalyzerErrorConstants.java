@@ -362,24 +362,52 @@ public class AnalyzerErrorConstants {
         }
 
         public static final class CreateLayerAPI {
-            public CreateLayerAPI() {
+            private CreateLayerAPI() {
             }
+
+            // Layer validation errors
+            public static final String LAYER_METADATA_NAME_NULL = "metadata.name cannot be null or empty";
+            public static final String LAYER_NAME_NULL = "layer_name cannot be null or empty";
+            public static final String LAYER_PRESENCE_NULL = "layer_presence cannot be null";
+            public static final String LAYER_TUNABLES_NULL_OR_EMPTY = "tunables cannot be null or empty - layer must have at least one tunable";
+            public static final String LAYER_LEVEL_NEGATIVE = "layer_level cannot be negative; got: %d";
+            public static final String LAYER_PRESENCE_MISSING = "layer_presence configuration missing: must specify exactly one of: presence='always', queries, or label";
+            public static final String LAYER_PRESENCE_MULTIPLE_TYPES = "layer_presence cannot specify multiple types. Choose exactly one: presence, queries, or label";
+            public static final String LAYER_DUPLICATE_TUNABLE_NAMES = "Layer contains duplicate tunable names: %s";
+
+            // General layer errors
             public static final String INVALID_LAYER_JSON = "Invalid Layer JSON";
             public static final String LAYER_ALREADY_EXISTS = "Layer already exists with name: %s";
             public static final String ADD_LAYER_TO_DB_FAILURE = "Failed to add layer to database: %s";
+
+            // Tunable validation errors
+            public static final String TUNABLE_MIXED_CONFIG = "Tunable '%s' cannot have both categorical choices and numeric bounds/step configured. Use either choices for categorical or upper_bound/lower_bound/step for numeric tunables.";
+            public static final String TUNABLE_MISSING_CONFIG = "Tunable '%s' must have either categorical choices or numeric bounds/step configured.";
+
+            // Bounds validation errors
+            public static final String TUNABLE_NULL_BOUNDS = "Tunable '%s' has null bounds; both upper_bound and lower_bound must be set";
+            public static final String TUNABLE_NON_NUMERIC_BOUNDS = "Tunable '%s' has non-numeric bounds: upper=%s, lower=%s";
+            public static final String TUNABLE_NULL_STEP = "Tunable '%s' has null step; step must be set for bounded tunables";
+            public static final String TUNABLE_INVALID_STEP = "Tunable '%s' has invalid step; step must be > 0, got: %s";
+            public static final String TUNABLE_NEGATIVE_BOUNDS = "Tunable '%s' has negative bounds; upperBound: %s lowerBound: %s";
+            public static final String TUNABLE_INVALID_BOUND_RANGE = "Tunable '%s' has invalid bounds; lowerBound (%s) must be less than upperBound (%s)";
+            public static final String TUNABLE_STEP_TOO_LARGE = "Tunable '%s' has invalid step; step (%s) must be <= (upperBound - lowerBound) (%s)";
+
+            // Categorical validation errors
+            public static final String TUNABLE_EMPTY_CHOICES = "Tunable '%s' is categorical but has null or empty choices list";
         }
 
-        public static final class ListLayerAPI {
-            public ListLayerAPI() {
-            }
-            public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
-            public static final String INVALID_LAYER_NAME_EXCPTN = "Invalid Layer Name";
-            public static final String INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exist or is not valid";
-            public static final String NO_LAYERS_EXCPTN = "No layers";
-            public static final String NO_LAYERS = "No layers found!";
-            public static final String LOAD_LAYER_ERROR = "Failed to load layer data: %s";
-            public static final String LOAD_ALL_LAYERS_ERROR = "Failed to load all layers: %s";
+    public static final class ListLayerAPI {
+        public ListLayerAPI() {
         }
+        public static final String INVALID_QUERY_PARAM = "The query param(s) - %s is/are invalid";
+        public static final String INVALID_LAYER_NAME_EXCPTN = "Invalid Layer Name";
+        public static final String INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exist or is not valid";
+        public static final String NO_LAYERS_EXCPTN = "No layers";
+        public static final String NO_LAYERS = "No layers found!";
+        public static final String LOAD_LAYER_ERROR = "Failed to load layer data: %s";
+        public static final String LOAD_ALL_LAYERS_ERROR = "Failed to load all layers: %s";
+    }
     }
 
     public static final class ConversionErrors {

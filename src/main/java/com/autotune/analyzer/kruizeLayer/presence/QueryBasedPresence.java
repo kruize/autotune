@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2025 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2026 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,12 @@
 
 package com.autotune.analyzer.kruizeLayer.presence;
 
-import com.autotune.analyzer.kruizeLayer.presence.LayerPresenceQuery;
+import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
 import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -179,7 +178,7 @@ public class QueryBasedPresence implements LayerPresenceDetector {
     }
 
     public void setQueries(List<LayerPresenceQuery> queries) {
-        this.queries = queries;
+        this.queries = queries != null ? queries : new ArrayList<>();
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2025 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2026 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 
 package com.autotune.analyzer.kruizeLayer.presence;
 
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
+
 /**
  * Implementation for layers that are always present
  */
@@ -23,12 +25,8 @@ public class PresenceAlways implements LayerPresenceDetector {
 
     private String presence;
 
-    public PresenceAlways() {
-    }
+    public PresenceAlways() {}
 
-    public PresenceAlways(String presence) {
-        this.presence = presence;
-    }
 
     @Override
     public PresenceType getType() {
@@ -51,8 +49,6 @@ public class PresenceAlways implements LayerPresenceDetector {
 
     @Override
     public String toString() {
-        return "PresenceAlways{" +
-                "presence='" + presence + '\'' +
-                '}';
+        return "PresenceAlways{}";
     }
 }
