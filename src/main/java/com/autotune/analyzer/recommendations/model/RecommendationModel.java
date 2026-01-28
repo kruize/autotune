@@ -1,6 +1,7 @@
 package com.autotune.analyzer.recommendations.model;
 
-import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
+import com.autotune.analyzer.kruizeLayer.LayerTunable;
+import com.autotune.analyzer.kruizeLayer.Tunable;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
 import com.autotune.analyzer.utils.AnalyzerConstants;
@@ -8,6 +9,7 @@ import com.autotune.common.data.result.IntervalResults;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 public interface RecommendationModel {
@@ -20,7 +22,7 @@ public interface RecommendationModel {
     RecommendationConfigItem getMemoryRequestRecommendationForNamespace(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications);
 
     Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> getAcceleratorRequestRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications);
-    RecommendationConfigEnv getRuntimeRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications);
+    Object getRuntimeRecommendations(String metricName, List<Tunable> tunables, Map<LayerTunable, Object> context, Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications);
 
     public String getModelName();
     void validate();

@@ -1119,6 +1119,17 @@ public class KruizeConstants {
         }
     }
 
+    public static final class LayerAPIMessages {
+        public static final String CREATE_LAYER_SUCCESS_MSG = "Layer : %s created successfully.";
+        public static final String VIEW_LAYERS_MSG = " View Layers at /listLayers";
+        public static final String ADD_LAYER_TO_DB = "Added Layer : {} into the DB";
+        public static final String LOAD_LAYER_FAILURE = "Failed to load layer data: {}";
+        public static final String LOAD_ALL_LAYERS_FAILURE = "Failed to load all layers: {}";
+
+        private LayerAPIMessages() {
+        }
+    }
+
     public static final class KAFKA_CONSTANTS {
         public static final String BULK_INPUT_TOPIC = "bulk-input-topic";
         public static final String RECOMMENDATIONS_TOPIC = "recommendations-topic";

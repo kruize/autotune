@@ -26,6 +26,7 @@ import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeBulkJobEntry;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
@@ -647,6 +648,45 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 timerUpdateMetadataProfileDB.stop(MetricsConfig.timerUpdateMetadataProfileDB);
             }
         }
+        return validationOutputData;
+    }
+
+    /**
+     * Add Layer to database
+     *
+     * @param kruizeLayerEntry Layer Database object to be added
+     * @return validationOutputData contains the status of the DB insert operation
+     */
+    @Override
+    public ValidationOutputData addLayerToDB(KruizeLMLayerEntry kruizeLayerEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerAddLayerDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            try {
+                tx = session.beginTransaction();
+                session.persist(kruizeLayerEntry);
+                tx.commit();
+                validationOutputData.setSuccess(true);
+                statusValue = "success";
+            } catch (HibernateException e) {
+                LOGGER.error("Not able to save layer due to {}", e.getMessage());
+                if (tx != null) tx.rollback();
+                e.printStackTrace();
+                validationOutputData.setSuccess(false);
+                validationOutputData.setMessage(e.getMessage());
+            }
+        } catch (Exception e) {
+            LOGGER.error("Not able to save layer due to {}", e.getMessage());
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerAddLayerDB) {
+                MetricsConfig.timerAddLayerDB = MetricsConfig.timerBAddLayerDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerAddLayerDB.stop(MetricsConfig.timerAddLayerDB);
+            }
+        }
+
         return validationOutputData;
     }
 
@@ -1390,6 +1430,62 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             if (null != timerLoadAllMetadataProfiles) {
                 MetricsConfig.timerLoadAllMetadataProfiles = MetricsConfig.timerBLoadAllMetadataProfiles.tag("status", statusValue).register(MetricsConfig.meterRegistry());
                 timerLoadAllMetadataProfiles.stop(MetricsConfig.timerLoadAllMetadataProfiles);
+            }
+        }
+        return entries;
+    }
+
+    /**
+     * Fetches all the Layer records from KruizeLMLayerEntry database table
+     *
+     * @return List of all KruizeLMLayerEntry database objects
+     * @throws Exception
+     */
+    @Override
+    public List<KruizeLMLayerEntry> loadAllLayers() throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadAllLayers = Timer.start(MetricsConfig.meterRegistry());
+
+        List<KruizeLMLayerEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_LAYER, KruizeLMLayerEntry.class).list();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Layers due to {}", e.getMessage());
+            throw new Exception("Error while loading existing Layers from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadAllLayers) {
+                MetricsConfig.timerLoadAllLayers = MetricsConfig.timerBLoadAllLayers.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadAllLayers.stop(MetricsConfig.timerLoadAllLayers);
+            }
+        }
+        return entries;
+    }
+
+    /**
+     * Fetches a single Layer record by layer name from KruizeLMLayerEntry database table
+     *
+     * @param layerName The name of the layer to retrieve
+     * @return List of KruizeLMLayerEntry database objects (should contain 0 or 1 element)
+     * @throws Exception
+     */
+    @Override
+    public List<KruizeLMLayerEntry> loadLayerByName(String layerName) throws Exception {
+        String statusValue = "failure";
+        Timer.Sample timerLoadLayerByName = Timer.start(MetricsConfig.meterRegistry());
+
+        List<KruizeLMLayerEntry> entries = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_LAYER_BY_NAME, KruizeLMLayerEntry.class)
+                    .setParameter("layerName", layerName).list();
+            statusValue = "success";
+        } catch (Exception e) {
+            LOGGER.error("Not able to load Layer {} due to {}", layerName, e.getMessage());
+            throw new Exception("Error while loading Layer from database due to : " + e.getMessage());
+        } finally {
+            if (null != timerLoadLayerByName) {
+                MetricsConfig.timerLoadLayerByName = MetricsConfig.timerBLoadLayerByName.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerLoadLayerByName.stop(MetricsConfig.timerLoadLayerByName);
             }
         }
         return entries;

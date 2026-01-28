@@ -19,21 +19,22 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.InvalidExperimentType;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
 import io.micrometer.core.instrument.Timer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -138,6 +139,18 @@ public class CreateExperiment extends HttpServlet {
                                 .findAny()
                                 .orElse(null);
                         validAPIObj.setValidationData(ko.getValidation_data());
+                        for (KubernetesAPIObject kubernetesAPIObject : validAPIObj.getKubernetesObjects()) {
+                            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                                // detect layers for the container
+                                Map<String, KruizeLayer> layers = LayerUtils.detectLayers(containerAPIObject.getContainer_name(),
+                                        kubernetesAPIObject.getName(),
+                                        kubernetesAPIObject.getNamespace()
+                                );
+                                if (null != layers && !layers.isEmpty()) {
+                                    containerAPIObject.setLayerMap(layers);
+                                }
+                            }
+                        }
                         addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
                     }
                     if (addedToDB.isSuccess()) {

@@ -20,6 +20,7 @@ import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
@@ -46,6 +47,7 @@ import com.autotune.common.datasource.DataSourceMetadataOperator;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
@@ -1557,6 +1559,145 @@ public class DBHelpers {
                     e.printStackTrace();
                 }
                 return kruizeMetadataProfileEntry;
+            }
+
+            /**
+             * Convert KruizeLayer object to KruizeLMLayerEntry database object
+             *
+             * @param kruizeLayer KruizeLayer object to be converted
+             * @return KruizeLMLayerEntry database entry object
+             */
+            public static KruizeLMLayerEntry convertLayerObjectToLayerDBObj(com.autotune.analyzer.kruizeLayer.KruizeLayer kruizeLayer) {
+                KruizeLMLayerEntry kruizeLayerEntry = null;
+                try {
+                    kruizeLayerEntry = new KruizeLMLayerEntry();
+                    kruizeLayerEntry.setApi_version(kruizeLayer.getApiVersion());
+                    kruizeLayerEntry.setKind(kruizeLayer.getKind());
+                    kruizeLayerEntry.setLayer_name(kruizeLayer.getLayerName());
+                    kruizeLayerEntry.setLayer_level(kruizeLayer.getLayerLevel());
+                    kruizeLayerEntry.setDetails(kruizeLayer.getDetails());
+
+                    ObjectMapper objectMapper = new ObjectMapper();
+
+                    // Convert metadata object to JsonNode
+                    if (kruizeLayer.getMetadata() != null) {
+                        try {
+                            JsonNode metadataNode = objectMapper.readTree(new Gson().toJson(kruizeLayer.getMetadata()));
+                            kruizeLayerEntry.setMetadata(metadataNode);
+                        } catch (JsonProcessingException e) {
+                            throw new Exception("Error processing layer metadata: " + e.getMessage());
+                        }
+                    }
+
+                    // Convert layer_presence object to JsonNode
+                    if (kruizeLayer.getLayerPresence() != null) {
+                        try {
+                            JsonNode layerPresenceNode = objectMapper.readTree(new Gson().toJson(kruizeLayer.getLayerPresence()));
+                            kruizeLayerEntry.setLayer_presence(layerPresenceNode);
+                        } catch (JsonProcessingException e) {
+                            throw new Exception("Error processing layer presence: " + e.getMessage());
+                        }
+                    }
+
+                    // Convert tunables list to JsonNode
+                    if (kruizeLayer.getTunables() != null) {
+                        try {
+                            JsonNode tunablesNode = objectMapper.readTree(new Gson().toJson(kruizeLayer.getTunables()));
+                            kruizeLayerEntry.setTunables(tunablesNode);
+                        } catch (JsonProcessingException e) {
+                            throw new Exception("Error processing layer tunables: " + e.getMessage());
+                        }
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Failed to convert KruizeLayer to database object: {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeLayerEntry;
+            }
+
+            /**
+             * Convert KruizeLMLayerEntry database object to KruizeLayer object
+             *
+             * @param entry KruizeLMLayerEntry database entry object to be converted
+             * @return KruizeLayer domain object
+             */
+            public static KruizeLayer convertLayerDBObjToLayerObject(KruizeLMLayerEntry entry) {
+                KruizeLayer kruizeLayer = null;
+                try {
+                    kruizeLayer = new KruizeLayer();
+                    kruizeLayer.setApiVersion(entry.getApi_version());
+                    kruizeLayer.setKind(entry.getKind());
+                    kruizeLayer.setLayerName(entry.getLayer_name());
+                    kruizeLayer.setLayerLevel(entry.getLayer_level());
+                    kruizeLayer.setDetails(entry.getDetails());
+
+                    Gson gson = new Gson();
+
+                    // Convert JsonNode to metadata object
+                    if (entry.getMetadata() != null) {
+                        try {
+                            String metadataJson = entry.getMetadata().toString();
+                            com.autotune.analyzer.kruizeLayer.LayerMetadata metadata = gson.fromJson(metadataJson, com.autotune.analyzer.kruizeLayer.LayerMetadata.class);
+                            kruizeLayer.setMetadata(metadata);
+                        } catch (Exception e) {
+                            throw new Exception("Error processing layer metadata: " + e.getMessage());
+                        }
+                    }
+
+                    // Convert JsonNode to layer_presence object
+                    if (entry.getLayer_presence() != null) {
+                        try {
+                            String layerPresenceJson = entry.getLayer_presence().toString();
+                            com.autotune.analyzer.kruizeLayer.LayerPresence layerPresence = gson.fromJson(layerPresenceJson, com.autotune.analyzer.kruizeLayer.LayerPresence.class);
+                            kruizeLayer.setLayerPresence(layerPresence);
+                        } catch (Exception e) {
+                            throw new Exception("Error processing layer presence: " + e.getMessage());
+                        }
+                    }
+
+                    // Convert JsonNode to tunables list
+                    if (entry.getTunables() != null) {
+                        try {
+                            String tunablesJson = entry.getTunables().toString();
+                            com.autotune.analyzer.kruizeLayer.Tunable[] tunablesArray = gson.fromJson(tunablesJson, com.autotune.analyzer.kruizeLayer.Tunable[].class);
+                            ArrayList<com.autotune.analyzer.kruizeLayer.Tunable> tunablesList = new ArrayList<>(java.util.Arrays.asList(tunablesArray));
+                            kruizeLayer.setTunables(tunablesList);
+                        } catch (Exception e) {
+                            throw new Exception("Error processing layer tunables: " + e.getMessage());
+                        }
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Failed to convert KruizeLMLayerEntry to KruizeLayer object: {}", e.getMessage());
+                    e.printStackTrace();
+                }
+                return kruizeLayer;
+            }
+
+            /**
+             * Converts List of KruizeLMLayerEntry DB objects to List of KruizeLayer objects
+             *
+             * @param kruizeLayerEntryList List of KruizeLMLayerEntry database objects to be converted
+             * @return List of KruizeLayer domain objects
+             * @throws Exception
+             */
+            public static List<KruizeLayer> convertLayerEntryToLayerObject(List<KruizeLMLayerEntry> kruizeLayerEntryList) throws Exception {
+                List<KruizeLayer> kruizeLayerList = new ArrayList<>();
+                try {
+                    for (KruizeLMLayerEntry entry : kruizeLayerEntryList) {
+                        try {
+                            KruizeLayer kruizeLayer = convertLayerDBObjToLayerObject(entry);
+                            if (kruizeLayer != null) {
+                                kruizeLayerList.add(kruizeLayer);
+                            }
+                        } catch (Exception e) {
+                            LOGGER.error("Error occurred while converting layer entry to layer object: {}", e.getMessage());
+                        }
+                    }
+                } catch (Exception e) {
+                    LOGGER.error("Error while converting layer entries to layer objects: {}", e.getMessage());
+                    throw new Exception("Error while converting layer entries to layer objects: " + e.getMessage());
+                }
+                return kruizeLayerList;
             }
         }
 
