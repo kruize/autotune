@@ -22,8 +22,6 @@ import com.autotune.common.datasource.DataSourceCollection;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.datasource.DataSourceOperatorImpl;
 import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +32,7 @@ import java.util.List;
  * Implementation for query-based layer presence detection
  */
 public class QueryBasedPresence implements LayerPresenceDetector {
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueryBasedPresence.class);
 
     private List<LayerPresenceQuery> queries;
 
