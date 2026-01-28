@@ -35,7 +35,7 @@ WORKDIR $AUTOTUNE_HOME/src/autotune
 
 # Copy only the pom.xml and download the dependencies
 COPY pom.xml $AUTOTUNE_HOME/src/autotune/
-RUN mvn -f pom.xml install dependency:copy-dependencies
+RUN mvn -f pom.xml install dependency:copy-dependencies -DskipTests
 
 # Now copy the sources and compile and package them
 COPY src $AUTOTUNE_HOME/src/autotune/src/
