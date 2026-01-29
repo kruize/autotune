@@ -28,8 +28,8 @@ NAMESPACE=monitoring
 demo=all
 
 target="crc"
-KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
-KRUIZE_OPERATOR_IMAGE="quay.io/kruize/kruize-operator:0.0.2"
+KRUIZE_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
+KRUIZE_OPERATOR_IMAGE=""
 KRUIZE_OPERATOR=1
 failed=0
 
@@ -42,8 +42,8 @@ function usage() {
 	echo
 	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k]"
 	echo "c = supports minikube, kind and openshift cluster-type"
-	echo "i = kruize image. Default - quay.io/kruize/autotune:mvp_demo"
-	echo "o = Kruize operator image. Default - quay.io/kruize/kruize-operator:0.0.2"
+	echo "i = kruize image. Default - quay.io/kruizehub/autotune-test-image:mvp_demo"
+	echo "o = Kruize operator image. Default - It will use the latest kruize operator image"
 	echo "a = Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git"
 	echo "b = Kruize demos git repo branch. Default - main"
 	echo "t = Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)"

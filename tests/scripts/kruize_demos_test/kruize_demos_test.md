@@ -31,8 +31,8 @@ Where values for kruize_demos_test.sh are:
 ```
 Usage: 
         [ -c ] : cluster_type. Supports minikube, kind and openshift cluster-type
-        [ -i ] : kruize image. Default - quay.io/kruize/autotune:mvp_demo
-        [ -o ] : Kruize operator image. Default - quay.io/kruize/kruize-operator:0.0.2
+        [ -i ] : kruize image. Default - quay.io/kruizehub/autotune-test-image:mvp_demo
+        [ -o ] : Kruize operator image. Default - It will use the latest kruize operator image
 	    [ -a ] : Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git
         [ -b ] : Kruize demos git repo branch. Default - main
         [ -t ] : Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)
