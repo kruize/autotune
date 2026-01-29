@@ -46,6 +46,7 @@ import com.autotune.common.datasource.DataSourceMetadataOperator;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
@@ -1557,6 +1558,52 @@ public class DBHelpers {
                     e.printStackTrace();
                 }
                 return kruizeMetadataProfileEntry;
+            }
+
+            /**
+             * Convert KruizeLayer object to KruizeLMLayerEntry database object
+             *
+             * @param kruizeLayer KruizeLayer object to be converted
+             * @return KruizeLMLayerEntry database entry object
+             */
+            public static KruizeLMLayerEntry convertLayerObjectToLayerDBObj(com.autotune.analyzer.kruizeLayer.KruizeLayer kruizeLayer) throws Exception {
+                if (kruizeLayer == null) {
+                    throw new IllegalArgumentException("KruizeLayer cannot be null");
+                }
+
+                try {
+                    KruizeLMLayerEntry kruizeLayerEntry = new KruizeLMLayerEntry();
+                    kruizeLayerEntry.setApi_version(kruizeLayer.getApiVersion());
+                    kruizeLayerEntry.setKind(kruizeLayer.getKind());
+                    kruizeLayerEntry.setLayer_name(kruizeLayer.getLayerName());
+                    kruizeLayerEntry.setLayer_level(kruizeLayer.getLayerLevel());
+                    kruizeLayerEntry.setDetails(kruizeLayer.getDetails());
+
+                    ObjectMapper objectMapper = new ObjectMapper();
+
+                    // Convert metadata object to JsonNode using ObjectMapper directly
+                    if (kruizeLayer.getMetadata() != null) {
+                        JsonNode metadataNode = objectMapper.valueToTree(kruizeLayer.getMetadata());
+                        kruizeLayerEntry.setMetadata(metadataNode);
+                    }
+
+                    // Convert layer_presence object to JsonNode using ObjectMapper directly
+                    if (kruizeLayer.getLayerPresence() != null) {
+                        JsonNode layerPresenceNode = objectMapper.valueToTree(kruizeLayer.getLayerPresence());
+                        kruizeLayerEntry.setLayer_presence(layerPresenceNode);
+                    }
+
+                    // Convert tunables list to JsonNode using ObjectMapper directly
+                    if (kruizeLayer.getTunables() != null) {
+                        JsonNode tunablesNode = objectMapper.valueToTree(kruizeLayer.getTunables());
+                        kruizeLayerEntry.setTunables(tunablesNode);
+                    }
+
+                    return kruizeLayerEntry;
+                } catch (Exception e) {
+                    LOGGER.error("Failed to convert KruizeLayer to database object: {}", e.getMessage(), e);
+                    throw new Exception("Error converting KruizeLayer to database object: " + e.getMessage(), e);
+                }
             }
         }
 
