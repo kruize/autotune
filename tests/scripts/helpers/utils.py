@@ -126,6 +126,24 @@ DELETE_PERF_PROFILE_EXPERIMENT_ASSOCIATION_ERROR = "Performance Profile '%s' can
 DATASOURCE_NOT_SERVICEABLE = "Datasource %s is not serviceable."
 RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE = "Runtimes recommendations are unavailable for the provided datasource."
 
+# Layer API Messages
+CREATE_LAYER_SUCCESS_MSG = "Layer '%s' created successfully"
+LAYER_DUPLICATE_MSG = "Layer with name '%s' already exists"
+LAYER_NOT_FOUND_MSG = "Layer with name '%s' not found"
+LAYER_METADATA_NAME_NULL_MSG = "metadata.name cannot be null or empty"
+LAYER_NAME_NULL_MSG = "layer_name cannot be null or empty"
+LAYER_PRESENCE_NULL_MSG = "layer_presence cannot be null"
+LAYER_TUNABLES_NULL_OR_EMPTY_MSG = "tunables cannot be null or empty - layer must have at least one tunable"
+LAYER_LEVEL_NEGATIVE_MSG = "layer_level cannot be negative"
+LAYER_PRESENCE_MISSING_MSG = "layer_presence configuration missing: must specify exactly one of: presence='always', queries, or label"
+LAYER_PRESENCE_MULTIPLE_TYPES_MSG = "layer_presence cannot specify multiple types. Choose exactly one: presence, queries, or label"
+LAYER_DUPLICATE_TUNABLE_NAMES_MSG = "Layer contains duplicate tunable names"
+TUNABLE_MIXED_CONFIG_MSG = "Tunable '%s' cannot have both categorical choices and numeric bounds/step configured"
+TUNABLE_MISSING_CONFIG_MSG = "Tunable '%s' must have either categorical choices or numeric bounds/step configured"
+TUNABLE_INVALID_BOUNDS_MSG = "Tunable '%s' has invalid bounds"
+TUNABLE_INVALID_STEP_MSG = "Tunable '%s' has invalid step"
+TUNABLE_EMPTY_CHOICES_MSG = "Tunable '%s' is categorical but has null or empty choices list"
+
 
 # Kruize Recommendations Notification codes
 NOTIFICATION_CODE_FOR_RECOMMENDATIONS_AVAILABLE = "111000"
@@ -1880,6 +1898,15 @@ def get_metric_profile_dir():
     metric_profile_dir = base_dir / 'manifests' / 'autotune' / 'performance-profiles'
 
     return metric_profile_dir
+
+def get_layer_dir():
+    # Get the current directory
+    current_directory = Path(__file__).resolve().parent
+    # Navigate up 3 levels and build the path to the 'manifests/autotune/layers' directory
+    base_dir = current_directory.parents[2]  # (index 2 because it's zero-based)
+    layer_dir = base_dir / 'manifests' / 'autotune' / 'layers'
+
+    return layer_dir
 
 def validate_local_monitoring_recommendation_data_present(recommendations_json):
     if recommendations_json[0]['experiment_type'] == NAMESPACE_EXPERIMENT_TYPE:

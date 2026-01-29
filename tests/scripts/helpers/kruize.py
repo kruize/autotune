@@ -692,3 +692,51 @@ def update_metadata_profile(metadata_profile_json_file, name=None, **kwargs):
     print("Response status code = ", response.status_code)
     print(response.json())
     return response
+
+
+# Description: This function creates a layer using createLayer API
+# Input Parameters: layer input json file
+def create_layer(layer_json_file):
+    json_file = open(layer_json_file, "r")
+    layer_json = json.loads(json_file.read())
+
+    print("\nCreating layer...")
+    print("\n************************************************************")
+    pretty_json_str = json.dumps(layer_json, indent=4)
+    print(pretty_json_str)
+    print("\n************************************************************")
+
+    url = URL + "/createLayer"
+    print("URL = ", url)
+
+    response = requests.post(url, json=layer_json)
+    print("Response status code = ", response.status_code)
+    print(response.text)
+    return response
+
+
+# Description: This function lists layers from Kruize Autotune using GET listLayers API
+# Input Parameters: layer name (optional)
+def list_layers(layer_name=None, logging=True):
+    print("\nListing the layers...")
+
+    query_params = {}
+
+    if layer_name is not None:
+        query_params['layer_name'] = layer_name
+
+    query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
+
+    url = URL + "/listLayers"
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
+    print("PARAMS = ", query_params)
+    response = requests.get(url)
+
+    print("Response status code = ", response.status_code)
+    if logging:
+        print("\n************************************************************")
+        print(response.text)
+        print("\n************************************************************")
+    return response
