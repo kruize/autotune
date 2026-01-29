@@ -665,24 +665,20 @@ public class ExperimentDAOImpl implements ExperimentDAO {
         Timer.Sample timerAddLayerDB = Timer.start(MetricsConfig.meterRegistry());
         Transaction tx = null;
         try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
-            try {
-                tx = session.beginTransaction();
-                session.persist(kruizeLayerEntry);
-                tx.commit();
-                validationOutputData.setSuccess(true);
-                statusValue = "success";
-            } catch (HibernateException e) {
-                LOGGER.error("Not able to save layer due to: {}", e.getMessage(), e);
-                if (tx != null) tx.rollback();
-                validationOutputData.setSuccess(false);
-                validationOutputData.setMessage(e.getMessage());
-                validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-            }
-        } catch (Exception e) {
+            tx = session.beginTransaction();
+            session.persist(kruizeLayerEntry);
+            tx.commit();
+            validationOutputData.setSuccess(true);
+            statusValue = "success";
+        } catch (HibernateException e) {
             LOGGER.error("Not able to save layer due to: {}", e.getMessage(), e);
+            if (tx != null && tx.isActive()) tx.rollback();
+            e.printStackTrace();
             validationOutputData.setSuccess(false);
             validationOutputData.setMessage(e.getMessage());
-            validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+        } catch (Exception e) {
+            LOGGER.error("Not able to save layer due to: {}", e.getMessage(), e);
+            validationOutputData.setMessage(e.getMessage());
         } finally {
             if (null != timerAddLayerDB) {
                 MetricsConfig.timerAddLayerDB = MetricsConfig.timerBAddLayerDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
