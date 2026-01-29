@@ -50,6 +50,8 @@ public class KruizeBulkJobEntry {
     private int totalExperiments;
     @Column(name = "processed_count")
     private int processedExperiments;
+    @Column(name = "existing_experiments", columnDefinition = "integer default 0")
+    private int existingExperiments;
     @Column(name = "start_time")
     private Timestamp jobStartTime;
     @Column(name = "end_time")
@@ -65,11 +67,15 @@ public class KruizeBulkJobEntry {
     @JdbcTypeCode(SqlTypes.JSON)
     private JsonNode payload; // JSONB field for experiments data
 
-    public KruizeBulkJobEntry(String jobId, String status, int totalExperiments, int processedExperiments, Timestamp jobStartTime, Timestamp jobEndTime, String webhook, String notifications, String experiments, String metadata, String payload) {
+    public KruizeBulkJobEntry(String jobId, String status, int totalExperiments, int processedExperiments,
+            int existingExperiments, Timestamp jobStartTime, Timestamp jobEndTime, String webhook, String notifications,
+            String experiments,
+            String metadata, String payload) {
         this.jobId = jobId;
         this.status = status;
         this.totalExperiments = totalExperiments;
         this.processedExperiments = processedExperiments;
+        this.existingExperiments = existingExperiments;
         this.jobStartTime = jobStartTime;
         this.jobEndTime = jobEndTime;
         try {
@@ -178,6 +184,14 @@ public class KruizeBulkJobEntry {
         this.payload = payload;
     }
 
+    public int getExistingExperiments() {
+        return existingExperiments;
+    }
+
+    public void setExistingExperiments(int existingExperiments) {
+        this.existingExperiments = existingExperiments;
+    }
+
     @Override
     public String toString() {
         return "BulkJob{" +
@@ -185,6 +199,7 @@ public class KruizeBulkJobEntry {
                 ", status='" + status + '\'' +
                 ", totalExperiments=" + totalExperiments +
                 ", processedExperiments=" + processedExperiments +
+                ", existingExperiments=" + existingExperiments +
                 ", jobStartTime=" + jobStartTime +
                 ", jobEndTime=" + jobEndTime +
                 ", webhook='" + webhook + '\'' +
@@ -202,18 +217,17 @@ public class KruizeBulkJobEntry {
                         status,
                         totalExperiments,
                         processedExperiments,
+                        existingExperiments,
                         jobStartTime,
                         jobEndTime,
                         convertJsonNodeToMap(notifications),
                         convertJsonNodeToBulkInput(payload)),
                 convertJsonNodeToExperimentsMap(experiments.get("experiments")),
                 null,
-                convertJsonNodeToMetaData(metadata)
-        );
+                convertJsonNodeToMetaData(metadata));
         return jobStatus;
 
     }
-
 
     public Map<String, BulkJobStatus.Notification> convertJsonNodeToMap(JsonNode jsonNode) {
         ObjectMapper objectMapper = new ObjectMapper();
