@@ -69,7 +69,7 @@ public class CreateExperiment extends HttpServlet {
     
     // Singleton instances to avoid creating new objects on each request
     private final Gson gson = new Gson();
-    private final ExperimentDBService experimentDBService = ExperimentDBService.getInstance();
+    private final ExperimentDBService experimentDBService = new ExperimentDBService();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
