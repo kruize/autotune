@@ -26,6 +26,7 @@ import com.autotune.database.init.KruizeHibernateUtil;
 import com.autotune.database.table.*;
 import com.autotune.database.table.lm.KruizeBulkJobEntry;
 import com.autotune.database.table.lm.KruizeLMExperimentEntry;
+import com.autotune.database.table.lm.KruizeLMLayerEntry;
 import com.autotune.database.table.lm.KruizeLMMetadataProfileEntry;
 import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.utils.KruizeConstants;
@@ -41,6 +42,7 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
 import java.text.SimpleDateFormat;
 import java.time.LocalDateTime;
@@ -647,6 +649,43 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                 timerUpdateMetadataProfileDB.stop(MetricsConfig.timerUpdateMetadataProfileDB);
             }
         }
+        return validationOutputData;
+    }
+
+    /**
+     * Add Layer to database
+     *
+     * @param kruizeLayerEntry Layer Database object to be added
+     * @return validationOutputData contains the status of the DB insert operation
+     */
+    @Override
+    public ValidationOutputData addLayerToDB(KruizeLMLayerEntry kruizeLayerEntry) {
+        ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
+        String statusValue = "failure";
+        Timer.Sample timerAddLayerDB = Timer.start(MetricsConfig.meterRegistry());
+        Transaction tx = null;
+        try (Session session = KruizeHibernateUtil.getSessionFactory().openSession()) {
+            tx = session.beginTransaction();
+            session.persist(kruizeLayerEntry);
+            tx.commit();
+            validationOutputData.setSuccess(true);
+            statusValue = "success";
+        } catch (HibernateException e) {
+            LOGGER.error("Not able to save layer due to: {}", e.getMessage(), e);
+            if (tx != null && tx.isActive()) tx.rollback();
+            e.printStackTrace();
+            validationOutputData.setSuccess(false);
+            validationOutputData.setMessage(e.getMessage());
+        } catch (Exception e) {
+            LOGGER.error("Not able to save layer due to: {}", e.getMessage(), e);
+            validationOutputData.setMessage(e.getMessage());
+        } finally {
+            if (null != timerAddLayerDB) {
+                MetricsConfig.timerAddLayerDB = MetricsConfig.timerBAddLayerDB.tag("status", statusValue).register(MetricsConfig.meterRegistry());
+                timerAddLayerDB.stop(MetricsConfig.timerAddLayerDB);
+            }
+        }
+
         return validationOutputData;
     }
 

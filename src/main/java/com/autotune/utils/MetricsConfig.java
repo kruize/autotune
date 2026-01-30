@@ -22,6 +22,7 @@ public class MetricsConfig {
     public static Timer timerAddRecDB, timerAddResultsDB, timerAddExpDB, timerAddBulkResultsDB, timerSaveBulkJobDB, timerAddBulkJob;
     public static Timer timerAddPerfProfileDB, timerLoadPerfProfileName, timerLoadAllPerfProfiles;
     public static Timer timerAddMetadataProfileDB, timerLoadMetadataProfileName, timerLoadAllMetadataProfiles, timerUpdateMetadataProfileDB;
+    public static Timer timerAddLayerDB;
     public static Timer timerImportMetadata, timerGetMetadata;
     public static Timer timerJobStatus, timerCreateBulkJob, timerGetExpMap, timerCreateBulkExp, timerGenerateBulkRec, timerRunJob;
     public static Counter timerKruizeNotifications , timerBulkJobs;
@@ -41,6 +42,7 @@ public class MetricsConfig {
     public static Timer.Builder timerBUpdateMetadataProfile;
     public static Timer timerUpdatePerfProfile;
     public static Timer.Builder timerBUpdatePerfProfile;
+    public static Timer.Builder timerBAddLayerDB;
 
     private static MetricsConfig INSTANCE;
     public String API_METRIC_DESC = "Time taken for Kruize APIs";
@@ -104,6 +106,7 @@ public class MetricsConfig {
         timerBUpdateMetadataProfile = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateMetadataProfile").tag("method", "PUT");
         timerBUpdatePerfProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updatePerformanceProfileInDB");
         timerBUpdatePerfProfile = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updatePerformanceProfile").tag("method", "PUT");
+        timerBAddLayerDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "addLayerToDB");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);
