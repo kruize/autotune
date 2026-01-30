@@ -16,6 +16,24 @@
 
 package com.autotune.analyzer.services;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+import javax.servlet.ServletConfig;
+import javax.servlet.ServletException;
+import javax.servlet.annotation.WebServlet;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.autotune.analyzer.exceptions.InvalidExperimentType;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
@@ -24,38 +42,20 @@ import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.ExperimentCache;
 import com.autotune.common.data.ValidationOutputData;
-import com.autotune.database.dao.ExperimentDAO;
 import com.autotune.database.dao.ExperimentDAOImpl;
 import com.autotune.database.service.ExperimentDBService;
+import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.MetricsConfig;
 import com.autotune.utils.Utils;
 import com.google.gson.Gson;
 import com.google.gson.JsonParseException;
-import com.google.gson.JsonSyntaxException;
+
 import io.micrometer.core.instrument.Timer;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
-
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.CHARACTER_ENCODING;
-import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.JSON_CONTENT_TYPE;
 
 /**
  * REST API to create experiments to Analyser for monitoring metrics.
@@ -69,7 +69,7 @@ public class CreateExperiment extends HttpServlet {
     
     // Singleton instances to avoid creating new objects on each request
     private final Gson gson = new Gson();
-    private final ExperimentDBService experimentDBService = new ExperimentDBService();
+    private final ExperimentDBService experimentDBService = ExperimentDBService.getInstance();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -93,7 +93,7 @@ public class CreateExperiment extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String statusValue = "failure";
         Timer.Sample timerCreateExp = Timer.start(MetricsConfig.meterRegistry());
-        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
+        Map<String, KruizeObject> mKruizeExperimentMap = KruizeOperator.autotuneObjectMap;
         String inputData = "";
         try {
             // Set the character encoding of the request to UTF-8
@@ -198,7 +198,6 @@ public class CreateExperiment extends HttpServlet {
      */
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
         String inputData = "";
         String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
         // Check if rm is not null and set to true
@@ -226,6 +225,7 @@ public class CreateExperiment extends HttpServlet {
                     }
                     if (validationOutputData.isSuccess()) {
                         experimentCache.remove(expName);
+                        KruizeOperator.autotuneObjectMap.remove(expName);
                     } else {
                         throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
                     }

@@ -16,8 +16,8 @@
 
 package com.autotune.analyzer.utils;
 
-import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
@@ -35,27 +35,53 @@ import com.autotune.operator.KruizeDeploymentInfo;
 public class ExperimentCache {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentCache.class);
     
-    private final HashSet<String> experimentNamesCache = new HashSet<>();
+    private final Set<String> experimentNamesCache = ConcurrentHashMap.newKeySet();
     private final ExperimentDBService experimentDBService = new ExperimentDBService();
     
     /**
      * Check if an experiment exists in cache or database.
+     *
+     * Fast path:
+     *   - Null check
+     *   - Concurrent cache lookup
+     * Slow path:
+     *   - DB lookup (potentially blocking)
+     *   - On positive hit, cache the experiment name
+     *
+     * This avoids serializing callers on a single monitor while still keeping the cache consistent.
      * 
      * @param experiment_name the experiment name to check
      * @return true if experiment exists, false otherwise
      */
-    public synchronized boolean isExists(String experiment_name) {
+    public boolean isExists(String experiment_name) {
         if (experiment_name == null) {
             return false;
         }
-        
-        // Check cache first
         if (experimentNamesCache.contains(experiment_name)) {
             LOGGER.debug("Experiment {} found in cache", experiment_name);
             return true;
         }
-        
-        // Cache miss - check database
+
+        // Slow-path DB lookup outside any lock to avoid serializing callers
+        boolean existsInDb = checkExperimentInDatabase(experiment_name);
+
+        // If found in DB, cache it for future calls
+        if (existsInDb) {
+            experimentNamesCache.add(experiment_name);
+            LOGGER.debug("Experiment {} found in database, added to cache", experiment_name);
+            return true;
+        }
+
+        return false;
+    }
+    
+    /**
+     * Helper method to check if experiment exists in database using existing ExperimentDBService API.
+     * 
+     * @param experiment_name the experiment name to check
+     * @return true if experiment exists in database, false otherwise
+     */
+    private boolean checkExperimentInDatabase(String experiment_name) {
         Map<String, KruizeObject> experimentMap = new ConcurrentHashMap<>();
         try {
             if (KruizeDeploymentInfo.is_ros_enabled) {
@@ -66,17 +92,11 @@ public class ExperimentCache {
                 experimentDBService.loadLMExperimentFromDBByName(experimentMap, experiment_name);
             }
             
-            // If found in database, add to cache
-            if (experimentMap.containsKey(experiment_name)) {
-                experimentNamesCache.add(experiment_name);
-                LOGGER.debug("Experiment {} found in database, added to cache", experiment_name);
-                return true;
-            }
+            return experimentMap.containsKey(experiment_name);
         } catch (Exception e) {
             LOGGER.debug("Database check for experiment {} failed: {}", experiment_name, e.getMessage());
+            return false;
         }
-        
-        return false;
     }
     
     /**
@@ -84,7 +104,7 @@ public class ExperimentCache {
      * 
      * @param experiment_name the experiment name to add
      */
-    public synchronized void add(String experiment_name) {
+    public void add(String experiment_name) {
         if (experiment_name != null) {
             experimentNamesCache.add(experiment_name);
             LOGGER.debug("Added experiment {} to cache", experiment_name);
@@ -96,7 +116,7 @@ public class ExperimentCache {
      * 
      * @param experiment_name the experiment name to remove
      */
-    public synchronized void remove(String experiment_name) {
+    public void remove(String experiment_name) {
         if (experiment_name != null) {
             boolean removed = experimentNamesCache.remove(experiment_name);
             if (removed) {
