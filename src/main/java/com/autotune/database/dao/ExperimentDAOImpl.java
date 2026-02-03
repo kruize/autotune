@@ -1451,7 +1451,7 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             statusValue = "success";
         } catch (Exception e) {
             LOGGER.error("Not able to load Layers due to {}", e.getMessage());
-            throw new Exception("Error while loading existing Layers from database due to : " + e.getMessage());
+            throw new Exception("Error while loading existing Layers from database", e);
         } finally {
             if (null != timerLoadAllLayers) {
                 MetricsConfig.timerLoadAllLayers = MetricsConfig.timerBLoadAllLayers.tag("status", statusValue).register(MetricsConfig.meterRegistry());
