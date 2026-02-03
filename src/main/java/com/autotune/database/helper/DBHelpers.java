@@ -20,6 +20,7 @@ import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
+import com.autotune.analyzer.exceptions.LayerConversionException;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.kruizeLayer.LayerMetadata;
 import com.autotune.analyzer.kruizeLayer.LayerPresence;
@@ -1616,54 +1617,68 @@ public class DBHelpers {
              * @param entry KruizeLMLayerEntry database entry object to be converted
              * @return KruizeLayer domain object
              */
-            public static KruizeLayer convertLayerDBObjToLayerObject(KruizeLMLayerEntry entry) {
-                KruizeLayer kruizeLayer = null;
+            public static KruizeLayer convertLayerDBObjToLayerObject(KruizeLMLayerEntry entry) throws LayerConversionException {
+                KruizeLayer kruizeLayer = new KruizeLayer();
+                Gson gson = new Gson();
+
                 try {
-                    kruizeLayer = new KruizeLayer();
                     kruizeLayer.setApiVersion(entry.getApi_version());
                     kruizeLayer.setKind(entry.getKind());
                     kruizeLayer.setLayerName(entry.getLayer_name());
                     kruizeLayer.setLayerLevel(entry.getLayer_level());
                     kruizeLayer.setDetails(entry.getDetails());
-
-                    Gson gson = new Gson();
-
-                    // Convert JsonNode to metadata object
-                    if (entry.getMetadata() != null) {
-                        try {
-                            String metadataJson = entry.getMetadata().toString();
-                            LayerMetadata metadata = gson.fromJson(metadataJson, LayerMetadata.class);
-                            kruizeLayer.setMetadata(metadata);
-                        } catch (Exception e) {
-                            throw new Exception("Error processing layer metadata: " + e.getMessage());
-                        }
-                    }
-
-                    // Convert JsonNode to layer_presence object
-                    if (entry.getLayer_presence() != null) {
-                        try {
-                            String layerPresenceJson = entry.getLayer_presence().toString();
-                            LayerPresence layerPresence = gson.fromJson(layerPresenceJson, LayerPresence.class);
-                            kruizeLayer.setLayerPresence(layerPresence);
-                        } catch (Exception e) {
-                            throw new Exception("Error processing layer presence: " + e.getMessage());
-                        }
-                    }
-
-                    // Convert JsonNode to tunables list
-                    if (entry.getTunables() != null) {
-                        try {
-                            String tunablesJson = entry.getTunables().toString();
-                            Tunable[] tunablesArray = gson.fromJson(tunablesJson, Tunable[].class);
-                            ArrayList<Tunable> tunablesList = new ArrayList<>(java.util.Arrays.asList(tunablesArray));
-                            kruizeLayer.setTunables(tunablesList);
-                        } catch (Exception e) {
-                            throw new Exception("Error processing layer tunables: " + e.getMessage());
-                        }
-                    }
                 } catch (Exception e) {
-                    LOGGER.error("Failed to convert KruizeLMLayerEntry to KruizeLayer object: {}", e.getMessage());
-                    e.printStackTrace();
+                    throw new LayerConversionException(
+                            AnalyzerConstants.LayerConversionSection.BASIC_FIELDS,
+                            "Failed while setting basic layer fields",
+                            e
+                    );
+                }
+
+                // Convert JsonNode to metadata object
+                if (entry.getMetadata() != null) {
+                    try {
+                        String metadataJson = entry.getMetadata().toString();
+                        LayerMetadata metadata = gson.fromJson(metadataJson, LayerMetadata.class);
+                        kruizeLayer.setMetadata(metadata);
+                    } catch (Exception e) {
+                        throw new LayerConversionException(
+                                AnalyzerConstants.LayerConversionSection.METADATA,
+                                "Failed while converting layer metadata",
+                                e
+                        );
+                    }
+                }
+
+                // Convert JsonNode to layer_presence object
+                if (entry.getLayer_presence() != null) {
+                    try {
+                        String layerPresenceJson = entry.getLayer_presence().toString();
+                        LayerPresence layerPresence = gson.fromJson(layerPresenceJson, LayerPresence.class);
+                        kruizeLayer.setLayerPresence(layerPresence);
+                    } catch (Exception e) {
+                        throw new LayerConversionException(
+                                AnalyzerConstants.LayerConversionSection.LAYER_PRESENCE,
+                                "Failed while converting layer presence",
+                                e
+                        );
+                    }
+                }
+
+                // Convert JsonNode to tunables list
+                if (entry.getTunables() != null) {
+                    try {
+                        String tunablesJson = entry.getTunables().toString();
+                        Tunable[] tunablesArray = gson.fromJson(tunablesJson, Tunable[].class);
+                        ArrayList<Tunable> tunablesList = new ArrayList<>(java.util.Arrays.asList(tunablesArray));
+                        kruizeLayer.setTunables(tunablesList);
+                    } catch (Exception e) {
+                        throw new LayerConversionException(
+                                AnalyzerConstants.LayerConversionSection.TUNABLES,
+                                "Failed while converting layer tunables",
+                                e
+                        );
+                    }
                 }
                 return kruizeLayer;
             }
@@ -1686,9 +1701,8 @@ public class DBHelpers {
                             continue;
 
                         KruizeLayer kruizeLayer = convertLayerDBObjToLayerObject(entry);
-                        if (null != kruizeLayer) {
-                            kruizeLayerList.add(kruizeLayer);
-                        }
+                        kruizeLayerList.add(kruizeLayer);
+
                     } catch (Exception e) {
                         LOGGER.error("Error occurred while converting layer entry to layer object: {}", e.getMessage());
                         throw new Exception("Error while converting layer entries to layer objects: " + e.getMessage());
