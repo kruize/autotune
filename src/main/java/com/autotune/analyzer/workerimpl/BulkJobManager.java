@@ -320,9 +320,9 @@ public class BulkJobManager implements Runnable {
         BulkJobStatus.Experiment experiment = jobData.addExperiment(experimentName);
 
         try {
+            LOGGER.debug("Creating experiment: {}", experimentName);
             experiment.getApis().getCreate().setRequest(apiObject);
-            boolean experimentExists = createExperiment(apiObject, experiment, datasource);
-
+            boolean experimentExists = createExperiment(apiObject, experiment, datasource);            
             if (!experimentExists) {
                 markExperimentAsFailed(experiment, null);
             }
@@ -496,7 +496,12 @@ public class BulkJobManager implements Runnable {
             GenericRestApiClient.HttpResponseWrapper response = apiClient.callKruizeAPI("[" + new Gson().toJson(apiObject) + "]");
             experiment.getApis().getCreate().setResponse(new Gson().fromJson(response.getResponseBody().toString(), KruizeResponse.class));
 
-            LOGGER.debug("API Response code: {}", response);
+            // increasing existing experiments count if experiment already exists
+            if (response.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
+                LOGGER.debug("Experiment {} already exists (HTTP_CONFLICT), incrementing existing_experiments count", apiObject.getExperimentName());
+                jobData.getSummary().incrementExisting_experiments();
+            }
+
             return response.getStatusCode() == HttpURLConnection.HTTP_CREATED || response.getStatusCode() == HttpURLConnection.HTTP_CONFLICT;
         } catch (Exception e) {
             handleException(e, experiment);

@@ -50,7 +50,7 @@ public class KruizeBulkJobEntry {
     private int totalExperiments;
     @Column(name = "processed_count")
     private int processedExperiments;
-    @Column(name = "existing_experiments", columnDefinition = "integer default 0")
+    @Column(name = "existing_experiments_count", columnDefinition = "integer default 0")
     private int existingExperiments;
     @Column(name = "start_time")
     private Timestamp jobStartTime;
