@@ -498,7 +498,8 @@ public class BulkJobManager implements Runnable {
             GenericRestApiClient.HttpResponseWrapper response = apiClient.callKruizeAPI("[" + new Gson().toJson(apiObject) + "]");
             experiment.getApis().getCreate().setResponse(new Gson().fromJson(response.getResponseBody().toString(), KruizeResponse.class));
 
-            LOGGER.debug("API Response code: {}", response);
+            LOGGER.debug("Create Experiment API Response code: {}", response.getStatusCode());
+            LOGGER.debug("Create Experiment API Response body: {}", response.getResponseBody());
             
             // increasing existing experiments count if experiment already exists
             if (response.getStatusCode() == HttpURLConnection.HTTP_CONFLICT) {
