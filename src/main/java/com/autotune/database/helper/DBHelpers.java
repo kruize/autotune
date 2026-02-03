@@ -21,6 +21,9 @@ import com.autotune.analyzer.adapters.MetricMetadataAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.LayerMetadata;
+import com.autotune.analyzer.kruizeLayer.LayerPresence;
+import com.autotune.analyzer.kruizeLayer.Tunable;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.SloInfo;
 import com.autotune.analyzer.metadataProfiles.MetadataProfile;
@@ -1567,7 +1570,7 @@ public class DBHelpers {
              * @param kruizeLayer KruizeLayer object to be converted
              * @return KruizeLMLayerEntry database entry object
              */
-            public static KruizeLMLayerEntry convertLayerObjectToLayerDBObj(com.autotune.analyzer.kruizeLayer.KruizeLayer kruizeLayer) throws Exception {
+            public static KruizeLMLayerEntry convertLayerObjectToLayerDBObj(KruizeLayer kruizeLayer) throws Exception {
                 if (kruizeLayer == null) {
                     throw new IllegalArgumentException("KruizeLayer cannot be null");
                 }
@@ -1629,7 +1632,7 @@ public class DBHelpers {
                     if (entry.getMetadata() != null) {
                         try {
                             String metadataJson = entry.getMetadata().toString();
-                            com.autotune.analyzer.kruizeLayer.LayerMetadata metadata = gson.fromJson(metadataJson, com.autotune.analyzer.kruizeLayer.LayerMetadata.class);
+                            LayerMetadata metadata = gson.fromJson(metadataJson, LayerMetadata.class);
                             kruizeLayer.setMetadata(metadata);
                         } catch (Exception e) {
                             throw new Exception("Error processing layer metadata: " + e.getMessage());
@@ -1640,7 +1643,7 @@ public class DBHelpers {
                     if (entry.getLayer_presence() != null) {
                         try {
                             String layerPresenceJson = entry.getLayer_presence().toString();
-                            com.autotune.analyzer.kruizeLayer.LayerPresence layerPresence = gson.fromJson(layerPresenceJson, com.autotune.analyzer.kruizeLayer.LayerPresence.class);
+                            LayerPresence layerPresence = gson.fromJson(layerPresenceJson, LayerPresence.class);
                             kruizeLayer.setLayerPresence(layerPresence);
                         } catch (Exception e) {
                             throw new Exception("Error processing layer presence: " + e.getMessage());
@@ -1651,8 +1654,8 @@ public class DBHelpers {
                     if (entry.getTunables() != null) {
                         try {
                             String tunablesJson = entry.getTunables().toString();
-                            com.autotune.analyzer.kruizeLayer.Tunable[] tunablesArray = gson.fromJson(tunablesJson, com.autotune.analyzer.kruizeLayer.Tunable[].class);
-                            ArrayList<com.autotune.analyzer.kruizeLayer.Tunable> tunablesList = new ArrayList<>(java.util.Arrays.asList(tunablesArray));
+                            Tunable[] tunablesArray = gson.fromJson(tunablesJson, Tunable[].class);
+                            ArrayList<Tunable> tunablesList = new ArrayList<>(java.util.Arrays.asList(tunablesArray));
                             kruizeLayer.setTunables(tunablesList);
                         } catch (Exception e) {
                             throw new Exception("Error processing layer tunables: " + e.getMessage());
