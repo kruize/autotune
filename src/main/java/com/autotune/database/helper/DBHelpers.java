@@ -1690,7 +1690,7 @@ public class DBHelpers {
              * @return List of KruizeLayer domain objects
              * @throws Exception
              */
-            public static List<KruizeLayer> convertLayerEntryToLayerObject(List<KruizeLMLayerEntry> kruizeLayerEntryList) throws Exception {
+            public static List<KruizeLayer> convertLayerEntryToLayerObject(List<KruizeLMLayerEntry> kruizeLayerEntryList) throws LayerConversionException {
                 List<KruizeLayer> kruizeLayerList = new ArrayList<>();
 
                 // Will throw an exception if any of the layer conversion gets failed
@@ -1703,9 +1703,9 @@ public class DBHelpers {
                         KruizeLayer kruizeLayer = convertLayerDBObjToLayerObject(entry);
                         kruizeLayerList.add(kruizeLayer);
 
-                    } catch (Exception e) {
+                    } catch (LayerConversionException e) {
                         LOGGER.error("Error occurred while converting layer entry to layer object: {}", e.getMessage());
-                        throw new Exception("Error while converting layer entries to layer objects: " + e.getMessage());
+                        throw e;
                     }
                 }
                 return kruizeLayerList;
