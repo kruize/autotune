@@ -490,6 +490,8 @@ public class ExperimentDBService {
      * @throws Exception if there's an error loading or converting layers
      */
     public void loadAllLayers(Map<String, KruizeLayer> layerMap) throws Exception {
+        if (null == layerMap)
+            return;
         List<KruizeLMLayerEntry> entries = experimentDAO.loadAllLayers();
         if (null != entries && !entries.isEmpty()) {
             List<KruizeLayer> kruizeLayers = DBHelpers.Converters.KruizeObjectConverters.convertLayerEntryToLayerObject(entries);
