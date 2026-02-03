@@ -43,6 +43,7 @@ import com.autotune.database.table.lm.KruizeLMRecommendationEntry;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.cache.PerformanceProfileCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -613,6 +614,13 @@ public class ExperimentDBService {
     }
 
     public void loadPerformanceProfileFromDBByName(Map<String, PerformanceProfile> performanceProfileMap, String performanceProfileName) throws Exception {
+        // Serve from cache if found
+        PerformanceProfile pp = PerformanceProfileCache.get(performanceProfileName);
+        if (null != pp) {
+            PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, pp);
+            return;
+        }
+        // cache miss
         List<KruizePerformanceProfileEntry> entries = experimentDAO.loadPerformanceProfileByName(performanceProfileName);
         if (null != entries && !entries.isEmpty()) {
             List<PerformanceProfile> performanceProfiles = DBHelpers.Converters.KruizeObjectConverters
@@ -620,6 +628,7 @@ public class ExperimentDBService {
             if (!performanceProfiles.isEmpty()) {
                 for (PerformanceProfile performanceProfile : performanceProfiles) {
                     if (null != performanceProfile) {
+                        PerformanceProfileCache.put(performanceProfileName, performanceProfile); // Update cache
                         PerformanceProfileUtil.addPerformanceProfile(performanceProfileMap, performanceProfile);
                     }
                 }
