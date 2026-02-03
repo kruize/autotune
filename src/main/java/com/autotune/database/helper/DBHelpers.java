@@ -1674,20 +1674,22 @@ public class DBHelpers {
              */
             public static List<KruizeLayer> convertLayerEntryToLayerObject(List<KruizeLMLayerEntry> kruizeLayerEntryList) throws Exception {
                 List<KruizeLayer> kruizeLayerList = new ArrayList<>();
-                try {
-                    for (KruizeLMLayerEntry entry : kruizeLayerEntryList) {
-                        try {
-                            KruizeLayer kruizeLayer = convertLayerDBObjToLayerObject(entry);
-                            if (kruizeLayer != null) {
-                                kruizeLayerList.add(kruizeLayer);
-                            }
-                        } catch (Exception e) {
-                            LOGGER.error("Error occurred while converting layer entry to layer object: {}", e.getMessage());
+
+                // Will throw an exception if any of the layer conversion gets failed
+                // Intentionally not returning partial list of layers which can effect the recommendations
+                for (KruizeLMLayerEntry entry : kruizeLayerEntryList) {
+                    try {
+                        if (null == entry)
+                            continue;
+
+                        KruizeLayer kruizeLayer = convertLayerDBObjToLayerObject(entry);
+                        if (null != kruizeLayer) {
+                            kruizeLayerList.add(kruizeLayer);
                         }
+                    } catch (Exception e) {
+                        LOGGER.error("Error occurred while converting layer entry to layer object: {}", e.getMessage());
+                        throw new Exception("Error while converting layer entries to layer objects: " + e.getMessage());
                     }
-                } catch (Exception e) {
-                    LOGGER.error("Error while converting layer entries to layer objects: {}", e.getMessage());
-                    throw new Exception("Error while converting layer entries to layer objects: " + e.getMessage());
                 }
                 return kruizeLayerList;
             }
