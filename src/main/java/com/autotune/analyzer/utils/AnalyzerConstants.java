@@ -398,6 +398,14 @@ public class AnalyzerConstants {
         CREATE, UPDATE
     }
 
+    public enum LayerConversionSection {
+        BASIC_FIELDS,
+        METADATA,
+        LAYER_PRESENCE,
+        TUNABLES
+    }
+
+
     /**
      * Validates if the metricName to be updated has supported prefix like namespace, workload, container.
      * @param metricName Name of the metric to be updated

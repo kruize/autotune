@@ -16,6 +16,7 @@
 package com.autotune.database.service;
 
 import com.autotune.analyzer.exceptions.InvalidConversionOfRecommendationEntryException;
+import com.autotune.analyzer.exceptions.LayerConversionException;
 import com.autotune.analyzer.experiment.ExperimentInterface;
 import com.autotune.analyzer.experiment.ExperimentInterfaceImpl;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
@@ -481,6 +482,24 @@ public class ExperimentDBService {
             validationOutputData.setErrorCode(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
         return validationOutputData;
+    }
+
+    /**
+     * Load all layers from the database and populate them into the provided map
+     *
+     * @param layerMap Map to store the loaded layers (key: layer_name, value: KruizeLayer)
+     * @throws Exception if there's an error loading or converting layers
+     */
+    public void loadAllLayers(Map<String, KruizeLayer> layerMap) throws Exception {
+        if (null == layerMap)
+            return;
+        List<KruizeLMLayerEntry> entries = experimentDAO.loadAllLayers();
+        if (null != entries && !entries.isEmpty()) {
+            List<KruizeLayer> kruizeLayers = DBHelpers.Converters.KruizeObjectConverters.convertLayerEntryToLayerObject(entries);
+            if (!kruizeLayers.isEmpty()) {
+                kruizeLayers.forEach(layer -> layerMap.put(layer.getLayerName(), layer));
+            }
+        }
     }
 
 
