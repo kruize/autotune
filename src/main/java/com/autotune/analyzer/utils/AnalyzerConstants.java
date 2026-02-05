@@ -618,6 +618,8 @@ public class AnalyzerConstants {
         public static final String METADATA = "metadata";
         public static final String NAMESPACE = "namespace";
         public static final String DATASOURCE = "datasource";
+        public static final String LAYER_NAME = "layer_name";
+        public static final String LAYER_LEVEL = "layer_level";
         public static final String LAYER_PRESENCE = "layer_presence";
         public static final String PRESENCE = "presence";
         public static final String LABEL = "label";

@@ -38,6 +38,14 @@ public class LayerValidation {
      * @return ValidationOutputData with success flag and error messages
      */
     public ValidationOutputData validate(KruizeLayer layer) {
+        // Check for null layer object first
+        if (layer == null) {
+            LOGGER.error("Layer validation failed: layer is null");
+            return new ValidationOutputData(false,
+                    AnalyzerErrorConstants.APIErrors.CreateLayerAPI.LAYER_NULL,
+                    HttpServletResponse.SC_BAD_REQUEST);
+        }
+
         List<String> errors = new ArrayList<>();
 
         // 1. Validate mandatory fields
@@ -58,20 +66,13 @@ public class LayerValidation {
             errors.add(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.LAYER_TUNABLES_NULL_OR_EMPTY);
         }
 
-        // 2. Validate layer level
-        if (layer.getLayerLevel() < 0) {
-            errors.add(String.format(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.LAYER_LEVEL_NEGATIVE, layer.getLayerLevel()));
+        // 2. Validate layer presence mutual exclusivity
+        ValidationOutputData presenceValidation = validateLayerPresence(layer.getLayerPresence());
+        if (!presenceValidation.isSuccess()) {
+            errors.add(presenceValidation.getMessage());
         }
 
-        // 3. Validate layer presence mutual exclusivity
-        if (layer.getLayerPresence() != null) {
-            ValidationOutputData presenceValidation = validateLayerPresence(layer.getLayerPresence());
-            if (!presenceValidation.isSuccess()) {
-                errors.add(presenceValidation.getMessage());
-            }
-        }
-
-        // 4. Validate tunables
+        // 3. Validate tunables
         if (layer.getTunables() != null && !layer.getTunables().isEmpty()) {
             ValidationOutputData tunableValidation = validateTunables(layer.getTunables());
             if (!tunableValidation.isSuccess()) {
@@ -129,13 +130,20 @@ public class LayerValidation {
     private ValidationOutputData validateTunables(ArrayList<Tunable> tunables) {
         List<String> errors = new ArrayList<>();
 
+        // Check for null tunables in the list
+        if (tunables.contains(null)) {
+            String errorMsg = AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_NULL_IN_LIST;
+            LOGGER.error("Tunable validation failed: {}", errorMsg);
+            errors.add(errorMsg);
+        }
+
         // Check for duplicate tunable names
         Set<String> tunableNames = new HashSet<>();
         List<String> duplicates = new ArrayList<>();
 
         for (Tunable tunable : tunables) {
             if (tunable == null) {
-                continue;
+                continue; // Skip null tunables (already reported above)
             }
 
             // Check for duplicate names
@@ -152,6 +160,13 @@ public class LayerValidation {
                 tunable.validate();
             } catch (InvalidBoundsException e) {
                 errors.add(e.getMessage());
+            } catch (Exception e) {
+                // Catch any unexpected exceptions during validation
+                String errorMsg = String.format("Unexpected error validating tunable '%s': %s",
+                        tunable.getName() != null ? tunable.getName() : "unknown",
+                        e.getMessage());
+                LOGGER.error(errorMsg, e);
+                errors.add(errorMsg);
             }
         }
 

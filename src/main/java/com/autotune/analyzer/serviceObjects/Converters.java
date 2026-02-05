@@ -553,9 +553,9 @@ public class Converters {
                 String name = metadataObject.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
 
                 // Parse basic layer fields
-                String layerName = jsonObject.getString("layer_name");
-                int layerLevel = jsonObject.getInt("layer_level");
-                String details = jsonObject.has("details") ? jsonObject.getString("details") : null;
+                String layerName = jsonObject.getString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
+                int layerLevel = jsonObject.getInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
+                String details = jsonObject.has(AnalyzerConstants.AutotuneConfigConstants.DETAILS) ? jsonObject.getString(AnalyzerConstants.AutotuneConfigConstants.DETAILS) : null;
 
                 // Parse layer_presence
                 String presence = null;
