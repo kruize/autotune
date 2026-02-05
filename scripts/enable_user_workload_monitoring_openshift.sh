@@ -56,8 +56,16 @@ else
       UPDATED="$EXISTING"$'\n'"enableUserWorkload: true"
     fi
 
-    oc -n $NAMESPACE patch configmap $CONFIGMAP --type merge -p \
-      "{\"data\":{\"config.yaml\":\"$(echo "$UPDATED" | sed 's/"/\\"/g')\"}}"
+    cat <<EOF | oc apply -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: $CONFIGMAP
+  namespace: $NAMESPACE
+data:
+  config.yaml: |
+$(printf '%s\n' "$UPDATED" | sed 's/^/    /')
+EOF
 
     echo "Done!"
 
