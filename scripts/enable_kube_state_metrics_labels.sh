@@ -30,14 +30,10 @@ else
   jq --arg ARG "$LABEL_ARG" '
     .spec.template.spec.containers |=
       map(if .name=="kube-state-metrics"
-          then .args += [$ARG]
+          then .args = ((.args // []) + [$ARG])
           else .
-          end)' | \
-  kubectl apply -f -
-
-#  echo "Restarting deployment..."
-#  kubectl -n "$NAMESPACE" rollout restart deployment "$DEPLOYMENT"
-#  kubectl -n "$NAMESPACE" rollout status deployment "$DEPLOYMENT"
+          end)
+  ' | kubectl apply -f -
 
   echo "Done."
 
