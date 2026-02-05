@@ -130,11 +130,11 @@ public class LayerValidation {
     private ValidationOutputData validateTunables(ArrayList<Tunable> tunables) {
         List<String> errors = new ArrayList<>();
 
-        // Check for null tunables in the list
+        // Check for null tunables in the list - early return if found
         if (tunables.contains(null)) {
             String errorMsg = AnalyzerErrorConstants.APIErrors.CreateLayerAPI.TUNABLE_NULL_IN_LIST;
             LOGGER.error("Tunable validation failed: {}", errorMsg);
-            errors.add(errorMsg);
+            return new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST);
         }
 
         // Check for duplicate tunable names
@@ -142,9 +142,6 @@ public class LayerValidation {
         List<String> duplicates = new ArrayList<>();
 
         for (Tunable tunable : tunables) {
-            if (tunable == null) {
-                continue; // Skip null tunables (already reported above)
-            }
 
             // Check for duplicate names
             if (tunable.getName() != null) {
