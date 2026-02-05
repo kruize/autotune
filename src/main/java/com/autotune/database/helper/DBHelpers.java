@@ -1630,7 +1630,7 @@ public class DBHelpers {
                 } catch (Exception e) {
                     throw new LayerConversionException(
                             AnalyzerConstants.LayerConversionSection.BASIC_FIELDS,
-                            "Failed while setting basic layer fields",
+                            AnalyzerErrorConstants.ConversionErrors.LayerConversionError.FAIL_SETTING_BASIC_FIELDS,
                             e
                     );
                 }
@@ -1644,7 +1644,7 @@ public class DBHelpers {
                     } catch (Exception e) {
                         throw new LayerConversionException(
                                 AnalyzerConstants.LayerConversionSection.METADATA,
-                                "Failed while converting layer metadata",
+                                AnalyzerErrorConstants.ConversionErrors.LayerConversionError.FAIL_SETTING_LAYER_METADATA,
                                 e
                         );
                     }
@@ -1659,7 +1659,7 @@ public class DBHelpers {
                     } catch (Exception e) {
                         throw new LayerConversionException(
                                 AnalyzerConstants.LayerConversionSection.LAYER_PRESENCE,
-                                "Failed while converting layer presence",
+                                AnalyzerErrorConstants.ConversionErrors.LayerConversionError.FAIL_SETTING_LAYER_PRESENCE,
                                 e
                         );
                     }
@@ -1675,7 +1675,7 @@ public class DBHelpers {
                     } catch (Exception e) {
                         throw new LayerConversionException(
                                 AnalyzerConstants.LayerConversionSection.TUNABLES,
-                                "Failed while converting layer tunables",
+                                AnalyzerErrorConstants.ConversionErrors.LayerConversionError.FAIL_SETTING_LAYER_TUNABLES,
                                 e
                         );
                     }
@@ -1704,13 +1704,12 @@ public class DBHelpers {
                         kruizeLayerList.add(kruizeLayer);
 
                     } catch (LayerConversionException e) {
-                        LOGGER.error("Error occurred while converting layer entry to layer object: {}", e.getMessage());
+                        LOGGER.error(AnalyzerErrorConstants.ConversionErrors.LayerConversionError.ERROR_LAYER_ENTRY_TO_LAYER_OBJ, e.getMessage());
                         throw e;
                     }
                 }
                 return kruizeLayerList;
             }
         }
-
     }
 }

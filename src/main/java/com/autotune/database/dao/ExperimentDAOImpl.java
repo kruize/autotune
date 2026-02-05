@@ -1450,8 +1450,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
             entries = session.createQuery(DBConstants.SQLQUERY.SELECT_FROM_LAYER, KruizeLMLayerEntry.class).list();
             statusValue = "success";
         } catch (Exception e) {
-            LOGGER.error("Not able to load Layers due to {}", e.getMessage());
-            throw new Exception("Error while loading existing Layers from database", e);
+            LOGGER.error(AnalyzerErrorConstants.ConversionErrors.LayerConversionError.UNABLE_TO_LOAD_LAYERS, e.getMessage());
+            throw new Exception(AnalyzerErrorConstants.ConversionErrors.LayerConversionError.ERROR_LAYER_LOAD_DB, e);
         } finally {
             if (null != timerLoadAllLayers) {
                 MetricsConfig.timerLoadAllLayers = MetricsConfig.timerBLoadAllLayers.tag("status", statusValue).register(MetricsConfig.meterRegistry());
@@ -1479,8 +1479,8 @@ public class ExperimentDAOImpl implements ExperimentDAO {
                     .setParameter("layerName", layerName).list();
             statusValue = "success";
         } catch (Exception e) {
-            LOGGER.error("Not able to load Layer {} due to {}", layerName, e.getMessage());
-            throw new Exception("Error while loading Layer from database", e);
+            LOGGER.error(AnalyzerErrorConstants.ConversionErrors.LayerConversionError.UNABLE_TO_LOAD_LAYER, layerName, e.getMessage());
+            throw new Exception(AnalyzerErrorConstants.ConversionErrors.LayerConversionError.ERROR_LOADING_LAYER_DB, e);
         } finally {
             if (null != timerLoadLayerByName) {
                 MetricsConfig.timerLoadLayerByName = MetricsConfig.timerBLoadLayerByName.tag("status", statusValue).register(MetricsConfig.meterRegistry());

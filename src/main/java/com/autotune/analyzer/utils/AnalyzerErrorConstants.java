@@ -399,6 +399,22 @@ public class AnalyzerErrorConstants {
 
             }
         }
+
+        public static final class LayerConversionError {
+            private LayerConversionError() {}
+
+            public static final String UNABLE_TO_LOAD_LAYERS = "Not able to load Layers due to {}";
+            public static final String ERROR_LAYER_LOAD_DB = "Error while loading existing Layers from database";
+            public static final String UNABLE_TO_LOAD_LAYER = "Not able to load Layer {} due to {}";
+            public static final String ERROR_LOADING_LAYER_DB = "Error while loading Layer from database";
+            public static final String FAIL_SETTING_BASIC_FIELDS = "Failed while setting basic layer fields";
+            public static final String FAIL_SETTING_LAYER_METADATA = "Failed while converting layer metadata";
+            public static final String FAIL_SETTING_LAYER_PRESENCE = "Failed while converting layer presence";
+            public static final String FAIL_SETTING_LAYER_TUNABLES = "Failed while converting layer tunables";
+            public static final String ERROR_LAYER_ENTRY_TO_LAYER_OBJ = "Error occurred while converting layer entry to layer object: {}";
+
+
+        }
     }
 
     public static final class AutoscalerErrors {
