@@ -7,12 +7,14 @@ To enable the generation of runtime recommendations, application metrics must be
 * Applications must be configured to expose metrics, typically using **Micrometer or JMX**.
 * Prometheus must be able to successfully scrape the designated metrics endpoint.
 * In an OpenShift environment, **User Workload Monitoring must be active**.
+* In kind or minikube Kubernetes: kube-state-metrics must be configured to export labels.
 
-## Enable Monitoring for User-Defined Projects in OpenShift
+## Platform-Specific Monitoring Setup
+### OpenShift: Enable User Workload Monitoring
 
 By default, OpenShift monitors only cluster components. To collect metrics from user applications, enable user workload monitoring.
 
-### Steps
+#### Steps
 
 Edit the `cluster-monitoring-config` ConfigMap:
 
@@ -44,6 +46,35 @@ thanos-ruler-user-workload
 ```
 Note: It may take a few minutes for these pods to start.
 
+### Kind or Minikube: Exposing pod labels with kube-state-metrics
+In kind or minikube clusters, kube-state-metrics often suppresses custom labels by default, making it impossible to filter metrics by labels like app or version in PromQL.
+
+#### Steps
+
+Find the Deployment: 
+
+```kubectl get deployments -A | grep kube-state-metrics```
+
+Edit the Deployment: 
+
+```kubectl edit deployment kube-state-metrics -n <namespace>```
+
+Update Arguments: 
+
+Add the --metric-labels-allowlist flag specifically to the kube-state-metrics container.
+
+YAML
+```
+spec:
+  template:
+    spec:
+      containers:
+      - name: kube-state-metrics  # <--- Target ONLY this container
+        args:
+          - --port=8081
+          - --metric-labels-allowlist=pods=[app,app.kubernetes.io/layer,version]
+```
+          
 ## Configure Applications to Expose Metrics
 
 Applications can expose metrics in different ways depending on the runtime or framework used.
