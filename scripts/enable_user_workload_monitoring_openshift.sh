@@ -1,10 +1,23 @@
 #!/bin/bash
+set -euo pipefail
 
 NAMESPACE="openshift-monitoring"
 CONFIGMAP="cluster-monitoring-config"
 
-echo -n "Fetching cluster monitoring config..."
+# ---- Dependency checks ----
+for cmd in oc; do
+  if ! command -v "$cmd" >/dev/null 2>&1; then
+    echo "❌ Required command '$cmd' not found in PATH. Please install it first."
+    exit 1
+  fi
+done
 
+if ! oc get namespace "$NAMESPACE" >/dev/null 2>&1; then
+  echo "❌ Namespace '$NAMESPACE' does not exist."
+  exit 1
+fi
+
+echo -n "Fetching cluster monitoring config..."
 EXISTING=$(oc -n $NAMESPACE get configmap $CONFIGMAP \
   -o jsonpath='{.data.config\.yaml}' 2>/dev/null)
 
