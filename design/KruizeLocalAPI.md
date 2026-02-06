@@ -2956,7 +2956,7 @@ Each tunable can be either:
 | 400              | Invalid bounds: `upper_bound` must be greater than `lower_bound` |
 | 400              | Invalid step: step must be > 0                                   |
 | 400              | Invalid categorical tunable: choices cannot be empty             |
-| 400              | Tunable with valueType 'categorical' cannot have bounds/step     |
+| 400              | Tunable with value_type 'categorical' cannot have bounds/step    |
 | 400              | Numeric tunable must have bounds and step                        |
 | 500              | Internal Server Error                                            |
 
