@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -106,9 +107,16 @@ public class LayerService extends HttpServlet {
         } catch (MonitoringAgentNotSupportedException e) {
             LOGGER.error("Failed to create layer: {}", e.getMessage());
             sendErrorResponse(response, new Exception(e), HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
+        } catch (org.json.JSONException e) {
+            // JSON parsing errors are client errors
+            LOGGER.error("Invalid JSON in layer creation request: {}", e.getMessage());
+            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST,
+                    AnalyzerErrorConstants.APIErrors.CreateLayerAPI.INVALID_LAYER_JSON + ": " + e.getMessage());
         } catch (Exception e) {
-            LOGGER.error("Failed to create layer: {}", e.getMessage());
-            sendErrorResponse(response, e, HttpServletResponse.SC_BAD_REQUEST, "Validation failed: " + e.getMessage());
+            // Unexpected errors are server errors
+            LOGGER.error("Unexpected error creating layer: {}", e.getMessage(), e);
+            sendErrorResponse(response, e, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Failed to create layer due to an internal error: " + e.getMessage());
         }
     }
 

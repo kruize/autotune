@@ -60,16 +60,16 @@ public class LayerValidation {
 
         if (layer.getLayerPresence() == null) {
             errors.add(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.LAYER_PRESENCE_NULL);
+        } else {
+            // 2. Validate layer presence mutual exclusivity (only if not null)
+            ValidationOutputData presenceValidation = validateLayerPresence(layer.getLayerPresence());
+            if (!presenceValidation.isSuccess()) {
+                errors.add(presenceValidation.getMessage());
+            }
         }
 
         if (layer.getTunables() == null || layer.getTunables().isEmpty()) {
             errors.add(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.LAYER_TUNABLES_NULL_OR_EMPTY);
-        }
-
-        // 2. Validate layer presence mutual exclusivity
-        ValidationOutputData presenceValidation = validateLayerPresence(layer.getLayerPresence());
-        if (!presenceValidation.isSuccess()) {
-            errors.add(presenceValidation.getMessage());
         }
 
         // 3. Validate tunables
