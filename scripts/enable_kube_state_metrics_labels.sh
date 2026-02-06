@@ -55,7 +55,7 @@ fi
 EXISTS=$(kubectl -n "$NAMESPACE" get deployment "$DEPLOYMENT" -o json | \
 jq -r '.spec.template.spec.containers[]
        | select(.name=="kube-state-metrics")
-       | .args[]? ' | grep -c "metric-labels-allowlist")
+       | .args[]? ' | grep -c "metric-labels-allowlist=.*pods=")
 
 if [ "$EXISTS" -gt 0 ]; then
   echo " --metric-labels-allowlist already present. No change needed."
