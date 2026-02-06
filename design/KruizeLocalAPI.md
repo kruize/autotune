@@ -3065,7 +3065,7 @@ Returns all configured layers
 
 </details>
 
-**Response for layer_name - `jvm`**
+**Response for layer_name - `hotspot`**
 
 <details>
 <summary><b>Example Response</b></summary>
@@ -3075,46 +3075,68 @@ Returns all configured layers
 ```json
 [
   {
-    "apiVersion": "v1.0",
-    "kind": "Layer",
+    "apiVersion": "recommender.com/v1",
+    "kind": "KruizeLayer",
     "metadata": {
-      "name": "jvm-layer"
+      "name": "hotspot"
     },
-    "layer_name": "jvm",
+    "layer_name": "hotspot",
     "layer_level": 1,
-    "details": "JVM tuning layer with both bounded and categorical tunables",
+    "details": "hotspot tunables",
     "layer_presence": {
       "queries": [
         {
           "datasource": "prometheus",
-          "query": "jvm_info"
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\".+Old.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Eden.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Tenured.+\"}",
+          "key": "pod"
+        },
+        {
+          "datasource": "prometheus",
+          "query": "jvm_memory_used_bytes{area=\"heap\",id=~\"Old.+\"}",
+          "key": "pod"
         }
       ]
     },
     "tunables": [
       {
-        "name": "heapSize",
-        "value_type": "double",
-        "upper_bound": "8192",
-        "lower_bound": "512",
-        "step": 256
+        "name": "GCPolicy",
+        "description": "Garbage collection policy",
+        "value_type": "categorical",
+        "choices": [
+          "G1GC",
+          "ParallelGC",
+          "SerialGC",
+          "ShenandoahGC",
+          "ZGC"
+        ]
       },
       {
-        "name": "threadPoolSize",
+        "name": "MaxRAMPercentage",
+        "description": "Maximum RAM percentage to allocate",
         "value_type": "integer",
-        "upper_bound": "200",
-        "lower_bound": "10",
-        "step": 10
-      },
-      {
-        "name": "garbageCollector",
-        "value_type": "categorical",
-        "choices": ["G1GC", "ParallelGC", "ZGC", "ShenandoahGC"]
-      },
-      {
-        "name": "compilerMode",
-        "value_type": "categorical",
-        "choices": ["C1", "C2", "tiered"]
+        "lower_bound": "25",
+        "upper_bound": "90",
+        "step": 1
       }
     ]
   }
