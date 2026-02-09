@@ -115,6 +115,72 @@ Here are the test scenarios:
 - Multiple delete attempts: Delete same metadata profile multiple times and validate the expected error message, ensuring redundant delete requests are handled gracefully.
 - Delete metadata profile, try to import cluster metadata and validate the expected error message. This testcase ensures that the cluster metadata cannot be imported once the MetadataProfile is deleted.
 
+### **Create Layer API tests**
+
+Here are the test scenarios:
+
+#### Positive Test Scenarios:
+- Create layer with different tunable types:
+  - Bounded tunables (lower_bound, upper_bound, step)
+  - Categorical tunables (choices list)
+  - Mixed tunables (combination of both)
+- Create layer with different layer_presence configurations:
+  - presence='always' (always applicable)
+  - queries (query-based detection using Prometheus/datasource queries)
+  - label (label-based detection using Kubernetes labels)
+- Create layer with minimum required fields
+
+#### Negative Test Scenarios:
+
+**A. Mandatory Fields Missing/NULL/Empty**
+- Create layer with null metadata.name
+- Create layer with empty metadata.name
+- Create layer with null layer_name
+- Create layer with empty layer_name
+- Create layer with null layer_presence
+- Create layer with null tunables
+- Create layer with empty tunables array
+
+**B. Invalid/Negative/Duplicate Values**
+- Create layer with negative layer_level value
+- Create layer with duplicate tunable names
+- Create layer with duplicate layer name (attempting to create same layer twice)
+
+**C. Wrong layer_presence Combinations**
+- Create layer with empty layer_presence (no type specified)
+- Create layer with both presence AND queries specified
+- Create layer with both presence AND label specified
+- Create layer with both queries AND label specified
+- Create layer with all three types specified (presence, queries, label)
+
+**D. Tunable Bounds/Step Validation**
+- Create layer with tunable having null upper_bound
+- Create layer with tunable having null lower_bound
+- Create layer with tunable having non-numeric upper_bound
+- Create layer with tunable having non-numeric lower_bound
+- Create layer with tunable having null step
+- Create layer with tunable having zero step
+- Create layer with tunable having negative step
+- Create layer with tunable having negative upper_bound
+- Create layer with tunable having negative lower_bound
+- Create layer with tunable where lower_bound >= upper_bound
+- Create layer with tunable where step > (upper_bound - lower_bound)
+
+**E. Categorical Tunable Validation**
+- Create layer with categorical tunable having null choices
+- Create layer with categorical tunable having empty choices array
+- Create layer with categorical tunable having both choices and bounds (mixed configuration)
+
+### **List Layers API tests**
+
+Here are the test scenarios:
+
+- List all layers without specifying any query parameters
+- List specific layer by name using query parameter
+- List layers with invalid layer name (non-existing layer)
+- List layers before creating any layers
+- Validate layer response structure and field values
+
 ### **Create Experiment API tests**
 
 Here are the test scenarios:
