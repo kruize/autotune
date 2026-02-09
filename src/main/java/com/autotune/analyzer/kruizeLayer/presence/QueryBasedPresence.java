@@ -93,9 +93,12 @@ public class QueryBasedPresence implements LayerPresenceDetector {
                 // Start with the original query
                 String modifiedQuery = query.getLayerPresenceQuery();
 
-                // Append dynamic filters for namespace and container
+                // Append dynamic filters for namespace, workload, and container
                 if (namespace != null && !namespace.isBlank()) {
                     modifiedQuery = appendFilter(modifiedQuery, "namespace", namespace);
+                }
+                if (workloadName != null && !workloadName.isBlank()) {
+                    modifiedQuery = appendFilter(modifiedQuery, "pod", workloadName);
                 }
                 if (containerName != null && !containerName.isBlank()) {
                     modifiedQuery = appendFilter(modifiedQuery, "container", containerName);
@@ -111,13 +114,13 @@ public class QueryBasedPresence implements LayerPresenceDetector {
 
                 // Check if we got any results - if yes, layer is present
                 if (resultArray != null && resultArray.size() > 0) {
-                    LOGGER.debug("Layer detected via query in namespace '{}', container '{}'",
-                            namespace, containerName);
+                    LOGGER.debug("Layer detected via query in namespace '{}', workload '{}', container '{}'",
+                            namespace, workloadName, containerName);
                     return true;
                 }
             } catch (Exception e) {
-                LOGGER.error("Error executing layer presence query for datasource '{}': {}",
-                        query.getDataSource(), e.getMessage());
+                LOGGER.error("Error executing layer presence query for datasource '{}'",
+                        query.getDataSource(), e);
                 // Continue to next query instead of failing completely
             }
         }
