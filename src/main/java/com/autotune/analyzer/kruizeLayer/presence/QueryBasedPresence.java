@@ -17,6 +17,7 @@
 package com.autotune.analyzer.kruizeLayer.presence;
 
 import com.autotune.analyzer.kruizeLayer.LayerPresenceQuery;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants;
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.LogMessages;
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
 import com.autotune.common.datasource.DataSourceCollection;
@@ -102,13 +103,13 @@ public class QueryBasedPresence implements LayerPresenceDetector {
 
                 // Append dynamic filters for namespace, workload, and container
                 if (namespace != null && !namespace.isBlank()) {
-                    modifiedQuery = appendFilter(modifiedQuery, "namespace", namespace);
+                    modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_NAMESPACE, namespace);
                 }
                 if (workloadName != null && !workloadName.isBlank()) {
-                    modifiedQuery = appendFilter(modifiedQuery, "pod", workloadName);
+                    modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_POD, workloadName);
                 }
                 if (containerName != null && !containerName.isBlank()) {
-                    modifiedQuery = appendFilter(modifiedQuery, "container", containerName);
+                    modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_CONTAINER, containerName);
                 }
 
                 LOGGER.debug(LogMessages.EXECUTING_QUERY, modifiedQuery);

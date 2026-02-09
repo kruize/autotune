@@ -676,6 +676,11 @@ public class AnalyzerConstants {
 
         public static final String DEFAULT_PRESENCE = "always";
 
+        // PromQL label names used in query-based presence detection
+        public static final String LABEL_NAMESPACE = "namespace";
+        public static final String LABEL_POD = "pod";
+        public static final String LABEL_CONTAINER = "container";
+
         /**
          * Log messages for layer detection operations
          */
