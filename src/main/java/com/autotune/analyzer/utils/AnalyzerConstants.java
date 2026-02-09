@@ -676,6 +676,34 @@ public class AnalyzerConstants {
 
         public static final String DEFAULT_PRESENCE = "always";
 
+        /**
+         * Log messages for layer detection operations
+         */
+        public static final class LogMessages {
+            public static final String ERROR_DETECTING_LAYER = "Error detecting layer '{}': {}";
+            public static final String NO_LAYERS_DETECTED = "No layers detected for container '{}' in namespace '{}'";
+            public static final String LAYERS_DETECTED = "Detected {} layer(s) for container '{}': {}";
+            public static final String DETECTING_LAYERS = "Detecting layers for container '{}' in namespace '{}'";
+            public static final String LAYER_DETECTED = "Detected layer: '{}' for container '{}'";
+            public static final String LAYER_NOT_DETECTED = "Layer '{}' not detected for container '{}'";
+            public static final String NO_PRESENCE_DETECTOR = "Layer '{}' has no presence detector configured, skipping";
+            public static final String NO_LAYERS_IN_DB = "No layers found in database";
+            public static final String LOADED_LAYERS_FROM_DB = "Loaded {} layers from database";
+            public static final String FAILED_TO_LOAD_LAYERS = "Failed to load layers from database";
+
+            // QueryBasedPresence log messages
+            public static final String NO_QUERIES_DEFINED = "No queries defined for layer presence detection";
+            public static final String NULL_QUERY_ENCOUNTERED = "Encountered null query in layer presence queries, skipping";
+            public static final String DATASOURCE_NOT_FOUND = "Datasource '{}' not found in collection";
+            public static final String NO_OPERATOR_AVAILABLE = "No operator available for datasource '{}'";
+            public static final String EXECUTING_QUERY = "Executing layer detection query: {}";
+            public static final String LAYER_DETECTED_VIA_QUERY = "Layer detected via query in namespace '{}', workload '{}', container '{}'";
+            public static final String ERROR_EXECUTING_QUERY = "Error executing layer presence query for datasource '{}'";
+
+            private LogMessages() {
+            }
+        }
+
         private LayerConstants() {
         }
     }

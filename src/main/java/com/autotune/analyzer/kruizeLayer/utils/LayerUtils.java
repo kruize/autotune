@@ -1,5 +1,5 @@
 /*******************************************************************************
- * Copyright (c) 2025 Red Hat, IBM Corporation and others.
+ * Copyright (c) 2026 Red Hat, IBM Corporation and others.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,12 @@ package com.autotune.analyzer.kruizeLayer.utils;
 
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.kruizeLayer.presence.QueryBasedPresence;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.LogMessages;
 import com.autotune.database.service.ExperimentDBService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,22 +40,23 @@ public class LayerUtils {
      * @param containerName The container name
      * @param workloadName The workload name
      * @param namespace The Kubernetes namespace
-     * @return Map of detected layers (layer name -> KruizeLayer), or null if inputs are invalid
+     * @return Map of detected layers (layer name -> KruizeLayer).
+     *         Returns an empty map when no layers are detected.
+     * @throws IllegalArgumentException if containerName or namespace is null or empty
+     * @throws Exception if database operations fail
      */
     public static Map<String, KruizeLayer> detectLayers(String containerName,
                                                          String workloadName,
-                                                         String namespace) {
-        // Validate inputs
+                                                         String namespace) throws Exception {
+        // Validate inputs - fail fast with clear error messages
         if (containerName == null || containerName.isBlank()) {
-            LOGGER.warn("Container name is null or empty, cannot detect layers");
-            return null;
+            throw new IllegalArgumentException("Container name cannot be null or empty");
         }
         if (namespace == null || namespace.isBlank()) {
-            LOGGER.warn("Namespace is null or empty, cannot detect layers");
-            return null;
+            throw new IllegalArgumentException("Namespace cannot be null or empty");
         }
 
-        LOGGER.info("Detecting layers for container '{}' in namespace '{}'", containerName, namespace);
+        LOGGER.info(LogMessages.DETECTING_LAYERS, containerName, namespace);
 
         // Load all available layers from database
         ExperimentDBService experimentDBService = new ExperimentDBService();
@@ -62,16 +65,16 @@ public class LayerUtils {
         try {
             experimentDBService.loadAllLayers(allLayersMap);
         } catch (Exception e) {
-            LOGGER.error("Failed to load layers from database: {}", e.getMessage());
-            return null;
+            LOGGER.error(LogMessages.FAILED_TO_LOAD_LAYERS, e);
+            throw new Exception("Failed to load layers from database: " + e.getMessage(), e);
         }
 
         if (allLayersMap.isEmpty()) {
-            LOGGER.warn("No layers found in database");
-            return null;
+            LOGGER.warn(LogMessages.NO_LAYERS_IN_DB);
+            return Collections.emptyMap();
         }
 
-        LOGGER.debug("Loaded {} layers from database", allLayersMap.size());
+        LOGGER.debug(LogMessages.LOADED_LAYERS_FROM_DB, allLayersMap.size());
 
         // Detect which layers are present
         Map<String, KruizeLayer> detectedLayers = new HashMap<>();
@@ -94,31 +97,30 @@ public class LayerUtils {
 
                     if (isDetected) {
                         detectedLayers.put(layer.getLayerName(), layer);
-                        LOGGER.info("Detected layer: '{}' for container '{}'",
+                        LOGGER.info(LogMessages.LAYER_DETECTED,
                                 layer.getLayerName(), containerName);
                     } else {
-                        LOGGER.debug("Layer '{}' not detected for container '{}'",
+                        LOGGER.debug(LogMessages.LAYER_NOT_DETECTED,
                                 layer.getLayerName(), containerName);
                     }
                 } else {
-                    LOGGER.warn("Layer '{}' has no presence detector configured, skipping",
+                    LOGGER.warn(LogMessages.NO_PRESENCE_DETECTOR,
                             layer.getLayerName());
                 }
             } catch (Exception e) {
-                LOGGER.error("Error detecting layer '{}': {}",
+                LOGGER.error(LogMessages.ERROR_DETECTING_LAYER,
                         layer.getLayerName(), e.getMessage(), e);
                 // Continue to next layer instead of failing completely
             }
         }
 
         if (detectedLayers.isEmpty()) {
-            LOGGER.info("No layers detected for container '{}' in namespace '{}'",
+            LOGGER.info(LogMessages.NO_LAYERS_DETECTED,
                     containerName, namespace);
-            return null;
+        } else {
+            LOGGER.info(LogMessages.LAYERS_DETECTED,
+                    detectedLayers.size(), containerName, detectedLayers.keySet());
         }
-
-        LOGGER.info("Detected {} layer(s) for container '{}': {}",
-                detectedLayers.size(), containerName, detectedLayers.keySet());
 
         return detectedLayers;
     }

@@ -23,10 +23,7 @@ import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType
  */
 public class PresenceAlways implements LayerPresenceDetector {
 
-    private String presence;
-
     public PresenceAlways() {}
-
 
     @Override
     public PresenceType getType() {
@@ -37,14 +34,6 @@ public class PresenceAlways implements LayerPresenceDetector {
     public boolean detectPresence(String namespace, String workloadName) throws Exception {
         // Layers with ALWAYS presence type are always detected
         return true;
-    }
-
-    public String getPresence() {
-        return presence;
-    }
-
-    public void setPresence(String presence) {
-        this.presence = presence;
     }
 
     @Override
