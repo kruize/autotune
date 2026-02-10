@@ -26,7 +26,6 @@ public class QuarkusLayer implements Layer {
     private static final QuarkusLayer INSTANCE = new QuarkusLayer();
 
     private QuarkusLayer() {
-        // prevent external instantiation
     }
 
     public static QuarkusLayer getInstance() {
@@ -40,6 +39,10 @@ public class QuarkusLayer implements Layer {
 
     @Override
     public Map<String, List<TunableSpec>> getTunableDependencies() {
-        return Map.of();
+        return Map.of(AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS,
+                List.of(
+                        new TunableSpec(AnalyzerConstants.LayerConstants.CONTAINER_LAYER,
+                                AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT)
+                ));
     }
 }

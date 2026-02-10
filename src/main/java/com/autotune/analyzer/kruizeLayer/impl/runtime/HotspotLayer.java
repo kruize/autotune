@@ -39,6 +39,22 @@ public class HotspotLayer implements Layer {
 
     @Override
     public Map<String, List<TunableSpec>> getTunableDependencies() {
-        return Map.of();
+        return Map.of(
+                AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC,
+                List.of(
+                        new TunableSpec(
+                                AnalyzerConstants.LayerConstants.CONTAINER_LAYER, AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT
+                        )
+                ),
+                AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY,
+                List.of(
+                        new TunableSpec(
+                                AnalyzerConstants.LayerConstants.CONTAINER_LAYER, AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT
+                        ),
+                        new TunableSpec(
+                                AnalyzerConstants.LayerConstants.CONTAINER_LAYER, AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT
+                        )
+                )
+        );
     }
 }
