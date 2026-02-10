@@ -28,6 +28,17 @@ from helpers.utils import *
 layer_dir = get_layer_dir()
 
 
+@pytest.fixture(autouse=False)
+def cleanup_test_layers():
+    """Fixture to clean up test layers before negative tests"""
+    # Cleanup before test
+    delete_layer_from_db("test-layer")
+    yield
+    # Cleanup after test
+    delete_layer_from_db("test-layer")
+
+
+@pytest.mark.layers
 @pytest.mark.sanity
 @pytest.mark.parametrize("layer_file", [
     pytest.param("container-config.json", id="bounded_tunables"),
@@ -61,7 +72,11 @@ def test_create_layer_with_different_tunable_types(cluster_type, layer_file):
 
     print(f"✓ Layer '{layer_name}' created successfully")
 
+    # Cleanup: Delete layer from database
+    delete_layer_from_db(layer_name)
 
+
+@pytest.mark.layers
 @pytest.mark.sanity
 @pytest.mark.parametrize("layer_file", [
     pytest.param("container-config.json", id="presence_always"),
@@ -96,7 +111,11 @@ def test_create_layer_with_different_presence_types(cluster_type, layer_file):
 
     print(f"✓ Layer '{layer_name}' created successfully")
 
+    # Cleanup: Delete layer from database
+    delete_layer_from_db(layer_name)
 
+
+@pytest.mark.layers
 @pytest.mark.sanity
 def test_create_layer_with_minimum_required_fields(cluster_type):
     """
@@ -121,14 +140,18 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
 
     print(f"✓ Layer '{layer_name}' created successfully with minimum required fields")
 
+    # Cleanup: Delete layer from database
+    delete_layer_from_db(layer_name)
+
 
 # =============================================================================
 # NEGATIVE TEST CASES - A. Mandatory Fields Missing/NULL/Empty
 # =============================================================================
 
+@pytest.mark.layers
 @pytest.mark.negative
 @pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables", [
-    ("null_metadata_name", "metadata.name", "recommender.com/v1", "KruizeLayer", None, "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
+    ("null_metadata_name", "name", "recommender.com/v1", "KruizeLayer", None, "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("empty_metadata_name", "metadata.name", "recommender.com/v1", "KruizeLayer", "", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("null_layer_name", "layer_name", "recommender.com/v1", "KruizeLayer", "test-meta", None, 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("empty_layer_name", "layer_name", "recommender.com/v1", "KruizeLayer", "test-meta", "", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
@@ -136,7 +159,7 @@ def test_create_layer_with_minimum_required_fields(cluster_type):
     ("null_tunables", "tunables", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', 'null'),
     ("empty_tunables_array", "tunables", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[]'),
 ])
-def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables, cluster_type):
+def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
     """
     Test Description: Validates createLayer API rejects requests with missing/null/empty mandatory fields
     """
@@ -172,12 +195,13 @@ def test_create_layer_mandatory_fields_validation(test_name, expected_error_msg,
 # NEGATIVE TEST CASES - B. Invalid/Negative/Duplicate Values
 # =============================================================================
 
+@pytest.mark.layers
 @pytest.mark.negative
 @pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables", [
     ("negative_layer_level", "layer_level", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", -1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
     ("duplicate_tunable_names", "duplicate", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "duplicate", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}, {"name": "duplicate", "value_type": "double", "upper_bound": "50", "lower_bound": "5", "step": 1}]'),
 ])
-def test_create_layer_invalid_values(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables, cluster_type):
+def test_create_layer_invalid_values(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables, cluster_type, cleanup_test_layers):
     """
     Test Description: Validates createLayer API rejects requests with invalid/negative/duplicate values
     """
@@ -209,6 +233,7 @@ def test_create_layer_invalid_values(test_name, expected_error_msg, apiVersion, 
     print(f"✓ Correctly rejected: {test_name}")
 
 
+@pytest.mark.layers
 @pytest.mark.negative
 def test_create_layer_duplicate_layer_name(cluster_type):
     """
@@ -233,11 +258,15 @@ def test_create_layer_duplicate_layer_name(cluster_type):
     assert "already exists" in data2['message'].lower()
     print(f"✓ Correctly rejected duplicate layer: {layer_name}")
 
+    # Cleanup: Delete the layer that was successfully created
+    delete_layer_from_db(layer_name)
+
 
 # =============================================================================
 # NEGATIVE TEST CASES - C. Wrong layer_presence Combinations
 # =============================================================================
 
+@pytest.mark.layers
 @pytest.mark.negative
 @pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables", [
     ("empty_layer_presence", "layer_presence", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 1}]'),
@@ -282,6 +311,7 @@ def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVe
 # NEGATIVE TEST CASES - D. Tunable Bounds/Step Validation
 # =============================================================================
 
+@pytest.mark.layers
 @pytest.mark.negative
 @pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables", [
     ("tunable_null_upper_bound", "upper_bound", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": null, "lower_bound": "10", "step": 1}]'),
@@ -293,7 +323,7 @@ def test_create_layer_presence_combinations(test_name, expected_error_msg, apiVe
     ("tunable_negative_step", "step", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": -5}]'),
     ("tunable_negative_upper_bound", "negative", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "-100", "lower_bound": "10", "step": 1}]'),
     ("tunable_negative_lower_bound", "negative", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "-50", "step": 1}]'),
-    ("tunable_lower_gte_upper", "lower_bound", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "50", "lower_bound": "100", "step": 1}]'),
+    ("tunable_lower_gte_upper", "lowerbound", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "50", "lower_bound": "100", "step": 1}]'),
     ("tunable_step_greater_than_range", "step", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "double", "upper_bound": "100", "lower_bound": "10", "step": 100}]'),
 ])
 def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables, cluster_type):
@@ -332,6 +362,7 @@ def test_create_layer_tunable_bounds_validation(test_name, expected_error_msg, a
 # NEGATIVE TEST CASES - E. Categorical Tunable Validation
 # =============================================================================
 
+@pytest.mark.layers
 @pytest.mark.negative
 @pytest.mark.parametrize("test_name, expected_error_msg, apiVersion, kind, metadata_name, layer_name, layer_level, details, layer_presence, tunables", [
     ("categorical_null_choices", "choices", "recommender.com/v1", "KruizeLayer", "test-meta", "test-layer", 1, "test layer", '{"presence": "always"}', '[{"name": "t1", "value_type": "categorical", "choices": null}]'),

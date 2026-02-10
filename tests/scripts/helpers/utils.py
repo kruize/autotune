@@ -127,7 +127,7 @@ DATASOURCE_NOT_SERVICEABLE = "Datasource %s is not serviceable."
 RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE = "Runtimes recommendations are unavailable for the provided datasource."
 
 # Layer API Messages
-CREATE_LAYER_SUCCESS_MSG = "Layer '%s' created successfully"
+CREATE_LAYER_SUCCESS_MSG = "Layer : %s created successfully. View Layers at /listLayers"
 LAYER_DUPLICATE_MSG = "Layer with name '%s' already exists"
 LAYER_NOT_FOUND_MSG = "Layer with name '%s' not found"
 LAYER_METADATA_NAME_NULL_MSG = "metadata.name cannot be null or empty"

@@ -723,7 +723,7 @@ def list_layers(layer_name=None, logging=True):
     query_params = {}
 
     if layer_name is not None:
-        query_params['layer_name'] = layer_name
+        query_params['name'] = layer_name
 
     query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
 
@@ -740,3 +740,37 @@ def list_layers(layer_name=None, logging=True):
         print(response.text)
         print("\n************************************************************")
     return response
+
+
+# Description: This function deletes a layer from the database (temporary workaround until deleteLayer API is implemented)
+# Input Parameters: layer name
+def delete_layer_from_db(layer_name):
+    """
+    Helper function to delete a layer from the database.
+    This is a temporary workaround until deleteLayer API is implemented.
+
+    Args:
+        layer_name: Name of the layer to delete
+
+    Returns:
+        bool: True if deletion succeeded, False otherwise
+    """
+    import subprocess
+    try:
+        cmd = [
+            "kubectl", "exec", "-n", "monitoring",
+            "deployment/kruize-db-deployment", "--",
+            "psql", "-U", "admin", "-d", "kruizeDB",
+            "-c", f"DELETE FROM kruize_lm_layer WHERE layer_name='{layer_name}';"
+        ]
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        if result.returncode == 0:
+            print(f"  ✓ Cleaned up layer '{layer_name}' from database")
+            return True
+        else:
+            # Don't fail - just warn
+            print(f"  ⚠ Warning: Could not clean up layer '{layer_name}': {result.stderr}")
+            return False
+    except Exception as e:
+        print(f"  ⚠ Warning: Error cleaning up layer '{layer_name}': {e}")
+        return False

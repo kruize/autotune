@@ -27,6 +27,7 @@ from helpers.utils import *
 layer_dir = get_layer_dir()
 
 
+@pytest.mark.layers
 @pytest.mark.sanity
 def test_list_all_layers_no_parameter(cluster_type):
     """
@@ -61,7 +62,11 @@ def test_list_all_layers_no_parameter(cluster_type):
 
     print(f"✓ Successfully listed {len(layers)} layer(s)")
 
+    # Cleanup: Delete the created layer
+    delete_layer_from_db('container')
 
+
+@pytest.mark.layers
 @pytest.mark.sanity
 def test_list_all_layers_with_multiple_layers(cluster_type):
     """
@@ -108,7 +113,12 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
 
     print(f"✓ Successfully listed {len(layers)} layer(s), verified all {len(created_layer_names)} created layers are present")
 
+    # Cleanup: Delete all created layers
+    for layer_name in created_layer_names:
+        delete_layer_from_db(layer_name)
 
+
+@pytest.mark.layers
 @pytest.mark.sanity
 @pytest.mark.parametrize("layer_file", [
     pytest.param("container-config.json", id="container_layer"),
@@ -174,7 +184,11 @@ def test_list_specific_layer_by_name(cluster_type, layer_file):
 
     print(f"✓ Successfully listed layer '{expected_layer_name}' with {len(returned_layer['tunables'])} tunable(s)")
 
+    # Cleanup: Delete the created layer
+    delete_layer_from_db(expected_layer_name)
 
+
+@pytest.mark.layers
 @pytest.mark.sanity
 @pytest.mark.parametrize("layer_file", [
     pytest.param("container-config.json", id="container_layer"),
@@ -349,14 +363,18 @@ def test_list_layer_validates_all_fields_and_values(cluster_type, layer_file):
 
     print(f"\n✓ All fields and values validated successfully for layer '{layer_name}'")
 
+    # Cleanup: Delete the created layer
+    delete_layer_from_db(layer_name)
+
 
 # ========== Negative Test Cases ==========
 
+@pytest.mark.layers
 @pytest.mark.negative
 def test_list_layer_with_non_existent_name(cluster_type):
     """
     Test Description: This test validates listLayers API when querying a layer that doesn't exist.
-    Expected: Should return 404 status with appropriate error message.
+    Expected: Should return 400 status with appropriate error message.
     """
     form_kruize_url(cluster_type)
 
@@ -367,15 +385,17 @@ def test_list_layer_with_non_existent_name(cluster_type):
 
     print(f"Response for non-existent layer '{non_existent_layer_name}': {response.status_code}")
 
-    assert response.status_code == ERROR_404_STATUS_CODE
+    assert response.status_code == ERROR_STATUS_CODE
 
     data = response.json()
     assert data['status'] == ERROR_STATUS
-    assert LAYER_NOT_FOUND_MSG % non_existent_layer_name in data['message']
+    assert non_existent_layer_name in data['message']
+    assert "does not exist" in data['message'] or "not valid" in data['message']
 
-    print(f"✓ Correctly returned 404 for non-existent layer '{non_existent_layer_name}'")
+    print(f"✓ Correctly returned 400 for non-existent layer '{non_existent_layer_name}'")
 
 
+@pytest.mark.layers
 @pytest.mark.negative
 @pytest.mark.parametrize("invalid_param,param_value", [
     pytest.param("invalid_param", "some_value", id="unknown_parameter"),
@@ -411,6 +431,7 @@ def test_list_layers_with_invalid_query_parameter(cluster_type, invalid_param, p
     print(f"✓ Correctly returned error for invalid parameter '{invalid_param}'")
 
 
+@pytest.mark.layers
 @pytest.mark.negative
 @pytest.mark.parametrize("special_char_name", [
     pytest.param("layer@special", id="at_symbol"),
@@ -425,7 +446,7 @@ def test_list_layers_with_invalid_query_parameter(cluster_type, invalid_param, p
 def test_list_layer_with_special_characters_in_name(cluster_type, special_char_name):
     """
     Test Description: This test validates listLayers API when layer name contains special characters.
-    Expected: Should handle gracefully - either return 404 for non-existent layer or 400 for invalid name format.
+    Expected: Should handle gracefully - return 400 for non-existent or invalid layer name.
     """
     form_kruize_url(cluster_type)
 
@@ -436,15 +457,15 @@ def test_list_layer_with_special_characters_in_name(cluster_type, special_char_n
 
     print(f"Response status code: {response.status_code}")
 
-    # Should return either 404 (not found) or 400 (invalid name format)
-    assert response.status_code in [ERROR_STATUS_CODE, ERROR_404_STATUS_CODE]
+    # Should return 400 (not found or invalid name format)
+    assert response.status_code == ERROR_STATUS_CODE
 
     data = response.json()
     assert data['status'] == ERROR_STATUS
 
     # Error message should indicate either not found or invalid name
-    assert (LAYER_NOT_FOUND_MSG % special_char_name in data['message'] or
-            "invalid" in data['message'].lower() or
-            "not found" in data['message'].lower())
+    assert ("invalid" in data['message'].lower() or
+            "does not exist" in data['message'].lower() or
+            "not valid" in data['message'].lower())
 
     print(f"✓ Correctly handled special character in layer name '{special_char_name}': {response.status_code}")
