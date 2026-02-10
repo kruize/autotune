@@ -319,7 +319,7 @@ public class DataSourceMetadataOperator {
     String constructDynamicFilter(String field, String includeRegex, String excludeRegex) {
         StringBuilder filterBuilder = new StringBuilder();
         if (includeRegex.isEmpty() && excludeRegex.isEmpty()) {
-            filterBuilder.append(String.format("%s!=''", field));
+            filterBuilder.append(String.format("%s!=\"\"", field));
         }
         if (!includeRegex.isEmpty()) {
             filterBuilder.append(String.format("%s=~\"%s\"", field, includeRegex));
