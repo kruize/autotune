@@ -28,6 +28,33 @@ layer_dir = get_layer_dir()
 
 
 @pytest.mark.layers
+@pytest.mark.negative
+def test_list_layers_when_no_layers_exist(cluster_type):
+    """
+    Test Description: This test validates listLayers API behavior when no layers exist in the system.
+    Expected: Should return 400 status with "No layers found!" message.
+    """
+    form_kruize_url(cluster_type)
+
+    # Ensure database is clean - delete any existing layers
+    # This ensures we test the true empty state
+    for layer_name in ['container', 'openj9', 'quarkus', 'hotspot', 'test-layer']:
+        delete_layer_from_db(layer_name)
+
+    # List layers when none exist
+    response = list_layers(layer_name=None, logging=False)
+
+    # API should return 400 when no layers exist
+    assert response.status_code == ERROR_STATUS_CODE
+
+    data = response.json()
+    assert data['status'] == ERROR_STATUS
+    assert 'no layers' in data['message'].lower()
+
+    print("✓ Correctly returned error when no layers exist")
+
+
+@pytest.mark.layers
 @pytest.mark.sanity
 def test_list_all_layers_no_parameter(cluster_type):
     """
