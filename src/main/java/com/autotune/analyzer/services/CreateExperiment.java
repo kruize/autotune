@@ -19,7 +19,10 @@ package com.autotune.analyzer.services;
 import com.autotune.analyzer.exceptions.InvalidExperimentType;
 import com.autotune.analyzer.exceptions.KruizeResponse;
 import com.autotune.analyzer.experiment.ExperimentInitiator;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
 import com.autotune.analyzer.serviceObjects.Converters;
 import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
 import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
@@ -138,6 +141,21 @@ public class CreateExperiment extends HttpServlet {
                                 .findAny()
                                 .orElse(null);
                         validAPIObj.setValidationData(ko.getValidation_data());
+                        ExperimentDAO experimentDAO = new ExperimentDAOImpl();
+
+                        for (KubernetesAPIObject kubernetesAPIObject : validAPIObj.getKubernetesObjects()) {
+                            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                                // detect layers for the container
+                                Map<String, KruizeLayer> layers = LayerUtils.detectLayers(containerAPIObject.getContainer_name(),
+                                        kubernetesAPIObject.getName(),
+                                        kubernetesAPIObject.getNamespace()
+                                );
+                                // Skipping null check as we return atleast an empty map if there are no exceptions
+                                if (!layers.isEmpty()) {
+                                    containerAPIObject.setLayerMap(layers);
+                                }
+                            }
+                        }
                         addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
                     }
                     if (addedToDB.isSuccess()) {
