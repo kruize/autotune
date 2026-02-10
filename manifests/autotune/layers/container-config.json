@@ -14,8 +14,8 @@
     {
       "name": "memoryRequest",
       "value_type": "double",
-      "lower_bound": "512 Mi",
-      "upper_bound": "2048 Mi",
+      "lower_bound": "512",
+      "upper_bound": "2048",
       "step": 1
     },
     {

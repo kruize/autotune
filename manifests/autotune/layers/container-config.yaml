@@ -9,10 +9,11 @@ layer_presence:
   # This layer is assumed to be available by default for all applications.
   presence: always
 tunables:
+# Memory request (MiB)
 - name: memoryRequest
   value_type: double
-  upper_bound: '2048 Mi'
-  lower_bound: '512 Mi'
+  upper_bound: '2048'
+  lower_bound: '512'
   step: 1
 
 - name: cpuRequest
