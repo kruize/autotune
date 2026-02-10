@@ -22,6 +22,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletConfig;
@@ -65,11 +66,8 @@ public class CreateExperiment extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private static final Logger LOGGER = LoggerFactory.getLogger(CreateExperiment.class);
     
-    private final ExperimentCache experimentCache = new ExperimentCache();
-    
-    // Singleton instances to avoid creating new objects on each request
-    private final Gson gson = new Gson();
-    private final ExperimentDBService experimentDBService = new ExperimentDBService();
+    private static final ExperimentCache experimentCache = new ExperimentCache();
+    private static final Gson gson = new Gson();
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -93,7 +91,7 @@ public class CreateExperiment extends HttpServlet {
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String statusValue = "failure";
         Timer.Sample timerCreateExp = Timer.start(MetricsConfig.meterRegistry());
-        Map<String, KruizeObject> mKruizeExperimentMap = KruizeOperator.autotuneObjectMap;
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
         String inputData = "";
         try {
             // Set the character encoding of the request to UTF-8
@@ -110,13 +108,10 @@ public class CreateExperiment extends HttpServlet {
                 for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
                     // Check if experiment already exists before processing
                     String experimentName = createExperimentAPIObject.getExperimentName();
-                    if (experimentName != null) {
-                        // Use ExperimentCache to check if experiment exists
-                        if (experimentCache.isExists(experimentName)) {
-                            LOGGER.debug("Experiment {} already exists, returning 409", experimentName);
-                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
-                            return;
-                        }
+                    if (experimentCache.isExists(experimentName)) {
+                        LOGGER.debug("Experiment {} already exists, returning 409", experimentName);
+                        sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                        return;
                     }
                     createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
                     createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
@@ -149,26 +144,27 @@ public class CreateExperiment extends HttpServlet {
                 //TODO: UX needs to be modified - Handle response for the multiple objects
                 KruizeObject invalidKruizeObject = kruizeExpList.stream().filter((ko) -> (!ko.getValidation_data().isSuccess())).findAny().orElse(null);
                 if (null == invalidKruizeObject) {
-                    ValidationOutputData addedToDB = null;  // TODO savetoDB should move to queue and bulk upload not considered here
-                    boolean allSuccessful = true;
-                    for (KruizeObject ko : kruizeExpList) {
-                        CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
-                                .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
-                                .findAny()
-                                .orElse(null);
-                        validAPIObj.setValidationData(ko.getValidation_data());
-                        addedToDB = experimentDBService.addExperimentToDB(validAPIObj);
-                        if (addedToDB.isSuccess()) {
-                            experimentCache.add(ko.getExperimentName());
-                        } else {
-                            allSuccessful = false;
-                        }
-                    }
-                    if (allSuccessful) {
+                    KruizeObject ko = kruizeExpList.get(0);
+                    CreateExperimentAPIObject validAPIObj = createExperimentAPIObjects.stream()
+                            .filter(createObj -> ko.getExperimentName().equals(createObj.getExperimentName()))
+                            .findAny()
+                            .orElse(null);
+                    validAPIObj.setValidationData(ko.getValidation_data());
+                    ValidationOutputData addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
+                    
+                    if (addedToDB.isSuccess()) {
+                        experimentCache.add(ko.getExperimentName());
                         sendSuccessResponse(response, "Experiment registered successfully with Kruize.");
                         statusValue = "success";
                     } else {
-                        sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB != null ? addedToDB.getMessage() : "Failed to add experiments to database");
+                        // Check if experiment already exists
+                        if (addedToDB.getMessage() != null && addedToDB.getMessage().contains("already exists")) {
+                            LOGGER.debug("Experiment {} already exists, returning 409", ko.getExperimentName());
+                            experimentCache.add(ko.getExperimentName());
+                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_CONFLICT, "Experiment name already exists");
+                        } else {
+                            sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, addedToDB.getMessage());
+                        }
                     }
                 } else {
                     sendErrorResponse(inputData, response, null, invalidKruizeObject.getValidation_data().getErrorCode(), invalidKruizeObject.getValidation_data().getMessage());
@@ -198,37 +194,46 @@ public class CreateExperiment extends HttpServlet {
      */
     @Override
     protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        Map<String, KruizeObject> mKruizeExperimentMap = new ConcurrentHashMap<String, KruizeObject>();
         String inputData = "";
         String rm = request.getParameter(AnalyzerConstants.ServiceConstants.RM);
         // Check if rm is not null and set to true
         boolean rmTable = (null != rm && AnalyzerConstants.BooleanString.TRUE.equalsIgnoreCase(rm.trim()));
         try {
             inputData = request.getReader().lines().collect(Collectors.joining());
-            CreateExperimentAPIObject[] createExperimentAPIObjects = gson.fromJson(inputData, CreateExperimentAPIObject[].class);
+            CreateExperimentAPIObject[] createExperimentAPIObjects = new Gson().fromJson(inputData, CreateExperimentAPIObject[].class);
             if (createExperimentAPIObjects.length > 1) {
                 LOGGER.error(AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
                 sendErrorResponse(inputData, response, null, HttpServletResponse.SC_BAD_REQUEST, AnalyzerErrorConstants.AutotuneObjectErrors.UNSUPPORTED_EXPERIMENT);
             } else {
                 for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
+                    try {
+                        if(rmTable) {
+                            new ExperimentDBService().loadExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                        } else {
+                            new ExperimentDBService().loadLMExperimentFromDBByName(mKruizeExperimentMap, ko.getExperimentName());
+                        }
+                    } catch (Exception e) {
+                        LOGGER.error("Loading saved experiment {} failed: {} ", ko.getExperimentName(), e.getMessage());
+                    }
+                }
+
+                for (CreateExperimentAPIObject ko : createExperimentAPIObjects) {
                     String expName = ko.getExperimentName();
-                    
-                    // Use ExperimentCache to check if experiment exists (instead of loading from DB)
-                    if (!experimentCache.isExists(expName)) {
+                    if (!mKruizeExperimentMap.isEmpty() && mKruizeExperimentMap.containsKey(expName)) {
+                        ValidationOutputData validationOutputData;
+                        if(rmTable) {
+                            validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
+                        } else {
+                            validationOutputData = new ExperimentDAOImpl().deleteKruizeLMExperimentEntryByName(expName);
+                        }
+                        if (validationOutputData.isSuccess()) {
+                            mKruizeExperimentMap.remove(ko.getExperimentName());
+                        } else {
+                            throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
+                        }
+                    } else
                         throw new Exception("Experiment not found!");
-                    }
-                    
-                    ValidationOutputData validationOutputData;
-                    if(rmTable) {
-                        validationOutputData = new ExperimentDAOImpl().deleteKruizeExperimentEntryByName(expName);
-                    } else {
-                        validationOutputData = new ExperimentDAOImpl().deleteKruizeLMExperimentEntryByName(expName);
-                    }
-                    if (validationOutputData.isSuccess()) {
-                        experimentCache.remove(expName);
-                        KruizeOperator.autotuneObjectMap.remove(expName);
-                    } else {
-                        throw new Exception("Experiment not deleted due to : " + validationOutputData.getMessage());
-                    }
                 }
                 sendSuccessResponse(response, "Experiment deleted successfully.");
             }

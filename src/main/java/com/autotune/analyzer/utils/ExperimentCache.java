@@ -36,7 +36,6 @@ public class ExperimentCache {
     private static final Logger LOGGER = LoggerFactory.getLogger(ExperimentCache.class);
     
     private final Set<String> experimentNamesCache = ConcurrentHashMap.newKeySet();
-    private final ExperimentDBService experimentDBService = new ExperimentDBService();
     
     /**
      * Check if an experiment exists in cache or database.
@@ -84,6 +83,7 @@ public class ExperimentCache {
     private boolean checkExperimentInDatabase(String experiment_name) {
         Map<String, KruizeObject> experimentMap = new ConcurrentHashMap<>();
         try {
+            ExperimentDBService experimentDBService = new ExperimentDBService();
             if (KruizeDeploymentInfo.is_ros_enabled) {
                 // load from kruize_experiments table
                 experimentDBService.loadExperimentFromDBByName(experimentMap, experiment_name);
