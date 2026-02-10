@@ -37,8 +37,7 @@ public class TunableDependencyResolver {
             String layerName = kruizeLayer.getLayerName();
 
             for (Tunable tunable : kruizeLayer.getTunables()) {
-                TunableSpec spec =
-                        new TunableSpec(layerName, tunable.getName());
+                TunableSpec spec = new TunableSpec(layerName, tunable.getName());
 
                 tunableMap.put(spec, tunable);
                 graph.putIfAbsent(spec, new ArrayList<>());
@@ -58,8 +57,7 @@ public class TunableDependencyResolver {
             String layerName = kruizeLayer.getLayerName();
 
             for (Map.Entry<String, List<TunableSpec>> entry : deps.entrySet()) {
-                TunableSpec source =
-                        new TunableSpec(layerName, entry.getKey());
+                TunableSpec source = new TunableSpec(layerName, entry.getKey());
 
                 if (!graph.containsKey(source)) {
                     continue;
@@ -72,7 +70,6 @@ public class TunableDependencyResolver {
                 }
             }
         }
-
         return topologicalSort(tunableMap, graph);
     }
 
@@ -118,7 +115,6 @@ public class TunableDependencyResolver {
                     "Circular or unresolved tunable dependencies detected"
             );
         }
-
         return ordered;
     }
 }
