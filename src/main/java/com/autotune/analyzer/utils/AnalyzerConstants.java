@@ -685,12 +685,13 @@ public class AnalyzerConstants {
         public static final String CONTAINER_LAYER = "container";
         public static final String HOTSPOT_LAYER = "hotspot";
         public static final String QUARKUS_LAYER = "quarkus";
-        public static final String OPENJ9_LAYER = "openj9";
+        public static final String SEMERU_LAYER = "semeru";
 
         public static final List<String> SUPPORTED_LAYERS = Arrays.asList(
                 CONTAINER_LAYER,
                 HOTSPOT_LAYER,
-                QUARKUS_LAYER
+                QUARKUS_LAYER,
+                SEMERU_LAYER
         );
 
         /**
@@ -730,13 +731,13 @@ public class AnalyzerConstants {
             private TunablesConstants() {}
 
             // Container tunables
-            public static final String MEMORY_LIMIT = "memory-limit";
-            public static final String CPU_LIMIT =  "cpu-limit";
+            public static final String MEMORY_LIMIT = "memoryLimit";
+            public static final String CPU_LIMIT =  "cpuLimit";
             // Hotspot tunables
-            public static final String MAX_RAM_PERC = "maxram-percentage";
-            public static final String GC_POLICY = "gc-policy";
+            public static final String MAX_RAM_PERC = "MaxRAMPercentage";
+            public static final String GC_POLICY = "GCPolicy";
             // Quarkus tunables
-            public static final String CORE_THREADS = "core-threads";
+            public static final String CORE_THREADS = "quarkus.thread-pool.core-threads";
         }
 
         private LayerConstants() {
