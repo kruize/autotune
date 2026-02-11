@@ -3,6 +3,7 @@ package com.autotune.analyzer.kruizeLayer.impl;
 import com.autotune.analyzer.kruizeLayer.impl.framework.QuarkusLayer;
 import com.autotune.analyzer.kruizeLayer.impl.infra.ContainerLayer;
 import com.autotune.analyzer.kruizeLayer.impl.runtime.HotspotLayer;
+import com.autotune.analyzer.kruizeLayer.impl.runtime.SemeruLayer;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -15,6 +16,7 @@ public class LayerRegistry {
         registerLayer(ContainerLayer.getInstance());
         registerLayer(HotspotLayer.getInstance());
         registerLayer(QuarkusLayer.getInstance());
+        registerLayer(SemeruLayer.getInstance());
     }
 
     public static LayerRegistry getInstance() {
