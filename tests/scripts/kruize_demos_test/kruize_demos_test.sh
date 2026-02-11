@@ -437,7 +437,7 @@ elapsed_time=$(time_diff "${start_time}" "${end_time}")
 echo "Test took ${elapsed_time} seconds to complete" | tee -a ${LOG}
 
 # Clone kruize-demos repo
-#delete_repos "kruize-demos"
+delete_repos "kruize-demos"
 
 if [ "${failed}" -ne 0 ]; then
 	echo "Kruize demos test failed! Check the logs for details" | tee -a ${LOG}
