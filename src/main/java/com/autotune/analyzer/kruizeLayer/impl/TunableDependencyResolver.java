@@ -51,8 +51,10 @@ public class TunableDependencyResolver {
             if (layerImpl == null)
                 continue;
 
-            Map<String, List<TunableSpec>> deps =
-                    layerImpl.getTunableDependencies();
+            Map<String, List<TunableSpec>> deps = layerImpl.getTunableDependencies();
+
+            if (null == deps || deps.isEmpty())
+                continue;
 
             String layerName = kruizeLayer.getLayerName();
 
