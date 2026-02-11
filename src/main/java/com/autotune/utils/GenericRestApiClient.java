@@ -17,6 +17,7 @@ package com.autotune.utils;
 
 import com.autotune.common.auth.AuthenticationStrategy;
 import com.autotune.common.auth.AuthenticationStrategyFactory;
+import com.autotune.common.auth.MTLSAuthenticationStrategy;
 import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.utils.authModels.APIKeysAuthentication;
 import com.autotune.utils.authModels.BasicAuthentication;
@@ -44,17 +45,29 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyManagementException;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
+import java.security.UnrecoverableKeyException;
+import java.security.cert.CertificateException;
+import java.security.cert.CertificateFactory;
+import java.security.cert.X509Certificate;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.KeyFactory;
+import java.security.PrivateKey;
+import java.util.Base64;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 /**
  * This is generic wrapper class used to retrieve RESTAPI response.
  * This class support following RESTAPI authentication mode
- * Basic , Bearer , APIKey , OAUTH2 , NO Auth
+ * Basic , Bearer , APIKey , OAUTH2 , MTLS , NO Auth
  */
 public class GenericRestApiClient {
     private static final long serialVersionUID = 1L;
@@ -135,26 +148,155 @@ public class GenericRestApiClient {
 
 
     /**
-     * Common method to setup SSL context for trust-all certificates.
+     * Common method to setup SSL context for trust-all certificates or mTLS.
+     * If the authentication strategy is mTLS, it configures the SSL context with client certificates.
+     * Otherwise, it uses a trust-all configuration.
      *
      * @return CloseableHttpClient
      */
     private CloseableHttpClient setupHttpClient() throws NoSuchAlgorithmException, KeyStoreException, KeyManagementException {
-        SSLContext sslContext = SSLContexts.custom().loadTrustMaterial((chain, authType) -> true).build();  // Trust all certificates
+        SSLContext sslContext;
+        
+        // Check if mTLS authentication is being used
+        if (authenticationStrategy instanceof MTLSAuthenticationStrategy) {
+            MTLSAuthenticationStrategy mtlsStrategy = (MTLSAuthenticationStrategy) authenticationStrategy;
+            try {
+                sslContext = createMTLSContext(mtlsStrategy);
+                LOGGER.debug("mTLS SSL context created successfully");
+            } catch (Exception e) {
+                LOGGER.error("Failed to create mTLS SSL context: {}", e.getMessage(), e);
+                throw new KeyManagementException("Failed to setup mTLS: " + e.getMessage(), e);
+            }
+        } else {
+            // Default trust-all configuration for non-mTLS authentication
+            sslContext = SSLContexts.custom().loadTrustMaterial((chain, authType) -> true).build();
+        }
+        
         SSLConnectionSocketFactory sslConnectionSocketFactory =
-                new SSLConnectionSocketFactory(sslContext, new String[]{"TLSv1.2"}, null, NoopHostnameVerifier.INSTANCE);
+                new SSLConnectionSocketFactory(sslContext, new String[]{"TLSv1.2", "TLSv1.3"}, null, NoopHostnameVerifier.INSTANCE);
         return HttpClients.custom().setSSLSocketFactory(sslConnectionSocketFactory).build();
     }
 
     /**
+     * Creates an SSL context configured for mutual TLS authentication.
+     * Loads the client certificate, private key, and optionally a CA certificate.
+     *
+     * @param mtlsStrategy The mTLS authentication strategy containing certificate paths
+     * @return Configured SSLContext for mTLS
+     * @throws Exception if certificate loading or SSL context creation fails
+     */
+    private SSLContext createMTLSContext(MTLSAuthenticationStrategy mtlsStrategy) throws Exception {
+        String clientCertPath = mtlsStrategy.getClientCertPath();
+        String clientKeyPath = mtlsStrategy.getClientKeyPath();
+        String caCertPath = mtlsStrategy.getCaCertPath();
+        String keyPassword = mtlsStrategy.getKeyPassword();
+
+        // Load client certificate
+        X509Certificate clientCert = loadCertificate(clientCertPath);
+        
+        // Load private key
+        PrivateKey privateKey = loadPrivateKey(clientKeyPath, keyPassword);
+        
+        // Create KeyStore and add client certificate with private key
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        keyStore.load(null, null);
+        keyStore.setKeyEntry("client", privateKey,
+                            (keyPassword != null ? keyPassword.toCharArray() : new char[0]),
+                            new X509Certificate[]{clientCert});
+        
+        // Create TrustStore
+        KeyStore trustStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        trustStore.load(null, null);
+        
+        if (caCertPath != null && !caCertPath.isEmpty()) {
+            // Load CA certificate if provided
+            X509Certificate caCert = loadCertificate(caCertPath);
+            trustStore.setCertificateEntry("ca", caCert);
+            LOGGER.debug("Loaded CA certificate from: {}", caCertPath);
+        } else {
+            // If no CA cert provided, trust the client cert itself (self-signed scenario)
+            trustStore.setCertificateEntry("client-ca", clientCert);
+            LOGGER.debug("No CA certificate provided, using client certificate for trust");
+        }
+        
+        // Build SSL context with both keystore and truststore
+        return SSLContexts.custom()
+                .loadKeyMaterial(keyStore, keyPassword != null ? keyPassword.toCharArray() : new char[0])
+                .loadTrustMaterial(trustStore, null)
+                .build();
+    }
+
+    /**
+     * Loads an X.509 certificate from a PEM file.
+     *
+     * @param certPath Path to the certificate file
+     * @return X509Certificate object
+     * @throws Exception if certificate loading fails
+     */
+    private X509Certificate loadCertificate(String certPath) throws Exception {
+        try (FileInputStream fis = new FileInputStream(certPath)) {
+            CertificateFactory cf = CertificateFactory.getInstance("X.509");
+            return (X509Certificate) cf.generateCertificate(fis);
+        } catch (Exception e) {
+            LOGGER.error("Failed to load certificate from {}: {}", certPath, e.getMessage());
+            throw new IOException("Failed to load certificate: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Loads a private key from a PEM file.
+     * Supports both encrypted and unencrypted PKCS#8 format keys.
+     *
+     * @param keyPath Path to the private key file
+     * @param password Password for encrypted keys (can be null)
+     * @return PrivateKey object
+     * @throws Exception if key loading fails
+     */
+    private PrivateKey loadPrivateKey(String keyPath, String password) throws Exception {
+        try {
+            String keyContent = new String(Files.readAllBytes(Paths.get(keyPath)));
+            
+            // Remove PEM headers and footers
+            keyContent = keyContent
+                    .replace("-----BEGIN PRIVATE KEY-----", "")
+                    .replace("-----END PRIVATE KEY-----", "")
+                    .replace("-----BEGIN RSA PRIVATE KEY-----", "")
+                    .replace("-----END RSA PRIVATE KEY-----", "")
+                    .replace("-----BEGIN EC PRIVATE KEY-----", "")
+                    .replace("-----END EC PRIVATE KEY-----", "")
+                    .replaceAll("\\s", "");
+            
+            byte[] keyBytes = Base64.getDecoder().decode(keyContent);
+            PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
+            
+            // Try RSA first, then EC
+            try {
+                KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+                return keyFactory.generatePrivate(keySpec);
+            } catch (Exception e) {
+                KeyFactory keyFactory = KeyFactory.getInstance("EC");
+                return keyFactory.generatePrivate(keySpec);
+            }
+        } catch (Exception e) {
+            LOGGER.error("Failed to load private key from {}: {}", keyPath, e.getMessage());
+            throw new IOException("Failed to load private key: " + e.getMessage(), e);
+        }
+    }
+
+    /**
      * Common method to apply authentication to the HTTP request.
+     * For mTLS, authentication is handled at the SSL/TLS layer, so no header is set.
+     * For other authentication types, the Authorization header is set.
      *
      * @param httpRequestBase the HTTP request (GET, POST, etc.)
      */
     private void applyAuthentication(HttpRequestBase httpRequestBase) {
         if (authenticationStrategy != null) {
             String authHeader = authenticationStrategy.applyAuthentication();
-            httpRequestBase.setHeader(KruizeConstants.AuthenticationConstants.AUTHORIZATION, authHeader);
+            // Only set the Authorization header if it's not null (mTLS returns null)
+            if (authHeader != null) {
+                httpRequestBase.setHeader(KruizeConstants.AuthenticationConstants.AUTHORIZATION, authHeader);
+            }
         }
     }
 

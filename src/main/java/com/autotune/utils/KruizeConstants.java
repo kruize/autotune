@@ -914,11 +914,16 @@ public class KruizeConstants {
         public static final String AUTHENTICATION_CLIENT_ID = "clientId";
         public static final String AUTHENTICATION_CLIENT_SECRET = "clientSecret";
         public static final String AUTHENTICATION_GRANT_TYPE = "grantType";
+        public static final String AUTHENTICATION_CLIENT_CERT_PATH = "clientCertPath";
+        public static final String AUTHENTICATION_CLIENT_KEY_PATH = "clientKeyPath";
+        public static final String AUTHENTICATION_CA_CERT_PATH = "caCertPath";
+        public static final String AUTHENTICATION_KEY_PASSWORD = "keyPassword";
         public static final String NONE = "none";
         public static final String BASIC = "basic";
         public static final String BEARER = "bearer";
         public static final String API_KEY = "apikey";
         public static final String OAUTH2 = "oauth2";
+        public static final String MTLS = "mtls";
         public static final String UNKNOWN_AUTHENTICATION = "Unknown authentication type: ";
         public static final String AUTHORIZATION = "Authorization";
 

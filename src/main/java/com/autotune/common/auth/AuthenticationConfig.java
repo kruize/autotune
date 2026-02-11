@@ -62,6 +62,14 @@ public class AuthenticationConfig {
                     oauth2Credentials.setGrantType(credentialsObj.getString(KruizeConstants.AuthenticationConstants.AUTHENTICATION_GRANT_TYPE));
                     credentials = oauth2Credentials;
                     break;
+                case MTLS:
+                    MTLSCredentials mtlsCredentials = new MTLSCredentials();
+                    mtlsCredentials.setClientCertPath(credentialsObj.getString(KruizeConstants.AuthenticationConstants.AUTHENTICATION_CLIENT_CERT_PATH));
+                    mtlsCredentials.setClientKeyPath(credentialsObj.getString(KruizeConstants.AuthenticationConstants.AUTHENTICATION_CLIENT_KEY_PATH));
+                    mtlsCredentials.setCaCertPath(credentialsObj.optString(KruizeConstants.AuthenticationConstants.AUTHENTICATION_CA_CERT_PATH, null));
+                    mtlsCredentials.setKeyPassword(credentialsObj.optString(KruizeConstants.AuthenticationConstants.AUTHENTICATION_KEY_PASSWORD, null));
+                    credentials = mtlsCredentials;
+                    break;
                 default:
                     LOGGER.error(KruizeConstants.AuthenticationConstants.UNKNOWN_AUTHENTICATION + "{}", type);
             }

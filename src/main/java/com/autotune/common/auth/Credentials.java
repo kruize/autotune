@@ -154,3 +154,67 @@ class ApiKeyCredentials extends Credentials {
     }
 }
 
+
+
+class MTLSCredentials extends Credentials {
+    private String clientCertPath;
+    private String clientKeyPath;
+    private String caCertPath;
+    private String keyPassword;
+
+    public String getClientCertPath() {
+        return clientCertPath;
+    }
+
+    public void setClientCertPath(String clientCertPath) {
+        this.clientCertPath = clientCertPath;
+    }
+
+    public String getClientKeyPath() {
+        return clientKeyPath;
+    }
+
+    public void setClientKeyPath(String clientKeyPath) {
+        this.clientKeyPath = clientKeyPath;
+    }
+
+    public String getCaCertPath() {
+        return caCertPath;
+    }
+
+    public void setCaCertPath(String caCertPath) {
+        this.caCertPath = caCertPath;
+    }
+
+    public String getKeyPassword() {
+        return keyPassword;
+    }
+
+    public void setKeyPassword(String keyPassword) {
+        this.keyPassword = keyPassword;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MTLSCredentials that = (MTLSCredentials) o;
+        return Objects.equals(clientCertPath, that.clientCertPath) &&
+                Objects.equals(clientKeyPath, that.clientKeyPath) &&
+                Objects.equals(caCertPath, that.caCertPath);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(clientCertPath, clientKeyPath, caCertPath);
+    }
+
+    @Override
+    public String toString() {
+        return "MTLSCredentials{" +
+                "clientCertPath='" + clientCertPath + '\'' +
+                ", clientKeyPath='" + clientKeyPath + '\'' +
+                ", caCertPath='" + caCertPath + '\'' +
+                '}';
+    }
+}
