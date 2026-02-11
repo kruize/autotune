@@ -39,7 +39,7 @@ public class ContainerLayer implements Layer {
 
     @Override
     public Map<String, List<TunableSpec>> getTunableDependencies() {
-        // Returning null as container layer tunables are independent
-        return null;
+        // Returning empty map as container layer tunables are independent
+        return Map.of();
     }
 }
