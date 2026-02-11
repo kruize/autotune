@@ -67,7 +67,7 @@ public class TunableDependencyResolver {
 
                 for (TunableSpec dependency : entry.getValue()) {
                     if (tunableMap.containsKey(dependency)) {
-                        graph.get(source).add(dependency);
+                        graph.get(dependency).add(source);
                     }
                 }
             }
