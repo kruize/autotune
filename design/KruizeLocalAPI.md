@@ -2910,6 +2910,8 @@ Kruize currently supports hotspot, openj9, and quarkus layers.
 }
 ```
 
+</details>
+
 **Layer Presence Configuration**
 
 The `layer_presence` object can have one of the following configurations:
@@ -2925,8 +2927,6 @@ Each tunable can be either:
 
 - **Bounded (numeric)**: Requires `value_type`, `upper_bound`, `lower_bound`, and `step`
 - **Categorical**: Requires `value_type: "categorical"` and `choices` array
-
-</details>
 
 **Response**
 
@@ -3151,8 +3151,6 @@ Returns all configured layers
 |------------------|------------------------------------------------|
 | 404              | Layer with name 'xyz' not found                |
 | 500              | Internal Server Error                          |
-
-**Note**: For categorical tunables, the `step`, `upper_bound`, and `lower_bound` fields will not be present in the response. Only `value_type` and `choices` will be returned.
 
 <a name="create-experiment-api"></a>
 
