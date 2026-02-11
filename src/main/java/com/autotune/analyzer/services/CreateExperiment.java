@@ -141,7 +141,6 @@ public class CreateExperiment extends HttpServlet {
                                 .findAny()
                                 .orElse(null);
                         validAPIObj.setValidationData(ko.getValidation_data());
-                        ExperimentDAO experimentDAO = new ExperimentDAOImpl();
 
                         // Detect layers if it's not a remote monitoring experiment
                         if (!ko.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
