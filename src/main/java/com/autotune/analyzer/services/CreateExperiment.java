@@ -143,16 +143,19 @@ public class CreateExperiment extends HttpServlet {
                         validAPIObj.setValidationData(ko.getValidation_data());
                         ExperimentDAO experimentDAO = new ExperimentDAOImpl();
 
-                        for (KubernetesAPIObject kubernetesAPIObject : validAPIObj.getKubernetesObjects()) {
-                            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
-                                // detect layers for the container
-                                Map<String, KruizeLayer> layers = LayerUtils.detectLayers(containerAPIObject.getContainer_name(),
-                                        kubernetesAPIObject.getName(),
-                                        kubernetesAPIObject.getNamespace()
-                                );
-                                // Skipping null check as we return atleast an empty map if there are no exceptions
-                                if (!layers.isEmpty()) {
-                                    containerAPIObject.setLayerMap(layers);
+                        // Detect layers if it's not a remote monitoring experiment
+                        if (!ko.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
+                            for (KubernetesAPIObject kubernetesAPIObject : validAPIObj.getKubernetesObjects()) {
+                                for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                                    // detect layers for the container
+                                    Map<String, KruizeLayer> layers = LayerUtils.detectLayers(containerAPIObject.getContainer_name(),
+                                            kubernetesAPIObject.getName(),
+                                            kubernetesAPIObject.getNamespace()
+                                    );
+                                    // Skipping null check as we return atleast an empty map if there are no exceptions
+                                    if (!layers.isEmpty()) {
+                                        containerAPIObject.setLayerMap(layers);
+                                    }
                                 }
                             }
                         }
