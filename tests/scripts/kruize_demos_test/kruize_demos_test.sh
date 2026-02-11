@@ -28,25 +28,28 @@ NAMESPACE=monitoring
 demo=all
 
 target="crc"
-KRUIZE_IMAGE="quay.io/kruize/autotune:mvp_demo"
-KRUIZE_OPERATOR_IMAGE="quay.io/kruize/kruize-operator:0.0.2"
-KRUIZE_OPERATOR=0
+KRUIZE_IMAGE="quay.io/kruizehub/autotune-test-image:mvp_demo"
+KRUIZE_OPERATOR_IMAGE=""
+KRUIZE_OPERATOR=1
 failed=0
 
 KRUIZE_DEMOS_REPO="https://github.com/kruize/kruize-demos.git"
 KRUIZE_DEMOS_BRANCH="main"
 SETUP=0
+WAIT_TIME=1800
 
 function usage() {
 	echo
-	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch]"
+	echo "Usage: -c cluster_type[minikube|openshift] [-i Kruize image] [-o Kruize operator image] [ -t demo ] [-r <resultsdir path>] [-a Kruize demos git repo URL] [-b Kruize demos branch] [-k]"
 	echo "c = supports minikube, kind and openshift cluster-type"
-	echo "i = kruize image. Default - quay.io/kruize/autotune:mvp_demo"
-	echo "o = Kruize operator image. Default - quay.io/kruize/kruize-operator:0.0.2"
+	echo "i = kruize image. Default - quay.io/kruizehub/autotune-test-image:mvp_demo"
+	echo "o = Kruize operator image. Default - It will use the latest kruize operator image"
 	echo "a = Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git"
 	echo "b = Kruize demos git repo branch. Default - main"
 	echo "t = Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)"
 	echo "r = Kruize results dir path. Default - /tmp/kruize_demos_test_results"
+	echo "k = Disable operator and install kruize using deploy scripts instead."
+	echo "w = Wait time for metrics to be available before recommedations are generated in bulk demo on a fresh cluster setup. Default 1800s"
 	exit 1
 }
 
@@ -56,8 +59,18 @@ function get_kruize_pod_log() {
 	# Fetch the kruize pod log
 	echo "" | tee -a ${LOG}
 	echo "Fetch the kruize pod logs and store in ${log}..." | tee -a ${LOG}
-	kruize_pod=$(kubectl get pod -n ${NAMESPACE} | grep kruize | grep -v kruize-ui | grep -v kruize-db | cut -d " " -f1)
-	kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
+	
+	# Get the kruize pod name
+	kruize_pod=$(kubectl get pods -n ${NAMESPACE} -l app=kruize -o jsonpath='{.items[0].metadata.name}')
+
+	# Check if kruize_pod is empty
+	if [ -z "${kruize_pod}" ]; then
+		error_msg="Error: No kruize pod found in namespace ${NAMESPACE}, unable to fetch kruize pod log"
+		echo "${error_msg}" | tee -a ${LOG}
+	else
+		echo "kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &" | tee -a ${LOG}
+		kubectl logs -f ${kruize_pod} -n ${NAMESPACE} > ${log} 2>&1 &
+	fi
 }
 
 function local_monitoring_demo() {
@@ -207,7 +220,9 @@ function run_demo() {
 
 	if [ "${KRUIZE_OPERATOR}" == 1 ]; then
 		if [ "${KRUIZE_OPERATOR_IMAGE}" != "" ]; then
-			CMD+=( -o ${KRUIZE_OPERATOR_IMAGE})
+			if [[ "${DEMO_NAME}" != "remote_monitoring" && "${DEMO_NAME}" != "bulk" ]]; then
+				CMD+=( -o ${KRUIZE_OPERATOR_IMAGE})
+			fi
 		fi
 	fi
 
@@ -219,6 +234,15 @@ function run_demo() {
 				CMD+=( -f)
 				SETUP=1
 			fi
+		fi
+		if [ "${DEMO_NAME}" == "bulk" ]; then
+			CMD+=( -w ${WAIT_TIME})
+		fi
+	fi
+
+	if [ "${KRUIZE_OPERATOR}" == 0 ]; then
+		if [ "${DEMO_NAME}" != "remote_monitoring" ]; then
+			CMD+=( -k)
 		fi
 	fi
 
@@ -318,7 +342,7 @@ function run_demo() {
 	} | tee -a ${LOG}
 }
 
-while getopts c:r:i:o:a:b:t:h gopts
+while getopts c:w:r:i:o:a:b:t:kh gopts
 do
 	case ${gopts} in
 	c)
@@ -329,6 +353,9 @@ do
 		;;
 	i)
 		KRUIZE_IMAGE="${OPTARG}"		
+		;;
+	w)
+		WAIT_TIME="${OPTARG}"
 		;;
 	o)
 		KRUIZE_OPERATOR_IMAGE="${OPTARG}"		
@@ -342,6 +369,9 @@ do
 	t)
 		demo="${OPTARG}"		
 		;;
+	k)
+		KRUIZE_OPERATOR=0
+      		;;
 	h)
 		usage
 		;;

@@ -13,31 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package com.autotune.analyzer.exceptions;
 
-package com.autotune.analyzer.kruizeLayer.presence;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
-import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
+public class LayerConversionException extends Exception {
 
-/**
- * Implementation for layers that are always present
- */
-public class PresenceAlways implements LayerPresenceDetector {
+    private final AnalyzerConstants.LayerConversionSection section;
 
-    public PresenceAlways() {}
-
-    @Override
-    public PresenceType getType() {
-        return PresenceType.ALWAYS;
+    public LayerConversionException(
+            AnalyzerConstants.LayerConversionSection section,
+            String message,
+            Throwable cause) {
+        super(message, cause);
+        this.section = section;
     }
 
-    @Override
-    public boolean detectPresence(String namespace, String workloadName) throws Exception {
-        // Layers with ALWAYS presence type are always detected
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "PresenceAlways{}";
+    public AnalyzerConstants.LayerConversionSection getSection() {
+        return section;
     }
 }

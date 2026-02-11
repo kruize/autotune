@@ -18,7 +18,7 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-KRUIZE_REPO="${CURRENT_DIR}/../../../../"
+KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
 
 
 # Source the common functions scripts
@@ -164,8 +164,8 @@ KRUIZE_SERVICE_LOG="${LOG_DIR}/kruize_service.log"
 # Setup kruize
 if [ ${skip_setup} -eq 0 ]; then
 	echo "Setting up kruize..." | tee -a "${LOG}"
-	echo "$KRUIZE_REPO"
-	pushd "${KRUIZE_REPO}" > /dev/null
+	echo "$KRUIZE_REPO_PATH"
+	pushd "${KRUIZE_REPO_PATH}" > /dev/null
 		# Update datasource
 		CRC_DIR="./manifests/crc/default-db-included-installation"
 	        KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"

@@ -14,30 +14,23 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.kruizeLayer.presence;
+package com.autotune.analyzer.kruizeLayer;
 
-import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
+public class LayerMetadata {
+    private String name;
 
-/**
- * Implementation for layers that are always present
- */
-public class PresenceAlways implements LayerPresenceDetector {
-
-    public PresenceAlways() {}
-
-    @Override
-    public PresenceType getType() {
-        return PresenceType.ALWAYS;
+    public String getName() {
+        return name;
     }
 
-    @Override
-    public boolean detectPresence(String namespace, String workloadName) throws Exception {
-        // Layers with ALWAYS presence type are always detected
-        return true;
+    public void setName(String name) {
+        this.name = name;
     }
 
     @Override
     public String toString() {
-        return "PresenceAlways{}";
+        return "LayerMetadata{" +
+                "name='" + name + '\'' +
+                '}';
     }
 }
