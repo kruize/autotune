@@ -30,13 +30,13 @@ public interface LayerPresenceDetector {
     PresenceType getType();
 
     /**
-     * Detect if the layer is present in the given namespace and workload
+     * Detect if the layer is present in the given namespace and container
      * @param namespace The Kubernetes namespace to check
-     * @param workloadName The workload name to check (optional, can be null for namespace-level detection)
+     * @param containerName The container name to check (optional, can be null)
      * @return true if the layer is detected, false otherwise
      * @throws Exception if detection fails due to connectivity or other issues
      */
-    boolean detectPresence(String namespace, String workloadName) throws Exception;
+    boolean detectPresence(String namespace, String containerName) throws Exception;
 
 
 }

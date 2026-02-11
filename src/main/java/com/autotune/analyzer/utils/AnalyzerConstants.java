@@ -678,7 +678,6 @@ public class AnalyzerConstants {
 
         // PromQL label names used in query-based presence detection
         public static final String LABEL_NAMESPACE = "namespace";
-        public static final String LABEL_POD = "pod";
         public static final String LABEL_CONTAINER = "container";
 
         /**
@@ -702,7 +701,7 @@ public class AnalyzerConstants {
             public static final String DATASOURCE_NOT_FOUND = "Datasource '{}' not found in collection";
             public static final String NO_OPERATOR_AVAILABLE = "No operator available for datasource '{}'";
             public static final String EXECUTING_QUERY = "Executing layer detection query: {}";
-            public static final String LAYER_DETECTED_VIA_QUERY = "Layer detected via query in namespace '{}', workload '{}', container '{}'";
+            public static final String LAYER_DETECTED_VIA_QUERY = "Layer detected via query in namespace '{}', container '{}'";
             public static final String ERROR_EXECUTING_QUERY = "Error executing layer presence query for datasource '{}'";
 
             private LogMessages() {

@@ -31,7 +31,7 @@ public class PresenceAlways implements LayerPresenceDetector {
     }
 
     @Override
-    public boolean detectPresence(String namespace, String workloadName) throws Exception {
+    public boolean detectPresence(String namespace, String containerName) throws Exception {
         // Layers with ALWAYS presence type are always detected
         return true;
     }

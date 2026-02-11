@@ -88,11 +88,11 @@ public class LayerUtils {
                     // For query-based detection, pass container name as well
                     if (layer.getLayerPresence().getDetector() instanceof QueryBasedPresence) {
                         QueryBasedPresence queryDetector = (QueryBasedPresence) layer.getLayerPresence().getDetector();
-                        isDetected = queryDetector.detectPresence(namespace, workloadName, containerName);
+                        isDetected = queryDetector.detectPresence(namespace, containerName);
                     } else {
                         // For other detector types (Always, Label)
                         isDetected = layer.getLayerPresence().getDetector()
-                                .detectPresence(namespace, workloadName);
+                                .detectPresence(namespace, containerName);
                     }
 
                     if (isDetected) {
