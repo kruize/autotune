@@ -38,7 +38,6 @@ public class LayerUtils {
      * Detects which layers are present for a given container in a namespace
      *
      * @param containerName The container name
-     * @param workloadName The workload name
      * @param namespace The Kubernetes namespace
      * @return Map of detected layers (layer name -> KruizeLayer).
      *         Returns an empty map when no layers are detected.
@@ -46,7 +45,6 @@ public class LayerUtils {
      * @throws Exception if database operations fail
      */
     public static Map<String, KruizeLayer> detectLayers(String containerName,
-                                                         String workloadName,
                                                          String namespace) throws Exception {
         // Validate inputs - fail fast with clear error messages
         if (containerName == null || containerName.isBlank()) {
