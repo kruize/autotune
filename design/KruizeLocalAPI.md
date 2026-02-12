@@ -2827,7 +2827,7 @@ Example: `curl -H 'Accept: application/json' -X PUT http://<URL>:<PORT>/updateMe
 ### Create Layer API
 
 Creates a new layer configuration that defines tunable parameters and layer presence detection for application optimization.
-Kruize currently supports hotspot, openj9, and quarkus layers.
+Kruize currently supports hotspot, semeur and quarkus layers.
 
 **Request**
 
