@@ -2,11 +2,11 @@
   "apiVersion": "recommender.com/v1",
   "kind": "KruizeLayer",
   "metadata": {
-    "name": "openj9"
+    "name": "semeru"
   },
-  "layer_name": "openj9",
+  "layer_name": "semeru",
   "layer_level": 1,
-  "details": "openj9 tunables",
+  "details": "semeru tunables",
   "layer_presence": {
     "queries": [
       {
