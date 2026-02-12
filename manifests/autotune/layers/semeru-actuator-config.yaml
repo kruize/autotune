@@ -4,7 +4,7 @@ metadata:
   name: "semeru"
 layer_name: semeru
 layer_level: 1
-details: openj9 tunables
+details: semeru tunables
 layer_presence:
   queries:
   - datasource: 'prometheus'
