@@ -17,6 +17,7 @@
 package com.autotune.analyzer.kruizeLayer.utils;
 
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.presence.LabelBasedPresence;
 import com.autotune.analyzer.kruizeLayer.presence.QueryBasedPresence;
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.LogMessages;
 import com.autotune.database.service.ExperimentDBService;
@@ -83,12 +84,19 @@ public class LayerUtils {
 
                 // Use the layer's presence detector
                 if (layer.getLayerPresence() != null && layer.getLayerPresence().getDetector() != null) {
+                    // Skip label-based detection as it's not yet implemented
+                    if (layer.getLayerPresence().getDetector() instanceof LabelBasedPresence) {
+                        LOGGER.debug("Skipping layer '{}': Label-based presence detection not yet implemented",
+                                    layer.getLayerName());
+                        continue; // Skip to next layer
+                    }
+
                     // For query-based detection, pass container name as well
                     if (layer.getLayerPresence().getDetector() instanceof QueryBasedPresence) {
                         QueryBasedPresence queryDetector = (QueryBasedPresence) layer.getLayerPresence().getDetector();
                         isDetected = queryDetector.detectPresence(namespace, containerName);
                     } else {
-                        // For other detector types (Always, Label)
+                        // For other detector types (Always)
                         isDetected = layer.getLayerPresence().getDetector()
                                 .detectPresence(namespace, containerName);
                     }

@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Implementation for query-based layer presence detection
@@ -74,22 +75,36 @@ public class QueryBasedPresence implements LayerPresenceDetector {
             }
 
             try {
-                // Get datasource info from global collection
-                DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance()
-                        .getDataSourcesCollection()
-                        .get(query.getDataSource());
-
-                if (dataSourceInfo == null) {
-                    LOGGER.warn(LogMessages.DATASOURCE_NOT_FOUND, query.getDataSource());
+                // Get the datasource type from the query configuration
+                String datasourceType = query.getDataSource();
+                if (datasourceType == null || datasourceType.isBlank()) {
+                    LOGGER.warn(LogMessages.NO_DATASOURCE_TYPE_SPECIFIED);
                     continue;
                 }
 
-                // Get the appropriate operator for the datasource
+                // Fetch all datasources and filter by the query's datasource type (provider)
+                LOGGER.debug(LogMessages.FILTERING_DATASOURCES_BY_TYPE, datasourceType);
+                List<DataSourceInfo> matchingDatasources = DataSourceCollection.getInstance()
+                        .getDataSourcesCollection()
+                        .values()
+                        .stream()
+                        .filter(ds -> datasourceType.equalsIgnoreCase(ds.getProvider()))
+                        .collect(Collectors.toList());
+
+                if (matchingDatasources.isEmpty()) {
+                    LOGGER.warn(LogMessages.NO_DATASOURCES_MATCHING_TYPE, datasourceType);
+                    continue;
+                }
+
+                // Use the first matching datasource
+                DataSourceInfo dataSourceInfo = matchingDatasources.get(0);
+
+                // Get the appropriate operator for the datasource provider
                 DataSourceOperatorImpl operator = DataSourceOperatorImpl.getInstance()
-                        .getOperator(query.getDataSource());
+                        .getOperator(dataSourceInfo.getProvider());
 
                 if (operator == null) {
-                    LOGGER.warn(LogMessages.NO_OPERATOR_AVAILABLE, query.getDataSource());
+                    LOGGER.warn(LogMessages.NO_OPERATOR_AVAILABLE, dataSourceInfo.getProvider());
                     continue;
                 }
 
