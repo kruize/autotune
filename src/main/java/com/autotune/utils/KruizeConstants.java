@@ -926,6 +926,16 @@ public class KruizeConstants {
         public static final String MTLS = "mtls";
         public static final String UNKNOWN_AUTHENTICATION = "Unknown authentication type: ";
         public static final String AUTHORIZATION = "Authorization";
+            // PEM format markers for certificate parsing
+        public static final String PEM_PRIVATE_KEY_HEADER = "-----BEGIN PRIVATE KEY-----";
+        public static final String PEM_PRIVATE_KEY_FOOTER = "-----END PRIVATE KEY-----";
+        public static final String PEM_RSA_PRIVATE_KEY_HEADER = "-----BEGIN RSA PRIVATE KEY-----";
+        public static final String PEM_RSA_PRIVATE_KEY_FOOTER = "-----END RSA PRIVATE KEY-----";
+        public static final String PEM_EC_PRIVATE_KEY_HEADER = "-----BEGIN EC PRIVATE KEY-----";
+        public static final String PEM_EC_PRIVATE_KEY_FOOTER = "-----END EC PRIVATE KEY-----";
+        public static final String EMPTY_STRING = "";
+        public static final String WHITESPACE_REGEX = "\\s";
+
 
     }
 

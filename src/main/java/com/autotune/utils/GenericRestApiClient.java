@@ -256,15 +256,15 @@ public class GenericRestApiClient {
         try {
             String keyContent = new String(Files.readAllBytes(Paths.get(keyPath)));
             
-            // Remove PEM headers and footers
+            // Remove PEM headers and footers to extract the Base64-encoded key data
             keyContent = keyContent
-                    .replace("-----BEGIN PRIVATE KEY-----", "")
-                    .replace("-----END PRIVATE KEY-----", "")
-                    .replace("-----BEGIN RSA PRIVATE KEY-----", "")
-                    .replace("-----END RSA PRIVATE KEY-----", "")
-                    .replace("-----BEGIN EC PRIVATE KEY-----", "")
-                    .replace("-----END EC PRIVATE KEY-----", "")
-                    .replaceAll("\\s", "");
+                    .replace(KruizeConstants.AuthenticationConstants.PEM_PRIVATE_KEY_HEADER, KruizeConstants.AuthenticationConstants.EMPTY_STRING)
+                    .replace(KruizeConstants.AuthenticationConstants.PEM_PRIVATE_KEY_FOOTER, KruizeConstants.AuthenticationConstants.EMPTY_STRING)
+                    .replace(KruizeConstants.AuthenticationConstants.PEM_RSA_PRIVATE_KEY_HEADER, KruizeConstants.AuthenticationConstants.EMPTY_STRING)
+                    .replace(KruizeConstants.AuthenticationConstants.PEM_RSA_PRIVATE_KEY_FOOTER, KruizeConstants.AuthenticationConstants.EMPTY_STRING)
+                    .replace(KruizeConstants.AuthenticationConstants.PEM_EC_PRIVATE_KEY_HEADER, KruizeConstants.AuthenticationConstants.EMPTY_STRING)
+                    .replace(KruizeConstants.AuthenticationConstants.PEM_EC_PRIVATE_KEY_FOOTER, KruizeConstants.AuthenticationConstants.EMPTY_STRING)
+                    .replaceAll(KruizeConstants.AuthenticationConstants.WHITESPACE_REGEX, KruizeConstants.AuthenticationConstants.EMPTY_STRING);
             
             byte[] keyBytes = Base64.getDecoder().decode(keyContent);
             PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(keyBytes);
