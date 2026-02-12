@@ -65,6 +65,8 @@ function local_monitoring_tests() {
 			kruize_local_ros_patch
 			# check for 'servicename' and 'datasource_namespace' input variables
 			kruize_local_datasource_manifest_patch
+			# increase cpu/memory resources, PV storage for openshift
+			kruize_local_patch
 			echo "Setting up kruize..." | tee -a ${LOG}
 			echo "${KRUIZE_SETUP_LOG}"
 			setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
