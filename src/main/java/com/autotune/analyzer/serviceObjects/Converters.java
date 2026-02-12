@@ -130,6 +130,9 @@ public class Converters {
             for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
                 ContainerData containerData = new ContainerData(containerAPIObject.getContainer_name(),
                         containerAPIObject.getContainer_image_name(), new ContainerRecommendations(), null);
+                if (null != containerAPIObject.getLayerMap() && !containerAPIObject.getLayerMap().isEmpty()) {
+                    containerData.setLayerMap(containerAPIObject.getLayerMap());
+                }
                 containerDataHashMap.put(containerData.getContainer_name(), containerData);
             }
             k8sObject.setContainerDataMap(containerDataHashMap);
