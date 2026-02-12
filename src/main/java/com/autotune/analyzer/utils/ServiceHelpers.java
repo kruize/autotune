@@ -16,9 +16,18 @@
 package com.autotune.analyzer.utils;
 
 import com.autotune.analyzer.application.ApplicationDeployment;
+import com.autotune.analyzer.exceptions.BulkNotSupportedException;
+import com.autotune.analyzer.exceptions.InvalidExperimentType;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfile;
 import com.autotune.analyzer.performanceProfiles.PerformanceProfilesDeployment;
+import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
+import com.autotune.analyzer.serviceObjects.Converters;
+import com.autotune.analyzer.serviceObjects.CreateExperimentAPIObject;
+import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
+import com.autotune.analyzer.services.CreateExperiment;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.operator.KruizeDeploymentInfo;
@@ -26,9 +35,15 @@ import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.Utils;
 import org.json.JSONArray;
 import org.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.servlet.http.HttpServletResponse;
 import java.sql.Timestamp;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 import static com.autotune.operator.KruizeOperator.deploymentMap;
 
@@ -36,6 +51,7 @@ import static com.autotune.operator.KruizeOperator.deploymentMap;
  * Helper functions used by the REST APIs to create the output JSON object
  */
 public class ServiceHelpers {
+    private static final Logger LOGGER = LoggerFactory.getLogger(ServiceHelpers.class);
     private ServiceHelpers() {
     }
 
@@ -78,6 +94,62 @@ public class ServiceHelpers {
         }
 
         experimentJson.put(AnalyzerConstants.ServiceConstants.DEPLOYMENTS, deploymentArray);
+    }
+
+    public static void checkForBulk(List<CreateExperimentAPIObject> expList) throws BulkNotSupportedException {
+        if (expList.size() > 1) {
+            throw new BulkNotSupportedException();
+        }
+    }
+
+    public static List<KruizeObject> normalizeAndValidateExperimentTypes(List<CreateExperimentAPIObject> createExperimentAPIObjects) throws InvalidExperimentType {
+        List<KruizeObject> kruizeExpList = new ArrayList<>();
+        for (CreateExperimentAPIObject createExperimentAPIObject : createExperimentAPIObjects) {
+            createExperimentAPIObject.setExperiment_id(Utils.generateID(createExperimentAPIObject.toString()));
+            createExperimentAPIObject.setStatus(AnalyzerConstants.ExperimentStatus.IN_PROGRESS);
+            // validating the kubernetes objects and experiment type
+            for (KubernetesAPIObject kubernetesAPIObject : createExperimentAPIObject.getKubernetesObjects()) {
+                if (createExperimentAPIObject.isContainerExperiment()) {
+                    createExperimentAPIObject.setExperimentType(AnalyzerConstants.ExperimentType.CONTAINER);
+                    // check if namespace data is also set for container-type experiments
+                    if (null != kubernetesAPIObject.getNamespaceAPIObject()) {
+                        throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.NAMESPACE_DATA_NOT_NULL_FOR_CONTAINER_EXP);
+                    }
+                    if ((AnalyzerConstants.AUTO.equalsIgnoreCase(createExperimentAPIObject.getMode())
+                            || AnalyzerConstants.RECREATE.equalsIgnoreCase(createExperimentAPIObject.getMode())) &&
+                            AnalyzerConstants.REMOTE.equalsIgnoreCase(createExperimentAPIObject.getTargetCluster())) {
+                        throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.AUTO_EXP_NOT_SUPPORTED_FOR_REMOTE);
+                    }
+                } else if (createExperimentAPIObject.isNamespaceExperiment()) {
+                    if (null != kubernetesAPIObject.getContainerAPIObjects()) {
+                        throw new InvalidExperimentType(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.CONTAINER_DATA_NOT_NULL_FOR_NAMESPACE_EXP);
+                    }
+                } else {
+                    LOGGER.debug("Missing container/namespace data from the input json {}", createExperimentAPIObject);
+                }
+            }
+            KruizeObject kruizeObject = Converters.KruizeObjectConverters.convertCreateExperimentAPIObjToKruizeObject(createExperimentAPIObject);
+            if (null != kruizeObject) {
+                kruizeExpList.add(kruizeObject);
+            }
+        }
+        return kruizeExpList;
+    }
+
+    public static void detectLayers (CreateExperimentAPIObject validAPIObj) throws Exception {
+        for (KubernetesAPIObject kubernetesAPIObject : validAPIObj.getKubernetesObjects()) {
+            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
+                // detect layers for the container
+                Map<String, KruizeLayer> layers = LayerUtils.detectLayers(containerAPIObject.getContainer_name(),
+                        kubernetesAPIObject.getName(),
+                        kubernetesAPIObject.getNamespace()
+                );
+                // Skipping null check as we return atleast an empty map if there are no exceptions
+                if (!layers.isEmpty()) {
+                    containerAPIObject.setLayerMap(layers);
+                }
+            }
+        }
     }
 
     public static class KruizeObjectOperations {
