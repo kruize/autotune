@@ -389,10 +389,10 @@ spec:
               value: ""
           resources:
             requests:
-              memory: "768Mi"
+              memory: "1Gi"
               cpu: "0.7"
             limits:
-              memory: "768Mi"
+              memory: "1Gi"
               cpu: "0.7"
           ports:
             - name: kruize-port
