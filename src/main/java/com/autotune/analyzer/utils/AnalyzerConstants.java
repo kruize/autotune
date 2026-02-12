@@ -606,6 +606,7 @@ public class AnalyzerConstants {
         public static final String QUERY_VARIABLE = "For query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String QUERY_VARIABLES = "query_variables";
+        public static final String JVM_METADATA = "jvm_metadata";
 
         private AutotuneObjectConstants() {
         }
