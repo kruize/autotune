@@ -1,8 +1,8 @@
 apiVersion: "recommender.com/v1"
 kind: "KruizeLayer"
 metadata:
-  name: "openj9"
-layer_name: openj9
+  name: "semeru"
+layer_name: semeru
 layer_level: 1
 details: openj9 tunables
 layer_presence:
