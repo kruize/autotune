@@ -15,6 +15,7 @@ tunables:
   upper_bound: '2048'
   lower_bound: '512'
   step: 1
+  units: 'Mi'
 
 # Memory limit (MiB)
 - name: memoryLimit
@@ -22,15 +23,18 @@ tunables:
   upper_bound: '2048'
   lower_bound: '512'
   step: 1
+  units: 'Mi'
 
 - name: cpuRequest
   value_type: double
   upper_bound: '3.0'
   lower_bound: '1.0'
   step: 0.01
+  units: 'cores'
 
 - name: cpuLimit
   value_type: double
   upper_bound: '3.0'
   lower_bound: '1.0'
   step: 0.01
+  units: 'cores'
