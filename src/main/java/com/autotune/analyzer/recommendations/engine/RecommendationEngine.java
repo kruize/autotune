@@ -4,6 +4,8 @@ import com.autotune.analyzer.autoscaler.instaslice.InstasliceHelper;
 import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
@@ -71,6 +73,7 @@ public class RecommendationEngine {
     private Timestamp interval_end_time;
     private List<String> modelNames;
     private Map<String, RecommendationTunables> modelTunable;
+    private static final String JVM_RUNTIME_INFO = AnalyzerConstants.MetricName.jvmRuntimeInfo.toString();
 
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
@@ -2155,7 +2158,7 @@ public class RecommendationEngine {
 
                                         // Prepare interval results
                                         prepareIntervalResults(namespaceDataResults, namespaceIntervalResults, namespaceResMap, namespaceMetricResults,
-                                                namespaceMetricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format, null);
+                                                namespaceMetricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format, null, false); // for namespace, runtimeLayerDetection is being passed as false for now
                                     }
                                 }
                             } catch (Exception e) {
@@ -2239,6 +2242,7 @@ public class RecommendationEngine {
 
                     boolean containerAcceleratorDetected = false;
                     boolean containerAcceleratorPartitionDetected = false;
+                    boolean runtimeLayerDetected = isRuntimeLayerPresent(LayerUtils.detectLayers(containerData.getContainer_name(), workload, namespace));
 
                     // Check if the container data has Accelerator support else check for Accelerator metrics
                     if (!isROS && null == gpuUUID && (null == containerData.getContainerDeviceList() || !containerData.getContainerDeviceList().isAcceleratorDeviceDetected())) {
@@ -2576,7 +2580,8 @@ public class RecommendationEngine {
 
                                         // Prepare interval results
                                         prepareIntervalResults(containerDataResults, intervalResults, resMap, metricResults,
-                                                metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format, metric);
+                                                metricAggregationInfoResults, sTime, eTime, metricEntry, aggregationFunctionsEntry, value, format, metric,
+                                                runtimeLayerDetected);
                                     }
                                 }
                             } catch (Exception e) {
@@ -2595,6 +2600,15 @@ public class RecommendationEngine {
             e.printStackTrace();
             throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
         }
+    }
+
+    private static boolean isRuntimeLayerPresent(Map<String, KruizeLayer> detectedLayers) {
+        if (detectedLayers == null || detectedLayers.isEmpty()) {
+            return false;
+        }
+
+        return detectedLayers.containsKey(AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT)
+                || detectedLayers.containsKey(AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU);
     }
 
     /**
@@ -2619,7 +2633,7 @@ public class RecommendationEngine {
     private void prepareIntervalResults(Map<Timestamp, IntervalResults> dataResultsMap, IntervalResults intervalResults,
                                         HashMap<AnalyzerConstants.MetricName, MetricResults> resMap, MetricResults metricResults,
                                         MetricAggregationInfoResults metricAggregationInfoResults, Timestamp sTime, Timestamp eTime, Metric metricEntry,
-                                        Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry, double value, String format, JsonObject metricObject) throws Exception {
+                                        Map.Entry<String, AggregationFunctions> aggregationFunctionsEntry, double value, String format, JsonObject metricObject, boolean runtimeLayerDetected) throws Exception {
         try {
             if (dataResultsMap.containsKey(eTime)) {
                 intervalResults = dataResultsMap.get(eTime);
@@ -2637,7 +2651,7 @@ public class RecommendationEngine {
                 metricAggregationInfoResults = new MetricAggregationInfoResults();
             }
 
-            if (metricObject != null && metricEntry.getName().equals(AnalyzerConstants.MetricName.jvmRuntimeInfo.toString())) {
+            if (runtimeLayerDetected && metricObject != null && JVM_RUNTIME_INFO.equals(metricEntry.getName())) {
                 MetricMetadataResults meta = new MetricMetadataResults();
                 meta.setVendor(getAsStringOrDefault(metricObject, AnalyzerConstants.VENDOR, null));
                 meta.setRuntime(getAsStringOrDefault(metricObject, AnalyzerConstants.RUNTIME, null));
