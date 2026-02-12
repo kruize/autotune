@@ -2639,9 +2639,9 @@ public class RecommendationEngine {
 
             if (metricObject != null && metricEntry.getName().equals(AnalyzerConstants.MetricName.jvmRuntimeInfo.toString())) {
                 MetricMetadataResults meta = new MetricMetadataResults();
-                meta.setVendor(metricObject.get("vendor").getAsString());
-                meta.setRuntime(metricObject.get("runtime").getAsString());
-                meta.setVersion(metricObject.get("version").getAsString());
+                meta.setVendor(getAsStringOrDefault(metricObject, AnalyzerConstants.VENDOR, null));
+                meta.setRuntime(getAsStringOrDefault(metricObject, AnalyzerConstants.RUNTIME, null));
+                meta.setVersion(getAsStringOrDefault(metricObject, AnalyzerConstants.VERSION, null));
                 metricResults.setMetricMetadataResults(meta);
             } else {
                 Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
@@ -2665,6 +2665,18 @@ public class RecommendationEngine {
             throw new Exception(AnalyzerErrorConstants.APIErrors.UpdateRecommendationsAPI.METRIC_EXCEPTION + e.getMessage());
         }
     }
+
+    private String getAsStringOrDefault(JsonObject metricObject, String key, String defaultVal) {
+        if (metricObject == null || !metricObject.has(key) || metricObject.get(key).isJsonNull()) {
+            return defaultVal;
+        }
+        try {
+            return metricObject.get(key).getAsString();
+        } catch (Exception e) {
+            return defaultVal;
+        }
+    }
+
 
 
     /**
