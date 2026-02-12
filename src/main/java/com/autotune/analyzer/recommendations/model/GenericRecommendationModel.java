@@ -707,10 +707,6 @@ public class GenericRecommendationModel implements RecommendationModel{
             RecommendationConfigItem cpuRec = getCPURequestRecommendation(filteredResultsMap, notifications);
             cpuLimits = (cpuRec != null) ? cpuRec.getAmount() : null;
         }
-        if (memLimits == null || cpuLimits == null) {
-            LOGGER.info("GC_POLICY: Skipping - memLimits or cpuLimits is null (memLimits={}, cpuLimits={})", memLimits, cpuLimits);
-            return null;
-        }
 
         MetricMetadataResults metricMetadata = getJvmMetricMetadataFromFilteredResults(filteredResultsMap);
 
@@ -720,23 +716,26 @@ public class GenericRecommendationModel implements RecommendationModel{
             case AnalyzerConstants.MetricNameConstants.GC_POLICY:
                 LOGGER.info("MetricMetadata : {}", metricMetadata);
                 if (metricMetadata == null) {
-                    LOGGER.warn("GC_POLICY: Skipping - JVM metric metadata not found in filteredResultsMap (layerName={}). Ensure jvmRuntimeInfo metric is in the performance profile and JVM metrics are being collected.", layerName);
+                    LOGGER.warn("JVM metric metadata not found (layerName={})", layerName);
                     return null;
                 }
                 if (metricMetadata.getVersion() == null || metricMetadata.getVersion().isEmpty()) {
-                    LOGGER.warn("GC_POLICY: Skipping - JVM version is null or empty in metricMetadata (layerName={}, runtime={}).", layerName, metricMetadata.getRuntime());
+                    LOGGER.warn("JVM version is null or empty(layerName={}, runtime={}).", layerName, metricMetadata.getRuntime());
                     return null;
                 }
                 if (metricMetadata.getRuntime() == null || !layerName.equalsIgnoreCase(metricMetadata.getRuntime())) {
-                    LOGGER.warn("GC_POLICY: Skipping - layerName '{}' does not match runtime '{}' from JVM metric metadata.", layerName, metricMetadata.getRuntime());
+                    LOGGER.warn("layerName '{}' does not match runtime '{}' from JVM metric metadata.", layerName, metricMetadata.getRuntime());
                     return null;
                 }
                 Double jvmHeapSizeMB = getJvmHeapSizeMBFromFilteredResults(filteredResultsMap);
                 String jdkVersion = metricMetadata.getVersion();
                 double maxRamPercentage = AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
-                LOGGER.debug("GC_POLICY: Computing recommendation (layerName={}, runtime={}, jdkVersion={}, jvmHeapSizeMB={})", layerName, metricMetadata.getRuntime(), jdkVersion, jvmHeapSizeMB);
+                LOGGER.debug("Computing recommendation (layerName={}, runtime={}, jdkVersion={}, jvmHeapSizeMB={})", layerName, metricMetadata.getRuntime(), jdkVersion, jvmHeapSizeMB);
                 return decideHotSpotGCPolicy(jvmHeapSizeMB, maxRamPercentage, memLimits, cpuLimits, jdkVersion);
             case AnalyzerConstants.MetricNameConstants.CORE_THREADS:
+                if (cpuLimits == null) {
+                    return null;
+                }
                 return (int) Math.ceil(cpuLimits);
             default:
                 return null;
@@ -749,13 +748,12 @@ public class GenericRecommendationModel implements RecommendationModel{
 
         if (jvmHeapSizeMB == null || jvmHeapSizeMB == 0) {
             double memLimitMB = memLimit / (1024 * 1024);
-            jvmHeapSizeMB = Math.ceil(maxRAMPercent * memLimitMB );
-            LOGGER.info("memLimitMB: {}", memLimitMB);
+            jvmHeapSizeMB = Math.ceil((maxRAMPercent / 100) * memLimitMB);
+            LOGGER.debug("memLimitMB: {}", memLimitMB);
         }
 
         LOGGER.info("jvmHeapSizeMB: {}", jvmHeapSizeMB);
         LOGGER.info("memLimit: {}", memLimit);
-
 
         if (cpuCores <= 1 && jvmHeapSizeMB < 4096) {
             return "-XX:+UseSerialGC";
