@@ -488,6 +488,26 @@
             "query": "avg by(container, namespace, runtime, vendor, version)(jvm_info{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})"
           }
         ]
+      },
+      {
+        "name": "jvmMemoryMaxBytes",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "max",
+            "query": "max_over_time(sum by(container, namespace)(jvm_memory_max_bytes{area=\"heap\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})[$MEASUREMENT_DURATION_IN_MIN$m])"
+          },
+          {
+            "function": "avg",
+            "query": "avg_over_time(sum by(container, namespace)(jvm_memory_max_bytes{area=\"heap\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})[$MEASUREMENT_DURATION_IN_MIN$m])"
+          },
+          {
+            "function": "min",
+            "query": "min_over_time(sum by(container, namespace)(jvm_memory_max_bytes{area=\"heap\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})[$MEASUREMENT_DURATION_IN_MIN$m])"
+          }
+        ]
       }
     ]
   }

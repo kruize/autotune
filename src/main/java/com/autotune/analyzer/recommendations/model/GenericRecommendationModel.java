@@ -1,6 +1,6 @@
 package com.autotune.analyzer.recommendations.model;
 
-import com.autotune.analyzer.recommendations.RecommendationConfigEnv;
+import com.autotune.analyzer.kruizeLayer.LayerTunable;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -10,6 +10,7 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.metrics.AcceleratorMetricMetadata;
 import com.autotune.common.data.metrics.AcceleratorMetricResult;
 import com.autotune.common.data.metrics.MetricAggregationInfoResults;
+import com.autotune.common.data.metrics.MetricMetadataResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.IntervalResults;
 
@@ -683,15 +684,185 @@ public class GenericRecommendationModel implements RecommendationModel{
     }
 
     /**
+     * @param metricName
+     * @param layerName
      * @param filteredResultsMap
+     * @param context
      * @param notifications
      * @return
      */
     @Override
-    public RecommendationConfigEnv getRuntimeRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
-        //TODO: Need to update this
+    public Object getRuntimeRecommendations(String metricName, String layerName, Map<Timestamp, IntervalResults> filteredResultsMap, Map<LayerTunable, Object> context,
+                                            ArrayList<RecommendationNotification> notifications) {
+
+        Double memLimits = (Double) getTunableValue(context, AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER);
+        Double cpuLimits = (Double) getTunableValue(context, AnalyzerConstants.MetricNameConstants.CPU_LIMIT, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER);
+
+        // Fallback: container layer may not have memoryLimit/cpuLimit tunables; use recommended values from filteredResultsMap
+        if (memLimits == null) {
+            RecommendationConfigItem memRec = getMemoryRequestRecommendation(filteredResultsMap, notifications);
+            memLimits = (memRec != null) ? memRec.getAmount() : null;
+        }
+        if (cpuLimits == null) {
+            RecommendationConfigItem cpuRec = getCPURequestRecommendation(filteredResultsMap, notifications);
+            cpuLimits = (cpuRec != null) ? cpuRec.getAmount() : null;
+        }
+        if (memLimits == null || cpuLimits == null) {
+            LOGGER.info("GC_POLICY: Skipping - memLimits or cpuLimits is null (memLimits={}, cpuLimits={})", memLimits, cpuLimits);
+            return null;
+        }
+
+        MetricMetadataResults metricMetadata = getJvmMetricMetadataFromFilteredResults(filteredResultsMap);
+
+        switch (metricName) {
+            case AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE:
+                return AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
+            case AnalyzerConstants.MetricNameConstants.GC_POLICY:
+                LOGGER.info("MetricMetadata : {}", metricMetadata);
+                if (metricMetadata == null) {
+                    LOGGER.warn("GC_POLICY: Skipping - JVM metric metadata not found in filteredResultsMap (layerName={}). Ensure jvmRuntimeInfo metric is in the performance profile and JVM metrics are being collected.", layerName);
+                    return null;
+                }
+                if (metricMetadata.getVersion() == null || metricMetadata.getVersion().isEmpty()) {
+                    LOGGER.warn("GC_POLICY: Skipping - JVM version is null or empty in metricMetadata (layerName={}, runtime={}).", layerName, metricMetadata.getRuntime());
+                    return null;
+                }
+                if (metricMetadata.getRuntime() == null || !layerName.equalsIgnoreCase(metricMetadata.getRuntime())) {
+                    LOGGER.warn("GC_POLICY: Skipping - layerName '{}' does not match runtime '{}' from JVM metric metadata.", layerName, metricMetadata.getRuntime());
+                    return null;
+                }
+                Double jvmHeapSizeMB = getJvmHeapSizeMBFromFilteredResults(filteredResultsMap);
+                String jdkVersion = metricMetadata.getVersion();
+                double maxRamPercentage = AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
+                LOGGER.debug("GC_POLICY: Computing recommendation (layerName={}, runtime={}, jdkVersion={}, jvmHeapSizeMB={})", layerName, metricMetadata.getRuntime(), jdkVersion, jvmHeapSizeMB);
+                return decideHotSpotGCPolicy(jvmHeapSizeMB, maxRamPercentage, memLimits, cpuLimits, jdkVersion);
+            case AnalyzerConstants.MetricNameConstants.CORE_THREADS:
+                return (int) Math.ceil(cpuLimits);
+            default:
+                return null;
+        }
+    }
+
+    public String decideHotSpotGCPolicy(Double jvmHeapSizeMB, double maxRAMPercent, double memLimit, double cpuCores, String jdkVersionStr) {
+
+        int jdkVersion = parseMajorVersion(jdkVersionStr);
+
+        if (jvmHeapSizeMB == null || jvmHeapSizeMB == 0) {
+            double memLimitMB = memLimit / (1024 * 1024);
+            jvmHeapSizeMB = Math.ceil(maxRAMPercent * memLimitMB );
+            LOGGER.info("memLimitMB: {}", memLimitMB);
+        }
+
+        LOGGER.info("jvmHeapSizeMB: {}", jvmHeapSizeMB);
+        LOGGER.info("memLimit: {}", memLimit);
+
+
+        if (cpuCores <= 1 && jvmHeapSizeMB < 4096) {
+            return "-XX:+UseSerialGC";
+        } else if (cpuCores > 1 && jvmHeapSizeMB < 4096) {
+            return "-XX:+UseParallelGC";
+        } else if (jvmHeapSizeMB >= 4096) {
+            if (jdkVersion >= 17) return "-XX:+UseZGC";
+            else if (jdkVersion >= 11) return "-XX:+UseShenandoahGC";
+            else return "-XX:+UseG1GC";
+        } else {
+            return "-XX:+UseG1GC";
+        }
+    }
+
+    public static int parseMajorVersion(String version) {
+        if (version == null || version.isEmpty()) return 8; // default fallback
+        version = version.trim();
+
+        if (version.startsWith("1.")) {
+            return Integer.parseInt(version.substring(2, 3)); // e.g. "1.8" → 8
+        } else {
+            int dotIndex = version.indexOf(".");
+            return (dotIndex != -1)
+                    ? Integer.parseInt(version.substring(0, dotIndex))
+                    : Integer.parseInt(version);
+        }
+    }
+
+
+    /**
+     * Extracts JVM heap size in MB from filteredResultsMap.
+     * Looks for jvmMemoryMaxBytes metric and returns the max value converted to MB.
+     *
+     * @param filteredResultsMap map of timestamp to IntervalResults
+     * @return JVM heap size in MB, or null if not found or invalid
+     */
+    public static Double getJvmHeapSizeMBFromFilteredResults(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        if (filteredResultsMap == null) {
+            return null;
+        }
+        double maxHeapBytes = 0;
+        boolean found = false;
+        for (IntervalResults intervalResults : filteredResultsMap.values()) {
+            if (intervalResults.getMetricResultsMap() == null) {
+                continue;
+            }
+            MetricResults metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmMemoryMaxBytes);
+            if (metricResults != null && metricResults.getAggregationInfoResult() != null) {
+                Double max = metricResults.getAggregationInfoResult().getMax();
+                if (max != null && max > 0) {
+                    maxHeapBytes = Math.max(maxHeapBytes, max);
+                    found = true;
+                }
+            }
+        }
+        if (!found || maxHeapBytes <= 0) {
+            return null;
+        }
+        return maxHeapBytes / (1024.0 * 1024.0);
+    }
+
+    /**
+     * Extracts JVM metric metadata (runtime, version, vendor) from filteredResultsMap.
+     * Looks for jvmRuntimeInfo metric in IntervalResults and returns its MetricMetadataResults.
+     *
+     * @param filteredResultsMap map of timestamp to IntervalResults
+     * @return MetricMetadataResults containing JVM info, or null if not found
+     */
+    public static MetricMetadataResults getJvmMetricMetadataFromFilteredResults(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        if (filteredResultsMap == null) {
+            LOGGER.debug("getJvmMetricMetadata: filteredResultsMap is null");
+            return null;
+        }
+        LOGGER.debug("getJvmMetricMetadata: filteredResultsMap size={}", filteredResultsMap.size());
+        for (IntervalResults intervalResults : filteredResultsMap.values()) {
+            if (intervalResults.getMetricResultsMap() == null) {
+                LOGGER.debug("getJvmMetricMetadata: intervalResults has null metricResultsMap");
+                continue;
+            }
+            Set<AnalyzerConstants.MetricName> metricKeys = intervalResults.getMetricResultsMap().keySet();
+            LOGGER.debug("getJvmMetricMetadata: interval metrics={}", metricKeys);
+            MetricResults metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmRuntimeInfo);
+            if (metricResults == null) {
+                LOGGER.debug("getJvmMetricMetadata: jvmRuntimeInfo metric not found in this interval");
+                continue;
+            }
+            if (metricResults.getMetricMetadataResults() == null) {
+                LOGGER.warn("getJvmMetricMetadata: jvmRuntimeInfo exists but MetricMetadataResults is null (metadata was not set from Prometheus response)");
+                continue;
+            }
+            return metricResults.getMetricMetadataResults();
+        }
+        LOGGER.debug("getJvmMetricMetadata: no JVM metadata found in any interval");
         return null;
     }
+
+    public static Object getTunableValue(Map<LayerTunable, Object> context, String metricName, String layer) {
+        for (Map.Entry<LayerTunable, Object> entry : context.entrySet()) {
+            LayerTunable key = entry.getKey();
+            if (key.getMetricName().equalsIgnoreCase(metricName) &&
+                    key.getLayerName().equalsIgnoreCase(layer)) {
+                return entry.getValue();
+            }
+        }
+        return null; // Not found
+    }
+
 
     @Override
     public String getModelName() {
