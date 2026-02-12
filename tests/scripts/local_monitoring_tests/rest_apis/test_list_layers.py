@@ -38,7 +38,7 @@ def test_list_layers_when_no_layers_exist(cluster_type):
 
     # Ensure database is clean - delete any existing layers
     # This ensures we test the true empty state
-    for layer_name in ['container', 'openj9', 'quarkus', 'hotspot', 'test-layer']:
+    for layer_name in ['container', 'semeru', 'quarkus', 'hotspot', 'test-layer']:
         delete_layer_from_db(layer_name)
 
     # List layers when none exist
@@ -105,7 +105,7 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
     # Create multiple layers
     layer_files = [
         'container-config.json',
-        'openj9-actuator-config.json',
+        'semeru-actuator-config.json',
         'quarkus-micrometer-config.json'
     ]
 
@@ -149,7 +149,7 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
 @pytest.mark.sanity
 @pytest.mark.parametrize("layer_file", [
     pytest.param("container-config.json", id="container_layer"),
-    pytest.param("openj9-actuator-config.json", id="openj9_layer"),
+    pytest.param("semeru-actuator-config.json", id="semeru_layer"),
     pytest.param("quarkus-micrometer-config.json", id="quarkus_layer"),
     pytest.param("hotspot-micrometer-config.json", id="hotspot_layer")
 ])
@@ -219,7 +219,7 @@ def test_list_specific_layer_by_name(cluster_type, layer_file):
 @pytest.mark.sanity
 @pytest.mark.parametrize("layer_file", [
     pytest.param("container-config.json", id="container_layer"),
-    pytest.param("openj9-actuator-config.json", id="openj9_layer"),
+    pytest.param("semeru-actuator-config.json", id="semeru_layer"),
     pytest.param("quarkus-micrometer-config.json", id="quarkus_layer"),
     pytest.param("hotspot-micrometer-config.json", id="hotspot_layer")
 ])

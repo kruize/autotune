@@ -42,7 +42,7 @@ def cleanup_test_layers():
 @pytest.mark.sanity
 @pytest.mark.parametrize("layer_file", [
     pytest.param("container-config.json", id="bounded_tunables"),
-    pytest.param("openj9-actuator-config.json", id="mixed_tunables"),
+    pytest.param("semeru-actuator-config.json", id="mixed_tunables"),
     pytest.param("hotspot-micrometer-config.json", id="mixed_tunables_hotspot")
 ])
 def test_create_layer_with_different_tunable_types(cluster_type, layer_file):
@@ -80,7 +80,7 @@ def test_create_layer_with_different_tunable_types(cluster_type, layer_file):
 @pytest.mark.sanity
 @pytest.mark.parametrize("layer_file", [
     pytest.param("container-config.json", id="presence_always"),
-    pytest.param("openj9-actuator-config.json", id="presence_queries"),
+    pytest.param("semeru-actuator-config.json", id="presence_queries"),
     pytest.param("quarkus-micrometer-config.json", id="presence_label")
 ])
 def test_create_layer_with_different_presence_types(cluster_type, layer_file):
