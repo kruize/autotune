@@ -165,7 +165,7 @@ thanos-ruler-user-workload
 ```
 
 > [!TIP]
-> **Pro Tip:** Skip the manual steps by running the utility script [scripts/enable_user_workload_monitoring_openshift.sh](../scripts/enable_user_workload_monitoring_openshift.sh) included in this repo.
+> **Pro Tip:** Skip the manual steps by running the included utility script [enable_user_workload_monitoring_openshift.sh](../scripts/enable_user_workload_monitoring_openshift.sh)
 
 ---
 
@@ -201,7 +201,7 @@ spec:
 ```
 
 > [!TIP]
-> **Pro Tip:** Skip the manual steps by running the utility script [scripts/enable_kube_state_metrics_labels.sh](../scripts/enable_kube_state_metrics_labels.sh) included in this repo.
+> **Pro Tip:** Skip the manual steps by running the included utility script [enable_kube_state_metrics_labels.sh](../scripts/enable_kube_state_metrics_labels.sh)
 
 
 ---
