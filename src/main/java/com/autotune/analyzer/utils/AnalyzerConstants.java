@@ -114,6 +114,8 @@ public class AnalyzerConstants {
     public static final String COMMA_SPACE_REGEX = "\\s*,\\s*";
     public static final String RM = "rm";
     public static final String LM = "lm";
+    public static final String VENDOR = "vendor";
+    public static final String RUNTIME = "runtime";
 
     private AnalyzerConstants() {
     }
