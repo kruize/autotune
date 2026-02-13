@@ -287,6 +287,183 @@ Ensure:
 
 ---
 
+## Example Reference Implementation - Hotspot Layer
+
+This section shows the complete definition of a working layer across all system components:
+
+- YAML configuration
+- JSON API representation
+- KriuzeLayer API model class
+- Backend supporting class implementation
+
+All artifacts must remain consistent for a layer to function correctly.
+
+
+### YAML Layer Definition
+
+<details>
+<summary><b>View Full YAML</b></summary>
+
+```yaml
+apiVersion: "recommender.com/v1"
+kind: "KruizeLayer"
+metadata:
+  name: "hotspot"
+layer_name: hotspot
+layer_level: 1
+details: hotspot tunables
+layer_presence:
+  queries:
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~".+Eden.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~".+Tenured.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~".+Old.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"Eden.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"Tenured.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"Old.+"}'
+    key: pod
+tunables:
+- name: GCPolicy
+  description: 'Garbage collection policy'
+  value_type: categorical
+  choices:
+    - 'G1GC'
+    - 'ParallelGC'
+    - 'SerialGC'
+    - 'ShenandoahGC'
+    - 'ZGC'
+
+- name: MaxRAMPercentage
+  description: 'Maximum RAM percentage to allocate'
+  value_type: integer
+  lower_bound: '25'
+  upper_bound: '90'
+  step: 1
+```
+
+</details>
+
+
+### JSON API Representation
+
+<details>
+<summary><b>View JSON Payload</b></summary>
+
+```json
+{
+  "apiVersion": "recommender.com/v1",
+  "kind": "KruizeLayer",
+  "metadata": { "name": "hotspot" },
+  "layer_name": "hotspot",
+  "layer_level": 1,
+  "details": "hotspot tunables",
+  "layer_presence": { ... },
+  "tunables": [ ... ]
+}
+```
+
+</details>
+
+
+### KruizeLayer API Model Class
+
+Layer JSON sent to `/createLayer` endpoint would be mapped to the KruizeLayer Object in `com.autotune.analyzer.kruizeLayer.KruizeLayer.java`
+
+<details>
+<summary><b>View Java API Class</b></summary>
+
+```java
+public final class KruizeLayer {
+    private String apiVersion;
+    private String kind;
+    private LayerMetadata metadata;
+    private String layerName;
+    private int layerLevel;
+    private String details;
+    private LayerPresence layerPresence;
+    private ArrayList<Tunable> tunables;
+}
+```
+
+</details>
+
+### Backend Runtime Implementation
+
+Code can be found at `com.autotune.analyzer.kruizeLayer.impl.runtime.HotspotLayer`
+
+<details>
+<summary><b>View HotspotLayer Implementation</b></summary>
+
+```java
+public class HotspotLayer implements Layer {
+    private static final HotspotLayer INSTANCE = new HotspotLayer();
+
+    public static HotspotLayer getInstance() {
+        return INSTANCE;
+    }
+
+    @Override
+    public String getName() {
+        return AnalyzerConstants.LayerConstants.HOTSPOT_LAYER;
+    }
+
+    @Override
+    public Map<String, List<TunableSpec>> getTunableDependencies() {
+        return Map.of(
+            AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC,
+            List.of(
+                new TunableSpec(
+                    AnalyzerConstants.LayerConstants.CONTAINER_LAYER,
+                    AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT
+                )
+            ),
+            AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY,
+            List.of(
+                new TunableSpec(
+                    AnalyzerConstants.LayerConstants.CONTAINER_LAYER,
+                    AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT
+                ),
+                new TunableSpec(
+                    AnalyzerConstants.LayerConstants.CONTAINER_LAYER,
+                    AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT
+                )
+            )
+        );
+    }
+}
+```
+
+</details>
+
+Once the backend class is implemented we update the Supported Layers and Register in the LayerRegistry
+
+Java File: `com.autotune.analyzer.utils.AnalyzerConstants.java`
+Class: `AnalyzerConstants.LayerConstants`
+
+```java
+        public static final String HOTSPOT_LAYER = "hotspot";
+```
+
+Java File: `com.autotune.analyzer.kruizeLayer.impl.LayerRegistry.java`
+Class: `LayerRegistry`
+
+Register Layer in constructor:
+```java
+        registerLayer(HotspotLayer.getInstance());
+```
+
+---
+
 ## Validation Checklist
 
 Before using a new layer, verify:
