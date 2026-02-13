@@ -114,6 +114,8 @@ public class AnalyzerConstants {
     public static final String COMMA_SPACE_REGEX = "\\s*,\\s*";
     public static final String RM = "rm";
     public static final String LM = "lm";
+    public static final String VENDOR = "vendor";
+    public static final String RUNTIME = "runtime";
 
     private AnalyzerConstants() {
     }
@@ -279,7 +281,9 @@ public class AnalyzerConstants {
         namespaceMaxDate,
         acceleratorCoreUsage,
         acceleratorMemoryUsage,
-        acceleratorFrameBufferUsage
+        acceleratorFrameBufferUsage,
+        jvmInfo,
+        jvmInfoTotal
     }
 
     public enum K8S_OBJECT_TYPES {
@@ -605,6 +609,7 @@ public class AnalyzerConstants {
         public static final String QUERY_VARIABLE = "For query_variable: ";
         public static final String CLUSTER_NAME = "cluster_name";
         public static final String QUERY_VARIABLES = "query_variables";
+        public static final String JVM_METADATA = "jvm_metadata";
 
         private AutotuneObjectConstants() {
         }
@@ -652,7 +657,7 @@ public class AnalyzerConstants {
         public static final String LAYER_CONTAINER = "container";
         public static final String LAYER_HOTSPOT = "hotspot";
         public static final String LAYER_QUARKUS = "quarkus";
-        public static final String LAYER_OPENJ9 = "openj9";
+        public static final String LAYER_SEMERU = "semeru";
         public static final String LAYER_NODEJS = "nodejs";
 
         private AutotuneConfigConstants() {
