@@ -46,7 +46,7 @@ public class LayerUtils {
      * @throws Exception if database operations fail
      */
     public static Map<String, KruizeLayer> detectLayers(String containerName,
-                                                         String namespace) throws Exception {
+                                                         String namespace, String datasourceName) throws Exception {
         // Validate inputs - fail fast with clear error messages
         if (containerName == null || containerName.isBlank()) {
             throw new IllegalArgumentException(LogMessages.CONTAINER_NAME_NULL_OR_EMPTY);
@@ -94,11 +94,11 @@ public class LayerUtils {
                     // For query-based detection, pass container name as well
                     if (layer.getLayerPresence().getDetector() instanceof QueryBasedPresence) {
                         QueryBasedPresence queryDetector = (QueryBasedPresence) layer.getLayerPresence().getDetector();
-                        isDetected = queryDetector.detectPresence(namespace, containerName);
+                        isDetected = queryDetector.detectPresence(namespace, containerName, datasourceName);
                     } else {
                         // For other detector types (Always)
                         isDetected = layer.getLayerPresence().getDetector()
-                                .detectPresence(namespace, containerName);
+                                .detectPresence(namespace, containerName, datasourceName);
                     }
 
                     if (isDetected) {

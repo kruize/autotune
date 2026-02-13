@@ -28,9 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Implementation for query-based layer presence detection
@@ -61,7 +59,7 @@ public class QueryBasedPresence implements LayerPresenceDetector {
      * @throws Exception if detection fails
      */
     @Override
-    public boolean detectPresence(String namespace, String containerName) throws Exception {
+    public boolean detectPresence(String namespace, String containerName, String datasourceName) throws Exception {
         if (queries == null || queries.isEmpty()) {
             LOGGER.warn(LogMessages.NO_QUERIES_DEFINED);
             return false;
@@ -76,39 +74,14 @@ public class QueryBasedPresence implements LayerPresenceDetector {
             }
 
             try {
-                // Get the datasource type from the query configuration
-                String datasourceType = query.getDataSource();
-                if (datasourceType == null || datasourceType.isBlank()) {
-                    LOGGER.warn(LogMessages.NO_DATASOURCE_TYPE_SPECIFIED);
-                    continue;
-                }
-
-                // Fetch all datasources and filter by the query's datasource type (provider)
-                LOGGER.debug(LogMessages.FILTERING_DATASOURCES_BY_TYPE, datasourceType);
-                List<DataSourceInfo> matchingDatasources = DataSourceCollection.getInstance()
+                // Get the specific datasource by name from the experiment
+                DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance()
                         .getDataSourcesCollection()
-                        .values()
-                        .stream()
-                        .filter(ds -> ds.getProvider() != null && datasourceType.equalsIgnoreCase(ds.getProvider()))
-                        .collect(Collectors.toList());
+                        .get(datasourceName);
 
-                if (matchingDatasources.isEmpty()) {
-                    LOGGER.warn(LogMessages.NO_DATASOURCES_MATCHING_TYPE, datasourceType);
+                if (dataSourceInfo == null) {
+                    LOGGER.warn(LogMessages.DATASOURCE_NOT_FOUND, datasourceName);
                     continue;
-                }
-
-                // Ensure deterministic selection when multiple datasources match the type
-                matchingDatasources.sort(Comparator.comparing(DataSourceInfo::getName));
-
-                // Use the first matching datasource after sorting
-                DataSourceInfo dataSourceInfo = matchingDatasources.get(0);
-
-                // Log when multiple datasources match for observability
-                if (matchingDatasources.size() > 1) {
-                    LOGGER.info(LogMessages.MULTIPLE_DATASOURCES_MATCHED,
-                               matchingDatasources.size(),
-                               datasourceType,
-                               dataSourceInfo.getName());
                 }
 
                 // Get the appropriate operator for the datasource provider
