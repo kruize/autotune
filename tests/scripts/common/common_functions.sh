@@ -1015,7 +1015,6 @@ function kruize_local_datasource_manifest_patch() {
 function kruize_local_patch() {
 	CRC_DIR="./manifests/crc/default-db-included-installation"
 	KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT="${CRC_DIR}/openshift/kruize-crc-openshift.yaml"
-	KRUIZE_CRC_DEPLOY_MANIFEST_MINIKUBE="${CRC_DIR}/minikube/kruize-crc-minikube.yaml"
 
 	if [ ${cluster_type} == "openshift" ]; then
 		sed -i 's/\([[:space:]]*\)\(storage:\)[[:space:]]*[0-9]\+Mi/\1\2 1Gi/' ${KRUIZE_CRC_DEPLOY_MANIFEST_OPENSHIFT}
