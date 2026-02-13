@@ -17,13 +17,20 @@
 package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
+import com.autotune.analyzer.kruizeLayer.presence.QueryBasedPresence;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.LogMessages;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.datasource.DataSourceCollection;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.DataSourceOperatorImpl;
+import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Validation helper for KruizeLayer objects
@@ -85,6 +92,12 @@ public class LayerValidation {
             String errorMsg = String.join("; ", errors);
             LOGGER.error("Layer validation failed: {}", errorMsg);
             return new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST);
+        }
+
+        // 4. Validate query execution for query-based layers
+        ValidationOutputData queryValidation = validateQueryExecution(layer);
+        if (!queryValidation.isSuccess()) {
+            return queryValidation;
         }
 
         return new ValidationOutputData(true, null, null);
@@ -175,6 +188,104 @@ public class LayerValidation {
         if (!errors.isEmpty()) {
             return new ValidationOutputData(false, String.join("; ", errors), HttpServletResponse.SC_BAD_REQUEST);
         }
+
+        return new ValidationOutputData(true, null, null);
+    }
+
+    /**
+     * Validates query execution for query-based layer presence
+     * Executes ALL queries against their datasources to ensure they are syntactically valid
+     *
+     * @param layer The layer to validate (assumed to be non-null with valid layerPresence)
+     * @return ValidationOutputData with success flag and error messages
+     */
+    private ValidationOutputData validateQueryExecution(KruizeLayer layer) {
+        // Only validate if detector is QueryBasedPresence
+        if (!(layer.getLayerPresence().getDetector() instanceof QueryBasedPresence)) {
+            return new ValidationOutputData(true, null, null);
+        }
+
+        QueryBasedPresence queryDetector = (QueryBasedPresence) layer.getLayerPresence().getDetector();
+        List<LayerPresenceQuery> queries = queryDetector.getQueries();
+
+        // Skip if no queries defined
+        if (queries == null || queries.isEmpty()) {
+            LOGGER.warn(LogMessages.NO_QUERIES_DEFINED);
+            return new ValidationOutputData(true, null, null);
+        }
+
+        LOGGER.debug("Validating query execution for layer: {}", layer.getLayerName());
+
+        // Track if any query returned data and which datasources work
+        boolean anyQueryReturnedData = false;
+        Set<String> datasourcesWithData = new HashSet<>();
+
+        // Validate ALL queries
+        for (LayerPresenceQuery query : queries) {
+            // Skip null query objects
+            if (query == null) {
+                LOGGER.warn(LogMessages.NULL_QUERY_ENCOUNTERED);
+                continue;
+            }
+
+            // Execute the base query without any filters
+            String baseQuery = query.getLayerPresenceQuery();
+            LOGGER.debug("Validating query: {}", baseQuery);
+
+            // Get all datasources
+            List<DataSourceInfo> allDatasources = new ArrayList<>(
+                    DataSourceCollection.getInstance().getDataSourcesCollection().values()
+            );
+
+            // Sort for deterministic order
+            allDatasources.sort(Comparator.comparing(DataSourceInfo::getName));
+
+            // Run for all datasources
+            for (DataSourceInfo dataSourceInfo : allDatasources) {
+                try {
+                    // Get the appropriate operator for the datasource provider
+                    DataSourceOperatorImpl operator = DataSourceOperatorImpl.getInstance()
+                            .getOperator(dataSourceInfo.getProvider());
+
+                    if (operator == null) {
+                        LOGGER.warn(LogMessages.QUERY_VALIDATION_SKIP_NO_OPERATOR,
+                                dataSourceInfo.getProvider(), dataSourceInfo.getName());
+                        continue;
+                    }
+
+                    // Execute query against this datasource
+                    JsonArray resultArray = operator.getResultArrayForQuery(dataSourceInfo, baseQuery);
+
+                    // Check if this query returned data from this datasource
+                    if (resultArray != null && !resultArray.isEmpty()) {
+                        anyQueryReturnedData = true;
+                        datasourcesWithData.add(dataSourceInfo.getName());
+                        LOGGER.debug(LogMessages.QUERY_VALIDATION_SUCCESS_WITH_DATA,
+                                resultArray.size(), dataSourceInfo.getName());
+                    } else {
+                        LOGGER.debug(LogMessages.QUERY_VALIDATION_SUCCESS_NO_DATA,
+                                dataSourceInfo.getName());
+                    }
+
+                } catch (Exception e) {
+                    // Query execution failed for this datasource - log and continue to next datasource
+                    LOGGER.warn(LogMessages.QUERY_VALIDATION_FAILED_FOR_DATASOURCE,
+                            dataSourceInfo.getName(), e.getMessage());
+                }
+            }
+        }
+
+        // After executing all queries against all datasources, check if any returned data
+        if (!anyQueryReturnedData) {
+            String errorMsg = String.format(LogMessages.QUERY_VALIDATION_NO_DATA_FROM_ANY_DATASOURCE,
+                    layer.getLayerName());
+            LOGGER.error(errorMsg);
+            return new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST);
+        }
+
+        // Log which datasources can provide runtime recommendations
+        LOGGER.info(LogMessages.QUERY_VALIDATION_COMPLETE_SUCCESS,
+                layer.getLayerName(), datasourcesWithData);
 
         return new ValidationOutputData(true, null, null);
     }
