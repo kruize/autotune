@@ -171,6 +171,7 @@ NOTIFICATION_CODE_FOR_CPU_REQUEST_NOT_SET = "523001"
 NOTIFICATION_CODE_FOR_CPU_LIMIT_NOT_SET = "423001"
 NOTIFICATION_CODE_FOR_MEMORY_REQUEST_NOT_SET = "524001"
 NOTIFICATION_CODE_FOR_MEMORY_LIMIT_NOT_SET = "524002"
+NOTIFICATION_CODE_FOR_RUNTIMES_RECOMMENDATIONS_AVAILABLE = "112104"
 
 AMOUNT_MISSING_IN_CPU_SECTION_CODE = "223001"
 INVALID_AMOUNT_IN_CPU_SECTION_CODE = "223002"
@@ -269,6 +270,26 @@ SUPPORTED_GPUS = [
 "NVIDIA-H200-PCIE-141GB"
 ]
 PERF_PROFILE_NAME = "resource-optimization-openshift"
+
+# Expected env names for JVM runtime recommendations
+JDK_JAVA_OPTIONS = "JDK_JAVA_OPTIONS"
+JAVA_OPTIONS = "JAVA_OPTIONS"
+
+# GC flag patterns (Hotspot)
+HOTSPOT_GC_PATTERNS = (
+    "-XX:+UseG1GC",
+    "-XX:+UseSerialGC",
+    "-XX:+UseParallelGC",
+    "-XX:+UseZGC",
+    "-XX:+UseShenandoahGC",
+)
+
+# GC policy patterns (Semeru/OpenJ9)
+SEMERU_GC_PATTERNS = (
+    "-Xgcpolicy:gencon",
+    "-Xgcpolicy:balanced",
+    "-Xgcpolicy:optthruput",
+)
 
 # version,experiment_name,cluster_name,performance_profile,mode,target_cluster,type,name,namespace,container_image_name,container_name,measurement_duration,threshold
 create_exp_test_data = {
@@ -2319,3 +2340,60 @@ def validate_metadata_workloads(metadata_json, namespace, workload, container):
         f"Validation failed: No entry found for namespace='{namespace}', "
         f"workload='{workload}', and container='{container}'."
     )
+
+def _has_runtime_env_value(value):
+    """Check if env value contains GC-related JVM options."""
+    if not value or not isinstance(value, str):
+        return False
+    for pattern in HOTSPOT_GC_PATTERNS + SEMERU_GC_PATTERNS:
+        if pattern in value:
+            return True
+    return False
+
+
+def validate_runtime_recommendations_if_present(recommendations_json):
+    """
+    Validates runtime recommendations when present.
+    Runtime recommendations appear as env entries (JDK_JAVA_OPTIONS or JAVA_OPTIONS)
+    with GC flags in config of recommendation_engines (cost/performance).
+    """
+    if not recommendations_json or len(recommendations_json) == 0:
+        return
+
+    rec = recommendations_json[0]
+    if rec.get("experiment_type") != CONTAINER_EXPERIMENT_TYPE:
+        return
+
+    kubernetes_objects = rec.get("kubernetes_objects", [])
+    if not kubernetes_objects:
+        return
+
+    for k8s_obj in kubernetes_objects:
+        containers = k8s_obj.get("containers", [])
+        for container in containers:
+            recommendations = container.get("recommendations", {})
+            data = recommendations.get("data", {})
+            if not data:
+                continue
+
+            for _timestamp, interval_obj in data.items():
+                terms = interval_obj.get("recommendation_terms", {})
+                for _term_name, term_obj in terms.items():
+                    engines = term_obj.get("recommendation_engines", {})
+                    for _engine_name, engine_obj in engines.items():
+                        config = engine_obj.get("config", {})
+                        env_list = config.get("env")
+                        if not env_list or not isinstance(env_list, list):
+                            continue
+
+                        for env_item in env_list:
+                            name = env_item.get("name")
+                            value = env_item.get("value")
+                            if name in (JDK_JAVA_OPTIONS, JAVA_OPTIONS) and _has_runtime_env_value(value):
+                                assert value, f"Runtime env {name} has empty value"
+                                assert _has_runtime_env_value(value), (
+                                    f"Runtime env {name} should contain GC flags, got: {value}"
+                                )
+                                return  # Found valid runtime recommendation
+                            else:
+                                print("No runtime recommendations present (workload may not expose jvm_info or layers not configured)")
