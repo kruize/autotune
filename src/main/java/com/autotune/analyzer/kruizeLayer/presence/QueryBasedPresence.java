@@ -28,6 +28,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -88,7 +89,7 @@ public class QueryBasedPresence implements LayerPresenceDetector {
                         .getDataSourcesCollection()
                         .values()
                         .stream()
-                        .filter(ds -> datasourceType.equalsIgnoreCase(ds.getProvider()))
+                        .filter(ds -> ds.getProvider() != null && datasourceType.equalsIgnoreCase(ds.getProvider()))
                         .collect(Collectors.toList());
 
                 if (matchingDatasources.isEmpty()) {
@@ -96,8 +97,19 @@ public class QueryBasedPresence implements LayerPresenceDetector {
                     continue;
                 }
 
-                // Use the first matching datasource
+                // Ensure deterministic selection when multiple datasources match the type
+                matchingDatasources.sort(Comparator.comparing(DataSourceInfo::getName));
+
+                // Use the first matching datasource after sorting
                 DataSourceInfo dataSourceInfo = matchingDatasources.get(0);
+
+                // Log when multiple datasources match for observability
+                if (matchingDatasources.size() > 1) {
+                    LOGGER.info(LogMessages.MULTIPLE_DATASOURCES_MATCHED,
+                               matchingDatasources.size(),
+                               datasourceType,
+                               dataSourceInfo.getName());
+                }
 
                 // Get the appropriate operator for the datasource provider
                 DataSourceOperatorImpl operator = DataSourceOperatorImpl.getInstance()

@@ -49,10 +49,10 @@ public class LayerUtils {
                                                          String namespace) throws Exception {
         // Validate inputs - fail fast with clear error messages
         if (containerName == null || containerName.isBlank()) {
-            throw new IllegalArgumentException("Container name cannot be null or empty");
+            throw new IllegalArgumentException(LogMessages.CONTAINER_NAME_NULL_OR_EMPTY);
         }
         if (namespace == null || namespace.isBlank()) {
-            throw new IllegalArgumentException("Namespace cannot be null or empty");
+            throw new IllegalArgumentException(LogMessages.NAMESPACE_NULL_OR_EMPTY);
         }
 
         LOGGER.info(LogMessages.DETECTING_LAYERS, containerName, namespace);
@@ -65,7 +65,7 @@ public class LayerUtils {
             experimentDBService.loadAllLayers(allLayersMap);
         } catch (Exception e) {
             LOGGER.error(LogMessages.FAILED_TO_LOAD_LAYERS, e);
-            throw new Exception("Failed to load layers from database: " + e.getMessage(), e);
+            throw new Exception(LogMessages.FAILED_TO_LOAD_LAYERS_EXCEPTION + ": " + e.getMessage(), e);
         }
 
         if (allLayersMap.isEmpty()) {
@@ -84,9 +84,9 @@ public class LayerUtils {
 
                 // Use the layer's presence detector
                 if (layer.getLayerPresence() != null && layer.getLayerPresence().getDetector() != null) {
-                    // Skip label-based detection as it's not yet implemented
+                    // Skip label-based detection as it's not yet implemented; warn to avoid hiding misconfigurations
                     if (layer.getLayerPresence().getDetector() instanceof LabelBasedPresence) {
-                        LOGGER.debug("Skipping layer '{}': Label-based presence detection not yet implemented",
+                        LOGGER.warn(LogMessages.LABEL_BASED_PRESENCE_NOT_IMPLEMENTED,
                                     layer.getLayerName());
                         continue; // Skip to next layer
                     }
