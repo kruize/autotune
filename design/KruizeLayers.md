@@ -2,7 +2,18 @@
 
 ## Overview
 
-Kruize supports a **layered optimization model** where different components of an application stack (e.g., container runtime, JVM runtime, framework) are represented as **layers**.
+Kruize supports a **layered optimization model** 
+
+### Definition: Layer
+
+A Layer is any part of the software stack packaged within a container running in Kubernetes that is identifiable, traceable, and tunable.
+
+**Examples of layers include:**
+- Container runtime environment
+- Operating system components
+- Language runtimes (JVM, Node.js, Python, Go)
+- Application frameworks (Quarkus, EAP, Liberty, Spring, PyTorch)
+- Supporting frameworks and libraries (Hibernate, Vert.x, etc.)
 
 Each layer:
 
