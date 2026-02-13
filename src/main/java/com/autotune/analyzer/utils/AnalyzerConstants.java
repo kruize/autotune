@@ -222,6 +222,12 @@ public class AnalyzerConstants {
         env
     }
 
+    public enum Aggregates {
+        max,
+        min,
+        avg
+    }
+
     public enum ConfigType {
         REQUESTS(ResourceSetting.requests),
         LIMITS(ResourceSetting.limits),

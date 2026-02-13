@@ -319,6 +319,9 @@ public class KruizeConstants {
         public static final String ACCELERATOR_PROFILE_NAME = "accelerator_profile_name";
         public static final String NODE = "node";
 
+        // Replicas related
+        public static final String TERM_REPLICAS = "term_replicas";
+
         private JSONKeys() {
         }
     }

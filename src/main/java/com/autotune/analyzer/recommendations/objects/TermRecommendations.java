@@ -3,11 +3,13 @@ package com.autotune.analyzer.recommendations.objects;
 import com.autotune.analyzer.plots.PlotData;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.utils.KruizeConstants;
 import com.google.gson.annotations.SerializedName;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
+import java.util.Map;
 
 public class TermRecommendations implements MappedRecommendationForTerm {
 
@@ -21,6 +23,9 @@ public class TermRecommendations implements MappedRecommendationForTerm {
     private HashMap<Integer, RecommendationNotification> termLevelNotificationMap;
     @SerializedName(KruizeConstants.JSONKeys.MONITORING_START_TIME)
     private Timestamp monitoringStartTime;
+
+    @SerializedName(KruizeConstants.JSONKeys.TERM_REPLICAS)
+    private Map<AnalyzerConstants.Aggregates, Integer> termReplicas;
 
     @SerializedName(KruizeConstants.JSONKeys.RECOMMENDATION_ENGINES)
     private HashMap<String, MappedRecommendationForModel> recommendationForModelHashMap;
@@ -105,5 +110,13 @@ public class TermRecommendations implements MappedRecommendationForTerm {
 
     public void setPlots(PlotData.PlotsData plots) {
         this.plots = plots;
+    }
+
+    public Map<AnalyzerConstants.Aggregates, Integer> getTermReplicas() {
+        return termReplicas;
+    }
+
+    public void setTermReplicas(Map<AnalyzerConstants.Aggregates, Integer> termReplicas) {
+        this.termReplicas = termReplicas;
     }
 }
