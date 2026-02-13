@@ -717,10 +717,6 @@ public class AnalyzerConstants {
             // QueryBasedPresence log messages
             public static final String NO_QUERIES_DEFINED = "No queries defined for layer presence detection";
             public static final String NULL_QUERY_ENCOUNTERED = "Encountered null query in layer presence queries, skipping";
-            public static final String NO_DATASOURCE_TYPE_SPECIFIED = "Query has no datasource type specified, skipping";
-            public static final String FILTERING_DATASOURCES_BY_TYPE = "Filtering datasources by type: '{}'";
-            public static final String NO_DATASOURCES_MATCHING_TYPE = "No datasources found with type '{}', skipping query";
-            public static final String MULTIPLE_DATASOURCES_MATCHED = "Multiple datasources ({}) matched type '{}', selected datasource '{}' (alphabetically first)";
             public static final String DATASOURCE_NOT_FOUND = "Datasource '{}' not found in collection";
             public static final String NO_OPERATOR_AVAILABLE = "No operator available for datasource '{}'";
             public static final String EXECUTING_QUERY = "Executing layer detection query: {}";
