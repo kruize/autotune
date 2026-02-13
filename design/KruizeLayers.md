@@ -301,6 +301,8 @@ All artifacts must remain consistent for a layer to function correctly.
 
 ### YAML Layer Definition
 
+Refer: [Hotspot Layer YAML](/manifests/autotune/layers/hotspot-micrometer-config.yaml)
+
 <details>
 <summary><b>View Full YAML</b></summary>
 
