@@ -983,7 +983,6 @@ public class RecommendationEngine {
         // Combine Recommendation tunables for each layer
         for (Map.Entry<LayerTunable, Object> entry : context.entrySet()) {
             Object value = entry.getValue();
-            LOGGER.info("Value : {}", value);
             if (value == null) {
                 continue;
             }
@@ -1005,10 +1004,16 @@ public class RecommendationEngine {
                     recommendationQuarkusBuilder.append(value.toString());
                 }
             } else if (layerTunable.getLayerName().equalsIgnoreCase(AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU)) {
-                if (layerTunable.getMetricName().equals(AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE)) {
-                    recommendationOpenjdkBuilder.append("-XX:MaxRAMPercentage=")
-                            .append(value.toString())
-                            .append(" ");
+                switch (layerTunable.getMetricName()) {
+                    case AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE:
+                        recommendationOpenjdkBuilder.append("-XX:MaxRAMPercentage=")
+                                .append(value.toString())
+                                .append(" ");
+                        break;
+                    case AnalyzerConstants.MetricNameConstants.GC_POLICY:
+                        recommendationOpenjdkBuilder.append(value)
+                                .append(" ");
+                        break;
                 }
             }
         }
@@ -2550,10 +2555,8 @@ public class RecommendationEngine {
 
                                 // Log Prometheus response for jvmRuntimeInfo to debug metadata extraction
                                 if (JVM_RUNTIME_INFO.equals(metricEntry.getName())) {
-                                    LOGGER.info("jvmRuntimeInfo Prometheus response: resultArray.isEmpty={}, runtimeLayerDetected={}, metricObject={}",
-                                            resultArray.isEmpty(), runtimeLayerDetected, metric != null ? metric.toString() : "null");
                                     if (metric != null) {
-                                        LOGGER.info("jvmRuntimeInfo metric labels: runtime={}, vendor={}, version={}",
+                                        LOGGER.debug("jvmRuntimeInfo metric labels: runtime={}, vendor={}, version={}",
                                                 metric.has(AnalyzerConstants.RUNTIME) ? metric.get(AnalyzerConstants.RUNTIME) : "absent",
                                                 metric.has(AnalyzerConstants.VENDOR) ? metric.get(AnalyzerConstants.VENDOR) : "absent",
                                                 metric.has(AnalyzerConstants.VERSION) ? metric.get(AnalyzerConstants.VERSION) : "absent");
@@ -2784,7 +2787,6 @@ public class RecommendationEngine {
                 meta.setRuntime(runtime);
                 meta.setVersion(version);
                 metricResults.setMetricMetadataResults(meta);
-                LOGGER.info("jvmRuntimeInfo: Set MetricMetadataResults from Prometheus (runtime={}, vendor={}, version={})", runtime, vendor, version);
             } else if (JVM_RUNTIME_INFO.equals(metricEntry.getName())) {
                 LOGGER.warn("jvmRuntimeInfo: Skipped metadata extraction - runtimeLayerDetected={}, metricObject={}", runtimeLayerDetected, metricObject != null);
             } else {

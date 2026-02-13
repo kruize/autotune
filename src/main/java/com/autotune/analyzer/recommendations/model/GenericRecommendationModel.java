@@ -16,6 +16,7 @@ import com.autotune.common.data.result.IntervalResults;
 
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
+import com.google.gson.Gson;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -698,7 +699,7 @@ public class GenericRecommendationModel implements RecommendationModel{
         Double memLimits = (Double) getTunableValue(context, AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER);
         Double cpuLimits = (Double) getTunableValue(context, AnalyzerConstants.MetricNameConstants.CPU_LIMIT, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER);
 
-        // Fallback: container layer may not have memoryLimit/cpuLimit tunables; use recommended values from filteredResultsMap
+        // Fallback: container layer may not have memoryLimit/cpuLimit tunables, use values from filteredResultsMap
         if (memLimits == null) {
             RecommendationConfigItem memRec = getMemoryRequestRecommendation(filteredResultsMap, notifications);
             memLimits = (memRec != null) ? memRec.getAmount() : null;
@@ -707,6 +708,11 @@ public class GenericRecommendationModel implements RecommendationModel{
             RecommendationConfigItem cpuRec = getCPURequestRecommendation(filteredResultsMap, notifications);
             cpuLimits = (cpuRec != null) ? cpuRec.getAmount() : null;
         }
+        if (memLimits == null || cpuLimits == null) {
+            return null;
+        }
+        double memLimitsVal = memLimits;
+        double cpuLimitsVal = cpuLimits;
 
         MetricMetadataResults metricMetadata = getJvmMetricMetadataFromFilteredResults(filteredResultsMap);
 
@@ -714,32 +720,54 @@ public class GenericRecommendationModel implements RecommendationModel{
             case AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE:
                 return AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
             case AnalyzerConstants.MetricNameConstants.GC_POLICY:
-                LOGGER.info("MetricMetadata : {}", metricMetadata);
                 if (metricMetadata == null) {
-                    LOGGER.warn("JVM metric metadata not found (layerName={})", layerName);
                     return null;
                 }
-                if (metricMetadata.getVersion() == null || metricMetadata.getVersion().isEmpty()) {
-                    LOGGER.warn("JVM version is null or empty(layerName={}, runtime={}).", layerName, metricMetadata.getRuntime());
-                    return null;
-                }
-                if (metricMetadata.getRuntime() == null || !layerName.equalsIgnoreCase(metricMetadata.getRuntime())) {
-                    LOGGER.warn("layerName '{}' does not match runtime '{}' from JVM metric metadata.", layerName, metricMetadata.getRuntime());
-                    return null;
-                }
-                Double jvmHeapSizeMB = getJvmHeapSizeMBFromFilteredResults(filteredResultsMap);
+
                 String jdkVersion = metricMetadata.getVersion();
-                double maxRamPercentage = AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
-                LOGGER.debug("Computing recommendation (layerName={}, runtime={}, jdkVersion={}, jvmHeapSizeMB={})", layerName, metricMetadata.getRuntime(), jdkVersion, jvmHeapSizeMB);
-                return decideHotSpotGCPolicy(jvmHeapSizeMB, maxRamPercentage, memLimits, cpuLimits, jdkVersion);
-            case AnalyzerConstants.MetricNameConstants.CORE_THREADS:
-                if (cpuLimits == null) {
+                if (jdkVersion == null || jdkVersion.isEmpty()) {
+                    LOGGER.warn("JVM version is null or empty (layerName={})", layerName);
                     return null;
                 }
-                return (int) Math.ceil(cpuLimits);
+
+                String effectiveLayer = getEffectiveLayerFromRuntime(metricMetadata.getRuntime());
+                if (!layerName.equalsIgnoreCase(effectiveLayer)) {
+                    LOGGER.debug("layerName '{}' does not match effective layer '{}' (runtime={})", layerName, effectiveLayer, metricMetadata.getRuntime());
+                    return null;
+                }
+
+                Double jvmHeapSizeMB = getJvmHeapSizeMBFromFilteredResults(filteredResultsMap);
+                double maxRamPercentage = AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
+
+                if (AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU.equalsIgnoreCase(effectiveLayer)) {
+                    LOGGER.debug("Computing Semeru/OpenJ9 recommendation (layerName={}, runtime={}, jdkVersion={}, jvmHeapSizeMB={})", layerName, metricMetadata.getRuntime(), jdkVersion, jvmHeapSizeMB);
+                    return decideSemeruGCPolicy(jvmHeapSizeMB, maxRamPercentage, memLimitsVal, cpuLimitsVal);
+                }
+
+                LOGGER.debug("Computing Hotspot recommendation (layerName={}, runtime={}, jdkVersion={}, jvmHeapSizeMB={})", layerName, metricMetadata.getRuntime(), jdkVersion, jvmHeapSizeMB);
+                return decideHotSpotGCPolicy(jvmHeapSizeMB, maxRamPercentage, memLimitsVal, cpuLimitsVal, jdkVersion);
+            case AnalyzerConstants.MetricNameConstants.CORE_THREADS:
+                return (int) Math.ceil(cpuLimitsVal);
             default:
                 return null;
         }
+    }
+
+    /**
+     * Maps JVM runtime name from metric metadata to the effective Kruize layer.
+     * - OpenJDK or Hotspot → hotspot
+     * - Semeru or OpenJ9 → semeru
+     * - null or empty → hotspot (default)
+     */
+    public static String getEffectiveLayerFromRuntime(String runtime) {
+        if (runtime == null || runtime.isBlank()) {
+            return AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT;
+        }
+        String r = runtime.trim().toLowerCase();
+        if (r.equals(AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU) || r.contains(AnalyzerConstants.AutotuneConfigConstants.LAYER_OPENJ9)) {
+            return AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU;
+        }
+        return AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT;
     }
 
     public String decideHotSpotGCPolicy(Double jvmHeapSizeMB, double maxRAMPercent, double memLimit, double cpuCores, String jdkVersionStr) {
@@ -760,11 +788,45 @@ public class GenericRecommendationModel implements RecommendationModel{
         } else if (cpuCores > 1 && jvmHeapSizeMB < 4096) {
             return "-XX:+UseParallelGC";
         } else if (jvmHeapSizeMB >= 4096) {
-            if (jdkVersion >= 17) return "-XX:+UseZGC";
-            else if (jdkVersion >= 11) return "-XX:+UseShenandoahGC";
-            else return "-XX:+UseG1GC";
+            if (jdkVersion >= 17) {
+                return "-XX:+UseZGC";
+            }
+            else if (jdkVersion >= 11) {
+                return "-XX:+UseShenandoahGC";
+            }
+            else {
+                return "-XX:+UseG1GC";
+            }
         } else {
             return "-XX:+UseG1GC";
+        }
+    }
+
+    /**
+     * Recommends OpenJ9/Semeru GC policy based on heap size and CPU cores.
+     * Uses -Xgcpolicy:&lt;policy&gt; format.
+     *
+     * Selection logic (per Eclipse OpenJ9 docs):
+     * - gencon: Default
+     * - balanced: 64-bit only, Use when heap >= 4GB.
+     * - optthruput: Use when throughput-critical.
+     */
+    public String decideSemeruGCPolicy(Double jvmHeapSizeMB, double maxRAMPercent, double memLimit, double cpuCores) {
+        if (jvmHeapSizeMB == null || jvmHeapSizeMB == 0) {
+            double memLimitMB = memLimit / (1024 * 1024);
+            jvmHeapSizeMB = Math.ceil((maxRAMPercent / 100) * memLimitMB);
+            LOGGER.debug("Semeru memLimitMB: {}", memLimitMB);
+        }
+
+        LOGGER.info("Semeru jvmHeapSizeMB: {}", jvmHeapSizeMB);
+        LOGGER.info("Semeru cpuCores: {}", cpuCores);
+
+        if (jvmHeapSizeMB >= 4096) {
+            return "-Xgcpolicy:balanced";
+        } else if (cpuCores > 8 && jvmHeapSizeMB >= 2048) {
+            return "-Xgcpolicy:optthruput";
+        } else {
+            return "-Xgcpolicy:gencon";
         }
     }
 
@@ -802,7 +864,7 @@ public class GenericRecommendationModel implements RecommendationModel{
             }
             MetricResults metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmMemoryMaxBytes);
             if (metricResults != null && metricResults.getAggregationInfoResult() != null) {
-                Double max = metricResults.getAggregationInfoResult().getMax();
+                Double max = metricResults.getAggregationInfoResult().getSum();
                 if (max != null && max > 0) {
                     maxHeapBytes = Math.max(maxHeapBytes, max);
                     found = true;
@@ -824,29 +886,22 @@ public class GenericRecommendationModel implements RecommendationModel{
      */
     public static MetricMetadataResults getJvmMetricMetadataFromFilteredResults(Map<Timestamp, IntervalResults> filteredResultsMap) {
         if (filteredResultsMap == null) {
-            LOGGER.debug("getJvmMetricMetadata: filteredResultsMap is null");
             return null;
         }
-        LOGGER.debug("getJvmMetricMetadata: filteredResultsMap size={}", filteredResultsMap.size());
         for (IntervalResults intervalResults : filteredResultsMap.values()) {
             if (intervalResults.getMetricResultsMap() == null) {
-                LOGGER.debug("getJvmMetricMetadata: intervalResults has null metricResultsMap");
                 continue;
             }
             Set<AnalyzerConstants.MetricName> metricKeys = intervalResults.getMetricResultsMap().keySet();
-            LOGGER.debug("getJvmMetricMetadata: interval metrics={}", metricKeys);
             MetricResults metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmRuntimeInfo);
             if (metricResults == null) {
-                LOGGER.debug("getJvmMetricMetadata: jvmRuntimeInfo metric not found in this interval");
                 continue;
             }
             if (metricResults.getMetricMetadataResults() == null) {
-                LOGGER.warn("getJvmMetricMetadata: jvmRuntimeInfo exists but MetricMetadataResults is null (metadata was not set from Prometheus response)");
                 continue;
             }
             return metricResults.getMetricMetadataResults();
         }
-        LOGGER.debug("getJvmMetricMetadata: no JVM metadata found in any interval");
         return null;
     }
 
