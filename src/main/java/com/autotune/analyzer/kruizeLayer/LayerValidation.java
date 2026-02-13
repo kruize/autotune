@@ -261,10 +261,10 @@ public class LayerValidation {
                         anyQueryReturnedData = true;
                         datasourcesWithData.add(dataSourceInfo.getName());
                         LOGGER.debug(LogMessages.QUERY_VALIDATION_SUCCESS_WITH_DATA,
-                                resultArray.size(), dataSourceInfo.getName());
+                                baseQuery, resultArray.size(), dataSourceInfo.getName());
                     } else {
                         LOGGER.debug(LogMessages.QUERY_VALIDATION_SUCCESS_NO_DATA,
-                                dataSourceInfo.getName());
+                                baseQuery, dataSourceInfo.getName());
                     }
 
                 } catch (Exception e) {

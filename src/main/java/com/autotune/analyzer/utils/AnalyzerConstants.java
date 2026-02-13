@@ -730,8 +730,8 @@ public class AnalyzerConstants {
 
             // Query validation log messages
             public static final String QUERY_VALIDATION_SKIP_NO_OPERATOR = "No operator available for datasource provider '{}', skipping datasource '{}'";
-            public static final String QUERY_VALIDATION_SUCCESS_WITH_DATA = "Query returned {} results from datasource '{}'";
-            public static final String QUERY_VALIDATION_SUCCESS_NO_DATA = "Query executed successfully against datasource '{}' but returned no data";
+            public static final String QUERY_VALIDATION_SUCCESS_WITH_DATA = "Query '{}' returned {} results from datasource '{}'";
+            public static final String QUERY_VALIDATION_SUCCESS_NO_DATA = "Query '{}' executed successfully against datasource '{}' but returned no data";
             public static final String QUERY_VALIDATION_FAILED_FOR_DATASOURCE = "Query validation failed for datasource '{}': {}";
             public static final String QUERY_VALIDATION_NO_DATA_FROM_ANY_DATASOURCE = "Runtime recommendations not supported by layer '%s': No query returned data from any datasource";
             public static final String QUERY_VALIDATION_COMPLETE_SUCCESS = "Layer '{}' validation successful. Runtime recommendations available using datasource(s): {}";
