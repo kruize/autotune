@@ -700,7 +700,6 @@ public class AnalyzerConstants {
             // Error messages
             public static final String CONTAINER_NAME_NULL_OR_EMPTY = "Container name cannot be null or empty";
             public static final String NAMESPACE_NULL_OR_EMPTY = "Namespace cannot be null or empty";
-            public static final String FAILED_TO_LOAD_LAYERS_EXCEPTION = "Failed to load layers from database";
 
             // Layer detection log messages
             public static final String ERROR_DETECTING_LAYER = "Error detecting layer '{}': {}";

@@ -64,8 +64,7 @@ public class LayerUtils {
         try {
             experimentDBService.loadAllLayers(allLayersMap);
         } catch (Exception e) {
-            LOGGER.error(LogMessages.FAILED_TO_LOAD_LAYERS, e);
-            throw new Exception(LogMessages.FAILED_TO_LOAD_LAYERS_EXCEPTION + ": " + e.getMessage(), e);
+            throw new Exception(LogMessages.FAILED_TO_LOAD_LAYERS + ": " + e.getMessage(), e);
         }
 
         if (allLayersMap.isEmpty()) {
