@@ -73,8 +73,9 @@ public class RecommendationEngine {
     private Timestamp interval_end_time;
     private List<String> modelNames;
     private Map<String, RecommendationTunables> modelTunable;
-    private static final String JVM_RUNTIME_INFO = AnalyzerConstants.MetricName.jvmRuntimeInfo.toString();
-
+    private static final Set<String> JVM_INFO_METRICS = Set.of(
+            AnalyzerConstants.MetricName.jvmInfo.toString(),
+            AnalyzerConstants.MetricName.jvmInfoTotal.toString());
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
         this.experimentName = experimentName;
@@ -2439,10 +2440,23 @@ public class RecommendationEngine {
                                 if (!resultArray.isEmpty()) {
                                     metric = resultArray.get(0).getAsJsonObject().getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
                                 }
+                                // Log Prometheus response for JVM info metrics to debug metadata extraction
+                                if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
+                                    if (metric != null) {
+                                        LOGGER.debug("JVM info metric labels: runtime={}, vendor={}, version={}",
+                                                metric.has(AnalyzerConstants.RUNTIME) ? metric.get(AnalyzerConstants.RUNTIME) : "absent",
+                                                metric.has(AnalyzerConstants.VENDOR) ? metric.get(AnalyzerConstants.VENDOR) : "absent",
+                                                metric.has(AnalyzerConstants.VERSION) ? metric.get(AnalyzerConstants.VERSION) : "absent");
+                                    }
+                                }
 
                                 // Skipping if Result array is null or empty
-                                if (null == resultArray || resultArray.isEmpty())
+                                if (null == resultArray || resultArray.isEmpty()) {
+                                    if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
+                                        LOGGER.warn("JVM info metric: Prometheus returned empty result - JVM metrics may not be exposed or query may not match (namespace={}, container={})", namespace, containerName);
+                                    }
                                     continue;
+                                }
 
                                 // Process fetched metrics
                                 if (isAcceleratorMetric || isAcceleratorPartitionMetric){
@@ -2651,12 +2665,14 @@ public class RecommendationEngine {
                 metricAggregationInfoResults = new MetricAggregationInfoResults();
             }
 
-            if (runtimeLayerDetected && metricObject != null && JVM_RUNTIME_INFO.equals(metricEntry.getName())) {
+            if (runtimeLayerDetected && metricObject != null && JVM_INFO_METRICS.contains(metricEntry.getName())) {
                 MetricMetadataResults meta = new MetricMetadataResults();
                 meta.setVendor(getAsStringOrDefault(metricObject, AnalyzerConstants.VENDOR, null));
                 meta.setRuntime(getAsStringOrDefault(metricObject, AnalyzerConstants.RUNTIME, null));
                 meta.setVersion(getAsStringOrDefault(metricObject, AnalyzerConstants.VERSION, null));
                 metricResults.setMetricMetadataResults(meta);
+            } else if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
+                LOGGER.warn("Skipped JVM info metric metadata extraction - runtimeLayerDetected={}, metricObject={}", runtimeLayerDetected, metricObject != null);
             } else {
                 Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
                 method.invoke(metricAggregationInfoResults, value);
