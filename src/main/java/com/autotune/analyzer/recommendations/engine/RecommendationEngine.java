@@ -106,14 +106,13 @@ public class RecommendationEngine {
             return null;
         }
 
-        double minPods = Double.MAX_VALUE;
-        double maxPods = Double.MIN_VALUE;
+        double minPods = Double.MIN_VALUE;
+        double maxPods = Double.MAX_VALUE;
         double totalPods = 0;
         int count = 0;
 
         for (IntervalResults interval : filteredResultsMap.values()) {
-            Map<AnalyzerConstants.MetricName, MetricResults> metrics =
-                    interval.getMetricResultsMap();
+            Map<AnalyzerConstants.MetricName, MetricResults> metrics = interval.getMetricResultsMap();
             if (metrics == null || metrics.isEmpty())
                 continue;
             Double pods = extractPods(metrics, AnalyzerConstants.MetricName.cpuUsage);
