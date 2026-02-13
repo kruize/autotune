@@ -43,7 +43,7 @@ public class LabelBasedPresence implements LayerPresenceDetector {
     }
 
     @Override
-    public boolean detectPresence(String namespace, String workloadName) throws Exception {
+    public boolean detectPresence(String namespace, String containerName, String datasourceName) throws Exception {
         // TODO: Implement label-based presence detection
         throw new UnsupportedOperationException("Label-based presence detection not yet implemented");
     }

@@ -141,8 +141,8 @@ public class ServiceHelpers {
             for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
                 // detect layers for the container
                 Map<String, KruizeLayer> layers = LayerUtils.detectLayers(containerAPIObject.getContainer_name(),
-                        kubernetesAPIObject.getName(),
-                        kubernetesAPIObject.getNamespace()
+                        kubernetesAPIObject.getNamespace(),
+                        validAPIObj.getDatasource()
                 );
                 // Skipping null check as we return atleast an empty map if there are no exceptions
                 if (!layers.isEmpty()) {
