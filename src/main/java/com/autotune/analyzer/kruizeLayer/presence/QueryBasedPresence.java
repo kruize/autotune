@@ -51,20 +51,15 @@ public class QueryBasedPresence implements LayerPresenceDetector {
         return PresenceType.QUERY;
     }
 
-    @Override
-    public boolean detectPresence(String namespace, String workloadName) throws Exception {
-        return detectPresence(namespace, workloadName, null);
-    }
-
     /**
-     * Detect layer presence with optional container name filtering
+     * Detect layer presence using namespace and container name filtering
      * @param namespace The Kubernetes namespace
-     * @param workloadName The workload name
-     * @param containerName The container name (optional)
+     * @param containerName The container name
      * @return true if layer is detected
      * @throws Exception if detection fails
      */
-    public boolean detectPresence(String namespace, String workloadName, String containerName) throws Exception {
+    @Override
+    public boolean detectPresence(String namespace, String containerName, String datasourceName) throws Exception {
         if (queries == null || queries.isEmpty()) {
             LOGGER.warn(LogMessages.NO_QUERIES_DEFINED);
             return false;
@@ -79,34 +74,31 @@ public class QueryBasedPresence implements LayerPresenceDetector {
             }
 
             try {
-                // Get datasource info from global collection
+                // Get the specific datasource by name from the experiment
                 DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance()
                         .getDataSourcesCollection()
-                        .get(query.getDataSource());
+                        .get(datasourceName);
 
                 if (dataSourceInfo == null) {
-                    LOGGER.warn(LogMessages.DATASOURCE_NOT_FOUND, query.getDataSource());
+                    LOGGER.warn(LogMessages.DATASOURCE_NOT_FOUND, datasourceName);
                     continue;
                 }
 
-                // Get the appropriate operator for the datasource
+                // Get the appropriate operator for the datasource provider
                 DataSourceOperatorImpl operator = DataSourceOperatorImpl.getInstance()
-                        .getOperator(query.getDataSource());
+                        .getOperator(dataSourceInfo.getProvider());
 
                 if (operator == null) {
-                    LOGGER.warn(LogMessages.NO_OPERATOR_AVAILABLE, query.getDataSource());
+                    LOGGER.warn(LogMessages.NO_OPERATOR_AVAILABLE, dataSourceInfo.getProvider());
                     continue;
                 }
 
                 // Start with the original query
                 String modifiedQuery = query.getLayerPresenceQuery();
 
-                // Append dynamic filters for namespace, workload, and container
+                // Append dynamic filters for namespace, container
                 if (namespace != null && !namespace.isBlank()) {
                     modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_NAMESPACE, namespace);
-                }
-                if (workloadName != null && !workloadName.isBlank()) {
-                    modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_POD, workloadName);
                 }
                 if (containerName != null && !containerName.isBlank()) {
                     modifiedQuery = appendFilter(modifiedQuery, LayerConstants.LABEL_CONTAINER, containerName);
@@ -121,8 +113,8 @@ public class QueryBasedPresence implements LayerPresenceDetector {
                 );
 
                 // Check if we got any results - if yes, layer is present
-                if (resultArray != null && resultArray.size() > 0) {
-                    LOGGER.debug(LogMessages.LAYER_DETECTED_VIA_QUERY, namespace, workloadName, containerName);
+                if (resultArray != null && !resultArray.isEmpty()) {
+                    LOGGER.debug(LogMessages.LAYER_DETECTED_VIA_QUERY, namespace, containerName);
                     return true;
                 }
             } catch (Exception e) {
@@ -133,36 +125,6 @@ public class QueryBasedPresence implements LayerPresenceDetector {
 
         // No queries returned positive results
         return false;
-    }
-
-    /**
-     * Escapes special characters in a PromQL label value
-     * PromQL requires backslashes and double quotes to be escaped
-     *
-     * @param value The label value to escape
-     * @return Escaped label value safe for use in PromQL queries
-     */
-    private String escapePromQLLabelValue(String value) {
-        if (value == null) {
-            return "";
-        }
-
-        // Escape backslashes first (must be done before escaping quotes)
-        String escaped = value.replace("\\", "\\\\");
-
-        // Escape double quotes
-        escaped = escaped.replace("\"", "\\\"");
-
-        // Escape newlines
-        escaped = escaped.replace("\n", "\\n");
-
-        // Escape tabs
-        escaped = escaped.replace("\t", "\\t");
-
-        // Escape carriage returns
-        escaped = escaped.replace("\r", "\\r");
-
-        return escaped;
     }
 
     /**
@@ -185,8 +147,7 @@ public class QueryBasedPresence implements LayerPresenceDetector {
         }
 
         // Escape the label value to prevent PromQL injection and syntax errors
-        String escapedValue = escapePromQLLabelValue(labelValue);
-        String filter = labelName + "=\"" + escapedValue + "\"";
+        String filter = labelName + "=\"" + labelValue.replace("\\", "\\\\").replace("\"","\\\"").replace("\n", "\\n").replace("\t", "\\t").replace("\r","\\r") + "\"";
 
         // Find the first opening and closing brace
         int openBrace = query.indexOf('{');

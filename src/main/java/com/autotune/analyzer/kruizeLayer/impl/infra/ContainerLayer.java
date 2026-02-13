@@ -13,31 +13,33 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package com.autotune.analyzer.kruizeLayer.impl.infra;
 
-package com.autotune.analyzer.kruizeLayer.presence;
+import com.autotune.analyzer.kruizeLayer.impl.Layer;
+import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
+import com.autotune.analyzer.utils.AnalyzerConstants;
 
-import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
+import java.util.List;
+import java.util.Map;
 
-/**
- * Implementation for layers that are always present
- */
-public class PresenceAlways implements LayerPresenceDetector {
+public class ContainerLayer implements Layer {
+    private static final ContainerLayer INSTANCE = new ContainerLayer();
 
-    public PresenceAlways() {}
+    private ContainerLayer() {
+    }
 
-    @Override
-    public PresenceType getType() {
-        return PresenceType.ALWAYS;
+    public static ContainerLayer getInstance() {
+        return INSTANCE;
     }
 
     @Override
-    public boolean detectPresence(String namespace, String containerName, String datasourceName) throws Exception {
-        // Layers with ALWAYS presence type are always detected
-        return true;
+    public String getName() {
+        return AnalyzerConstants.LayerConstants.CONTAINER_LAYER;
     }
 
     @Override
-    public String toString() {
-        return "PresenceAlways{}";
+    public Map<String, List<TunableSpec>> getTunableDependencies() {
+        // Returning empty map as container layer tunables are independent
+        return Map.of();
     }
 }

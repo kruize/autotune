@@ -13,31 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  *******************************************************************************/
+package com.autotune.analyzer.exceptions;
 
-package com.autotune.analyzer.kruizeLayer.presence;
-
-import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.PresenceType;
-
-/**
- * Implementation for layers that are always present
- */
-public class PresenceAlways implements LayerPresenceDetector {
-
-    public PresenceAlways() {}
-
-    @Override
-    public PresenceType getType() {
-        return PresenceType.ALWAYS;
-    }
-
-    @Override
-    public boolean detectPresence(String namespace, String containerName, String datasourceName) throws Exception {
-        // Layers with ALWAYS presence type are always detected
-        return true;
-    }
-
-    @Override
-    public String toString() {
-        return "PresenceAlways{}";
+public class BulkNotSupportedException extends Throwable{
+    public BulkNotSupportedException() {}
+    public BulkNotSupportedException(String message) {
+        super(message);
     }
 }

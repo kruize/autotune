@@ -17,6 +17,7 @@
 package com.autotune.analyzer.kruizeLayer.utils;
 
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.presence.LabelBasedPresence;
 import com.autotune.analyzer.kruizeLayer.presence.QueryBasedPresence;
 import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.LogMessages;
 import com.autotune.database.service.ExperimentDBService;
@@ -38,7 +39,6 @@ public class LayerUtils {
      * Detects which layers are present for a given container in a namespace
      *
      * @param containerName The container name
-     * @param workloadName The workload name
      * @param namespace The Kubernetes namespace
      * @return Map of detected layers (layer name -> KruizeLayer).
      *         Returns an empty map when no layers are detected.
@@ -46,14 +46,13 @@ public class LayerUtils {
      * @throws Exception if database operations fail
      */
     public static Map<String, KruizeLayer> detectLayers(String containerName,
-                                                         String workloadName,
-                                                         String namespace) throws Exception {
+                                                         String namespace, String datasourceName) throws Exception {
         // Validate inputs - fail fast with clear error messages
         if (containerName == null || containerName.isBlank()) {
-            throw new IllegalArgumentException("Container name cannot be null or empty");
+            throw new IllegalArgumentException(LogMessages.CONTAINER_NAME_NULL_OR_EMPTY);
         }
         if (namespace == null || namespace.isBlank()) {
-            throw new IllegalArgumentException("Namespace cannot be null or empty");
+            throw new IllegalArgumentException(LogMessages.NAMESPACE_NULL_OR_EMPTY);
         }
 
         LOGGER.info(LogMessages.DETECTING_LAYERS, containerName, namespace);
@@ -66,7 +65,7 @@ public class LayerUtils {
             experimentDBService.loadAllLayers(allLayersMap);
         } catch (Exception e) {
             LOGGER.error(LogMessages.FAILED_TO_LOAD_LAYERS, e);
-            throw new Exception("Failed to load layers from database: " + e.getMessage(), e);
+            throw new Exception(LogMessages.FAILED_TO_LOAD_LAYERS_EXCEPTION + ": " + e.getMessage(), e);
         }
 
         if (allLayersMap.isEmpty()) {
@@ -85,14 +84,21 @@ public class LayerUtils {
 
                 // Use the layer's presence detector
                 if (layer.getLayerPresence() != null && layer.getLayerPresence().getDetector() != null) {
+                    // Skip label-based detection as it's not yet implemented; warn to avoid hiding misconfigurations
+                    if (layer.getLayerPresence().getDetector() instanceof LabelBasedPresence) {
+                        LOGGER.warn(LogMessages.LABEL_BASED_PRESENCE_NOT_IMPLEMENTED,
+                                    layer.getLayerName());
+                        continue; // Skip to next layer
+                    }
+
                     // For query-based detection, pass container name as well
                     if (layer.getLayerPresence().getDetector() instanceof QueryBasedPresence) {
                         QueryBasedPresence queryDetector = (QueryBasedPresence) layer.getLayerPresence().getDetector();
-                        isDetected = queryDetector.detectPresence(namespace, workloadName, containerName);
+                        isDetected = queryDetector.detectPresence(namespace, containerName, datasourceName);
                     } else {
-                        // For other detector types (Always, Label)
+                        // For other detector types (Always)
                         isDetected = layer.getLayerPresence().getDetector()
-                                .detectPresence(namespace, workloadName);
+                                .detectPresence(namespace, containerName, datasourceName);
                     }
 
                     if (isDetected) {

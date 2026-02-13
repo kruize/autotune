@@ -206,7 +206,12 @@ function run_demo() {
 
 	if [[ "${DEMO_NAME}" == "local_monitoring" ]]; then
 		CMD=(./local_monitoring_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE})
-		JSONS=(container_experiment_sysbench_recommendation.json namespace_experiment_sysbench_recommendation.json)
+		JSONS=(container_experiment_local_recommendation.json namespace_experiment_local_recommendation.json)
+		if [[ "${CLUSTER_TYPE}" == minikube || "${CLUSTER_TYPE}" == "kind" ]]; then
+			if [[ "${SETUP}" == 0 ]]; then
+				JSONS=(container_experiment_sysbench_recommendation.json namespace_experiment_sysbench_recommendation.json)
+			fi
+		fi
 	elif [[ "${DEMO_NAME}" == "remote_monitoring" ]]; then
 		CMD=(./remote_monitoring_demo.sh -c ${CLUSTER_TYPE} -o ${KRUIZE_IMAGE})
 		JSONS=(recommendations_data.json)

@@ -683,13 +683,31 @@ public class AnalyzerConstants {
 
         // PromQL label names used in query-based presence detection
         public static final String LABEL_NAMESPACE = "namespace";
-        public static final String LABEL_POD = "pod";
         public static final String LABEL_CONTAINER = "container";
+
+        // Supported Layers
+        public static final String CONTAINER_LAYER = "container";
+        public static final String HOTSPOT_LAYER = "hotspot";
+        public static final String QUARKUS_LAYER = "quarkus";
+        public static final String SEMERU_LAYER = "semeru";
+
+        public static final List<String> SUPPORTED_LAYERS = Arrays.asList(
+                CONTAINER_LAYER,
+                HOTSPOT_LAYER,
+                QUARKUS_LAYER,
+                SEMERU_LAYER
+        );
 
         /**
          * Log messages for layer detection operations
          */
         public static final class LogMessages {
+            // Error messages
+            public static final String CONTAINER_NAME_NULL_OR_EMPTY = "Container name cannot be null or empty";
+            public static final String NAMESPACE_NULL_OR_EMPTY = "Namespace cannot be null or empty";
+            public static final String FAILED_TO_LOAD_LAYERS_EXCEPTION = "Failed to load layers from database";
+
+            // Layer detection log messages
             public static final String ERROR_DETECTING_LAYER = "Error detecting layer '{}': {}";
             public static final String NO_LAYERS_DETECTED = "No layers detected for container '{}' in namespace '{}'";
             public static final String LAYERS_DETECTED = "Detected {} layer(s) for container '{}': {}";
@@ -697,6 +715,7 @@ public class AnalyzerConstants {
             public static final String LAYER_DETECTED = "Detected layer: '{}' for container '{}'";
             public static final String LAYER_NOT_DETECTED = "Layer '{}' not detected for container '{}'";
             public static final String NO_PRESENCE_DETECTOR = "Layer '{}' has no presence detector configured, skipping";
+            public static final String LABEL_BASED_PRESENCE_NOT_IMPLEMENTED = "Skipping layer '{}' configured with LabelBasedPresence: label-based presence detection is not yet implemented; this layer will not be auto-detected";
             public static final String NO_LAYERS_IN_DB = "No layers found in database";
             public static final String LOADED_LAYERS_FROM_DB = "Loaded {} layers from database";
             public static final String FAILED_TO_LOAD_LAYERS = "Failed to load layers from database";
@@ -704,14 +723,36 @@ public class AnalyzerConstants {
             // QueryBasedPresence log messages
             public static final String NO_QUERIES_DEFINED = "No queries defined for layer presence detection";
             public static final String NULL_QUERY_ENCOUNTERED = "Encountered null query in layer presence queries, skipping";
+            public static final String NO_DATASOURCE_TYPE_SPECIFIED = "Query has no datasource type specified, skipping";
+            public static final String FILTERING_DATASOURCES_BY_TYPE = "Filtering datasources by type: '{}'";
+            public static final String NO_DATASOURCES_MATCHING_TYPE = "No datasources found with type '{}', skipping query";
+            public static final String MULTIPLE_DATASOURCES_MATCHED = "Multiple datasources ({}) matched type '{}', selected datasource '{}' (alphabetically first)";
             public static final String DATASOURCE_NOT_FOUND = "Datasource '{}' not found in collection";
             public static final String NO_OPERATOR_AVAILABLE = "No operator available for datasource '{}'";
             public static final String EXECUTING_QUERY = "Executing layer detection query: {}";
-            public static final String LAYER_DETECTED_VIA_QUERY = "Layer detected via query in namespace '{}', workload '{}', container '{}'";
+            public static final String LAYER_DETECTED_VIA_QUERY = "Layer detected via query in namespace '{}', container '{}'";
             public static final String ERROR_EXECUTING_QUERY = "Error executing layer presence query for datasource '{}'";
+
+            // Tunable Spec messages
+            public static final String LAYER_NAME_N_TUNABLE_NAME_NOT_NULL = "layerName and tunableName must not be null";
+            public static final String LAYER_NAME_NOT_NULL = "layerName must not be null or empty";
+            public static final String TUNABLE_NAME_NOT_NULL = "tunableName must not be null or empty";
 
             private LogMessages() {
             }
+        }
+
+        public static final class TunablesConstants {
+            private TunablesConstants() {}
+
+            // Container tunables
+            public static final String MEMORY_LIMIT = "memoryLimit";
+            public static final String CPU_LIMIT =  "cpuLimit";
+            // Hotspot tunables
+            public static final String MAX_RAM_PERC = "MaxRAMPercentage";
+            public static final String GC_POLICY = "GCPolicy";
+            // Quarkus tunables
+            public static final String CORE_THREADS = "quarkus.thread-pool.core-threads";
         }
 
         private LayerConstants() {
