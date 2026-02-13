@@ -43,4 +43,5 @@ tunables:
   lower_bound: '25'
   upper_bound: '90'
   step: 1
+  units: '%'
 
