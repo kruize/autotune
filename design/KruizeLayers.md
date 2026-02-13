@@ -24,6 +24,13 @@ Each layer:
 
 Layers can be created dynamically via API, but they must also have backend support to define their tuning logic and dependencies.
 
+#### References
+
+[Layer Payload JSON's](/manifests/autotune/layers)
+[Backend Class Implementations](/src/main/java/com/autotune/analyzer/kruizeLayer/impl)
+
+Note: Each implementation here shares the same `name` which is mentioned in the JSON config. At runtime the layers are linked to respective backend classes via their `name`
+
 ---
 
 ## Layer Architecture
