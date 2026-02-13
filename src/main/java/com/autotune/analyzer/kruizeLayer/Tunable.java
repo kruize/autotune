@@ -42,6 +42,8 @@ public class Tunable {
 
     private Double step;
 
+    private String units;
+
     private List<String> choices;
 
     /**
@@ -58,15 +60,17 @@ public class Tunable {
      * @param step Step size for optimization
      * @param upperBoundValue Upper bound
      * @param lowerBoundValue Lower bound
+     * @param units Units for the tunable (e.g., "Mi", "cores")
      * @throws InvalidBoundsException if bounds are invalid
      */
-    public Tunable(String name, String valueType, Double step, String upperBoundValue, String lowerBoundValue)
+    public Tunable(String name, String valueType, Double step, String upperBoundValue, String lowerBoundValue, String units)
             throws InvalidBoundsException {
         this.name = name;
         this.valueType = valueType;
         this.step = step;
         this.upperBoundValue = upperBoundValue;
         this.lowerBoundValue = lowerBoundValue;
+        this.units = units;
         validateBounds();
     }
 
@@ -209,6 +213,10 @@ public class Tunable {
         return choices;
     }
 
+    public String getUnits() {
+        return units;
+    }
+
     // Setters for YAML/JSON deserialization
     public void setName(String name) {
         this.name = name;
@@ -238,6 +246,10 @@ public class Tunable {
         this.choices = choices;
     }
 
+    public void setUnits(String units) {
+        this.units = units;
+    }
+
     @Override
     public String toString() {
         return "Tunable{" +
@@ -247,6 +259,7 @@ public class Tunable {
                 ", upperBound=" + upperBoundValue +
                 ", lowerBound=" + lowerBoundValue +
                 ", step=" + step +
+                ", units='" + units + '\'' +
                 ", choices=" + choices +
                 '}';
     }
