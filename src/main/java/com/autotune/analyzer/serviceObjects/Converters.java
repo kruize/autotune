@@ -552,16 +552,13 @@ public class Converters {
                 String kind = jsonObject.getString(AnalyzerConstants.KIND);
 
                 // Parse metadata
-                // Use optJSONObject to handle null values gracefully (returns null instead of throwing JSONException)
                 JSONObject metadataObject = jsonObject.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
                 String name = null;
                 if (metadataObject != null) {
-                    // Use optString to handle null values gracefully (returns null instead of throwing JSONException)
                     name = metadataObject.optString(AnalyzerConstants.AutotuneObjectConstants.NAME, null);
                 }
 
                 // Parse basic layer fields
-                // Use optString to handle null values gracefully (returns null instead of throwing JSONException)
                 String layerName = jsonObject.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, null);
                 int layerLevel = jsonObject.getInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
                 String details = jsonObject.has(AnalyzerConstants.AutotuneConfigConstants.DETAILS) ? jsonObject.getString(AnalyzerConstants.AutotuneConfigConstants.DETAILS) : null;
@@ -572,7 +569,6 @@ public class Converters {
                 String labelName = null;
                 String labelValue = null;
 
-                // Use optJSONObject to handle null values gracefully (returns null instead of throwing JSONException)
                 JSONObject layerPresenceObject = jsonObject.optJSONObject("layer_presence");
                 if (layerPresenceObject != null) {
                     presence = layerPresenceObject.has("presence") ? layerPresenceObject.getString("presence") : null;
@@ -603,7 +599,6 @@ public class Converters {
                 }
 
                 // Parse tunables array
-                // Use optJSONArray to handle null values gracefully (returns null instead of throwing JSONException)
                 ArrayList<Tunable> tunables = null;
                 JSONArray tunablesArray = jsonObject.optJSONArray("tunables");
                 if (tunablesArray != null) {
