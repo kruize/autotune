@@ -1,6 +1,9 @@
 package com.autotune.analyzer.recommendations.model;
 
-import com.autotune.analyzer.kruizeLayer.LayerTunable;
+import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
+import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationContext;
+import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationHandlerRegistry;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -16,7 +19,6 @@ import com.autotune.common.data.result.IntervalResults;
 
 import com.autotune.common.utils.CommonUtils;
 import com.autotune.utils.KruizeConstants;
-import com.google.gson.Gson;
 import org.json.JSONArray;
 import org.json.JSONObject;
 import org.slf4j.Logger;
@@ -693,13 +695,11 @@ public class GenericRecommendationModel implements RecommendationModel{
      * @return
      */
     @Override
-    public Object getRuntimeRecommendations(String metricName, String layerName, Map<Timestamp, IntervalResults> filteredResultsMap, Map<LayerTunable, Object> context,
+    public Object getRuntimeRecommendations(String metricName, String layerName, Map<Timestamp, IntervalResults> filteredResultsMap, Map<TunableSpec, Object> context,
                                             ArrayList<RecommendationNotification> notifications) {
+        Double memLimits = (Double) getTunableValue(context, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER, AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT);
+        Double cpuLimits = (Double) getTunableValue(context, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER, AnalyzerConstants.MetricNameConstants.CPU_LIMIT);
 
-        Double memLimits = (Double) getTunableValue(context, AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER);
-        Double cpuLimits = (Double) getTunableValue(context, AnalyzerConstants.MetricNameConstants.CPU_LIMIT, AnalyzerConstants.AutotuneConfigConstants.LAYER_CONTAINER);
-
-        // Fallback: container layer may not have memoryLimit/cpuLimit tunables, use values from filteredResultsMap
         if (memLimits == null) {
             RecommendationConfigItem memRec = getMemoryRequestRecommendation(filteredResultsMap, notifications);
             memLimits = (memRec != null) ? memRec.getAmount() : null;
@@ -711,46 +711,16 @@ public class GenericRecommendationModel implements RecommendationModel{
         if (memLimits == null || cpuLimits == null) {
             return null;
         }
-        double memLimitsVal = memLimits;
-        double cpuLimitsVal = cpuLimits;
 
         MetricMetadataResults metricMetadata = getJvmMetricMetadataFromFilteredResults(filteredResultsMap);
+        String effectiveLayer = metricMetadata != null
+                ? getEffectiveLayerFromRuntime(metricMetadata.getRuntime())
+                : layerName;
 
-        switch (metricName) {
-            case AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE:
-                return AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
-            case AnalyzerConstants.MetricNameConstants.GC_POLICY:
-                if (metricMetadata == null) {
-                    return null;
-                }
-
-                String jdkVersion = metricMetadata.getVersion();
-                if (jdkVersion == null || jdkVersion.isEmpty()) {
-                    LOGGER.warn("JVM version is null or empty (layerName={})", layerName);
-                    return null;
-                }
-
-                String effectiveLayer = getEffectiveLayerFromRuntime(metricMetadata.getRuntime());
-                if (!layerName.equalsIgnoreCase(effectiveLayer)) {
-                    LOGGER.debug("layerName '{}' does not match effective layer '{}' (runtime={})", layerName, effectiveLayer, metricMetadata.getRuntime());
-                    return null;
-                }
-
-                Double jvmHeapSizeMB = null; // TODO: to be considered in the future release
-                double maxRamPercentage = AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
-
-                if (AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU.equalsIgnoreCase(effectiveLayer)) {
-                    LOGGER.debug("Computing Semeru/OpenJ9 recommendation (layerName={}, runtime={}, jdkVersion={}, jvmHeapSizeMB={})", layerName, metricMetadata.getRuntime(), jdkVersion, jvmHeapSizeMB);
-                    return decideSemeruGCPolicy(jvmHeapSizeMB, maxRamPercentage, memLimitsVal, cpuLimitsVal);
-                }
-
-                LOGGER.debug("Computing Hotspot recommendation (layerName={}, runtime={}, jdkVersion={}, jvmHeapSizeMB={})", layerName, metricMetadata.getRuntime(), jdkVersion, jvmHeapSizeMB);
-                return decideHotSpotGCPolicy(jvmHeapSizeMB, maxRamPercentage, memLimitsVal, cpuLimitsVal, jdkVersion);
-            case AnalyzerConstants.MetricNameConstants.CORE_THREADS:
-                return (int) Math.ceil(cpuLimitsVal);
-            default:
-                return null;
-        }
+        LayerRecommendationContext layerContext = new LayerRecommendationContext(
+                memLimits, cpuLimits, metricMetadata, effectiveLayer);
+        LayerRecommendationHandler handler = LayerRecommendationHandlerRegistry.getInstance().getHandler(layerName);
+        return handler != null ? handler.getRecommendation(metricName, layerContext) : null;
     }
 
     /**
@@ -768,78 +738,6 @@ public class GenericRecommendationModel implements RecommendationModel{
             return AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU;
         }
         return AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT;
-    }
-
-    public String decideHotSpotGCPolicy(Double jvmHeapSizeMB, double maxRAMPercent, double memLimit, double cpuCores, String jdkVersionStr) {
-
-        int jdkVersion = parseMajorVersion(jdkVersionStr);
-
-        if (jvmHeapSizeMB == null || jvmHeapSizeMB == 0) {
-            double memLimitMB = memLimit / (1024 * 1024);
-            jvmHeapSizeMB = Math.ceil((maxRAMPercent / 100) * memLimitMB);
-            LOGGER.debug("memLimitMB: {}", memLimitMB);
-        }
-
-        LOGGER.info("jvmHeapSizeMB: {}", jvmHeapSizeMB);
-        LOGGER.info("memLimit: {}", memLimit);
-
-        if (cpuCores <= 1 && jvmHeapSizeMB < 4096) {
-            return "-XX:+UseSerialGC";
-        } else if (cpuCores > 1 && jvmHeapSizeMB < 4096) {
-            return "-XX:+UseParallelGC";
-        } else if (jvmHeapSizeMB >= 4096) {
-            if (jdkVersion >= 17) {
-                return "-XX:+UseZGC";
-            }
-            else if (jdkVersion >= 11) {
-                return "-XX:+UseShenandoahGC";
-            }
-            else {
-                return "-XX:+UseG1GC";
-            }
-        } else {
-            return "-XX:+UseG1GC";
-        }
-    }
-
-    /**
-     * Recommends OpenJ9/Semeru GC policy based on heap size and CPU cores.
-     * Uses -Xgcpolicy:&lt;policy&gt; format.
-     *
-     * Selection logic (per Eclipse OpenJ9 docs):
-     * - gencon: Default
-     * - balanced: 64-bit only, Use when heap >= 4GB.
-     * - optthruput: Use when throughput-critical.
-     */
-    public String decideSemeruGCPolicy(Double jvmHeapSizeMB, double maxRAMPercent, double memLimit, double cpuCores) {
-        if (jvmHeapSizeMB == null || jvmHeapSizeMB == 0) {
-            double memLimitMB = memLimit / (1024 * 1024);
-            jvmHeapSizeMB = Math.ceil((maxRAMPercent / 100) * memLimitMB);
-            LOGGER.debug("Semeru memLimitMB: {}", memLimitMB);
-        }
-
-        LOGGER.info("Semeru jvmHeapSizeMB: {}", jvmHeapSizeMB);
-        LOGGER.info("Semeru cpuCores: {}", cpuCores);
-
-        if (jvmHeapSizeMB >= 4096 && cpuCores > 1) {
-            return "-Xgcpolicy:balanced";
-        } else {
-            return "-Xgcpolicy:gencon";
-        }
-    }
-
-    public static int parseMajorVersion(String version) {
-        if (version == null || version.isEmpty()) return 8; // default fallback
-        version = version.trim();
-
-        if (version.startsWith("1.")) {
-            return Integer.parseInt(version.substring(2, 3)); // e.g. "1.8" → 8
-        } else {
-            int dotIndex = version.indexOf(".");
-            return (dotIndex != -1)
-                    ? Integer.parseInt(version.substring(0, dotIndex))
-                    : Integer.parseInt(version);
-        }
     }
 
 
@@ -871,15 +769,8 @@ public class GenericRecommendationModel implements RecommendationModel{
         return null;
     }
 
-    public static Object getTunableValue(Map<LayerTunable, Object> context, String metricName, String layer) {
-        for (Map.Entry<LayerTunable, Object> entry : context.entrySet()) {
-            LayerTunable key = entry.getKey();
-            if (key.getMetricName().equalsIgnoreCase(metricName) &&
-                    key.getLayerName().equalsIgnoreCase(layer)) {
-                return entry.getValue();
-            }
-        }
-        return null; // Not found
+    public static Object getTunableValue(Map<TunableSpec, Object> context, String layerName, String metricName) {
+        return context.get(new TunableSpec(layerName, metricName));
     }
 
 

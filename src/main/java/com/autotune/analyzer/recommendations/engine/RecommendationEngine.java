@@ -5,11 +5,11 @@ import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
-import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
-import com.autotune.analyzer.kruizeLayer.KruizeLayer;
-import com.autotune.analyzer.kruizeLayer.LayerTunable;
 import com.autotune.analyzer.kruizeLayer.Tunable;
-import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
+import com.autotune.analyzer.kruizeLayer.impl.TunableDependencyResolver;
+import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
+import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationHandlerRegistry;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
 import com.autotune.analyzer.kruizeObject.ModelSettings;
 import com.autotune.analyzer.kruizeObject.RecommendationSettings;
@@ -922,34 +922,48 @@ public class RecommendationEngine {
         }
         Map<String, KruizeLayer> layerMap = containerData.getLayerMap();
         LOGGER.debug("layerMap: {}", new Gson().toJson(layerMap));
-        List<LayerTunable> layerTunables = getTunablesList(layerMap);
-        Map<LayerTunable, Object> context = new HashMap<>();
+        if (layerMap == null || layerMap.isEmpty()) {
+            return runtimeRecommList;
+        }
+        List<KruizeLayer> kruizeLayers = layerMap.values().stream()
+                .filter(layer -> layer.getTunables() != null)
+                .collect(Collectors.toList());
+        Map<Tunable, TunableSpec> tunableToSpec = new HashMap<>();
+        for (KruizeLayer layer : kruizeLayers) {
+            for (Tunable tunable : layer.getTunables()) {
+                tunableToSpec.put(tunable, new TunableSpec(layer.getLayerName(), tunable.getName()));
+            }
+        }
+        List<Tunable> orderedTunables = TunableDependencyResolver.resolve(kruizeLayers);
+        Map<TunableSpec, Object> context = new HashMap<>();
         RecommendationConfigItem recommendationCpuRequest;
         RecommendationConfigItem recommendationCpuLimits;
         RecommendationConfigItem recommendationMemRequest;
         RecommendationConfigItem recommendationMemLimits;
         Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap = null;
 
-        // Process the tunables
-        for (LayerTunable layerTunable : layerTunables) {
+        // Process the tunables (ordered by dependency resolution)
+        for (Tunable tunable : orderedTunables) {
+            TunableSpec spec = tunableToSpec.get(tunable);
+            String layerName = spec.layerName();
+            String metricName = spec.tunableName();
             Double amount;
-            switch (layerTunable.getMetricName()) {
+            switch (metricName) {
                 case AnalyzerConstants.MetricNameConstants.MEMORY_REQUEST:
                     recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
                     amount = null;
                     if (recommendationMemRequest != null) {
                         amount = recommendationMemRequest.getAmount();
                     }
-                    context.put(layerTunable, amount);
+                    context.put(spec, amount);
                     break;
                 case AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT:
-                    // TODO: Combine memRequest and Limit cases to avoid duplicacy. Need to find how to update the context.
                     recommendationMemLimits = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
                     amount = null;
                     if (recommendationMemLimits != null) {
                         amount = recommendationMemLimits.getAmount();
                     }
-                    context.put(layerTunable, amount);
+                    context.put(spec, amount);
                     break;
                 case AnalyzerConstants.MetricNameConstants.CPU_REQUEST:
                     recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
@@ -957,7 +971,7 @@ public class RecommendationEngine {
                     if (recommendationCpuRequest != null) {
                         amount = recommendationCpuRequest.getAmount();
                     }
-                    context.put(layerTunable, amount);
+                    context.put(spec, amount);
                     break;
                 case AnalyzerConstants.MetricNameConstants.CPU_LIMIT:
                     recommendationCpuLimits = model.getCPURequestRecommendation(filteredResultsMap, notifications);
@@ -965,66 +979,48 @@ public class RecommendationEngine {
                     if (recommendationCpuLimits != null) {
                         amount = recommendationCpuLimits.getAmount();
                     }
-                    context.put(layerTunable, amount);
+                    context.put(spec, amount);
                     break;
                 case AnalyzerConstants.MetricNameConstants.GPU:
                     recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
-                    context.put(layerTunable, recommendationAcceleratorRequestMap);
+                    context.put(spec, recommendationAcceleratorRequestMap);
                     break;
-                case AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE, AnalyzerConstants.MetricNameConstants.GC_POLICY, AnalyzerConstants.MetricNameConstants.CORE_THREADS:
-                    Object recommendationRuntimes;
-                    recommendationRuntimes = model.getRuntimeRecommendations(layerTunable.getMetricName(), layerTunable.getLayerName(), filteredResultsMap, context, notifications);
-                    context.put(layerTunable, recommendationRuntimes);
+                case AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE:
+                case AnalyzerConstants.MetricNameConstants.GC_POLICY:
+                case AnalyzerConstants.MetricNameConstants.CORE_THREADS:
+                    Object recommendationRuntimes = model.getRuntimeRecommendations(metricName, layerName, filteredResultsMap, context, notifications);
+                    context.put(spec, recommendationRuntimes);
                     break;
                 default:
-                    throw new IllegalStateException("Unexpected value: " + layerTunable.getLayerName());
+                    throw new IllegalStateException("Unexpected value: " + metricName);
             }
         }
 
-        StringBuilder recommendationOpenjdkBuilder = new StringBuilder();
-        StringBuilder recommendationQuarkusBuilder = new StringBuilder();
-        // Combine Recommendation tunables for each layer
-        for (Map.Entry<LayerTunable, Object> entry : context.entrySet()) {
+        // Build env var strings via layer handlers
+        StringBuilder jvmOptsBuilder = new StringBuilder();
+        StringBuilder quarkusBuilder = new StringBuilder();
+        Map<String, StringBuilder> envBuilders = new HashMap<>();
+        envBuilders.put(KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS, jvmOptsBuilder);
+        envBuilders.put(KruizeConstants.JSONKeys.JAVA_OPTIONS, jvmOptsBuilder);
+        envBuilders.put(AnalyzerConstants.MetricNameConstants.CORE_THREADS, quarkusBuilder);
+
+        for (Map.Entry<TunableSpec, Object> entry : context.entrySet()) {
             Object value = entry.getValue();
-            if (value == null) {
-                continue;
-            }
-            LayerTunable layerTunable = entry.getKey();
-            if (layerTunable.getLayerName().equalsIgnoreCase(AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT)) {
-                switch (layerTunable.getMetricName()) {
-                    case AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE:
-                        recommendationOpenjdkBuilder.append("-XX:MaxRAMPercentage=")
-                                .append(value.toString())
-                                .append(" ");
-                        break;
-                    case AnalyzerConstants.MetricNameConstants.GC_POLICY:
-                        recommendationOpenjdkBuilder.append(value)
-                                .append(" ");
-                        break;
-                }
-            } else if (layerTunable.getLayerName().equalsIgnoreCase(AnalyzerConstants.AutotuneConfigConstants.LAYER_QUARKUS)) {
-                if (layerTunable.getMetricName().equals(AnalyzerConstants.MetricNameConstants.CORE_THREADS)) {
-                    recommendationQuarkusBuilder.append(value.toString());
-                }
-            } else if (layerTunable.getLayerName().equalsIgnoreCase(AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU)) {
-                switch (layerTunable.getMetricName()) {
-                    case AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE:
-                        recommendationOpenjdkBuilder.append("-XX:MaxRAMPercentage=")
-                                .append(value.toString())
-                                .append(" ");
-                        break;
-                    case AnalyzerConstants.MetricNameConstants.GC_POLICY:
-                        recommendationOpenjdkBuilder.append(value)
-                                .append(" ");
-                        break;
+            if (value == null) continue;
+            TunableSpec spec = entry.getKey();
+            String layerName = spec.layerName();
+            String metricName = spec.tunableName();
+            if (isRuntimeTunable(metricName)) {
+                LayerRecommendationHandler handler = LayerRecommendationHandlerRegistry.getInstance().getHandler(layerName);
+                if (handler != null) {
+                    handler.formatForEnv(metricName, value, envBuilders);
                 }
             }
         }
 
-        // Add recommended ENV values in the list
-        addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS, recommendationOpenjdkBuilder);
-        addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JAVA_OPTIONS, recommendationOpenjdkBuilder);
-        addIfNotEmpty(runtimeRecommList, AnalyzerConstants.MetricNameConstants.CORE_THREADS, recommendationQuarkusBuilder);
+        addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS, jvmOptsBuilder);
+        addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JAVA_OPTIONS, jvmOptsBuilder);
+        addIfNotEmpty(runtimeRecommList, AnalyzerConstants.MetricNameConstants.CORE_THREADS, quarkusBuilder);
 
         return runtimeRecommList;
     }
@@ -2861,22 +2857,10 @@ public class RecommendationEngine {
         }
     }
 
-    public static List<LayerTunable> getTunablesList(Map<String, KruizeLayer> layerHashMap) {
-        List<LayerTunable> layerTunableList = new ArrayList<>();
-
-        for (KruizeLayer kruizeLayer : layerHashMap.values()) {
-            if (kruizeLayer.getTunables() == null) continue;
-
-            for (Tunable tunable : kruizeLayer.getTunables()) {
-                if (kruizeLayer.getTunables() == null) {
-                    LOGGER.warn("Missing layer or tunables for: {}", kruizeLayer.getLayerName());
-                }
-                layerTunableList.add(new LayerTunable(kruizeLayer.getLayerName(), tunable.getName()));
-            }
-        }
-
-        LOGGER.debug("list of tunables: {}", layerTunableList);
-        return layerTunableList;
+    private static boolean isRuntimeTunable(String metricName) {
+        return AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE.equals(metricName)
+                || AnalyzerConstants.MetricNameConstants.GC_POLICY.equals(metricName)
+                || AnalyzerConstants.MetricNameConstants.CORE_THREADS.equals(metricName);
     }
 
 }
