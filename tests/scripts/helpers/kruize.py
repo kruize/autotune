@@ -725,14 +725,10 @@ def list_layers(layer_name=None, logging=True):
     if layer_name is not None:
         query_params['name'] = layer_name
 
-    query_string = "&".join(f"{key}={value}" for key, value in query_params.items())
-
     url = URL + "/listLayers"
-    if query_string:
-        url += "?" + query_string
     print("URL = ", url)
     print("PARAMS = ", query_params)
-    response = requests.get(url)
+    response = requests.get(url, params=query_params)
 
     print("Response status code = ", response.status_code)
     if logging:
@@ -756,9 +752,37 @@ def delete_layer_from_db(layer_name):
         bool: True if deletion succeeded, False otherwise
     """
     import subprocess
+
+    # Auto-detect namespace where kruize-db-deployment is running
+    try:
+        namespace_cmd = [
+            "kubectl", "get", "deployment", "-A",
+            "-o", "custom-columns=NAMESPACE:.metadata.namespace,NAME:.metadata.name",
+            "--no-headers"
+        ]
+        namespace_result = subprocess.run(namespace_cmd, capture_output=True, text=True, timeout=5)
+        if namespace_result.returncode != 0:
+            print(f"  ⚠ Warning: Could not find kruize-db-deployment namespace")
+            return False
+
+        # Parse output to find kruize-db-deployment
+        namespace = None
+        for line in namespace_result.stdout.strip().split('\n'):
+            parts = line.split()
+            if len(parts) >= 2 and parts[1] == 'kruize-db-deployment':
+                namespace = parts[0]
+                break
+
+        if not namespace:
+            print(f"  ⚠ Warning: Could not find kruize-db-deployment namespace")
+            return False
+    except Exception as e:
+        print(f"  ⚠ Warning: Error detecting namespace: {e}")
+        return False
+
     try:
         cmd = [
-            "kubectl", "exec", "-n", "monitoring",
+            "kubectl", "exec", "-n", namespace,
             "deployment/kruize-db-deployment", "--",
             "psql", "-U", "admin", "-d", "kruizeDB",
             "-c", f"DELETE FROM kruize_lm_layer WHERE layer_name='{layer_name}';"

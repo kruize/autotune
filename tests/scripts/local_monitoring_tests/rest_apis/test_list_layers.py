@@ -23,8 +23,25 @@ sys.path.append("../../")
 from helpers.fixtures import *
 from helpers.kruize import *
 from helpers.utils import *
+from helpers.list_layers_validate import *
+from helpers.list_layers_schema import *
 
 layer_dir = get_layer_dir()
+
+# Layer names to clean up in tests
+CLEANUP_LAYER_NAMES = ['container', 'semeru', 'quarkus', 'hotspot', 'test-layer']
+
+
+@pytest.fixture(autouse=True)
+def cleanup_test_layers():
+    """Fixture to clean up test layers before and after each test"""
+    # Cleanup before test - clean up all known layer names
+    for layer_name in CLEANUP_LAYER_NAMES:
+        delete_layer_from_db(layer_name)
+    yield
+    # Cleanup after test - clean up all known layer names
+    for layer_name in CLEANUP_LAYER_NAMES:
+        delete_layer_from_db(layer_name)
 
 
 @pytest.mark.layers
@@ -36,12 +53,7 @@ def test_list_layers_when_no_layers_exist(cluster_type):
     """
     form_kruize_url(cluster_type)
 
-    # Ensure database is clean - delete any existing layers
-    # This ensures we test the true empty state
-    for layer_name in ['container', 'semeru', 'quarkus', 'hotspot', 'test-layer']:
-        delete_layer_from_db(layer_name)
-
-    # List layers when none exist
+    # List layers when none exist (fixture ensures clean state)
     response = list_layers(layer_name=None, logging=False)
 
     # API should return 400 when no layers exist
@@ -49,7 +61,7 @@ def test_list_layers_when_no_layers_exist(cluster_type):
 
     data = response.json()
     assert data['status'] == ERROR_STATUS
-    assert 'no layers' in data['message'].lower()
+    assert data['message'] == LIST_LAYERS_NO_LAYERS_FOUND_MSG
 
     print("✓ Correctly returned error when no layers exist")
 
@@ -79,18 +91,11 @@ def test_list_all_layers_no_parameter(cluster_type):
     assert isinstance(layers, list)
     assert len(layers) > 0
 
-    # Verify each layer has required fields
-    for layer in layers:
-        assert 'layer_name' in layer
-        assert 'metadata' in layer
-        assert 'layer_level' in layer
-        assert 'layer_presence' in layer
-        assert 'tunables' in layer
+    # Validate the json against the json schema
+    errorMsg = validate_list_layers_json(layers, list_layers_schema)
+    assert errorMsg == ""
 
     print(f"✓ Successfully listed {len(layers)} layer(s)")
-
-    # Cleanup: Delete the created layer
-    delete_layer_from_db('container')
 
 
 @pytest.mark.layers
@@ -130,7 +135,11 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
 
     layers = response.json()
     assert isinstance(layers, list)
-    assert len(layers) >= len(created_layer_names)
+    assert len(layers) == len(created_layer_names)
+
+    # Validate the json against the json schema
+    errorMsg = validate_list_layers_json(layers, list_layers_schema)
+    assert errorMsg == ""
 
     # Verify all created layers are present
     returned_layer_names = [layer['layer_name'] for layer in layers]
@@ -139,10 +148,6 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
         assert expected_name in returned_layer_names, f"Layer '{expected_name}' not found in list"
 
     print(f"✓ Successfully listed {len(layers)} layer(s), verified all {len(created_layer_names)} created layers are present")
-
-    # Cleanup: Delete all created layers
-    for layer_name in created_layer_names:
-        delete_layer_from_db(layer_name)
 
 
 @pytest.mark.layers
@@ -183,36 +188,16 @@ def test_list_specific_layer_by_name(cluster_type, layer_file):
     assert isinstance(layers, list)
     assert len(layers) == 1, f"Expected 1 layer, got {len(layers)}"
 
+    # Validate the json against the json schema
+    errorMsg = validate_list_layers_json(layers, list_layers_schema)
+    assert errorMsg == ""
+
     returned_layer = layers[0]
 
-    # Verify layer name matches
-    assert returned_layer['layer_name'] == expected_layer_name
-
-    # Verify metadata
-    assert 'metadata' in returned_layer
-    assert returned_layer['metadata']['name'] == input_json['metadata']['name']
-
-    # Verify layer_level
-    assert returned_layer['layer_level'] == input_json['layer_level']
-
-    # Verify layer_presence structure
-    assert 'layer_presence' in returned_layer
-
-    # Verify tunables
-    assert 'tunables' in returned_layer
-    assert len(returned_layer['tunables']) == len(expected_tunables)
-
-    # Verify tunable names match
-    returned_tunable_names = [t['name'] for t in returned_layer['tunables']]
-    expected_tunable_names = [t['name'] for t in expected_tunables]
-
-    for expected_name in expected_tunable_names:
-        assert expected_name in returned_tunable_names, f"Tunable '{expected_name}' not found"
+    # Validate all layer data matches input
+    validate_layer_data(returned_layer, input_json, verbose=False)
 
     print(f"✓ Successfully listed layer '{expected_layer_name}' with {len(returned_layer['tunables'])} tunable(s)")
-
-    # Cleanup: Delete the created layer
-    delete_layer_from_db(expected_layer_name)
 
 
 @pytest.mark.layers
@@ -253,145 +238,15 @@ def test_list_layer_validates_all_fields_and_values(cluster_type, layer_file):
     layers = response.json()
     assert len(layers) == 1
 
+    # Validate the json against the json schema
+    errorMsg = validate_list_layers_json(layers, list_layers_schema)
+    assert errorMsg == ""
+
     returned_layer = layers[0]
 
-    # ========== Validate Top-Level Fields ==========
-
-    # 1. apiVersion
-    assert 'apiVersion' in returned_layer
-    assert returned_layer['apiVersion'] == input_json['apiVersion']
-    print(f"  ✓ apiVersion: {returned_layer['apiVersion']}")
-
-    # 2. kind
-    assert 'kind' in returned_layer
-    assert returned_layer['kind'] == input_json['kind']
-    print(f"  ✓ kind: {returned_layer['kind']}")
-
-    # 3. metadata
-    assert 'metadata' in returned_layer
-    assert isinstance(returned_layer['metadata'], dict)
-    assert 'name' in returned_layer['metadata']
-    assert returned_layer['metadata']['name'] == input_json['metadata']['name']
-    print(f"  ✓ metadata.name: {returned_layer['metadata']['name']}")
-
-    # 4. layer_name
-    assert 'layer_name' in returned_layer
-    assert returned_layer['layer_name'] == input_json['layer_name']
-    print(f"  ✓ layer_name: {returned_layer['layer_name']}")
-
-    # 5. layer_level
-    assert 'layer_level' in returned_layer
-    assert returned_layer['layer_level'] == input_json['layer_level']
-    print(f"  ✓ layer_level: {returned_layer['layer_level']}")
-
-    # 6. details (optional field)
-    if 'details' in input_json:
-        assert 'details' in returned_layer
-        assert returned_layer['details'] == input_json['details']
-        print(f"  ✓ details: {returned_layer['details']}")
-
-    # ========== Validate layer_presence ==========
-
-    assert 'layer_presence' in returned_layer
-    assert isinstance(returned_layer['layer_presence'], dict)
-
-    input_presence = input_json['layer_presence']
-    returned_presence = returned_layer['layer_presence']
-
-    # Check presence type and validate accordingly
-    if 'presence' in input_presence:
-        assert 'presence' in returned_presence
-        assert returned_presence['presence'] == input_presence['presence']
-        print(f"  ✓ layer_presence.presence: {returned_presence['presence']}")
-
-    if 'queries' in input_presence:
-        assert 'queries' in returned_presence
-        assert isinstance(returned_presence['queries'], list)
-        assert len(returned_presence['queries']) == len(input_presence['queries'])
-
-        for i, query in enumerate(input_presence['queries']):
-            returned_query = returned_presence['queries'][i]
-            assert 'datasource' in returned_query
-            assert returned_query['datasource'] == query['datasource']
-            assert 'query' in returned_query
-            assert returned_query['query'] == query['query']
-            assert 'key' in returned_query
-            assert returned_query['key'] == query['key']
-
-        print(f"  ✓ layer_presence.queries: {len(returned_presence['queries'])} queries validated")
-
-    if 'label' in input_presence:
-        assert 'label' in returned_presence
-        assert isinstance(returned_presence['label'], list)
-        assert len(returned_presence['label']) == len(input_presence['label'])
-
-        for i, label in enumerate(input_presence['label']):
-            returned_label = returned_presence['label'][i]
-            assert 'name' in returned_label
-            assert returned_label['name'] == label['name']
-            assert 'value' in returned_label
-            assert returned_label['value'] == label['value']
-
-        print(f"  ✓ layer_presence.label: {len(returned_presence['label'])} labels validated")
-
-    # ========== Validate tunables ==========
-
-    assert 'tunables' in returned_layer
-    assert isinstance(returned_layer['tunables'], list)
-    assert len(returned_layer['tunables']) == len(input_json['tunables'])
-    print(f"  ✓ tunables count: {len(returned_layer['tunables'])}")
-
-    # Validate each tunable in detail
-    for i, input_tunable in enumerate(input_json['tunables']):
-        # Find matching tunable by name
-        tunable_name = input_tunable['name']
-        returned_tunable = None
-
-        for rt in returned_layer['tunables']:
-            if rt['name'] == tunable_name:
-                returned_tunable = rt
-                break
-
-        assert returned_tunable is not None, f"Tunable '{tunable_name}' not found in response"
-
-        # Validate tunable name
-        assert returned_tunable['name'] == input_tunable['name']
-
-        # Validate value_type
-        assert 'value_type' in returned_tunable
-        assert returned_tunable['value_type'] == input_tunable['value_type']
-
-        # Validate description (optional)
-        if 'description' in input_tunable:
-            assert 'description' in returned_tunable
-            assert returned_tunable['description'] == input_tunable['description']
-
-        # Validate bounded tunable fields (lower_bound, upper_bound, step)
-        if 'lower_bound' in input_tunable:
-            assert 'lower_bound' in returned_tunable
-            assert returned_tunable['lower_bound'] == input_tunable['lower_bound']
-            assert 'upper_bound' in returned_tunable
-            assert returned_tunable['upper_bound'] == input_tunable['upper_bound']
-            assert 'step' in returned_tunable
-            assert returned_tunable['step'] == input_tunable['step']
-            print(f"    ✓ Tunable '{tunable_name}': bounded (lower={input_tunable['lower_bound']}, upper={input_tunable['upper_bound']}, step={input_tunable['step']})")
-
-        # Validate categorical tunable fields (choices)
-        if 'choices' in input_tunable:
-            assert 'choices' in returned_tunable
-            assert isinstance(returned_tunable['choices'], list)
-            assert len(returned_tunable['choices']) == len(input_tunable['choices'])
-
-            # Verify all choices are present
-            for choice in input_tunable['choices']:
-                assert choice in returned_tunable['choices'], f"Choice '{choice}' not found in tunable '{tunable_name}'"
-
-            print(f"    ✓ Tunable '{tunable_name}': categorical ({len(input_tunable['choices'])} choices)")
-
+    # Validate all layer data matches input
+    validate_layer_data(returned_layer, input_json, verbose=True)
     print(f"\n✓ All fields and values validated successfully for layer '{layer_name}'")
-
-    # Cleanup: Delete the created layer
-    delete_layer_from_db(layer_name)
 
 
 # ========== Negative Test Cases ==========
@@ -416,8 +271,7 @@ def test_list_layer_with_non_existent_name(cluster_type):
 
     data = response.json()
     assert data['status'] == ERROR_STATUS
-    assert non_existent_layer_name in data['message']
-    assert "does not exist" in data['message'] or "not valid" in data['message']
+    assert data['message'] == LIST_LAYERS_INVALID_LAYER_NAME_MSG % non_existent_layer_name
 
     print(f"✓ Correctly returned 400 for non-existent layer '{non_existent_layer_name}'")
 
@@ -452,8 +306,8 @@ def test_list_layers_with_invalid_query_parameter(cluster_type, invalid_param, p
 
     data = response.json()
     assert data['status'] == ERROR_STATUS
-    # Error message should mention the invalid parameter
-    assert invalid_param in data['message'] or "invalid" in data['message'].lower()
+    # Validate exact error message for invalid query parameter
+    assert data['message'] == LIST_LAYERS_INVALID_QUERY_PARAM_MSG % invalid_param
 
     print(f"✓ Correctly returned error for invalid parameter '{invalid_param}'")
 
@@ -490,9 +344,7 @@ def test_list_layer_with_special_characters_in_name(cluster_type, special_char_n
     data = response.json()
     assert data['status'] == ERROR_STATUS
 
-    # Error message should indicate either not found or invalid name
-    assert ("invalid" in data['message'].lower() or
-            "does not exist" in data['message'].lower() or
-            "not valid" in data['message'].lower())
+    # Validate exact error message for invalid layer name
+    assert data['message'] == LIST_LAYERS_INVALID_LAYER_NAME_MSG % special_char_name
 
     print(f"✓ Correctly handled special character in layer name '{special_char_name}': {response.status_code}")

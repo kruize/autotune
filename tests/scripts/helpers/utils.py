@@ -128,21 +128,28 @@ RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE = "Runtimes recommendations are unavailab
 
 # Layer API Messages
 CREATE_LAYER_SUCCESS_MSG = "Layer : %s created successfully. View Layers at /listLayers"
-LAYER_DUPLICATE_MSG = "Layer with name '%s' already exists"
+LAYER_DUPLICATE_MSG = "Layer already exists with name: %s"
 LAYER_NOT_FOUND_MSG = "Layer with name '%s' not found"
-LAYER_METADATA_NAME_NULL_MSG = "metadata.name cannot be null or empty"
-LAYER_NAME_NULL_MSG = "layer_name cannot be null or empty"
-LAYER_PRESENCE_NULL_MSG = "layer_presence cannot be null"
-LAYER_TUNABLES_NULL_OR_EMPTY_MSG = "tunables cannot be null or empty - layer must have at least one tunable"
-LAYER_LEVEL_NEGATIVE_MSG = "layer_level cannot be negative"
-LAYER_PRESENCE_MISSING_MSG = "layer_presence configuration missing: must specify exactly one of: presence='always', queries, or label"
-LAYER_PRESENCE_MULTIPLE_TYPES_MSG = "layer_presence cannot specify multiple types. Choose exactly one: presence, queries, or label"
-LAYER_DUPLICATE_TUNABLE_NAMES_MSG = "Layer contains duplicate tunable names"
-TUNABLE_MIXED_CONFIG_MSG = "Tunable '%s' cannot have both categorical choices and numeric bounds/step configured"
-TUNABLE_MISSING_CONFIG_MSG = "Tunable '%s' must have either categorical choices or numeric bounds/step configured"
-TUNABLE_INVALID_BOUNDS_MSG = "Tunable '%s' has invalid bounds"
-TUNABLE_INVALID_STEP_MSG = "Tunable '%s' has invalid step"
-TUNABLE_EMPTY_CHOICES_MSG = "Tunable '%s' is categorical but has null or empty choices list"
+LAYER_METADATA_NAME_NULL_JSON_MSG = "Validation failed: metadata.name cannot be null or empty"
+LAYER_METADATA_NAME_EMPTY_MSG = "Validation failed: metadata.name cannot be null or empty"
+LAYER_NAME_NULL_JSON_MSG = "Validation failed: layer_name cannot be null or empty"
+LAYER_NAME_EMPTY_MSG = "Validation failed: layer_name cannot be null or empty"
+LAYER_PRESENCE_NULL_JSON_MSG = "Validation failed: layer_presence configuration missing: must specify exactly one of: presence='always', queries, or label"
+LAYER_TUNABLES_NULL_JSON_MSG = "Validation failed: tunables cannot be null or empty - layer must have at least one tunable"
+LAYER_TUNABLES_EMPTY_MSG = "Validation failed: tunables cannot be null or empty - layer must have at least one tunable"
+LAYER_LEVEL_NEGATIVE_MSG = "Validation failed: Layer level must be a non-negative integer"
+LAYER_PRESENCE_MISSING_MSG = "Validation failed: layer_presence configuration missing: must specify exactly one of: presence='always', queries, or label"
+LAYER_PRESENCE_MULTIPLE_TYPES_MSG = "Validation failed: layer_presence cannot specify multiple types. Choose exactly one: presence, queries, or label"
+LAYER_DUPLICATE_TUNABLE_NAMES_MSG = "Validation failed: Layer contains duplicate tunable names: %s"
+TUNABLE_MIXED_CONFIG_MSG = "Validation failed: ERROR: Tunable: Tunable '%s' cannot have both categorical choices and numeric bounds/step configured. Use either choices for categorical or upper_bound/lower_bound/step for numeric tunables."
+TUNABLE_MISSING_CONFIG_MSG = "Validation failed: ERROR: Tunable: Tunable '%s' must have either categorical choices or numeric bounds/step configured."
+TUNABLE_NULL_BOUNDS_MSG = "Validation failed: ERROR: Tunable: Tunable '%s' has null bounds; both upper_bound and lower_bound must be set"
+TUNABLE_NULL_STEP_MSG = "Validation failed: ERROR: Tunable: Tunable '%s' has null step; step must be set for bounded tunables"
+
+# List Layer API Messages
+LIST_LAYERS_INVALID_LAYER_NAME_MSG = "Given layer name - %s either does not exist or is not valid"
+LIST_LAYERS_NO_LAYERS_FOUND_MSG = "No layers found!"
+LIST_LAYERS_INVALID_QUERY_PARAM_MSG = "The query param(s) - [%s] is/are invalid"
 
 
 # Kruize Recommendations Notification codes
@@ -1907,6 +1914,195 @@ def get_layer_dir():
     layer_dir = base_dir / 'manifests' / 'autotune' / 'layers'
 
     return layer_dir
+
+
+def validate_layer_data(returned_layer, input_json, verbose=True):
+    """
+    Validates that a returned layer JSON matches the input JSON.
+    Performs comprehensive validation of all layer fields including:
+    - Top-level fields (apiVersion, kind, metadata, layer_name, layer_level, details)
+    - Layer presence configuration (presence/queries/label)
+    - All tunable fields and their values
+
+    Args:
+        returned_layer: The layer JSON returned from the listLayers API
+        input_json: The original input JSON used to create the layer
+        verbose: If True, prints validation progress (default: True)
+    """
+    # ========== Validate Top-Level Fields ==========
+
+    # 1. apiVersion
+    assert 'apiVersion' in returned_layer, "apiVersion field missing"
+    assert returned_layer['apiVersion'] == input_json['apiVersion'], \
+        f"apiVersion mismatch: expected {input_json['apiVersion']}, got {returned_layer['apiVersion']}"
+    if verbose:
+        print(f"  ✓ apiVersion: {returned_layer['apiVersion']}")
+
+    # 2. kind
+    assert 'kind' in returned_layer, "kind field missing"
+    assert returned_layer['kind'] == input_json['kind'], \
+        f"kind mismatch: expected {input_json['kind']}, got {returned_layer['kind']}"
+    if verbose:
+        print(f"  ✓ kind: {returned_layer['kind']}")
+
+    # 3. metadata
+    assert 'metadata' in returned_layer, "metadata field missing"
+    assert isinstance(returned_layer['metadata'], dict), "metadata must be an object"
+    assert 'name' in returned_layer['metadata'], "metadata.name field missing"
+    assert returned_layer['metadata']['name'] == input_json['metadata']['name'], \
+        f"metadata.name mismatch: expected {input_json['metadata']['name']}, got {returned_layer['metadata']['name']}"
+    if verbose:
+        print(f"  ✓ metadata.name: {returned_layer['metadata']['name']}")
+
+    # 4. layer_name
+    assert 'layer_name' in returned_layer, "layer_name field missing"
+    assert returned_layer['layer_name'] == input_json['layer_name'], \
+        f"layer_name mismatch: expected {input_json['layer_name']}, got {returned_layer['layer_name']}"
+    if verbose:
+        print(f"  ✓ layer_name: {returned_layer['layer_name']}")
+
+    # 5. layer_level
+    assert 'layer_level' in returned_layer, "layer_level field missing"
+    assert returned_layer['layer_level'] == input_json['layer_level'], \
+        f"layer_level mismatch: expected {input_json['layer_level']}, got {returned_layer['layer_level']}"
+    if verbose:
+        print(f"  ✓ layer_level: {returned_layer['layer_level']}")
+
+    # 6. details (optional field)
+    if 'details' in input_json:
+        assert 'details' in returned_layer, "details field missing"
+        assert returned_layer['details'] == input_json['details'], \
+            f"details mismatch: expected {input_json['details']}, got {returned_layer['details']}"
+        if verbose:
+            print(f"  ✓ details: {returned_layer['details']}")
+
+    # ========== Validate layer_presence ==========
+
+    assert 'layer_presence' in returned_layer, "layer_presence field missing"
+    assert isinstance(returned_layer['layer_presence'], dict), "layer_presence must be an object"
+
+    input_presence = input_json['layer_presence']
+    returned_presence = returned_layer['layer_presence']
+
+    # Check presence type and validate accordingly
+    if 'presence' in input_presence:
+        assert 'presence' in returned_presence, "layer_presence.presence field missing"
+        assert returned_presence['presence'] == input_presence['presence'], \
+            f"layer_presence.presence mismatch: expected {input_presence['presence']}, got {returned_presence['presence']}"
+        if verbose:
+            print(f"  ✓ layer_presence.presence: {returned_presence['presence']}")
+
+    if 'queries' in input_presence:
+        assert 'queries' in returned_presence, "layer_presence.queries field missing"
+        assert isinstance(returned_presence['queries'], list), "layer_presence.queries must be an array"
+        assert len(returned_presence['queries']) == len(input_presence['queries']), \
+            f"queries count mismatch: expected {len(input_presence['queries'])}, got {len(returned_presence['queries'])}"
+
+        for i, query in enumerate(input_presence['queries']):
+            returned_query = returned_presence['queries'][i]
+            assert 'datasource' in returned_query, f"queries[{i}].datasource field missing"
+            assert returned_query['datasource'] == query['datasource'], \
+                f"queries[{i}].datasource mismatch"
+            assert 'query' in returned_query, f"queries[{i}].query field missing"
+            assert returned_query['query'] == query['query'], \
+                f"queries[{i}].query mismatch"
+            assert 'key' in returned_query, f"queries[{i}].key field missing"
+            assert returned_query['key'] == query['key'], \
+                f"queries[{i}].key mismatch"
+
+        if verbose:
+            print(f"  ✓ layer_presence.queries: {len(returned_presence['queries'])} queries validated")
+
+    if 'label' in input_presence:
+        assert 'label' in returned_presence, "layer_presence.label field missing"
+        assert isinstance(returned_presence['label'], list), "layer_presence.label must be an array"
+        assert len(returned_presence['label']) == len(input_presence['label']), \
+            f"label count mismatch: expected {len(input_presence['label'])}, got {len(returned_presence['label'])}"
+
+        for i, label in enumerate(input_presence['label']):
+            returned_label = returned_presence['label'][i]
+            assert 'name' in returned_label, f"label[{i}].name field missing"
+            assert returned_label['name'] == label['name'], \
+                f"label[{i}].name mismatch"
+            assert 'value' in returned_label, f"label[{i}].value field missing"
+            assert returned_label['value'] == label['value'], \
+                f"label[{i}].value mismatch"
+
+        if verbose:
+            print(f"  ✓ layer_presence.label: {len(returned_presence['label'])} labels validated")
+
+    # ========== Validate tunables ==========
+
+    assert 'tunables' in returned_layer, "tunables field missing"
+    assert isinstance(returned_layer['tunables'], list), "tunables must be an array"
+    assert len(returned_layer['tunables']) == len(input_json['tunables']), \
+        f"tunables count mismatch: expected {len(input_json['tunables'])}, got {len(returned_layer['tunables'])}"
+    if verbose:
+        print(f"  ✓ tunables count: {len(returned_layer['tunables'])}")
+
+    # Validate each tunable in detail
+    for i, input_tunable in enumerate(input_json['tunables']):
+        # Find matching tunable by name
+        tunable_name = input_tunable['name']
+        returned_tunable = None
+
+        for rt in returned_layer['tunables']:
+            if rt['name'] == tunable_name:
+                returned_tunable = rt
+                break
+
+        assert returned_tunable is not None, f"Tunable '{tunable_name}' not found in response"
+
+        # Validate tunable name
+        assert returned_tunable['name'] == input_tunable['name'], \
+            f"Tunable name mismatch"
+
+        # Validate value_type
+        assert 'value_type' in returned_tunable, f"Tunable '{tunable_name}' missing value_type"
+        assert returned_tunable['value_type'] == input_tunable['value_type'], \
+            f"Tunable '{tunable_name}' value_type mismatch"
+
+        # Validate description (optional)
+        if 'description' in input_tunable:
+            assert 'description' in returned_tunable, \
+                f"Tunable '{tunable_name}' missing description"
+            assert returned_tunable['description'] == input_tunable['description'], \
+                f"Tunable '{tunable_name}' description mismatch"
+
+        # Validate bounded tunable fields (lower_bound, upper_bound, step)
+        if 'lower_bound' in input_tunable:
+            assert 'lower_bound' in returned_tunable, \
+                f"Tunable '{tunable_name}' missing lower_bound"
+            assert returned_tunable['lower_bound'] == input_tunable['lower_bound'], \
+                f"Tunable '{tunable_name}' lower_bound mismatch"
+            assert 'upper_bound' in returned_tunable, \
+                f"Tunable '{tunable_name}' missing upper_bound"
+            assert returned_tunable['upper_bound'] == input_tunable['upper_bound'], \
+                f"Tunable '{tunable_name}' upper_bound mismatch"
+            assert 'step' in returned_tunable, \
+                f"Tunable '{tunable_name}' missing step"
+            assert returned_tunable['step'] == input_tunable['step'], \
+                f"Tunable '{tunable_name}' step mismatch"
+            if verbose:
+                print(f"    ✓ Tunable '{tunable_name}': bounded (lower={input_tunable['lower_bound']}, upper={input_tunable['upper_bound']}, step={input_tunable['step']})")
+
+        # Validate categorical tunable fields (choices)
+        if 'choices' in input_tunable:
+            assert 'choices' in returned_tunable, \
+                f"Tunable '{tunable_name}' missing choices"
+            assert isinstance(returned_tunable['choices'], list), \
+                f"Tunable '{tunable_name}' choices must be an array"
+            assert len(returned_tunable['choices']) == len(input_tunable['choices']), \
+                f"Tunable '{tunable_name}' choices count mismatch"
+
+            # Verify all choices are present
+            for choice in input_tunable['choices']:
+                assert choice in returned_tunable['choices'], \
+                    f"Choice '{choice}' not found in tunable '{tunable_name}'"
+
+            if verbose:
+                print(f"    ✓ Tunable '{tunable_name}': categorical ({len(input_tunable['choices'])} choices)")
+
 
 def validate_local_monitoring_recommendation_data_present(recommendations_json):
     if recommendations_json[0]['experiment_type'] == NAMESPACE_EXPERIMENT_TYPE:
