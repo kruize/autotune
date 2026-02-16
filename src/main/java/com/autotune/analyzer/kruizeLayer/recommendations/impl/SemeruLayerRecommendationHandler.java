@@ -53,11 +53,11 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
             return null;
         }
 
-        if (AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE.equals(tunableName)) {
+        if (AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC.equals(tunableName)) {
             return AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
         }
 
-        if (AnalyzerConstants.MetricNameConstants.GC_POLICY.equals(tunableName)) {
+        if (AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY.equals(tunableName)) {
             Double jvmHeapSizeMB = null;
             double maxRamPercentage = AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
             return decideGCPolicy(jvmHeapSizeMB, maxRamPercentage, context.getMemLimit(), context.getCpuLimit());

@@ -53,11 +53,11 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
             return null;
         }
 
-        if (AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE.equals(tunableName)) {
+        if (AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC.equals(tunableName)) {
             return AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
         }
 
-        if (AnalyzerConstants.MetricNameConstants.GC_POLICY.equals(tunableName)) {
+        if (AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY.equals(tunableName)) {
             String jdkVersion = context.getJdkVersion();
             if (jdkVersion == null || jdkVersion.isEmpty()) {
                 LOGGER.warn("JVM version is null or empty (layerName=hotspot)");
@@ -84,9 +84,9 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
         StringBuilder target = (jdkOpts != null) ? jdkOpts : javaOpts;
         if (target == null) return;
 
-        if (AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE.equals(tunableName)) {
+        if (AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC.equals(tunableName)) {
             target.append("-XX:MaxRAMPercentage=").append(value).append(" ");
-        } else if (AnalyzerConstants.MetricNameConstants.GC_POLICY.equals(tunableName)) {
+        } else if (AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY.equals(tunableName)) {
             target.append(value).append(" ");
         }
     }

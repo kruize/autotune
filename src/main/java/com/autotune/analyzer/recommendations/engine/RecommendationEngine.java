@@ -985,9 +985,9 @@ public class RecommendationEngine {
                     recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
                     context.put(spec, recommendationAcceleratorRequestMap);
                     break;
-                case AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE:
-                case AnalyzerConstants.MetricNameConstants.GC_POLICY:
-                case AnalyzerConstants.MetricNameConstants.CORE_THREADS:
+                case AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC:
+                case AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY:
+                case AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS:
                     Object recommendationRuntimes = model.getRuntimeRecommendations(metricName, layerName, filteredResultsMap, context, notifications);
                     context.put(spec, recommendationRuntimes);
                     break;
@@ -1002,7 +1002,7 @@ public class RecommendationEngine {
         Map<String, StringBuilder> envBuilders = new HashMap<>();
         envBuilders.put(KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS, jvmOptsBuilder);
         envBuilders.put(KruizeConstants.JSONKeys.JAVA_OPTIONS, jvmOptsBuilder);
-        envBuilders.put(AnalyzerConstants.MetricNameConstants.CORE_THREADS, quarkusBuilder);
+        envBuilders.put(AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS, quarkusBuilder);
 
         for (Map.Entry<TunableSpec, Object> entry : context.entrySet()) {
             Object value = entry.getValue();
@@ -1020,7 +1020,7 @@ public class RecommendationEngine {
 
         addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS, jvmOptsBuilder);
         addIfNotEmpty(runtimeRecommList, KruizeConstants.JSONKeys.JAVA_OPTIONS, jvmOptsBuilder);
-        addIfNotEmpty(runtimeRecommList, AnalyzerConstants.MetricNameConstants.CORE_THREADS, quarkusBuilder);
+        addIfNotEmpty(runtimeRecommList, AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS, quarkusBuilder);
 
         return runtimeRecommList;
     }
@@ -2858,9 +2858,9 @@ public class RecommendationEngine {
     }
 
     private static boolean isRuntimeTunable(String metricName) {
-        return AnalyzerConstants.MetricNameConstants.MAX_RAM_PERCENTAGE.equals(metricName)
-                || AnalyzerConstants.MetricNameConstants.GC_POLICY.equals(metricName)
-                || AnalyzerConstants.MetricNameConstants.CORE_THREADS.equals(metricName);
+        return AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC.equals(metricName)
+                || AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY.equals(metricName)
+                || AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS.equals(metricName);
     }
 
 }

@@ -1024,9 +1024,6 @@ public class AnalyzerConstants {
         public static final String MEMORY_USAGE = "memoryUsage";
         public static final String MEMORY_RSS = "memoryRSS";
         public static final String GPU = "gpu";
-        public static final String GC_POLICY = "GCPolicy";
-        public static final String MAX_RAM_PERCENTAGE = "MaxRAMPercentage";
-        public static final String CORE_THREADS = "quarkus.thread-pool.core-threads";
 
         private MetricNameConstants() {
 

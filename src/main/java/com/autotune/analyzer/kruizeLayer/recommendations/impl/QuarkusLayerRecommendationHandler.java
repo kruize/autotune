@@ -44,7 +44,7 @@ public class QuarkusLayerRecommendationHandler implements LayerRecommendationHan
 
     @Override
     public Object getRecommendation(String tunableName, LayerRecommendationContext context) {
-        if (AnalyzerConstants.MetricNameConstants.CORE_THREADS.equals(tunableName)) {
+        if (AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS.equals(tunableName)) {
             return (int) Math.ceil(context.getCpuLimit());
         }
         return null;
@@ -54,8 +54,8 @@ public class QuarkusLayerRecommendationHandler implements LayerRecommendationHan
     public void formatForEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders) {
         if (value == null) return;
 
-        if (AnalyzerConstants.MetricNameConstants.CORE_THREADS.equals(tunableName)) {
-            StringBuilder quarkusBuilder = envBuilders.get(AnalyzerConstants.MetricNameConstants.CORE_THREADS);
+        if (AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS.equals(tunableName)) {
+            StringBuilder quarkusBuilder = envBuilders.get(AnalyzerConstants.LayerConstants.TunablesConstants.CORE_THREADS);
             if (quarkusBuilder != null) {
                 quarkusBuilder.append(value);
             }
