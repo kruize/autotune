@@ -58,6 +58,21 @@ function local_monitoring_tests() {
 
 	mkdir -p ${TEST_SUITE_DIR}
 
+	# Run cluster-type-specific pre-requisite scripts before tests for runtime recommendations
+  	echo ""
+  	echo "Running runtime pre-requisite scripts for cluster type: ${cluster_type}" | tee -a "${KRUIZE_SETUP_LOG}"
+  	if [ "${cluster_type}" == "minikube" ] || [ "${cluster_type}" == "kind" ]; then
+  		echo "Running enable_kube_state_metrics_labels.sh..." | tee -a "${KRUIZE_SETUP_LOG}"
+  		bash "${KRUIZE_REPO}/scripts/enable_kube_state_metrics_labels.sh" >> "${KRUIZE_SETUP_LOG}" 2>&1
+  		err_exit "ERROR: enable_kube_state_metrics_labels.sh failed. Check ${KRUIZE_SETUP_LOG} for details."
+  	elif [ "${cluster_type}" == "openshift" ]; then
+  		echo "Running enable_user_workload_monitoring_openshift.sh..." | tee -a ${KRUIZE_SETUP_LOG}
+  		bash "${KRUIZE_REPO}/scripts/enable_user_workload_monitoring_openshift.sh" >> ${KRUIZE_SETUP_LOG} 2>&1
+  		err_exit "ERROR: enable_user_workload_monitoring_openshift.sh failed. Check ${KRUIZE_SETUP_LOG} for details."
+  	fi
+  	echo "Prerequisite scripts completed." | tee -a ${KRUIZE_SETUP_LOG}
+  	echo ""
+
 	# Setup kruize
 	if [ ${skip_setup} -eq 0 ]; then
 		pushd "${KRUIZE_REPO}" > /dev/null
