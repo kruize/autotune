@@ -149,7 +149,6 @@
             <scope>test</scope>
         </dependency>
 
-
         <!-- The Prometheus client -->
         <dependency>
             <groupId>io.prometheus</groupId>
@@ -186,7 +185,6 @@
             <artifactId>gson</artifactId>
             <version>${gson-version}</version>
         </dependency>
-
 
         <dependency>
             <groupId>org.postgresql</groupId>
