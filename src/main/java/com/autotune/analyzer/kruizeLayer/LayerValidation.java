@@ -59,7 +59,7 @@ public class LayerValidation {
         }
 
         if (layer.getLayerPresence() == null) {
-            errors.add(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.LAYER_PRESENCE_NULL);
+            errors.add(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.LAYER_PRESENCE_MISSING);
         } else {
             // 2. Validate layer presence mutual exclusivity (only if not null)
             ValidationOutputData presenceValidation = validateLayerPresence(layer.getLayerPresence());
