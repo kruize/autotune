@@ -106,8 +106,8 @@ public class RecommendationEngine {
             return null;
         }
 
-        double minPods = Double.MIN_VALUE;
-        double maxPods = Double.MAX_VALUE;
+        double minPods = Double.MAX_VALUE;
+        double maxPods = Double.MIN_VALUE;
         double totalPods = 0;
         int count = 0;
 
