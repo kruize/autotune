@@ -25,10 +25,15 @@ public class PresenceAlways implements LayerPresenceDetector {
 
     public PresenceAlways() {}
 
-
     @Override
     public PresenceType getType() {
         return PresenceType.ALWAYS;
+    }
+
+    @Override
+    public boolean detectPresence(String namespace, String containerName, String datasourceName) throws Exception {
+        // Layers with ALWAYS presence type are always detected
+        return true;
     }
 
     @Override

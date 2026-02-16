@@ -48,8 +48,8 @@ public class LayerPresence {
                 return new PresenceAlways();
             } else {
                 throw new IllegalArgumentException(
-                        "Invalid presence value: '" + presence + "'. Expected '" +
-                        LayerConstants.DEFAULT_PRESENCE + "'");
+                        "Invalid presence value: '" + presence + "'. Expected '"
+                                + LayerConstants.DEFAULT_PRESENCE + "'");
             }
 
         }
@@ -65,9 +65,8 @@ public class LayerPresence {
         }
 
         // No valid configuration found
-        throw new IllegalStateException(
-                "Invalid LayerPresence configuration: must specify either " +
-                "presence='always', queries, or label");
+        throw new IllegalStateException( "Invalid LayerPresence configuration: must specify either presence='always', queries, or label");
+
     }
 
     /**

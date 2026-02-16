@@ -57,7 +57,9 @@ public class LayerPresenceQuery {
 	}
 
 	public void setDataSource(String dataSource) {
-		this.dataSource = dataSource;
+		if (null != dataSource &&
+				KruizeSupportedTypes.MONITORING_AGENTS_SUPPORTED.contains(dataSource.toLowerCase()))
+			this.dataSource = dataSource;
 	}
 
 	public String getLayerPresenceKey() {

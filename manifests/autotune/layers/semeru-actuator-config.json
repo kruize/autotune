@@ -2,11 +2,11 @@
   "apiVersion": "recommender.com/v1",
   "kind": "KruizeLayer",
   "metadata": {
-    "name": "openj9"
+    "name": "semeru"
   },
-  "layer_name": "openj9",
+  "layer_name": "semeru",
   "layer_level": 1,
-  "details": "openj9 tunables",
+  "details": "semeru tunables",
   "layer_presence": {
     "queries": [
       {
@@ -55,7 +55,8 @@
       "value_type": "integer",
       "lower_bound": "25",
       "upper_bound": "90",
-      "step": 1
+      "step": 1,
+      "units": "%"
     }
   ]
 }

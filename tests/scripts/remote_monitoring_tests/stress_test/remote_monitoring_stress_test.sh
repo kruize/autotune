@@ -18,8 +18,8 @@
 #
 
 CURRENT_DIR="$(dirname "$(realpath "$0")")"
-KRUIZE_REPO="${CURRENT_DIR}/../../../../"
-PERFORMANCE_PROFILE_DIR="${KRUIZE_REPO}manifests/autotune/performance-profiles"
+KRUIZE_REPO_PATH="${CURRENT_DIR}/../../../.."
+PERFORMANCE_PROFILE_DIR="${KRUIZE_REPO_PATH}/manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
 . ${CURRENT_DIR}/../../common/common_functions.sh
@@ -141,7 +141,7 @@ echo "Invoking jmeter setup...done" | tee -a ${LOG}
 echo "Setting up kruize..." | tee -a ${LOG}
 echo "Removing isROSEnabled=false and local=true"
 cluster_type=${CLUSTER_TYPE}
-pushd ${KRUIZE_REPO} > /dev/null
+pushd ${KRUIZE_REPO_PATH} > /dev/null
 	kruize_remote_patch
 	echo "./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${LOG_DIR}/kruize_setup.log"
 	./deploy.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE} -m ${target} -t >> ${LOG_DIR}/kruize_setup.log 2>&1
