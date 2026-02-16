@@ -12,6 +12,7 @@ Kruize Demos test validates the behaviour of Kruize APIs by running the Kruize d
      - remote_monitoring
      - vpa demo
      - bulk demo
+     - runtimes demo (Supported from Kruize release 0.9)
      
    - Validates if recommendations are generated 
   
@@ -33,9 +34,9 @@ Usage:
         [ -c ] : cluster_type. Supports minikube, kind and openshift cluster-type
         [ -i ] : kruize image. Default - quay.io/kruizehub/autotune-test-image:mvp_demo
         [ -o ] : Kruize operator image. Default - It will use the latest kruize operator image
-	    [ -a ] : Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git
+	[ -a ] : Kruize demos git repo URL. Default - https://github.com/kruize/kruize-demos.git
         [ -b ] : Kruize demos git repo branch. Default - main
-        [ -t ] : Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa)
+        [ -t ] : Kruize demo to run. Default - all (valid values - all/local_monitoring/remote_monitoring/bulk/vpa/runtimes)
         [ -r ] : Kruize results dir path. Default - /tmp/kruize_demos_test_results
         [ -k ] : Disable operator and install kruize using deploy scripts instead
 ```

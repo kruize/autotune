@@ -91,6 +91,12 @@ function vpa_demo() {
 	run_demo "${demo_name}" "${demo_dir}"
 }
 
+function runtimes_demo() {
+	demo_name="runtimes"
+	demo_dir="local_monitoring/runtimes_demo"
+	run_demo "${demo_name}" "${demo_dir}"
+}
+
 function remote_monitoring_demo() {
 	demo_name="remote_monitoring"
 	demo_dir="remote_monitoring_demo"
@@ -102,7 +108,11 @@ function all_demos() {
 	local_monitoring_demo
 	vpa_demo
 	bulk_demo
-	remote_monitoring_demo	
+	runtimes_demo
+	if [ "${KRUIZE_OPERATOR}" == 0 ]; then
+		# Include demos supported with manifests
+		remote_monitoring_demo
+	fi
 }
 
 function check_log() {
@@ -221,6 +231,12 @@ function run_demo() {
 	elif [[ "${DEMO_NAME}" == "vpa" ]]; then
 		CMD=(./vpa_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE})
 		JSONS=(container_vpa_experiment_sysbench_recommendation.json)
+	elif [[ "${DEMO_NAME}" == "runtimes" ]]; then
+		CMD=(./runtimes_demo.sh -c ${CLUSTER_TYPE} -i ${KRUIZE_IMAGE})
+		JSONS=(create_tfb-db_exp_recommendation.json create_tfb_exp_recommendation.json create_petclinic_openj9_exp_recommendation.json)
+		if [[ "${CLUSTER_TYPE}" == "openshift" ]]; then
+			JSONS=(create_tfb-db_exp_ocp_recommendation.json create_tfb_exp_ocp_recommendation.json create_petclinic_openj9_exp_ocp_recommendation.json)
+		fi
 	fi
 
 	if [ "${KRUIZE_OPERATOR}" == 1 ]; then
@@ -402,7 +418,8 @@ repo_name="kruize-demos"
 
 if [ ! -d ${repo_name} ]; then
 	echo "Cloning ${repo_name} git repo..." | tee -a ${LOG}
-	git clone -b ${KRUIZE_DEMOS_BRANCH} ${KRUIZE_DEMOS_REPO} > /dev/null 2> /dev/null
+	#git clone -b ${KRUIZE_DEMOS_BRANCH} ${KRUIZE_DEMOS_REPO} > /dev/null 2> /dev/null
+	git clone -b runtimes_demo https://github.com/chandrams/kruize-demos.git > /dev/null 2> /dev/null
 	check_err "ERROR: git clone of kruize/${repo_name} failed." | tee -a ${LOG}
 fi
 
