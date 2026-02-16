@@ -736,7 +736,7 @@ public class GenericRecommendationModel implements RecommendationModel{
                     return null;
                 }
 
-                Double jvmHeapSizeMB = getJvmHeapSizeMBFromFilteredResults(filteredResultsMap);
+                Double jvmHeapSizeMB = null; // TODO: to be considered in the future release
                 double maxRamPercentage = AnalyzerConstants.HotspotConstants.MAX_RAM_PERCENTAGE_VALUE;
 
                 if (AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU.equalsIgnoreCase(effectiveLayer)) {
@@ -846,38 +846,6 @@ public class GenericRecommendationModel implements RecommendationModel{
 
 
     /**
-     * Extracts JVM heap size in MB from filteredResultsMap.
-     * Looks for jvmMemoryMaxBytes metric and returns the max value converted to MB.
-     *
-     * @param filteredResultsMap map of timestamp to IntervalResults
-     * @return JVM heap size in MB, or null if not found or invalid
-     */
-    public static Double getJvmHeapSizeMBFromFilteredResults(Map<Timestamp, IntervalResults> filteredResultsMap) {
-        if (filteredResultsMap == null) {
-            return null;
-        }
-        double maxHeapBytes = 0;
-        boolean found = false;
-        for (IntervalResults intervalResults : filteredResultsMap.values()) {
-            if (intervalResults.getMetricResultsMap() == null) {
-                continue;
-            }
-            MetricResults metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmMemoryMaxBytes);
-            if (metricResults != null && metricResults.getAggregationInfoResult() != null) {
-                Double max = metricResults.getAggregationInfoResult().getSum();
-                if (max != null && max > 0) {
-                    maxHeapBytes = Math.max(maxHeapBytes, max);
-                    found = true;
-                }
-            }
-        }
-        if (!found || maxHeapBytes <= 0) {
-            return null;
-        }
-        return maxHeapBytes / (1024.0 * 1024.0);
-    }
-
-    /**
      * Extracts JVM metric metadata (runtime, version, vendor) from filteredResultsMap.
      * Looks for jvmRuntimeInfo metric in IntervalResults and returns its MetricMetadataResults.
      *
@@ -892,12 +860,12 @@ public class GenericRecommendationModel implements RecommendationModel{
             if (intervalResults.getMetricResultsMap() == null) {
                 continue;
             }
-            Set<AnalyzerConstants.MetricName> metricKeys = intervalResults.getMetricResultsMap().keySet();
-            MetricResults metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmRuntimeInfo);
+            // Try jvmInfo first, then jvmInfoTotal (both provide runtime, vendor, version)
+            MetricResults metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmInfo);
             if (metricResults == null) {
-                continue;
+                metricResults = intervalResults.getMetricResultsMap().get(AnalyzerConstants.MetricName.jvmInfoTotal);
             }
-            if (metricResults.getMetricMetadataResults() == null) {
+            if (metricResults == null || metricResults.getMetricMetadataResults() == null) {
                 continue;
             }
             return metricResults.getMetricMetadataResults();

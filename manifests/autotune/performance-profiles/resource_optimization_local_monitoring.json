@@ -496,18 +496,6 @@
             "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info_total{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})"
           }
         ]
-      },
-      {
-        "name": "jvmMemoryMaxBytes",
-        "datasource": "prometheus",
-        "value_type": "double",
-        "kubernetes_object": "container",
-        "aggregation_functions": [
-          {
-            "function": "sum",
-            "query": "sum by(container, namespace)(jvm_memory_max_bytes{area=\"heap\", namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})"
-          }
-        ]
       }
     ]
   }

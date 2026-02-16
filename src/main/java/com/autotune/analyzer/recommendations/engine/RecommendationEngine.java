@@ -2358,7 +2358,6 @@ public class RecommendationEngine {
 
                     boolean containerAcceleratorDetected = false;
                     boolean containerAcceleratorPartitionDetected = false;
-                    boolean runtimeLayerDetected = isRuntimeLayerPresent(LayerUtils.detectLayers(containerData.getContainer_name(), workload, namespace));
                     boolean runtimeLayerDetected = isRuntimeLayerPresent(containerData.getLayerMap());
 
                     // Check if the container data has Accelerator support else check for Accelerator metrics
@@ -2510,7 +2509,7 @@ public class RecommendationEngine {
 
                             // Determine format based on metric type - Todo move this metric profile
                             List<String> cpuFunction = Arrays.asList(AnalyzerConstants.MetricName.cpuUsage.toString(), AnalyzerConstants.MetricName.cpuThrottle.toString(), AnalyzerConstants.MetricName.cpuLimit.toString(), AnalyzerConstants.MetricName.cpuRequest.toString());
-                            List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString(), AnalyzerConstants.MetricName.jvmMemoryMaxBytes.toString());
+                            List<String> memFunction = Arrays.asList(AnalyzerConstants.MetricName.memoryLimit.toString(), AnalyzerConstants.MetricName.memoryRequest.toString(), AnalyzerConstants.MetricName.memoryRSS.toString(), AnalyzerConstants.MetricName.memoryUsage.toString());
                             if (cpuFunction.contains(metricEntry.getName())) {
                                 format = KruizeConstants.JSONKeys.CORES;
                             } else if (memFunction.contains(metricEntry.getName())) {
