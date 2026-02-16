@@ -282,7 +282,8 @@ public class AnalyzerConstants {
         acceleratorCoreUsage,
         acceleratorMemoryUsage,
         acceleratorFrameBufferUsage,
-        jvmRuntimeInfo,
+        jvmInfo,
+        jvmInfoTotal,
         jvmMemoryMaxBytes
     }
 

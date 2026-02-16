@@ -5,6 +5,8 @@ import com.autotune.analyzer.exceptions.FetchMetricsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.kruizeLayer.KruizeLayer;
+import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
+import com.autotune.analyzer.kruizeLayer.KruizeLayer;
 import com.autotune.analyzer.kruizeLayer.LayerTunable;
 import com.autotune.analyzer.kruizeLayer.Tunable;
 import com.autotune.analyzer.kruizeLayer.utils.LayerUtils;
@@ -74,8 +76,9 @@ public class RecommendationEngine {
     private Timestamp interval_end_time;
     private List<String> modelNames;
     private Map<String, RecommendationTunables> modelTunable;
-    private static final String JVM_RUNTIME_INFO = AnalyzerConstants.MetricName.jvmRuntimeInfo.toString();
-
+    private static final Set<String> JVM_INFO_METRICS = Set.of(
+            AnalyzerConstants.MetricName.jvmInfo.toString(),
+            AnalyzerConstants.MetricName.jvmInfoTotal.toString());
 
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
         this.experimentName = experimentName;
@@ -2355,6 +2358,7 @@ public class RecommendationEngine {
 
                     boolean containerAcceleratorDetected = false;
                     boolean containerAcceleratorPartitionDetected = false;
+                    boolean runtimeLayerDetected = isRuntimeLayerPresent(LayerUtils.detectLayers(containerData.getContainer_name(), workload, namespace));
                     boolean runtimeLayerDetected = isRuntimeLayerPresent(containerData.getLayerMap());
 
                     // Check if the container data has Accelerator support else check for Accelerator metrics
@@ -2552,11 +2556,10 @@ public class RecommendationEngine {
                                 if (!resultArray.isEmpty()) {
                                     metric = resultArray.get(0).getAsJsonObject().getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
                                 }
-
-                                // Log Prometheus response for jvmRuntimeInfo to debug metadata extraction
-                                if (JVM_RUNTIME_INFO.equals(metricEntry.getName())) {
+                                // Log Prometheus response for JVM info metrics to debug metadata extraction
+                                if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
                                     if (metric != null) {
-                                        LOGGER.debug("jvmRuntimeInfo metric labels: runtime={}, vendor={}, version={}",
+                                        LOGGER.debug("JVM info metric labels: runtime={}, vendor={}, version={}",
                                                 metric.has(AnalyzerConstants.RUNTIME) ? metric.get(AnalyzerConstants.RUNTIME) : "absent",
                                                 metric.has(AnalyzerConstants.VENDOR) ? metric.get(AnalyzerConstants.VENDOR) : "absent",
                                                 metric.has(AnalyzerConstants.VERSION) ? metric.get(AnalyzerConstants.VERSION) : "absent");
@@ -2565,8 +2568,8 @@ public class RecommendationEngine {
 
                                 // Skipping if Result array is null or empty
                                 if (null == resultArray || resultArray.isEmpty()) {
-                                    if (JVM_RUNTIME_INFO.equals(metricEntry.getName())) {
-                                        LOGGER.warn("jvmRuntimeInfo: Prometheus returned empty result - JVM metrics may not be exposed or query may not match (namespace={}, container={})", namespace, containerName);
+                                    if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
+                                        LOGGER.warn("JVM info metric: Prometheus returned empty result - JVM metrics may not be exposed or query may not match (namespace={}, container={})", namespace, containerName);
                                     }
                                     continue;
                                 }
@@ -2778,17 +2781,14 @@ public class RecommendationEngine {
                 metricAggregationInfoResults = new MetricAggregationInfoResults();
             }
 
-            if (runtimeLayerDetected && metricObject != null && JVM_RUNTIME_INFO.equals(metricEntry.getName())) {
-                String vendor = getAsStringOrDefault(metricObject, AnalyzerConstants.VENDOR, null);
-                String runtime = getAsStringOrDefault(metricObject, AnalyzerConstants.RUNTIME, null);
-                String version = getAsStringOrDefault(metricObject, AnalyzerConstants.VERSION, null);
+            if (runtimeLayerDetected && metricObject != null && JVM_INFO_METRICS.contains(metricEntry.getName())) {
                 MetricMetadataResults meta = new MetricMetadataResults();
-                meta.setVendor(vendor);
-                meta.setRuntime(runtime);
-                meta.setVersion(version);
+                meta.setVendor(getAsStringOrDefault(metricObject, AnalyzerConstants.VENDOR, null));
+                meta.setRuntime(getAsStringOrDefault(metricObject, AnalyzerConstants.RUNTIME, null));
+                meta.setVersion(getAsStringOrDefault(metricObject, AnalyzerConstants.VERSION, null));
                 metricResults.setMetricMetadataResults(meta);
-            } else if (JVM_RUNTIME_INFO.equals(metricEntry.getName())) {
-                LOGGER.warn("jvmRuntimeInfo: Skipped metadata extraction - runtimeLayerDetected={}, metricObject={}", runtimeLayerDetected, metricObject != null);
+            } else if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
+                LOGGER.warn("Skipped JVM info metric metadata extraction - runtimeLayerDetected={}, metricObject={}", runtimeLayerDetected, metricObject != null);
             } else {
                 Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
                 method.invoke(metricAggregationInfoResults, value);
