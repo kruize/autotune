@@ -232,15 +232,10 @@ public class LayerValidation {
             String baseQuery = query.getLayerPresenceQuery();
             LOGGER.debug("Validating query: {}", baseQuery);
 
-            // Get all datasources
+            // Get all datasources and validate query against each
             List<DataSourceInfo> allDatasources = new ArrayList<>(
                     DataSourceCollection.getInstance().getDataSourcesCollection().values()
             );
-
-            // Sort for deterministic order
-            allDatasources.sort(Comparator.comparing(DataSourceInfo::getName));
-
-            // Run for all datasources
             for (DataSourceInfo dataSourceInfo : allDatasources) {
                 try {
                     // Get the appropriate operator for the datasource provider
