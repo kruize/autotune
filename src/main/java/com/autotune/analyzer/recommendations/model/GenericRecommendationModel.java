@@ -821,10 +821,8 @@ public class GenericRecommendationModel implements RecommendationModel{
         LOGGER.info("Semeru jvmHeapSizeMB: {}", jvmHeapSizeMB);
         LOGGER.info("Semeru cpuCores: {}", cpuCores);
 
-        if (jvmHeapSizeMB >= 4096) {
+        if (jvmHeapSizeMB >= 4096 && cpuCores > 1) {
             return "-Xgcpolicy:balanced";
-        } else if (cpuCores > 8 && jvmHeapSizeMB >= 2048) {
-            return "-Xgcpolicy:optthruput";
         } else {
             return "-Xgcpolicy:gencon";
         }
