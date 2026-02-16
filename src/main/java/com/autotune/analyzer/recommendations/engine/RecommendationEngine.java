@@ -2781,13 +2781,18 @@ public class RecommendationEngine {
             }
 
             if (runtimeLayerDetected && metricObject != null && JVM_INFO_METRICS.contains(metricEntry.getName())) {
+                // JVM info metrics are metadata-only: results contain jvm_metadata (version, runtime, vendor)
+                // with no aggregation_info, value, or format - structurally different from other metrics
                 MetricMetadataResults meta = new MetricMetadataResults();
                 meta.setVendor(getAsStringOrDefault(metricObject, AnalyzerConstants.VENDOR, null));
                 meta.setRuntime(getAsStringOrDefault(metricObject, AnalyzerConstants.RUNTIME, null));
                 meta.setVersion(getAsStringOrDefault(metricObject, AnalyzerConstants.VERSION, null));
                 metricResults.setMetricMetadataResults(meta);
+                metricResults.setName(metricEntry.getName());
+                metricResults.setAggregationInfoResult(null);  // omit aggregation for metadata-only structure
             } else if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
                 LOGGER.warn("Skipped JVM info metric metadata extraction - runtimeLayerDetected={}, metricObject={}", runtimeLayerDetected, metricObject != null);
+                // Do not add to resMap when metadata extraction skipped
             } else {
                 Method method = MetricAggregationInfoResults.class.getDeclaredMethod(KruizeConstants.APIMessages.SET + aggregationFunctionsEntry.getKey().substring(0, 1).toUpperCase() + aggregationFunctionsEntry.getKey().substring(1), Double.class);
                 method.invoke(metricAggregationInfoResults, value);
@@ -2796,7 +2801,9 @@ public class RecommendationEngine {
                 metricResults.setName(metricEntry.getName());
                 metricResults.setFormat(format);
             }
-            resMap.put(metricName, metricResults);
+            if (!JVM_INFO_METRICS.contains(metricEntry.getName()) || (runtimeLayerDetected && metricObject != null)) {
+                resMap.put(metricName, metricResults);
+            }
             intervalResults.setMetricResultsMap(resMap);
             intervalResults.setIntervalStartTime(sTime);  //Todo this will change
             intervalResults.setIntervalEndTime(eTime);
