@@ -77,6 +77,11 @@ def test_list_all_layers_no_parameter(cluster_type):
 
     # First, create a layer to ensure there's at least one layer in the system
     input_json_file = layer_dir / 'container-config.json'
+
+    with open(input_json_file, "r") as json_file:
+        input_json = json.load(json_file)
+        expected_layer_name = input_json['layer_name']
+
     create_response = create_layer(input_json_file)
 
     # Verify layer was created
@@ -94,6 +99,11 @@ def test_list_all_layers_no_parameter(cluster_type):
     # Validate the json against the json schema
     errorMsg = validate_list_layers_json(layers, list_layers_schema)
     assert errorMsg == ""
+
+    # Find and validate the created layer data
+    created_layer = next((layer for layer in layers if layer['layer_name'] == expected_layer_name), None)
+    assert created_layer is not None, f"Created layer '{expected_layer_name}' not found in list"
+    validate_layer_data(created_layer, input_json, verbose=False)
 
     print(f"✓ Successfully listed {len(layers)} layer(s)")
 
@@ -114,19 +124,20 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
         'quarkus-micrometer-config.json'
     ]
 
-    created_layer_names = []
+    created_layers_data = {}
 
     for layer_file in layer_files:
         input_json_file = layer_dir / layer_file
 
         with open(input_json_file, "r") as json_file:
             input_json = json.load(json_file)
-            created_layer_names.append(input_json['layer_name'])
+            layer_name = input_json['layer_name']
+            created_layers_data[layer_name] = input_json
 
         create_response = create_layer(input_json_file)
         assert create_response.status_code == SUCCESS_STATUS_CODE
 
-    print(f"Created {len(created_layer_names)} layers: {created_layer_names}")
+    print(f"Created {len(created_layers_data)} layers: {list(created_layers_data.keys())}")
 
     # List all layers
     response = list_layers(layer_name=None)
@@ -135,19 +146,24 @@ def test_list_all_layers_with_multiple_layers(cluster_type):
 
     layers = response.json()
     assert isinstance(layers, list)
-    assert len(layers) == len(created_layer_names)
+    assert len(layers) == len(created_layers_data)
 
     # Validate the json against the json schema
     errorMsg = validate_list_layers_json(layers, list_layers_schema)
     assert errorMsg == ""
 
-    # Verify all created layers are present
+    # Verify all created layers are present and validate their data
     returned_layer_names = [layer['layer_name'] for layer in layers]
 
-    for expected_name in created_layer_names:
+    for expected_name in created_layers_data.keys():
         assert expected_name in returned_layer_names, f"Layer '{expected_name}' not found in list"
 
-    print(f"✓ Successfully listed {len(layers)} layer(s), verified all {len(created_layer_names)} created layers are present")
+        # Find and validate the layer data
+        returned_layer = next((layer for layer in layers if layer['layer_name'] == expected_name), None)
+        assert returned_layer is not None
+        validate_layer_data(returned_layer, created_layers_data[expected_name], verbose=False)
+
+    print(f"✓ Successfully listed {len(layers)} layer(s), verified all {len(created_layers_data)} created layers are present")
 
 
 @pytest.mark.layers
