@@ -134,7 +134,7 @@ LAYER_METADATA_NAME_NULL_JSON_MSG = "Validation failed: metadata.name cannot be 
 LAYER_METADATA_NAME_EMPTY_MSG = "Validation failed: metadata.name cannot be null or empty"
 LAYER_NAME_NULL_JSON_MSG = "Validation failed: layer_name cannot be null or empty"
 LAYER_NAME_EMPTY_MSG = "Validation failed: layer_name cannot be null or empty"
-LAYER_PRESENCE_NULL_JSON_MSG = "Validation failed: layer_presence configuration missing: must specify exactly one of: presence='always', queries, or label"
+LAYER_PRESENCE_NULL_JSON_MSG = "Validation failed: layer_presence cannot be null"
 LAYER_TUNABLES_NULL_JSON_MSG = "Validation failed: tunables cannot be null or empty - layer must have at least one tunable"
 LAYER_TUNABLES_EMPTY_MSG = "Validation failed: tunables cannot be null or empty - layer must have at least one tunable"
 LAYER_LEVEL_NEGATIVE_MSG = "Validation failed: Layer level must be a non-negative integer"
