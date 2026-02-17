@@ -66,7 +66,7 @@ public class LayerValidation {
         }
 
         if (layer.getLayerPresence() == null) {
-            errors.add(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.LAYER_PRESENCE_NULL);
+            errors.add(AnalyzerErrorConstants.APIErrors.CreateLayerAPI.LAYER_PRESENCE_MISSING);
         } else {
             // 2. Validate layer presence mutual exclusivity (only if not null)
             ValidationOutputData presenceValidation = validateLayerPresence(layer.getLayerPresence());
@@ -194,7 +194,7 @@ public class LayerValidation {
 
     /**
      * Validates query execution for query-based layer presence
-     * Executes ALL queries against their datasources to ensure they are syntactically valid
+     * Executes ALL queries against the first datasource present in the list of datasources to ensure they are syntactically valid
      *
      * @param layer The layer to validate (assumed to be non-null with valid layerPresence)
      * @return ValidationOutputData with success flag and error messages
@@ -214,13 +214,27 @@ public class LayerValidation {
             return new ValidationOutputData(true, null, null);
         }
 
-        LOGGER.debug("Validating query execution for layer: {}", layer.getLayerName());
+        // Get the first datasource for validation
+        HashMap<String, DataSourceInfo> allDatasources = DataSourceCollection.getInstance().getDataSourcesCollection();
+        if (allDatasources == null || allDatasources.isEmpty()) {
+            LOGGER.warn(LogMessages.QUERY_VALIDATION_NO_DATASOURCES);
+            return new ValidationOutputData(true, null, null);
+        }
+        DataSourceInfo firstDatasource = allDatasources.values().iterator().next();
 
-        // Track if any query returned data and which datasources work
-        boolean anyQueryReturnedData = false;
-        Set<String> datasourcesWithData = new HashSet<>();
+        // Get the operator for the first datasource
+        DataSourceOperatorImpl operator = DataSourceOperatorImpl.getInstance()
+                .getOperator(firstDatasource.getProvider());
 
-        // Validate ALL queries
+        if (operator == null) {
+            LOGGER.warn(LogMessages.QUERY_VALIDATION_SKIP_NO_OPERATOR,
+                    firstDatasource.getProvider(), firstDatasource.getName());
+            return new ValidationOutputData(true, null, null);
+        }
+
+        List<String> validationErrors = new ArrayList<>();
+
+        // Validate each query for syntax
         for (LayerPresenceQuery query : queries) {
             // Skip null query objects
             if (query == null) {
@@ -228,60 +242,31 @@ public class LayerValidation {
                 continue;
             }
 
-            // Execute the base query without any filters
             String baseQuery = query.getLayerPresenceQuery();
-            LOGGER.debug("Validating query: {}", baseQuery);
+            LOGGER.debug(LogMessages.QUERY_VALIDATION_VALIDATING_SYNTAX, baseQuery);
 
-            // Get all datasources and validate query against each
-            List<DataSourceInfo> allDatasources = new ArrayList<>(
-                    DataSourceCollection.getInstance().getDataSourcesCollection().values()
-            );
-            for (DataSourceInfo dataSourceInfo : allDatasources) {
-                try {
-                    // Get the appropriate operator for the datasource provider
-                    DataSourceOperatorImpl operator = DataSourceOperatorImpl.getInstance()
-                            .getOperator(dataSourceInfo.getProvider());
+            // Validate query syntax by executing against the datasource
+            try {
+                operator.getResultArrayForQuery(firstDatasource, baseQuery);
+                LOGGER.debug(LogMessages.QUERY_VALIDATION_SYNTAX_SUCCESS, baseQuery);
 
-                    if (operator == null) {
-                        LOGGER.warn(LogMessages.QUERY_VALIDATION_SKIP_NO_OPERATOR,
-                                dataSourceInfo.getProvider(), dataSourceInfo.getName());
-                        continue;
-                    }
-
-                    // Execute query against this datasource
-                    JsonArray resultArray = operator.getResultArrayForQuery(dataSourceInfo, baseQuery);
-
-                    // Check if this query returned data from this datasource
-                    if (resultArray != null && !resultArray.isEmpty()) {
-                        anyQueryReturnedData = true;
-                        datasourcesWithData.add(dataSourceInfo.getName());
-                        LOGGER.debug(LogMessages.QUERY_VALIDATION_SUCCESS_WITH_DATA,
-                                baseQuery, resultArray.size(), dataSourceInfo.getName());
-                    } else {
-                        LOGGER.debug(LogMessages.QUERY_VALIDATION_SUCCESS_NO_DATA,
-                                baseQuery, dataSourceInfo.getName());
-                    }
-
-                } catch (Exception e) {
-                    // Query execution failed for this datasource - log and continue to next datasource
-                    LOGGER.warn(LogMessages.QUERY_VALIDATION_FAILED_FOR_DATASOURCE,
-                            dataSourceInfo.getName(), e.getMessage());
-                }
+            } catch (Exception e) {
+                // Query execution failed - this indicates a malformed query
+                String errorMsg = String.format(LogMessages.QUERY_VALIDATION_SYNTAX_FAILED,
+                        baseQuery, e.getMessage());
+                LOGGER.error(errorMsg);
+                validationErrors.add(errorMsg);
             }
         }
 
-        // After executing all queries against all datasources, check if any returned data
-        if (!anyQueryReturnedData) {
-            String errorMsg = String.format(LogMessages.QUERY_VALIDATION_NO_DATA_FROM_ANY_DATASOURCE,
-                    layer.getLayerName());
-            LOGGER.error(errorMsg);
-            return new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST);
+        // Return error if any query had syntax errors
+        if (!validationErrors.isEmpty()) {
+            return new ValidationOutputData(false,
+                    String.join("; ", validationErrors),
+                    HttpServletResponse.SC_BAD_REQUEST);
         }
 
-        // Log which datasources can provide runtime recommendations
-        LOGGER.info(LogMessages.QUERY_VALIDATION_COMPLETE_SUCCESS,
-                layer.getLayerName(), datasourcesWithData);
-
+        LOGGER.info(LogMessages.QUERY_VALIDATION_COMPLETE, layer.getLayerName());
         return new ValidationOutputData(true, null, null);
     }
 }
