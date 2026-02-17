@@ -16,10 +16,10 @@
 
 package com.autotune.analyzer.kruizeLayer.recommendations.impl;
 
+import com.autotune.analyzer.kruizeLayer.recommendations.JvmLayerRecommendationUtils;
 import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationContext;
 import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationHandler;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -68,7 +68,7 @@ public class SemeruLayerRecommendationHandler implements LayerRecommendationHand
 
     @Override
     public void formatForEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders) {
-        HotspotLayerRecommendationHandler.formatForJVMEnv(tunableName, value, envBuilders);
+        JvmLayerRecommendationUtils.formatForJVMEnv(tunableName, value, envBuilders);
     }
 
     private String decideGCPolicy(Double jvmHeapSizeMB, double maxRAMPercent, double memLimit, double cpuCores) {

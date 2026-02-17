@@ -16,10 +16,10 @@
 
 package com.autotune.analyzer.kruizeLayer.recommendations.impl;
 
+import com.autotune.analyzer.kruizeLayer.recommendations.JvmLayerRecommendationUtils;
 import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationContext;
 import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationHandler;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import com.autotune.utils.KruizeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -73,26 +73,11 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
 
     @Override
     public void formatForEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders) {
-        formatForJVMEnv(tunableName, value, envBuilders);
-    }
-
-    static void formatForJVMEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders) {
-        if (value == null) return;
-
-        StringBuilder jdkOpts = envBuilders.get(KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS);
-        StringBuilder javaOpts = envBuilders.get(KruizeConstants.JSONKeys.JAVA_OPTIONS);
-        StringBuilder target = (jdkOpts != null) ? jdkOpts : javaOpts;
-        if (target == null) return;
-
-        if (AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC.equals(tunableName)) {
-            target.append("-XX:MaxRAMPercentage=").append(value).append(" ");
-        } else if (AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY.equals(tunableName)) {
-            target.append(value).append(" ");
-        }
+        JvmLayerRecommendationUtils.formatForJVMEnv(tunableName, value, envBuilders);
     }
 
     private String decideGCPolicy(Double jvmHeapSizeMB, double maxRAMPercent, double memLimit, double cpuCores, String jdkVersionStr) {
-        int jdkVersion = parseMajorVersion(jdkVersionStr);
+        int jdkVersion = JvmLayerRecommendationUtils.parseMajorVersion(jdkVersionStr);
 
         if (jvmHeapSizeMB == null || jvmHeapSizeMB == 0) {
             double memLimitMB = memLimit / (1024 * 1024);
@@ -114,17 +99,5 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
         } else {
             return "-XX:+UseG1GC";
         }
-    }
-
-    private static int parseMajorVersion(String version) {
-        if (version == null || version.isEmpty()) return 8;
-        version = version.trim();
-        if (version.startsWith("1.")) {
-            return Integer.parseInt(version.substring(2, 3));
-        }
-        int dotIndex = version.indexOf(".");
-        return (dotIndex != -1)
-                ? Integer.parseInt(version.substring(0, dotIndex))
-                : Integer.parseInt(version);
     }
 }

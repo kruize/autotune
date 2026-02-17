@@ -880,8 +880,7 @@ public class RecommendationEngine {
                 }
             } catch (Exception e) {
                 LOGGER.error("Exception occurred while preparing runtime recommendations: {}", e.getMessage());
-                e.printStackTrace();
-            }
+             }
 
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
@@ -958,7 +957,7 @@ public class RecommendationEngine {
                     context.put(spec, amount);
                     break;
                 case AnalyzerConstants.MetricNameConstants.MEMORY_LIMIT:
-                    recommendationMemLimits = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
+                    recommendationMemLimits = model.getMemoryLimitRecommendation(filteredResultsMap, notifications);
                     amount = null;
                     if (recommendationMemLimits != null) {
                         amount = recommendationMemLimits.getAmount();
@@ -974,7 +973,7 @@ public class RecommendationEngine {
                     context.put(spec, amount);
                     break;
                 case AnalyzerConstants.MetricNameConstants.CPU_LIMIT:
-                    recommendationCpuLimits = model.getCPURequestRecommendation(filteredResultsMap, notifications);
+                    recommendationCpuLimits = model.getCPULimitRecommendation(filteredResultsMap, notifications);
                     amount = null;
                     if (recommendationCpuLimits != null) {
                         amount = recommendationCpuLimits.getAmount();

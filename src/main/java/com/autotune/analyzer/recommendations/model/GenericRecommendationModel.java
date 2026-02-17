@@ -257,6 +257,18 @@ public class GenericRecommendationModel implements RecommendationModel{
         return recommendationConfigItem;
     }
 
+    @Override
+    public RecommendationConfigItem getCPULimitRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        // Default: same as request. Override when model has distinct limit-specific logic.
+        return getCPURequestRecommendation(filteredResultsMap, notifications);
+    }
+
+    @Override
+    public RecommendationConfigItem getMemoryLimitRecommendation(Map<Timestamp, IntervalResults> filteredResultsMap, ArrayList<RecommendationNotification> notifications) {
+        // Default: same as request. Override when model has distinct limit-specific logic.
+        return getMemoryRequestRecommendation(filteredResultsMap, notifications);
+    }
+
     // helper functions for getMemoryRequestRecommendation
 
     public static JSONObject calculateMemoryUsage(IntervalResults intervalResults) {
@@ -719,7 +731,7 @@ public class GenericRecommendationModel implements RecommendationModel{
 
         LayerRecommendationContext layerContext = new LayerRecommendationContext(
                 memLimits, cpuLimits, metricMetadata, effectiveLayer);
-        LayerRecommendationHandler handler = LayerRecommendationHandlerRegistry.getInstance().getHandler(layerName);
+        LayerRecommendationHandler handler = LayerRecommendationHandlerRegistry.getInstance().getHandler(effectiveLayer);
         return handler != null ? handler.getRecommendation(metricName, layerContext) : null;
     }
 
