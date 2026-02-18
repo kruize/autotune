@@ -705,7 +705,6 @@ public class AnalyzerConstants {
             // Error messages
             public static final String CONTAINER_NAME_NULL_OR_EMPTY = "Container name cannot be null or empty";
             public static final String NAMESPACE_NULL_OR_EMPTY = "Namespace cannot be null or empty";
-            public static final String FAILED_TO_LOAD_LAYERS_EXCEPTION = "Failed to load layers from database";
 
             // Layer detection log messages
             public static final String ERROR_DETECTING_LAYER = "Error detecting layer '{}': {}";
@@ -723,10 +722,6 @@ public class AnalyzerConstants {
             // QueryBasedPresence log messages
             public static final String NO_QUERIES_DEFINED = "No queries defined for layer presence detection";
             public static final String NULL_QUERY_ENCOUNTERED = "Encountered null query in layer presence queries, skipping";
-            public static final String NO_DATASOURCE_TYPE_SPECIFIED = "Query has no datasource type specified, skipping";
-            public static final String FILTERING_DATASOURCES_BY_TYPE = "Filtering datasources by type: '{}'";
-            public static final String NO_DATASOURCES_MATCHING_TYPE = "No datasources found with type '{}', skipping query";
-            public static final String MULTIPLE_DATASOURCES_MATCHED = "Multiple datasources ({}) matched type '{}', selected datasource '{}' (alphabetically first)";
             public static final String DATASOURCE_NOT_FOUND = "Datasource '{}' not found in collection";
             public static final String NO_OPERATOR_AVAILABLE = "No operator available for datasource '{}'";
             public static final String EXECUTING_QUERY = "Executing layer detection query: {}";
@@ -737,6 +732,14 @@ public class AnalyzerConstants {
             public static final String LAYER_NAME_N_TUNABLE_NAME_NOT_NULL = "layerName and tunableName must not be null";
             public static final String LAYER_NAME_NOT_NULL = "layerName must not be null or empty";
             public static final String TUNABLE_NAME_NOT_NULL = "tunableName must not be null or empty";
+
+            // Query validation log messages
+            public static final String QUERY_VALIDATION_NO_DATASOURCES = "No datasources available for query validation";
+            public static final String QUERY_VALIDATION_SKIP_NO_OPERATOR = "No operator available for datasource provider '{}', skipping datasource '{}'";
+            public static final String QUERY_VALIDATION_VALIDATING_SYNTAX = "Validating query syntax: {}";
+            public static final String QUERY_VALIDATION_SYNTAX_SUCCESS = "Query syntax validation successful for query: {}";
+            public static final String QUERY_VALIDATION_SYNTAX_FAILED = "Query validation failed for query '%s': %s";
+            public static final String QUERY_VALIDATION_COMPLETE = "Query syntax validation completed successfully for layer: {}";
 
             private LogMessages() {
             }
