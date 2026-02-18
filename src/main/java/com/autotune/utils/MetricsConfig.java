@@ -1,8 +1,9 @@
 package com.autotune.utils;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.Gauge;
-import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.binder.jvm.ClassLoaderMetrics;
 import io.micrometer.core.instrument.binder.jvm.JvmGcMetrics;
@@ -11,8 +12,6 @@ import io.micrometer.core.instrument.binder.system.ProcessorMetrics;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.prometheus.PrometheusConfig;
 import io.micrometer.prometheus.PrometheusMeterRegistry;
-
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class MetricsConfig {
     
@@ -31,6 +30,7 @@ public class MetricsConfig {
     public static Timer.Builder timerBAddRecDB, timerBAddResultsDB, timerBAddExpDB, timerBAddBulkResultsDB, timerBLoadBulkJobId, timerBUpdateBulkJobId, timerBSaveBulkJobDB, timerBaddBulkJob;
     public static Timer.Builder timerBAddPerfProfileDB, timerBLoadPerfProfileName, timerBLoadAllPerfProfiles, timerBUpdatePerfProfileDB;
     public static Counter.Builder timerBKruizeNotifications, timerBBulkJobs;
+    public static Counter.Builder timerBUpdateResultsAdded, timerBUpdateResultsDuplicates, timerBUpdateResultsFailed;
     public static PrometheusMeterRegistry meterRegistry;
     public static Timer timerListDS, timerImportDSMetadata, timerListDSMetadata;
     public static Timer.Builder timerBListDS, timerBImportDSMetadata, timerBListDSMetadata;
@@ -104,6 +104,11 @@ public class MetricsConfig {
         timerBUpdateMetadataProfile = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updateMetadataProfile").tag("method", "PUT");
         timerBUpdatePerfProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updatePerformanceProfileInDB");
         timerBUpdatePerfProfile = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updatePerformanceProfile").tag("method", "PUT");
+
+        // Counter builders for updateResults data point tracking
+        timerBUpdateResultsAdded = Counter.builder("updateresults.datapoints.added").description("Data points newly added to database").tag("api", "updateResults");
+        timerBUpdateResultsDuplicates = Counter.builder("updateresults.datapoints.duplicates").description("Duplicate data points skipped").tag("api", "updateResults");
+        timerBUpdateResultsFailed = Counter.builder("updateresults.datapoints.failed").description("Data points that failed to be added").tag("api", "updateResults");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);
