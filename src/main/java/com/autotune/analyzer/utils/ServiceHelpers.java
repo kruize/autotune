@@ -138,11 +138,6 @@ public class ServiceHelpers {
 
     public static void detectLayers (CreateExperimentAPIObject validAPIObj) throws Exception {
         for (KubernetesAPIObject kubernetesAPIObject : validAPIObj.getKubernetesObjects()) {
-            // Skip layer detection for namespace experiments (no containers)
-            if (kubernetesAPIObject.getContainerAPIObjects() == null) {
-                continue;
-            }
-
             for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
                 // detect layers for the container
                 Map<String, KruizeLayer> layers = LayerUtils.detectLayers(containerAPIObject.getContainer_name(),

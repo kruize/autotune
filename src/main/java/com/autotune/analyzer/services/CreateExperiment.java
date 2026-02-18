@@ -121,8 +121,8 @@ public class CreateExperiment extends HttpServlet {
                     if (null != validAPIObj)
                         validAPIObj.setValidationData(ko.getValidation_data());
 
-                    // Detect layers if it's not a remote monitoring experiment
-                    if (null != validAPIObj && !ko.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE)) {
+                    // Detect layers only if it's not a remote monitoring experiment and not a namespace experiment
+                    if (null != validAPIObj && !ko.getTarget_cluster().equalsIgnoreCase(AnalyzerConstants.REMOTE) && !validAPIObj.isNamespaceExperiment()) {
                         ServiceHelpers.detectLayers(validAPIObj);
                     }
                     addedToDB = new ExperimentDBService().addExperimentToDB(validAPIObj);
