@@ -14,6 +14,7 @@ See the License for the specific language governing permissions and
 limitations under the License.
 """
 import json
+import shutil
 
 import pytest
 import sys
@@ -43,6 +44,10 @@ def test_runtime_recommendation(cluster_type):
     Asserts: When a JVM layer is present, config.env contains JDK_JAVA_OPTIONS or JAVA_OPTIONS
     with GC flags (e.g. -XX:+UseG1GC or -Xgcpolicy:gencon).
     """
+
+    clone_repo("https://github.com/kruize/benchmarks")
+    benchmarks_install()
+
     input_json_file = str(Path(__file__).parent / "../json_files/create_tfb_exp.json")
 
     form_kruize_url(cluster_type)
@@ -122,6 +127,15 @@ def test_runtime_recommendation(cluster_type):
     validate_local_monitoring_recommendation_data_present(list_reco_json)
     validate_runtime_recommendations_if_present(list_reco_json)
 
+    # Delete experiment
     response = delete_experiment(input_json_file, rm=False)
     print("delete exp = ", response.status_code)
     assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Delete Metric Profile
+    response = delete_metric_profile(metric_profile_json_file)
+    print("delete metric profile = ", response.status_code)
+    assert response.status_code == SUCCESS_STATUS_CODE
+
+    # Remove benchmarks directory
+    shutil.rmtree("benchmarks")
