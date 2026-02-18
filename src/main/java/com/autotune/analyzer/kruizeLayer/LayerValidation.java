@@ -17,13 +17,20 @@
 package com.autotune.analyzer.kruizeLayer;
 
 import com.autotune.analyzer.exceptions.InvalidBoundsException;
+import com.autotune.analyzer.kruizeLayer.presence.QueryBasedPresence;
+import com.autotune.analyzer.utils.AnalyzerConstants.LayerConstants.LogMessages;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
+import com.autotune.common.datasource.DataSourceCollection;
+import com.autotune.common.datasource.DataSourceInfo;
+import com.autotune.common.datasource.DataSourceOperatorImpl;
+import com.google.gson.JsonArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Validation helper for KruizeLayer objects
@@ -85,6 +92,12 @@ public class LayerValidation {
             String errorMsg = String.join("; ", errors);
             LOGGER.error("Layer validation failed: {}", errorMsg);
             return new ValidationOutputData(false, errorMsg, HttpServletResponse.SC_BAD_REQUEST);
+        }
+
+        // 4. Validate query execution for query-based layers
+        ValidationOutputData queryValidation = validateQueryExecution(layer);
+        if (!queryValidation.isSuccess()) {
+            return queryValidation;
         }
 
         return new ValidationOutputData(true, null, null);
@@ -176,6 +189,84 @@ public class LayerValidation {
             return new ValidationOutputData(false, String.join("; ", errors), HttpServletResponse.SC_BAD_REQUEST);
         }
 
+        return new ValidationOutputData(true, null, null);
+    }
+
+    /**
+     * Validates query execution for query-based layer presence
+     * Executes ALL queries against the first datasource present in the list of datasources to ensure they are syntactically valid
+     *
+     * @param layer The layer to validate (assumed to be non-null with valid layerPresence)
+     * @return ValidationOutputData with success flag and error messages
+     */
+    private ValidationOutputData validateQueryExecution(KruizeLayer layer) {
+        // Only validate if detector is QueryBasedPresence
+        if (!(layer.getLayerPresence().getDetector() instanceof QueryBasedPresence)) {
+            return new ValidationOutputData(true, null, null);
+        }
+
+        QueryBasedPresence queryDetector = (QueryBasedPresence) layer.getLayerPresence().getDetector();
+        List<LayerPresenceQuery> queries = queryDetector.getQueries();
+
+        // Skip if no queries defined
+        if (queries == null || queries.isEmpty()) {
+            LOGGER.warn(LogMessages.NO_QUERIES_DEFINED);
+            return new ValidationOutputData(true, null, null);
+        }
+
+        // Get the first datasource for validation
+        HashMap<String, DataSourceInfo> allDatasources = DataSourceCollection.getInstance().getDataSourcesCollection();
+        if (allDatasources == null || allDatasources.isEmpty()) {
+            LOGGER.warn(LogMessages.QUERY_VALIDATION_NO_DATASOURCES);
+            return new ValidationOutputData(true, null, null);
+        }
+        DataSourceInfo firstDatasource = allDatasources.values().iterator().next();
+
+        // Get the operator for the first datasource
+        DataSourceOperatorImpl operator = DataSourceOperatorImpl.getInstance()
+                .getOperator(firstDatasource.getProvider());
+
+        if (operator == null) {
+            LOGGER.warn(LogMessages.QUERY_VALIDATION_SKIP_NO_OPERATOR,
+                    firstDatasource.getProvider(), firstDatasource.getName());
+            return new ValidationOutputData(true, null, null);
+        }
+
+        List<String> validationErrors = new ArrayList<>();
+
+        // Validate each query for syntax
+        for (LayerPresenceQuery query : queries) {
+            // Skip null query objects
+            if (query == null) {
+                LOGGER.warn(LogMessages.NULL_QUERY_ENCOUNTERED);
+                continue;
+            }
+
+            String baseQuery = query.getLayerPresenceQuery();
+            LOGGER.debug(LogMessages.QUERY_VALIDATION_VALIDATING_SYNTAX, baseQuery);
+
+            // Validate query syntax by executing against the datasource
+            try {
+                operator.getResultArrayForQuery(firstDatasource, baseQuery);
+                LOGGER.debug(LogMessages.QUERY_VALIDATION_SYNTAX_SUCCESS, baseQuery);
+
+            } catch (Exception e) {
+                // Query execution failed - this indicates a malformed query
+                String errorMsg = String.format(LogMessages.QUERY_VALIDATION_SYNTAX_FAILED,
+                        baseQuery, e.getMessage());
+                LOGGER.error(errorMsg);
+                validationErrors.add(errorMsg);
+            }
+        }
+
+        // Return error if any query had syntax errors
+        if (!validationErrors.isEmpty()) {
+            return new ValidationOutputData(false,
+                    String.join("; ", validationErrors),
+                    HttpServletResponse.SC_BAD_REQUEST);
+        }
+
+        LOGGER.info(LogMessages.QUERY_VALIDATION_COMPLETE, layer.getLayerName());
         return new ValidationOutputData(true, null, null);
     }
 }

@@ -552,11 +552,14 @@ public class Converters {
                 String kind = jsonObject.getString(AnalyzerConstants.KIND);
 
                 // Parse metadata
-                JSONObject metadataObject = jsonObject.getJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
-                String name = metadataObject.getString(AnalyzerConstants.AutotuneObjectConstants.NAME);
+                JSONObject metadataObject = jsonObject.optJSONObject(AnalyzerConstants.AutotuneObjectConstants.METADATA);
+                String name = null;
+                if (metadataObject != null) {
+                    name = metadataObject.optString(AnalyzerConstants.AutotuneObjectConstants.NAME, null);
+                }
 
                 // Parse basic layer fields
-                String layerName = jsonObject.getString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME);
+                String layerName = jsonObject.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, null);
                 int layerLevel = jsonObject.getInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
                 String details = jsonObject.has(AnalyzerConstants.AutotuneConfigConstants.DETAILS) ? jsonObject.getString(AnalyzerConstants.AutotuneConfigConstants.DETAILS) : null;
 
@@ -566,8 +569,8 @@ public class Converters {
                 String labelName = null;
                 String labelValue = null;
 
-                if (jsonObject.has("layer_presence")) {
-                    JSONObject layerPresenceObject = jsonObject.getJSONObject("layer_presence");
+                JSONObject layerPresenceObject = jsonObject.optJSONObject("layer_presence");
+                if (layerPresenceObject != null) {
                     presence = layerPresenceObject.has("presence") ? layerPresenceObject.getString("presence") : null;
 
                     // Parse queries array if present
@@ -597,8 +600,8 @@ public class Converters {
 
                 // Parse tunables array
                 ArrayList<Tunable> tunables = null;
-                if (jsonObject.has("tunables")) {
-                    JSONArray tunablesArray = jsonObject.getJSONArray("tunables");
+                JSONArray tunablesArray = jsonObject.optJSONArray("tunables");
+                if (tunablesArray != null) {
                     tunables = new ArrayList<>();
                     for (Object tunableObj : tunablesArray) {
                         JSONObject tunableJsonObject = (JSONObject) tunableObj;
