@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import javax.servlet.ServletConfig;
@@ -70,7 +71,7 @@ public class UpdateResults extends HttpServlet {
     private static final Logger LOGGER = LoggerFactory.getLogger(UpdateResults.class);
     private static final Gson SIMPLE_GSON = new Gson();
     public static ConcurrentHashMap<String, PerformanceProfile> performanceProfilesMap = new ConcurrentHashMap<>();
-    private static int requestCount = 0;
+    private static final AtomicLong requestCount = new AtomicLong(0);
 
     @Override
     public void init(ServletConfig config) throws ServletException {
@@ -79,7 +80,7 @@ public class UpdateResults extends HttpServlet {
 
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        int calCount = ++requestCount;
+        long calCount = requestCount.incrementAndGet();
         String requestId = String.valueOf(calCount);
         
         LOGGER.info("Starting updateResults API processing - requestId: {}, remoteAddr: {}", 
@@ -105,8 +106,6 @@ public class UpdateResults extends HttpServlet {
                     .registerTypeAdapter(DeviceDetails.class, new DeviceDetailsAdapter())
                     .registerTypeAdapter(MetricMetadata.class, new MetricMetadataAdapter())
                     .create();
-            LOGGER.debug("updateResults API request payload size for requestID {}: {} characters", 
-                    requestId, inputData.length());
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("updateResults API request payload for requestID {}: {}", requestId, inputData);
             }
@@ -257,8 +256,13 @@ public class UpdateResults extends HttpServlet {
             LOGGER.debug("UpdateResults error response - input payload size: {} chars", 
                     inputPayload != null ? inputPayload.length() : 0);
             if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("UpdateResults error response - input payload: {}", 
-                        inputPayload != null ? SIMPLE_GSON.toJson(JsonParser.parseString(inputPayload)) : "null");
+                try {
+                    LOGGER.trace("UpdateResults error response - input payload: {}", 
+                            inputPayload != null ? SIMPLE_GSON.toJson(JsonParser.parseString(inputPayload)) : "null");
+                } catch (Exception ex) {
+                    LOGGER.trace("UpdateResults error response - failed to parse JSON ({}), input payload (raw): {}", 
+                            ex.getMessage(), inputPayload);
+                }
             }
         }
         response.sendError(httpStatusCode, errorMsg);

@@ -105,10 +105,9 @@ public class MetricsConfig {
         timerBUpdatePerfProfileDB = Timer.builder("kruizeDB").description(DB_METRIC_DESC).tag("method", "updatePerformanceProfileInDB");
         timerBUpdatePerfProfile = Timer.builder("kruizeAPI").description(API_METRIC_DESC).tag("api", "updatePerformanceProfile").tag("method", "PUT");
 
-        // Counter builders for updateResults data point tracking
-        timerBUpdateResultsAdded = Counter.builder("updateresults.datapoints.added").description("Data points newly added to database").tag("api", "updateResults");
-        timerBUpdateResultsDuplicates = Counter.builder("updateresults.datapoints.duplicates").description("Duplicate data points skipped").tag("api", "updateResults");
-        timerBUpdateResultsFailed = Counter.builder("updateresults.datapoints.failed").description("Data points that failed to be added").tag("api", "updateResults");
+        timerBUpdateResultsAdded = Counter.builder("updateresults_datapoints_added").description("Data points newly added to database").tag("api", "updateResults");
+        timerBUpdateResultsDuplicates = Counter.builder("updateresults_datapoints_duplicates").description("Duplicate data points skipped").tag("api", "updateResults");
+        timerBUpdateResultsFailed = Counter.builder("updateresults_datapoints_failed").description("Data points that failed to be added").tag("api", "updateResults");
 
         new ClassLoaderMetrics().bindTo(meterRegistry);
         new ProcessorMetrics().bindTo(meterRegistry);
