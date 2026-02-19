@@ -51,7 +51,6 @@ It includes:
 | kind | Resource type |
 | metadata | Layer metadata |
 | layer_name | Name of the layer |
-| layer_level | Hierarchy level |
 | details | Description of the layer |
 | layer_presence | Logic to detect layer presence |
 | tunables | Tunable parameters for the layer |

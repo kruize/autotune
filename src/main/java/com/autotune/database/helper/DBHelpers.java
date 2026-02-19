@@ -1581,7 +1581,6 @@ public class DBHelpers {
                     kruizeLayerEntry.setApi_version(kruizeLayer.getApiVersion());
                     kruizeLayerEntry.setKind(kruizeLayer.getKind());
                     kruizeLayerEntry.setLayer_name(kruizeLayer.getLayerName());
-                    kruizeLayerEntry.setLayer_level(kruizeLayer.getLayerLevel());
                     kruizeLayerEntry.setDetails(kruizeLayer.getDetails());
 
                     ObjectMapper objectMapper = new ObjectMapper();

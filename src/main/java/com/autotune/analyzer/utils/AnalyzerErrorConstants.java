@@ -35,7 +35,6 @@ public class AnalyzerErrorConstants {
         public static final String AUTOTUNE_CONFIG_NAME_NULL = "KruizeLayer object name cannot be null or empty\n";
         public static final String LAYER_PRESENCE_MISSING = "Layer presence missing! Must be indicated through a presence field, layerPresenceQuery or layerPresenceLabel\n";
         public static final String BOTH_LAYER_QUERY_AND_LABEL_SET = "Both layerPresenceQuery and layerPresenceLabel cannot be set\n";
-        public static final String LAYER_LEVEL_INVALID = "Layer level must be a non-negative integer\n";
         public static final String NO_TUNABLES = "KruizeLayer has no tunables\n";
         public static final String COULD_NOT_GET_LIST_OF_APPLICATIONS = "Could not get the applications for the layer ";
         public static final String INVALID_SLO_CLASS = "Invalid slo_class for tunable ";

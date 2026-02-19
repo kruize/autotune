@@ -560,7 +560,6 @@ public class Converters {
 
                 // Parse basic layer fields
                 String layerName = jsonObject.optString(AnalyzerConstants.AutotuneConfigConstants.LAYER_NAME, null);
-                int layerLevel = jsonObject.getInt(AnalyzerConstants.AutotuneConfigConstants.LAYER_LEVEL);
                 String details = jsonObject.has(AnalyzerConstants.AutotuneConfigConstants.DETAILS) ? jsonObject.getString(AnalyzerConstants.AutotuneConfigConstants.DETAILS) : null;
 
                 // Parse layer_presence
@@ -626,7 +625,7 @@ public class Converters {
                     layerPresence.setLabel(labels);
                 }
 
-                kruizeLayer = new KruizeLayer(apiVersion, kind, metadata, layerName, layerLevel,
+                kruizeLayer = new KruizeLayer(apiVersion, kind, metadata, layerName,
                         details, layerPresence, tunables);
             }
             return kruizeLayer;

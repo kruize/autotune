@@ -30,8 +30,6 @@ public final class KruizeLayer {
     private LayerMetadata metadata;
     @SerializedName("layer_name")
     private String layerName;
-    @SerializedName("layer_level")
-    private int layerLevel;
     private String details;
     @SerializedName("layer_presence")
     private LayerPresence layerPresence;
@@ -41,13 +39,12 @@ public final class KruizeLayer {
     }
 
     public KruizeLayer(String apiVersion, String kind, LayerMetadata metadata,
-                       String layerName, int layerLevel, String details,
+                       String layerName, String details,
                        LayerPresence layerPresence, ArrayList<Tunable> tunables) {
         this.apiVersion = apiVersion;
         this.kind = kind;
         this.metadata = metadata;
         this.layerName = layerName;
-        this.layerLevel = layerLevel;
         this.details = details;
         this.layerPresence = layerPresence;
         this.tunables = tunables;
@@ -85,14 +82,6 @@ public final class KruizeLayer {
         this.layerName = layerName;
     }
 
-    public int getLayerLevel() {
-        return layerLevel;
-    }
-
-    public void setLayerLevel(int layerLevel) {
-        this.layerLevel = layerLevel;
-    }
-
     public String getDetails() {
         return details;
     }
@@ -122,7 +111,6 @@ public final class KruizeLayer {
         return "KruizeLayer{" +
                 "apiVersion='" + apiVersion + '\'' +
                 ", kind='" + kind + '\'' +
-                ", layerLevel=" + layerLevel +
                 ", layerName='" + layerName + '\'' +
                 ", details='" + details + '\'' +
                 ", metadata=" + metadata +
