@@ -63,6 +63,18 @@ import static com.autotune.utils.KruizeConstants.PerformanceBasedRecommendationC
 
 public class RecommendationEngine {
     private static final Logger LOGGER = LoggerFactory.getLogger(RecommendationEngine.class);
+
+    // JVM info metrics for metadata extraction
+    private static final Set<String> JVM_INFO_METRICS = Set.of(
+        AnalyzerConstants.MetricName.jvmInfo.name(),
+        AnalyzerConstants.MetricName.jvmInfoTotal.name()
+    );
+
+    private static final Set<String> JVM_MEMORY_METRICS = Set.of(
+        AnalyzerConstants.MetricName.jvmTotalNonHeapMemory.name(),
+        AnalyzerConstants.MetricName.jvmThreadsLive.name(),
+        AnalyzerConstants.MetricName.jvmBufferMemoryDirect.name()
+    );
     private final String intervalEndTimeStr;
     private final String intervalStartTimeStr; // TODO: to be used in future
     List<RecommendationModel> recommendationModels;
@@ -73,10 +85,6 @@ public class RecommendationEngine {
     private Timestamp interval_end_time;
     private List<String> modelNames;
     private Map<String, RecommendationTunables> modelTunable;
-    private static final Set<String> JVM_INFO_METRICS = Set.of(
-            AnalyzerConstants.MetricName.jvmInfo.toString(),
-            AnalyzerConstants.MetricName.jvmInfoTotal.toString());
-
     public RecommendationEngine(String experimentName, String intervalEndTimeStr, String intervalStartTimeStr) {
         this.experimentName = experimentName;
         this.intervalEndTimeStr = intervalEndTimeStr;
@@ -845,17 +853,40 @@ public class RecommendationEngine {
             // Pass Notification object to all callers to update the notifications required
             ArrayList<RecommendationNotification> notifications = new ArrayList<>();
 
-            // Get the Recommendation Items
-            RecommendationConfigItem recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
-            RecommendationConfigItem recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
-            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
+            RecommendationConfigItem recommendationCpuRequest;
+            RecommendationConfigItem recommendationMemRequest;
+            RecommendationConfigItem recommendationCpuLimits;
+            RecommendationConfigItem recommendationMemLimits;
+            List<RecommendationConfigEnv> runtimeRecommList = null;
+            boolean isROS = KruizeDeploymentInfo.is_ros_enabled;
+            if(!isROS) {
+                // Generate ALL recommendations (container + runtime) using orchestrator for LM mode.
+                List<RecommendationConstants.RecommendationNotification> orchestratorNotifications = new ArrayList<>();
+                Map<String, Object> allRecommendations = LayerRecommendationOrchestrator.generateAllRecommendations(
+                                (GenericRecommendationModel) model,
+                                kruizeObject,
+                                filteredResultsMap,
+                                orchestratorNotifications);
+                Map<Object, RecommendationConfigItem> allContainerRecs = (Map<Object, RecommendationConfigItem>) allRecommendations.get("container");
+                recommendationCpuLimits = allContainerRecs.get(AnalyzerConstants.LayerConstants.TunablesConstants.CPU_LIMIT);
+                recommendationMemLimits = allContainerRecs.get(AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_LIMIT);
+                recommendationCpuRequest = allContainerRecs.get(AnalyzerConstants.LayerConstants.TunablesConstants.CPU_REQUEST);
+                recommendationMemRequest = allContainerRecs.get(AnalyzerConstants.LayerConstants.TunablesConstants.MEMORY_REQUEST);
+                // Extract runtime recommendations
+                runtimeRecommList = (List<RecommendationConfigEnv>) allRecommendations.get("runtime");
+            } else {
 
-            // Get the Recommendation Items
-            // Calling requests on limits as we are maintaining limits and requests as same
-            // Maintaining different flow for both of them even though if they are same as in future we might have
-            // a different implementation for both and this avoids confusion
-            RecommendationConfigItem recommendationCpuLimits = recommendationCpuRequest;
-            RecommendationConfigItem recommendationMemLimits = recommendationMemRequest;
+                recommendationCpuRequest = model.getCPURequestRecommendation(filteredResultsMap, notifications);
+                recommendationMemRequest = model.getMemoryRequestRecommendation(filteredResultsMap, notifications);
+                // Calling requests on limits as we are maintaining limits and requests as same
+                // Maintaining different flow for both of them even though if they are same as in future we might have
+                // a different implementation for both and this avoids confusion
+                recommendationCpuLimits = recommendationCpuRequest;
+                recommendationMemLimits = recommendationMemRequest;
+            }
+
+            // Handle Accelerator recommendations here until accelerator tunable is added in container layer.
+            Map<AnalyzerConstants.RecommendationItem, RecommendationConfigItem> recommendationAcceleratorRequestMap = model.getAcceleratorRequestRecommendation(filteredResultsMap, notifications);
 
             // Create an internal map to send data to populate
             HashMap<String, RecommendationConfigItem> internalMapToPopulate = new HashMap<>();
@@ -869,8 +900,6 @@ public class RecommendationEngine {
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_CPU_LIMIT, recommendationCpuLimits);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_REQUEST, recommendationMemRequest);
             internalMapToPopulate.put(RecommendationConstants.RecommendationEngine.InternalConstants.RECOMMENDED_MEMORY_LIMIT, recommendationMemLimits);
-
-            List<RecommendationConfigEnv> runtimeRecommList = handleRuntimeRecommendations(kruizeObject);
 
             // Call the populate method to validate and populate the recommendation object
             boolean isSuccess = populateRecommendation(
@@ -890,28 +919,6 @@ public class RecommendationEngine {
             mappedRecommendationForModel.addNotification(notification);
         }
         return mappedRecommendationForModel;
-    }
-
-    /**
-     * Method to handle the runtimes recommendations logic
-     * @param kruizeObject to get the datasource
-     * @return
-     */
-    private List<RecommendationConfigEnv> handleRuntimeRecommendations(KruizeObject kruizeObject) {
-        List<RecommendationConfigEnv> runtimeRecommList = new ArrayList<>();
-        String datasourceName = kruizeObject.getDataSource();
-        if (datasourceName == null) {
-            LOGGER.warn("Datasource missing, skipping runtime recommendations");
-            return null;
-        }
-        DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(datasourceName);
-        if (dataSourceInfo == null ||
-                !KruizeSupportedTypes.RUNTIMES_SUPPORTED_DATASOURCES
-                        .contains(dataSourceInfo.getServiceName())) {
-            return null;
-        }
-        // TODO: add runtime env logic
-        return runtimeRecommList;
     }
 
 
@@ -2334,6 +2341,7 @@ public class RecommendationEngine {
                     MetricResults metricResults = null;
                     MetricAggregationInfoResults metricAggregationInfoResults = null;
 
+                    //TODO : Skip jvmMetrics if runtimeLayer is not detected for container experiment.
                     List<Metric> metricList = filterMetricsBasedOnExpTypeAndK8sObject(metricProfile,
                             AnalyzerConstants.MetricName.maxDate.name(), kruizeObject.getExperimentType());
 
@@ -2423,6 +2431,13 @@ public class RecommendationEngine {
                             }
 
                             LOGGER.debug(promQL);
+                            
+                            // Log JVM memory metric queries
+                            if (JVM_MEMORY_METRICS.contains(metricEntry.getName())) {
+                                LOGGER.info("Executing JVM memory metric query: metric={}, namespace={}, container={}",
+                                        metricEntry.getName(), namespace, containerName);
+                            }
+                            
                             String podMetricsUrl;
                             try {
                                 podMetricsUrl = String.format(KruizeConstants.DataSourceConstants.DATASOURCE_ENDPOINT_WITH_QUERY_RANGE,
@@ -2440,6 +2455,19 @@ public class RecommendationEngine {
                                 if (!resultArray.isEmpty()) {
                                     metric = resultArray.get(0).getAsJsonObject().getAsJsonObject(KruizeConstants.JSONKeys.METRIC);
                                 }
+                                
+                                // Log Prometheus response for JVM memory metrics
+                                if (JVM_MEMORY_METRICS.contains(metricEntry.getName())) {
+                                    if (resultArray != null && !resultArray.isEmpty()) {
+                                        LOGGER.info("JVM memory metric data received: metric={}, resultCount={}",
+                                                metricEntry.getName(), resultArray.size());
+                                    } else {
+                                        LOGGER.warn("JVM memory metric returned empty: metric={}, namespace={}, container={}. " +
+                                                "Ensure application exposes JVM metrics via Micrometer or similar instrumentation.",
+                                                metricEntry.getName(), namespace, containerName);
+                                    }
+                                }
+                                
                                 // Log Prometheus response for JVM info metrics to debug metadata extraction
                                 if (JVM_INFO_METRICS.contains(metricEntry.getName())) {
                                     if (metric != null) {
