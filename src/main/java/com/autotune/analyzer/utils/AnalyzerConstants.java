@@ -283,7 +283,10 @@ public class AnalyzerConstants {
         acceleratorMemoryUsage,
         acceleratorFrameBufferUsage,
         jvmInfo,
-        jvmInfoTotal
+        jvmInfoTotal,
+        jvmTotalNonHeapMemory,
+        jvmThreadsLive,
+        jvmBufferMemoryDirect
     }
 
     public enum K8S_OBJECT_TYPES {
@@ -751,6 +754,9 @@ public class AnalyzerConstants {
             // Container tunables
             public static final String MEMORY_LIMIT = "memoryLimit";
             public static final String CPU_LIMIT =  "cpuLimit";
+            public static final String MEMORY_REQUEST = "memoryRequest";
+            public static final String CPU_REQUEST =  "cpuRequest";
+
             // Hotspot tunables
             public static final String MAX_RAM_PERC = "MaxRAMPercentage";
             public static final String GC_POLICY = "GCPolicy";

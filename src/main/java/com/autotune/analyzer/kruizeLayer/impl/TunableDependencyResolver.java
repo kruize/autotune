@@ -25,9 +25,10 @@ public class TunableDependencyResolver {
     private TunableDependencyResolver() {}
 
     /**
-     * Returns tunables ordered such that all dependencies are resolved first.
+     * Returns tunable specs ordered such that all dependencies are resolved first.
+     * Each TunableSpec contains both the layer name and tunable name.
      */
-    public static List<Tunable> resolve(List<KruizeLayer> kruizeLayers) {
+    public static List<TunableSpec> resolve(List<KruizeLayer> kruizeLayers) {
 
         Map<TunableSpec, Tunable> tunableMap = new HashMap<>();
 
@@ -75,7 +76,7 @@ public class TunableDependencyResolver {
         return topologicalSort(tunableMap, graph);
     }
 
-    private static List<Tunable> topologicalSort(
+    private static List<TunableSpec> topologicalSort(
             Map<TunableSpec, Tunable> tunableMap,
             Map<TunableSpec, List<TunableSpec>> graph) {
 
@@ -98,11 +99,11 @@ public class TunableDependencyResolver {
             }
         }
 
-        List<Tunable> ordered = new ArrayList<>();
+        List<TunableSpec> ordered = new ArrayList<>();
 
         while (!queue.isEmpty()) {
             TunableSpec current = queue.poll();
-            ordered.add(tunableMap.get(current));
+            ordered.add(current);
 
             for (TunableSpec dep : graph.getOrDefault(current, List.of())) {
                 inDegree.put(dep, inDegree.get(dep) - 1);

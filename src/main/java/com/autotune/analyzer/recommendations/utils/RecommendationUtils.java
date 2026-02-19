@@ -5,6 +5,7 @@ import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
+import com.autotune.common.data.metrics.MetricMetadataResults;
 import com.autotune.common.data.metrics.MetricResults;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.common.data.result.IntervalResults;
@@ -623,6 +624,61 @@ public class RecommendationUtils {
             return 96 * 1024;
 
         return -1;
+    }
+
+    /**
+     * Parses JDK major version from version string.
+     * Handles both old format (1.8.0_xxx) and new format (11.0.18, 17.0.5, 21).
+     * @param versionStr JDK version string (e.g., "1.8.0_292", "11.0.18", "17.0.5", "21")
+     * @return JDK major version, or 0 if unavailable/unparseable
+     */
+    public static int parseJdkMajorVersion(String versionStr) {
+        if (versionStr == null || versionStr.isBlank()) {
+            return 0;
+        }
+        String version = versionStr.trim();
+        try {
+            // Handle "1.8.0_xxx" format (Java 8 and earlier)
+            if (version.startsWith("1.")) {
+                String[] parts = version.split("\\.");
+                if (parts.length >= 2) {
+                    return Integer.parseInt(parts[1]);
+                }
+            }
+            // Handle "17.0.5", "11.0.18", "21" formats (Java 9+)
+            String[] parts = version.split("\\.");
+            return Integer.parseInt(parts[0]);
+        } catch (NumberFormatException e) {
+            LOGGER.warn("Failed to parse JDK version: {}", version, e);
+            return 0;
+        }
+    }
+
+    /**
+     * Extracts JVM metric metadata (runtime, version, vendor) from filteredResultsMap.
+     *@param filteredResultsMap map of timestamp to IntervalResults
+     * @return MetricMetadataResults containing JVM info, or null if not found
+     */
+    public static MetricMetadataResults getJvmMetadata(Map<Timestamp, IntervalResults> filteredResultsMap) {
+        if (filteredResultsMap == null) {
+            return null;
+        }
+        for (IntervalResults intervalResults : filteredResultsMap.values()) {
+            if (intervalResults.getMetricResultsMap() == null) {
+                continue;
+            }
+            // Try jvmInfo first, then jvmInfoTotal (both provide runtime, vendor, version)
+            MetricResults metricResults = intervalResults.getMetricResultsMap()
+                .get(AnalyzerConstants.MetricName.jvmInfo);
+            if (metricResults == null) {
+                metricResults = intervalResults.getMetricResultsMap()
+                    .get(AnalyzerConstants.MetricName.jvmInfoTotal);
+            }
+            if (metricResults != null && metricResults.getMetricMetadataResults() != null) {
+                return metricResults.getMetricMetadataResults();
+            }
+        }
+        return null;
     }
 }
 
