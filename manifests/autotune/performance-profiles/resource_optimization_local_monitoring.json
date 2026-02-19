@@ -496,6 +496,66 @@
             "query": "sum by(container, namespace, runtime, vendor, version)(jvm_info_total{namespace=\"$NAMESPACE$\", container=\"$CONTAINER_NAME$\"})"
           }
         ]
+      },
+      {
+        "name": "jvmTotalNonHeapMemory",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "sum by(container, namespace) (avg_over_time(jvm_memory_used_bytes{area=\"nonheap\",namespace=\"$NAMESPACE$\",container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "max",
+            "query": "sum by(container, namespace) (max_over_time(jvm_memory_used_bytes{area=\"nonheap\",namespace=\"$NAMESPACE$\",container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "min",
+            "query": "sum by(container, namespace) (min_over_time(jvm_memory_used_bytes{area=\"nonheap\",namespace=\"$NAMESPACE$\",container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          }
+        ]
+      },
+      {
+        "name": "jvmThreadsLive",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg by(container, namespace) (avg_over_time(jvm_threads_live_threads{namespace=\"$NAMESPACE$\",container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "max",
+            "query": "max by(container, namespace) (max_over_time(jvm_threads_live_threads{namespace=\"$NAMESPACE$\",container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "min",
+            "query": "min by(container, namespace) (min_over_time(jvm_threads_live_threads{namespace=\"$NAMESPACE$\",container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          }
+        ]
+      },
+      {
+        "name": "jvmBufferMemoryDirect",
+        "datasource": "prometheus",
+        "value_type": "double",
+        "kubernetes_object": "container",
+        "aggregation_functions": [
+          {
+            "function": "avg",
+            "query": "avg by(container, namespace) (avg_over_time(jvm_buffer_memory_used_bytes{id=\"direct\",namespace=\"$NAMESPACE$\",container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "max",
+            "query": "max by(container, namespace) (max_over_time(jvm_buffer_memory_used_bytes{id=\"direct\",namespace=\"$NAMESPACE$\",container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          },
+          {
+            "function": "min",
+            "query": "min by(container, namespace) (min_over_time(jvm_buffer_memory_used_bytes{id=\"direct\",namespace=\"$NAMESPACE$\",container=\"$CONTAINER_NAME$\"}[$MEASUREMENT_DURATION_IN_MIN$m]))"
+          }
+        ]
       }
     ]
   }
