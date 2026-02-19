@@ -14,11 +14,11 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.kruizeLayer.recommendations;
+package com.autotune.analyzer.recommendations;
 
-import com.autotune.analyzer.kruizeLayer.recommendations.impl.HotspotLayerRecommendationHandler;
-import com.autotune.analyzer.kruizeLayer.recommendations.impl.QuarkusLayerRecommendationHandler;
-import com.autotune.analyzer.kruizeLayer.recommendations.impl.SemeruLayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.layers.HotspotLayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.layers.QuarkusLayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.layers.SemeruLayerRecommendationHandler;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;

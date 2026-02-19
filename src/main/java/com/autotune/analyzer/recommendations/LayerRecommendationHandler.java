@@ -14,7 +14,7 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.kruizeLayer.recommendations;
+package com.autotune.analyzer.recommendations;
 
 import java.util.Map;
 

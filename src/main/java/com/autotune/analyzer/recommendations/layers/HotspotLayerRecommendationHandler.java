@@ -14,11 +14,11 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.kruizeLayer.recommendations.impl;
+package com.autotune.analyzer.recommendations.layers;
 
-import com.autotune.analyzer.kruizeLayer.recommendations.JvmLayerRecommendationUtils;
-import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationContext;
-import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.LayerRecommendationContext;
+import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,11 +73,11 @@ public class HotspotLayerRecommendationHandler implements LayerRecommendationHan
 
     @Override
     public void formatForEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders) {
-        JvmLayerRecommendationUtils.formatForJVMEnv(tunableName, value, envBuilders);
+        RecommendationUtils.formatForJVMEnv(tunableName, value, envBuilders);
     }
 
     private String decideGCPolicy(Double jvmHeapSizeMB, double maxRAMPercent, double memLimit, double cpuCores, String jdkVersionStr) {
-        int jdkVersion = JvmLayerRecommendationUtils.parseMajorVersion(jdkVersionStr);
+        int jdkVersion = RecommendationUtils.parseMajorVersion(jdkVersionStr);
 
         if (jvmHeapSizeMB == null || jvmHeapSizeMB == 0) {
             double memLimitMB = memLimit / (1024 * 1024);

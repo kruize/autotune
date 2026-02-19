@@ -1,9 +1,9 @@
 package com.autotune.analyzer.recommendations.model;
 
 import com.autotune.analyzer.kruizeLayer.impl.TunableSpec;
-import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationContext;
-import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationHandler;
-import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationHandlerRegistry;
+import com.autotune.analyzer.recommendations.LayerRecommendationContext;
+import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.LayerRecommendationHandlerRegistry;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.recommendations.RecommendationConstants;
 import com.autotune.analyzer.recommendations.RecommendationNotification;
@@ -746,7 +746,7 @@ public class GenericRecommendationModel implements RecommendationModel{
             return AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT;
         }
         String r = runtime.trim().toLowerCase();
-        if (r.equals(AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU) || r.contains(AnalyzerConstants.AutotuneConfigConstants.LAYER_OPENJ9)) {
+        if (r.equals(AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU)) {
             return AnalyzerConstants.AutotuneConfigConstants.LAYER_SEMERU;
         }
         return AnalyzerConstants.AutotuneConfigConstants.LAYER_HOTSPOT;

@@ -14,10 +14,10 @@
  * limitations under the License.
  *******************************************************************************/
 
-package com.autotune.analyzer.kruizeLayer.recommendations.impl;
+package com.autotune.analyzer.recommendations.layers;
 
-import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationContext;
-import com.autotune.analyzer.kruizeLayer.recommendations.LayerRecommendationHandler;
+import com.autotune.analyzer.recommendations.LayerRecommendationContext;
+import com.autotune.analyzer.recommendations.LayerRecommendationHandler;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 
 import java.util.Map;

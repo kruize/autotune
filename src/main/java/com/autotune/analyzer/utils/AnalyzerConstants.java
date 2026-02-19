@@ -658,7 +658,6 @@ public class AnalyzerConstants {
         public static final String LAYER_HOTSPOT = "hotspot";
         public static final String LAYER_QUARKUS = "quarkus";
         public static final String LAYER_SEMERU = "semeru";
-        public static final String LAYER_OPENJ9 = "openj9";
         public static final String LAYER_NODEJS = "nodejs";
 
         private AutotuneConfigConstants() {

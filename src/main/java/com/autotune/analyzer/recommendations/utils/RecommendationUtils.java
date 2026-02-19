@@ -624,5 +624,40 @@ public class RecommendationUtils {
 
         return -1;
     }
+
+    public static int parseMajorVersion(String version) {
+        if (version == null || version.isEmpty()) return 8;
+        version = version.trim();
+        if (version.startsWith("1.")) {
+            return Integer.parseInt(version.substring(2, 3));
+        }
+        int dotIndex = version.indexOf(".");
+        return (dotIndex != -1)
+                ? Integer.parseInt(version.substring(0, dotIndex))
+                : Integer.parseInt(version);
+    }
+
+    /**
+     * Formats tunable values for JVM environment variables (JDK_JAVA_OPTIONS / JAVA_OPTIONS).
+     * Shared by Hotspot, Semeru, and any future JVM runtime layer handlers.
+     *
+     * @param tunableName  tunable name (e.g. MaxRAMPercentage, GCPolicy)
+     * @param value       recommended value
+     * @param envBuilders map of env var name to StringBuilder
+     */
+    public static void formatForJVMEnv(String tunableName, Object value, Map<String, StringBuilder> envBuilders) {
+        if (value == null) return;
+
+        StringBuilder jdkOpts = envBuilders.get(KruizeConstants.JSONKeys.JDK_JAVA_OPTIONS);
+        StringBuilder javaOpts = envBuilders.get(KruizeConstants.JSONKeys.JAVA_OPTIONS);
+        StringBuilder target = (jdkOpts != null) ? jdkOpts : javaOpts;
+        if (target == null) return;
+
+        if (AnalyzerConstants.LayerConstants.TunablesConstants.MAX_RAM_PERC.equals(tunableName)) {
+            target.append("-XX:MaxRAMPercentage=").append(value).append(" ");
+        } else if (AnalyzerConstants.LayerConstants.TunablesConstants.GC_POLICY.equals(tunableName)) {
+            target.append(value).append(" ");
+        }
+    }
 }
 
