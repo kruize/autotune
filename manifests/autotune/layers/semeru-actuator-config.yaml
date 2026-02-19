@@ -1,0 +1,44 @@
+apiVersion: "recommender.com/v1"
+kind: "KruizeLayer"
+metadata:
+  name: "semeru"
+layer_name: semeru
+layer_level: 1
+details: semeru tunables
+layer_presence:
+  queries:
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"nursery-.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"tenured-.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"tenured"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"balanced.+"}'
+    key: pod
+  - datasource: 'prometheus'
+    query: 'jvm_memory_used_bytes{area="heap",id=~"JavaHeap"}'
+    key: pod
+
+tunables:
+- name: GCPolicy
+  description: 'Garbage collection policy'
+  value_type: categorical
+  choices:
+    - 'gencon'
+    - 'balanced'
+    - 'optavgpause'
+    - 'optthruput'
+    - 'metronome'
+
+- name: MaxRAMPercentage
+  description: 'Maximum RAM percentage to allocate'
+  value_type: integer
+  lower_bound: '25'
+  upper_bound: '90'
+  step: 1
+  units: '%'
+

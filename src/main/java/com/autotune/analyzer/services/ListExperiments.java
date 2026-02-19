@@ -18,12 +18,8 @@ package com.autotune.analyzer.services;
 
 import com.autotune.analyzer.adapters.DeviceDetailsAdapter;
 import com.autotune.analyzer.adapters.RecommendationItemAdapter;
-import com.autotune.analyzer.experiment.KruizeExperiment;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
-import com.autotune.analyzer.serviceObjects.ContainerAPIObject;
-import com.autotune.analyzer.serviceObjects.Converters;
-import com.autotune.analyzer.serviceObjects.KubernetesAPIObject;
-import com.autotune.analyzer.serviceObjects.ListRecommendationsAPIObject;
+import com.autotune.analyzer.serviceObjects.*;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.analyzer.utils.GsonUTCDateAdapter;
@@ -40,7 +36,6 @@ import com.autotune.database.service.ExperimentDBService;
 import com.autotune.utils.KruizeConstants;
 import com.autotune.utils.KruizeSupportedTypes;
 import com.autotune.utils.MetricsConfig;
-import com.autotune.utils.TrialHelpers;
 import com.google.gson.*;
 import io.micrometer.core.instrument.Timer;
 import org.json.JSONArray;
@@ -57,7 +52,6 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
-import static com.autotune.analyzer.experiment.Experimentator.experimentsMap;
 import static com.autotune.analyzer.utils.AnalyzerConstants.ServiceConstants.*;
 
 /**
@@ -77,22 +71,33 @@ public class ListExperiments extends HttpServlet {
                     kubernetesAPIObject.getNamespace()
             );
             HashMap<String, ContainerData> containerDataMap = new HashMap<>();
-            for (ContainerAPIObject containerAPIObject : kubernetesAPIObject.getContainerAPIObjects()) {
-                ContainerData containerData = new ContainerData(
-                        containerAPIObject.getContainer_name(),
-                        containerAPIObject.getContainer_image_name(),
-                        containerAPIObject.getContainerRecommendations(),
-                        null);
-                containerDataMap.put(containerAPIObject.getContainer_name(), containerData);
+            List<ContainerAPIObject> containerAPIObjects = kubernetesAPIObject.getContainerAPIObjects();
+            if (containerAPIObjects != null && !containerAPIObjects.isEmpty()) {
+                for (ContainerAPIObject containerAPIObject : containerAPIObjects) {
+                    ContainerData containerData = new ContainerData(
+                            containerAPIObject.getContainer_name(),
+                            containerAPIObject.getContainer_image_name(),
+                            containerAPIObject.getContainerRecommendations(),
+                            null);
+                    containerDataMap.put(containerAPIObject.getContainer_name(), containerData);
+                }
+                k8sObject.setContainerDataMap(containerDataMap);
             }
-            k8sObject.setContainerDataMap(containerDataMap);
 
             // adding namespace recommendations to K8sObject
-            NamespaceData namespaceData = new NamespaceData();
-            if (kubernetesAPIObject.getNamespaceAPIObjects() != null && kubernetesAPIObject.getNamespaceAPIObjects().getnamespaceRecommendations() != null) {
-                namespaceData.setNamespace_name(kubernetesAPIObject.getNamespace());
-                namespaceData.setNamespaceRecommendations(kubernetesAPIObject.getNamespaceAPIObjects().getnamespaceRecommendations());
-                k8sObject.setNamespaceData(namespaceData);
+
+            NamespaceAPIObject namespaceAPIObject = kubernetesAPIObject.getNamespaceAPIObject();
+            if (namespaceAPIObject != null && namespaceAPIObject.getNamespaceRecommendations() != null) {
+                NamespaceData namespaceData = new NamespaceData();
+                namespaceData.setNamespace_name(namespaceAPIObject.getNamespace());
+                namespaceData.setNamespaceRecommendations(namespaceAPIObject.getNamespaceRecommendations());
+
+                HashMap<String, NamespaceData> k8sNamespaceDataMap = k8sObject.getNamespaceDataMap();
+                if (k8sNamespaceDataMap == null) {
+                    k8sNamespaceDataMap = new HashMap<>();
+                    k8sObject.setNamespaceDataMap(k8sNamespaceDataMap);
+                }
+                k8sNamespaceDataMap.put(namespaceAPIObject.getNamespace(), namespaceData);
             }
 
             k8sObjectList.add(k8sObject);
@@ -193,7 +198,7 @@ public class ListExperiments extends HttpServlet {
                                 // Modify the JSON response here based on query params.
                                 gsonStr = buildResponseBasedOnQuery(mKruizeExperimentMap, gsonObj, results, recommendations, latest, experimentName, rmTable);
                                 if (gsonStr.isEmpty()) {
-                                    gsonStr = generateDefaultResponse();
+                                    gsonStr = "[]";
                                 }
                                 response.getWriter().println(gsonStr);
                                 response.getWriter().close();
@@ -277,19 +282,6 @@ public class ListExperiments extends HttpServlet {
 
     private boolean isValidBooleanValue(String value) {
         return value != null && (value.equals("true") || value.equals("false"));
-    }
-
-    private String generateDefaultResponse() {
-        JSONArray experimentTrialJSONArray = new JSONArray();
-        for (String deploymentName : experimentsMap.keySet()) {
-            KruizeExperiment kruizeExperiment = experimentsMap.get(deploymentName);
-            for (int trialNum : kruizeExperiment.getExperimentTrials().keySet()) {
-                ExperimentTrial experimentTrial = kruizeExperiment.getExperimentTrials().get(trialNum);
-                JSONArray experimentTrialJSON = new JSONArray(TrialHelpers.experimentTrialToJSON(experimentTrial));
-                experimentTrialJSONArray.put(experimentTrialJSON.get(0));
-            }
-        }
-        return experimentTrialJSONArray.toString(4);
     }
 
     private void loadExperimentsFromDatabase(Map<String, KruizeObject> mKruizeExperimentMap, String experimentName) {
@@ -456,12 +448,12 @@ public class ListExperiments extends HttpServlet {
             mKruizeExperimentMap.values().forEach(kruizeObject -> kruizeObject.getKubernetes_objects()
                     .forEach(cont -> cont.getContainerDataMap().values().forEach(containerData -> containerData.setResults(null))));
             mKruizeExperimentMap.values().forEach(kruizeObject -> kruizeObject.getKubernetes_objects()
-                    .forEach(cont -> cont.getNamespaceData().setResults(null)));
+                    .forEach(cont -> cont.getNamespaceDataMap().values().forEach(namespaceData -> namespaceData.setResults(null))));
         } else if (objectTobeRemoved.equalsIgnoreCase("recommendations")) {
             mKruizeExperimentMap.values().forEach(kruizeObject -> kruizeObject.getKubernetes_objects()
                     .forEach(cont -> cont.getContainerDataMap().values().forEach(containerData -> containerData.setContainerRecommendations(null))));
             mKruizeExperimentMap.values().forEach(kruizeObject -> kruizeObject.getKubernetes_objects()
-                    .forEach(cont -> cont.getNamespaceData().setNamespaceRecommendations(null)));
+                    .forEach(cont -> cont.getNamespaceDataMap().values().forEach(namespaceData -> namespaceData.setNamespaceRecommendations(null))));
         } else
             LOGGER.error("Unsupported Object passed!");
 

@@ -16,9 +16,8 @@
 #
 #
 
-# Get the absolute path of current directory
-CURRENT_DIR="$(dirname "$(realpath "$0")")"
-LOCAL_MONITORING_TEST_DIR="${CURRENT_DIR}/local_monitoring_tests"
+# Get the path of the test dir
+LOCAL_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/local_monitoring_tests"
 
 # Source the common functions scripts
 . ${LOCAL_MONITORING_TEST_DIR}/../common/common_functions.sh
@@ -48,10 +47,13 @@ function authentication_tests() {
  	target="crc"
   echo ""
   echo "Setting up kruize..." | tee -a ${LOG}
-		echo "${KRUIZE_SETUP_LOG}"
+  echo "${KRUIZE_SETUP_LOG}"
+  pushd "${KRUIZE_REPO}" > /dev/null
 		setup "${KRUIZE_POD_LOG}" >> "${KRUIZE_SETUP_LOG}" 2>&1
 		echo "Setting up kruize...Done" | tee -a ${LOG}
-	sleep 15
+	  sleep 60
+	popd > /dev/null
+
   if [ "$cluster_type" == "minikube" ] || [ "$cluster_type" == "kind" ]; then
   	NAMESPACE="monitoring"
   	YAML_FILE="${LOCAL_MONITORING_TEST_DIR}/../../../manifests/crc/default-db-included-installation/minikube/kruize-crc-minikube.yaml"
@@ -173,9 +175,9 @@ update_yaml_with_token() {
 		/name: kruize$/,/containers:/{
 			/^        - name: kruize$/{
 				n
-				s|image: .*|image: '"$AUTOTUNE_IMAGE"'|
+				s|image: .*|image: '"$KRUIZE_IMAGE"'|
 			}
 		}
 	}' "$YAML_FILE"
-  echo "Updated image in YAML to $AUTOTUNE_IMAGE"
+  echo "Updated image in YAML to $KRUIZE_IMAGE"
 }

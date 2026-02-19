@@ -1,6 +1,7 @@
 package com.autotune.analyzer.plots;
 
 import com.autotune.analyzer.recommendations.model.CostBasedRecommendationModel;
+import com.autotune.analyzer.recommendations.model.GenericRecommendationModel;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.common.data.result.IntervalResults;
@@ -16,36 +17,33 @@ import java.sql.Timestamp;
 import java.util.*;
 
 import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.*;
+import static com.autotune.analyzer.utils.AnalyzerConstants.ExperimentType.NAMESPACE;
+import static com.autotune.analyzer.utils.AnalyzerConstants.MetricName.*;
 
 public class PlotManager {
     private static final Logger LOGGER = LoggerFactory.getLogger(PlotManager.class);
-    private HashMap<Timestamp, IntervalResults> containerResultsMap;
-    private Terms recommendationTerm;
-    private Timestamp monitoringStartTime;
-    private Timestamp monitoringEndTime;
+    private final HashMap<Timestamp, IntervalResults> resultsMap;
+    private final Terms recommendationTerm;
+    private final Timestamp monitoringStartTime;
+    private final Timestamp monitoringEndTime;
 
-    public PlotManager(HashMap<Timestamp, IntervalResults> containerResultsMap, Terms recommendationTerm, Timestamp monitoringStartTime, Timestamp monitoringEndTime) {
-        this.containerResultsMap = containerResultsMap;
+    public PlotManager(HashMap<Timestamp, IntervalResults> resultsMap, Terms recommendationTerm, Timestamp monitoringStartTime, Timestamp monitoringEndTime) {
+        this.resultsMap = resultsMap;
         this.recommendationTerm = recommendationTerm;
         this.monitoringStartTime = monitoringStartTime;
         this.monitoringEndTime = monitoringEndTime;
     }
 
-    public PlotData.PlotsData generatePlots() {
+    public PlotData.PlotsData generatePlots(AnalyzerConstants.ExperimentType experimentType) {
+
+        AnalyzerConstants.MetricName cpuMetric = experimentType == NAMESPACE ? namespaceCpuUsage : cpuUsage;
+        AnalyzerConstants.MetricName memMetric = experimentType == NAMESPACE ? namespaceMemoryUsage : memoryUsage;
 
         // Convert the HashMap to a TreeMap to maintain sorted order based on IntervalEndTime
         TreeMap<Timestamp, IntervalResults> sortedResultsHashMap = new TreeMap<>(Collections.reverseOrder());
-        sortedResultsHashMap.putAll(containerResultsMap);
-
+        sortedResultsHashMap.putAll(resultsMap);
         // Retrieve entries within the specified range
         Map<Timestamp, IntervalResults> resultInRange = sortedResultsHashMap.subMap(monitoringEndTime, true, monitoringStartTime, false);
-
-        int delimiterNumber = (int) (resultInRange.size() / recommendationTerm.getPlots_datapoints());
-
-        // Convert set to list
-        List<Timestamp> timestampList = new LinkedList<>(resultInRange.keySet());
-        // Sort the LinkedList
-        Collections.sort(timestampList);
 
         Map<Timestamp, PlotData.PlotPoint> plotsDataMap = new HashMap<>();
         Timestamp incrementStartTime = monitoringStartTime;
@@ -62,9 +60,9 @@ public class PlotManager {
             // Convert the modified Calendar back to a Timestamp
             Timestamp newTimestamp = new Timestamp(calendar.getTimeInMillis());
             PlotData.UsageData cpuUsage = getUsageData(sortedResultsHashMap.subMap(newTimestamp, true,
-                    incrementStartTime,false), AnalyzerConstants.MetricName.cpuUsage);
+                    incrementStartTime,false), cpuMetric);
             PlotData.UsageData memoryUsage = getUsageData(sortedResultsHashMap.subMap(newTimestamp, true,
-                    incrementStartTime, false), AnalyzerConstants.MetricName.memoryUsage);
+                    incrementStartTime, false), memMetric);
             plotsDataMap.put(newTimestamp, new PlotData.PlotPoint(cpuUsage, memoryUsage));
             incrementStartTime = newTimestamp;
         }
@@ -75,8 +73,13 @@ public class PlotManager {
     PlotData.UsageData getUsageData(Map<Timestamp, IntervalResults> resultInRange, AnalyzerConstants.MetricName metricName) {
         // stream through the results value and extract the CPU values
         try {
-            if (metricName.equals(AnalyzerConstants.MetricName.cpuUsage)) {
-                JSONArray cpuValues = CostBasedRecommendationModel.getCPUUsageList(resultInRange);
+            if (metricName == AnalyzerConstants.MetricName.cpuUsage || metricName == AnalyzerConstants.MetricName.namespaceCpuUsage) {
+                JSONArray cpuValues;
+                if (metricName == (AnalyzerConstants.MetricName.namespaceCpuUsage)) {
+                    cpuValues = CostBasedRecommendationModel.getNamespaceCPUUsageList(resultInRange);
+                } else {
+                    cpuValues = CostBasedRecommendationModel.getCPUUsageList(resultInRange);
+                }
                 LOGGER.debug("cpuValues : {}", cpuValues);
                 if (!cpuValues.isEmpty()) {
                     // Extract "max" values from cpuUsageList
@@ -96,12 +99,16 @@ public class PlotManager {
 
             } else {
                 // loop through the results value and extract the memory values
-                CostBasedRecommendationModel costBasedRecommendationModel  = new CostBasedRecommendationModel();
                 List<Double> memUsageMinList = new ArrayList<>();
                 List<Double> memUsageMaxList = new ArrayList<>();
                 boolean memDataAvailable = false;
+                JSONObject jsonObject;
                 for (IntervalResults intervalResults: resultInRange.values()) {
-                    JSONObject jsonObject = costBasedRecommendationModel.calculateMemoryUsage(intervalResults);
+                    if (metricName == (namespaceMemoryUsage)) {
+                        jsonObject = GenericRecommendationModel.calculateNamespaceMemoryUsage(intervalResults);
+                    } else {
+                        jsonObject = GenericRecommendationModel.calculateMemoryUsage(intervalResults);
+                    }
                     if (!jsonObject.isEmpty()) {
                         memDataAvailable = true;
                         Double memUsageMax = jsonObject.getDouble(KruizeConstants.JSONKeys.MAX);

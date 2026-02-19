@@ -16,17 +16,20 @@
 
 package com.autotune.analyzer.autoscaler.vpa;
 
+import com.autotune.analyzer.autoscaler.validator.ResourceValidator;
 import com.autotune.analyzer.exceptions.ApplyRecommendationsError;
 import com.autotune.analyzer.exceptions.InvalidModelException;
 import com.autotune.analyzer.exceptions.InvalidTermException;
 import com.autotune.analyzer.exceptions.UnableToCreateVPAException;
 import com.autotune.analyzer.kruizeObject.KruizeObject;
+import com.autotune.analyzer.recommendations.Config;
 import com.autotune.analyzer.recommendations.RecommendationConfigItem;
 import com.autotune.analyzer.autoscaler.AutoscalerImpl;
 import com.autotune.analyzer.recommendations.term.Terms;
 import com.autotune.analyzer.recommendations.utils.RecommendationUtils;
 import com.autotune.analyzer.utils.AnalyzerConstants;
 import com.autotune.analyzer.utils.AnalyzerErrorConstants;
+import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.common.data.result.ContainerData;
 import com.autotune.analyzer.recommendations.objects.MappedRecommendationForTimestamp;
@@ -196,9 +199,10 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                 }
 
                 for (K8sObject k8sObject: kruizeObject.getKubernetes_objects()) {
-                    List<RecommendedContainerResources> containerRecommendations = convertRecommendationsToContainerPolicy(k8sObject.getContainerDataMap(), kruizeObject);
+                    String namespace = k8sObject.getNamespace();
+                    List<RecommendedContainerResources> containerRecommendations = convertRecommendationsToContainerPolicy(k8sObject.getContainerDataMap(), namespace, kruizeObject);
                     if (containerRecommendations.isEmpty()){
-                        LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.RECOMMENDATION_DATA_NOT_PRESENT);
+                        LOGGER.error(AnalyzerErrorConstants.AutoscalerErrors.RECOMMENDATION_DATA_NOT_PRESENT, expName);
                     } else {
                         RecommendedPodResources recommendedPodResources = new RecommendedPodResources();
                         recommendedPodResources.setContainerRecommendations(containerRecommendations);
@@ -235,13 +239,17 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
     /**
      * This function converts container recommendations for VPA Container Recommendations Object Format
      */
-    private List<RecommendedContainerResources>  convertRecommendationsToContainerPolicy(HashMap<String, ContainerData> containerDataMap, KruizeObject kruizeObject) throws InvalidTermException, InvalidModelException {
+    private List<RecommendedContainerResources>  convertRecommendationsToContainerPolicy(HashMap<String, ContainerData> containerDataMap,
+                                                                                         String namespace, KruizeObject kruizeObject)
+            throws InvalidTermException, InvalidModelException, ApplyRecommendationsError {
+
         List<RecommendedContainerResources> containerRecommendations = new ArrayList<>();
 
         for (Map.Entry<String, ContainerData> containerDataEntry : containerDataMap.entrySet()) {
             // fetching container data
             ContainerData containerData = containerDataEntry.getValue();
             String containerName = containerData.getContainer_name();
+            String containerImage = containerData.getContainer_image_name();
             HashMap<Timestamp, MappedRecommendationForTimestamp> recommendationData = containerData.getContainerRecommendations().getData();
 
             // checking if recommendation data is present
@@ -269,7 +277,7 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     }
                     // vpa changes for models
                     String user_model = kruizeObject.getRecommendation_settings().getModelSettings().getModels().get(0);
-                    HashMap<AnalyzerConstants.ResourceSetting, HashMap<AnalyzerConstants.RecommendationItem, RecommendationConfigItem>> recommendationsConfig;
+                    Config recommendationsConfig;
 
                     if (KruizeConstants.JSONKeys.COST.equalsIgnoreCase(user_model)) {
                         recommendationsConfig = termRecommendations.getCostRecommendations().getConfig();
@@ -279,8 +287,8 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                         throw new IllegalArgumentException("Unknown model: "+ user_model);
                     }
 
-                    Double cpuRecommendationValue = recommendationsConfig.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.CPU).getAmount();
-                    Double memoryRecommendationValue = recommendationsConfig.get(AnalyzerConstants.ResourceSetting.requests).get(AnalyzerConstants.RecommendationItem.MEMORY).getAmount();
+                    Double cpuRecommendationValue = recommendationsConfig.getRequests().get(AnalyzerConstants.RecommendationItem.CPU).getAmount();
+                    Double memoryRecommendationValue = recommendationsConfig.getRequests().get(AnalyzerConstants.RecommendationItem.MEMORY).getAmount();
 
                     LOGGER.debug(String.format(AnalyzerConstants.AutoscalerConstants.InfoMsgs.RECOMMENDATION_VALUE,
                             AnalyzerConstants.RecommendationItem.CPU, containerName, cpuRecommendationValue));
@@ -292,30 +300,43 @@ public class VpaAutoscalerImpl extends AutoscalerImpl {
                     String memoryRecommendationValueForVpa = RecommendationUtils.resource2str(AnalyzerConstants.RecommendationItem.MEMORY.toString(),
                             memoryRecommendationValue);
 
-                    // creating container resource vpa object
-                    RecommendedContainerResources recommendedContainerResources = new RecommendedContainerResources();
-                    recommendedContainerResources.setContainerName(containerName);
+                    Map<String, Quantity> resourceMap = new HashMap<>();
 
-                    // setting target values
-                    Map<String, Quantity> target = new HashMap<>();
-                    target.put(AnalyzerConstants.RecommendationItem.CPU.toString(), new Quantity(cpuRecommendationValueForVpa));
-                    target.put(AnalyzerConstants.RecommendationItem.MEMORY.toString(), new Quantity(memoryRecommendationValueForVpa));
+                    resourceMap.put(KruizeConstants.JSONKeys.CPU, new Quantity(cpuRecommendationValueForVpa));
+                    resourceMap.put(KruizeConstants.JSONKeys.MEMORY, new Quantity(memoryRecommendationValueForVpa));
 
-                    // setting lower bound values
-                    Map<String, Quantity> lowerBound = new HashMap<>();
-                    lowerBound.put(AnalyzerConstants.RecommendationItem.CPU.toString(), new Quantity(cpuRecommendationValueForVpa));
-                    lowerBound.put(AnalyzerConstants.RecommendationItem.MEMORY.toString(), new Quantity(memoryRecommendationValueForVpa));
+                    ValidationOutputData validationOutputData = ResourceValidator.verifyResources(containerName,
+                            containerImage, namespace, resourceMap);
 
-                    // setting upper bound values
-                    Map<String, Quantity> upperBound = new HashMap<>();
-                    upperBound.put(AnalyzerConstants.RecommendationItem.CPU.toString(), new Quantity(cpuRecommendationValueForVpa));
-                    upperBound.put(AnalyzerConstants.RecommendationItem.MEMORY.toString(), new Quantity(memoryRecommendationValueForVpa));
+                    if (!validationOutputData.isSuccess()) {
+                        // TODO: store this event in the database to notify the user later
+                        LOGGER.error(validationOutputData.getMessage());
+                    } else {
+                        // creating container resource vpa object
+                        RecommendedContainerResources recommendedContainerResources = new RecommendedContainerResources();
+                        recommendedContainerResources.setContainerName(containerName);
 
-                    recommendedContainerResources.setLowerBound(lowerBound);
-                    recommendedContainerResources.setTarget(target);
-                    recommendedContainerResources.setUpperBound(upperBound);
+                        // setting target values
+                        Map<String, Quantity> target = new HashMap<>();
+                        target.put(AnalyzerConstants.RecommendationItem.CPU.toString(), new Quantity(cpuRecommendationValueForVpa));
+                        target.put(AnalyzerConstants.RecommendationItem.MEMORY.toString(), new Quantity(memoryRecommendationValueForVpa));
 
-                    containerRecommendations.add(recommendedContainerResources);
+                        // setting lower bound values
+                        Map<String, Quantity> lowerBound = new HashMap<>();
+                        lowerBound.put(AnalyzerConstants.RecommendationItem.CPU.toString(), new Quantity(cpuRecommendationValueForVpa));
+                        lowerBound.put(AnalyzerConstants.RecommendationItem.MEMORY.toString(), new Quantity(memoryRecommendationValueForVpa));
+
+                        // setting upper bound values
+                        Map<String, Quantity> upperBound = new HashMap<>();
+                        upperBound.put(AnalyzerConstants.RecommendationItem.CPU.toString(), new Quantity(cpuRecommendationValueForVpa));
+                        upperBound.put(AnalyzerConstants.RecommendationItem.MEMORY.toString(), new Quantity(memoryRecommendationValueForVpa));
+
+                        recommendedContainerResources.setLowerBound(lowerBound);
+                        recommendedContainerResources.setTarget(target);
+                        recommendedContainerResources.setUpperBound(upperBound);
+
+                        containerRecommendations.add(recommendedContainerResources);
+                    }
                 }
             }
         }

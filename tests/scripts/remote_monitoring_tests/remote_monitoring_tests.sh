@@ -15,15 +15,15 @@
 # limitations under the License.
 #
 #
-##### Script to perform basic tests for EM #####
+##### Script to perform remote monitoring tests #####
 
 
 # Get the absolute path of current directory
-CURRENT_DIR="$(dirname "$(realpath "$0")")"
-REMOTE_MONITORING_TEST_DIR="${CURRENT_DIR}/remote_monitoring_tests"
+REMOTE_MONITORING_TEST_DIR="${KRUIZE_REPO}/tests/scripts/remote_monitoring_tests"
+PERF_PROFILE_DIR="${KRUIZE_REPO}/manifests/autotune/performance-profiles"
 
 # Source the common functions scripts
-. ${REMOTE_MONITORING_TEST_DIR}/../common/common_functions.sh
+#. ${KRUIZE_REPO}/tests/scripts/common/common_functions.sh
 
 # Tests to validate Remote monitoring mode in Kruize 
 function remote_monitoring_tests() {
@@ -40,9 +40,9 @@ function remote_monitoring_tests() {
 	err_exit "ERROR: python3 not installed"
 
 	target="crc"
-	perf_profile_json="${REMOTE_MONITORING_TEST_DIR}/json_files/resource_optimization_openshift.json"
+	perf_profile_json="${PERF_PROFILE_DIR}/resource_optimization_openshift.json"
 
-	remote_monitoring_tests=("test_e2e" "sanity" "negative" "extended")
+	remote_monitoring_tests=("test_e2e" "perf_profile" "sanity" "negative" "extended")
 	
 	# check if the test case is supported
 	if [ ! -z "${testcase}" ]; then
@@ -62,14 +62,19 @@ function remote_monitoring_tests() {
 		echo "Setting up kruize..." | tee -a ${LOG}
 		echo "${KRUIZE_SETUP_LOG}"
 		echo "Removing isROSEnabled=false and local=true"
-    kruize_remote_patch
-		setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
-	        echo "Setting up kruize...Done" | tee -a ${LOG}
-	
-		sleep 60
+		pwd
+		pushd "${KRUIZE_REPO}" > /dev/null
+			kruize_remote_patch
+			echo "Removing isROSEnabled=false and local=true...done"
 
-		# create performance profile
-		create_performance_profile ${perf_profile_json}
+			setup "${KRUIZE_POD_LOG}" >> ${KRUIZE_SETUP_LOG} 2>&1
+				echo "Setting up kruize...Done" | tee -a ${LOG}
+		
+			sleep 60
+
+			# create performance profile
+			create_performance_profile ${perf_profile_json}
+		popd > /dev/null
 	else
 		echo "Skipping kruize setup..." | tee -a ${LOG}
 	fi

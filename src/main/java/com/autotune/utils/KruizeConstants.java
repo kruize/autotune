@@ -18,13 +18,15 @@
 package com.autotune.utils;
 
 import com.autotune.analyzer.kruizeObject.CreateExperimentConfigBean;
+import com.autotune.analyzer.recommendations.model.RecommendationTunables;
 import com.autotune.analyzer.serviceObjects.BulkJobStatus;
 import com.autotune.analyzer.utils.AnalyzerConstants;
-import org.apache.kafka.common.protocol.types.Field;
 
 import java.text.SimpleDateFormat;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import static com.autotune.analyzer.recommendations.RecommendationConstants.RecommendationEngine.PercentileConstants.*;
 
 /**
  * Constants for Autotune module
@@ -70,6 +72,8 @@ public class KruizeConstants {
         public static final String UPDATE_RECOMMENDATIONS_FAILURE = "UpdateRecommendations API failure response, experiment_name: %s and intervalEndTimeStr : %s";
         public static final String UPDATE_RECOMMENDATIONS_RESPONSE = "Update Recommendation API response: %s";
         public static final String UPDATE_RECOMMENDATIONS_FAILURE_MSG = "UpdateRecommendations API failed for experiment_name: %s and intervalEndTimeStr : %s due to %s";
+        public static final String PERFORMANCE_PROFILE_UPDATE_SUCCESS = "Performance Profile '%s' updated successfully to version %.1f.";
+        public static final String PERF_PROFILE_DELETION_SUCCESS = "Performance profile %s deleted successfully.";
     }
 
     public static class MetricProfileAPIMessages {
@@ -138,6 +142,17 @@ public class KruizeConstants {
         }
     }
 
+    public static final class CostBasedRecommendationConstants {
+
+        public static final RecommendationTunables COST_RECOMMENDATION_TUNABLES = new RecommendationTunables(COST_CPU_PERCENTILE, COST_MEMORY_PERCENTILE, COST_ACCELERATOR_PERCENTILE);
+
+    }
+    public static final class PerformanceBasedRecommendationConstants {
+
+        public static final RecommendationTunables PERFORMANCE_RECOMMENDATION_TUNABLES = new RecommendationTunables(PERFORMANCE_CPU_PERCENTILE, PERFORMANCE_MEMORY_PERCENTILE, PERFORMANCE_ACCELERATOR_PERCENTILE);
+
+    }
+
     public static final class JSONKeys {
         public static final String QUESTION_MARK = "?";
         public static final String AMPERSAND = "&";
@@ -181,7 +196,6 @@ public class KruizeConstants {
         // Deployments Section
         public static final String DEPLOYMENTS = "deployments";
         public static final String NAMESPACE = "namespace";
-        public static final String NAMESPACE_NAME = "namespace_name";
         public static final String POD_METRICS = "pod_metrics";
         public static final String CONTAINER_METRICS = "container_metrics";
         public static final String METRICS = "metrics";
@@ -291,9 +305,19 @@ public class KruizeConstants {
         public static final String MODEL_NAME = "modelName";
         public static final String GPU_PROFILE = "GPU_I_PROFILE";
 
+        public static final String CREATION_DATE = "creation_date";
+        public static final String UPDATE_DATE = "update_date";
+
         // Config changes JSON Keys
         public static final String MODEL_SETTINGS = "model_settings";
         public static final String TERM_SETTINGS = "term_settings";
+        public static final String MEMORY_PERCENTILE = "memory_percentile";
+        public static final String CPU_PERCENTILE = "cpu_percentile";
+        public static final String ACCELERATOR_PERCENTILE = "accelerator_percentile";
+        public static final String MODEL_TUNABLE = "model_tunables";
+        public static final String ACCELERATOR_MODEL_NAME = "accelerator_model_name";
+        public static final String ACCELERATOR_PROFILE_NAME = "accelerator_profile_name";
+        public static final String NODE = "node";
 
         private JSONKeys() {
         }
@@ -454,6 +478,7 @@ public class KruizeConstants {
             public static final String CHECK_DATASOURCE_UPDATES = "Datasource {} already exists, Checking for updates...";
             public static final String DATASOURCE_AUTH_CHANGED = "Authentication details for datasource {} have changed. Checking if the datasource is serviceable with the new config...";
             public static final String DATASOURCE_AUTH_UNCHANGED = "No changes detected in the authentication details for datasource {}";
+            public static final String RUNTIMES_RECOMMENDATIONS_NOT_AVAILABLE = "Runtimes recommendations are unavailable for the provided datasource.";
 
             private DataSourceInfoMsgs() {
             }
@@ -468,6 +493,7 @@ public class KruizeConstants {
             public static final String DATASOURCE_SERVICEABLE = "Datasource is serviceable.";
             public static final String DATASOURCE_AUTH_ADDED_DB = "Auth details added to the DB successfully.";
             public static final String DATASOURCE_AUTH_UPDATED_DB = "Auth details updated in the DB successfully.";
+            public static final String DATASOURCE_ADD_SUMMARY = "Datasource add summary: successCount={}, failures={}";
 
             private DataSourceSuccessMsgs() {
             }
@@ -480,7 +506,7 @@ public class KruizeConstants {
             public static final String DATASOURCE_URL_SERVICENAME_BOTH_SET = "Datasource url and servicename both can not be set.";
             public static final String MISSING_DATASOURCE_SERVICENAME_AND_URL = "Datasource servicename and url both cannot be empty.";
             public static final String UNSUPPORTED_DATASOURCE_PROVIDER = "Datasource provider is invalid.";
-            public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource is not serviceable.";
+            public static final String DATASOURCE_NOT_SERVICEABLE = "Datasource %s is not serviceable.";
             public static final String DATASOURCE_CONNECTION_FAILED = "Datasource connection refused or timed out.";
             public static final String DATASOURCE_DB_LOAD_FAILED = "Loading saved datasource {} details from db failed: {}";
             public static final String DATASOURCE_DB_AUTH_LOAD_FAILED = "Loading datasource {} AUTH details failed: {}";
@@ -493,9 +519,13 @@ public class KruizeConstants {
             public static final String MISSING_DATASOURCE_INFO = "Datasource is missing, add a valid Datasource";
             public static final String INVALID_DATASOURCE_INFO = "Datasource is either missing or is invalid: ";
             public static final String MISSING_DATASOURCE_AUTH = "Auth details are missing for datasource: {}";
-            public static final String DATASOURCE_AUTH_DB_INSERTION_FAILED = "Failed to add auth details to DB: {}";
+            public static final String DATASOURCE_AUTH_DB_INSERTION_FAILED = "Failed to add auth details to DB: %s";
             public static final String DATASOURCE_AUTH_DB_UPDATE_FAILED = "Failed to update auth details in the DB: {}";
             public static final String DATASOURCE_AUTH_UPDATE_INVALID = "The updated authentication configuration is invalid. Reverting to the previous configuration.";
+            public static final String DATASOURCE_ACCESS_ERROR_MESSAGE = "An unexpected error occurred while accessing datasource {} details: {}";
+            public static final String NO_DATASOURCE_SERVICEABLE = "No datasource could be added or are serviceable.";
+            public static final String UNSERVICEABLE_DATASOURCE = "The following datasource failed to be added/serviceable: {}";
+            public static final String DATASOURCE_VALIDATION_FAILURE = "Validation failed for datasource {}";
 
             private DataSourceErrorMsgs() {
             }
@@ -648,6 +678,7 @@ public class KruizeConstants {
             public static final String INPUT_NULL = "Input object cannot be null";
             public static final String VALUE_NEGATIVE = "Value cannot be negative";
             public static final String INVALID_MEM_FORMAT = "Invalid format: Supported formats are bytes, KB, KiB, MB, MiB, GB, GiB, etc.";
+            public static final String EMPTY_NOTIFICATIONS_OBJECT ="Notifications Object passed is empty. The notifications are not sent as part of recommendation.";
         }
     }
 
@@ -783,6 +814,46 @@ public class KruizeConstants {
                 public static final int MEDIUM_TERM_MIN_DATAPOINTS = 192;
                 public static final int LONG_TERM_MIN_DATAPOINTS = 768;
 
+                // Term Names (for consistency in keys and names)
+                public static final String TERM_DAILY = "daily";
+                public static final String TERM_WEEKLY = "weekly";
+                public static final String TERM_15_DAYS = "15 days";
+                public static final String TERM_MONTHLY = "monthly";
+                public static final String TERM_QUARTERLY = "quarterly";
+                public static final String TERM_HALF_YEARLY = "half_yearly";
+                public static final String TERM_YEARLY = "yearly";
+                public static final String TERM_SHORT = "short_term";
+                public static final String TERM_MEDIUM = "medium_term";
+                public static final String TERM_LONG = "long_term";
+
+                // Durations in Days
+                public static final double DURATION_DAILY = 1.0;
+                public static final double DURATION_WEEKLY = 7.0;
+                public static final double DURATION_15_DAYS = 15.0;
+                public static final double DURATION_MONTHLY = 30.0;
+                public static final double DURATION_QUARTERLY = 90.0;
+                public static final double DURATION_HALF_YEARLY = 180.0;
+                public static final double DURATION_YEARLY = 365.0;
+
+                // Duration Thresholds as Strings
+                public static final String THRESHOLD_DAILY = "30 min";
+                public static final String THRESHOLD_WEEKLY = "2 days";
+                public static final String THRESHOLD_15_DAYS = "7 days";
+                public static final String THRESHOLD_MONTHLY = "21 days";
+                public static final String THRESHOLD_QUARTERLY = "63 days";
+                public static final String THRESHOLD_HALF_YEARLY = "126 days";
+                public static final String THRESHOLD_YEARLY = "256 days";
+
+                // Plotting Parameters
+                public static final int PLOTS_DATAPOINT_DAILY = 4;
+                public static final double PLOTS_DELTA_DAILY = 0.25;
+                public static final int PLOTS_DATAPOINT_WEEKLY = 7;
+                public static final double PLOTS_DELTA_GENERIC = 1.0;
+                public static final int PLOTS_DATAPOINT_15_DAYS = 15;
+                public static final int PLOTS_DATAPOINT_MONTHLY = 30;
+                public static final int PLOTS_DATAPOINT_QUARTERLY = 90;
+                public static final int PLOTS_DATAPOINT_HALF_YEARLY = 180;
+                public static final int PLOTS_DATAPOINT_YEARLY = 365;
 
                 private DurationAmount() {
 
@@ -873,6 +944,16 @@ public class KruizeConstants {
         public static final String JOB_FILTER = "jobFilter";
         public static final String BULK_JOB_SAVE_ERROR = "Not able to save experiment due to {}";
         public static final String BULK_JOB_LOAD_ERROR = "Not able to load bulk JOB {} due to {}";
+
+        // Validation error messages
+        public static final String DUPLICATE_REQ_ID_WITH_SAME_PAYLOAD = "Duplicate requestId found with different payload: %s";
+        public static final String MISSING_REQUEST_ID = "RequestId parameter is missing";
+        public static final String INVALID_REQUEST_ID = "Invalid requestId format. Must be 36-character alphanumeric";
+        public static final String INVALID_START_TIME = "Start time should be before end time";
+        public static final String INVALID_TIME_RANGE = "Time range must be between 24 hours and 15 days";
+        public static final String INVALID_DATE_FORMAT = "Invalid date format. Must follow ISO 8601 format (YYYY-MM-DDTHH:mm:ss.sssZ)";
+        public static final String TIME_RANGE_EXCEPTION = "Exception occurred while validating the time range";
+
 
 
         // TODO : Bulk API Create Experiments defaults
@@ -999,6 +1080,10 @@ public class KruizeConstants {
         public static final String METADATA_PROFILE_ADDED = "MetadataProfile added to the collection successfully: {}";
         public static final String CONVERT_INPUT_JSON_TO_METADATA_PROFILE_FAILURE = "Failed to convert input JSON to MetadataProfile object due to: {}";
         public static final String METADATA_PROFILE_FILE_PATH = "MetadataProfile file path: {}";
+        public static final String UPDATING_METADATA_PROFILE = "Trying to update the metadata profile to collection: ";
+        public static final String METADATA_PROFILE_DOES_NOT_EXIST = "MetadataProfile does not exist: {}";
+        public static final String METADATA_PROFILE_UPDATED = "MetadataProfile updated in the collection successfully: {}";
+        public static final String METADATA_PROFILE_VALIDATION_ERROR= "Validation of metadata profile failed: {}";
 
         public static class MetadataProfileErrorMsgs {
 
@@ -1013,6 +1098,7 @@ public class KruizeConstants {
             public static final String SET_UP_DEFAULT_METADATA_PROFILE_ERROR = "Failed to set up default MetadataProfile due to: {}";
             public static final String FILE_NOT_FOUND_ERROR = "File not found: {}";
             public static final String FILE_READ_ERROR_ERROR_MESSAGE = "Failed to read the JSON file from the specified path: {}";
+            public static final String UPDATE_METADATA_PROFILE_FROM_DB_ERROR = "Failed to update Metadata Profile due to {}";
 
             private MetadataProfileErrorMsgs() {
             }
@@ -1026,8 +1112,21 @@ public class KruizeConstants {
         public static final String ADD_METADATA_PROFILE_TO_DB_WITH_VERSION = "Added Metadata Profile : {} into the DB with version: {}";
         public static final String DELETE_METADATA_PROFILE_SUCCESS_MSG = "Metadata profile: %s deleted successfully.";
         public static final String DELETE_METADATA_PROFILE_FROM_DB_SUCCESS_MSG = "Metadata profile deleted successfully from the DB.";
+        public static final String UPDATE_METADATA_PROFILE_SUCCESS_MSG = "Metadata Profile : %s updated successfully.";
+        public static final String UPDATE_METADATA_PROFILE_TO_DB_WITH_VERSION = "Updated Metadata Profile : {} into the DB with version: {}";
 
         private MetadataProfileAPIMessages() {
+        }
+    }
+
+    public static final class LayerAPIMessages {
+        public static final String CREATE_LAYER_SUCCESS_MSG = "Layer : %s created successfully.";
+        public static final String VIEW_LAYERS_MSG = " View Layers at /listLayers";
+        public static final String ADD_LAYER_TO_DB = "Added Layer : {} into the DB";
+        public static final String LOAD_LAYER_FAILURE = "Failed to load layer data: {}";
+        public static final String LOAD_ALL_LAYERS_FAILURE = "Failed to load all layers: {}";
+
+        private LayerAPIMessages() {
         }
     }
 

@@ -7,6 +7,8 @@ tuned.
 
 * experiment_name \
   A unique string name is specified for identifying individual experiments.
+* experiment_type \
+  An optional string used to indicate whether the experiment is of type `namespace` or `container`. If no experiment type is specified, it will default to `container`.
 * deployment_name \
   Stay tuned
 * namespace \

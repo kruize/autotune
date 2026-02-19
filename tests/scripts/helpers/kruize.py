@@ -45,6 +45,18 @@ def form_kruize_url(cluster_type, SERVER_IP=None):
         SERVER_IP = ip.stdout.decode('utf-8').strip('\n')
         URL = "http://" + str(SERVER_IP) + ":" + str(AUTOTUNE_PORT)
 
+    elif cluster_type == "kind":
+            port = subprocess.run(
+                ['kubectl get svc kruize -n monitoring -o jsonpath="{.spec.ports[0].nodePort}"'],
+                shell=True, stdout=subprocess.PIPE)
+
+            AUTOTUNE_PORT = port.stdout.decode('utf-8').strip('\n')
+
+            ip = subprocess.run(['docker inspect kind-control-plane --format "{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}"'],
+                                shell=True, stdout=subprocess.PIPE)
+            SERVER_IP = ip.stdout.decode('utf-8').strip('\n')
+            URL = "http://" + str(SERVER_IP) + ":" + str(AUTOTUNE_PORT)
+
     elif (cluster_type == "openshift"):
 
         subprocess.run(['oc expose svc/kruize -n openshift-tuning'], shell=True, stdout=subprocess.PIPE)
@@ -226,6 +238,63 @@ def create_performance_profile(perf_profile_json_file):
     response = requests.post(url, json=perf_profile_json)
     print("Response status code = ", response.status_code)
     print(response.text)
+    return response
+
+
+# Description: This function updates a performance profile using the Kruize updatePerformanceProfile API
+# Input Parameters: performance profile json
+def update_performance_profile(perf_profile_json_file):
+    json_file = open(perf_profile_json_file, "r")
+    perf_profile_json = json.loads(json_file.read())
+
+    print("\nUpdating performance profile...")
+    url = URL + "/updatePerformanceProfile"
+    print("URL = ", url)
+
+    response = requests.put(url, json=perf_profile_json)
+    print("Response status code = ", response.status_code)
+    print(response.text)
+    return response
+
+# Description: This function deletes the performance profile
+# Input Parameters: performance profile input json
+def delete_performance_profile(input_json_file, invalid_header=False):
+    json_file = open(input_json_file, "r")
+    input_json = json.loads(json_file.read())
+
+    print("\nDeleting the performance profile...")
+    url = URL + "/deletePerformanceProfile"
+
+    try:
+        performance_profile_name = input_json['name']
+        query_string = f"name={performance_profile_name}"
+    except KeyError:
+        query_string = ""
+
+    if query_string:
+        url += "?" + query_string
+    print("URL = ", url)
+
+    headers = {'content-type': 'application/xml'}
+    if invalid_header:
+        print("Invalid header")
+        response = requests.delete(url, headers=headers)
+    else:
+        response = requests.delete(url)
+
+    print(response)
+    print("Response status code = ", response.status_code)
+    return response
+
+
+# Description: This function lists performance profiles using the Kruize listPerformanceProfiles API
+def list_performance_profiles():
+    print("\nListing the Performance Profiles...")
+    url = URL + "/listPerformanceProfiles"
+    print("URL = ", url)
+    response = requests.get(url)
+
+    print("Response status code = ", response.status_code)
     return response
 
 
@@ -553,13 +622,16 @@ def create_metadata_profile(metadata_profile_json_file):
 
 # Description: This function deletes the metadata profile
 # Input Parameters: metadata profile input json
-def delete_metadata_profile(metadata_profile_name):
+def delete_metadata_profile(metadata_profile_name=None):
     print("\nDeleting the metadata profile...")
     url = URL + "/deleteMetadataProfile"
 
-    query_string = f"name={metadata_profile_name}"
+    query_string = None
 
-    if query_string:
+    if metadata_profile_name is not None:
+        query_string = f"name={metadata_profile_name}"
+
+    if query_string is not None:
         url += "?" + query_string
     print("URL = ", url)
 
@@ -597,4 +669,26 @@ def list_metadata_profiles(name=None, verbose=None, logging=True):
         print("\n************************************************************")
         print(response.text)
         print("\n************************************************************")
+    return response
+
+# Description: This function updates a metadata profile using the Kruize updateMetadataProfile API
+# Input Parameters: name and metadata profile json
+def update_metadata_profile(metadata_profile_json_file, name=None, **kwargs):
+    json_file = open(metadata_profile_json_file, "r")
+    metric_profile_json = json.loads(json_file.read())
+
+    parameters = {}
+
+    if name is not None:
+        parameters['name'] = name
+
+    parameters.update(kwargs)
+
+    print("\nUpdating metadata profile...")
+    url = URL + "/updateMetadataProfile"
+    print("URL = ", url)
+
+    response = requests.put(url, params=parameters, json=metric_profile_json)
+    print("Response status code = ", response.status_code)
+    print(response.json())
     return response

@@ -91,6 +91,30 @@ Here are the test scenarios:
 - Test with invalid values such as blank, null or an invalid value for name query parameter in listMetadataProfiles API
 - List metadata profiles without creating metadata profile
 
+### **Update Metadata Profile API tests**
+
+Here are the test scenarios:
+
+- Update a metadata profile with a valid json using the API, list and validate the metadata profiles before and after 
+calling /updateMetadataProfile API and validate the updated queries using /dsmetadata API.
+- Update metadata profile twice using the API, list and validate the updated profiles and validate the updated queries using /dsmetadata API. Checks if different workloads can be imported by updating the MetadataProfile with corresponding workload details.
+- Update metadata profile with a valid json using the API, omitting required `name` in the query parameter. Verifies that the API returns an error when a profile update is attempted with a valid JSON body but omits the required `name` query parameter.
+- Update metadata profile by passing invalid `name` query parameter: Empty, NULL, invalid profile names. Verifies that the `name` parameter cannot be invalid when a profile update is attempted with a valid JSON body.
+- Update metadata profile with an invalid json missing the mandatory fields, validate for appropriate error message. Ensures the API returns a specific validation error when the request's JSON payload is missing mandatory fields.
+- Update metadata profile with a valid json using the API but pass invalid query parameter other than `name`. Checks that the API correctly rejects requests that use an invalid query parameter other than the accepted `name` parameter.
+- Update metadata profile with mismatch in profile names of input JSON payload, query parameter and validate for appropriate error message. Ensuring that the `name` field and input parameter match for successfully updating the MetadataProfile.
+
+
+### **Delete Metadata Profile API tests**
+
+Here are the test scenarios:
+
+- Delete metadata profile passing a valid `name` parameter.
+- Delete metadata profile by missing `name` query parameter. Verifies that the API returns an error when a profile is attempted to delete without the `name` query parameter.
+- Delete metadata profile by passing invalid `name` query parameter: Empty, NULL, invalid profile names. Verifies that the `name` parameter cannot be invalid to successfully delete the profile.
+- Multiple delete attempts: Delete same metadata profile multiple times and validate the expected error message, ensuring redundant delete requests are handled gracefully.
+- Delete metadata profile, try to import cluster metadata and validate the expected error message. This testcase ensures that the cluster metadata cannot be imported once the MetadataProfile is deleted.
+
 ### **Create Experiment API tests**
 
 Here are the test scenarios:
@@ -128,6 +152,11 @@ Here are the test scenarios:
   - Sample JSON Payload: Verifies the API correctly processes a structured payload and generates a job_id.
 - Verify the response of the GET job status API for the generated job_id.
   - Tests both verbose=false and verbose=true GET requests for comprehensive verification.
+- Validate bulk API response by passing a valid and multiple invalid time range values.
+  - Job_id will be generated in case of the valid scenario
+  - Corresponding error message will be sent back in case of invalid scenario with Response code 400.
+- Validate bulk API response by passing an invalid datasource name in the input JSON.
+  - Error message will be sent back with the response code 400
 
 ## Prerequisites for running the tests:
 - Minikube setup or access to Openshift cluster
@@ -233,3 +262,48 @@ It can be run as shown in the example below:
 **_invalid_**: an invalid path to the token
 
 **_empty_**: a blank input in place of the token file path
+
+### Datasource Availability/Serviceability Test:
+
+Kruize supports multiple datasources such as Prometheus and Thanos Querier. During startup, Kruize validates the reachability of all configured datasources before proceeding.
+
+The datasource availability/serviceability test is part of the functional test bucket and is implemented as a standalone shell script, similar to the authentication tests.
+It validates Kruize behavior when one or more datasources are reachable or unreachable.
+
+Kruize startup behavior follows these rules:
+
+* Kruize continues startup if at least one datasource is reachable.
+* Kruize logs an error for each unreachable datasource.
+* Kruize fails startup only when all configured datasources are unreachable.
+
+The test can be run using the command below:
+
+```
+./test_autotune.sh -c <cluster-type> -i <image-name> -r benchmarks/ --testsuite=datasource_tests
+```
+
+#### Scenarios
+
+**both-valid**
+
+Both Prometheus and Thanos Querier datasources are reachable.
+
+**✔ Expected:** Kruize starts successfully.
+
+**prom-valid-thanos-invalid**
+
+Prometheus is reachable and Thanos Querier is unreachable.
+
+**✔ Expected:** Kruize starts successfully and logs an error for Thanos.
+
+**prom-invalid-thanos-valid**
+
+Prometheus is unreachable and Thanos Querier is reachable.
+
+**✔ Expected:** Kruize starts successfully and logs an error for Prometheus.
+
+**both-invalid**
+
+Both Prometheus and Thanos Querier datasources are unreachable.
+
+**❌ Expected:** Kruize fails to start and exits with an error.

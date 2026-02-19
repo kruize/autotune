@@ -24,11 +24,15 @@ import com.autotune.analyzer.utils.AnalyzerErrorConstants;
 import com.autotune.common.data.ValidationOutputData;
 import com.autotune.common.data.metrics.Metric;
 import com.autotune.common.data.result.ContainerData;
+import com.autotune.common.data.result.NamespaceData;
+import com.autotune.common.datasource.DataSourceCollection;
+import com.autotune.common.datasource.DataSourceInfo;
 import com.autotune.common.k8sObjects.K8sObject;
 import com.autotune.database.service.ExperimentDBService;
 import com.autotune.operator.KruizeDeploymentInfo;
 import com.autotune.operator.KruizeOperator;
 import com.autotune.utils.KruizeConstants;
+import com.autotune.utils.KruizeSupportedTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -168,6 +172,15 @@ public class ExperimentValidation {
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             proceed = false;
                         }
+                        // check if the provided datasource name exists
+                        DataSourceInfo dataSourceInfo = DataSourceCollection.getInstance().getDataSourcesCollection().get(kruizeObject.getDataSource());
+                        if (dataSourceInfo != null) {
+                            LOGGER.debug("DataSource {} exists", kruizeObject.getDataSource());
+                        } else {
+                            errorMsg = String.format(AnalyzerErrorConstants.APIErrors.ListDataSourcesAPI.INVALID_DATASOURCE_NAME_MSG, kruizeObject.getDataSource());
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            proceed = false;
+                        }
                     }
 
                     // validate mode and experiment type
@@ -262,6 +275,8 @@ public class ExperimentValidation {
         ValidationOutputData validationOutputData = new ValidationOutputData(false, null, null);
         boolean missingDeploySelector = true;
         boolean missingLocalDatasource = false;
+        boolean missingNamespaceData = false;
+
         String errorMsg = "";
         mandatoryFields.forEach(
                 mField -> {
@@ -328,7 +343,7 @@ public class ExperimentValidation {
                     for(String term: expObj.getRecommendation_settings().getTermSettings().getTerms()) {
                         // Check for whitespace in terms
                         if (term == null || term.trim().isEmpty()) {
-                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.WHITESPACE_NOT_ALLOWED;
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.EMPTY_NOT_ALLOWED;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
                             validationOutputData.setMessage(errorMsg);
@@ -336,10 +351,13 @@ public class ExperimentValidation {
                         }
                         // Check for correct term in terms
                         if (!validTerms.contains(term)) {
-                            throw new IllegalArgumentException(term + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
                         }
                     }
-                    LOGGER.info("All terms are valid");
                 }
 
                 if (expObj.getRecommendation_settings().getModelSettings() != null &&
@@ -348,14 +366,18 @@ public class ExperimentValidation {
 
                     for (String model: expObj.getRecommendation_settings().getModelSettings().getModels()) {
                         if (model == null || model.trim().isEmpty()) {
-                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.WHITESPACE_NOT_ALLOWED;
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.EMPTY_NOT_ALLOWED;
                             validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                             validationOutputData.setSuccess(false);
                             validationOutputData.setMessage(errorMsg);
                             return validationOutputData;
                         }
                         if (!validModels.contains(model)) {
-                            throw new IllegalArgumentException( model + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME);
+                            errorMsg = AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_MODEL_NAME;
+                            validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
+                            validationOutputData.setSuccess(false);
+                            validationOutputData.setMessage(errorMsg);
+                            return validationOutputData;
                         }
                     }
                 }
@@ -363,23 +385,42 @@ public class ExperimentValidation {
                 String depType = "";
                 if (expObj.getExperiment_usecase_type().isRemote_monitoring()) {
                     // In case of RM, kubernetes_obj is mandatory
-                    mandatoryDeploymentSelector = Collections.singletonList(AnalyzerConstants.KUBERNETES_OBJECTS);
-                    // check for valid k8stype
-                    for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
-                        AnalyzerConstants.K8S_OBJECT_TYPES type = Arrays.stream(AnalyzerConstants.K8S_OBJECT_TYPES.values())
-                                .filter(k8sType -> k8sType.equals(getApproriateK8sObjectType(k8sObject.getType())))
-                                .findFirst()
-                                .orElse(null);
-                        if (type == null) {
-                            depType = k8sObject.getType();
-                            invalidType = true;
-                            break;
+                    if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.CONTAINER)) {
+                        mandatoryDeploymentSelector = Collections.singletonList(AnalyzerConstants.KUBERNETES_OBJECTS);
+                        // check for valid k8stype
+                        for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
+                            AnalyzerConstants.K8S_OBJECT_TYPES type = Arrays.stream(AnalyzerConstants.K8S_OBJECT_TYPES.values())
+                                    .filter(k8sType -> k8sType.equals(getApproriateK8sObjectType(k8sObject.getType())))
+                                    .findFirst()
+                                    .orElse(null);
+                            if (type == null) {
+                                depType = k8sObject.getType();
+                                invalidType = true;
+                                break;
+                            }
                         }
                     }
                 } else if (expObj.getExperiment_usecase_type().isLocal_monitoring()) {
                     if (null == expObj.getDataSource()) {
                         errorMsg = errorMsg.concat(String.format(LOCAL_MONITORING_DATASOURCE_MANDATORY, expObj.getExperimentName()));
                         missingLocalDatasource = true;
+                    }
+                }
+                // Namespace experiment validation for both remote and local monitoring
+                if (expObj.getExperimentType().equals(AnalyzerConstants.ExperimentType.NAMESPACE)){
+                    for (K8sObject k8sObject : expObj.getKubernetes_objects()) {
+                        if (null == k8sObject.getNamespaceDataMap() || k8sObject.getNamespaceDataMap().isEmpty()) {
+                            errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE_DATA, expObj.getExperimentType().toString()));
+                            missingNamespaceData = true;
+                        } else {
+                            for (NamespaceData namespaceData : k8sObject.getNamespaceDataMap().values()) {
+                                if (null == namespaceData.getNamespace_name()) {
+                                    errorMsg = errorMsg.concat(String.format(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.MISSING_NAMESPACE, expObj.getExperimentType().toString()));
+                                    missingNamespaceData = true;
+                                    break;
+                                }
+                            }
+                        }
                     }
                 }
 
@@ -398,7 +439,7 @@ public class ExperimentValidation {
                     errorMsg = errorMsg.concat(String.format("Invalid deployment type: %s", depType));
                 if (missingDeploySelector)
                     errorMsg = errorMsg.concat(String.format("Either parameter should be present: %s", mandatoryDeploymentSelector));
-                if (invalidType || missingDeploySelector || missingLocalDatasource) {
+                if (invalidType || missingDeploySelector || missingLocalDatasource || missingNamespaceData) {
                     validationOutputData.setErrorCode(HttpServletResponse.SC_BAD_REQUEST);
                     validationOutputData.setSuccess(false);
                     validationOutputData.setMessage(errorMsg);

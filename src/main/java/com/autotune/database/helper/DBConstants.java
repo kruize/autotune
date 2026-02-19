@@ -8,6 +8,7 @@ public class DBConstants {
         public static final String SELECT_FROM_EXPERIMENTS = "from KruizeExperimentEntry";
         public static final String SELECT_FROM_LM_EXPERIMENTS = "from KruizeLMExperimentEntry";
         public static final String SELECT_FROM_EXPERIMENTS_BY_EXP_NAME = "from KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
+        public static final String SELECT_COUNT_FROM_EXPERIMENTS_BY_PROFILE_NAME = "SELECT count(k) FROM KruizeExperimentEntry k WHERE k.performance_profile = :performanceProfile";
         public static final String SELECT_FROM_LM_EXPERIMENTS_BY_EXP_NAME = "from KruizeLMExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_BULKJOBS_BY_JOB_ID = "from KruizeBulkJobEntry k WHERE k.jobId = :jobId";
         public static final String UPDATE_BULKJOB_BY_ID = "UPDATE kruize_bulkjobs " +
@@ -16,6 +17,8 @@ public class DBConstants {
                 "    :recommendationPath, :newRecommendation::jsonb, true" +
                 ") " +
                 "WHERE job_id = :jobId";
+        public static final String UPDATE_EXPERIMENTS_DATE = "UPDATE kruize_experiments " +
+                "SET update_date = :updateDate WHERE experiment_name IN (:experimentNames) ";
         public static final String SELECT_FROM_RESULTS = "from KruizeResultsEntry";
         public static final String SELECT_FROM_RESULTS_BY_EXP_NAME = "from KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
         public static final String SELECT_FROM_DATASOURCE = "from KruizeDataSourceEntry";
@@ -82,6 +85,8 @@ public class DBConstants {
         public static final String SELECT_FROM_METRIC_PROFILE_BY_NAME = "from KruizeMetricProfileEntry k WHERE k.name = :name";
         public static final String SELECT_FROM_METADATA_PROFILE = "from KruizeLMMetadataProfileEntry";
         public static final String SELECT_FROM_METADATA_PROFILE_BY_NAME = "from KruizeLMMetadataProfileEntry k WHERE k.name = :name";
+        public static final String SELECT_FROM_LAYER = "from KruizeLMLayerEntry";
+        public static final String SELECT_FROM_LAYER_BY_NAME = "from KruizeLMLayerEntry k WHERE k.layer_name = :layerName";
         public static final String DELETE_FROM_EXPERIMENTS_BY_EXP_NAME = "DELETE FROM KruizeExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_LM_EXPERIMENTS_BY_EXP_NAME = "DELETE FROM KruizeLMExperimentEntry k WHERE k.experiment_name = :experimentName";
         public static final String DELETE_FROM_RESULTS_BY_EXP_NAME = "DELETE FROM KruizeResultsEntry k WHERE k.experiment_name = :experimentName";
@@ -111,6 +116,11 @@ public class DBConstants {
                 " WHERE container->>'container_name' = :container_name" +
                 " AND container->>'container_image_name' = :container_image_name" +
                 " ))";
+        public static final String UPDATE_METADATA_PROFILE_TO_DB = "UPDATE KruizeLMMetadataProfileEntry km "+
+                "SET km.api_version = :apiVersion, km.kind = :kind, km.metadata = :metadata, km.name = :name, km.profile_version = :profileVersion, " +
+                "km.k8s_type = :k8sType, km.datasource = :datasource, km.query_variables = :queryVariables " +
+                "WHERE km.name = :metadataProfileName";
+        public static final String DELETE_FROM_PERFORMANCE_PROFILE_BY_NAME = "DELETE FROM KruizePerformanceProfileEntry kpp WHERE kpp.name = :perfProfileName";
     }
 
     public static final class TABLE_NAMES {

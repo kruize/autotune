@@ -32,6 +32,7 @@ import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import io.fabric8.kubernetes.api.model.ObjectReference;
 
+import java.sql.Timestamp;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -79,6 +80,8 @@ public final class KruizeObject implements ExperimentTypeAware {
     private List<K8sObject> kubernetes_objects;
     private Map<String, Terms> terms;
     private transient String bulkJobId;
+    private Timestamp creation_date;
+    private Timestamp update_date;
 
     public KruizeObject(String experimentName,
                         String clusterName,
@@ -196,7 +199,7 @@ public final class KruizeObject implements ExperimentTypeAware {
                             getTermThresholdInDays(KruizeConstants.JSONKeys.LONG_TERM, kruizeObject.getTrial_settings().getMeasurement_durationMinutes_inDouble()),
                             15, 1));
                 } else {
-                    throw new InvalidTermException(userInputTerm + AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
+                    throw new InvalidTermException(AnalyzerErrorConstants.APIErrors.CreateExperimentAPI.INVALID_TERM_NAME);
                 }
             }
             kruizeObject.setTerms(terms);
@@ -452,5 +455,13 @@ public final class KruizeObject implements ExperimentTypeAware {
 
         return ((double) measurement_duration * minDataPoints
                 / (KruizeConstants.TimeConv.NO_OF_HOURS_PER_DAY * KruizeConstants.TimeConv.NO_OF_MINUTES_PER_HOUR));
+    }
+
+    public void setCreation_date(Timestamp creation_date) {
+        this.creation_date = creation_date;
+    }
+
+    public void setUpdate_date(Timestamp update_date) {
+        this.update_date = update_date;
     }
 }

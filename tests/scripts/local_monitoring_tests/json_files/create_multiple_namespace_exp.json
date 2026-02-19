@@ -12,7 +12,7 @@
     "kubernetes_objects": [
       {
         "namespaces": {
-          "namespace_name": "default"
+          "namespace": "default"
         }
       }
     ],
@@ -36,7 +36,7 @@
     "kubernetes_objects": [
       {
         "namespaces": {
-          "namespace_name": "test-multiple-import"
+          "namespace": "test-multiple-import"
         }
       }
     ],
